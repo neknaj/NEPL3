@@ -3,6 +3,29 @@ body
   cons section public_layout "1. [公開構成/こうかいこうせい]"
     body
       cons paragraph
+        cons "GitHub Pagesへの[文書公開/ぶんしょこうかい]は[明示/めいじ]された[成果物/せいかぶつ]であり、[任意/にんい]の[作業/さぎょう]として[取/と]り[下/さ]げない。"
+        cons "[目的/もくてき]は[仕様/しよう]・[設計/せっけい]などのMarkdown[正本/せいほん]をNEPL3dへ[移/うつ]し、その[出力/しゅつりょく]を[人/ひと]が[読/よ]めるようにすることである。"
+        cons "[移行済/いこうず]みの[正式文書/せいしきぶんしょ]は.nepldであり、HTMLは[再生成/さいせいせい]できるprojectionである。"
+        cons "T19の[配信基盤/はいしんきばん]やrustdocの[完全/かんぜん]な[資源閉包/しげんへいほう]を、T21の[言語実装/げんごじっそう]・[正本移行/せいほんいこう]の[前提/ぜんてい]にしない。"
+        nil
+      cons paragraph
+        cons "T19の[初期段階/しょきだんかい]は、Markdown/NEPL3dの[正本選択/せいほんせんたく]、[移行前後/いこうぜんご]で[維持/いじ]するroute、HTML[生成/せいせい]、[必要/ひつよう]なCSS/font、[主要/しゅよう]リンクとbrowser[可読性/かどくせい]、[検査/けんさ]した[同/おな]じ[成果物/せいかぶつ]のPages[公開/こうかい]とする。"
+        cons "rustdoc・tutorial・[例/れい]の[拡充/かくじゅう]、[生成/せいせい]HTML[全/ぜん]fragmentの[詳細監査/しょうさいかんさ]は、[後段/こうだん]の[改善/かいぜん]として[分離/ぶんり]する。"
+        cons "[既知/きち]の[補助生成器/ほじょせいせいき]の[不具合/ふぐあい]は[対象/たいしょう]と[影響/えいきょう]を[記録/きろく]し、NEPL3dの[移行/いこう]を[止/と]めない。"
+        cons "NEPL3dのparse/schema/[意味/いみ]・Source/Origin・[参照/さんしょう]・[情報保存/じょうほうほぞん]の[検査/けんさ]、rendererのescaping、[資源/しげん]identityと[生成失敗/せいせいしっぱい]の[検出/けんしゅつ]は[維持/いじ]する。"
+        cons "サイトが[読/よ]めるだけで、これらの[本体検査/ほんたいけんさ]を[代替/だいたい]しない。"
+        nil
+      cons paragraph
+        cons "[初期/しょき]docs-only[公開/こうかい]は、NEPL3d[正本/せいほん]への[段階移行/だんかいいこう]を[人/ひと]が[閲覧/えつらん]できる[形/かたち]で[支/ささ]える。"
+        cons "[正式文書/せいしきぶんしょ]は[移行後/いこうご]のNEPL3d sourceであり、HTMLは[再生成/さいせいせい]できるprojectionである。"
+        cons "[本章第/ほんしょうだい]5[節/せつ]の[高度/こうど]なLKG/journal[復旧/ふっきゅう]は[後段/こうだん]の[配信機能/はいしんきのう]とし、[初期公開/しょきこうかい]・T21[移行/いこう]の[前提/ぜんてい]にしない。"
+        cons "[初期/しょき]publisherは[成功/せいこう]したmain CIの[固定/こてい]commit・[検査済/けんさず]み[元/もと]payloadを[照合/しょうごう]し、[同/おな]じfile byte[列/れつ]を[公式/こうしき]Pages actionで[梱包/こんぽう]して、[主要/しゅよう]routeと[公開/こうかい]byteを[確認/かくにん]する。"
+        cons "[失敗/しっぱい]はworkflow[失敗/しっぱい]として[報告/ほうこく]し、[自動/じどう]rollbackやLKG[完成/かんせい]を[主張/しゅちょう]しない。"
+        cons "CIの[決定的/けっていてき]tarとPages[輸送/ゆそう]tarのbyte identityは[区別/くべつ]し、[輸送時/ゆそうじ]にHTMLを[再生成/さいせいせい]しない。"
+        cons "rustdocの[完全性/かんぜんせい]・[全/ぜん]fragment[監査/かんさ]・Playground[完成/かんせい]も[初期公開/しょきこうかい]の[前提/ぜんてい]にしない。"
+        cons sentence cons ruby text "公開" text "こうかい" cons text "namespaceとrepo" cons ruby text "別" text "べつ" cons text "の" cons ruby text "所有境界" text "しょゆうきょうかい" cons text "は" cons link relative "../decisions/pages-information-architecture.md" none concat cons text "Pages" cons ruby text "情報設計" text "じょうほうせっけい" nil cons text "に" cons ruby text "従" text "したが" cons text "う。" nil
+        nil
+      cons paragraph
         cons sentence
           cons ruby text "標準公開先" text "ひょうじゅんこうかいさき"
           cons text "を "
@@ -15,10 +38,11 @@ body
           nil
         cons "[独立/どくりつ]HTMLのトップ・docsと、ブラウザWasmで[動/うご]くPlaygroundを[配布/はいふ]する。"
         cons "[言語処理/げんごしょり]serverは[設/もう]けない。"
-        cons "[現在/げんざい]のsource artifact[配布/はいふ]は[維持/いじ]し、サイト[実装前/じっそうまえ]に[空/から]のPages siteや[架空/かくう]のWasmを[公開/こうかい]しない。"
+        cons "[通常/つうじょう]のsource[取得/しゅとく]は[検査対象/けんさたいしょう]commitのGit checkoutまたはsource archiveを[用/もち]い、main pushごとの[重複/ちょうふく]archive[配布/はいふ]は[行/おこな]わない。"
+        cons "サイト[実装前/じっそうまえ]に[空/から]のPages siteや[架空/かくう]のWasmを[公開/こうかい]しない。"
         nil
       cons paragraph
-        cons "[予定/よてい]する[出力/しゅつりょく]は、トップのindex.html、playground/index.html、docs/index.htmlとtutorials/reference/design、api/rust、examples/manifest.json、assets[内/ない]のJS/CSS/Wasm/Worker、build.jsonである。"
+        cons "[予定/よてい]する[出力/しゅつりょく]は、トップのindex.html、playground/index.html、tutorial/index.html、docs/index.htmlとreference/design、api/rust、examples/manifest.json、assets[内/ない]のJS/CSS/Wasm/Worker、build.jsonである。"
         cons sentence
           cons code "site/"
           cons text " は"
@@ -37,6 +61,13 @@ body
           cons ruby text "行" text "おこな"
           cons text "う。"
           nil
+        nil
+      cons paragraph
+        cons sentence cons code "/NEPL3/playground/" cons text "、" cons code "/NEPL3/tutorial/" cons text "、" cons code "/NEPL3/docs/" cons text " は" cons ruby text "本体" text "ほんたい" cons text "の" cons ruby text "安定入口" text "あんていいりぐち" cons text "として" cons ruby text "予約" text "よやく" cons text "する。" nil
+        cons "Tutorialの[入口/いりぐち]は、[従来/じゅうらい]のplannedなdocs/tutorialsではなくtutorialとする。"
+        cons "[予約/よやく]は[公開/こうかい]・[実装完了/じっそうかんりょう]を[意味/いみ]しない。"
+        cons "PlaygroundとTutorialは[特定/とくてい]guest languageの[専用/せんよう]UI・[入門書/にゅうもんしょ]にせず、[共通原理/きょうつうげんり]、[最小/さいしょう]guest languageの[作成/さくせい]、LanguagePackage/schema/operation/provider/Profile、[別言語/べつげんご]のimport/compositionを[扱/あつか]う。"
+        cons "sentenceとannotationも[独立/どくりつ]したLanguagePackageとして[教材/きょうざい]に[利用/りよう]し、foundationの[暗黙/あんもく]の[特別構文/とくべつこうぶん]にしない。"
         nil
       cons paragraph
         cons "T19はUI/runtimeのタスクへ[依存/いぞん]せず、[既存/きそん]の[固定版/こていばん]Markdown[生成器/せいせいき]を[使/つか]うhost[側/がわ]の[静的生成経路/せいてきせいせいけいろ]を[先/さき]に[完成/かんせい]できる。"
