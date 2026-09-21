@@ -411,18 +411,21 @@ body
         cons sentence cons code "\\0" cons text " はゼロbyte、" cons ruby text "他" text "ほか" cons text "のdomain" cons ruby text "文字" text "もじ" cons text "はASCIIで、" cons ruby text "正式" text "せいしき" cons text "Doc/foundation codecが" cons ruby text "返" text "かえ" cons text "すschema" cons ruby text "検査済" text "けんさず" cons text "み" cons ruby text "値" text "あたい" cons text "のSchemaRef digest、owner" cons ruby text "環境" text "かんきょう" cons text "、" cons ruby text "元" text "もと" cons text "Origin" cons ruby text "表" text "ひょう" cons text "、source/map" cons ruby text "閉包" text "へいほう" cons text "を" cons ruby text "含" text "ふく" cons text "める。" nil
         cons "[全提供/ぜんていきょう]entryの32byte digest、EmbedRefの[存在/そんざい]、[重複/ちょうふく]、[両/りょう]identityを[検査/けんさ]し、[必要/ひつよう]な[印字/いんじ]がなければUnresolvedGuestとする。" nil
       cons paragraph
-        cons "このdigestはtextがguest[意味/いみ]と[一致/いっち]することを[証明/しょうめい]しない。"
+        cons "このdigestは、[対象/たいしょう]documentとguestのidentityを[照合/しょうごう]するために[用/もち]いる。"
+        cons "textとguestの[意味/いみ]の[一致/いっち]は、digest[照合/しょうごう]の[保証範囲/ほしょうはんい]に[含/ふく]めない。"
         cons "[通常/つうじょう]printの[意味/いみ]roundtrip[保証/ほしょう]は、hostが[同/おな]じguestを[扱/あつか]う[実/じつ]printerの[正/ただ]しい[出力/しゅつりょく]を[供給/きょうきゅう]することを[前提/ぜんてい]とする。"
         cons "raw[受信/じゅしん]やDoc coreはその[意味/いみ]proofを[発行/はっこう]せず、guestのlower・[意味/いみ]check・[評価/ひょうか]も[呼/よ]ばない。"
         cons sentence cons ruby text "原文取得" text "げんぶんしゅとく" cons text "helper " cons code "original_guest_source" cons text " はroot coverに" cons ruby text "対応" text "たいおう" cons text "する" cons ruby text "保持" text "ほじ" cons text "byteを" cons ruby text "返" text "かえ" cons text "すだけであり、coverがなければNoneとなる。" nil
         cons "[構造検査済/こうぞうけんさず]みForeignClosureにも[構文/こうぶん]と[原文/げんぶん]の[一致/いっち]proofはないため、[通常/つうじょう]printはこのhelperを[自動/じどう]fallbackとして[使/つか]わない。"
         cons "host[側/がわ]の[統合試験/とうごうしけん]では[実/じつ]guest parserとchecked tree、generic engine printerを[通/とお]し、Doc→Docの[意味不正/いみふせい]なCodeもguest[構文/こうぶん]のまま[保持/ほじ]する。" nil
       cons paragraph
-        cons "[公開/こうかい]identity[取得/しゅとく]はhost[要求/ようきゅう]の[準備/じゅんび]データであり、[実行予算/じっこうよさん]を[支払/しはら]い[済/ず]みにするproofではない。"
-        cons "[公開/こうかい]printは[同一/どういつ]Budget/SourceAdmissionでDocumentSyntax[再検査/さいけんさ]、canonical[値/あたい]の[生成/せいせい]・digest、[全/ぜん]entry[検査/けんさ]と[出力/しゅつりょく]を[合成/ごうせい]する。"
+        cons "[公開/こうかい]identity[取得/しゅとく]は、hostが[要求/ようきゅう]を[準備/じゅんび]するためのデータを[返/かえ]す。"
+        cons "[後続/こうぞく]のprint[実行/じっこう]では、その[処理/しょり]の[資源/しげん]を[個別/こべつ]に[計上/けいじょう]する。"
+        cons "[公開/こうかい]printはDocumentSyntaxの[再検査/さいけんさ]、canonical[値/あたい]の[生成/せいせい]とdigest[計算/けいさん]、[全/ぜん]entryの[検査/けんさ]、[出力/しゅつりょく]を[実行/じっこう]し、これらの[処理/しょり]で[同一/どういつ]のBudget・SourceAdmissionを[共有/きょうゆう]する。"
         cons "sourceの[重複計上/ちょうふくけいじょう]を[避/さ]け、[反復処理/はんぷくしょり]で[共有/きょうゆう]DAGの[各表示経路/かくひょうじけいろ]を[出力/しゅつりょく]し、そのWork・[出力/しゅつりょく]byte・Allocation・Depthを[計上/けいじょう]する。"
-        cons "[停止時/ていしじ]は[元要求/もとようきゅう]を[変更/へんこう]せず、[準備中/じゅんびちゅう]も[元/もと]StopReasonのStoppedとUsageを[返/かえ]し、[途中/とちゅう]textをCompleteへ[昇格/しょうかく]させない。"
-        cons "[構造/こうぞう]/schema[不正/ふせい]は[型付/かたつ]き[入力境界/にゅうりょくきょうかい]エラー、[受理後/じゅりご]の[不適合/ふてきごう]はPrintFailureとなる。"
+        cons "[停止時/ていしじ]は[元要求/もとようきゅう]を[保持/ほじ]し、[元/もと]のStopReasonを[持/も]つStoppedとUsageを[返/かえ]す。"
+        cons "[準備中/じゅんびちゅう]の[停止/ていし]にも[同/おな]じ[規則/きそく]を[適用/てきよう]し、Completeは[印字/いんじ]が[完了/かんりょう]した[場合/ばあい]に[限/かぎ]って[返/かえ]す。"
+        cons "[構造/こうぞう]・schemaの[不正/ふせい]は[型付/かたつ]きの[入力境界/にゅうりょくきょうかい]エラーとして[返/かえ]し、[受理後/じゅりご]の[不適合/ふてきごう]はPrintFailureとして[返/かえ]す。"
         cons "[返信/へんしん]Reportの[位置/いち]は[明示要求/めいじようきゅう]documentの[宣言/せんげん]source[閉包/へいほう]だけを[参照/さんしょう]でき、[独立/どくりつ]reply codecにもそのdocumentを[渡/わた]す。"
         cons "ambient[補完/ほかん]と[非/ひ]StoppedのtraceOverflowを[拒否/きょひ]する。" nil
       nil
