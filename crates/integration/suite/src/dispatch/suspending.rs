@@ -47,7 +47,11 @@ pub(crate) fn prepare_reply<'a, S: DiagnosticSourceResolver>(
         reply => {
             suspension::host::prepare_owned(request, context, reply, registry, sources, validation)
                 .map(PreparedReply::Await)
-                .map_err(Error::Preparation)
+                .map_err(|error| match error {
+                    suspension::host::ActivationError::Stopped(reason) => Error::Stopped(reason),
+                    suspension::host::ActivationError::Await(error) => Error::Await(error),
+                    error => Error::Preparation(error),
+                })
         }
     }
 }
