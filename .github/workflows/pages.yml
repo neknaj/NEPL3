@@ -55,6 +55,7 @@ jobs:
         with:
           name: github-pages
           path: dist/checked/site
+          include-hidden-files: true
           retention-days: 14
       - name: Require current main immediately before publication
         run: test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$SOURCE_COMMIT"
