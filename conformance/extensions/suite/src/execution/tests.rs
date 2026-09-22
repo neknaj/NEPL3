@@ -62,6 +62,77 @@ fn with_program(
 }
 
 #[test]
+fn received_plan_uses_typed_execution_and_admitted_source_mapping() -> Result<(), String> {
+    with_program(
+        "add framed frame neg 7 2",
+        |program, sources, runtime, registry| {
+            let schema = &runtime.operations[0].schema;
+            let encoded = transfer::encode(program, schema, &mut budget()).map_err(error)?;
+            let TypedValue::Record(record) = encoded else {
+                return Err("plan record".into());
+            };
+            let bytes =
+                nepl3_wire::encode(&NdfValue::Record(record), &mut budget()).map_err(error)?;
+            let NdfValue::Record(ref record) =
+                nepl3_wire::decode(&bytes, &mut budget()).map_err(error)?
+            else {
+                return Err("received plan record".into());
+            };
+            let received = TypedValue::Record(record.clone());
+            let heads = program
+                .nodes()
+                .iter()
+                .map(|node| node.head.cloned())
+                .collect::<Vec<_>>();
+            let checked =
+                || transfer::validate(&received, schema, registry, &mut budget()).map_err(error);
+            assert!(matches!(
+                checked()?.program(&[], sources, &mut budget()),
+                Err(transfer::Error::Reference)
+            ));
+            assert!(matches!(
+                checked()?.program(&heads, &SourceStore::default(), &mut budget()),
+                Err(transfer::Error::Source(SourceError::MissingSnapshot))
+            ));
+            let mut limits = budget().limits();
+            limits.allocation_units = 0;
+            assert!(matches!(
+                checked()?.program(&heads, sources, &mut Budget::new(limits)),
+                Err(transfer::Error::Stopped(StopReason::AllocationLimit))
+            ));
+            let admitted = checked()?
+                .program(&heads, sources, &mut budget())
+                .map_err(error)?;
+            assert_eq!(admitted.nodes().len(), program.nodes().len());
+            for (received, original) in admitted.nodes().iter().zip(program.nodes()) {
+                assert_eq!(received.language, original.language);
+                assert_eq!(received.head, original.head);
+            }
+            let result = runtime
+                .run(
+                    &admitted,
+                    sources,
+                    registry,
+                    &mut budget(),
+                    &mut budget(),
+                    |_, _| {},
+                    |_| {},
+                )
+                .map_err(error)?;
+            let OperationResult::Complete {
+                value: TypedValue::Record(value),
+                ..
+            } = result
+            else {
+                return Err("received plan evaluation".into());
+            };
+            assert_eq!(value.fields, vec![NdfValue::Integer(Integer::from(-5_i64))]);
+            Ok(())
+        },
+    )
+}
+
+#[test]
 fn source_admission_rejects_missing_and_changed_snapshots_before_execution() -> Result<(), String> {
     with_program(
         "add framed frame neg 7 2",

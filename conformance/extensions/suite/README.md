@@ -82,6 +82,13 @@ canonical NDF plan. Child requests copy this fixed-size identity and select one
 occurrence; they share the plan through the callback's Rust lifetime. Plan encoding,
 validation and hashing occur once per run. The portable plan representation remains
 available for a future process provider's admission path.
+`transfer::Checked::program` converts a received, schema-checked plan into the
+same typed execution model. The host supplies its admitted source-head mapping
+in occurrence order; snapshot identity and bounds are checked before use.
+The conversion borrows numeric payloads and spans. Source correspondence is a
+host responsibility; transport of that mapping and OS process execution remain
+unfinished. Tests exercise the actual NDF codec, native evaluation and rejection
+of missing source permissions, mismatched mapping length and allocation stops.
 Remaining integration: additional failure and large-input cost cases, process
 execution and independent review. Regression tests cover successful
 nesting depths 1, 8 and 24, Depth=1 rejection, and sampled Work/Allocation stops.
