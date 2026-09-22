@@ -1,5 +1,6 @@
 //! Language-owned dependency plan over borrowed, validated syntax.
 //! Child results precede consumers; foreign nodes remain explicit operations.
+pub mod transfer;
 use crate::syntax::{Cursor, Error, Expression, Language};
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},

@@ -39,11 +39,21 @@ consumer references its earlier child ValueIds; Frame and Framed remain distinct
 language-owned operations. Each syntax occurrence is charged separately, including
 repeated references. Work, AllocationUnits, Nodes and logical Depth bound planning.
 
+`program::transfer` represents the plan as a flat, typed `Plan`/`Node` schema.
+The decoder validates exact schema identity, nonnegative literal values,
+postorder child references, single-parent occurrences and language boundaries.
+The root is the last MiniExpr node. Disconnected nodes, shared occurrence IDs
+and cycles are rejected before scheduling. Source spans remain in the host's
+immutable Program and correspond to the same occurrence indices. This transport
+value carries no source authority; the execution adapter must retain that mapping
+and supply independently authorized source snapshots.
+
 Current implementation: typed integer arithmetic, operation schemas, borrowed
-syntax views, dependency planning and native terminal dispatch with input/output validation.
+syntax views, checked plan transfer and native terminal dispatch with input/output validation.
 Remaining integration: plan-to-operation scheduling, Await/Resume adapters, grants, and
 end-to-end recursive composition. The terminal dispatch test yielding -5 covers
 an explicit binary request. Source-level MiniExpr/Frame evaluation remains open.
 
 Run `cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml`.
 WASI uses the same command with `--target wasm32-wasip2` and the Wasmtime runner.
+CI runs this independent workspace on all three native hosts and WASI.

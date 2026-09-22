@@ -208,6 +208,67 @@ mod tests {
         assert_eq!(plan.nodes()[2].language, Language::Frame);
         let origin = plan.nodes()[0].head.ok_or("planned leaf span")?;
         assert_eq!((origin.start(), origin.end()), (21, 22));
+        {
+            use crate::program::transfer;
+            use nepl3_core::{schema::SchemaRegistry, value::TypedValue};
+            let descriptor = transfer::descriptor(&mut budget()).map_err(error)?;
+            let identity = descriptor.reference(&mut budget()).map_err(error)?;
+            let mut registry = SchemaRegistry::default();
+            registry
+                .register(identity.clone(), descriptor, &mut budget())
+                .map_err(error)?;
+            registry.finalize(&mut budget()).map_err(error)?;
+            let encoded = transfer::encode(&plan, &identity, &mut budget()).map_err(error)?;
+            let checked =
+                transfer::validate(&encoded, &identity, &registry, &mut budget()).map_err(error)?;
+            assert_eq!(checked.nodes().len(), 6);
+            let NdfValue::Variant(leaf) = &checked.nodes()[0] else {
+                return Err("transferred leaf".into());
+            };
+            assert_eq!(leaf.variant, "Natural");
+            assert_eq!(leaf.fields, vec![NdfValue::Integer(Integer::from(7_i64))]);
+            // Cycles, duplicate occurrence IDs, foreign-language confusion and
+            // disconnected subtrees remain structurally valid schema values.
+            // The domain validator must reject all four independently.
+            for (node_index, child_index, child) in [(1, 0, 1), (5, 1, 3), (3, 0, 1), (5, 0, 0)] {
+                let mut changed = encoded.clone_with_budget(&mut budget()).map_err(error)?;
+                let TypedValue::Record(record) = &mut changed else {
+                    return Err("plan record".into());
+                };
+                let [NdfValue::List(nodes)] = record.fields.as_mut_slice() else {
+                    return Err("plan list".into());
+                };
+                let NdfValue::Variant(node) = &mut nodes[node_index] else {
+                    return Err("plan node".into());
+                };
+                node.fields[child_index] = NdfValue::U64(child);
+                registry
+                    .validate_typed(&changed, &mut budget())
+                    .map_err(error)?;
+                assert!(matches!(
+                    transfer::validate(&changed, &identity, &registry, &mut budget()),
+                    Err(transfer::Error::Reference)
+                ));
+            }
+            let mut wrong_identity = identity.clone();
+            wrong_identity.digest = Digest::of(b"wrong plan schema");
+            assert!(matches!(
+                transfer::validate(&encoded, &wrong_identity, &registry, &mut budget()),
+                Err(transfer::Error::Shape)
+            ));
+            let mut limits = budget().limits();
+            limits.allocation_units = 0;
+            assert!(matches!(
+                transfer::encode(&plan, &identity, &mut Budget::new(limits)),
+                Err(transfer::Error::Stopped(StopReason::AllocationLimit))
+            ));
+            let mut stopped = budget();
+            stopped.stop(StopReason::Cancelled);
+            assert!(matches!(
+                transfer::validate(&encoded, &identity, &registry, &mut stopped),
+                Err(transfer::Error::Stopped(StopReason::Cancelled))
+            ));
+        }
         for reason in [
             StopReason::WorkLimit,
             StopReason::AllocationLimit,
