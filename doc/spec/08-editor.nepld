@@ -245,18 +245,26 @@ body
       cons "hostがreaderの[生成/せいせい]sourceを[予約/よやく]する[場合/ばあい]も、この[候補/こうほ]identityを[使/つか]う。"
       cons "[公開/こうかい]する[編集/へんしゅう]は[許可/きょか]された[元/もと]snapshotへの[列/れつ]だけで、[派生側/はせいがわ]の[内部編集/ないぶへんしゅう]を[追加/ついか]の[書込権限/かきこみけんげん]として[外部/がいぶ]へ[渡/わた]さない。" nil
     cons paragraph
-      cons "acceptは[候補/こうほ]の[実/じつ]parse[完了結果/かんりょうけっか]と[同/おな]じimmutable treeに[対/たい]するprepared[要求/ようきゅう]・[完了解析/かんりょうかいせき]を[照合/しょうごう]する。"
-      cons "Profileの[意味/いみ]identity、provider/package[実行/じっこう]identity、options・analysis ID・[有効/ゆうこう]Limitsを[維持/いじ]し、[候補全/こうほぜん]source、[構文/こうぶん]kind/field/[選択/せんたく]context、[編集/へんしゅう]に[対応/たいおう]する[位置/いち]と[意味/いみ]payloadを[検査/けんさ]する。"
-      cons "Entityの[対応/たいおう]は[宣言位置/せんげんいち]・scope/namespace・[意味名/いみめい]に[基/もと]づき、opaque IDの[数値一致/すうちいっち]だけで[決/き]めない。"
+      cons "acceptは、[編集候補/へんしゅうこうほ]のparse[完了結果/かんりょうけっか]、prepared Binding[要求/ようきゅう]、[完了済/かんりょうず]みのBinding[解析結果/かいせきけっか]を[照合/しょうごう]する。"
+      cons "Binding[要求/ようきゅう]は、[候補/こうほ]のparse[完了結果/かんりょうけっか]と[同一/どういつ]の[不変/ふへん]treeを[借用/しゃくよう]する。"
+      cons "Binding[解析結果/かいせきけっか]は、[候補/こうほ]のprepared Binding[要求/ようきゅう]と[同一/どういつ]のkeyを[持/も]つ。"
+      cons "[元/もと]の[解析/かいせき]から、Profileの[意味/いみ]identity、provider/packageの[実行/じっこう]identity、options、analysis ID、[有効/ゆうこう]Limitsを[維持/いじ]する。"
+      cons "[検査対象/けんさたいしょう]は、[候補/こうほ]の[全/ぜん]source、[構文/こうぶん]のkind・field・[選択/せんたく]context、[編集/へんしゅう]に[対応/たいおう]する[位置/いち]と[意味/いみ]payloadである。"
+      cons "[編集前後/へんしゅうぜんご]のEntityは、[宣言位置/せんげんいち]、scope/namespace、[意味名/いみめい]に[基/もと]づいて[対応/たいおう]させる。"
+      cons "opaque IDの[数値一致/すうちいっち]だけによる[対応/たいおう]の[確定/かくてい]は[禁止/きんし]する。"
       cons "[対象外/たいしょうがい]の[名前/なまえ]も[含/ふく]め、Resolved・[全/ぜん]Ambiguous[候補/こうほ]・Unresolved/free input・Deferred・Customの[確定/かくてい]resolutionが[対応/たいおう]していることを[検査/けんさ]する。"
       cons "[後続/こうぞく]scopeで[名前検索/なまえけんさく]をやり[直/なお]してCustomの[判断/はんだん]を[上書/うわが]きしない。"
       cons "[衝突/しょうとつ]・[捕捉/ほそく]・[構文変更/こうぶんへんこう]・[別要求/べつようきゅう]との[組替/くみか]え・[停止/ていし]では[編集列/へんしゅうれつ]を[一部/いちぶ]も[公開/こうかい]しない。" nil
     cons paragraph
-      cons "nativeのCompletedParseは[実/じつ]ParseSessionのread/resume/reserve/resume_headがCompleteを[返/かえ]した[場合/ばあい]だけ[発行/はっこう]する[所有/しょゆう]proofであり、[待機/たいき]・[回復/かいふく]・[停止/ていし]は[通常/つうじょう]のParseReplyを[保持/ほじ]する。"
-      cons "[元/もと]と[候補/こうほ]のprepared treeがこのproofの[同一/どういつ]immutable treeを[借用/しゃくよう]する[条件/じょうけん]はnative[内部/ないぶ]の[保証/ほしょう]で、pointerやRust ABIを[公開/こうかい]schemaへ[露出/ろしゅつ]しない。"
+      cons "native[実装/じっそう]のCompletedParseは、ParseSessionの[実行完了/じっこうかんりょう]を[示/しめ]す[所有/しょゆう]proofである。"
+      cons "read・resume・reserve・resume_headがCompleteを[返/かえ]した[場合/ばあい]に[限/かぎ]り[発行/はっこう]する。"
+      cons "[待機/たいき]・[回復/かいふく]・[停止/ていし]の[状態/じょうたい]は、[通常/つうじょう]のParseReplyで[保持/ほじ]する。"
+      cons "[元/もと]と[候補/こうほ]のprepared treeは、それぞれのCompletedParseが[所有/しょゆう]する[同一/どういつ]の[不変/ふへん]treeを[借用/しゃくよう]する。"
+      cons "この[借用条件/しゃくようじょうけん]はnative[実装内部/じっそうないぶ]で[保証/ほしょう]し、pointerやRust ABIの[公開/こうかい]schemaへの[露出/ろしゅつ]を[禁止/きんし]する。"
       cons "raw treeの[取出/とりだ]しはproofを[消費/しょうひ]し、raw ParseTreeやNDF decodeから[再発行/さいはっこう]できない。"
       cons "[将来/しょうらい]の[別言語/べつげんご]・[別/べつ]process parserも、[認証/にんしょう]された[発行要求/はっこうようきゅう]と[実/じつ]parse[実行結果/じっこうけっか]を[結/むす]ぶ[同等/どうとう]のhost[境界/きょうかい]を[必要/ひつよう]とする。"
-      cons "[現在/げんざい]のraw rename request/reply codecはschema、[要求/ようきゅう]key、[書込対象/かきこみたいしょう]、old digest、[編集非重複/へんしゅうひじゅうふく]、[元/もと]source[閉包/へいほう]を[検査/けんさ]するが、[通信認証/つうしんにんしょう]やparse[実行証明/じっこうしょうめい]を[発行/はっこう]しない。" nil
+      cons "[現在/げんざい]のraw rename request/reply codecの[検査対象/けんさたいしょう]は、schema、[要求/ようきゅう]key、[書込対象/かきこみたいしょう]、old digest、[編集/へんしゅう]の[非重複/ひじゅうふく]、[元/もと]sourceの[閉包/へいほう]である。"
+      cons "[通信/つうしん]の[認証/にんしょう]とparseの[実行証明/じっこうしょうめい]は、このcodecの[保証範囲外/ほしょうはんいがい]とする。" nil
     cons paragraph
       cons "RenameReplyのCompleteは[新/しん]AnalysisKeyと[全/ぜん]TextEdit、Invalid/Stoppedは[編集/へんしゅう]なしを[返/かえ]す。"
       cons "Reportは[実消費/じつしょうひ]Usageを[保持/ほじ]し、この[操作自身/そうさじしん]は[新規/しんき]diagnostic/eventを[発行/はっこう]しない。"
