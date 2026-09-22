@@ -1,4 +1,6 @@
 //! Run language-owned nodes through native Invoke/Await/Resume.
+#[cfg(test)]
+mod tests;
 use crate::{
     arithmetic::{self, Application},
     program::{Program, transfer},

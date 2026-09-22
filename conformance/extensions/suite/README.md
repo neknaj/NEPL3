@@ -58,12 +58,21 @@ dependency completion; Frame returns its guest result. The source-level test
 Missing source grants are rejected before dispatch. Every run owns a fresh
 lifetime table; continuation reuse across runs is unsupported.
 
+Scheduler failures expose the active request ID. `Program::request_node` maps
+that ID back to its language and original head Span without allocation or a
+Budget poll. A child admission/depth failure belongs to the active parent frame;
+accepted child reports retain the child's own ID through `accepted_results`.
+The example prints this host failure context. Provider-generated, source-bearing
+Stopped reports remain a separate unfinished path.
+
 The initial owned callback adapter copies the flat plan into dependency requests;
 the existing clone operation charges this cost to the execution Budget. This
 retains quadratic copy cost for large plans. Shared execution environments require
 a separate API design before this example serves as a large-input performance claim.
 Remaining integration: source-associated stop diagnostics, additional failure and
-deep-nesting cases, and independent review.
+large-input cost cases, and independent review. Regression tests cover successful
+nesting depths 1, 8 and 24, Depth=1 rejection, and sampled Work/Allocation stops.
+They check unique cancellation and preserve inspectable accepted child outcomes.
 
 Run the existing MiniExpr/Frame syntax through the evaluator:
 

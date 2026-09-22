@@ -85,6 +85,18 @@ fn context(_: &Invoke, implementation: Digest, b: &mut Budget) -> Result<Digest,
     Ok(implementation)
 }
 
+fn stop_at_leaf(
+    call: &Invoke,
+    context: Digest,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<OperationReply, StopReason> {
+    if number(&call.input) == Some(0) {
+        return Err(b.stop(StopReason::Cancelled));
+    }
+    invoke(call, context, registry, b)
+}
+
 fn suspend_with(
     call: &Invoke,
     context: Digest,
@@ -305,7 +317,7 @@ fn iterative_scheduler_resolves_nested_calls_and_cancels_on_execution_stop() -> 
     let grants = Grants::new(&root.environment, &sources, &[], &mut budget())
         .map_err(|e| format!("{e:?}"))?;
     let identity = Digest::of(b"recursive native fixture");
-    let registrations = [scheduler::Registration {
+    let mut registrations = [scheduler::Registration {
         invoke: suspending::Registration {
             operation: &root.operation,
             implementation: identity,
@@ -369,5 +381,25 @@ fn iterative_scheduler_resolves_nested_calls_and_cancels_on_execution_stop() -> 
         cancelled.dedup();
         assert_eq!(cancelled.len(), count);
     }
+    registrations[0].invoke.invoke = stop_at_leaf;
+    cancelled.clear();
+    let failure = scheduler::run(
+        &registrations,
+        &root,
+        &registry,
+        &mut budget(),
+        &mut budget(),
+        |_, _| {},
+        |id| cancelled.push(id),
+    )
+    .err()
+    .ok_or("expected leaf stop")?;
+    assert_eq!(failure.active_request_id(), root.request_id + 4);
+    assert!(failure.accepted_results().next().is_none());
+    cancelled.sort_unstable();
+    assert_eq!(
+        cancelled,
+        (root.request_id..=root.request_id + 4).collect::<Vec<_>>()
+    );
     Ok(())
 }

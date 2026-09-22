@@ -134,6 +134,7 @@ fn invalid_keeps_partial_and_diagnostic_while_stopped_prevents_parent_callback()
                 Err(failure) => failure,
             };
             assert!(matches!(failure.cause, scheduler::Error::Stopped(_)));
+            assert_eq!(failure.active_request_id(), root.request_id);
             let accepted = failure.accepted_results().collect::<Vec<_>>();
             let stopped = if input == 97 {
                 assert_eq!(accepted.len(), 2);

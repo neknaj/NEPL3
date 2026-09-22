@@ -55,10 +55,20 @@ impl From<StopReason> for Error {
 /// Generations already transferred to a Resume callback are consumed.
 pub struct Failure {
     pub cause: Error,
+    root_request: u64,
     frames: Vec<Frame>,
 }
 
 impl Failure {
+    /// Request whose execution frame was active when scheduling failed. Before
+    /// root activation this is the root ID. A dependency admission/depth failure
+    /// is attributed to its active parent; accepted child outcomes retain their
+    /// own IDs through accepted_results. This accessor performs no allocation.
+    pub fn active_request_id(&self) -> u64 {
+        self.frames
+            .last()
+            .map_or(self.root_request, |frame| frame.request_id)
+    }
     /// Borrow results already accepted by the host, outer generation first and
     /// in call order within each generation. Rejected replies are excluded.
     /// This inspection neither allocates nor polls the stopped Budget.
@@ -76,12 +86,14 @@ impl core::fmt::Debug for Failure {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Failure")
             .field("cause", &self.cause)
+            .field("active_request_id", &self.active_request_id())
             .field("active_frames", &self.frames.len())
             .finish_non_exhaustive()
     }
 }
 
 struct Frame {
+    request_id: u64,
     registration: usize,
     context: Digest,
     scope: ExecutionScope,
@@ -166,6 +178,7 @@ fn frame(
             .map_err(Error::Source)?;
     }
     Ok(Frame {
+        request_id: request.request_id,
         registration,
         context,
         scope,
@@ -227,6 +240,7 @@ pub fn run(
             lifetimes.close(&mut cancel);
             Err(Failure {
                 cause,
+                root_request: root.request_id,
                 frames: stack,
             })
         }

@@ -40,6 +40,12 @@ impl<'a> Program<'a> {
     pub fn root(&self) -> ValueId {
         self.root
     }
+    /// The execution adapter assigns occurrence index + 1 to every request.
+    /// Failure/source inspection borrows the original node without allocation.
+    pub fn request_node(&self, request_id: u64) -> Option<&Node<'a>> {
+        let index = usize::try_from(request_id.checked_sub(1)?).ok()?;
+        self.nodes.get(index)
+    }
 }
 
 #[derive(Clone, Copy)]

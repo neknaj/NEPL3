@@ -1,5 +1,9 @@
 //! Evaluate MiniExpr/Frame using public package APIs and the native scheduler.
-use external_composition_runtime::{execution::Runtime, program, syntax::Cursor};
+use external_composition_runtime::{
+    execution::{self, Runtime},
+    program,
+    syntax::Cursor,
+};
 use external_hello_language::{budget, composition, error};
 use nepl3_core::{
     diagnostic::OperationResult,
@@ -78,7 +82,18 @@ fn main() -> Result<(), String> {
             |id, report| eprintln!("Await request {id}: {report:?}"),
             |id| eprintln!("Cancelled request {id}"),
         )
-        .map_err(error)?;
+        .map_err(|failure| {
+            if let execution::Error::Execution(scheduler) = &failure {
+                let request = scheduler.active_request_id();
+                if let Some(node) = plan.request_node(request) {
+                    eprintln!(
+                        "Active request {request}, language {:?}, source {:?}",
+                        node.language, node.head
+                    );
+                }
+            }
+            error(failure)
+        })?;
     let OperationResult::Complete {
         value: TypedValue::Record(value),
         ..
