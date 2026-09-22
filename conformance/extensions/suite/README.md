@@ -33,9 +33,15 @@ host bind the view to the selected packages. Recovered trees and mismatched
 identities are rejected. Traversal charges Work; the eventual execution adapter
 must additionally account for its retained state and dependency depth.
 
+`program::compile` converts those views into an immutable dependency plan using
+an explicit work stack. Natural values and head spans remain borrowed. Each
+consumer references its earlier child ValueIds; Frame and Framed remain distinct
+language-owned operations. Each syntax occurrence is charged separately, including
+repeated references. Work, AllocationUnits, Nodes and logical Depth bound planning.
+
 Current implementation: typed integer arithmetic, operation schemas, borrowed
-syntax views and native terminal dispatch with input/output validation.
-Remaining integration: syntax-to-operation scheduling, Await/Resume adapters, grants, and
+syntax views, dependency planning and native terminal dispatch with input/output validation.
+Remaining integration: plan-to-operation scheduling, Await/Resume adapters, grants, and
 end-to-end recursive composition. The terminal dispatch test yielding -5 covers
 an explicit binary request. Source-level MiniExpr/Frame evaluation remains open.
 

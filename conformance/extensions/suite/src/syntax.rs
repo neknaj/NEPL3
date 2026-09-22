@@ -185,6 +185,47 @@ mod tests {
             &mut budget(),
         )
         .map_err(error)?;
+        use crate::program::{self, Instruction, ValueId};
+        let plan = program::compile(root, &mut budget()).map_err(error)?;
+        assert_eq!(plan.nodes().len(), 6);
+        assert_eq!(plan.root(), ValueId(5));
+        assert!(matches!(
+            plan.nodes()[1].instruction,
+            Instruction::Neg(ValueId(0))
+        ));
+        assert!(matches!(
+            plan.nodes()[2].instruction,
+            Instruction::Frame(ValueId(1))
+        ));
+        assert!(matches!(
+            plan.nodes()[3].instruction,
+            Instruction::Framed(ValueId(2))
+        ));
+        assert!(matches!(
+            plan.nodes()[5].instruction,
+            Instruction::Add(ValueId(3), ValueId(4))
+        ));
+        assert_eq!(plan.nodes()[2].language, Language::Frame);
+        let origin = plan.nodes()[0].head.ok_or("planned leaf span")?;
+        assert_eq!((origin.start(), origin.end()), (21, 22));
+        for reason in [
+            StopReason::WorkLimit,
+            StopReason::AllocationLimit,
+            StopReason::DepthLimit,
+            StopReason::NodeLimit,
+        ] {
+            let mut limits = budget().limits();
+            match reason {
+                StopReason::WorkLimit => limits.work = 0,
+                StopReason::AllocationLimit => limits.allocation_units = 0,
+                StopReason::DepthLimit => limits.depth = 2,
+                StopReason::NodeLimit => limits.nodes = 0,
+                _ => return Err("unexpected test resource".into()),
+            }
+            assert!(
+                matches!(program::compile(root, &mut Budget::new(limits)), Err(Error::Stopped(actual)) if actual == reason)
+            );
+        }
         let Expression::Add(left, right) = root.step(&mut budget()).map_err(error)?.expression
         else {
             return Err("add".into());
