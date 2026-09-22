@@ -1,5 +1,6 @@
 //! Flat, schema-checked transport of a dependency plan to native callbacks.
 //! The host retains source spans in Program; node indices identify occurrences.
+pub mod envelope;
 use super::{Instruction, Node, Program, ValueId};
 use crate::syntax::Language;
 use nepl3_core::{
@@ -21,6 +22,7 @@ pub enum Error {
     Shape,
     Reference,
     Source(SourceError),
+    Wire(nepl3_wire::WireError),
 }
 impl From<StopReason> for Error {
     fn from(reason: StopReason) -> Self {
@@ -63,6 +65,21 @@ pub fn descriptor(budget: &mut Budget) -> Result<SchemaDescriptor, StopReason> {
         package: PACKAGE.into(),
         revision: 1,
         types: vec![
+            NamedType {
+                name: "Envelope".into(),
+                constraints: vec![],
+                shape: TypeShape::Record {
+                    fields: vec![
+                        field("plan", named("Plan")),
+                        field(
+                            "heads",
+                            TypeDescriptor::List(Box::new(TypeDescriptor::Option(Box::new(
+                                TypeDescriptor::Bytes,
+                            )))),
+                        ),
+                    ],
+                },
+            },
             NamedType {
                 name: "PlanIdentity".into(),
                 constraints: vec![],
@@ -279,6 +296,10 @@ pub fn validate<'a>(
     registry
         .validate_typed(value, budget)
         .map_err(Error::Schema)?;
+    validate_record(record, budget)
+}
+
+fn validate_record<'a>(record: &'a Record, budget: &mut Budget) -> Result<Checked<'a>, Error> {
     let [NdfValue::List(nodes)] = record.fields.as_slice() else {
         return Err(Error::Shape);
     };

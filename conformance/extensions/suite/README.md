@@ -85,9 +85,13 @@ available for a future process provider's admission path.
 `transfer::Checked::program` converts a received, schema-checked plan into the
 same typed execution model. The host supplies its admitted source-head mapping
 in occurrence order; snapshot identity and bounds are checked before use.
-The conversion borrows numeric payloads and spans. Source correspondence is a
-host responsibility; transport of that mapping and OS process execution remain
-unfinished. Tests exercise the actual NDF codec, native evaluation and rejection
+The conversion borrows numeric payloads and spans. `transfer::envelope` carries
+the plan and occurrence-ordered Span payloads in one schema-checked NDF packet,
+using the Foundation Span codec. Decode checks the plan graph, mapping length
+and receiving host's source permissions. `Received` owns the immutable packet;
+its typed Program borrows admitted payloads. Source correspondence is a host
+responsibility, and OS process execution remains unfinished. Tests exercise
+the actual NDF codec, native evaluation and rejection
 of missing source permissions, mismatched mapping length and allocation stops.
 Remaining integration: additional failure and large-input cost cases, process
 execution and independent review. Regression tests cover successful

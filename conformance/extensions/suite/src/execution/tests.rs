@@ -159,6 +159,70 @@ fn received_plan_uses_typed_execution_and_admitted_source_mapping() -> Result<()
                 return Err("received plan evaluation".into());
             };
             assert_eq!(value.fields, vec![NdfValue::Integer(Integer::from(-5_i64))]);
+            let packet =
+                transfer::envelope::encode(program, schema, &foundation, registry, &mut budget())
+                    .map_err(error)?;
+            assert!(
+                transfer::envelope::decode(
+                    &packet,
+                    schema,
+                    &foundation,
+                    registry,
+                    &SourceStore::default(),
+                    &mut budget()
+                )
+                .is_err()
+            );
+            let received = transfer::envelope::decode(
+                &packet,
+                schema,
+                &foundation,
+                registry,
+                sources,
+                &mut budget(),
+            )
+            .map_err(error)?;
+            let remote = received.program(sources, &mut budget()).map_err(error)?;
+            let result = runtime
+                .run(
+                    &remote,
+                    sources,
+                    registry,
+                    &mut budget(),
+                    &mut budget(),
+                    |_, _| {},
+                    |_| {},
+                )
+                .map_err(error)?;
+            let OperationResult::Complete {
+                value: TypedValue::Record(value),
+                ..
+            } = result
+            else {
+                return Err("envelope evaluation".into());
+            };
+            assert_eq!(value.fields, vec![NdfValue::Integer(Integer::from(-5_i64))]);
+            for (node, original) in remote.nodes().iter().zip(program.nodes()) {
+                assert_eq!(node.head, original.head);
+            }
+            let mut malformed = nepl3_wire::decode(&packet, &mut budget()).map_err(error)?;
+            if let NdfValue::Record(record) = &mut malformed
+                && let [_, NdfValue::List(heads)] = record.fields.as_mut_slice()
+            {
+                heads.pop();
+            }
+            let malformed = nepl3_wire::encode(&malformed, &mut budget()).map_err(error)?;
+            assert!(matches!(
+                transfer::envelope::decode(
+                    &malformed,
+                    schema,
+                    &foundation,
+                    registry,
+                    sources,
+                    &mut budget()
+                ),
+                Err(transfer::Error::Reference)
+            ));
             Ok(())
         },
     )
