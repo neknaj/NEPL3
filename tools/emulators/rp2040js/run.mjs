@@ -9,7 +9,7 @@ const [firmware, output] = process.argv.slice(2);
 if (!firmware || !output) throw Error("usage: node run.mjs firmware.uf2 evidence.json");
 const bytes = readFileSync(firmware);
 const installed = JSON.parse(readFileSync(new URL("../../package.json", import.meta.resolve("rp2040js")), "utf8"));
-if (installed.version !== "1.3.3" || process.version !== "v24.14.1") throw Error("unqualified emulator/Node version");
+if (installed.version !== "1.3.4" || process.version !== "v24.14.1") throw Error("unqualified emulator/Node version");
 const evidence = { protocol: "nepl3-rp2040-test/1", target: "thumbv6m-none-eabi",
   firmware_sha256: createHash("sha256").update(bytes).digest("hex"),
   node: process.version, rp2040js: installed.version, heap_bytes: 65536,
