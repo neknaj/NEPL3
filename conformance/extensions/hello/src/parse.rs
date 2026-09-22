@@ -4,7 +4,10 @@ use nepl3_engine::{parse::*, profile::*};
 use nepl3_reader::model::ReaderContext;
 use nepl3_wire::{environment::environment_digest, foundation::FoundationCodec};
 
-pub(crate) struct Languages<'a> {
+/// Host-owned package definitions and their schema registry. Aliases borrow
+/// caller configuration; package values and schemas are owned by this set.
+/// Consumers resolve the profile against their own RuntimeCatalog before use.
+pub struct Languages<'a> {
     pub packages: Vec<(&'a str, LanguagePackage)>,
     pub registry: SchemaRegistry,
 }
@@ -91,7 +94,10 @@ pub(crate) fn with_languages<T>(
 }
 
 impl Languages<'_> {
-    pub(crate) fn profile(&self, source_name: &str) -> Result<ParseProfile, String> {
+    /// Build the example's parsing profile with checked semantic identities.
+    /// This does not register operation implementations or grant execution rights.
+    /// Resolve it against the host catalog to validate aliases and dependencies.
+    pub fn profile(&self, source_name: &str) -> Result<ParseProfile, String> {
         let languages = &self.packages;
         let registry = &self.registry;
         let mut setup = budget();

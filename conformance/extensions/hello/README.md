@@ -151,6 +151,21 @@ Unicode head, and a missing child produce the same parse replies as native
 registration. Schema descriptors remain explicitly supplied by the host; this
 test covers package transport and execution within the external consumer.
 
+## Reuse the package definitions from another host
+
+`composition::languages(expr_alias, frame_alias)` returns the public `Languages`
+value used by the examples. It owns the two packages and their schema registry;
+the aliases borrow the caller's strings. `Languages::profile(source_name)` builds
+the parsing profile with checked package identities. A host supplies its own
+`RuntimeCatalog` and calls `ParseProfile::resolve` before parsing.
+
+This API lets a separate suite integration consumer reuse the definitions without
+copying private test source or adding suite dependencies to this Foundation-only
+workspace. Operation implementations, execution grants and arithmetic semantics
+are subsequent integration work. The profile has empty provider and allowlist
+sets. `tests/packages.rs` exercises the public API from an independent test crate
+and rejects a catalog missing the guest package.
+
 ## What the existing example verifies
 
 Start with `unicode_source_and_external_kind_survive_native_and_ndf` in
