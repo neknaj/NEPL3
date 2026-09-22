@@ -56,7 +56,10 @@ fn scheduler_rejects_missing_ambiguous_registration_and_ancestor_cycle() -> Resu
             |_, _| {},
             |id| cancelled.push(id)
         ),
-        Err(scheduler::Error::Missing)
+        Err(scheduler::Failure {
+            cause: scheduler::Error::Missing,
+            ..
+        })
     ));
     assert!(matches!(
         scheduler::run(
@@ -68,7 +71,10 @@ fn scheduler_rejects_missing_ambiguous_registration_and_ancestor_cycle() -> Resu
             |_, _| {},
             |id| cancelled.push(id)
         ),
-        Err(scheduler::Error::Ambiguous)
+        Err(scheduler::Failure {
+            cause: scheduler::Error::Ambiguous,
+            ..
+        })
     ));
     assert_eq!(execution.usage(), Usage::default());
     assert!(cancelled.is_empty());
@@ -84,7 +90,10 @@ fn scheduler_rejects_missing_ambiguous_registration_and_ancestor_cycle() -> Resu
             |_, _| {},
             |id| cancelled.push(id)
         ),
-        Err(scheduler::Error::Registration)
+        Err(scheduler::Failure {
+            cause: scheduler::Error::Registration,
+            ..
+        })
     ));
     assert_eq!(execution.usage(), Usage::default());
     assert!(cancelled.is_empty());
@@ -98,9 +107,12 @@ fn scheduler_rejects_missing_ambiguous_registration_and_ancestor_cycle() -> Resu
             |_, _| {},
             |id| cancelled.push(id)
         ),
-        Err(scheduler::Error::Activation(ActivationError::Lifetime(
-            LifetimeError::CyclicOperation
-        )))
+        Err(scheduler::Failure {
+            cause: scheduler::Error::Activation(ActivationError::Lifetime(
+                LifetimeError::CyclicOperation
+            )),
+            ..
+        })
     ));
     assert_eq!(cancelled, vec![root.request_id]);
     Ok(())

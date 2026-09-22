@@ -200,7 +200,7 @@ fn request<'a>(root: &'a Invoke, ancestors: &'a [Frame]) -> Result<&'a Invoke, E
 /// Additional generated sources require a separate host admission path.
 /// Failure retains unconsumed, accepted dependency results without allocating
 /// during failure handling. A stopped child never resumes its parent.
-pub fn run_with_failure(
+pub fn run(
     registrations: &[Registration<'_>],
     root: &Invoke,
     registry: &SchemaRegistry,
@@ -231,29 +231,6 @@ pub fn run_with_failure(
             })
         }
     }
-}
-
-/// Run a root while preserving the historical error-only interface. Hosts that
-/// need accepted terminal results after a stop should use `run_with_failure`.
-pub fn run(
-    registrations: &[Registration<'_>],
-    root: &Invoke,
-    registry: &SchemaRegistry,
-    execution: &mut Budget,
-    validation: &mut Budget,
-    report: impl FnMut(u64, Report),
-    cancel: impl FnMut(u64),
-) -> Result<OperationResult<TypedValue>, Error> {
-    run_with_failure(
-        registrations,
-        root,
-        registry,
-        execution,
-        validation,
-        report,
-        cancel,
-    )
-    .map_err(|failure| failure.cause)
 }
 
 #[allow(clippy::too_many_arguments)]
