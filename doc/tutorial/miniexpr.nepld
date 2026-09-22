@@ -1,0 +1,62 @@
+article ja "[再帰的/さいきてき]な[小言語/しょうげんご]を[定義/ていぎ]する"
+body
+  cons section purpose "この[章/しょう]の[到達点/とうたつてん]"
+    body
+      cons paragraph
+        cons "MiniExprは、[自然数/しぜんすう]とneg・add・mulの[前置構文/ぜんちこうぶん]を[持/も]つ[教材用/きょうざいよう]の[言語/げんご]である。"
+        cons "この[章/しょう]では、[入/い]れ[子/こ]の[式/しき]を[解析/かいせき]し、LanguagePackageの[宣言/せんげん]と[構文木/こうぶんぎ]を[対応/たいおう]させる。"
+        cons "[実行環境/じっこうかんきょう]はHelloの[導入章/どうにゅうしょう]と[共通/きょうつう]であり、コマンドはリポジトリのrootで[実行/じっこう]する。"
+        nil
+      nil
+  cons section parse "[式/しき]を[解析/かいせき]する"
+    body
+      cons rawcode some "sh" "cargo run --locked --manifest-path conformance/extensions/hello/Cargo.toml --example miniexpr -- \"add 1 mul 2 3\"\n"
+      cons paragraph
+        cons "[出力/しゅつりょく]はComplete; cursor=13となり、Add・Natural・Mul・Natural・Naturalの5 nodeを[表示/ひょうじ]する。"
+        cons "Addの[二/ふた]つの[子/こ]は1とMulであり、Mulの[子/こ]は2と3である。"
+        cons "[数値/すうち]tokenのUTF-8 byte[範囲/はんい]は、[順/じゅん]に4..5、10..11、12..13となる。"
+        nil
+      cons rawcode some "text" "add\n├── 1\n└── mul\n    ├── 2\n    └── 3\n"
+      cons paragraph
+        cons "この[図/ず]は[親子関係/おやこかんけい]の[説明用/せつめいよう]の[表記/ひょうき]である。"
+        cons "[印字結果/いんじけっか]はsource print: Complete(\"add 1 mul 2 3\")となる。"
+        cons "[構文検査/こうぶんけんさ]を[通過/つうか]した[木/き]をsource-backed printerへ[渡/わた]し、[受理/じゅり]した[字句/じく]と[先行/せんこう]する[空白/くうはく]を[保持/ほじ]して[出力/しゅつりょく]する。"
+        cons "[算術評価/さんじゅつひょうか]と[意味的/いみてき]な[正規化/せいきか]は[後続/こうぞく]の[実装対象/じっそうたいしょう]である。"
+        nil
+      nil
+  cons section declaration "[宣言/せんげん]と[子/こ]の[読取規則/よみとりきそく]"
+    body
+      cons paragraph
+        cons "conformance/extensions/hello/src/miniexpr.rsのlanguageは、LanguagePackageとSchemaRegistryを[構築/こうちく]する。"
+        cons "categoryは[読取対象/よみとりたいしょう]の[構文/こうぶん]の[集合/しゅうごう]を[表/あらわ]し、この[例/れい]ではExprを[使用/しよう]する。"
+        cons "formはheadの[表記/ひょうき]とfieldの[順序/じゅんじょ]を[定義/ていぎ]する。"
+        cons "negは[一/ひと]つ、addとmulは[二/ふた]つのfieldを[持/も]ち、ReadSpec::Localによって[同/おな]じpackageのExprを[再帰的/さいきてき]に[読/よ]む。"
+        cons "NatとNameのreaderは、この[順序/じゅんじょ]で[数値/すうち]とheadを[識別/しきべつ]する。"
+        cons "Natは[非負/ひふ]の[十進整数/じっしんせいすう]を[受理/じゅり]し、Integer payloadを[返/かえ]す。"
+        nil
+      nil
+  cons section exercise "[入力/にゅうりょく]と[宣言/せんげん]を[変更/へんこう]する"
+    body
+      cons paragraph
+        cons "[最初/さいしょ]に[入力/にゅうりょく]をneg add 1 2へ[変更/へんこう]する。"
+        cons "Negの[子/こ]にAddが[配置/はいち]され、その[子/こ]に1と2が[配置/はいち]されることを[確認/かくにん]する。"
+        cons "[次/つぎ]にadd 1を[実行/じっこう]する。"
+        cons "[入力終端/にゅうりょくしゅうたん]で[二番目/にばんめ]の[子/こ]が[不足/ふそく]し、Recoveredと[診断/しんだん]が[表示/ひょうじ]される。"
+        cons "[成功/せいこう]したsource printは[出力/しゅつりょく]されない。"
+        nil
+      cons paragraph
+        cons "[宣言/せんげん]の[演習/えんしゅう]は[専用/せんよう]のbranchで[行/おこな]う。"
+        cons "miniexpr.rsのform[構築/こうちく]でaddのspellingをsumへ[変更/へんこう]し、[入力/にゅうりょく]sum 1 2を[実行/じっこう]する。"
+        cons "[構文木/こうぶんぎ]のAddと[二/ふた]つのfieldは[維持/いじ]され、source printにはsumが[現/あらわ]れる。"
+        cons "[標準/ひょうじゅん]の[言語/げんご]を[検査/けんさ]する[回帰試験/かいきしけん]の[期待値/きたいち]は[保持/ほじ]する。"
+        cons "[演習/えんしゅう]の[変更/へんこう]を[専用/せんよう]branchへcommitして[保存/ほぞん]し、[次章/じしょう]と[標準/ひょうじゅん]の[試験/しけん]はaddの[定義/ていぎ]を[持/も]つcheckoutで[実行/じっこう]する。"
+        cons "この[章/しょう]の[完了条件/かんりょうじょうけん]は、headの[表記/ひょうき]、fieldの[順序/じゅんじょ]、[解析/かいせき]と[印字/いんじ]の[結果/けっか]を[説明/せつめい]できることである。"
+        nil
+      nil
+  cons section next "[次/つぎ]の[章/しょう]"
+    body
+      cons paragraph
+        cons sentence cons link page "tutorial-composition" none concat cons ruby text "独立" text "どくりつ" cons text "した" cons ruby text "二言語" text "にげんご" cons text "を" cons ruby text "組" text "く" cons text "み" cons ruby text "合" text "あ" cons text "わせる" nil nil
+        nil
+      nil
+  nil
