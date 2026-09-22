@@ -13,6 +13,14 @@ nepl3-engine = { path = "../../../crates/foundation/engine" }
 nepl3-wire = { path = "../../../crates/foundation/wire" }
 nepl3-suite = { path = "../../../crates/integration/suite" }
 
+[target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
+nepl3-provider = { path = "../../../apps/provider" }
+
+[[test]]
+name = "process"
+path = "tests/process/main.rs"
+harness = false
+
 [lints.clippy]
 unwrap_used = "deny"
 expect_used = "deny"

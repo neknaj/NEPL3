@@ -90,11 +90,11 @@ the plan and occurrence-ordered Span payloads in one schema-checked NDF packet,
 using the Foundation Span codec. Decode checks the plan graph, mapping length
 and receiving host's source permissions. `Received` owns the immutable packet;
 its typed Program borrows admitted payloads. Source correspondence is a host
-responsibility, and OS process execution remains unfinished. Tests exercise
+responsibility. Tests exercise
 the actual NDF codec, native evaluation and rejection
 of missing source permissions, mismatched mapping length and allocation stops.
-Remaining integration: additional failure and large-input cost cases, process
-execution and independent review. Regression tests cover successful
+Remaining integration: additional failure and large-input cost cases, distributed
+Await/Resume execution and independent review. Regression tests cover successful
 nesting depths 1, 8 and 24, Depth=1 rejection, and sampled Work/Allocation stops.
 They check unique cancellation and preserve inspectable accepted child outcomes.
 
@@ -112,3 +112,27 @@ evaluation. The example requires a complete parse and has no source-level import
 Run `cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml`.
 WASI uses the same command with `--target wasm32-wasip2` and the Wasmtime runner.
 CI runs this independent workspace on all three native hosts and WASI.
+
+The native `process` test transfers the envelope in an Invoke frame through the
+existing provider's stdin/stdout transport. A separate process validates the
+operation, host-selected source grants and envelope, then evaluates the admitted
+plan through its native scheduler. The parent validates the reply and compares
+its Value with both native execution and independent arithmetic expectations
+(`-5` and `-18`). Corrupt packets, missing source grants and an unexpected
+operation must close the child without a result; the test checks the specific
+failure diagnostic and unsuccessful exit. The parent enforces a 30-second
+deadline and terminates/reaps the direct child on failure.
+
+Run this stage independently with:
+
+```sh
+cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml --test process
+```
+
+This is a test-only aggregate operation with a fixed, host-authorized fixture
+source. Nested Await/Resume calls execute inside the child. Distributed child
+operation scheduling, stopped-child outcome transfer, general package loading,
+process-tree containment and cross-process cumulative resource accounting remain
+unimplemented. Host protocol/validation failures terminate the fixture process;
+they do not produce a successful operation result. WASI explicitly skips this
+OS process harness while executing the 13 portable consumer tests.
