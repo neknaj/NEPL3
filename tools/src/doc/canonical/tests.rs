@@ -2,6 +2,78 @@ use super::*;
 use crate::testing::Fixture;
 use serde_json::json;
 
+#[test]
+#[ignore = "explicit measurement of current canonical document preparation costs"]
+fn canonical_document_preparation_work_breakdown() -> Result<()> {
+    use nepl3_core::{
+        source::{SourceAdmission, SourceStore},
+        value_codec::FoundationValueCodec,
+    };
+    use nepl3_wire::foundation::FoundationCodec;
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .ok_or("repository")?;
+    let compiled = super::super::source::compiled()?;
+    for name in ["05-document", "08-editor"] {
+        let text = fs::read_to_string(root.join(format!("doc/spec/{name}.nepld")))?;
+        super::super::source::with_named_input(
+            true,
+            &compiled,
+            &text,
+            name,
+            "Article",
+            |tree, profile, _, _| {
+                let store = SourceStore::default();
+                let mut admission = SourceAdmission::default();
+                let mut codec = FoundationCodec::new(profile.registry(), &store, &mut admission)
+                    .map_err(super::super::source::err)?;
+                let document = nepl3_doc_core::lower::document(
+                    tree.syntax(),
+                    &compiled.doc.package.schema,
+                    nepl3_doc_core::check::Category::Article,
+                    profile.registry(),
+                    &mut super::super::source::budget(),
+                    &mut codec,
+                )
+                .map_err(super::super::source::err)?;
+                let mut labels = super::super::source::budget();
+                nepl3_doc_core::labels::check(
+                    &document,
+                    profile.registry(),
+                    &mut labels,
+                    codec.source_admission(),
+                )
+                .map_err(super::super::source::err)?;
+                let mut portable = super::super::source::budget();
+                let value = nepl3_doc_core::portable::to_value(
+                    &document,
+                    profile.registry(),
+                    &mut codec,
+                    &mut portable,
+                )
+                .map_err(super::super::source::err)?;
+                let before_digest = portable.usage();
+                codec
+                    .canonical_value_digest(
+                        nepl3_doc_core::prepare::DOCUMENT_DOMAIN,
+                        &value,
+                        &mut portable,
+                    )
+                    .map_err(super::super::source::err)?;
+                eprintln!(
+                    "{name}: nodes={}; labels={:?}; to_value={:?}; digest_work={}",
+                    document.value.nodes.len(),
+                    labels.usage(),
+                    before_digest,
+                    portable.usage().work - before_digest.work
+                );
+                Ok(())
+            },
+        )?;
+    }
+    Ok(())
+}
+
 fn registry() -> serde_json::Value {
     json!({"version":1,"pages":[{"id":"sample","source":"doc/sample.nepld",
         "projection":"doc/sample.md","aliases":"doc/aliases.json",

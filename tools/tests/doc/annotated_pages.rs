@@ -196,6 +196,117 @@ fn page_projection_scales_with_pages_without_rescanning_all_links() -> Result<()
 }
 
 #[test]
+fn html_pages_consume_ordered_links_once_across_empty_pages() -> Result<(), String> {
+    use nepl3_doc_html::{
+        ParallelMode, RenderOptions,
+        pages::{PagesHtmlRequest, render_pages},
+    };
+    use nepl3_markup::html::{HtmlAttribute, HtmlHref, HtmlNode};
+    let c = compiled()?;
+    let store = SourceStore::default();
+    for (internal, external) in [(0, 1), (1, 0), (3, 2)] {
+        let mut pages = Vec::new();
+        for index in 0..32 {
+            let id = format!("p{index:02}");
+            let input = if index % 4 == 1 {
+                "article en \"Empty\" body nil".to_owned()
+            } else {
+                format!(
+                    "article en \"A\" body cons paragraph cons sentence {}{}nil nil nil",
+                    "cons link page \"p00\" none text \"Local\" ".repeat(internal),
+                    "cons link external \"https://example.com/\" text \"External\" "
+                        .repeat(external)
+                )
+            };
+            pages.push(page(
+                &c,
+                &id,
+                &format!("{id}.nepld"),
+                &format!("{id}.html"),
+                &input,
+            )?);
+        }
+        let mut work = Vec::new();
+        for count in [8, 16, 32] {
+            let request = PagesHtmlRequest {
+                set: PageSet {
+                    pages: pages[..count].to_vec(),
+                    files: vec![],
+                },
+                options: RenderOptions {
+                    parallel: ParallelMode::Rows,
+                },
+            };
+            let mut admission = SourceAdmission::default();
+            let mut codec =
+                FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+            let mut resolved = budget();
+            resolve(&request.set, &c.doc.registry, &mut codec, &mut resolved).map_err(err)?;
+            let mut admission = SourceAdmission::default();
+            let mut codec =
+                FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+            let mut actual = budget();
+            let output =
+                render_pages(&request, &c.doc.registry, &mut codec, &mut actual).map_err(err)?;
+            assert_eq!(output.fragments.len(), count);
+            for (index, fragment) in output.fragments.iter().enumerate() {
+                let hrefs: Vec<_> = fragment
+                    .markup
+                    .fragment
+                    .nodes
+                    .iter()
+                    .filter_map(|node| {
+                        if let HtmlNode::Element { attributes, .. } = node {
+                            Some(attributes)
+                        } else {
+                            None
+                        }
+                    })
+                    .flatten()
+                    .filter_map(|attribute| {
+                        if let HtmlAttribute::Href { value } = attribute {
+                            Some(value)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+                let mut expected = Vec::new();
+                if index % 4 != 1 {
+                    expected.extend((0..internal).map(|_| HtmlHref::BetweenArtifacts {
+                        source: format!("p{index:02}.html"),
+                        target: "p00.html".into(),
+                        fragment: None,
+                    }));
+                    expected.extend((0..external).map(|_| HtmlHref::External {
+                        uri: "https://example.com/".into(),
+                    }));
+                }
+                assert_eq!(hrefs, expected.iter().collect::<Vec<_>>());
+            }
+            work.push(
+                actual
+                    .usage()
+                    .work
+                    .checked_sub(resolved.usage().work)
+                    .ok_or("resolution work mismatch")?,
+            );
+        }
+        // Repeat fixed-width groups of four pages. Preparation, rendering and
+        // output-ID collection are linear; only terminal cursor checks vary.
+        assert!(
+            work[1] <= 2 * work[0] + 16,
+            "{internal}/{external}: {work:?}"
+        );
+        assert!(
+            work[2] <= 2 * work[1] + 16,
+            "{internal}/{external}: {work:?}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn checked_pages_still_reject_unsafe_external_and_guest_requirements() -> Result<(), String> {
     let c = compiled()?;
     let store = SourceStore::default();

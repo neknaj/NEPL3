@@ -14,6 +14,8 @@ use nepl3_doc_core::{
 };
 use nepl3_markup::html::{HtmlAttribute, HtmlHref, HtmlNode};
 
+mod anchors;
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PagesHtmlRequest {
     pub set: PageSet,
@@ -73,6 +75,8 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
         return Err(PagesRenderError::NeedsResolution(checked.into_plan()));
     }
     let mut fragments = Vec::new();
+    let mut page_links = plan.links.as_slice();
+    let mut page_pending = plan.remaining.as_slice();
     for (page, input) in request.set.pages.iter().enumerate() {
         b.charge(Resource::Work, 1)?;
         let document_digest = checked
@@ -89,10 +93,10 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
             e => PagesRenderError::Preparation(e),
         })?;
         let mut links = Vec::new();
-        for link in &plan.links {
+        while let Some((link, rest)) = page_links.split_first() {
             b.charge(Resource::Work, 1)?;
             if link.page != page as u64 {
-                continue;
+                break;
             }
             let href = HtmlHref::BetweenArtifacts {
                 source: copy(&input.registration.route, b)?,
@@ -110,11 +114,12 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
                 fragment: link.fragment.as_ref().map(|s| hex_id(s, b)).transpose()?,
             };
             push(&mut links, (link.node, href), b)?;
+            page_links = rest;
         }
-        for pending in &plan.remaining {
+        while let Some((pending, rest)) = page_pending.split_first() {
             b.charge(Resource::Work, 1)?;
             if pending.page != page as u64 {
-                continue;
+                break;
             }
             if let prepare::DocRequirement::Link {
                 node,
@@ -124,6 +129,7 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
                 let href = HtmlHref::External { uri: copy(uri, b)? };
                 push(&mut links, (*node, href), b)?;
             }
+            page_pending = rest;
         }
         let fragment =
             crate::build::render_prepared(&prepared, &links, b).map_err(|e| match e {
@@ -131,6 +137,15 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
                 e => PagesRenderError::Render(e),
             })?;
         push(&mut fragments, fragment, b)?;
+    }
+    if !page_links.is_empty() || !page_pending.is_empty() {
+        return Err(PagesRenderError::Render(RenderError::InternalShape));
+    }
+    // Borrow emitted IDs on the first incoming fragment link. Pages without
+    // such links need no collection; semantic labels remain insufficient.
+    let mut anchors = Vec::new();
+    for _ in &fragments {
+        push(&mut anchors, None, b)?;
     }
     // Reject a link whose semantic destination was hidden by language selection.
     // Check emitted hrefs only: a hidden source occurrence is not a broken link.
@@ -166,26 +181,14 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
                 }
                 let index =
                     target_index.ok_or(PagesRenderError::Render(RenderError::InternalShape))?;
-                let mut found = false;
-                for node in &fragments[index].markup.fragment.nodes {
-                    b.charge(Resource::Work, 1)?;
-                    if let HtmlNode::Element { attributes, .. } = node {
-                        for a in attributes {
-                            b.charge(Resource::Work, 1)?;
-                            if let HtmlAttribute::Id { value } = a {
-                                b.charge(Resource::Work, (id.len() + value.len()) as u64)?;
-                                if id == value {
-                                    found = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    if found {
-                        break;
-                    }
-                }
-                if !found {
+                let ids = match &mut anchors[index] {
+                    Some(ids) => ids,
+                    slot @ None => slot.insert(anchors::OutputAnchors::collect(
+                        &fragments[index].markup.fragment.nodes,
+                        b,
+                    )?),
+                };
+                if !ids.contains(id, b)? {
                     // The renderer records origins in element order.
                     let cause = fragment
                         .origins
