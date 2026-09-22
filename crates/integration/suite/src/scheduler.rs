@@ -225,7 +225,10 @@ pub fn run_with_failure(
         Ok(result) => Ok(result),
         Err(cause) => {
             lifetimes.close(&mut cancel);
-            Err(Failure { cause, frames: stack })
+            Err(Failure {
+                cause,
+                frames: stack,
+            })
         }
     }
 }
@@ -241,8 +244,16 @@ pub fn run(
     report: impl FnMut(u64, Report),
     cancel: impl FnMut(u64),
 ) -> Result<OperationResult<TypedValue>, Error> {
-    run_with_failure(registrations, root, registry, execution, validation, report, cancel)
-        .map_err(|failure| failure.cause)
+    run_with_failure(
+        registrations,
+        root,
+        registry,
+        execution,
+        validation,
+        report,
+        cancel,
+    )
+    .map_err(|failure| failure.cause)
 }
 
 #[allow(clippy::too_many_arguments)]
