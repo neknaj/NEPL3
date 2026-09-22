@@ -55,7 +55,7 @@ and reaps the Node process after 30 seconds, including a stuck emulator call.
 - Known PLL/UART startup warnings are recorded; other warnings and errors
   fail. Clock accuracy, peripherals, multicore behavior and physical hardware
   are outside this test's claim.
-- `rp2040js` is pinned to 1.3.3 with the npm lockfile. The converter accepts a
+- `rp2040js` is pinned to 1.3.4 with the npm lockfile. The converter accepts a
   restricted ELF32 little-endian ARM load image and emits family-tagged UF2.
   The loader validates all block headers and vector bounds before execution.
 - Browser execution, RISC-V and big-endian execution remain separate work.
