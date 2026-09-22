@@ -57,6 +57,7 @@ version = "0.1.0"
 dependencies = [
  "external-hello-language",
  "nepl3-core",
+ "nepl3-engine",
  "nepl3-suite",
 ]
 

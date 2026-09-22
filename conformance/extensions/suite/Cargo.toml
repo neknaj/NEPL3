@@ -9,6 +9,7 @@ publish = false
 [dependencies]
 external-hello-language = { path = "../hello" }
 nepl3-core = { path = "../../../crates/foundation/core" }
+nepl3-engine = { path = "../../../crates/foundation/engine" }
 nepl3-suite = { path = "../../../crates/integration/suite" }
 
 [lints.clippy]

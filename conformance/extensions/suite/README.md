@@ -26,9 +26,16 @@ the output is `Value.value: Integer`. The environment record has no fields.
 bound to exact OperationRefs and a host-supplied implementation identity.
 The host finalizes the registry and authorizes sources/resources before dispatch.
 
-Current implementation: typed integer arithmetic, operation schemas and native
-terminal dispatch with input/output validation. Remaining integration: validated
-syntax lowering with source attribution, Await/Resume adapters, grants, and
+`syntax::Cursor` borrows a validated ParseTree and classifies one node at a time.
+Its typed Expression variants retain local child references, foreign-language
+boundaries and borrowed head spans. Complete schema identities supplied by the
+host bind the view to the selected packages. Recovered trees and mismatched
+identities are rejected. Traversal charges Work; the eventual execution adapter
+must additionally account for its retained state and dependency depth.
+
+Current implementation: typed integer arithmetic, operation schemas, borrowed
+syntax views and native terminal dispatch with input/output validation.
+Remaining integration: syntax-to-operation scheduling, Await/Resume adapters, grants, and
 end-to-end recursive composition. The terminal dispatch test yielding -5 covers
 an explicit binary request. Source-level MiniExpr/Frame evaluation remains open.
 

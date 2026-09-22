@@ -3,3 +3,4 @@
 pub mod arithmetic;
 pub mod contract;
 pub mod native;
+pub mod syntax;
