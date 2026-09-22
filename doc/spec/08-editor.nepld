@@ -256,7 +256,7 @@ body
       cons "[再/さい]parse/[解析/かいせき]の[正式/せいしき]Reportはそれぞれの[返/かえ]り[値/ち]に[保持/ほじ]する。"
       cons "[受信/じゅしん]したUsageの[内部整合/ないぶせいごう]と[外部処理費用/がいぶしょりひよう]の[認証/にんしょう]は[別/べつ]の[責務/せきむ]である。"
       cons "[最終適用/さいしゅうてきよう]は[呼出側/よびだしがわ]の[元/もと]SourceStoreに[対/たい]し、base revision・old digest[付/つ]きのatomic applyで[行/おこな]う。"
-      cons "[一般/いっぱん]region selector、[任意/にんい]encoderによる[意味名/いみめい]の[逆変換/ぎゃくへんかん]、[増分再解析/ぞうぶんさいかいせき]、[外部/がいぶ]parser[実行/じっこう]の[認証/にんしょう]transportはこの[段階/だんかい]の[完成範囲/かんせいはんい]に[含/ふく]めない。" nil
+      cons "このrenameの[実装段階/じっそうだんかい]では、[一般/いっぱん]region selectorからrenameへの[接続/せつぞく]、[任意/にんい]encoderによる[意味名/いみめい]の[逆変換/ぎゃくへんかん]、[増分再解析/ぞうぶんさいかいせき]、[外部/がいぶ]parser[実行/じっこう]の[認証/にんしょう]transportが[残件/ざんけん]である。" nil
     nil
   cons section recovery "5. [不完全入力/ふかんぜんにゅうりょく]" body
     cons paragraph
@@ -297,6 +297,9 @@ body
     nil
   cons section lsp "7. LSP adapterの[責務/せきむ]" body
     cons paragraph
+      cons "この[節/せつ]は、LSP adapterの[設計上/せっけいじょう]の[構成/こうせい]と[実装/じっそう]が[満/み]たす[条件/じょうけん]を[定/さだ]める。"
+      cons "[現在/げんざい]のworkspace[構成/こうせい]はCargo.toml、[実装/じっそう]と[受入試験/うけいれしけん]の[状態/じょうたい]はimplementation-status.jsonを[参照/さんしょう]する。" nil
+    cons paragraph
       cons "3.17で[定義/ていぎ]された[位置/いち]encoding/diagnostic/semantic token/definition[等/など]の[契約/けいやく]を[利用/りよう]し、[機能/きのう]はcapabilityで[交渉/こうしょう]する。"
       cons "UTF-8/UTF-16/UTF-32の[位置変換/いちへんかん]をLineIndexで[行/おこな]う。"
       cons "UTF-16をfallbackとして[必/かなら]ず[扱/あつか]う。"
@@ -306,9 +309,9 @@ body
       cons "クライアントが[対応/たいおう]しない[場合/ばあい]は[表示/ひょうじ]fallbackを[使/つか]うが、NEPL3[内部/ないぶ]kindを[書/か]き[換/か]えない。"
       cons "position/legendの[変換/へんかん]はdomain crateに[置/お]かない。" nil
     cons paragraph
-      cons "nepl3-lspは[一/ひと]つの[汎用/はんよう]server。"
-      cons "workspace[設定/せってい]から[拡張子/かくちょうし]とLanguagePackageを[選択/せんたく]し、[各/かく]DSLごとのserverの[再実装/さいじっそう]は[不要/ふよう]。"
-      cons "VS Code/Neovimには[接続/せつぞく]と[設定/せってい]だけの[薄/うす]いadapterを[置/お]く。"
+      cons "nepl3-lspは、[各/かく]DSLで[共用/きょうよう]する[一/ひと]つの[汎用/はんよう]serverとして[構成/こうせい]する。"
+      cons "workspace[設定/せってい]から[拡張子/かくちょうし]とLanguagePackageを[選択/せんたく]する。"
+      cons "VS Code・Neovimのadapterは、serverへの[接続/せつぞく]と[設定/せってい]を[担当/たんとう]する。"
       cons "packageを[変更/へんこう]したらanalysisを[無効化/むこうか]し、[必要/ひつよう]ならlegend[登録/とうろく]も[更新/こうしん]する。" nil
     nil
   cons section diagnostics "8. [診断/しんだん]・ログの[表示/ひょうじ]" body
