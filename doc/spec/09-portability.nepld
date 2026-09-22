@@ -153,21 +153,22 @@ body
     nil
   cons section invocation "3. [操作呼出/そうさよびだ]し" body
     cons paragraph
-      cons "CallはrequestId、OperationRef、input TypedRecord、sources/resources/environment、Limitsを[持/も]つ。"
-      cons "OperationRefはpackage/revision/digestとoperation[名/めい]。"
-      cons "provider manifestにinput/output schema、[必要/ひつよう]capability、[純粋性契約/じゅんすいせいけいやく]を[宣言/せんげん]する。" nil
+      cons "Callは、[一回/いっかい]の[操作要求/そうさようきゅう]を[表/あらわ]す。"
+      cons "requestId、OperationRef、input TypedRecord、sources/resources/environment、Limitsを[保持/ほじ]する。"
+      cons "OperationRefは、package・revision・digestとoperation[名/めい]によって[呼出対象/よびだしたいしょう]を[識別/しきべつ]する。"
+      cons "provider manifestは、[操作/そうさ]のinput/output schema、[必要/ひつよう]なcapability、[純粋性契約/じゅんすいせいけいやく]を[宣言/せんげん]する。" nil
     cons paragraph
-      cons "ReplyはComplete / Invalid / Stopped / Awaitのvariant。"
-      cons "DiagnosticとEventは[成功/せいこう]の[値/あたい]と[別/べつ]field。"
+      cons "Replyは、[操作/そうさ]の[処理状態/しょりじょうたい]をComplete・Invalid・Stopped・Awaitのvariantで[表/あらわ]す。"
+      cons "DiagnosticとEventは、それぞれ[専用/せんよう]のfieldに[格納/かくのう]する。"
       cons "[未対応/みたいおう]operationを[空/から]の[値/あたい]や[成功/せいこう]Unitで[返/かえ]さない。" nil
     cons paragraph
-      cons "Awaitは[外部/がいぶ]service[要求/ようきゅう]とcontinuationを[返/かえ]す。"
-      cons "hostはallowlistで[照合/しょうごう]し、[同一親予算/どういつおやよさん]で[要求/ようきゅう]を[実行/じっこう]してresumeする。"
+      cons "Awaitは、[処理/しょり]の[継続/けいぞく]に[必要/ひつよう]な[外部/がいぶ]サービスへの[要求/ようきゅう]とcontinuationを[返/かえ]す。"
+      cons "hostは[要求/ようきゅう]をallowlistと[照合/しょうごう]し、[親要求/おやようきゅう]と[同/おな]じ[予算/よさん]で[実行/じっこう]した[後/あと]、[中断/ちゅうだん]した[処理/しょり]を[再開/さいかい]する。"
       cons "continuationはprovider revision、[親/おや]request、snapshot digestに[束縛/そくばく]し、[別/べつ]providerへ[渡/わた]せない。"
       cons "[中断中/ちゅうだんちゅう]の[要求/ようきゅう]を[実装差替/じっそうさしか]え[対象/たいしょう]にしない。" nil
     cons paragraph
-      cons "call graphはhostが[追跡/ついせき]する。"
-      cons "[同/おな]じoperation/input/contextの[循環依存/じゅんかんいぞん]はCyclicOperation。"
+      cons "hostはcall graphを[追跡/ついせき]し、[要求間/ようきゅうかん]の[依存関係/いぞんかんけい]を[管理/かんり]する。"
+      cons "[同/おな]じoperation/input/contextへの[循環依存/じゅんかんいぞん]をCyclicOperationとして[報告/ほうこく]する。"
       cons "[有限/ゆうげん]だが[大/おお]きい[再帰/さいき]も[共通/きょうつう]Limitsで[停止/ていし]できる。"
       cons "provider[内部/ないぶ]のアルゴリズム[固有/こゆう]costは[性能情報/せいのうじょうほう]であり、[二実装/にじっそう]でusageの[数値一致/すうちいっち]を[互換要件/ごかんようけん]にしない。" nil
     cons section transform "3.1 Reader Transformの[操作返信/そうさへんしん]" body
@@ -238,11 +239,11 @@ body
   cons section replacement "6. [置換手順/ちかんてじゅん]" body
     cons paragraph
       cons "[一/ひと]つのoperationについて[新実装/しんじっそう]を[登録/とうろく]し、[同/おな]じconformance[入力/にゅうりょく]をnative Rust[経路/けいろ]とNDF[経路/けいろ]へ[渡/わた]す。"
-      cons "[比較対象/ひかくたいしょう]は[意味正規形/いみせいきけい]、[定義済/ていぎず]みdiagnostic code/[位置/いち]、[参照先/さんしょうさき]、source[対応/たいおう]、[出力/しゅつりょく]artifactのcanonical[内容/ないよう]。"
-      cons "traceの[内部手順/ないぶてじゅん]や[実行時間/じっこうじかん]は[比較対象外/ひかくたいしょうがい]。" nil
+      cons "[互換性/ごかんせい]は、[意味正規形/いみせいきけい]、[定義済/ていぎず]みdiagnostic codeと[位置/いち]、[参照先/さんしょうさき]、source[対応/たいおう]、[出力/しゅつりょく]artifactのcanonical[内容/ないよう]を[比較/ひかく]して[確認/かくにん]する。"
+      cons "traceの[内部手順/ないぶてじゅん]と[実行時間/じっこうじかん]は、この[互換性比較/ごかんせいひかく]の[対象外/たいしょうがい]とする。" nil
     cons paragraph
-      cons "[新実装/しんじっそう]がpassingになったoperationだけdispatchを[切/き]り[替/か]える。"
-      cons "[残/のこ]りをRustで[実行/じっこう]する[混在/こんざい]を[許/ゆる]す。"
+      cons "[新実装/しんじっそう]へのdispatch[切替対象/きりかえたいしょう]は、conformanceに[合格/ごうかく]したoperationに[限/かぎ]る。"
+      cons "[他/ほか]のoperationはRust[実装/じっそう]を[継続利用/けいぞくりよう]できる。"
       cons "[各/かく]coreが[別言語/べつげんご]coreへ[直接依存/ちょくせついぞん]していないため、[単一言語/たんいつげんご]・[単一操作/たんいつそうさ]から[交換/こうかん]できる。" nil
     cons paragraph
       cons "[最初/さいしょ]のRust[実装段階/じっそうだんかい]からencode/decode loopbackと[別/べつ]process providerを[受入対象/うけいれたいしょう]にする。"
