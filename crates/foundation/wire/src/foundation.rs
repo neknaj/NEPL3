@@ -89,6 +89,13 @@ impl<'a> FoundationCodec<'a> {
 }
 impl FoundationValueCodec for FoundationCodec<'_> {
     type Error = WireError;
+    fn canonical_value_digests(
+        &mut self,
+        inputs: &[nepl3_core::value_codec::CanonicalDigestInput<'_>],
+        budget: &mut Budget,
+    ) -> Result<Vec<Digest>, WireError> {
+        crate::encode::digests(inputs, budget)
+    }
     fn canonical_value_digest(
         &mut self,
         domain: &[u8],

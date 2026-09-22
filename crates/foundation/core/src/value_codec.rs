@@ -9,6 +9,13 @@ use crate::{
 };
 use alloc::vec::Vec;
 
+/// One domain-separated digest of an immutably borrowed value. These references
+/// are local API inputs; their addresses are not part of a portable identity.
+pub struct CanonicalDigestInput<'a> {
+    pub domain: &'a [u8],
+    pub value: &'a NdfValue,
+}
+
 /// Implementations must enforce the registered foundation schema and its semantic
 /// source/view/environment constraints. This is not a provider-supplied callback.
 pub trait FoundationCodecError {
@@ -34,6 +41,17 @@ pub trait FoundationValueCodec {
         value: &NdfValue,
         budget: &mut Budget,
     ) -> Result<Digest, Self::Error>;
+    /// Return the same digests as independent calls, in request order. An
+    /// implementation may encode an enclosing value and requested descendants
+    /// in one traversal. Charge each actual encoding once, each hash's bytes,
+    /// temporary storage, and each 32-byte result. Failure returns no partial
+    /// result and never refunds consumed resources. Earlier enclosing inputs
+    /// permit sharing with later descendant inputs; disjoint inputs also work.
+    fn canonical_value_digests(
+        &mut self,
+        inputs: &[CanonicalDigestInput<'_>],
+        budget: &mut Budget,
+    ) -> Result<Vec<Digest>, Self::Error>;
     /// Encode a symbolic type description as foundation data. This does not
     /// assert that a described Named type resolves in the current registry.
     fn encode_type_descriptor(

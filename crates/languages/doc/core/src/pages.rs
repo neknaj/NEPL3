@@ -11,7 +11,7 @@ use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::SchemaRegistry,
     source::Digest,
-    value_codec::{FoundationCodecError, FoundationValueCodec},
+    value_codec::{CanonicalDigestInput, FoundationCodecError, FoundationValueCodec},
 };
 
 pub const SET_DOMAIN: &[u8] = b"NEPL3.Doc.Pages.v1\0";
@@ -292,12 +292,41 @@ pub fn resolve<'a, C: FoundationValueCodec>(
 ) -> Result<CheckedPages<'a>, PageError<'a, C::Error>> {
     registrations(set, b)?;
     let (value, structures) = portable::pages::set_to_value_with_structures(set, registry, c, b)?;
-    let identity = c
-        .canonical_value_digest(SET_DOMAIN, &value, b)
-        .map_err(|e| match e.stop_reason() {
-            Some(s) => PageError::Stopped(s),
-            None => PageError::Boundary(portable::PortableError::Foundation(e)),
-        })?;
+    let mut digest_inputs = Vec::new();
+    push(
+        &mut digest_inputs,
+        CanonicalDigestInput {
+            domain: SET_DOMAIN,
+            value: &value,
+        },
+        b,
+    )?;
+    for page in 0..structures.len() {
+        let document = portable::pages::document_value(&value, page, b)?;
+        push(
+            &mut digest_inputs,
+            CanonicalDigestInput {
+                domain: prepare::DOCUMENT_DOMAIN,
+                value: document,
+            },
+            b,
+        )?;
+    }
+    // The enclosing PageSet owns the exact document values. A codec can encode
+    // these once while feeding the independently domain-separated hashes.
+    let digests =
+        c.canonical_value_digests(&digest_inputs, b)
+            .map_err(|e| match e.stop_reason() {
+                Some(s) => PageError::Stopped(s),
+                None => PageError::Boundary(portable::PortableError::Foundation(e)),
+            })?;
+    if digests.len() != digest_inputs.len() {
+        return Err(PageError::Boundary(portable::PortableError::Shape));
+    }
+    let mut digests = digests.into_iter();
+    let identity = digests
+        .next()
+        .ok_or(PageError::Boundary(portable::PortableError::Shape))?;
     let mut definitions = Vec::new();
     let mut plans = Vec::new();
     let mut document_digests = Vec::new();
@@ -309,18 +338,9 @@ pub fn resolve<'a, C: FoundationValueCodec>(
                 error: PreparationError::Label(e),
             },
         })?;
-        // set_to_value has already structurally validated and encoded every
-        // document. Hash the exact child value instead of constructing it again.
-        let document_value = portable::pages::document_value(&value, page, b)?;
-        let document_digest = c
-            .canonical_value_digest(prepare::DOCUMENT_DOMAIN, document_value, b)
-            .map_err(|e| match e.stop_reason() {
-                Some(s) => PageError::Stopped(s),
-                None => PageError::Input {
-                    page: page as u64,
-                    error: PreparationError::Boundary(portable::PortableError::Foundation(e)),
-                },
-            })?;
+        let document_digest = digests
+            .next()
+            .ok_or(PageError::Boundary(portable::PortableError::Shape))?;
         let requirements = prepare::requirements(&labels, c, b).map_err(|error| match error {
             PreparationError::Stopped(s) => PageError::Stopped(s),
             error => PageError::Input {
