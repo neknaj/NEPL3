@@ -205,18 +205,25 @@ body
       cons "[全/ぜん]TextEditはrevision[付/つ]きでatomicに[返/かえ]す。" nil
     cons paragraph
       cons sentence cons ruby text "現在" text "げんざい" cons text "の rename は " cons code "RenameRequest(key, source, offset, newName, writable)" cons text " に" cons ruby text "対" text "たい" cons text "する" cons ruby text "二段操作" text "にだんそうさ" cons text "である。" nil
+      cons "prepareで[編集候補/へんしゅうこうほ]を[作成/さくせい]し、[候補/こうほ]の[再解析後/さいかいせきご]にacceptで[編集結果/へんしゅうけっか]を[確定/かくてい]する。"
       cons "[対象選択/たいしょうせんたく]は[上記/じょうき]の[名前/なまえ]Occurrence[規則/きそく]を[使/つか]う。"
-      cons "writable はhostが[許可/きょか]した[元/もと]snapshot[集合/しゅうごう]であり、[受信/じゅしん]したSourceRefやURIだけから[編集権限/へんしゅうけんげん]を[発行/はっこう]しない。"
+      cons "writableは、hostが[編集/へんしゅう]を[許可/きょか]した[元/もと]snapshotの[集合/しゅうごう]である。"
+      cons "[編集権限/へんしゅうけんげん]はhostが[指定/してい]し、[受信/じゅしん]したSourceRefやURIだけによる[権限付与/けんげんふよ]を[禁止/きんし]する。"
       cons "[未選択/みせんたく]・[未解決/みかいけつ]・[曖昧/あいまい]・Deferred・[位置/いち]なしを[型付/かたつ]きで[区別/くべつ]して[拒否/きょひ]する。"
       cons "[予約/よやく]headは[対象/たいしょう]EntityのFactNamespace.schemaを[所有/しょゆう]する[選択済/せんたくず]みpackageのForm.spellingと[照合/しょうごう]する。"
       cons "[別/べつ]schemaの[言語/げんご]だけに[存在/そんざい]するheadを[予約語/よやくご]へ[加/くわ]えない。"
       cons "[最終的/さいしゅうてき]な[名前/なまえ]のreader[適格性/てきかくせい]と[構文選択/こうぶんせんたく]は[実再/じっさい]parseで[検査/けんさ]する。" nil
     cons paragraph
-      cons "prepareは[元/もと]の[実/じつ]parse[完了結果/かんりょうけっか]と、その[同/おな]じimmutable treeを[借用/しゃくよう]するprepared Binding[要求/ようきゅう]、[同/どう]keyの[完了解析/かんりょうかいせき]を[要求/ようきゅう]する。"
-      cons "private RenameDraftには[元/もと]revisionへの[編集候補/へんしゅうこうほ]と[候補/こうほ]snapshot[集合/しゅうごう]を[保持/ほじ]するが、[成功/せいこう]transactionや[編集列/へんしゅうれつ]の[公開入口/こうかいいりぐち]を[与/あた]えない。"
-      cons "draftはrename[操作専用/そうさせんよう]SourceAdmissionを[所有/しょゆう]し、[同/おな]じ[有効/ゆうこう]LimitsのBudgetをprepare・[再/さい]parse・[再解析/さいかいせき]・acceptの[間/あいだ]、[排他的/はいたてき]に[借用/しゃくよう]する。"
-      cons "[失敗/しっぱい]やdraft[破棄/はき]で[使用済/しようず]み[費用/ひよう]を[払/はら]い[戻/もど]さない。"
-      cons "[別候補/べつこうほ]は[同/おな]じ[元/もと]revisionから[分岐/ぶんき]でき、[共有/きょうゆう]の[元/もと]SourceStoreを[候補作成時/こうほさくせいじ]に[変更/へんこう]しない。" nil
+      cons "prepareの[入力/にゅうりょく]は、[元/もと]の[実/じつ]parse[完了結果/かんりょうけっか]、prepared Binding[要求/ようきゅう]、[完了済/かんりょうず]みのBinding[解析結果/かいせきけっか]である。"
+      cons "Binding[要求/ようきゅう]はparse[完了結果/かんりょうけっか]と[同一/どういつ]の[不変/ふへん]treeを[借用/しゃくよう]し、[解析結果/かいせきけっか]はその[要求/ようきゅう]と[同一/どういつ]のkeyを[持/も]つ。"
+      cons "prepareが[作成/さくせい]するRenameDraftは、[元/もと]revisionへの[編集候補/へんしゅうこうほ]と[候補/こうほ]snapshotの[集合/しゅうごう]を[非公開状態/ひこうかいじょうたい]として[保持/ほじ]する。"
+      cons "[成功/せいこう]transactionと[編集列/へんしゅうれつ]の[公開/こうかい]には、[後続/こうぞく]のacceptによる[確定/かくてい]を[要求/ようきゅう]する。" nil
+    cons paragraph
+      cons "RenameDraftはrename[操作専用/そうさせんよう]のSourceAdmissionを[所有/しょゆう]する。"
+      cons "prepare・[再/さい]parse・[再解析/さいかいせき]・acceptの[全段階/ぜんだんかい]で、[同一/どういつ]のBudgetを[排他的/はいたてき]に[借用/しゃくよう]し、その[有効/ゆうこう]Limitsを[維持/いじ]する。"
+      cons "[消費済/しょうひず]みの[資源量/しげんりょう]は、[失敗/しっぱい]やdraftの[破棄後/はきご]も[累積値/るいせきち]として[保持/ほじ]する。"
+      cons "[複数/ふくすう]の[候補/こうほ]を[同一/どういつ]の[元/もと]revisionから[作成/さくせい]できる。"
+      cons "[候補作成中/こうほさくせいちゅう]は、[共有/きょうゆう]する[元/もと]のSourceStoreを[不変/ふへん]に[保持/ほじ]する。" nil
     cons paragraph
       cons "[逆写像/ぎゃくしゃぞう]は[宣言/せんげん]SourceMapを[全探索/ぜんたんさく]し、[同一/どういつ]source・revision・digest[上/じょう]の[一意/いちい]な[連続範囲/れんぞくはんい]へ[達/たっ]するExact[対応/たいおう]だけを[使/つか]う。"
       cons "[隣接/りんせつ]するExact[区間/くかん]は[同/おな]じbyte[変位/へんい]で[穴/あな]なく[全対象範囲/ぜんたいしょうはんい]を[被覆/ひふく]するなら[結合/けつごう]でき、[表順/ひょうじゅん]や[区間分割/くかんぶんかつ]で[結果/けっか]を[変/か]えない。"
