@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/10&#45;integration.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page integration; source SHA-256 00b26776b0b653e0c630d94757191858ba7bd1884b358a7b38dab3c37efcba39; alias input SHA-256 00e7d3fbbc79af03ae9a66bba6cc0bcd47165fb3eb087ea15a633624a51e1309; page input SHA-256 e3a9f008bd260fa5e526a3264d7492446db8b006e4223b890da5bf0ef6b1b1ae. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/10&#45;integration.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page integration; source SHA-256 3db546a5575a3b962efbbbb3f8a40d4a93bb2f6d77a35b5cb0d17dd9d5ca9388; alias input SHA-256 00e7d3fbbc79af03ae9a66bba6cc0bcd47165fb3eb087ea15a633624a51e1309; page input SHA-256 bf9f70c5f7d075a1b2a06e02a079a371b698fd4498fe73c3b8479fc65b8bffea. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="10-profile埋め込み実行入口"></a>
 
@@ -72,7 +72,7 @@ MathのDoc<ruby>注記<rt>ちゅうき</rt></ruby>は<ruby>文書全体<rt>ぶ�
 
 ソース<ruby>上<rt>じょう</rt></ruby>の<ruby>有限<rt>ゆうげん</rt></ruby>な<ruby>入<rt>い</rt></ruby>れ<ruby>子<rt>こ</rt></ruby>は<ruby>許<rt>ゆる</rt></ruby>す。ForeignSyntaxはroot node、language revision、originと<ruby>環境参照<rt>かんきょうさんしょう</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>する。<ruby>操作<rt>そうさ</rt></ruby>グラフは<ruby>対象<rt>たいしょう</rt></ruby>nodeとoperationの<ruby>組<rt>くみ</rt></ruby>を<ruby>頂点<rt>ちょうてん</rt></ruby>に<ruby>持<rt>も</rt></ruby>ち、suiteが<ruby>必要<rt>ひつよう</rt></ruby>な<ruby>依存順<rt>いぞんじゅん</rt></ruby>に<ruby>処理<rt>しょり</rt></ruby>する。
 
-Doc→Math→Docの<ruby>有限<rt>ゆうげん</rt></ruby>の<ruby>注記<rt>ちゅうき</rt></ruby>は<ruby>循環<rt>じゅんかん</rt></ruby>ではない。<ruby>同<rt>おな</rt></ruby>じnodeのrenderが<ruby>再<rt>ふたた</rt></ruby>び<ruby>自分<rt>じぶん</rt></ruby>のrenderを<ruby>要求<rt>ようきゅう</rt></ruby>する<ruby>等<rt>とう</rt></ruby>の<ruby>循環<rt>じゅんかん</rt></ruby>はCyclicOperation。<ruby>生成<rt>せいせい</rt></ruby>によって<ruby>構造<rt>こうぞう</rt></ruby>が<ruby>増<rt>ふ</rt></ruby>える<ruby>場合<rt>ばあい</rt></ruby>も<ruby>共通予算<rt>きょうつうよさん</rt></ruby>とoriginを<ruby>維持<rt>いじ</rt></ruby>する。
+Doc→Math→Docの<ruby>注記<rt>ちゅうき</rt></ruby>も、<ruby>有限<rt>ゆうげん</rt></ruby>な<ruby>構文<rt>こうぶん</rt></ruby>の<ruby>入<rt>い</rt></ruby>れ<ruby>子<rt>こ</rt></ruby>として<ruby>処理<rt>しょり</rt></ruby>できる。<ruby>操作<rt>そうさ</rt></ruby>の<ruby>循環<rt>じゅんかん</rt></ruby>は、<ruby>同<rt>おな</rt></ruby>じnodeとoperationの<ruby>組<rt>くみ</rt></ruby>へ<ruby>依存要求<rt>いぞんようきゅう</rt></ruby>が<ruby>戻<rt>もど</rt></ruby>る<ruby>場合<rt>ばあい</rt></ruby>にCyclicOperationとして<ruby>報告<rt>ほうこく</rt></ruby>する。<ruby>同<rt>おな</rt></ruby>じnodeのrenderが<ruby>自身<rt>じしん</rt></ruby>のrenderを<ruby>要求<rt>ようきゅう</rt></ruby>する<ruby>場合<rt>ばあい</rt></ruby>が、これに<ruby>該当<rt>がいとう</rt></ruby>する。<ruby>生成<rt>せいせい</rt></ruby>によって<ruby>構造<rt>こうぞう</rt></ruby>が<ruby>増<rt>ふ</rt></ruby>える<ruby>場合<rt>ばあい</rt></ruby>も<ruby>共通予算<rt>きょうつうよさん</rt></ruby>とoriginを<ruby>維持<rt>いじ</rt></ruby>する。
 
 <a name="n-656e7669726f6e6d656e74"></a>
 
@@ -80,7 +80,7 @@ Doc→Math→Docの<ruby>有限<rt>ゆうげん</rt></ruby>の<ruby>注記<rt>�
 
 ## 4\. <ruby>環境<rt>かんきょう</rt></ruby>の<ruby>受渡<rt>うけわた</rt></ruby>し
 
-<ruby>各<rt>かく</rt></ruby>guestの<ruby>名前空間<rt>なまえくうかん</rt></ruby>は<ruby>既定<rt>きてい</rt></ruby>で<ruby>新<rt>あたら</rt></ruby>しく<ruby>分離<rt>ぶんり</rt></ruby>する。DocLabel、MathSymbol、CircuitSignalを<ruby>一<rt>ひと</rt></ruby>つの<ruby>名前辞書<rt>なまえじしょ</rt></ruby>へ<ruby>入<rt>い</rt></ruby>れない。bridgeは<ruby>必要<rt>ひつよう</rt></ruby>に<ruby>応<rt>おう</rt></ruby>じて `EnvironmentProjection` として、どのnamespace\/entityをどの<ruby>型<rt>かた</rt></ruby>の<ruby>外部値<rt>がいぶち</rt></ruby>として<ruby>渡<rt>わた</rt></ruby>すかを<ruby>明示<rt>めいじ</rt></ruby>する。
+<ruby>各<rt>かく</rt></ruby>guestには、<ruby>既定<rt>きてい</rt></ruby>で<ruby>独立<rt>どくりつ</rt></ruby>した<ruby>新<rt>あたら</rt></ruby>しい<ruby>名前空間<rt>なまえくうかん</rt></ruby>を<ruby>割<rt>わ</rt></ruby>り<ruby>当<rt>あ</rt></ruby>てる。DocLabel、MathSymbol、CircuitSignalを<ruby>一<rt>ひと</rt></ruby>つの<ruby>名前辞書<rt>なまえじしょ</rt></ruby>へ<ruby>入<rt>い</rt></ruby>れない。bridgeは<ruby>必要<rt>ひつよう</rt></ruby>に<ruby>応<rt>おう</rt></ruby>じて `EnvironmentProjection` として、どのnamespace\/entityをどの<ruby>型<rt>かた</rt></ruby>の<ruby>外部値<rt>がいぶち</rt></ruby>として<ruby>渡<rt>わた</rt></ruby>すかを<ruby>明示<rt>めいじ</rt></ruby>する。
 
 <ruby>配布<rt>はいふ</rt></ruby>bridgeはMathのfree symbol<ruby>値<rt>あたい</rt></ruby>をRenderContextから<ruby>明示的<rt>めいじてき</rt></ruby>に<ruby>受<rt>う</rt></ruby>け<ruby>取<rt>と</rt></ruby>り、DocLabelとCircuitSignalは<ruby>自動<rt>じどう</rt></ruby>exportしない。Doc annotation<ruby>内<rt>ない</rt></ruby>のlabelはそのsentenceの<ruby>局所<rt>きょくしょ</rt></ruby>scopeで<ruby>検査<rt>けんさ</rt></ruby>する。<ruby>呼出<rt>よびだ</rt></ruby>し<ruby>側<rt>がわ</rt></ruby>のlabel<ruby>参照<rt>さんしょう</rt></ruby>が<ruby>必要<rt>ひつよう</rt></ruby>ならprofileのprojectionで<ruby>明示<rt>めいじ</rt></ruby>する。
 
@@ -90,15 +90,17 @@ Doc→Math→Docの<ruby>有限<rt>ゆうげん</rt></ruby>の<ruby>注記<rt>�
 
 ## 5\. artifactの<ruby>準備<rt>じゅんび</rt></ruby>
 
-backendsに<ruby>任意<rt>にんい</rt></ruby>raw HTML stringを<ruby>渡<rt>わた</rt></ruby>さない。suiteがforeign subtreeをtyped MarkupFragmentへ<ruby>変換<rt>へんかん</rt></ruby>し、そのslotに<ruby>適合<rt>てきごう</rt></ruby>する<ruby>内容<rt>ないよう</rt></ruby>モデルを<ruby>検査<rt>けんさ</rt></ruby>する。doc\-htmlはPreparedEmbedsの<ruby>対応表<rt>たいおうひょう</rt></ruby>を<ruby>入力<rt>にゅうりょく</rt></ruby>として<ruby>受<rt>う</rt></ruby>け<ruby>取<rt>と</rt></ruby>る。math\-mathml\/circuit\-svgを<ruby>直接<rt>ちょくせつ</rt></ruby>importしない。
+suiteがforeign subtreeをtyped MarkupFragmentへ<ruby>変換<rt>へんかん</rt></ruby>し、そのslotに<ruby>適合<rt>てきごう</rt></ruby>する<ruby>内容<rt>ないよう</rt></ruby>モデルを<ruby>検査<rt>けんさ</rt></ruby>する。doc\-htmlはPreparedEmbedsの<ruby>対応表<rt>たいおうひょう</rt></ruby>を<ruby>入力<rt>にゅうりょく</rt></ruby>として<ruby>受<rt>う</rt></ruby>け<ruby>取<rt>と</rt></ruby>る。backendへ<ruby>任意<rt>にんい</rt></ruby>のraw HTML<ruby>文字列<rt>もじれつ</rt></ruby>を<ruby>渡<rt>わた</rt></ruby>すことは<ruby>禁止<rt>きんし</rt></ruby>する。doc\-htmlからmath\-mathml\/circuit\-svgへの<ruby>直接<rt>ちょくせつ</rt></ruby>importは<ruby>禁止<rt>きんし</rt></ruby>する。
 
-asset<ruby>参照<rt>さんしょう</rt></ruby>は<ruby>固定内容<rt>こていないよう</rt></ruby>とdigestを<ruby>持<rt>も</rt></ruby>つResourceSnapshot。coreがpathから<ruby>読<rt>よ</rt></ruby>んだりURLへ<ruby>接続<rt>せつぞく</rt></ruby>したりしない。HTML<ruby>出力<rt>しゅつりょく</rt></ruby>は<ruby>既定<rt>きてい</rt></ruby>で<ruby>外部<rt>がいぶ</rt></ruby>network<ruby>無<rt>な</rt></ruby>しで<ruby>閲覧<rt>えつらん</rt></ruby>できる。KaTeX<ruby>生成時<rt>せいせいじ</rt></ruby>は<ruby>同<rt>おな</rt></ruby>じ<ruby>固定版<rt>こていばん</rt></ruby>のCSS\/fontをartifactへ<ruby>同梱<rt>どうこん</rt></ruby>し、<ruby>相対参照<rt>そうたいさんしょう</rt></ruby>とlicenseを<ruby>保持<rt>ほじ</rt></ruby>する。host<ruby>生成<rt>せいせい</rt></ruby>・<ruby>独立<rt>どくりつ</rt></ruby>MathML fallback・<ruby>出力検査<rt>しゅつりょくけんさ</rt></ruby>・asset identityは[17<ruby>章<rt>しょう</rt></ruby>](<17\-math\-html\.md>)に<ruby>従<rt>したが</rt></ruby>う。<ruby>全資源<rt>ぜんしげん</rt></ruby>を<ruby>明示的<rt>めいじてき</rt></ruby>なartifact dependencyとして<ruby>報告<rt>ほうこく</rt></ruby>する。
+asset<ruby>参照<rt>さんしょう</rt></ruby>は、<ruby>固定<rt>こてい</rt></ruby>した<ruby>内容<rt>ないよう</rt></ruby>とdigestを<ruby>保持<rt>ほじ</rt></ruby>するResourceSnapshotで<ruby>表<rt>あらわ</rt></ruby>す。coreがpathから<ruby>読<rt>よ</rt></ruby>んだりURLへ<ruby>接続<rt>せつぞく</rt></ruby>したりしない。HTML<ruby>出力<rt>しゅつりょく</rt></ruby>は<ruby>既定<rt>きてい</rt></ruby>で<ruby>外部<rt>がいぶ</rt></ruby>network<ruby>無<rt>な</rt></ruby>しで<ruby>閲覧<rt>えつらん</rt></ruby>できる。KaTeX<ruby>生成時<rt>せいせいじ</rt></ruby>は<ruby>同<rt>おな</rt></ruby>じ<ruby>固定版<rt>こていばん</rt></ruby>のCSS\/fontをartifactへ<ruby>同梱<rt>どうこん</rt></ruby>し、<ruby>相対参照<rt>そうたいさんしょう</rt></ruby>とlicenseを<ruby>保持<rt>ほじ</rt></ruby>する。host<ruby>生成<rt>せいせい</rt></ruby>・<ruby>独立<rt>どくりつ</rt></ruby>MathML fallback・<ruby>出力検査<rt>しゅつりょくけんさ</rt></ruby>・asset identityは[17<ruby>章<rt>しょう</rt></ruby>](<17\-math\-html\.md>)に<ruby>従<rt>したが</rt></ruby>う。<ruby>全資源<rt>ぜんしげん</rt></ruby>を<ruby>明示的<rt>めいじてき</rt></ruby>なartifact dependencyとして<ruby>報告<rt>ほうこく</rt></ruby>する。
 
 <a name="n-636c69"></a>
 
 <a name="6-cli"></a>
 
 ## 6\. CLI
+
+CLIは、<ruby>入力<rt>にゅうりょく</rt></ruby>ファイルと<ruby>操作<rt>そうさ</rt></ruby>を<ruby>指定<rt>してい</rt></ruby>し、<ruby>構文<rt>こうぶん</rt></ruby>・<ruby>診断<rt>しんだん</rt></ruby>・<ruby>成果物<rt>せいかぶつ</rt></ruby>を<ruby>取得<rt>しゅとく</rt></ruby>するhost<ruby>側<rt>がわ</rt></ruby>の<ruby>実行入口<rt>じっこういりぐち</rt></ruby>である。<ruby>以下<rt>いか</rt></ruby>に<ruby>各<rt>かく</rt></ruby>コマンドの<ruby>要求<rt>ようきゅう</rt></ruby>を<ruby>定<rt>さだ</rt></ruby>める。<ruby>各<rt>かく</rt></ruby>コマンドと<ruby>対象環境<rt>たいしょうかんきょう</rt></ruby>の<ruby>実装状態<rt>じっそうじょうたい</rt></ruby>は、implementation\-status\.jsonを<ruby>参照<rt>さんしょう</rt></ruby>する。
 
 - `nepl3 parse --language doc input.nepld --format ndf|json` はRecover treeと<ruby>診断<rt>しんだん</rt></ruby>を<ruby>出<rt>だ</rt></ruby>す。
 - `nepl3 check input.nepld` は<ruby>必要<rt>ひつよう</rt></ruby>なdomain<ruby>検査<rt>けんさ</rt></ruby>と<ruby>参照検査<rt>さんしょうけんさ</rt></ruby>を<ruby>行<rt>おこな</rt></ruby>う。
@@ -111,7 +113,7 @@ asset<ruby>参照<rt>さんしょう</rt></ruby>は<ruby>固定内容<rt>こて�
 - `nepl3 circuit diagram input.neplc --output out.svg` はSVGを<ruby>出<rt>だ</rt></ruby>す。
 - `nepl3 format input --style prefix|compact` は<ruby>明示的<rt>めいじてき</rt></ruby>なformatter。<ruby>既定<rt>きてい</rt></ruby>はstdoutで、\-\-write<ruby>時<rt>じ</rt></ruby>だけファイルを<ruby>置換<rt>ちかん</rt></ruby>する。
 
-<ruby>終了<rt>しゅうりょう</rt></ruby>code\: 0 <ruby>成功<rt>せいこう</rt></ruby>（Symbolicは<ruby>操作<rt>そうさ</rt></ruby>が<ruby>許<rt>ゆる</rt></ruby>す<ruby>正常結果<rt>せいじょうけっか</rt></ruby>）、1 <ruby>入力<rt>にゅうりょく</rt></ruby>\/<ruby>検査<rt>けんさ</rt></ruby>\/テスト<ruby>失敗<rt>しっぱい</rt></ruby>、2 CLI\/config\/protocolエラー、3 limit\/cancel、4 provider<ruby>内部違反<rt>ないぶいはん</rt></ruby>。stdoutは<ruby>成果物<rt>せいかぶつ</rt></ruby>だけ。sourceのdecode<ruby>失敗<rt>しっぱい</rt></ruby>を<ruby>成功空文書<rt>せいこうからぶんしょ</rt></ruby>にしない。
+<ruby>終了<rt>しゅうりょう</rt></ruby>コードは、0を<ruby>成功<rt>せいこう</rt></ruby>、1を<ruby>入力<rt>にゅうりょく</rt></ruby>・<ruby>検査<rt>けんさ</rt></ruby>・テストの<ruby>失敗<rt>しっぱい</rt></ruby>、2をCLI\/config\/protocolエラー、3をlimit\/cancel、4をproviderの<ruby>内部違反<rt>ないぶいはん</rt></ruby>とする。<ruby>操作<rt>そうさ</rt></ruby>がSymbolicを<ruby>正常結果<rt>せいじょうけっか</rt></ruby>として<ruby>許可<rt>きょか</rt></ruby>する<ruby>場合<rt>ばあい</rt></ruby>は、<ruby>成功<rt>せいこう</rt></ruby>として<ruby>終了<rt>しゅうりょう</rt></ruby>する。stdoutへの<ruby>出力<rt>しゅつりょく</rt></ruby>は<ruby>成果物<rt>せいかぶつ</rt></ruby>に<ruby>限定<rt>げんてい</rt></ruby>する。sourceのdecode<ruby>失敗<rt>しっぱい</rt></ruby>を<ruby>成功空文書<rt>せいこうからぶんしょ</rt></ruby>にしない。
 
 <a name="n-686f737473"></a>
 
@@ -119,6 +121,6 @@ asset<ruby>参照<rt>さんしょう</rt></ruby>は<ruby>固定内容<rt>こて�
 
 ## 7\. browser\/native\/WASI
 
-<ruby>同<rt>おな</rt></ruby>じsuite APIを<ruby>利用<rt>りよう</rt></ruby>する。browserではWorkerで<ruby>計算<rt>けいさん</rt></ruby>し、<ruby>未応答時<rt>みおうとうじ</rt></ruby>はWorkerを<ruby>終了<rt>しゅうりょう</rt></ruby>できる。ファイル\/ネットワーク<ruby>権限<rt>けんげん</rt></ruby>はWeb shellに<ruby>限定<rt>げんてい</rt></ruby>する。wasm\-bindgenのJS undefined\/nullは<ruby>境界<rt>きょうかい</rt></ruby>でOption\/Resultへ<ruby>変換<rt>へんかん</rt></ruby>し、domainへ<ruby>流<rt>なが</rt></ruby>さない。
+browser・native・WASIのhostは、<ruby>同<rt>おな</rt></ruby>じsuite APIを<ruby>利用<rt>りよう</rt></ruby>する。browserではWorkerで<ruby>計算<rt>けいさん</rt></ruby>し、<ruby>未応答時<rt>みおうとうじ</rt></ruby>はWorkerを<ruby>終了<rt>しゅうりょう</rt></ruby>できる。ファイル\/ネットワーク<ruby>権限<rt>けんげん</rt></ruby>はWeb shellに<ruby>限定<rt>げんてい</rt></ruby>する。wasm\-bindgenのJS undefined\/nullは<ruby>境界<rt>きょうかい</rt></ruby>でOption\/Resultへ<ruby>変換<rt>へんかん</rt></ruby>し、domainへ<ruby>流<rt>なが</rt></ruby>さない。
 
 wasm32\-wasip2 CLIはWASI I\/O adapterを<ruby>使<rt>つか</rt></ruby>う。nativeのprocess provider<ruby>呼出<rt>よびだ</rt></ruby>しをbrowser\/WASIへ<ruby>無条件<rt>むじょうけん</rt></ruby>に<ruby>持<rt>も</rt></ruby>ち<ruby>込<rt>こ</rt></ruby>まない。<ruby>該当<rt>がいとう</rt></ruby>hostが<ruby>提供<rt>ていきょう</rt></ruby>するregistry\/runnerのcapabilityを<ruby>検査<rt>けんさ</rt></ruby>する。<ruby>組込<rt>くみこ</rt></ruby>み4<ruby>言語<rt>げんご</rt></ruby>の<ruby>基本操作<rt>きほんそうさ</rt></ruby>は<ruby>全<rt>ぜん</rt></ruby>targetで<ruby>使<rt>つか</rt></ruby>える。
