@@ -49,10 +49,32 @@ value carries no source authority; the execution adapter must retain that mappin
 and supply independently authorized source snapshots.
 
 Current implementation: typed integer arithmetic, operation schemas, borrowed
-syntax views, checked plan transfer and native terminal dispatch with input/output validation.
-Remaining integration: plan-to-operation scheduling, Await/Resume adapters, grants, and
-end-to-end recursive composition. The terminal dispatch test yielding -5 covers
-an explicit binary request. Source-level MiniExpr/Frame evaluation remains open.
+syntax views, checked plan transfer and native recursive operation execution.
+`execution::Runtime` registers separate MiniExpr and Frame callbacks, admits the
+immutable plan and source grants, and runs the existing suite scheduler. Each
+occurrence has request ID `index + 1`. MiniExpr evaluates its arithmetic after
+dependency completion; Frame returns its guest result. The source-level test
+`add framed frame neg 7 2` evaluates to -5 through four Await/Resume generations.
+Missing source grants are rejected before dispatch. Every run owns a fresh
+lifetime table; continuation reuse across runs is unsupported.
+
+The initial owned callback adapter copies the flat plan into dependency requests;
+the existing clone operation charges this cost to the execution Budget. This
+retains quadratic copy cost for large plans. Shared execution environments require
+a separate API design before this example serves as a large-input performance claim.
+Remaining integration: source-associated stop diagnostics, additional failure and
+deep-nesting cases, and independent review.
+
+Run the existing MiniExpr/Frame syntax through the evaluator:
+
+```sh
+cargo run --locked --manifest-path conformance/extensions/suite/Cargo.toml --example evaluate -- "add framed frame neg 7 2"
+```
+
+Standard output is `-5`. Standard error shows Await request IDs `6`, `4`, `3`,
+`2`, corresponding to Add, Framed, Frame and Neg. Try `mul neg 3 add 4 2` to
+obtain `-18`. An incomplete input such as `add 1` exits unsuccessfully before
+evaluation. The example requires a complete parse and has no source-level import.
 
 Run `cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml`.
 WASI uses the same command with `--target wasm32-wasip2` and the Wasmtime runner.

@@ -269,6 +269,84 @@ mod tests {
                 Err(transfer::Error::Stopped(StopReason::Cancelled))
             ));
         }
+        {
+            use crate::execution::{self, Runtime};
+            use nepl3_core::{
+                diagnostic::OperationResult, schema::SchemaRegistry, source::SourceStore,
+                value::TypedValue,
+            };
+            let mut registry = SchemaRegistry::default();
+            let runtime = Runtime::register(
+                &mut registry,
+                [
+                    Digest::of(b"MiniExpr evaluator v1"),
+                    Digest::of(b"Frame evaluator v1"),
+                ],
+                &mut budget(),
+            )
+            .map_err(error)?;
+            registry.finalize(&mut budget()).map_err(error)?;
+            let mut sources = SourceStore::default();
+            for source in &tree.bundle.sources {
+                sources
+                    .insert_ref_with_budget(source, &mut budget())
+                    .map_err(error)?;
+            }
+            let mut awaits = Vec::new();
+            let mut cancellations = Vec::new();
+            let result = runtime
+                .run(
+                    &plan,
+                    &sources,
+                    &registry,
+                    &mut budget(),
+                    &mut budget(),
+                    |id, _| awaits.push(id),
+                    |id| cancellations.push(id),
+                )
+                .map_err(error)?;
+            let OperationResult::Complete {
+                value: TypedValue::Record(result),
+                ..
+            } = result
+            else {
+                return Err("completed composition evaluation".into());
+            };
+            // MiniExpr Add -> Framed -> Frame -> MiniExpr Neg, followed by 2:
+            // (-7) + 2 = -5. Every non-leaf traverses an Await/Resume boundary.
+            assert_eq!(
+                result.fields,
+                vec![NdfValue::Integer(Integer::from(-5_i64))]
+            );
+            assert_eq!(awaits, vec![6, 4, 3, 2]);
+            assert!(cancellations.is_empty());
+            assert!(matches!(
+                runtime.run(
+                    &plan,
+                    &SourceStore::default(),
+                    &registry,
+                    &mut budget(),
+                    &mut budget(),
+                    |_, _| {},
+                    |_| {}
+                ),
+                Err(execution::Error::Source(_))
+            ));
+            let mut stopped = budget();
+            stopped.stop(StopReason::Cancelled);
+            assert!(matches!(
+                runtime.run(
+                    &plan,
+                    &sources,
+                    &registry,
+                    &mut stopped,
+                    &mut budget(),
+                    |_, _| {},
+                    |_| {}
+                ),
+                Err(execution::Error::Execution(_))
+            ));
+        }
         for reason in [
             StopReason::WorkLimit,
             StopReason::AllocationLimit,

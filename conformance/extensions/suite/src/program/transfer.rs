@@ -4,8 +4,8 @@ use super::{Instruction, Program};
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::{
-        FieldDescriptor, NamedType, SchemaDescriptor, SchemaError, SchemaRegistry, TypeDescriptor,
-        TypeRef, TypeShape, VariantDescriptor,
+        FieldDescriptor, NamedType, OperationDescriptor, SchemaDescriptor, SchemaError,
+        SchemaRegistry, TypeDescriptor, TypeRef, TypeShape, VariantDescriptor,
     },
     value::{NdfValue, Record, SchemaRef, TypedValue, Variant},
 };
@@ -75,8 +75,30 @@ pub fn descriptor(budget: &mut Budget) -> Result<SchemaDescriptor, StopReason> {
                     )],
                 },
             },
+            NamedType {
+                name: "Selection".into(),
+                constraints: vec![],
+                shape: TypeShape::Record {
+                    fields: vec![field("node", TypeDescriptor::U64)],
+                },
+            },
+            NamedType {
+                name: "Value".into(),
+                constraints: vec![],
+                shape: TypeShape::Record {
+                    fields: vec![field("value", TypeDescriptor::Integer)],
+                },
+            },
         ],
-        operations: vec![],
+        operations: ["miniexpr", "frame"]
+            .into_iter()
+            .map(|name| OperationDescriptor {
+                name: name.into(),
+                input: named("Selection"),
+                output: named("Value"),
+                pure: true,
+            })
+            .collect(),
     })
 }
 
