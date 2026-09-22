@@ -57,6 +57,10 @@ dependency completion; Frame returns its guest result. The source-level test
 `add framed frame neg 7 2` evaluates to -5 through four Await/Resume generations.
 Missing source grants are rejected before dispatch. Every run owns a fresh
 lifetime table; continuation reuse across runs is unsupported.
+The host computes each provider's context digest with the existing wire context
+recipe after grant admission. It binds the plan, source closure and configured
+implementation identity. Borrowed scheduler closures reuse these immutable
+digests within the run; every child retains the exact same environment and sources.
 
 Scheduler failures expose the active request ID. `Program::request_node` maps
 that ID back to its language and original head Span without allocation or a

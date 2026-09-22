@@ -22,11 +22,13 @@ use nepl3_core::{
 
 /// The host supplies executable identity, exact grants and a context digest
 /// function covering provider configuration plus the admitted invocation.
+pub type Context<'a> = dyn Fn(&Invoke, Digest, &mut Budget) -> Result<Digest, StopReason> + 'a;
+
 pub struct Registration<'a> {
     pub invoke: suspending::Registration<'a>,
     pub resume: resume::Registration<'a>,
     pub grants: &'a Grants<'a>,
-    pub context: fn(&Invoke, Digest, &mut Budget) -> Result<Digest, StopReason>,
+    pub context: &'a Context<'a>,
 }
 
 #[derive(Debug)]

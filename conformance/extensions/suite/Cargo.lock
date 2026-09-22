@@ -59,6 +59,7 @@ dependencies = [
  "nepl3-core",
  "nepl3-engine",
  "nepl3-suite",
+ "nepl3-wire",
 ]
 
 [[package]]

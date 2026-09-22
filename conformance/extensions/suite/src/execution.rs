@@ -26,6 +26,7 @@ pub enum Error {
     Plan(transfer::Error),
     Source(SourceError),
     Grants(GrantError),
+    Context(nepl3_wire::WireError),
     Execution(scheduler::Failure),
 }
 impl From<StopReason> for Error {
@@ -46,6 +47,13 @@ impl Runtime {
         implementations: [Digest; 2],
         b: &mut Budget,
     ) -> Result<Self, Error> {
+        let foundation = nepl3_core::schema::foundation::descriptor(b).map_err(Error::Schema)?;
+        let foundation_ref = foundation.reference(b).map_err(Error::Schema)?;
+        if registry.descriptor(&foundation_ref).is_none() {
+            registry
+                .register(foundation_ref, foundation, b)
+                .map_err(Error::Schema)?;
+        }
         let descriptor = transfer::descriptor(b).map_err(Error::Stopped)?;
         let schema = descriptor.reference(b).map_err(Error::Schema)?;
         b.charge(Resource::AllocationUnits, 1024)?;
@@ -111,6 +119,34 @@ impl Runtime {
             limits: execution.limits(),
         };
         let grants = Grants::new(&environment, sources, &[], validation).map_err(Error::Grants)?;
+        grants.admit(&root, validation).map_err(Error::Grants)?;
+        let contexts = [
+            nepl3_wire::operation::context_digest(
+                &root,
+                self.implementations[0],
+                registry,
+                validation,
+            )
+            .map_err(Error::Context)?,
+            nepl3_wire::operation::context_digest(
+                &root,
+                self.implementations[1],
+                registry,
+                validation,
+            )
+            .map_err(Error::Context)?,
+        ];
+        // Each callback copies this exact admitted environment and complete
+        // source closure. The immutable digest is shared for this run only.
+        let mini_context = |_: &Invoke, _: Digest, b: &mut Budget| {
+            b.poll()?;
+            Ok(contexts[0])
+        };
+        let frame_context = |_: &Invoke, _: Digest, b: &mut Budget| {
+            b.poll()?;
+            Ok(contexts[1])
+        };
+        let context_callbacks: [&scheduler::Context<'_>; 2] = [&mini_context, &frame_context];
         let registrations = [0, 1].map(|i| scheduler::Registration {
             invoke: suspending::Registration {
                 operation: &self.operations[i],
@@ -123,7 +159,7 @@ impl Runtime {
                 resume: if i == 0 { resume_mini } else { resume_frame },
             },
             grants: &grants,
-            context,
+            context: context_callbacks[i],
         });
         scheduler::run(
             &registrations,
@@ -213,14 +249,6 @@ fn selected(call: &Invoke) -> Option<&Variant> {
     };
     Some(node)
 }
-// Every run has a fresh lifetime table and immutable, exact environment/source
-// grants. No continuation or context cache crosses run boundaries. Within this
-// scope, the configured executable identity distinguishes the two providers.
-fn context(_: &Invoke, implementation: Digest, b: &mut Budget) -> Result<Digest, StopReason> {
-    b.poll()?;
-    Ok(implementation)
-}
-
 fn invoke_mini(
     call: &Invoke,
     context: Digest,

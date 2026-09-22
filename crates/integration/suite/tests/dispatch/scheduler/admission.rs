@@ -55,7 +55,7 @@ fn scheduler_rejects_missing_ambiguous_registration_and_ancestor_cycle() -> Resu
             resume,
         },
         grants: &grants,
-        context,
+        context: &context,
     };
     let mut cancelled = Vec::new();
     let mut execution = budget();

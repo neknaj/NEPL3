@@ -102,7 +102,7 @@ fn invalid_keeps_partial_and_diagnostic_while_stopped_prevents_parent_callback()
                 resume: receive_invalid,
             },
             grants: &grants,
-            context,
+            context: &context,
         }];
         let mut execution = budget();
         let mut cancelled = Vec::new();

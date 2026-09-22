@@ -218,7 +218,7 @@ fn scheduler_preserves_sibling_order_and_resumes_empty_and_repeated_await() -> R
                 resume: branching_resume,
             },
             grants: &grants,
-            context,
+            context: &context,
         }];
         let mut reports = Vec::new();
         let mut cancelled = Vec::new();
@@ -317,6 +317,13 @@ fn iterative_scheduler_resolves_nested_calls_and_cancels_on_execution_stop() -> 
     let grants = Grants::new(&root.environment, &sources, &[], &mut budget())
         .map_err(|e| format!("{e:?}"))?;
     let identity = Digest::of(b"recursive native fixture");
+    let configured_context = Digest::of(b"immutable run configuration");
+    let context_calls = core::cell::Cell::new(0_usize);
+    let borrowed_context = |_: &Invoke, _: Digest, b: &mut Budget| {
+        b.charge(Resource::Work, 1)?;
+        context_calls.set(context_calls.get() + 1);
+        Ok(configured_context)
+    };
     let mut registrations = [scheduler::Registration {
         invoke: suspending::Registration {
             operation: &root.operation,
@@ -329,7 +336,7 @@ fn iterative_scheduler_resolves_nested_calls_and_cancels_on_execution_stop() -> 
             resume,
         },
         grants: &grants,
-        context,
+        context: &borrowed_context,
     }];
     let mut reports = Vec::new();
     let mut cancelled = Vec::new();
@@ -348,6 +355,7 @@ fn iterative_scheduler_resolves_nested_calls_and_cancels_on_execution_stop() -> 
         return Err("expected Complete".into());
     };
     assert_eq!(number(&value), Some(4));
+    assert_eq!(context_calls.get(), 5);
     assert_eq!(
         reports.iter().map(|v| v.0).collect::<Vec<_>>(),
         (root.request_id..root.request_id + 4).collect::<Vec<_>>()
