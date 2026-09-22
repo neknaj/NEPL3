@@ -28,59 +28,86 @@ fn prepared_await_moves_calls_and_avoids_repeated_validation_cost() -> Result<()
         grants: &grants,
     }];
     let context = Digest::of(b"prepared await");
-    let mut old_budget = budget();
-    let old_reply = reply(&parent, context);
-    nepl3_suite::dispatch::suspending::validate_reply(
-        &old_reply,
-        &parent,
-        context,
-        &registry,
-        &sources,
-        &mut old_budget,
-    )
-    .map_err(|e| format!("{e:?}"))?;
-    let old = activate_owned(
-        &parent,
-        context,
-        old_reply,
-        &policy,
-        &[context],
-        &registry,
-        &sources,
-        &mut running(&parent, context),
-        &mut old_budget,
-    )
-    .map_err(|e| format!("{e:?}"))?;
-
-    let mut measured = budget();
-    let mut table = running(&parent, context);
-    let prepared = prepare_owned(
-        &parent,
-        context,
-        reply(&parent, context),
-        &registry,
-        &sources,
-        &mut measured,
-    )
-    .map_err(|e| format!("{e:?}"))?;
-    assert_eq!(
-        table.phase(parent.request_id, &mut budget()),
-        Ok(RequestPhase::Running)
-    );
-    let calls = prepared.calls().as_ptr();
-    let active = prepared
-        .activate(&policy, &[context], &mut table, &mut measured)
+    for count in [1_usize, 8, 32] {
+        let make_reply = || {
+            let mut result = reply(&parent, context);
+            if let OperationReply::Await { calls, .. } = &mut result {
+                calls.clear();
+                // Descending IDs exercise index sorting while preserving wire order.
+                for offset in (1..=count).rev() {
+                    let mut child = parent.clone();
+                    child.request_id = parent.request_id + offset as u64;
+                    if let TypedValue::Record(record) = &mut child.input {
+                        record.fields[0] = NdfValue::U64(3);
+                    }
+                    calls.push(child);
+                }
+            }
+            result
+        };
+        let contexts = vec![context; count];
+        let mut old_budget = budget();
+        let old_reply = make_reply();
+        nepl3_suite::dispatch::suspending::validate_reply(
+            &old_reply,
+            &parent,
+            context,
+            &registry,
+            &sources,
+            &mut old_budget,
+        )
         .map_err(|e| format!("{e:?}"))?;
-    // Owned calls survive activation at the same address; the indexed pending
-    // collection moves intact. This compares the old two-stage path's cost.
-    assert_eq!(active.pending.calls().as_ptr(), calls);
-    assert_eq!(active.pending.calls(), old.pending.calls());
-    assert!(measured.usage().work < old_budget.usage().work);
-    assert!(measured.usage().allocation_units < old_budget.usage().allocation_units);
-    assert_eq!(
-        table.phase(parent.request_id, &mut budget()),
-        Ok(RequestPhase::Awaiting)
-    );
+        let old = activate_owned(
+            &parent,
+            context,
+            old_reply,
+            &policy,
+            &contexts,
+            &registry,
+            &sources,
+            &mut running(&parent, context),
+            &mut old_budget,
+        )
+        .map_err(|e| format!("{e:?}"))?;
+
+        let mut measured = budget();
+        let mut table = running(&parent, context);
+        let prepared = prepare_owned(
+            &parent,
+            context,
+            make_reply(),
+            &registry,
+            &sources,
+            &mut measured,
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        assert_eq!(
+            table.phase(parent.request_id, &mut budget()),
+            Ok(RequestPhase::Running)
+        );
+        let calls = prepared.calls().as_ptr();
+        let active = prepared
+            .activate(&policy, &contexts, &mut table, &mut measured)
+            .map_err(|e| format!("{e:?}"))?;
+        // Owned calls survive activation at the same address; the indexed pending
+        // collection moves intact. This compares the old two-stage path's cost.
+        assert_eq!(active.pending.calls().as_ptr(), calls);
+        assert_eq!(active.pending.calls(), old.pending.calls());
+        assert_eq!(active.pending.calls().len(), count);
+        assert!(
+            active
+                .pending
+                .calls()
+                .windows(2)
+                .all(|pair| pair[0].request_id > pair[1].request_id)
+        );
+        assert!(measured.usage().work < old_budget.usage().work);
+        assert!(measured.usage().allocation_units < old_budget.usage().allocation_units);
+        assert_eq!(
+            table.phase(parent.request_id, &mut budget()),
+            Ok(RequestPhase::Awaiting)
+        );
+    }
     Ok(())
 }
 
