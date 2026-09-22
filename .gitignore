@@ -3,6 +3,7 @@
 /target/
 /conformance/targets/rp2040/target/
 /conformance/extensions/hello/target/
+/conformance/extensions/suite/target/
 /tools/emulators/rp2040js/node_modules/
 /tools/audit/math/node_modules/
 /dist/
