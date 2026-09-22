@@ -33,6 +33,17 @@ pub enum ResumeError {
     SourceCount,
     NonterminalDependency,
     Await(crate::suspension::AwaitError),
+    Preparation(crate::suspension::host::ActivationError),
+}
+impl From<super::suspending::Error> for ResumeError {
+    fn from(error: super::suspending::Error) -> Self {
+        match error {
+            super::suspending::Error::Stopped(s) => Self::Stopped(s),
+            super::suspending::Error::Dispatch(e) => Self::Dispatch(e),
+            super::suspending::Error::Await(e) => Self::Await(e),
+            super::suspending::Error::Preparation(e) => Self::Preparation(e),
+        }
+    }
 }
 impl From<DispatchError> for ResumeError {
     fn from(error: DispatchError) -> Self {
@@ -78,6 +89,41 @@ pub fn execute<S: DiagnosticSourceResolver>(
     execution: &mut Budget,
     validation: &mut Budget,
 ) -> Result<OperationReply, ResumeError> {
+    execute_with(
+        registration,
+        implementation,
+        saved,
+        resume,
+        lifetimes,
+        registry,
+        execution,
+        validation,
+        |reply, validation| {
+            super::suspending::validate_reply(
+                &reply,
+                saved.parent,
+                saved.context,
+                registry,
+                output_sources,
+                validation,
+            )?;
+            Ok(reply)
+        },
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn execute_with<S: DiagnosticSourceResolver, T>(
+    registration: &Registration<'_>,
+    implementation: Digest,
+    saved: &SavedAwait<'_, S>,
+    resume: &Resume,
+    lifetimes: &mut RequestLifetimes,
+    registry: &SchemaRegistry,
+    execution: &mut Budget,
+    validation: &mut Budget,
+    admit: impl FnOnce(OperationReply, &mut Budget) -> Result<T, ResumeError>,
+) -> Result<T, ResumeError> {
     execution.poll()?;
     validation.charge(Resource::Work, 32)?;
     if registration.implementation != implementation {
@@ -136,18 +182,5 @@ pub fn execute<S: DiagnosticSourceResolver>(
             _ => None,
         },
     )?;
-    super::suspending::validate_reply(
-        &reply,
-        saved.parent,
-        saved.context,
-        registry,
-        output_sources,
-        validation,
-    )
-    .map_err(|error| match error {
-        super::suspending::Error::Stopped(s) => ResumeError::Stopped(s),
-        super::suspending::Error::Dispatch(e) => ResumeError::Dispatch(e),
-        super::suspending::Error::Await(e) => ResumeError::Await(e),
-    })?;
-    Ok(reply)
+    admit(reply, validation)
 }
