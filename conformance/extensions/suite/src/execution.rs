@@ -3,7 +3,8 @@
 mod tests;
 use crate::{
     arithmetic::{self, Application},
-    program::{Program, transfer},
+    program::{Instruction, Node, Program, transfer},
+    syntax::Language,
 };
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
@@ -11,7 +12,7 @@ use nepl3_core::{
     operation::{Continuation, Invoke, OperationReply, Resume},
     schema::{SchemaError, SchemaRegistry},
     source::{Digest, SourceError, SourceSnapshot, SourceStore},
-    value::{Integer, NdfValue, OperationRef, Record, SchemaRef, TypedValue, Variant},
+    value::{Integer, NdfValue, OperationRef, Record, SchemaRef, TypedValue},
 };
 use nepl3_suite::{
     dispatch::{resume, suspending},
@@ -91,15 +92,23 @@ impl Runtime {
                 source.slice(span).map_err(Error::Source)?;
             }
         }
-        let environment = transfer::encode(program, &self.operations[0].schema, validation)
+        let encoded_plan = transfer::encode(program, &self.operations[0].schema, validation)
             .map_err(Error::Plan)?;
         transfer::validate(
-            &environment,
+            &encoded_plan,
             &self.operations[0].schema,
             registry,
             validation,
         )
         .map_err(Error::Plan)?;
+        let digest = plan_digest(&encoded_plan, validation)?;
+        validation.charge(Resource::AllocationUnits, 32)?;
+        let environment = record(
+            &self.operations[0].schema,
+            "PlanIdentity",
+            [NdfValue::Bytes(digest.0.to_vec())],
+            validation,
+        )?;
         let root_index =
             u64::try_from(program.root().0).map_err(|_| validation.stop(StopReason::NodeLimit))?;
         let root = Invoke {
@@ -147,16 +156,30 @@ impl Runtime {
             Ok(contexts[1])
         };
         let context_callbacks: [&scheduler::Context<'_>; 2] = [&mini_context, &frame_context];
+        let mini_invoke = |call: &Invoke, context: Digest, _: &SchemaRegistry, b: &mut Budget| {
+            invoke(program, call, context, false, b)
+        };
+        let frame_invoke = |call: &Invoke, context: Digest, _: &SchemaRegistry, b: &mut Budget| {
+            invoke(program, call, context, true, b)
+        };
+        let mini_resume = |call: &Invoke, reply: &Resume, _: &SchemaRegistry, b: &mut Budget| {
+            resume_value(program, call, reply, false, b)
+        };
+        let frame_resume = |call: &Invoke, reply: &Resume, _: &SchemaRegistry, b: &mut Budget| {
+            resume_value(program, call, reply, true, b)
+        };
+        let invoke_callbacks: [&suspending::Callback<'_>; 2] = [&mini_invoke, &frame_invoke];
+        let resume_callbacks: [&resume::Callback<'_>; 2] = [&mini_resume, &frame_resume];
         let registrations = [0, 1].map(|i| scheduler::Registration {
             invoke: suspending::Registration {
                 operation: &self.operations[i],
                 implementation: self.implementations[i],
-                invoke: if i == 0 { invoke_mini } else { invoke_frame },
+                invoke: invoke_callbacks[i],
             },
             resume: resume::Registration {
                 operation: &self.operations[i],
                 implementation: self.implementations[i],
-                resume: if i == 0 { resume_mini } else { resume_frame },
+                resume: resume_callbacks[i],
             },
             grants: &grants,
             context: context_callbacks[i],
@@ -172,6 +195,16 @@ impl Runtime {
         )
         .map_err(Error::Execution)
     }
+}
+
+fn plan_digest(value: &TypedValue, budget: &mut Budget) -> Result<Digest, Error> {
+    let value = match value.clone_with_budget(budget)? {
+        TypedValue::Record(record) => NdfValue::Record(record),
+        TypedValue::Variant(variant) => NdfValue::Variant(variant),
+    };
+    let bytes = nepl3_wire::encode(&value, budget).map_err(Error::Context)?;
+    budget.charge(Resource::Work, bytes.len() as u64)?;
+    Ok(Digest::domain(b"nepl3.example.composition-plan/1", &bytes))
 }
 
 fn copy_operation(op: &OperationRef, b: &mut Budget) -> Result<OperationRef, StopReason> {
@@ -228,7 +261,10 @@ fn invalid() -> OperationReply {
         report: Report::default(),
     })
 }
-fn selected(call: &Invoke) -> Option<&Variant> {
+fn selected<'a, 'source>(
+    program: &'a Program<'source>,
+    call: &Invoke,
+) -> Option<&'a Node<'source>> {
     let TypedValue::Record(input) = &call.input else {
         return None;
     };
@@ -238,56 +274,38 @@ fn selected(call: &Invoke) -> Option<&Variant> {
     if index.checked_add(1) != Some(call.request_id) {
         return None;
     }
-    let TypedValue::Record(environment) = &call.environment else {
-        return None;
-    };
-    let [NdfValue::List(nodes)] = environment.fields.as_slice() else {
-        return None;
-    };
-    let NdfValue::Variant(node) = nodes.get(usize::try_from(*index).ok()?)? else {
-        return None;
-    };
-    Some(node)
-}
-fn invoke_mini(
-    call: &Invoke,
-    context: Digest,
-    _: &SchemaRegistry,
-    b: &mut Budget,
-) -> Result<OperationReply, StopReason> {
-    invoke(call, context, false, b)
-}
-fn invoke_frame(
-    call: &Invoke,
-    context: Digest,
-    _: &SchemaRegistry,
-    b: &mut Budget,
-) -> Result<OperationReply, StopReason> {
-    invoke(call, context, true, b)
+    program.request_node(call.request_id)
 }
 fn invoke(
+    program: &Program<'_>,
     call: &Invoke,
     context: Digest,
     frame: bool,
     b: &mut Budget,
 ) -> Result<OperationReply, StopReason> {
     b.charge(Resource::Work, 1)?;
-    let Some(node) = selected(call) else {
+    let Some(node) = selected(program, call) else {
         return Ok(invalid());
     };
-    if (node.variant == "Frame") != frame {
+    if (node.language == Language::Frame) != frame {
         return Ok(invalid());
     }
-    if let ("Natural", [NdfValue::Integer(value)]) = (node.variant.as_str(), node.fields.as_slice())
-    {
-        let value = NdfValue::Integer(copy_integer(value, b)?);
-        return complete(&call.operation.schema, value, b);
-    }
+    let (left, right) = match node.instruction {
+        Instruction::Natural(value) => {
+            return complete(
+                &call.operation.schema,
+                NdfValue::Integer(copy_integer(value, b)?),
+                b,
+            );
+        }
+        Instruction::Neg(child) | Instruction::Framed(child) | Instruction::Frame(child) => {
+            (child, None)
+        }
+        Instruction::Add(left, right) | Instruction::Mul(left, right) => (left, Some(right)),
+    };
     let mut calls = Vec::new();
-    for child in &node.fields {
-        let NdfValue::U64(index) = child else {
-            return Ok(invalid());
-        };
+    for child in core::iter::once(left).chain(right) {
+        let index = u64::try_from(child.0).map_err(|_| b.stop(StopReason::NodeLimit))?;
         b.charge(
             Resource::AllocationUnits,
             core::mem::size_of::<Invoke>() as u64,
@@ -297,7 +315,7 @@ fn invoke(
             .map_err(|_| b.stop(StopReason::AllocationLimit))?;
         let mut operation = copy_operation(&call.operation, b)?;
         b.charge(Resource::AllocationUnits, 8)?;
-        operation.name = if node.variant == "Framed" {
+        operation.name = if matches!(node.instruction, Instruction::Framed(_)) {
             "frame"
         } else {
             "miniexpr"
@@ -311,7 +329,7 @@ fn invoke(
             input: record(
                 &call.operation.schema,
                 "Selection",
-                [NdfValue::U64(*index)],
+                [NdfValue::U64(index)],
                 b,
             )?,
             environment: call.environment.clone_with_budget(b)?,
@@ -360,55 +378,40 @@ fn number(reply: &OperationReply) -> Option<&Integer> {
     };
     Some(value)
 }
-fn resume_mini(
-    call: &Invoke,
-    reply: &Resume,
-    _: &SchemaRegistry,
-    b: &mut Budget,
-) -> Result<OperationReply, StopReason> {
-    resume_value(call, reply, false, b)
-}
-fn resume_frame(
-    call: &Invoke,
-    reply: &Resume,
-    _: &SchemaRegistry,
-    b: &mut Budget,
-) -> Result<OperationReply, StopReason> {
-    resume_value(call, reply, true, b)
-}
 fn resume_value(
+    program: &Program<'_>,
     call: &Invoke,
     reply: &Resume,
     frame: bool,
     b: &mut Budget,
 ) -> Result<OperationReply, StopReason> {
     b.poll()?;
-    let Some(node) = selected(call) else {
+    let Some(node) = selected(program, call) else {
         return Ok(invalid());
     };
-    if (node.variant == "Frame") != frame {
+    if (node.language == Language::Frame) != frame {
         return Ok(invalid());
     }
     let children = reply.dependency_results.as_slice();
-    let value = match (node.variant.as_str(), children) {
-        ("Frame" | "Framed", [child]) => {
+    let value = match (&node.instruction, children) {
+        (Instruction::Frame(_) | Instruction::Framed(_), [child]) => {
             let Some(value) = number(child) else {
                 return Ok(invalid());
             };
             copy_integer(value, b)?
         }
-        ("Neg", [child]) => {
+        (Instruction::Neg(_), [child]) => {
             let Some(value) = number(child) else {
                 return Ok(invalid());
             };
             arithmetic::apply(Application::Neg(value), b)?
         }
-        ("Add" | "Mul", [left, right]) => {
+        (Instruction::Add(..) | Instruction::Mul(..), [left, right]) => {
             let (Some(left), Some(right)) = (number(left), number(right)) else {
                 return Ok(invalid());
             };
             arithmetic::apply(
-                if node.variant == "Add" {
+                if matches!(node.instruction, Instruction::Add(..)) {
                     Application::Add(left, right)
                 } else {
                     Application::Mul(left, right)

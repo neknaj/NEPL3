@@ -58,7 +58,7 @@ fn schema_exchange_rejects_invoke_before_callback() -> Result<(), String> {
     let registration = nepl3_suite::dispatch::suspending::Registration {
         operation: &request.operation,
         implementation: identity,
-        invoke: increment,
+        invoke: &increment,
     };
     for incoming in [false, true] {
         let mut server = negotiating(&registry, incoming)?;
@@ -120,7 +120,7 @@ fn wire_invoke_executes_native_callback_and_returns_the_checked_result() -> Resu
     let registration = nepl3_suite::dispatch::suspending::Registration {
         operation: &request.operation,
         implementation: identity,
-        invoke: increment,
+        invoke: &increment,
     };
     let mut server = connection(&ProviderFrame::Invoke(request.clone()), &registry)?;
     let Some(ProviderFrame::Invoke(received)) = server
@@ -196,7 +196,7 @@ fn decoded_ungranted_environment_cannot_reach_dispatch() -> Result<(), String> {
     let registration = nepl3_suite::dispatch::suspending::Registration {
         operation: &request.operation,
         implementation: identity,
-        invoke: increment,
+        invoke: &increment,
     };
     let mut execution = budget();
     let outcome = grants.admit(&received, &mut budget()).map(|approved| {
@@ -231,7 +231,7 @@ fn rejected_dispatch_and_closed_transport_do_not_execute_or_emit_a_reply() -> Re
     let registration = nepl3_suite::dispatch::suspending::Registration {
         operation: &request.operation,
         implementation: identity,
-        invoke: increment,
+        invoke: &increment,
     };
     let mut server = Connection::new(Cursor::new(Vec::<u8>::new()), Vec::<u8>::new());
     let mut execution = budget();
@@ -288,7 +288,7 @@ fn failed_reply_write_keeps_execution_work_and_prevents_callback_retry() -> Resu
     let registration = nepl3_suite::dispatch::suspending::Registration {
         operation: &request.operation,
         implementation: identity,
-        invoke: increment,
+        invoke: &increment,
     };
     let mut server = Connection::new(io::empty(), Broken);
     let mut execution = budget();

@@ -69,10 +69,12 @@ accepted child reports retain the child's own ID through `accepted_results`.
 The example prints this host failure context. Provider-generated, source-bearing
 Stopped reports remain a separate unfinished path.
 
-The initial owned callback adapter copies the flat plan into dependency requests;
-the existing clone operation charges this cost to the execution Budget. This
-retains quadratic copy cost for large plans. Shared execution environments require
-a separate API design before this example serves as a large-input performance claim.
+Native Invoke and Resume callbacks borrow one immutable, schema-checked plan.
+The request environment carries a `PlanIdentity` containing the digest of the
+canonical NDF plan. Child requests copy this fixed-size identity and select one
+occurrence; they share the plan through the callback's Rust lifetime. Plan encoding,
+validation and hashing occur once per run. The portable plan representation remains
+available for a future process provider's admission path.
 Remaining integration: source-associated stop diagnostics, additional failure and
 large-input cost cases, and independent review. Regression tests cover successful
 nesting depths 1, 8 and 24, Depth=1 rejection, and sampled Work/Allocation stops.

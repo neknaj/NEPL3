@@ -167,7 +167,7 @@ fn resume_failure_preserves_or_consumes_generation_at_the_callback_boundary() ->
         let registration = dispatch::Registration {
             operation: &parent.operation,
             implementation: identity,
-            resume: callback,
+            resume: &callback,
         };
         let mut lifetimes = RequestLifetimes::default();
         lifetimes
@@ -270,7 +270,7 @@ fn resume_can_suspend_again_and_rejects_the_previous_generation() -> Result<(), 
     let registration = dispatch::Registration {
         operation: &parent.operation,
         implementation: identity,
-        resume: await_again,
+        resume: &await_again,
     };
     let saved_first = dispatch::SavedAwait {
         parent: &parent,
@@ -326,7 +326,7 @@ fn resume_can_suspend_again_and_rejects_the_previous_generation() -> Result<(), 
         ..request
     };
     let registration = dispatch::Registration {
-        resume: resume_parent,
+        resume: &resume_parent,
         ..registration
     };
     let reply = dispatch::execute(
@@ -369,7 +369,7 @@ fn admitted_await_collects_dispatched_dependencies_and_resumes_saved_lifetime() 
     let registration = suspending::Registration {
         operation: &parent.operation,
         implementation: identity,
-        invoke: invoke_parent,
+        invoke: &invoke_parent,
     };
     let root_scope = suspension::execution::ExecutionScope::root(&mut execution, parent.limits)
         .map_err(|e| format!("{e:?}"))?;
@@ -462,7 +462,7 @@ fn admitted_await_collects_dispatched_dependencies_and_resumes_saved_lifetime() 
     let registration = dispatch::Registration {
         operation: &parent.operation,
         implementation: identity,
-        resume: resume_parent,
+        resume: &resume_parent,
     };
     let grants = [&sources];
     let saved = dispatch::SavedAwait {
@@ -622,7 +622,7 @@ fn suspending_dispatch_rejects_an_await_after_execution_stopped() -> Result<(), 
     let registration = suspending::Registration {
         operation: &parent.operation,
         implementation: identity,
-        invoke: stopped_await,
+        invoke: &stopped_await,
     };
     let mut execution = budget();
     let result = suspending::invoke(

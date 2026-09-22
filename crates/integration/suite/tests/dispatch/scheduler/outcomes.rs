@@ -94,12 +94,12 @@ fn invalid_keeps_partial_and_diagnostic_while_stopped_prevents_parent_callback()
             invoke: suspending::Registration {
                 operation: &root.operation,
                 implementation: identity,
-                invoke: outcome,
+                invoke: &outcome,
             },
             resume: resume::Registration {
                 operation: &root.operation,
                 implementation: identity,
-                resume: receive_invalid,
+                resume: &receive_invalid,
             },
             grants: &grants,
             context: &context,

@@ -207,3 +207,40 @@ fn work_and_allocation_stops_retain_inspectable_active_occurrence() -> Result<()
         },
     )
 }
+
+#[test]
+fn execution_allocation_scales_with_occurrences_without_plan_copies() -> Result<(), String> {
+    let mut allocations = Vec::new();
+    for depth in [8, 16, 32] {
+        with_program(
+            &format!("{}7", "neg ".repeat(depth)),
+            |program, sources, runtime, registry| {
+                let mut execution = budget();
+                runtime
+                    .run(
+                        program,
+                        sources,
+                        registry,
+                        &mut execution,
+                        &mut budget(),
+                        |_, _| {},
+                        |_| {},
+                    )
+                    .map_err(error)?;
+                allocations.push(execution.usage().allocation_units);
+                Ok(())
+            },
+        )?;
+    }
+    // A copied full plan adds N-sized payloads to each of N requests. With a
+    // shared plan, each extra occurrence retains only a fixed-size selection,
+    // context identity and the small source snapshot used by this fixture.
+    eprintln!("execution AllocationUnits for depths 8/16/32: {allocations:?}");
+    for pair in allocations.windows(2) {
+        assert!(
+            pair[1] < pair[0] * 3,
+            "full-plan copy regression: {allocations:?}"
+        );
+    }
+    Ok(())
+}

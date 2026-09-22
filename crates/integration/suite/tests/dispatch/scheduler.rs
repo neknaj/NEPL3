@@ -210,12 +210,12 @@ fn scheduler_preserves_sibling_order_and_resumes_empty_and_repeated_await() -> R
             invoke: suspending::Registration {
                 operation: &root.operation,
                 implementation: identity,
-                invoke: branching,
+                invoke: &branching,
             },
             resume: resume::Registration {
                 operation: &root.operation,
                 implementation: identity,
-                resume: branching_resume,
+                resume: &branching_resume,
             },
             grants: &grants,
             context: &context,
@@ -328,12 +328,12 @@ fn iterative_scheduler_resolves_nested_calls_and_cancels_on_execution_stop() -> 
         invoke: suspending::Registration {
             operation: &root.operation,
             implementation: identity,
-            invoke,
+            invoke: &invoke,
         },
         resume: resume::Registration {
             operation: &root.operation,
             implementation: identity,
-            resume,
+            resume: &resume,
         },
         grants: &grants,
         context: &borrowed_context,
@@ -389,7 +389,7 @@ fn iterative_scheduler_resolves_nested_calls_and_cancels_on_execution_stop() -> 
         cancelled.dedup();
         assert_eq!(cancelled.len(), count);
     }
-    registrations[0].invoke.invoke = stop_at_leaf;
+    registrations[0].invoke.invoke = &stop_at_leaf;
     cancelled.clear();
     let failure = scheduler::run(
         &registrations,

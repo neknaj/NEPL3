@@ -61,6 +61,13 @@ pub fn descriptor(budget: &mut Budget) -> Result<SchemaDescriptor, StopReason> {
         revision: 1,
         types: vec![
             NamedType {
+                name: "PlanIdentity".into(),
+                constraints: vec![],
+                shape: TypeShape::Record {
+                    fields: vec![field("digest", TypeDescriptor::Bytes32)],
+                },
+            },
+            NamedType {
                 name: "Node".into(),
                 constraints: vec![],
                 shape: TypeShape::Variant { variants },
