@@ -131,8 +131,9 @@ body
     cons paragraph
       cons sentence cons text "Occurrenceベースの " cons code "analysis::query::query" cons text " は、" cons ruby text "完了" text "かんりょう" cons text "したBoundBindingReplyとQueryRequest(key, SourceRef, byte offset, kind)を" cons ruby text "受" text "う" cons text "ける。" nil
       cons "SourceRefのrevision/digestと[現在要求/げんざいようきゅう]するkeyを[照合/しょうごう]し、UTF-8 scalar[境界/きょうかい]を[検査/けんさ]する。"
-      cons "[範囲/はんい]は[半開区間/はんかいくかん]で、[終端/しゅうたん]byteや[空白/くうはく]を[直前/ちょくぜん]の[名前/なまえ]へ[吸着/きゅうちゃく]させない。"
-      cons "[包含/ほうがん]するOccurrence.spanのうち[最小/さいしょう]のものを[選/えら]び、[同長/どうちょう]なら[確定/かくてい]factsの[発行順/はっこうじゅん]を[使/つか]う。" nil
+      cons "Occurrence.spanは[開始位置/かいしいち]を[含/ふく]み、[終了位置/しゅうりょういち]を[含/ふく]まない[半開区間/はんかいくかん]である。"
+      cons "[終端/しゅうたん]byteや[空白/くうはく]を[直前/ちょくぜん]の[名前/なまえ]へ[対応付/たいおうづ]ける[補正/ほせい]は[禁止/きんし]する。"
+      cons "[要求位置/ようきゅういち]を[包含/ほうがん]するOccurrence.spanのうち[最小/さいしょう]の[範囲/はんい]を[選択/せんたく]し、[長/なが]さが[等/ひと]しい[場合/ばあい]は[確定/かくてい]factsの[発行順/はっこうじゅん]を[使/つか]う。" nil
     cons paragraph
       cons sentence cons ruby text "一般" text "いっぱん" cons text "regionを" cons ruby text "使" text "つか" cons text "う " cons code "analysis::region::query::query" cons text " は、" cons ruby text "同" text "おな" cons text "じ" cons ruby text "準備入力" text "じゅんびにゅうりょく" cons text "と" cons ruby text "実" text "じつ" cons text "Binding" cons ruby text "完了結果" text "かんりょうけっか" cons text "に" cons ruby text "対" text "たい" cons text "するRegionQueryRequest(region:RegionRequest, kind:QueryKind)を" cons ruby text "受" text "う" cons text "ける。" nil
       cons "まず3[節/せつ]のpriorityを[含/ふく]む[構造選択/こうぞうせんたく]を[実行/じっこう]し、[選択/せんたく]したSourceRegionを[保持/ほじ]する。"
@@ -142,7 +143,8 @@ body
     cons paragraph
       cons "[要求位置/ようきゅういち]の[一/いち]Unicode scalar[範囲/はんい]と[選択/せんたく]regionのlogical[範囲/はんい]を、[所有/しょゆう]bundleの[宣言/せんげん]Exact/Transformed[関係/かんけい]でOccurrenceのsourceへ[対応付/たいおうづ]け、[両者/りょうしゃ]とOccurrence.spanが[重/かさ]なるものを[残/のこ]す。"
       cons "Exactはbyte[差分/さぶん]と[被覆区間/ひふくくかん]、Transformedは[宣言/せんげん]された[範囲全体/はんいぜんたい]の[対応/たいおう]である。"
-      cons "query[用/よう]の[対応/たいおう]は[双方向/そうほうこう]の[関係/かんけい]であり、[非一意/ひいちい]なExactやTransformedの[候補/こうほ]を[黙/だま]って[一/ひと]つへ[絞/しぼ]らず、rename[用/よう]の[一意/いちい]な[逆変換/ぎゃくへんかん]や[編集権限/へんしゅうけんげん]とは[区別/くべつ]する。"
+      cons "query[用/よう]の[対応/たいおう]は[双方向/そうほうこう]の[関係/かんけい]であり、ExactやTransformedに[複数/ふくすう]の[対応候補/たいおうこうほ]がある[場合/ばあい]は、その[候補/こうほ]を[保持/ほじ]する。"
+      cons "renameに[必要/ひつよう]な[逆変換/ぎゃくへんかん]の[一意性/いちいせい]と[編集権限/へんしゅうけんげん]は、[個別/こべつ]の[条件/じょうけん]として[検査/けんさ]する。"
       cons "source[不足/ふそく]・[古/ふる]いrevision・[不正/ふせい]scalar[境界/きょうかい]・[停止/ていし]は[型付/かたつ]き[失敗/しっぱい]となる。" nil
     cons paragraph
       cons "[対応/たいおう]に[使/つか]うmapはそのSyntaxBundleの[局所表/きょくしょひょう]と、[実/じつ]BindingBundleScope.customSourceMapsが[指/さ]すCustom[受理行/じゅりぎょう]だけである。"
@@ -161,9 +163,10 @@ body
       cons "raw BindingResultやbundleScopes[行/ぎょう]、[自己申告/じこしんこく]RegionKeyから[意味/いみ]proof・[通信認証/つうしんにんしょう]・provider[実行許可/じっこうきょか]を[発行/はっこう]しない。" nil
     cons paragraph
       cons "QuerySelectionは[元/もと]のOccurrenceId・span・[確定/かくてい]ReferenceResolutionとopenInputを[保持/ほじ]する。"
-      cons "[対象/たいしょう]なしはNone、[未解決/みかいけつ]とOpen namespaceのfree inputはopenInputで[区別/くべつ]し、DeferredもUnresolvedに[潰/つぶ]さない。"
+      cons "[対象/たいしょう]がない[場合/ばあい]はNoneを[返/かえ]す。"
+      cons "[未解決/みかいけつ]とOpen namespaceのfree inputはopenInputで[区別/くべつ]し、DeferredとUnresolvedはそれぞれの[状態/じょうたい]を[保持/ほじ]する。"
       cons "[定義候補/ていぎこうほ]は[確定/かくてい]resolutionのEntity ID[列/れつ]に[従/したが]い、[曖昧/あいまい]な[全候補/ぜんこうほ]とその[順序/じゅんじょ]を[維持/いじ]する。"
-      cons "[位置/いち]を[持/も]たないEntityはIDとlocation=Noneを[返/かえ]し、[仮/かり]のsource[位置/いち]を[作/つく]らない。"
+      cons "[位置/いち]を[持/も]たないEntityは、IDとlocation=Noneを[返/かえ]す。"
       cons "locationがある[場合/ばあい]はURI、[定義全体/ていぎぜんたい]range、[任意/にんい]の[名前/なまえ]selectionを[分離/ぶんり]する。" nil
     cons paragraph
       cons "Referencesは[選択/せんたく]した[各/かく]Entity IDごとに[確定/かくてい]Occurrenceを[検索/けんさく]する。"
@@ -171,7 +174,8 @@ body
       cons "ReferenceOptionsはDefinition・Import・Export role、およびそのEntityをAmbiguous[候補/こうほ]に[含/ふく]むOccurrenceをそれぞれ[明示的/めいじてき]に[追加/ついか]できる。"
       cons "[曖昧/あいまい]な[出現/しゅつげん]はambiguous=trueで[区別/くべつ]し、[同綴/どうつづ]りの[別/べつ]Entityを[混/ま]ぜない。"
       cons "[通常/つうじょう]BindingのImportが[子/こ]のexport[候補/こうほ]を[可視/かし]にする[操作/そうさ]と、providerが[明示的/めいじてき]に[返/かえ]すImport roleのOccurrenceは[別/べつ]であり、queryが[新/あたら]しいOccurrenceを[捏造/ねつぞう]しない。"
-      cons "Customの[更新後/こうしんご]も[元/もと]stageから[名前検索/なまえけんさく]をやり[直/なお]さず、[確定/かくてい]resolutionを[用/もち]いる。" nil
+      cons "Customの[更新後/こうしんご]は、その[更新/こうしん]を[反映/はんえい]した[確定/かくてい]resolutionを[用/もち]いる。"
+      cons "[元/もと]stageからの[名前検索/なまえけんさく]によって[確定/かくてい]resolutionを[上書/うわが]きする[処理/しょり]は[禁止/きんし]する。" nil
     cons paragraph
       cons "QueryReplyはDefinition/References/Invalid/StoppedとReport、[参照位置/さんしょういち]に[必要/ひつよう]な[宣言/せんげん]sourcesを[持/も]つ。"
       cons "[現/げん]queryは[新/あら]たな[診断/しんだん]・eventを[発行/はっこう]せず、[解析診断/かいせきしんだん]は[元/もと]BindingReplyに[残/のこ]す。"
