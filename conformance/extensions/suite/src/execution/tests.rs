@@ -62,6 +62,57 @@ fn with_program(
 }
 
 #[test]
+fn source_admission_rejects_missing_and_changed_snapshots_before_execution() -> Result<(), String> {
+    with_program(
+        "add framed frame neg 7 2",
+        |program, sources, runtime, registry| {
+            let original = sources.snapshots().first().ok_or("source snapshot")?;
+            // Keep the ID and revision, but change the bytes at the same positions.
+            // Span admission must compare the full snapshot identity, including digest.
+            let changed = SourceSnapshot::new(
+                original.identity().source.clone(),
+                original.identity().revision,
+                original.uri().into(),
+                b"add framed frame neg 8 2".to_vec(),
+                &mut budget(),
+            )
+            .map_err(error)?;
+            let mut changed_sources = SourceStore::default();
+            changed_sources
+                .insert_ref_with_budget(&changed, &mut budget())
+                .map_err(error)?;
+            for (supplied, expected) in [
+                (SourceStore::default(), SourceError::MissingSnapshot),
+                (changed_sources, SourceError::SnapshotMismatch),
+            ] {
+                let mut execution = budget();
+                let before = execution.usage();
+                let mut reports = Vec::new();
+                let mut cancelled = Vec::new();
+                let result = runtime.run(
+                    program,
+                    &supplied,
+                    registry,
+                    &mut execution,
+                    &mut budget(),
+                    |id, _| reports.push(id),
+                    |id| cancelled.push(id),
+                );
+                let Err(Error::Source(actual)) = result else {
+                    return Err("expected source admission rejection".into());
+                };
+                assert_eq!(actual, expected);
+                assert_eq!(execution.usage(), before);
+                assert_eq!(execution.poll(), Ok(()));
+                assert!(reports.is_empty());
+                assert!(cancelled.is_empty());
+            }
+            Ok(())
+        },
+    )
+}
+
+#[test]
 fn nested_operations_and_depth_stop_preserve_request_source() -> Result<(), String> {
     for depth in [1, 8, 24] {
         // Direct source construction exercises the real parser on increasing
