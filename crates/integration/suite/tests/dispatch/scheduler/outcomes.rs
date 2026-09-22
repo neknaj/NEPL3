@@ -123,7 +123,10 @@ fn invalid_keeps_partial_and_diagnostic_while_stopped_prevents_parent_callback()
             assert_eq!(execution.poll(), Ok(()));
             assert!(cancelled.is_empty());
         } else {
-            let failure = result.expect_err("stopped child must preserve failure state");
+            let failure = match result {
+                Ok(_) => return Err("stopped child unexpectedly completed".into()),
+                Err(failure) => failure,
+            };
             assert!(matches!(failure.cause, scheduler::Error::Stopped(_)));
             let accepted = failure.accepted_results().collect::<Vec<_>>();
             assert_eq!(accepted.len(), 1);
