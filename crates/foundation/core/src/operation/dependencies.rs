@@ -134,6 +134,17 @@ impl<'a> PendingDependencies<'a> {
     pub fn continuation(&self) -> &Continuation {
         &self.continuation
     }
+    /// Borrow accepted terminal results together with their immutable requests,
+    /// in call order. Consumed Resume generations contain no remaining results.
+    /// Iteration requires no allocation and remains available after Budget stop.
+    pub fn accepted_results(
+        &self,
+    ) -> impl Iterator<Item = (&Invoke, &OperationResult<TypedValue>)> {
+        self.calls
+            .iter()
+            .zip(&self.results)
+            .filter_map(|(call, result)| result.as_ref().map(|result| (call, result)))
+    }
     /// Validate and store one terminal result. Rejection leaves every slot intact.
     /// The supplied resolver must carry the permissions of this specific call.
     pub fn accept(

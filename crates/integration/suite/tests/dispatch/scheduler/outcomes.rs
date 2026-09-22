@@ -11,9 +11,15 @@ fn outcome(
     b: &mut Budget,
 ) -> Result<OperationReply, StopReason> {
     b.charge(Resource::Work, 1)?;
+    assert_ne!(
+        number(&call.input),
+        Some(30),
+        "callback after stopped sibling"
+    );
     match number(&call.input) {
         Some(99) => return suspend_with(call, context, 99, &[10], b),
         Some(98) => return suspend_with(call, context, 98, &[20], b),
+        Some(97) => return suspend_with(call, context, 97, &[10, 20, 30], b),
         _ => (),
     }
     let partial = Some(call.input.clone_with_budget(b)?);
@@ -74,7 +80,7 @@ fn receive_invalid(
 #[test]
 fn invalid_keeps_partial_and_diagnostic_while_stopped_prevents_parent_callback()
 -> Result<(), String> {
-    for input in [99, 98] {
+    for input in [99, 98, 97] {
         RESUMED.store(0, Ordering::SeqCst);
         let (registry, mut root) = fixture()?;
         if let TypedValue::Record(record) = &mut root.input {
@@ -123,10 +129,57 @@ fn invalid_keeps_partial_and_diagnostic_while_stopped_prevents_parent_callback()
             assert_eq!(execution.poll(), Ok(()));
             assert!(cancelled.is_empty());
         } else {
-            assert!(result.is_err());
+            let failure = match result {
+                Ok(_) => return Err("stopped child unexpectedly completed".into()),
+                Err(failure) => failure,
+            };
+            assert!(matches!(failure.cause, scheduler::Error::Stopped(_)));
+            let accepted = failure.accepted_results().collect::<Vec<_>>();
+            let stopped = if input == 97 {
+                assert_eq!(accepted.len(), 2);
+                assert_eq!(accepted[0].0.request_id, root.request_id + 10);
+                let OperationResult::Invalid {
+                    partial: Some(value),
+                    report,
+                } = accepted[0].1
+                else {
+                    return Err("expected retained preceding Invalid".into());
+                };
+                assert_eq!(number(value), Some(10));
+                assert_eq!(report.diagnostics[0].code, "child-outcome");
+                assert_eq!(accepted[1].0.request_id, root.request_id + 9);
+                accepted[1]
+            } else {
+                assert_eq!(accepted.len(), 1);
+                assert_eq!(accepted[0].0.request_id, root.request_id + 10);
+                accepted[0]
+            };
+            assert_eq!(stopped.0.operation, root.operation);
+            assert_eq!(number(&stopped.0.input), Some(20));
+            let OperationResult::Stopped {
+                reason,
+                partial: Some(value),
+                report,
+            } = stopped.1
+            else {
+                return Err("expected retained stopped result".into());
+            };
+            assert_eq!(number(value), Some(20));
+            assert_eq!(*reason, StopReason::Cancelled);
+            assert_eq!(report.diagnostics.len(), 1);
+            assert_eq!(report.diagnostics[0].schema, stopped.0.operation.schema);
+            assert_eq!(report.diagnostics[0].code, "child-outcome");
+            assert_eq!(number(&report.diagnostics[0].arguments), Some(20));
+            assert_eq!(report.usage.diagnostics, 1);
             assert_eq!(execution.poll(), Err(StopReason::Cancelled));
             assert_eq!(RESUMED.load(Ordering::SeqCst), 0);
-            assert_eq!(cancelled, vec![root.request_id]);
+            if input == 97 {
+                // Both accepted children are finished. Only the parent and
+                // the registered, unexecuted third child require cancellation.
+                assert_eq!(cancelled, vec![root.request_id, root.request_id + 8]);
+            } else {
+                assert_eq!(cancelled, vec![root.request_id]);
+            }
         }
     }
     Ok(())
