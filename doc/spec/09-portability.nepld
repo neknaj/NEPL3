@@ -60,9 +60,11 @@ body
     cons paragraph
       cons sentence cons text "SchemaRefは " cons code "[packageName:text, revision:uint64, digest:bytes32]" cons text "。" nil
       cons "[型名/かためい]/kind[名/めい]は[登録済/とうろくず]みschemaに[照合/しょうごう]する。"
-      cons "naturalはtag3のnonnegativeを[要求/ようきゅう]するfield[制約/せいやく]。"
-      cons "integer magnitudeはbig-endian、[先頭/せんとう]zeroなし、zeroはempty bytesかつnegative=false。"
-      cons "rational denominatorは[正/せい]で[先頭/せんとう]zeroなし、gcd=1、zero numeratorはdenominator=1。" nil
+      cons "naturalは、tag3の[値/あたい]にnonnegativeを[要求/ようきゅう]するfield[制約/せいやく]である。"
+      cons "integerのmagnitudeはbig-endianとし、[先頭/せんとう]のzero byteを[禁止/きんし]する。"
+      cons "zeroは、[空/から]のmagnitudeとnegative=falseで[表/あらわ]す。"
+      cons "rationalのdenominatorは[正/せい]とし、[先頭/せんとう]のzero byteを[禁止/きんし]する。"
+      cons "[分子/ぶんし]と[分母/ぶんぼ]はgcd=1を[満/み]たし、[分子/ぶんし]がzeroの[場合/ばあい]はdenominator=1とする。" nil
     cons paragraph
       cons "NodeId/EntityId[等/など]は[公開/こうかい]record[内/ない]のindexとしてencodeし、[同/おな]じbundleに[対応/たいおう]するtableとschemaを[含/ふく]める。"
       cons "[未定義参照/みていぎさんしょう]、[循環禁止構造/じゅんかんきんしこうぞう]の[循環/じゅんかん]、[重複/じゅうふく]ID、[範囲外/はんいがい]spanはdecode[直後/ちょくご]に[拒否/きょひ]する。"
@@ -80,18 +82,19 @@ body
         cons "Unitは[追加/ついか]payloadを[持/も]たず、Noneとは[異/こと]なる。"
         cons "NaturalはIntegerの[非負制約/ひふせいやく]、Bytes32はBytesの[長/なが]さ[制約/せいやく]であり、[追加/ついか]のwire tagを[持/も]たない。" nil
       cons paragraph
-        cons "このintrinsic[記述/きじゅつ]は[通常/つうじょう]のdomain sumではない。"
-        cons sentence cons text "たとえば " cons code "NdfValue.Integer(value: Integer)" cons text " の" cons ruby text "論理" text "ろんり" cons text "fieldを" cons ruby text "一般" text "いっぱん" cons text "のVariantとしてtag11で" cons ruby text "包" text "つつ" cons text "まず、" cons ruby text "上表" text "じょうひょう" cons text "のtag3へ" cons ruby text "直接写" text "ちょくせつうつ" cons text "す。" nil
+        cons "intrinsic[記述/きじゅつ]は、[論理値/ろんりち]を[上表/じょうひょう]の[専用/せんよう]tagへ[対応付/たいおうづ]ける。"
+        cons sentence cons text "たとえば " cons code "NdfValue.Integer(value: Integer)" cons text " は、" cons ruby text "上表" text "じょうひょう" cons text "のtag3へ" cons ruby text "直接符号化" text "ちょくせつふごうか" cons text "する。" nil
+        cons "intrinsicのcaseをdomainのVariantとしてtag11で[包/つつ]むことは[禁止/きんし]する。"
         cons "Integerのnegative/magnitude、Rationalの[分子/ぶんし]tag3と[分母/ぶんぼ]bytesは[上表/じょうひょう]の[専用表現/せんようひょうげん]を[使/つか]う。"
-        cons "tag10/11のfieldsは[裸/はだか]のCBOR arrayであり、Listのtag7を[付/つ]けない。"
-        cons sentence cons text "そのheader" cons ruby text "内" text "ない" cons text "のSchemaRefも" cons ruby text "裸" text "はだか" cons text "の " cons code "[text,uint64,bytes32]" cons text " であり、" cons ruby text "通常" text "つうじょう" cons text "のRecordのtag10を" cons ruby text "付" text "つ" cons text "けない。" nil
+        cons "tag10/11のfieldsはCBOR arrayで[直接表現/ちょくせつひょうげん]し、Listのtag7を[付/つ]けない。"
+        cons sentence cons text "そのheader" cons ruby text "内" text "ない" cons text "のSchemaRefは " cons code "[text,uint64,bytes32]" cons text " で" cons ruby text "直接表現" text "ちょくせつひょうげん" cons text "し、Recordのtag10を" cons ruby text "付" text "つ" cons text "けない。" nil
         cons "[論理/ろんり]fieldのTextやU64も、[上表/じょうひょう]で[裸/はだか]のCBOR text/uint64を[指定/してい]する[位置/いち]へ[余分/よぶん]なNDF tagを[付/つ]けない。"
         cons "codecの[物理表現/ぶつりひょうげん]は[上表/じょうひょう]を[正本/せいほん]とする。" nil
       cons paragraph
         cons sentence cons text "intrinsicの" cons ruby text "識別子" text "しきべつし" cons text " " cons code "nepl3.ndf/1" cons text " は" cons ruby text "本符号化" text "ほんふごうか" cons text "profileに" cons ruby text "組" text "く" cons text "み" cons ruby text "込" text "こ" cons text "まれた" cons ruby text "固定識別子" text "こていしきべつし" cons text "である。" nil
         cons "intrinsic[自体/じたい]へdomain SchemaRefや[自己/じこ]hashを[要求/ようきゅう]しない。"
-        cons "Record/Variant headerのSchemaRefは[運/はこ]ばれるdomain[値/あたい]のdescriptorを[識別/しきべつ]し、intrinsicの[識別子/しきべつし]とは[別物/べつもの]である。"
-        cons "domain descriptorの[登録/とうろく]・digest[検証/けんしょう]は[必要/ひつよう]であり、TypedValueという[型名/かためい]やtag10/11であることだけでは[検査済/けんさず]みにならない。"
+        cons "Record/Variant headerのSchemaRefは、[転送/てんそう]するdomain[値/あたい]のdescriptorを[識別/しきべつ]する。"
+        cons "TypedValueの[検査/けんさ]には、そのdomain descriptorの[登録/とうろく]とdigest[検証/けんしょう]を[要求/ようきゅう]する。"
         cons sentence cons ruby text "通常" text "つうじょう" cons text "のfieldとしてのSchemaRefは " cons code "nepl3.foundation" cons text " revision 1のSchemaRef recordをtag10で" cons ruby text "運" text "はこ" cons text "ぶ。" nil
         cons "そのheaderのSchemaRefだけが[裸/はだか]のtupleとなるため、[無限/むげん]のwrapper[再帰/さいき]は[生/しょう]じない。" nil
       nil
@@ -203,8 +206,8 @@ body
     cons paragraph
       cons "Rustの[各/かく]coreは[型付/かたつ]き[関数/かんすう]を[公開/こうかい]する。"
       cons "suiteの[登録時/とうろくじ]に、その[関数/かんすう]とOperationRefの[対応/たいおう]を[固定/こてい]する。"
-      cons "wire boundaryを[通/とお]る[場合/ばあい]にだけTypedRecordとencode/decodeを[行/おこな]う。"
-      cons "[全/ぜん]tokenを[常/つね]にCBOR[化/か]する[設計/せっけい]にしない。" nil
+      cons "wire boundaryを[通/とお]る[場合/ばあい]に[限/かぎ]り、TypedRecordへの[変換/へんかん]とencode/decodeを[行/おこな]う。"
+      cons "native[経路/けいろ]のtoken[処理/しょり]には、Rustの[型付/かたつ]きAPIを[使用/しよう]する。" nil
     cons paragraph
       cons "[呼出/よびだ]し[元/もと]へ[渡/わた]すparse treeやsourceは[借用/しゃくよう]してよいが、そのborrow/lifetimeをoperation schemaへ[露出/ろしゅつ]しない。"
       cons "wire[要求/ようきゅう]では[必要/ひつよう]なsnapshot bundleを[明示的/めいじてき]な[値/あたい]として[渡/わた]す。" nil
@@ -214,9 +217,9 @@ body
       cons "apps/providerはstdin/stdoutの8byte unsigned big-endian length + NDF frameを[処理/しょり]する。"
       cons "[最大/さいだい]frame[長/ちょう]をLimitsで[検査/けんさ]する。"
       cons "stdoutへlogを[書/か]かない。"
-      cons "[失敗診断/しっぱいしんだん]はReply、hostの[運用/うんよう]logはstderr。" nil
+      cons "[失敗診断/しっぱいしんだん]はReplyに[格納/かくのう]し、hostの[運用/うんよう]ログはstderrへ[出力/しゅつりょく]する。" nil
     cons paragraph
-      cons "frame kindはSchemaRequest / SchemaReply / Invoke / Resume / Reply / Cancel / Close。"
+      cons "frame kindはSchemaRequest・SchemaReply・Invoke・Resume・Reply・Cancel・Closeとする。"
       cons "[接続開始時/せつぞくかいしじ]のschema[交換/こうかん]では、hostが[選択/せんたく]したSchemaRefの[順序付/じゅんじょつ]き[列/れつ]をSchemaRequest.schemasとして[送/おく]る。"
       cons "providerは[同/おな]じ[順序/じゅんじょ]のSchemaDescriptor NDF byte[列/れつ]をSchemaReply.descriptorsとして[返/かえ]す。"
       cons "[両/りょう]frameとdescriptorは[接続前/せつぞくまえ]に[共有/きょうゆう]したfoundation schemaで[符号化/ふごうか]する。"
