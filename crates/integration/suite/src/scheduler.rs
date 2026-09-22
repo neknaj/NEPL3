@@ -50,6 +50,37 @@ impl From<StopReason> for Error {
     }
 }
 
+/// Owns the failure cause and the active Await generations. Their accepted
+/// terminal results retain each child's operation, output schema and sources.
+/// Generations already transferred to a Resume callback are consumed.
+pub struct Failure {
+    pub cause: Error,
+    frames: Vec<Frame>,
+}
+
+impl Failure {
+    /// Borrow results already accepted by the host, outer generation first and
+    /// in call order within each generation. Rejected replies are excluded.
+    /// This inspection neither allocates nor polls the stopped Budget.
+    pub fn accepted_results(
+        &self,
+    ) -> impl Iterator<Item = (&Invoke, &OperationResult<TypedValue>)> {
+        self.frames
+            .iter()
+            .filter_map(|frame| frame.active.as_ref())
+            .flat_map(|active| active.pending.accepted_results())
+    }
+}
+
+impl core::fmt::Debug for Failure {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("Failure")
+            .field("cause", &self.cause)
+            .field("active_frames", &self.frames.len())
+            .finish_non_exhaustive()
+    }
+}
+
 struct Frame {
     registration: usize,
     context: Digest,
@@ -167,7 +198,9 @@ fn request<'a>(root: &'a Invoke, ancestors: &'a [Frame]) -> Result<&'a Invoke, E
 /// are cancelled exactly once. Execution is synchronous; no OS I/O is performed.
 /// Diagnostic permissions are the admitted `request.sources` of each call.
 /// Additional generated sources require a separate host admission path.
-pub fn run(
+/// Failure retains unconsumed, accepted dependency results without allocating
+/// during failure handling. A stopped child never resumes its parent.
+pub fn run_with_failure(
     registrations: &[Registration<'_>],
     root: &Invoke,
     registry: &SchemaRegistry,
@@ -175,8 +208,9 @@ pub fn run(
     validation: &mut Budget,
     mut report: impl FnMut(u64, Report),
     mut cancel: impl FnMut(u64),
-) -> Result<OperationResult<TypedValue>, Error> {
+) -> Result<OperationResult<TypedValue>, Failure> {
     let mut lifetimes = RequestLifetimes::default();
+    let mut stack = Vec::new();
     let result = run_inner(
         registrations,
         root,
@@ -185,11 +219,30 @@ pub fn run(
         validation,
         &mut lifetimes,
         &mut report,
+        &mut stack,
     );
-    if result.is_err() {
-        lifetimes.close(&mut cancel);
+    match result {
+        Ok(result) => Ok(result),
+        Err(cause) => {
+            lifetimes.close(&mut cancel);
+            Err(Failure { cause, frames: stack })
+        }
     }
-    result
+}
+
+/// Run a root while preserving the historical error-only interface. Hosts that
+/// need accepted terminal results after a stop should use `run_with_failure`.
+pub fn run(
+    registrations: &[Registration<'_>],
+    root: &Invoke,
+    registry: &SchemaRegistry,
+    execution: &mut Budget,
+    validation: &mut Budget,
+    report: impl FnMut(u64, Report),
+    cancel: impl FnMut(u64),
+) -> Result<OperationResult<TypedValue>, Error> {
+    run_with_failure(registrations, root, registry, execution, validation, report, cancel)
+        .map_err(|failure| failure.cause)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -201,6 +254,7 @@ fn run_inner(
     validation: &mut Budget,
     lifetimes: &mut RequestLifetimes,
     report: &mut impl FnMut(u64, Report),
+    stack: &mut Vec<Frame>,
 ) -> Result<OperationResult<TypedValue>, Error> {
     let selected = select(registrations, root, validation)?;
     let context = (registrations[selected].context)(
@@ -209,8 +263,7 @@ fn run_inner(
         validation,
     )?;
     let scope = ExecutionScope::root(execution, root.limits)?;
-    let mut stack = Vec::new();
-    reserve(&mut stack, 1, validation)?;
+    reserve(stack, 1, validation)?;
     stack.push(frame(registrations, root, context, scope, validation)?);
     lifetimes
         .begin_call(root, context, None, validation)
@@ -224,6 +277,9 @@ fn run_inner(
         });
     }
     loop {
+        // Preserve accepted child results before any Resume extraction or
+        // further validation once the shared execution has stopped.
+        execution.poll()?;
         validation.charge(Resource::Work, 1)?;
         let (current, ancestors) = stack.split_last_mut().ok_or(Error::State)?;
         let call = request(root, ancestors)?;
@@ -239,7 +295,7 @@ fn run_inner(
                     scope,
                     validation,
                 )?;
-                reserve(&mut stack, 1, validation)?;
+                reserve(stack, 1, validation)?;
                 stack.push(child_frame);
                 continue;
             }

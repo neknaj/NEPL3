@@ -100,7 +100,7 @@ fn invalid_keeps_partial_and_diagnostic_while_stopped_prevents_parent_callback()
         }];
         let mut execution = budget();
         let mut cancelled = Vec::new();
-        let result = scheduler::run(
+        let result = scheduler::run_with_failure(
             &registrations,
             &root,
             &registry,
@@ -123,7 +123,14 @@ fn invalid_keeps_partial_and_diagnostic_while_stopped_prevents_parent_callback()
             assert_eq!(execution.poll(), Ok(()));
             assert!(cancelled.is_empty());
         } else {
-            assert!(result.is_err());
+            let failure = result.expect_err("stopped child must preserve failure state");
+            assert!(matches!(failure.cause, scheduler::Error::Stopped(_)));
+            let accepted = failure.accepted_results().collect::<Vec<_>>();
+            assert_eq!(accepted.len(), 1);
+            let OperationResult::Stopped { partial: Some(value), .. } = accepted[0].1 else {
+                return Err("expected retained stopped result".into());
+            };
+            assert_eq!(number(value), Some(20));
             assert_eq!(execution.poll(), Err(StopReason::Cancelled));
             assert_eq!(RESUMED.load(Ordering::SeqCst), 0);
             assert_eq!(cancelled, vec![root.request_id]);
