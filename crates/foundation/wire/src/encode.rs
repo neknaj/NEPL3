@@ -8,10 +8,19 @@ use nepl3_core::{
 
 use sha2::{Digest as _, Sha256};
 
+mod batch;
+pub(super) use batch::digests;
+
 // Both destinations consume the same canonical encoding traversal. Only the
 // byte-vector destination materializes the encoded output.
 trait Sink {
     fn write(&mut self, value: &[u8], budget: &mut Budget) -> Result<(), WireError>;
+    fn enter(&mut self, _: &NdfValue, _: &mut Budget) -> Result<bool, WireError> {
+        Ok(false)
+    }
+    fn leave(&mut self, _: &mut Budget) -> Result<(), WireError> {
+        Ok(())
+    }
 }
 impl Sink for Vec<u8> {
     fn write(&mut self, value: &[u8], budget: &mut Budget) -> Result<(), WireError> {
@@ -85,7 +94,7 @@ fn schema(out: &mut impl Sink, schema: &SchemaRef, budget: &mut Budget) -> Resul
 }
 
 fn push<'a>(
-    stack: &mut Vec<(&'a NdfValue, u64)>,
+    stack: &mut Vec<(Option<&'a NdfValue>, u64)>,
     value: &'a NdfValue,
     depth: u64,
     budget: &mut Budget,
@@ -93,15 +102,15 @@ fn push<'a>(
     budget.charge(Resource::Work, 1)?;
     budget.charge(
         Resource::AllocationUnits,
-        core::mem::size_of::<(&NdfValue, u64)>() as u64,
+        core::mem::size_of::<(Option<&NdfValue>, u64)>() as u64,
     )?;
-    stack.push((value, depth));
+    stack.push((Some(value), depth));
     Ok(())
 }
 
 fn children<'a>(
     out: &mut impl Sink,
-    stack: &mut Vec<(&'a NdfValue, u64)>,
+    stack: &mut Vec<(Option<&'a NdfValue>, u64)>,
     values: &'a [NdfValue],
     depth: u64,
     budget: &mut Budget,
@@ -120,8 +129,20 @@ fn emit(item: &NdfValue, out: &mut impl Sink, budget: &mut Budget) -> Result<(),
     let mut pending = Vec::new();
     push(&mut pending, item, 1, budget)?;
     while let Some((item, depth)) = pending.pop() {
+        let Some(item) = item else {
+            out.leave(budget)?;
+            continue;
+        };
         budget.observe_depth(depth)?;
         budget.charge(Resource::Nodes, 1)?;
+        if out.enter(item, budget)? {
+            budget.charge(Resource::Work, 1)?;
+            budget.charge(
+                Resource::AllocationUnits,
+                core::mem::size_of::<(Option<&NdfValue>, u64)>() as u64,
+            )?;
+            pending.push((None, depth));
+        }
         match item {
             NdfValue::Unit => {
                 head(out, 4, 1, budget)?;

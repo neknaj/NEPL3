@@ -112,6 +112,16 @@ fn all_twelve_tags_match_specified_cbor_bytes() -> TestResult {
             codec.canonical_value_digest(b"all-tags\0", &value, &mut budget()),
             Ok(Digest::domain(b"all-tags\0", &bytes))
         );
+        assert_eq!(
+            codec.canonical_value_digests(
+                &[nepl3_core::value_codec::CanonicalDigestInput {
+                    domain: b"all-tags\0",
+                    value: &value,
+                },],
+                &mut budget()
+            ),
+            Ok(vec![Digest::domain(b"all-tags\0", &bytes)])
+        );
         assert_eq!(decode(&bytes, &mut budget()), Ok(value));
     }
     Ok(())
