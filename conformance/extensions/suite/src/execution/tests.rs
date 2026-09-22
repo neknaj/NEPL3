@@ -79,11 +79,43 @@ fn received_plan_uses_typed_execution_and_admitted_source_mapping() -> Result<()
                 return Err("received plan record".into());
             };
             let received = TypedValue::Record(record.clone());
-            let heads = program
-                .nodes()
-                .iter()
-                .map(|node| node.head.cloned())
-                .collect::<Vec<_>>();
+            let foundation = nepl3_core::schema::foundation::descriptor(&mut budget())
+                .map_err(error)?
+                .reference(&mut budget())
+                .map_err(error)?;
+            // Transport each host-admitted Span through the existing Foundation
+            // codec. The receiving source store remains an explicit permission.
+            let mut heads = Vec::new();
+            for node in program.nodes() {
+                let head = if let Some(span) = node.head {
+                    let bytes =
+                        nepl3_wire::source::encode_span(span, &foundation, registry, &mut budget())
+                            .map_err(error)?;
+                    assert!(
+                        nepl3_wire::source::decode_span(
+                            &bytes,
+                            &foundation,
+                            registry,
+                            &SourceStore::default(),
+                            &mut budget(),
+                        )
+                        .is_err()
+                    );
+                    Some(
+                        nepl3_wire::source::decode_span(
+                            &bytes,
+                            &foundation,
+                            registry,
+                            sources,
+                            &mut budget(),
+                        )
+                        .map_err(error)?,
+                    )
+                } else {
+                    None
+                };
+                heads.push(head);
+            }
             let checked =
                 || transfer::validate(&received, schema, registry, &mut budget()).map_err(error);
             assert!(matches!(
