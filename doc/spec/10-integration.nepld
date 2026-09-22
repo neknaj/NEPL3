@@ -1,20 +1,27 @@
 article ja "10. Profile・[埋/う]め[込/こ]み・[実行入口/じっこういりぐち]"
 body
   cons paragraph
-    cons "この[章/しょう]はsuite・bridge・CLIの[目標契約/もくひょうけいやく]を[含/ふく]む。[列挙/れっきょ]した[全操作/ぜんそうさ]の[実装/じっそう]・[全/ぜん]targetでの[受入完了/うけいれかんりょう]を[宣言/せんげん]するものではない。"
-    cons "[現在/げんざい]の[実装/じっそう]と[受入/うけいれ]の[状態/じょうたい]はimplementation-status.jsonで[管理/かんり]する。" nil
-  cons section policy "[方針/ほうしん]" body
+    cons "この[章/しょう]は、[複数/ふくすう]の[言語/げんご]と[操作/そうさ]を[接続/せつぞく]するsuite、[言語間/げんごかん]のbridge、CLIの[契約/けいやく]を[定/さだ]める。"
+    cons "[利用/りよう]する[言語/げんご]とproviderの[選択/せんたく]、[環境/かんきょう]と[資源/しげん]の[受渡/うけわた]し、[成果物/せいかぶつ]の[準備/じゅんび]、[実行環境/じっこうかんきょう]ごとの[責務/せきむ]を[規定/きてい]する。"
+    cons "[各操作/かくそうさ]と[対象環境/たいしょうかんきょう]の[実装状態/じっそうじょうたい]・[受入結果/うけいれけっか]は、implementation-status.jsonで[管理/かんり]する。" nil
+  cons section policy "suiteの[接続責務/せつぞくせきむ]" body
     cons paragraph
-      cons "ソース[上/じょう]の[相互埋/そうごう]め[込/こ]みとcrate[依存/いぞん]を[分離/ぶんり]する。"
-      cons "suiteが[登録済/とうろくず]みlanguage package、domain operation、output adapterを[接続/せつぞく]する。" nil
+      cons "suiteは、[登録済/とうろくず]みlanguage package、domain operation、output adapterを[接続/せつぞく]する。"
+      cons "suiteは、[埋/う]め[込/こ]まれた[構文/こうぶん]に[対/たい]する[操作/そうさ]を[調整/ちょうせい]する。"
+      cons "crateの[依存関係/いぞんかんけい]は、[各/かく]coreの[責務/せきむ]に[従/したが]って[定/さだ]める。"
+      cons "[言語/げんご]を[相互/そうご]に[埋/う]め[込/こ]むために、domain core[間/かん]の[直接依存/ちょくせついぞん]を[追加/ついか]することは[禁止/きんし]する。" nil
     nil
   cons section profile "1. Profile" body
     cons paragraph
-      cons "[不変/ふへん]のParseProfileと、[構文位置/こうぶんいち]ごとのcontextを[区別/くべつ]する。[先行/せんこう]する[構文/こうぶん]で[後続/こうぞく]contextを[更新/こうしん]できることは、Profileを[不変/ふへん]とする[契約/けいやく]と[両立/りょうりつ]する。"
+      cons "ParseProfileは、[解析/かいせき]で[利用/りよう]する[言語/げんご]と[読取設定/よみとりせってい]を[保持/ほじ]する[不変値/ふへんち]である。"
+      cons "contextは、[各構文位置/かくこうぶんいち]で[有効/ゆうこう]な[読取状態/よみとりじょうたい]を[表/あらわ]す。"
+      cons "[先行/せんこう]する[構文/こうぶん]は、ParseProfileを[保持/ほじ]したまま[後続/こうぞく]のcontextを[更新/こうしん]できる。"
       cons "[各/かく]headのshapeはその[出現/しゅつげん]までに[確定/かくてい]した[情報/じょうほう]から[決/き]め、[後続/こうぞく]sourceから[遡及/そきゅう]して[変更/へんこう]しない。" nil
     cons paragraph
-      cons "Profileはlanguage alias→SchemaRef、category mode、provider allowlist、operation bridge、resource snapshot、Limitsを[持/も]つ[不変値/ふへんち]。"
-      cons "root languageはファイル[拡張子/かくちょうし]またはCLI[引数/ひきすう]で[選/えら]び、[全/ぜん]ソースを[一律/いちりつ]のlexerで[先/さき]にtoken[化/か]しない。" nil
+      cons "suiteのProfileは、language aliasからSchemaRefへの[対応/たいおう]、category mode、provider allowlist、operation bridge、resource snapshot、Limitsを[保持/ほじ]する[不変値/ふへんち]である。"
+      cons "root languageは、ファイル[拡張子/かくちょうし]またはCLI[引数/ひきすう]で[選択/せんたく]する。"
+      cons "[各位置/かくいち]のtokenは、その[位置/いち]で[有効/ゆうこう]なcontextの[読取規則/よみとりきそく]に[従/したが]って[取得/しゅとく]する。"
+      cons "[全/ぜん]ソースを[一律/いちりつ]のlexerで[事前/じぜん]にtoken[化/か]することは[禁止/きんし]する。" nil
     cons paragraph
       cons sentence cons code "design/profile.json" cons text " はsource manifestであり、" cons ruby text "解決済" text "かいけつず" cons text "みruntime Profileではない。" nil
       cons "R009の[解消/かいしょう]では[生成結果/せいせいけっか]の[閉/と]じた[型/かた]、[各/かく]schema/package/provider digest、[許可/きょか]capability、resource identityと[整合検査/せいごうけんさ]を[先/さき]に[定/さだ]める。"

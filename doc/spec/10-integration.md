@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/10&#45;integration.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page integration; source SHA-256 9161d6faee7ab61be38132df12ebd4e83578dc376e79f213aff172174bcfc107; alias input SHA-256 00e7d3fbbc79af03ae9a66bba6cc0bcd47165fb3eb087ea15a633624a51e1309; page input SHA-256 0c006b0abf7a66da957dd364a5d3fe3cdc2a75876a5a6c490a8ae0999f96c8f9. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/10&#45;integration.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page integration; source SHA-256 00b26776b0b653e0c630d94757191858ba7bd1884b358a7b38dab3c37efcba39; alias input SHA-256 00e7d3fbbc79af03ae9a66bba6cc0bcd47165fb3eb087ea15a633624a51e1309; page input SHA-256 e3a9f008bd260fa5e526a3264d7492446db8b006e4223b890da5bf0ef6b1b1ae. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="10-profile埋め込み実行入口"></a>
 
@@ -6,15 +6,15 @@
 
 [正本（NEPL3d）](<10-integration.nepld>)
 
-この<ruby>章<rt>しょう</rt></ruby>はsuite・bridge・CLIの<ruby>目標契約<rt>もくひょうけいやく</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>む。<ruby>列挙<rt>れっきょ</rt></ruby>した<ruby>全操作<rt>ぜんそうさ</rt></ruby>の<ruby>実装<rt>じっそう</rt></ruby>・<ruby>全<rt>ぜん</rt></ruby>targetでの<ruby>受入完了<rt>うけいれかんりょう</rt></ruby>を<ruby>宣言<rt>せんげん</rt></ruby>するものではない。<ruby>現在<rt>げんざい</rt></ruby>の<ruby>実装<rt>じっそう</rt></ruby>と<ruby>受入<rt>うけいれ</rt></ruby>の<ruby>状態<rt>じょうたい</rt></ruby>はimplementation\-status\.jsonで<ruby>管理<rt>かんり</rt></ruby>する。
+この<ruby>章<rt>しょう</rt></ruby>は、<ruby>複数<rt>ふくすう</rt></ruby>の<ruby>言語<rt>げんご</rt></ruby>と<ruby>操作<rt>そうさ</rt></ruby>を<ruby>接続<rt>せつぞく</rt></ruby>するsuite、<ruby>言語間<rt>げんごかん</rt></ruby>のbridge、CLIの<ruby>契約<rt>けいやく</rt></ruby>を<ruby>定<rt>さだ</rt></ruby>める。<ruby>利用<rt>りよう</rt></ruby>する<ruby>言語<rt>げんご</rt></ruby>とproviderの<ruby>選択<rt>せんたく</rt></ruby>、<ruby>環境<rt>かんきょう</rt></ruby>と<ruby>資源<rt>しげん</rt></ruby>の<ruby>受渡<rt>うけわた</rt></ruby>し、<ruby>成果物<rt>せいかぶつ</rt></ruby>の<ruby>準備<rt>じゅんび</rt></ruby>、<ruby>実行環境<rt>じっこうかんきょう</rt></ruby>ごとの<ruby>責務<rt>せきむ</rt></ruby>を<ruby>規定<rt>きてい</rt></ruby>する。<ruby>各操作<rt>かくそうさ</rt></ruby>と<ruby>対象環境<rt>たいしょうかんきょう</rt></ruby>の<ruby>実装状態<rt>じっそうじょうたい</rt></ruby>・<ruby>受入結果<rt>うけいれけっか</rt></ruby>は、implementation\-status\.jsonで<ruby>管理<rt>かんり</rt></ruby>する。
 
 <a name="n-706f6c696379"></a>
 
 <a name="方針"></a>
 
-## <ruby>方針<rt>ほうしん</rt></ruby>
+## suiteの<ruby>接続責務<rt>せつぞくせきむ</rt></ruby>
 
-ソース<ruby>上<rt>じょう</rt></ruby>の<ruby>相互埋<rt>そうごう</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みとcrate<ruby>依存<rt>いぞん</rt></ruby>を<ruby>分離<rt>ぶんり</rt></ruby>する。suiteが<ruby>登録済<rt>とうろくず</rt></ruby>みlanguage package、domain operation、output adapterを<ruby>接続<rt>せつぞく</rt></ruby>する。
+suiteは、<ruby>登録済<rt>とうろくず</rt></ruby>みlanguage package、domain operation、output adapterを<ruby>接続<rt>せつぞく</rt></ruby>する。suiteは、<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>まれた<ruby>構文<rt>こうぶん</rt></ruby>に<ruby>対<rt>たい</rt></ruby>する<ruby>操作<rt>そうさ</rt></ruby>を<ruby>調整<rt>ちょうせい</rt></ruby>する。crateの<ruby>依存関係<rt>いぞんかんけい</rt></ruby>は、<ruby>各<rt>かく</rt></ruby>coreの<ruby>責務<rt>せきむ</rt></ruby>に<ruby>従<rt>したが</rt></ruby>って<ruby>定<rt>さだ</rt></ruby>める。<ruby>言語<rt>げんご</rt></ruby>を<ruby>相互<rt>そうご</rt></ruby>に<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>むために、domain core<ruby>間<rt>かん</rt></ruby>の<ruby>直接依存<rt>ちょくせついぞん</rt></ruby>を<ruby>追加<rt>ついか</rt></ruby>することは<ruby>禁止<rt>きんし</rt></ruby>する。
 
 <a name="n-70726f66696c65"></a>
 
@@ -22,9 +22,9 @@
 
 ## 1\. Profile
 
-<ruby>不変<rt>ふへん</rt></ruby>のParseProfileと、<ruby>構文位置<rt>こうぶんいち</rt></ruby>ごとのcontextを<ruby>区別<rt>くべつ</rt></ruby>する。<ruby>先行<rt>せんこう</rt></ruby>する<ruby>構文<rt>こうぶん</rt></ruby>で<ruby>後続<rt>こうぞく</rt></ruby>contextを<ruby>更新<rt>こうしん</rt></ruby>できることは、Profileを<ruby>不変<rt>ふへん</rt></ruby>とする<ruby>契約<rt>けいやく</rt></ruby>と<ruby>両立<rt>りょうりつ</rt></ruby>する。<ruby>各<rt>かく</rt></ruby>headのshapeはその<ruby>出現<rt>しゅつげん</rt></ruby>までに<ruby>確定<rt>かくてい</rt></ruby>した<ruby>情報<rt>じょうほう</rt></ruby>から<ruby>決<rt>き</rt></ruby>め、<ruby>後続<rt>こうぞく</rt></ruby>sourceから<ruby>遡及<rt>そきゅう</rt></ruby>して<ruby>変更<rt>へんこう</rt></ruby>しない。
+ParseProfileは、<ruby>解析<rt>かいせき</rt></ruby>で<ruby>利用<rt>りよう</rt></ruby>する<ruby>言語<rt>げんご</rt></ruby>と<ruby>読取設定<rt>よみとりせってい</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>する<ruby>不変値<rt>ふへんち</rt></ruby>である。contextは、<ruby>各構文位置<rt>かくこうぶんいち</rt></ruby>で<ruby>有効<rt>ゆうこう</rt></ruby>な<ruby>読取状態<rt>よみとりじょうたい</rt></ruby>を<ruby>表<rt>あらわ</rt></ruby>す。<ruby>先行<rt>せんこう</rt></ruby>する<ruby>構文<rt>こうぶん</rt></ruby>は、ParseProfileを<ruby>保持<rt>ほじ</rt></ruby>したまま<ruby>後続<rt>こうぞく</rt></ruby>のcontextを<ruby>更新<rt>こうしん</rt></ruby>できる。<ruby>各<rt>かく</rt></ruby>headのshapeはその<ruby>出現<rt>しゅつげん</rt></ruby>までに<ruby>確定<rt>かくてい</rt></ruby>した<ruby>情報<rt>じょうほう</rt></ruby>から<ruby>決<rt>き</rt></ruby>め、<ruby>後続<rt>こうぞく</rt></ruby>sourceから<ruby>遡及<rt>そきゅう</rt></ruby>して<ruby>変更<rt>へんこう</rt></ruby>しない。
 
-Profileはlanguage alias→SchemaRef、category mode、provider allowlist、operation bridge、resource snapshot、Limitsを<ruby>持<rt>も</rt></ruby>つ<ruby>不変値<rt>ふへんち</rt></ruby>。root languageはファイル<ruby>拡張子<rt>かくちょうし</rt></ruby>またはCLI<ruby>引数<rt>ひきすう</rt></ruby>で<ruby>選<rt>えら</rt></ruby>び、<ruby>全<rt>ぜん</rt></ruby>ソースを<ruby>一律<rt>いちりつ</rt></ruby>のlexerで<ruby>先<rt>さき</rt></ruby>にtoken<ruby>化<rt>か</rt></ruby>しない。
+suiteのProfileは、language aliasからSchemaRefへの<ruby>対応<rt>たいおう</rt></ruby>、category mode、provider allowlist、operation bridge、resource snapshot、Limitsを<ruby>保持<rt>ほじ</rt></ruby>する<ruby>不変値<rt>ふへんち</rt></ruby>である。root languageは、ファイル<ruby>拡張子<rt>かくちょうし</rt></ruby>またはCLI<ruby>引数<rt>ひきすう</rt></ruby>で<ruby>選択<rt>せんたく</rt></ruby>する。<ruby>各位置<rt>かくいち</rt></ruby>のtokenは、その<ruby>位置<rt>いち</rt></ruby>で<ruby>有効<rt>ゆうこう</rt></ruby>なcontextの<ruby>読取規則<rt>よみとりきそく</rt></ruby>に<ruby>従<rt>したが</rt></ruby>って<ruby>取得<rt>しゅとく</rt></ruby>する。<ruby>全<rt>ぜん</rt></ruby>ソースを<ruby>一律<rt>いちりつ</rt></ruby>のlexerで<ruby>事前<rt>じぜん</rt></ruby>にtoken<ruby>化<rt>か</rt></ruby>することは<ruby>禁止<rt>きんし</rt></ruby>する。
 
 `design/profile.json` はsource manifestであり、<ruby>解決済<rt>かいけつず</rt></ruby>みruntime Profileではない。R009の<ruby>解消<rt>かいしょう</rt></ruby>では<ruby>生成結果<rt>せいせいけっか</rt></ruby>の<ruby>閉<rt>と</rt></ruby>じた<ruby>型<rt>かた</rt></ruby>、<ruby>各<rt>かく</rt></ruby>schema\/package\/provider digest、<ruby>許可<rt>きょか</rt></ruby>capability、resource identityと<ruby>整合検査<rt>せいごうけんさ</rt></ruby>を<ruby>先<rt>さき</rt></ruby>に<ruby>定<rt>さだ</rt></ruby>める。T05\/T11で<ruby>実際<rt>じっさい</rt></ruby>の<ruby>検査済<rt>けんさず</rt></ruby>みpackageから<ruby>生成<rt>せいせい</rt></ruby>・<ruby>差分検査<rt>さぶんけんさ</rt></ruby>し、UI\/Workerはこの<ruby>値<rt>あたい</rt></ruby>を<ruby>利用<rt>りよう</rt></ruby>する。R006の<ruby>操作<rt>そうさ</rt></ruby>・bundle<ruby>型<rt>がた</rt></ruby>の<ruby>未定義<rt>みていぎ</rt></ruby>を<ruby>文字列<rt>もじれつ</rt></ruby>signatureや<ruby>仮<rt>かり</rt></ruby>digestで<ruby>補<rt>おぎな</rt></ruby>わない。
 
