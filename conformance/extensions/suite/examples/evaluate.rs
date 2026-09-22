@@ -91,6 +91,9 @@ fn main() -> Result<(), String> {
                         node.language, node.head
                     );
                 }
+                for (child, outcome) in scheduler.accepted_results() {
+                    eprintln!("Accepted request {}: {outcome:?}", child.request_id);
+                }
             }
             error(failure)
         })?;

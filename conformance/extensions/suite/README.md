@@ -66,8 +66,15 @@ Scheduler failures expose the active request ID. `Program::request_node` maps
 that ID back to its language and original head Span without allocation or a
 Budget poll. A child admission/depth failure belongs to the active parent frame;
 accepted child reports retain the child's own ID through `accepted_results`.
-The example prints this host failure context. Provider-generated, source-bearing
-Stopped reports remain a separate unfinished path.
+The example prints this host failure context and accepted child outcomes.
+Before `neg`, `add` or `mul` arithmetic, the adapter prepares one owned
+`evaluation-stopped` diagnostic with the current selection and head Span. If
+arithmetic or output construction stops, it returns that Report without further
+allocation. The parent remains suspended and the scheduler retains the child's
+validated Report. Preparation consumes Work, AllocationUnits and one diagnostic
+slot even when evaluation succeeds; all charges remain cumulative. A stop during
+preparation uses the host failure context. Frame forwarding and request preparation
+also retain that host context rather than constructing a Report after exhaustion.
 
 Native Invoke and Resume callbacks borrow one immutable, schema-checked plan.
 The request environment carries a `PlanIdentity` containing the digest of the
@@ -75,8 +82,8 @@ canonical NDF plan. Child requests copy this fixed-size identity and select one
 occurrence; they share the plan through the callback's Rust lifetime. Plan encoding,
 validation and hashing occur once per run. The portable plan representation remains
 available for a future process provider's admission path.
-Remaining integration: source-associated stop diagnostics, additional failure and
-large-input cost cases, and independent review. Regression tests cover successful
+Remaining integration: additional failure and large-input cost cases, process
+execution and independent review. Regression tests cover successful
 nesting depths 1, 8 and 24, Depth=1 rejection, and sampled Work/Allocation stops.
 They check unique cancellation and preserve inspectable accepted child outcomes.
 

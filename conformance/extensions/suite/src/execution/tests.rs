@@ -180,8 +180,25 @@ fn work_and_allocation_stops_retain_inspectable_active_occurrence() -> Result<()
                         |_, _| {},
                         |id| cancelled.push(id),
                     );
-                    let Err(Error::Execution(failure)) = result else {
-                        return Err(format!("expected {expected:?} at {limit}"));
+                    let failure = match result {
+                        Err(Error::Execution(failure)) => failure,
+                        Ok(OperationResult::Stopped {
+                            reason,
+                            partial,
+                            report,
+                        }) => {
+                            assert_eq!(reason, expected);
+                            assert_eq!(execution.poll(), Err(expected));
+                            assert!(partial.is_none());
+                            assert_eq!(report.diagnostics[0].code, "evaluation-stopped");
+                            assert_eq!(
+                                report.diagnostics[0].primary.as_ref(),
+                                program.nodes().last().and_then(|node| node.head)
+                            );
+                            assert!(cancelled.is_empty());
+                            continue;
+                        }
+                        _ => return Err(format!("expected {expected:?} at {limit}")),
                     };
                     assert_eq!(execution.poll(), Err(expected));
                     let before = execution.usage();
@@ -206,6 +223,108 @@ fn work_and_allocation_stops_retain_inspectable_active_occurrence() -> Result<()
             Ok(())
         },
     )
+}
+
+#[test]
+fn stopped_guest_arithmetic_report_keeps_its_source_and_request() -> Result<(), String> {
+    let large = "1234567890123456789012345678901234567890123456789012345678901234567890";
+    with_program(
+        &format!("add framed frame mul {large} {large} 2"),
+        |program, sources, runtime, registry| {
+            let mut limits = budget().limits();
+            limits.work = 20_000;
+            let mut execution = Budget::new(limits);
+            let mut awaits = Vec::new();
+            let mut cancelled = Vec::new();
+            let result = runtime.run(
+                program,
+                sources,
+                registry,
+                &mut execution,
+                &mut budget(),
+                |id, _| awaits.push(id),
+                |id| cancelled.push(id),
+            );
+            let Err(Error::Execution(failure)) = result else {
+                return Err("expected stopped guest to block its parent".into());
+            };
+            assert_eq!(execution.poll(), Err(StopReason::WorkLimit));
+            assert_eq!(awaits, vec![7, 5, 4, 3]);
+            let accepted = failure.accepted_results().collect::<Vec<_>>();
+            assert_eq!(accepted.len(), 1);
+            let (call, result) = accepted[0];
+            assert_eq!(call.request_id, 3);
+            let OperationResult::Stopped {
+                reason,
+                partial,
+                report,
+            } = result
+            else {
+                return Err("expected accepted Stopped".into());
+            };
+            assert_eq!(*reason, StopReason::WorkLimit);
+            assert!(partial.is_none());
+            assert_eq!(report.diagnostics.len(), 1);
+            let diagnostic = &report.diagnostics[0];
+            assert_eq!(diagnostic.code, "evaluation-stopped");
+            assert_eq!(diagnostic.schema, call.operation.schema);
+            assert_eq!(diagnostic.arguments, call.input);
+            let span = diagnostic.primary.as_ref().ok_or("guest span")?;
+            assert_eq!((span.start(), span.end()), (17, 20));
+            let identity = span.snapshot_ref();
+            let source = sources
+                .get_revision_with_budget(&identity.source, identity.revision, &mut budget())
+                .map_err(error)?
+                .ok_or("authorized source")?;
+            assert_eq!(source.slice(span).map_err(error)?, "mul");
+            report
+                .validate_with_sources(sources, registry, &mut budget())
+                .map_err(error)?;
+            assert!(
+                report
+                    .validate_with_sources(&SourceStore::default(), registry, &mut budget())
+                    .is_err()
+            );
+            assert!(!cancelled.contains(&3));
+            assert_eq!(failure.active_request_id(), 4);
+            assert_eq!(
+                cancelled
+                    .iter()
+                    .collect::<std::collections::BTreeSet<_>>()
+                    .len(),
+                cancelled.len()
+            );
+            Ok(())
+        },
+    )
+}
+
+#[test]
+fn diagnostic_preparation_stop_uses_host_context_without_claiming_a_report() -> Result<(), String> {
+    with_program("neg 7", |program, sources, runtime, registry| {
+        let mut limits = budget().limits();
+        limits.diagnostics = 0;
+        let mut execution = Budget::new(limits);
+        let result = runtime.run(
+            program,
+            sources,
+            registry,
+            &mut execution,
+            &mut budget(),
+            |_, _| {},
+            |_| {},
+        );
+        let Err(Error::Execution(failure)) = result else {
+            return Err("expected preparation stop".into());
+        };
+        assert_eq!(execution.poll(), Err(StopReason::DiagnosticLimit));
+        assert_eq!(failure.active_request_id(), 2);
+        let node = program.request_node(2).ok_or("neg node")?;
+        let span = node.head.ok_or("neg span")?;
+        assert_eq!((span.start(), span.end()), (0, 3));
+        assert!(failure.accepted_results().next().is_none());
+        Ok(())
+    })
 }
 
 #[test]

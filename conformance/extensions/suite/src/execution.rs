@@ -8,10 +8,10 @@ use crate::{
 };
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
-    diagnostic::{OperationResult, Report},
+    diagnostic::{Diagnostic, OperationResult, Report, Severity},
     operation::{Continuation, Invoke, OperationReply, Resume},
     schema::{SchemaError, SchemaRegistry},
-    source::{Digest, SourceError, SourceSnapshot, SourceStore},
+    source::{Digest, SourceError, SourceSnapshot, SourceStore, Span},
     value::{Integer, NdfValue, OperationRef, Record, SchemaRef, TypedValue},
 };
 use nepl3_suite::{
@@ -393,33 +393,88 @@ fn resume_value(
         return Ok(invalid());
     }
     let children = reply.dependency_results.as_slice();
-    let value = match (&node.instruction, children) {
+    let application = match (&node.instruction, children) {
         (Instruction::Frame(_) | Instruction::Framed(_), [child]) => {
             let Some(value) = number(child) else {
                 return Ok(invalid());
             };
-            copy_integer(value, b)?
+            return complete(
+                &call.operation.schema,
+                NdfValue::Integer(copy_integer(value, b)?),
+                b,
+            );
         }
         (Instruction::Neg(_), [child]) => {
             let Some(value) = number(child) else {
                 return Ok(invalid());
             };
-            arithmetic::apply(Application::Neg(value), b)?
+            Application::Neg(value)
         }
         (Instruction::Add(..) | Instruction::Mul(..), [left, right]) => {
             let (Some(left), Some(right)) = (number(left), number(right)) else {
                 return Ok(invalid());
             };
-            arithmetic::apply(
-                if matches!(node.instruction, Instruction::Add(..)) {
-                    Application::Add(left, right)
-                } else {
-                    Application::Mul(left, right)
-                },
-                b,
-            )?
+            if matches!(node.instruction, Instruction::Add(..)) {
+                Application::Add(left, right)
+            } else {
+                Application::Mul(left, right)
+            }
         }
         _ => return Ok(invalid()),
     };
-    complete(&call.operation.schema, NdfValue::Integer(value), b)
+    // Reserve the owned diagnostic before arithmetic can exhaust the Budget.
+    // Failure during preparation remains a host failure with active source
+    // context. Once prepared, returning Stopped requires no further allocation.
+    let mut report = prepare_stop_report(call, node.head, b)?;
+    match arithmetic::apply(application, b)
+        .and_then(|value| complete(&call.operation.schema, NdfValue::Integer(value), b))
+    {
+        Ok(result) => Ok(result),
+        Err(reason) => {
+            report.usage = b.usage();
+            Ok(OperationReply::Result(OperationResult::Stopped {
+                reason,
+                partial: None,
+                report,
+            }))
+        }
+    }
+}
+
+fn prepare_stop_report(
+    call: &Invoke,
+    span: Option<&Span>,
+    b: &mut Budget,
+) -> Result<Report, StopReason> {
+    const CODE: &str = "evaluation-stopped";
+    const STAGE: &str = "evaluate";
+    let source_bytes = span.map_or(0, |span| span.snapshot_ref().source.0.len());
+    let bytes = (core::mem::size_of::<Diagnostic>()
+        + call.operation.schema.package.len()
+        + CODE.len()
+        + STAGE.len()
+        + source_bytes) as u64;
+    b.charge(Resource::Work, bytes)?;
+    b.charge(Resource::AllocationUnits, bytes)?;
+    b.charge(Resource::Diagnostics, 1)?;
+    let mut diagnostics = Vec::new();
+    diagnostics
+        .try_reserve_exact(1)
+        .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+    let arguments = call.input.clone_with_budget(b)?;
+    diagnostics.push(Diagnostic {
+        schema: call.operation.schema.clone(),
+        code: CODE.into(),
+        severity: Severity::Error,
+        stage: STAGE.into(),
+        arguments,
+        primary: span.cloned(),
+        related: vec![],
+        fixes: vec![],
+    });
+    Ok(Report {
+        diagnostics,
+        usage: b.usage(),
+        ..Report::default()
+    })
 }
