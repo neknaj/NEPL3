@@ -19,11 +19,18 @@ single operand's bit length. These are conservative logical allowances, not
 measurements of allocator behavior or a guarantee against physical OOM.
 Cancellation and resource exhaustion return a typed StopReason.
 
-Current implementation: typed integer arithmetic and resource-stop tests.
-Remaining integration: validated syntax lowering with source attribution,
-operation input/output schemas, native Invoke/Await/Resume adapters, grants,
-and end-to-end recursive composition. The arithmetic unit test yielding -5
-does not establish execution of the source expression through the scheduler.
+The separate `org.example.miniexpr.operations` schema defines pure `neg`, `add`
+and `mul` operations. `Unary.value` and `Binary.left/right` are Integer fields;
+the output is `Value.value: Integer`. The environment record has no fields.
+`native::Arithmetic` registers this descriptor and provides terminal callbacks
+bound to exact OperationRefs and a host-supplied implementation identity.
+The host finalizes the registry and authorizes sources/resources before dispatch.
+
+Current implementation: typed integer arithmetic, operation schemas and native
+terminal dispatch with input/output validation. Remaining integration: validated
+syntax lowering with source attribution, Await/Resume adapters, grants, and
+end-to-end recursive composition. The terminal dispatch test yielding -5 covers
+an explicit binary request. Source-level MiniExpr/Frame evaluation remains open.
 
 Run `cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml`.
 WASI uses the same command with `--target wasm32-wasip2` and the Wasmtime runner.
