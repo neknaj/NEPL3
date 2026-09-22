@@ -1,25 +1,31 @@
-article ja "09. Rust[以外/いがい]へ[置換/ちかん]するための[契約/けいやく]"
+article ja "09. [実装/じっそう]の[可搬性/かはんせい]と[交換契約/こうかんけいやく]"
 body
   cons paragraph
-    cons "この[章/しょう]は[公開境界/こうかいきょうかい]と[置換/ちかん]の[目標契約/もくひょうけいやく]を[定/さだ]める。[全/ぜん]provider・process transport・[全/ぜん]targetの[実装/じっそう]と[受入完了/うけいれかんりょう]を[宣言/せんげん]するものではない。"
-    cons "[現在/げんざい]の[実装/じっそう]と[受入状態/うけいれじょうたい]はimplementation-status.jsonで[管理/かんり]する。" nil
-  cons section policy "[方針/ほうしん]" body
+    cons "この[章/しょう]は、[異/こと]なる[言語/げんご]やプロセスで[実装/じっそう]したproviderを、[同/おな]じ[操作/そうさ]の[実装/じっそう]として[利用/りよう]するための[契約/けいやく]を[定/さだ]める。"
+    cons "[交換/こうかん]するデータのschema、[符号化/ふごうか]、[操作/そうさ]の[要求/ようきゅう]と[返信/へんしん]、[実装/じっそう]の[置換手順/ちかんてじゅん]を[規定/きてい]する。"
+    cons "[各/かく]provider、プロセス[間通信/かんつうしん]、[対象環境/たいしょうかんきょう]の[実装状態/じっそうじょうたい]と[受入結果/うけいれけっか]は、implementation-status.jsonで[管理/かんり]する。" nil
+  cons section policy "[実装/じっそう]を[交換/こうかん]するための[共通契約/きょうつうけいやく]" body
     cons paragraph
-      cons "[意味/いみ]モデル・[操作/そうさ]・[診断/しんだん]・source[対応/たいおう]のschemaを[公開境界/こうかいきょうかい]とする。"
+      cons "[実装間/じっそうかん]の[公開契約/こうかいけいやく]は、[意味/いみ]モデル・[操作/そうさ]・[診断/しんだん]・source[対応/たいおう]を[表/あらわ]すschemaで[定義/ていぎ]する。"
       cons "Rustのメモリ[表現/ひょうげん]やtrait objectをABIにしない。"
-      cons "native fast pathとportable pathを[同時/どうじ]に[提供/ていきょう]し、その[意味/いみ]を[比較/ひかく]する。" nil
+      cons "native fast pathとportable pathを[同時/どうじ]に[提供/ていきょう]し、[同/おな]じ[入力/にゅうりょく]に[対/たい]する[意味上/いみじょう]の[結果/けっか]を[比較/ひかく]する。" nil
     nil
   cons section layers "1. [三/みっ]つの[層/そう]" body
     cons list ordered 1
-      cons item none body cons paragraph cons "[言語中立/げんごちゅうりつ]のschema: field[順/じゅん]、variant、[必須制約/ひっすせいやく]、[整数/せいすう]/[有理数/ゆうりすう]、[範囲/はんい]と[参照/さんしょう]、operation signature。" nil nil
-      cons item none body cons paragraph cons "Rustの[型付/かたつ]きAPI: schemaに[対応/たいおう]するstruct/enumと[関数/かんすう]。" cons "Rust[内/ない]の[通常利用/つうじょうりよう]ではserialize[不要/ふよう]。" nil nil
-      cons item none body cons paragraph cons "transport adapter: schema[値/あたい]をNDF（[下記/かき]）でencode/decodeし、[別/べつ]process/[別実装/べつじっそう]へ[渡/わた]す。" nil nil
+      cons item none body cons paragraph cons "[言語中立/げんごちゅうりつ]のschemaは、fieldの[順序/じゅんじょ]、variant、[必須制約/ひっすせいやく]、[整数/せいすう]・[有理数/ゆうりすう]、[範囲/はんい]と[参照/さんしょう]、operation signatureを[定義/ていぎ]する。" nil nil
+      cons item none body cons paragraph cons "Rustの[型付/かたつ]きAPIは、schemaに[対応/たいおう]するstruct・enumと、それらを[操作/そうさ]する[関数/かんすう]を[提供/ていきょう]する。" cons "Rust[内/ない]の[通常/つうじょう]の[呼出/よびだ]しでは、[型付/かたつ]きの[値/あたい]を[直接/ちょくせつ][授受/じゅじゅ]する。" nil nil
+      cons item none body cons paragraph cons "transport adapterは、schemaに[従/したが]う[値/あたい]をNDFで[符号化/ふごうか]・[復号/ふくごう]し、[別/べつ]のプロセスや[実装/じっそう]へ[渡/わた]す。" nil nil
       nil
     cons paragraph
-      cons "この[分離/ぶんり]により、[将来/しょうらい]のNEPL3プログラミング[言語/げんご]は[同/おな]じschemaを[生成/せいせい]/[消費/しょうひ]する[実装/じっそう]を[持/も]てばよい。"
+      cons "[将来/しょうらい]のNEPL3プログラミング[言語/げんご]による[実装/じっそう]も、[同/おな]じschemaの[値/あたい]を[生成/せいせい]・[処理/しょり]し、[操作契約/そうさけいやく]を[満/み]たすことで[接続/せつぞく]できる。"
       cons "[現在/げんざい]のRustのallocator、enum discriminant、pointer、Arc/Rc、usize、trait vtableは[境界/きょうかい]を[越/こ]えない。" nil
     nil
   cons section ndf "2. NDF/1" body
+    cons paragraph
+      cons "NDFは、[本仕様/ほんしよう]の[型付/かたつ]き[値/あたい]をCBORで[表現/ひょうげん]する[符号化/ふごうか]profileである。"
+      cons "RFC 8949のdefinite lengthと、[整数/せいすう]・[長/なが]さの[最短表現/さいたんひょうげん]を[要求/ようきゅう]する。"
+      cons "NDFで[許可/きょか]する[値/あたい]と[表現/ひょうげん]は、[本節/ほんせつ]のtag[表/ひょう]で[定義/ていぎ]する。"
+      cons "map、float、NaN、CBOR tag、null、indefinite lengthの[使用/しよう]は[禁止/きんし]する。" nil
     cons paragraph
       cons sentence cons text "canonical" cons ruby text "値" text "あたい" cons text "digestは " cons code "SHA-256(domain || canonical NDF/1 CBOR(value))" cons text " とする。" nil
       cons "digest[専用経路/せんようけいろ]は[通常/つうじょう]のencoderと[同/おな]じ[符号化規則/ふごうかきそく]でbyte[片/へん]を[順次/じゅんじ]hashへ[渡/わた]してよく、[完全/かんぜん]なCBOR bufferの[作成/さくせい]を[必須/ひっす]にしない。"
@@ -35,11 +41,6 @@ body
       cons "[通常/つうじょう]のNDF encodeは[引/ひ]き[続/つづ]き[生成/せいせい]する[全/ぜん]CBOR byteを[出力/しゅつりょく]として[課金/かきん]する。"
       cons "[文書/ぶんしょ]digestを[得/え]るための[一時/いちじ]CBORを[除去/じょきょ]することと、HTMLの[出力上限/しゅつりょくじょうげん]を[変更/へんこう]することは[別/べつ]である。"
       nil
-    cons paragraph
-      cons "NDFは[本仕様/ほんしよう]の[型付/かたつ]き[値/あたい]をCBORで[運/はこ]ぶ[符号化/ふごうか]profile。"
-      cons "RFC 8949のdefinite lengthと[最短/さいたん]の[整数/せいすう]/[長/なが]さ[表現/ひょうげん]を[要求/ようきゅう]する。"
-      cons "map、float、NaN、CBOR tag、null、indefinite lengthはNDFでは[使用/しよう]しない。"
-      cons "CBORそのものの[汎用機能/はんようきのう]を[全部許可/ぜんぶきょか]するわけではない。" nil
     cons paragraph cons "[値/あたい]は[次/つぎ]のtagged arrayで[表/あらわ]す。" nil
     cons table cons right cons default cons default nil
       some row cons "tag" cons "[配列/はいれつ]" cons "[型/かた]" nil
