@@ -111,6 +111,71 @@ fn prepared_await_rejects_parent_and_duplicate_ids_before_publication() -> Resul
 }
 
 #[test]
+fn preparation_preserves_activation_policy_lifetime_and_budget_gates() -> Result<(), String> {
+    let (registry, parent) = fixture()?;
+    let sources = SourceStore::default();
+    let grants = Grants::new(&parent.environment, &sources, &[], &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let policy = [OperationGrant {
+        operation: &parent.operation,
+        grants: &grants,
+    }];
+    let context = Digest::of(b"late activation gates");
+    let prepare = || {
+        prepare_owned(
+            &parent,
+            context,
+            reply(&parent, context),
+            &registry,
+            &sources,
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))
+    };
+
+    let mut table = running(&parent, context);
+    assert!(matches!(
+        prepare()?.activate(&[], &[context], &mut table, &mut budget()),
+        Err(ActivationError::Grants(_))
+    ));
+    unchanged(&table, &parent);
+    assert!(matches!(
+        prepare()?.activate(&policy, &[], &mut table, &mut budget()),
+        Err(ActivationError::ContextCount)
+    ));
+    unchanged(&table, &parent);
+
+    let prepared = prepare()?;
+    let mut limits = budget().limits();
+    limits.allocation_units = 0;
+    assert!(matches!(
+        prepared.activate(&policy, &[context], &mut table, &mut Budget::new(limits)),
+        Err(ActivationError::Stopped(StopReason::AllocationLimit))
+    ));
+    unchanged(&table, &parent);
+
+    // Preparation owns no lifetime permission. Cancellation between preparation
+    // and publication must prevent this generation from registering any child.
+    let prepared = prepare()?;
+    table
+        .cancel(parent.request_id, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert!(matches!(
+        prepared.activate(&policy, &[context], &mut table, &mut budget()),
+        Err(ActivationError::Lifetime(_))
+    ));
+    assert_eq!(
+        table.phase(parent.request_id, &mut budget()),
+        Ok(RequestPhase::Cancelled)
+    );
+    assert_eq!(
+        table.phase(parent.request_id + 1, &mut budget()),
+        Err(LifetimeError::UnknownRequest)
+    );
+    Ok(())
+}
+
+#[test]
 fn owned_activation_retains_calls_and_publishes_only_after_all_budgeted_checks()
 -> Result<(), String> {
     let (registry, parent) = fixture()?;
