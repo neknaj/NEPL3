@@ -130,14 +130,24 @@ fn invalid_keeps_partial_and_diagnostic_while_stopped_prevents_parent_callback()
             assert!(matches!(failure.cause, scheduler::Error::Stopped(_)));
             let accepted = failure.accepted_results().collect::<Vec<_>>();
             assert_eq!(accepted.len(), 1);
+            assert_eq!(accepted[0].0.request_id, root.request_id + 10);
+            assert_eq!(accepted[0].0.operation, root.operation);
+            assert_eq!(number(&accepted[0].0.input), Some(20));
             let OperationResult::Stopped {
+                reason,
                 partial: Some(value),
-                ..
+                report,
             } = accepted[0].1
             else {
                 return Err("expected retained stopped result".into());
             };
             assert_eq!(number(value), Some(20));
+            assert_eq!(*reason, StopReason::Cancelled);
+            assert_eq!(report.diagnostics.len(), 1);
+            assert_eq!(report.diagnostics[0].schema, accepted[0].0.operation.schema);
+            assert_eq!(report.diagnostics[0].code, "child-outcome");
+            assert_eq!(number(&report.diagnostics[0].arguments), Some(20));
+            assert_eq!(report.usage.diagnostics, 1);
             assert_eq!(execution.poll(), Err(StopReason::Cancelled));
             assert_eq!(RESUMED.load(Ordering::SeqCst), 0);
             assert_eq!(cancelled, vec![root.request_id]);
