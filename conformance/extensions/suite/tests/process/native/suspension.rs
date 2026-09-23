@@ -1,11 +1,21 @@
 //! One remote root delegates real language operations to the parent host.
 use super::*;
+use nepl3_core::budget::{Budget, StopReason};
 use nepl3_core::operation::lifetime::{RequestLifetimes, RequestPhase};
 use nepl3_suite::{
     dispatch::resume, grants::dependencies::OperationGrant, scheduler, suspension::host,
 };
 
-pub fn child(text: &str) -> Result<(), String> {
+fn remote_budget(stop: bool) -> Budget {
+    let mut limits = budget().limits();
+    if stop {
+        // Allows Await and literal operands; the 70-digit product exceeds Work.
+        limits.work = 20_000;
+    }
+    Budget::new(limits)
+}
+
+pub fn child(text: &str, remote_stop: bool) -> Result<(), String> {
     let model = model()?;
     // Both hosts independently install this fixed fixture plan. Dynamic plan
     // transfer is exercised by the separate aggregate-operation cases.
@@ -26,7 +36,7 @@ pub fn child(text: &str) -> Result<(), String> {
             &program,
             &sources,
             &model.registry,
-            budget().limits(),
+            remote_budget(remote_stop).limits(),
             &mut budget(),
         )
         .map_err(error)?;
@@ -34,7 +44,7 @@ pub fn child(text: &str) -> Result<(), String> {
     let mut lifetimes = RequestLifetimes::default();
     let mut admission = SourceAdmission::default();
     let mut transport = budget();
-    let mut execution = budget();
+    let mut execution = remote_budget(remote_stop);
     session
         .with_registrations(
             &mut budget(),
@@ -140,10 +150,17 @@ pub fn child(text: &str) -> Result<(), String> {
                             )
                             .map_err(error)?;
                         result.delivery.map_err(error)?;
-                        let OperationReply::Result(OperationResult::Complete { report, .. }) =
-                            result.reply
-                        else {
+                        let OperationReply::Result(outcome) = result.reply else {
                             return Err("expected terminal root".into());
+                        };
+                        let report = match &outcome {
+                            OperationResult::Complete { report, .. } if !remote_stop => report,
+                            OperationResult::Stopped { reason, report, .. } if remote_stop => {
+                                assert_eq!(*reason, nepl3_core::budget::StopReason::WorkLimit);
+                                assert_eq!(execution.poll(), Err(*reason));
+                                report
+                            }
+                            _ => return Err("unexpected remote result".into()),
                         };
                         assert_eq!(report.usage, execution.usage());
                         lifetimes
@@ -191,6 +208,7 @@ pub fn exchange(
     expected: i64,
     cancel: bool,
     stop: bool,
+    remote_stop: bool,
 ) -> Result<(), String> {
     let model = model()?;
     let (bytes, sources, native) = packet(text, &model)?;
@@ -210,7 +228,7 @@ pub fn exchange(
             &program,
             &sources,
             &model.registry,
-            budget().limits(),
+            remote_budget(remote_stop).limits(),
             &mut budget(),
         )
         .map_err(error)?;
@@ -397,20 +415,58 @@ pub fn exchange(
                         return Err("expected remote terminal result".into());
                     };
                     assert_eq!(execution.usage(), local_usage);
-                    let OperationResult::Complete { report, .. } = &result else {
-                        return Err("Complete required".into());
+                    let report = match &result {
+                        OperationResult::Complete { report, .. } if !remote_stop => {
+                            let actual = complete_value(&result)?;
+                            assert_eq!(actual, complete_value(&native)?);
+                            let [NdfValue::Integer(value)] = actual.fields.as_slice() else {
+                                return Err("expected Integer".into());
+                            };
+                            assert_eq!(value.as_bigint().to_string(), expected.to_string());
+                            report
+                        }
+                        OperationResult::Stopped {
+                            reason,
+                            partial,
+                            report,
+                        } if remote_stop => {
+                            assert_eq!(*reason, StopReason::WorkLimit);
+                            assert!(partial.is_none());
+                            let [diagnostic] = report.diagnostics.as_slice() else {
+                                return Err("expected remote arithmetic diagnostic".into());
+                            };
+                            assert_eq!(diagnostic.code, "evaluation-stopped");
+                            assert_eq!(diagnostic.schema, root.operation.schema);
+                            assert_eq!(diagnostic.arguments, root.input);
+                            let span = diagnostic.primary.as_ref().ok_or("missing remote span")?;
+                            assert_eq!((span.start(), span.end()), (0, 3));
+                            report
+                                .validate_with_sources(&sources, &model.registry, validation)
+                                .map_err(error)?;
+                            assert!(
+                                report
+                                    .validate_with_sources(
+                                        &SourceStore::default(),
+                                        &model.registry,
+                                        validation
+                                    )
+                                    .is_err()
+                            );
+                            report
+                        }
+                        _ => return Err("unexpected remote terminal result".into()),
                     };
                     assert!(report.usage.work > remote_await_usage.work);
                     assert!(report.usage.allocation_units >= remote_await_usage.allocation_units);
-                    let actual = complete_value(&result)?;
-                    assert_eq!(actual, complete_value(&native)?);
-                    let [NdfValue::Integer(value)] = actual.fields.as_slice() else {
-                        return Err("expected Integer".into());
-                    };
-                    assert_eq!(value.as_bigint().to_string(), expected.to_string());
                     lifetimes
                         .finish(root.request_id, validation)
                         .map_err(error)?;
+                    assert_eq!(
+                        lifetimes
+                            .phase(root.request_id, validation)
+                            .map_err(error)?,
+                        RequestPhase::Finished
+                    );
                 }
                 if let Some(failure) = &stopped {
                     // The host owns this accepted child outcome across remote
