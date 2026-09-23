@@ -22,7 +22,7 @@ pub fn child() -> Result<(), String> {
     let registration = suspending::Registration {
         operation: &prototype.operation,
         implementation: identity(),
-        invoke: increment,
+        invoke: &increment,
     };
     for call in calls.iter().rev() {
         let approved = authority.admit(call, &mut budget()).map_err(error)?;

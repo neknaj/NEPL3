@@ -1,0 +1,8 @@
+//! Language-owned semantics for the external MiniExpr/Frame runtime consumer.
+//! Package declarations are shared with the Foundation-only Hello consumer.
+pub mod arithmetic;
+pub mod contract;
+pub mod execution;
+pub mod native;
+pub mod program;
+pub mod syntax;

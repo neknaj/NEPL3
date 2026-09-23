@@ -63,7 +63,7 @@ fn child() -> Result<(), String> {
                 let registration = suspending::Registration {
                     operation: &prototype.operation,
                     implementation: identity(),
-                    invoke: await_increment,
+                    invoke: &await_increment,
                 };
                 let reply = connection
                     .dispatch_invoke(
@@ -113,7 +113,7 @@ fn child() -> Result<(), String> {
                 let registration = resume::Registration {
                     operation: &prototype.operation,
                     implementation: identity(),
-                    resume: finish,
+                    resume: &finish,
                 };
                 let result = connection
                     .dispatch_resume(
@@ -252,7 +252,7 @@ fn exchange(
     let registration = suspending::Registration {
         operation: &selected,
         implementation: identity(),
-        invoke: increment,
+        invoke: &increment,
     };
     let authority =
         Grants::new(&request.environment, &sources, &[], &mut budget()).map_err(error)?;

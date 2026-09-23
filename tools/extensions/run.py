@@ -98,6 +98,7 @@ def main():
             fixture = ROOT / "conformance/extensions/hello"
             shutil.copytree(fixture / "src", directory / "src")
             shutil.copytree(fixture / "examples", directory / "examples")
+            shutil.copytree(fixture / "tests", directory / "tests")
             shutil.copyfile(fixture / "Cargo.lock", directory / "Cargo.lock")
             manifest = (fixture / "Cargo.toml").read_text(encoding="utf-8")
             manifest = external_manifest(manifest, packages)

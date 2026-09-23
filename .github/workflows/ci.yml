@@ -86,6 +86,13 @@ jobs:
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - name: Tests
         run: cargo test --workspace --locked
+      - name: Composition runtime consumer
+        run: cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml
+      - name: Composition consumer formatting and Clippy
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cargo fmt --manifest-path conformance/extensions/suite/Cargo.toml -- --check
+          cargo clippy --locked --manifest-path conformance/extensions/suite/Cargo.toml --all-targets -- -D warnings
       - name: External language public API consumer
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -291,6 +298,7 @@ jobs:
           cargo test --locked -p nepl3-tools --test doc_capacity --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked -p nepl3-tools --test sentence --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked -p nepl3-tools --test math --target wasm32-wasip2 -- --test-threads=1
+          cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml --target wasm32-wasip2 -- --test-threads=1
       - name: Compile foundation for browser Wasm
         run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html -p nepl3-suite --no-default-features --target wasm32-unknown-unknown
       - name: Compare identical foundation components with Pulley64

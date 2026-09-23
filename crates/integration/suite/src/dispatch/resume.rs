@@ -7,11 +7,15 @@ use nepl3_core::operation::{
 
 pub type ResumeOperation =
     fn(&Invoke, &Resume, &SchemaRegistry, &mut Budget) -> Result<OperationReply, StopReason>;
+/// Borrowed implementation sharing typed host state. Saved continuation state
+/// and dependency results still pass the ordinary boundary validation.
+pub type Callback<'a> = dyn Fn(&Invoke, &Resume, &SchemaRegistry, &mut Budget) -> Result<OperationReply, StopReason>
+    + 'a;
 
 pub struct Registration<'a> {
     pub operation: &'a OperationRef,
     pub implementation: Digest,
-    pub resume: ResumeOperation,
+    pub resume: &'a Callback<'a>,
 }
 
 /// Immutable data retained by the host for this Await generation. Each source

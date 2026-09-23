@@ -85,6 +85,18 @@ fn context(_: &Invoke, implementation: Digest, b: &mut Budget) -> Result<Digest,
     Ok(implementation)
 }
 
+fn stop_at_leaf(
+    call: &Invoke,
+    context: Digest,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<OperationReply, StopReason> {
+    if number(&call.input) == Some(0) {
+        return Err(b.stop(StopReason::Cancelled));
+    }
+    invoke(call, context, registry, b)
+}
+
 fn suspend_with(
     call: &Invoke,
     context: Digest,
@@ -198,15 +210,15 @@ fn scheduler_preserves_sibling_order_and_resumes_empty_and_repeated_await() -> R
             invoke: suspending::Registration {
                 operation: &root.operation,
                 implementation: identity,
-                invoke: branching,
+                invoke: &branching,
             },
             resume: resume::Registration {
                 operation: &root.operation,
                 implementation: identity,
-                resume: branching_resume,
+                resume: &branching_resume,
             },
             grants: &grants,
-            context,
+            context: &context,
         }];
         let mut reports = Vec::new();
         let mut cancelled = Vec::new();
@@ -305,19 +317,26 @@ fn iterative_scheduler_resolves_nested_calls_and_cancels_on_execution_stop() -> 
     let grants = Grants::new(&root.environment, &sources, &[], &mut budget())
         .map_err(|e| format!("{e:?}"))?;
     let identity = Digest::of(b"recursive native fixture");
-    let registrations = [scheduler::Registration {
+    let configured_context = Digest::of(b"immutable run configuration");
+    let context_calls = core::cell::Cell::new(0_usize);
+    let borrowed_context = |_: &Invoke, _: Digest, b: &mut Budget| {
+        b.charge(Resource::Work, 1)?;
+        context_calls.set(context_calls.get() + 1);
+        Ok(configured_context)
+    };
+    let mut registrations = [scheduler::Registration {
         invoke: suspending::Registration {
             operation: &root.operation,
             implementation: identity,
-            invoke,
+            invoke: &invoke,
         },
         resume: resume::Registration {
             operation: &root.operation,
             implementation: identity,
-            resume,
+            resume: &resume,
         },
         grants: &grants,
-        context,
+        context: &borrowed_context,
     }];
     let mut reports = Vec::new();
     let mut cancelled = Vec::new();
@@ -336,6 +355,7 @@ fn iterative_scheduler_resolves_nested_calls_and_cancels_on_execution_stop() -> 
         return Err("expected Complete".into());
     };
     assert_eq!(number(&value), Some(4));
+    assert_eq!(context_calls.get(), 5);
     assert_eq!(
         reports.iter().map(|v| v.0).collect::<Vec<_>>(),
         (root.request_id..root.request_id + 4).collect::<Vec<_>>()
@@ -369,5 +389,25 @@ fn iterative_scheduler_resolves_nested_calls_and_cancels_on_execution_stop() -> 
         cancelled.dedup();
         assert_eq!(cancelled.len(), count);
     }
+    registrations[0].invoke.invoke = &stop_at_leaf;
+    cancelled.clear();
+    let failure = scheduler::run(
+        &registrations,
+        &root,
+        &registry,
+        &mut budget(),
+        &mut budget(),
+        |_, _| {},
+        |id| cancelled.push(id),
+    )
+    .err()
+    .ok_or("expected leaf stop")?;
+    assert_eq!(failure.active_request_id(), root.request_id + 4);
+    assert!(failure.accepted_results().next().is_none());
+    cancelled.sort_unstable();
+    assert_eq!(
+        cancelled,
+        (root.request_id..=root.request_id + 4).collect::<Vec<_>>()
+    );
     Ok(())
 }

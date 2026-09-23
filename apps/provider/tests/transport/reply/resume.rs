@@ -28,7 +28,7 @@ fn schema_exchange_rejects_resume_before_consuming_await() -> Result<(), String>
     let registration = Registration {
         operation: &parent.operation,
         implementation: identity,
-        resume: resume_result,
+        resume: &resume_result,
     };
     for incoming in [false, true] {
         let mut server = negotiating(&registry, incoming)?;
@@ -132,7 +132,7 @@ fn decoded_resume_runs_saved_callback_once_and_returns_dependency_value() -> Res
     let registration = Registration {
         operation: &parent.operation,
         implementation: identity,
-        resume: resume_result,
+        resume: &resume_result,
     };
     let calls = [child];
     let grants = [&sources];
@@ -234,7 +234,7 @@ fn resume_write_failure_consumes_lifetime_and_closes_transport() -> Result<(), S
     let registration = Registration {
         operation: &parent.operation,
         implementation: identity,
-        resume: resume_result,
+        resume: &resume_result,
     };
     let saved = SavedAwait {
         parent: &parent,

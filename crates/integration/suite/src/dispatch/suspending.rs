@@ -5,10 +5,14 @@ use nepl3_core::operation::OperationReply;
 
 pub type Operation =
     fn(&Invoke, Digest, &SchemaRegistry, &mut Budget) -> Result<OperationReply, StopReason>;
+/// Borrowed implementation whose typed captures remain alive for the entire
+/// registration. Dispatch requires no heap allocation for the callback.
+pub type Callback<'a> = dyn Fn(&Invoke, Digest, &SchemaRegistry, &mut Budget) -> Result<OperationReply, StopReason>
+    + 'a;
 pub struct Registration<'a> {
     pub operation: &'a OperationRef,
     pub implementation: Digest,
-    pub invoke: Operation,
+    pub invoke: &'a Callback<'a>,
 }
 #[derive(Debug)]
 pub enum Error {

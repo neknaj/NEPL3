@@ -15,7 +15,7 @@ pub fn execute(registry: &SchemaRegistry, request: &Invoke) -> Result<OperationR
     let registration = suspending::Registration {
         operation: &request.operation,
         implementation: identity(),
-        invoke: await_increment,
+        invoke: &await_increment,
     };
     let OperationReply::Await {
         continuation,
@@ -52,7 +52,7 @@ pub fn execute(registry: &SchemaRegistry, request: &Invoke) -> Result<OperationR
     let registration = suspending::Registration {
         operation: &selected,
         implementation: identity(),
-        invoke: increment,
+        invoke: &increment,
     };
     let OperationReply::Result(result) = suspending::invoke(
         &registration,
@@ -91,7 +91,7 @@ pub fn execute(registry: &SchemaRegistry, request: &Invoke) -> Result<OperationR
     let registration = resume::Registration {
         operation: &request.operation,
         implementation: identity(),
-        resume: finish,
+        resume: &finish,
     };
     let result = resume::execute(
         &registration,

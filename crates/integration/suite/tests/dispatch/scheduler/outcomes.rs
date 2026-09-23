@@ -94,15 +94,15 @@ fn invalid_keeps_partial_and_diagnostic_while_stopped_prevents_parent_callback()
             invoke: suspending::Registration {
                 operation: &root.operation,
                 implementation: identity,
-                invoke: outcome,
+                invoke: &outcome,
             },
             resume: resume::Registration {
                 operation: &root.operation,
                 implementation: identity,
-                resume: receive_invalid,
+                resume: &receive_invalid,
             },
             grants: &grants,
-            context,
+            context: &context,
         }];
         let mut execution = budget();
         let mut cancelled = Vec::new();
@@ -134,6 +134,7 @@ fn invalid_keeps_partial_and_diagnostic_while_stopped_prevents_parent_callback()
                 Err(failure) => failure,
             };
             assert!(matches!(failure.cause, scheduler::Error::Stopped(_)));
+            assert_eq!(failure.active_request_id(), root.request_id);
             let accepted = failure.accepted_results().collect::<Vec<_>>();
             let stopped = if input == 97 {
                 assert_eq!(accepted.len(), 2);

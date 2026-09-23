@@ -52,6 +52,7 @@ class RunnerFailures(unittest.TestCase):
 
             def command(args, cwd, **kwargs):
                 if "metadata" in args:
+                    self.assertTrue((Path(cwd) / "tests/packages.rs").is_file())
                     consumer = {"id": "hello", "name": "external-hello-language",
                                 "manifest_path": str(Path(cwd) / "Cargo.toml")}
                     packages = [{"id": name, "name": name, "manifest_path": str(path / "Cargo.toml")}
@@ -86,6 +87,7 @@ class RunnerFailures(unittest.TestCase):
             record = json.loads((output / "result.json").read_text(encoding="utf-8"))
             self.assertEqual(record["result"], "passed" if fault == "metadata-stderr" else "failed")
             if fault == "metadata-stderr":
+                self.assertIn(str(Path("tests") / "packages.rs"), record["consumer"])
                 self.assertEqual((output / "metadata.json.stderr.log").read_bytes(), b"Downloading crates ...\n")
                 json.loads((output / "metadata.json").read_bytes())
             if fault == "timeout":

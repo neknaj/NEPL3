@@ -30,10 +30,13 @@ pub fn inspect(input: &str, final_input: bool) -> Result<miniexpr::Observation, 
 }
 
 /// The host supplies aliases; each package declares its foreign category reads.
-pub(crate) fn languages<'a>(
+/// This returns the same definitions used by `inspect` and the portable tests.
+/// External adapters can reuse them while providing their own host catalog,
+/// operations and grants. The returned profile still requires host resolution.
+pub fn languages<'a>(
     expr_alias: &'a str,
     frame_alias: &'a str,
-) -> Result<super::parse::Languages<'a>, String> {
+) -> Result<super::Languages<'a>, String> {
     let (expr, mut registry) = miniexpr::definition(Some(frame_alias))?;
     let mut b = budget();
     let descriptor = SchemaDescriptor {

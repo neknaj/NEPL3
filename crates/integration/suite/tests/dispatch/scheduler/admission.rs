@@ -47,15 +47,15 @@ fn scheduler_rejects_missing_ambiguous_registration_and_ancestor_cycle() -> Resu
         invoke: suspending::Registration {
             operation: &root.operation,
             implementation: identity,
-            invoke: cycle,
+            invoke: &cycle,
         },
         resume: resume::Registration {
             operation: &root.operation,
             implementation: identity,
-            resume,
+            resume: &resume,
         },
         grants: &grants,
-        context,
+        context: &context,
     };
     let mut cancelled = Vec::new();
     let mut execution = budget();
@@ -111,7 +111,7 @@ fn scheduler_rejects_missing_ambiguous_registration_and_ancestor_cycle() -> Resu
     assert_eq!(execution.usage(), Usage::default());
     assert!(cancelled.is_empty());
     let mut malformed = registration();
-    malformed.invoke.invoke = parent_id_reply;
+    malformed.invoke.invoke = &parent_id_reply;
     assert!(matches!(
         scheduler::run(
             &[malformed],
