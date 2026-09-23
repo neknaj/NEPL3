@@ -3,6 +3,8 @@ use super::*;
 mod admission;
 #[path = "scheduler/outcomes.rs"]
 mod outcomes;
+#[path = "scheduler/profile.rs"]
+mod profile;
 use nepl3_core::operation::{Continuation, OperationReply, Resume};
 use nepl3_suite::{
     dispatch::{resume, suspending},
