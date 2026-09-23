@@ -16,8 +16,10 @@ use nepl3_reader::{
     tokenizer::{ReaderMode, SkipRule, TakeRule, TokenReader},
 };
 mod diagnostic;
+mod foreign;
 mod payload;
 mod surface;
+pub use foreign::ForeignForm;
 
 pub struct PackageContext<'a> {
     /// Explicit surface package owner selected by the compiling host.
@@ -251,12 +253,33 @@ pub fn compile_with_admission(
     budget: &mut Budget,
     admission: &mut nepl3_core::source::SourceAdmission,
 ) -> Result<CompiledLanguage, CompileError> {
+    compile_with_foreign_forms(document, context, &[], registry, budget, admission)
+}
+/// Compile explicit host-generated, single-guest forms together with source
+/// declarations. Their synthetic origins are separate from source locations.
+/// Foreign aliases are resolved by the resulting ParseProfile; no guest runs.
+pub fn compile_with_foreign_forms(
+    document: &CheckedDocument<'_>,
+    context: &PackageContext<'_>,
+    foreign_forms: &[ForeignForm<'_>],
+    registry: SchemaRegistry,
+    budget: &mut Budget,
+    admission: &mut nepl3_core::source::SourceAdmission,
+) -> Result<CompiledLanguage, CompileError> {
     for source in &document.document().sources {
         admission
             .admit_existing(source, budget)
             .map_err(ModelError::from)?;
     }
-    assemble(document, context, registry, budget, admission).map_err(|error| {
+    assemble(
+        document,
+        context,
+        foreign_forms,
+        registry,
+        budget,
+        admission,
+    )
+    .map_err(|error| {
         if matches!(
             error,
             CompileError::Declaration { .. } | CompileError::WrongConstructor(_)
@@ -270,6 +293,7 @@ pub fn compile_with_admission(
 fn assemble(
     document: &CheckedDocument<'_>,
     context: &PackageContext<'_>,
+    foreign_forms: &[ForeignForm<'_>],
     mut registry: SchemaRegistry,
     budget: &mut Budget,
     admission: &mut nepl3_core::source::SourceAdmission,
@@ -447,7 +471,8 @@ fn assemble(
         }
     }
     let outputs = reader::output::infer_document(document, &imports, budget)?;
-    let descriptor = surface::descriptor(document, context, revision, &outputs, budget)?;
+    let mut descriptor = surface::descriptor(document, context, revision, &outputs, budget)?;
+    foreign::declare(&mut descriptor, foreign_forms, budget)?;
     let schema = descriptor.reference(budget)?;
     budget.charge(Resource::AllocationUnits, schema.package.len() as u64)?;
     registry.register(schema.clone(), descriptor, budget)?;
@@ -726,7 +751,7 @@ fn assemble(
         &extensions,
         budget,
     )?;
-    let package = p::LanguagePackage {
+    let mut package = p::LanguagePackage {
         schema,
         payload_schemas,
         root: text(&root.value, budget)?,
@@ -750,6 +775,7 @@ fn assemble(
             declarations,
         },
     };
+    foreign::append(&mut package, foreign_forms, &registry, budget)?;
     check_selection_locations(doc, &package, budget)?;
     if let Err(error) = package.check_detailed_with_admission(&registry, budget, admission) {
         return Err(diagnostic::locate(

@@ -1,7 +1,74 @@
 use super::*;
+use nepl3_core::value_codec::FoundationValueCodec;
 use nepl3_doc_core::{check::Category, lower, model::DocKind};
 use nepl3_sentence_core::model::Kind;
 use nepl3_wire::foundation::FoundationCodec;
+
+#[test]
+fn math_sentence_math_printing_preserves_recursive_source() -> Result<(), String> {
+    let compiled = compiled()?;
+    let sentence = compiled.others.last().ok_or("Sentence package")?;
+    let input = r#"article en "Math" body cons display Math label x Sentence sentence cons math label 7 Sentence "[字/じ]" nil nil"#;
+    for native in [false, true] {
+        with_input_route(
+            native,
+            &compiled,
+            input,
+            "Article",
+            |tree, profile, b, a| {
+                let checked = tree
+                    .tree()
+                    .bundle
+                    .validate_with_sources(profile.registry(), b, a)
+                    .map_err(err)?;
+                let empty = SourceStore::default();
+                let mut admission = SourceAdmission::default();
+                let mut codec = FoundationCodec::new(profile.registry(), &empty, &mut admission)
+                    .map_err(err)?;
+                let document = lower::document(
+                    &checked,
+                    &compiled.doc.package.schema,
+                    Category::Article,
+                    profile.registry(),
+                    b,
+                    &mut codec,
+                )
+                .map_err(err)?;
+                let closure = document.value.embeds.first().ok_or("Math closure")?;
+                let input = closure
+                    .closure
+                    .syntax
+                    .bundle
+                    .validate_with_sources(profile.registry(), b, codec.source_admission())
+                    .map_err(err)?;
+                let math = nepl3_math_core::lower::expression(
+                    &input,
+                    &compiled.others[0].schema,
+                    nepl3_math_core::check::Category::Expr,
+                    profile.registry(),
+                    b,
+                    codec.source_admission(),
+                )
+                .map_err(err)?;
+                let shape = math.value.validate_shape(b).map_err(err)?;
+                let mut printer = crate::doc::printing::SentenceGuestPrinter {
+                    registry: profile.registry(),
+                    surface: &sentence.schema,
+                    math_surface: Some(&compiled.others[0].schema),
+                    codec: &mut codec,
+                };
+                let output =
+                    nepl3_math_core::print::prefix(&shape, &mut printer, b).map_err(err)?;
+                assert_eq!(
+                    output.text,
+                    "label symbol \"x\" Sentence sentence cons math label 7 Sentence sentence cons ruby text \"字\" text \"じ\" nil nil"
+                );
+                Ok(())
+            },
+        )?;
+    }
+    Ok(())
+}
 
 #[test]
 fn math_annotation_uses_registered_sentence_on_both_reader_routes() -> Result<(), String> {

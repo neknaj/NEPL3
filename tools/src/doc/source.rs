@@ -318,8 +318,17 @@ pub fn compiled() -> Result<Compiled, String> {
             .map_err(err)?;
         others.push(other.package);
     }
-    let sentence = crate::sentence::catalog::standard(
+    let sentence = crate::sentence::catalog::standard_with_foreign_forms(
         host_identity(),
+        &[nepl3_grammar_core::compile::package::ForeignForm {
+            kind: "InlineMath",
+            category: "Inline",
+            spelling: "math",
+            field: "syntax",
+            alias: "Math",
+            guest_category: "Expr",
+            origin_reason: "Doc host selects Math expressions in Sentence Inline",
+        }],
         &mut budget(),
         &mut SourceAdmission::default(),
     )?;

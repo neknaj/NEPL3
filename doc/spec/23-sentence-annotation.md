@@ -271,6 +271,21 @@ Doc SentencePayloadであり、同じschema identityで独立Sentence payloadを
 Sentence所有、現行lowerが受信するDoc SentencePayload、Mathとの既存bridgeは残る。
 これらは後続のconsumer所有移行で整理する。
 
+## hostが選択するforeign Inlineの構築
+
+hostは、Grammar compilerの型付き`ForeignForm`を通じて、既存categoryへ単一のforeign fieldを持つformを追加できる。
+宣言にはkind、category、spelling、field、foreign alias、guest category、生成理由を指定する。
+compilerは追加宣言を含めてsurface descriptorを生成し、そのidentityでreaderと全formを構築する。
+既存kindとの衝突、重複kind、空の宣言情報、未定義category、同一読取りcontextでのspelling衝突を拒否する。
+元の文法sourceと由来を保持し、hostが生成した宣言には独立したSynthetic Originを付ける。
+foreign aliasの実schemaとcategoryはParseProfileの解決時に検査する。
+
+Doc hostは、この経路でSentenceのInlineへ`math Expr`を追加し、MathのExprを明示的に選択する。
+標準Sentence単独のpackageは従来の宣言集合を保持する。選択後のsurfaceは追加宣言に対応するschema identityを持つ。
+Math注釈のprinterはSentenceを構造としてlowerし、foreign MathをMath printerへ渡す。
+共有guestの呼出しには最深の出現位置を使用し、呼出元のDepthと累積Budgetを保持する。
+HTMLのforeign adapter、旧consumer試験と生成物の更新は、Math所有移行の残件として検証する。
+
 ## 注釈と移行完了条件
 
 以下は移行後にも維持する注釈契約と、旧経路を除去する際の受入条件である。実施順・各段階の残件はT07と実装状態で管理する。旧コメントの認識だけを先に削除する変更はmainへ統合しない。

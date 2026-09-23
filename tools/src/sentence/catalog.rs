@@ -1,5 +1,7 @@
 //! Independent Sentence surface assembly; no Doc/Math or annotation registry is needed.
 //! A known facts signature is not an executable facts implementation.
+#[cfg(test)]
+mod tests;
 use nepl3_core::{
     budget::Budget,
     schema::{SchemaRegistry, TypeDescriptor},
@@ -23,6 +25,23 @@ pub fn standard(
     budget: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> Result<CompiledLanguage, String> {
+    standard_with_foreign_forms(implementation, &[], budget, admission)
+}
+/// Assemble the selected host surface with explicit typed foreign declarations.
+pub fn standard_with_foreign_forms(
+    implementation: nepl3_core::source::Digest,
+    forms: &[compile::package::ForeignForm<'_>],
+    budget: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<CompiledLanguage, String> {
+    let document = standard_document(implementation, budget, admission)?;
+    compile_with_foreign_forms(&document, "nepl3.syntax.sentence", forms, budget, admission)
+}
+fn standard_document(
+    implementation: nepl3_core::source::Digest,
+    budget: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<Document, String> {
     use nepl3_core::source::{SourceId, SourceSnapshot};
     let err = |error| format!("{error:?}");
     let seed = crate::bootstrap::load(
@@ -44,12 +63,21 @@ pub fn standard(
     let document =
         crate::bootstrap::runtime::parse(&source, &grammar, implementation, budget, admission)
             .map_err(|e| format!("{e:?}"))?;
-    compile(&document, "nepl3.syntax.sentence", budget, admission)
+    Ok(document)
 }
 
 pub fn compile(
     document: &Document,
     package: &str,
+    budget: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<CompiledLanguage, String> {
+    compile_with_foreign_forms(document, package, &[], budget, admission)
+}
+fn compile_with_foreign_forms(
+    document: &Document,
+    package: &str,
+    forms: &[compile::package::ForeignForm<'_>],
     budget: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> Result<CompiledLanguage, String> {
@@ -114,7 +142,7 @@ pub fn compile(
     let checked = document
         .validate(budget, admission)
         .map_err(|e| format!("{e:?}"))?;
-    compile::package::compile_with_admission(
+    compile::package::compile_with_foreign_forms(
         &checked,
         &PackageContext {
             package,
@@ -124,6 +152,7 @@ pub fn compile(
             classes: &classes,
             views: &[],
         },
+        forms,
         registry,
         budget,
         admission,
