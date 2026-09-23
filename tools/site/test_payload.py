@@ -11,7 +11,7 @@ from payload import digest, pack, snapshot
 
 
 class PayloadTests(unittest.TestCase):
-    def test_manifest_version_requires_integer_one(self):
+    def test_manifest_version_requires_integer_one(self) -> None:
         for version in [True, 1.0, '1', None, 2]:
             with self.subTest(version=version), tempfile.TemporaryDirectory() as directory:
                 parent = Path(directory).resolve(); root = parent / 'site'
@@ -25,7 +25,7 @@ class PayloadTests(unittest.TestCase):
                 self.assertFalse((parent / 'out.tar').exists())
 
     @unittest.skipUnless(os.name == 'nt', 'Windows junction regression')
-    def test_windows_junction_is_rejected_without_following_it(self):
+    def test_windows_junction_is_rejected_without_following_it(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             parent = Path(directory).resolve(); root = parent / 'site'
             identity, _ = self.fixture(root)
@@ -44,7 +44,7 @@ class PayloadTests(unittest.TestCase):
                 os.rmdir(link)
             self.assertEqual(sentinel.read_bytes(), b'keep')
 
-    def test_input_limits_and_output_location(self):
+    def test_input_limits_and_output_location(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             parent = Path(directory).resolve(); root = parent / 'site'
             identity, files = self.fixture(root)
@@ -69,7 +69,7 @@ class PayloadTests(unittest.TestCase):
                 pack(root, identity, root / 'output.tar')
             self.assertFalse((root / 'output.tar').exists())
 
-    def test_directory_read_errors_propagate(self):
+    def test_directory_read_errors_propagate(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             parent = Path(directory).resolve(); root = parent / 'site'
             identity, _ = self.fixture(root)
@@ -90,7 +90,7 @@ class PayloadTests(unittest.TestCase):
         files['manifest.json'] = manifest
         return digest(manifest), files
 
-    def test_identical_bytes_and_regular_members_without_clock_or_owner(self):
+    def test_identical_bytes_and_regular_members_without_clock_or_owner(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             parent = Path(directory).resolve(); root = parent / 'site'
             identity, files = self.fixture(root)
@@ -107,7 +107,7 @@ class PayloadTests(unittest.TestCase):
                     self.assertEqual(archive.extractfile(member).read(), files[member.name])
             self.assertFalse(a['publication_verified'])
 
-    def test_corruption_and_unlisted_files_do_not_create_output(self):
+    def test_corruption_and_unlisted_files_do_not_create_output(self) -> None:
         for corruption in ['digest', 'file', 'extra', 'missing', 'duplicate', 'traversal']:
             with self.subTest(corruption=corruption), tempfile.TemporaryDirectory() as directory:
                 parent = Path(directory).resolve(); root = parent / 'site'
@@ -125,7 +125,7 @@ class PayloadTests(unittest.TestCase):
                 with self.assertRaises(ValueError): pack(root, identity, parent / 'out.tar')
                 self.assertFalse((parent / 'out.tar').exists())
 
-    def test_existing_output_and_hard_links_are_rejected(self):
+    def test_existing_output_and_hard_links_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             parent = Path(directory).resolve(); root = parent / 'site'
             identity, _ = self.fixture(root)

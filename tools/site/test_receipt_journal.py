@@ -11,7 +11,7 @@ RAW = b'{ "id":"123", "status_url":"https://api.github.com/repos/neknaj/NEPL3/pa
 
 
 class ReceiptJournalTests(unittest.TestCase):
-    def test_real_git_roundtrip_and_exact_original_response(self):
+    def test_real_git_roundtrip_and_exact_original_response(self) -> None:
         for kind in ("DeployIntent", "RecoveryIntent"):
             with self.subTest(kind=kind), tempfile.TemporaryDirectory() as directory:
                 repo = Path(directory) / "journal.git"
@@ -29,7 +29,7 @@ class ReceiptJournalTests(unittest.TestCase):
                 self.assertEqual(load(repo).head, next_head)
                 with self.assertRaises(ValueError): latest_created(repo, owner="other", repository="NEPL3")
 
-    def test_wrong_intent_identity_or_response_leaves_journal_unchanged(self):
+    def test_wrong_intent_identity_or_response_leaves_journal_unchanged(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repo = Path(directory) / "journal.git"
             subprocess.run(["git", "init", "--bare", "--quiet", str(repo)], check=True)
@@ -42,7 +42,7 @@ class ReceiptJournalTests(unittest.TestCase):
                     record_created(repo, head, candidate, raw, owner="neknaj", repository="NEPL3")
                 self.assertEqual(load(repo).head, head)
 
-    def test_replay_does_not_trust_generic_storage_event_names(self):
+    def test_replay_does_not_trust_generic_storage_event_names(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repo = Path(directory) / "journal.git"
             subprocess.run(["git", "init", "--bare", "--quiet", str(repo)], check=True)
@@ -51,7 +51,7 @@ class ReceiptJournalTests(unittest.TestCase):
             append(repo, head, replace(intent, kind="DeployReceipt"), b'{}')
             with self.assertRaises(ValueError): latest_created(repo, owner="neknaj", repository="NEPL3")
 
-    def test_large_valid_api_response_is_not_truncated_to_fit_journal(self):
+    def test_large_valid_api_response_is_not_truncated_to_fit_journal(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repo = Path(directory) / "journal.git"
             subprocess.run(["git", "init", "--bare", "--quiet", str(repo)], check=True)
@@ -64,7 +64,7 @@ class ReceiptJournalTests(unittest.TestCase):
                 record_created(repo, head, intent, raw, owner="neknaj", repository="NEPL3")
             self.assertEqual(load(repo).head, head)
 
-    def test_status_history_reloads_original_bytes_and_rejects_late_observation(self):
+    def test_status_history_reloads_original_bytes_and_rejects_late_observation(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repo = Path(directory) / "journal.git"
             subprocess.run(["git", "init", "--bare", "--quiet", str(repo)], check=True)
@@ -81,7 +81,7 @@ class ReceiptJournalTests(unittest.TestCase):
                 record_status(repo, head, b'{"status":"succeed"}', owner="neknaj", repository="NEPL3", request_url=receipt.status_endpoint)
             self.assertEqual(load(repo).head, head)
 
-    def test_status_request_mismatch_and_forged_storage_observation_rejected(self):
+    def test_status_request_mismatch_and_forged_storage_observation_rejected(self) -> None:
         from journal.model import encode
         import base64
         with tempfile.TemporaryDirectory() as directory:

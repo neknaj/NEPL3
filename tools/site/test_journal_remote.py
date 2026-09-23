@@ -24,7 +24,7 @@ class RemoteJournalTests(unittest.TestCase):
                 remote.publish(a, str(server), None, first)
             self.assertEqual(load(server).head, successor[0])
 
-    def test_follow_tags_configuration_does_not_publish_other_refs(self):
+    def test_follow_tags_configuration_does_not_publish_other_refs(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             server, (a, _) = self.setup_repositories(directory)
             first = append(a, None, event(), b'{}')
@@ -43,7 +43,7 @@ class RemoteJournalTests(unittest.TestCase):
             store.git(repo, 'remote', 'add', 'origin', str(server))
         return server, mirrors
 
-    def test_actual_push_confirm_and_lost_ack_reconciliation(self):
+    def test_actual_push_confirm_and_lost_ack_reconciliation(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             server, (a, b) = self.setup_repositories(directory)
             first = append(a, None, event(), b'{}')
@@ -81,7 +81,7 @@ class RemoteJournalTests(unittest.TestCase):
                 remote.publish(a, str(server), first, loser)
             self.assertEqual(load(server).head, winner)
 
-    def test_different_push_destination_is_rejected_without_write(self):
+    def test_different_push_destination_is_rejected_without_write(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             server, (a, b) = self.setup_repositories(directory)
             first = append(a, None, event(), b'{}')

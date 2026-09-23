@@ -11,7 +11,7 @@ from tools.extensions import run
 
 
 class ManifestTests(unittest.TestCase):
-    def test_paths_are_toml_values_and_other_values_are_preserved(self):
+    def test_paths_are_toml_values_and_other_values_are_preserved(self) -> None:
         source = '''[package]
 name = "consumer"
 description = "../../../crates/foundation/core"
@@ -36,7 +36,7 @@ optional = true
                 self.assertEqual(tomllib.loads(output), expected)
                 self.assertIn('# The same text in a comment is not a path field: "../../../crates/foundation/core"', output)
 
-    def test_missing_or_non_path_dependencies_are_rejected(self):
+    def test_missing_or_non_path_dependencies_are_rejected(self) -> None:
         for source in ['[package]\nname="consumer"', '[dependencies]',
                        '[dependencies]\nnepl3-core="1"',
                        '[dependencies]\nnepl3-core={version="1"}',
@@ -97,22 +97,22 @@ class RunnerFailures(unittest.TestCase):
             if fault == "changed":
                 self.assertFalse(record["foundation_unchanged"])
 
-    def test_duplicate_package_cannot_hide_behind_same_name(self):
+    def test_duplicate_package_cannot_hide_behind_same_name(self) -> None:
         self.exercise("duplicate")
 
-    def test_wrong_workspace_is_rejected(self):
+    def test_wrong_workspace_is_rejected(self) -> None:
         self.exercise("wrong-workspace")
 
-    def test_changed_source_cannot_publish_passed(self):
+    def test_changed_source_cannot_publish_passed(self) -> None:
         self.exercise("changed")
 
-    def test_timeout_preserves_partial_output_and_command(self):
+    def test_timeout_preserves_partial_output_and_command(self) -> None:
         self.exercise("timeout")
 
-    def test_failed_test_cannot_publish_passed(self):
+    def test_failed_test_cannot_publish_passed(self) -> None:
         self.exercise("failed-test")
 
-    def test_dependency_download_progress_does_not_corrupt_metadata(self):
+    def test_dependency_download_progress_does_not_corrupt_metadata(self) -> None:
         self.exercise("metadata-stderr")
 
 

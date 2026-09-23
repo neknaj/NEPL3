@@ -13,7 +13,7 @@ class CreateTests(unittest.TestCase):
     def args(self):
         return ('neknaj', 'NEPL3', 42, 'a' * 40, 'private-token', 'private.oidc.token')
 
-    def test_actual_http_post_has_exact_artifact_environment_and_build(self):
+    def test_actual_http_post_has_exact_artifact_environment_and_build(self) -> None:
         with server(body=RAW) as seen:
             raw = _create(*self.args(), timeout=10)
         self.assertEqual(raw, RAW)
@@ -24,7 +24,7 @@ class CreateTests(unittest.TestCase):
         self.assertEqual(json.loads(body), dict(artifact_id=42, pages_build_version='a'*40,
                                                environment='github-pages', oidc_token='private.oidc.token'))
 
-    def test_validation_does_not_start_process(self):
+    def test_validation_does_not_start_process(self) -> None:
         for index, values in [(0, ['../evil']), (2, [True, 0, 2**53]),
                               (3, ['bad']), (4, ['bad\r\nheader']), (5, ['', 'x'*16385])]:
             for value in values:
@@ -33,7 +33,7 @@ class CreateTests(unittest.TestCase):
                     with self.assertRaises(ValueError): create(*args)
                     run.assert_not_called()
 
-    def test_credentials_on_stdin_and_raw_response_revalidated(self):
+    def test_credentials_on_stdin_and_raw_response_revalidated(self) -> None:
         with patch('deployment.create.subprocess.run') as run:
             run.return_value = subprocess.CompletedProcess([], 0, base64.b64encode(RAW), b'')
             receipt, raw = create(*self.args())
@@ -42,7 +42,7 @@ class CreateTests(unittest.TestCase):
             self.assertIn(b'private.oidc.token', run.call_args.kwargs['input'])
             self.assertEqual(run.call_count, 1)
 
-    def test_uncertain_attempt_is_never_retried_and_secrets_not_reported(self):
+    def test_uncertain_attempt_is_never_retried_and_secrets_not_reported(self) -> None:
         outcomes = [subprocess.TimeoutExpired('private-token', 10), OSError('private-token'),
                     subprocess.CompletedProcess([], 1, b'private-token', b'private.oidc.token'),
                     subprocess.CompletedProcess([], 0, base64.b64encode(b'{"id":"wrong"}'), b'')]

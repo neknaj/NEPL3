@@ -41,7 +41,7 @@ class RemoteWaitTests(unittest.TestCase):
             self.assertEqual(load(server).head, final)
             self.assertEqual([r.raw_response for r in status_history(server, owner="neknaj", repository="NEPL3").observations], calls)
 
-    def test_remote_failure_keeps_local_evidence_and_stops_requests(self):
+    def test_remote_failure_keeps_local_evidence_and_stops_requests(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             server, mirror, head, receipt = self.prepare(directory)
             raw = b'{"status":"deployment_in_progress"}'

@@ -6,7 +6,7 @@ import contract
 
 
 class ContractMigration(unittest.TestCase):
-    def test_changed_historical_fixture_cannot_rewrite_expected_output(self):
+    def test_changed_historical_fixture_cannot_rewrite_expected_output(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             source = Path(temporary) / "source.md"
             output = Path(temporary) / "output.nepld"
@@ -18,7 +18,7 @@ class ContractMigration(unittest.TestCase):
             self.assertEqual(output.read_bytes(), b"preserved expected fixture")
             self.assertFalse(output.with_suffix(".json").exists())
 
-    def test_historical_source_and_explicit_code(self):
+    def test_historical_source_and_explicit_code(self) -> None:
         source = contract.SOURCE.read_text(encoding="utf-8")
         result = contract.generate(source)
         self.assertEqual(result, contract.TARGET.read_text(encoding="utf-8"))
@@ -26,7 +26,7 @@ class ContractMigration(unittest.TestCase):
         self.assertIn('cons code "cons"', result)
         self.assertEqual(result.count("cons section contract_"), 6)
 
-    def test_unsupported_features_fail_before_generation(self):
+    def test_unsupported_features_fail_before_generation(self) -> None:
         source = contract.SOURCE.read_text(encoding="utf-8")
         for addition in [
             "first  \nsecond", "x &amp; y", "    indented code", "Heading\n=======",
@@ -38,7 +38,7 @@ class ContractMigration(unittest.TestCase):
             with self.subTest(addition=addition), self.assertRaises(ValueError):
                 contract.generate(source + "\n" + addition + "\n")
 
-    def test_plain_soft_break_and_literal_escape(self):
+    def test_plain_soft_break_and_literal_escape(self) -> None:
         source = contract.SOURCE.read_text(encoding="utf-8")
         self.assertIn('"first second"', contract.generate(source + "\nfirst\nsecond\n"))
         self.assertEqual(contract.sentence('a {b}'), '"a \\{b\\}"')

@@ -10,7 +10,7 @@ import test_artifact
 
 
 class ArtifactExportTests(unittest.TestCase):
-    def test_command_writes_original_payload_and_never_overwrites(self):
+    def test_command_writes_original_payload_and_never_overwrites(self) -> None:
         meta, archive, kwargs, tar = test_artifact.ArtifactTests().fixture()
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve(strict=True)
@@ -30,7 +30,7 @@ class ArtifactExportTests(unittest.TestCase):
             self.assertEqual(json.loads(result.stdout)['reason'], 'FileExistsError')
             self.assertEqual(output.read_bytes(), tar)
 
-    def test_invalid_inputs_leave_output_absent(self):
+    def test_invalid_inputs_leave_output_absent(self) -> None:
         meta, archive, kwargs, _ = test_artifact.ArtifactTests().fixture()
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve(strict=True)

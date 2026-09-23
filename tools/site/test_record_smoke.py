@@ -37,7 +37,7 @@ class RecordSmokeTests(unittest.TestCase):
                       url=args[-1], transport='https', publication_verified=False)
         return server, args, kwargs, report
 
-    def test_pass_and_failure_are_recorded_remotely(self):
+    def test_pass_and_failure_are_recorded_remotely(self) -> None:
         for result in ('passed', 'failed'):
             with self.subTest(result=result), tempfile.TemporaryDirectory() as directory:
                 server, args, kwargs, report = self.prepare(directory)
@@ -49,7 +49,7 @@ class RecordSmokeTests(unittest.TestCase):
                 self.assertEqual(state.events[-1].kind, 'SmokePassed' if result == 'passed' else 'SmokeFailed')
                 self.assertEqual(decode(state.evidence[-1])['report'], actual)
 
-    def test_altered_site_does_not_start_http(self):
+    def test_altered_site_does_not_start_http(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             server, args, kwargs, _ = self.prepare(directory)
             (args[2]/'index.html').write_bytes(b'other document')
@@ -58,7 +58,7 @@ class RecordSmokeTests(unittest.TestCase):
             run.assert_not_called()
             self.assertEqual(load(server).head, args[1])
 
-    def test_report_identity_mismatch_is_not_recorded(self):
+    def test_report_identity_mismatch_is_not_recorded(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             server, args, kwargs, report = self.prepare(directory)
             for key, value in [('source_commit', 'c'*40), ('manifest_sha256', 'c'*64),

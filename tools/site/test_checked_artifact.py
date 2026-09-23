@@ -28,7 +28,7 @@ class CheckedArtifactTests(unittest.TestCase):
             'manifest_sha256': identity}), encoding='utf-8')
         return identity
 
-    def test_original_payload_and_rejection_boundaries(self):
+    def test_original_payload_and_rejection_boundaries(self) -> None:
         # Expectations derive from immutable CI input, not a rebuilt site.
         for mutation in ('none', 'commit', 'site', 'tar', 'report'):
             with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:

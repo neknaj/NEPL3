@@ -32,7 +32,7 @@ class SubmitTests(unittest.TestCase):
             self.assertEqual(status_history(server, owner='neknaj', repository='NEPL3').observations,
                              report.responses)
 
-    def test_execute_passes_remaining_budget_and_never_polls_unknown_creation(self):
+    def test_execute_passes_remaining_budget_and_never_polls_unknown_creation(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             server, mirror, intent, kwargs = self.setup(directory)
             for budget, elapsed, allowance in [(60, 17, 43), (60, 60, None), (3600, 0, 600)]:
@@ -74,7 +74,7 @@ class SubmitTests(unittest.TestCase):
             self.assertEqual(load(server).head, head)
             self.assertEqual(latest_created(server, owner="neknaj", repository="NEPL3")[2:], (receipt, RAW))
 
-    def test_lost_response_leaves_remote_intent_and_rejects_replay(self):
+    def test_lost_response_leaves_remote_intent_and_rejects_replay(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             server, mirror, intent, kwargs = self.setup(directory)
             with patch('deployment.submit.create', side_effect=CreationUnknown('lost')) as call:
@@ -89,7 +89,7 @@ class SubmitTests(unittest.TestCase):
                 self.assertEqual(load(server).head, state.head)
             self.assertEqual(call.call_count, 1)
 
-    def test_intent_push_failure_prevents_post(self):
+    def test_intent_push_failure_prevents_post(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             server, mirror, intent, kwargs = self.setup(directory)
             with patch.object(remote, 'publish', side_effect=ValueError('push failed')), \
@@ -123,7 +123,7 @@ class SubmitTests(unittest.TestCase):
                 submit(mirror, local_head, intent, **kwargs)
             send.assert_not_called()
 
-    def test_budget_expired_by_intent_confirmation_prevents_post(self):
+    def test_budget_expired_by_intent_confirmation_prevents_post(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             server, mirror, intent, kwargs = self.setup(directory)
             with patch('deployment.submit.create') as send:

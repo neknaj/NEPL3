@@ -37,7 +37,7 @@ class DistributionTests(unittest.TestCase):
             tracked.extend((f"{member}/Cargo.toml", f"{member}/src/lib.rs"))
         return ("\0".join(tracked) + "\0").encode("utf-8")
 
-    def test_valid_root_inputs_reach_cargo_metadata(self):
+    def test_valid_root_inputs_reach_cargo_metadata(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             tracked = self.root_fixture(root)
@@ -60,7 +60,7 @@ class DistributionTests(unittest.TestCase):
                 if name:
                     self.assertEqual((output / name).read_bytes(), (root / name).read_bytes())
 
-    def test_metadata_checks_target_sources_and_manifests(self):
+    def test_metadata_checks_target_sources_and_manifests(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             allowed = root / "allowed"
@@ -75,7 +75,7 @@ class DistributionTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 check_metadata({"packages": [package]}, [allowed])
 
-    def test_foundation_requires_identical_files_and_refuses_symlinks(self):
+    def test_foundation_requires_identical_files_and_refuses_symlinks(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary)
             root, external = base / "source", base / "external"
@@ -98,7 +98,7 @@ class DistributionTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     check_foundation(root, external)
 
-    def test_doc_members_use_only_explicit_external_foundation(self):
+    def test_doc_members_use_only_explicit_external_foundation(self) -> None:
         source = '''[workspace.dependencies]
 nepl3-core = { path = "crates/foundation/core" }
 nepl3-doc-core = { path = "crates/languages/doc/core" }
@@ -122,14 +122,14 @@ nepl3-doc-core.workspace = true
         with self.assertRaises(ValueError):
             workspace_manifest(source, [manifest])
 
-    def test_doc_refuses_monorepo_as_foundation(self):
+    def test_doc_refuses_monorepo_as_foundation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             with self.assertRaises(ValueError):
                 export_doc(root, root / "output", root)
             self.assertFalse((root / "output").exists())
 
-    def test_doc_refuses_missing_or_wrong_foundation_packages(self):
+    def test_doc_refuses_missing_or_wrong_foundation_packages(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary)
             root = base / "source"
@@ -146,7 +146,7 @@ nepl3-doc-core.workspace = true
                 export_doc(root, output, foundation)
             self.assertFalse(output.exists())
 
-    def test_every_root_input_is_checked_before_output_is_created(self):
+    def test_every_root_input_is_checked_before_output_is_created(self) -> None:
         inputs = (*SUPPORT, "Cargo.toml", *(f"{m}/Cargo.toml" for m in MEMBERS))
         for name in inputs:
             with self.subTest(name=name), tempfile.TemporaryDirectory() as temporary:
@@ -167,7 +167,7 @@ nepl3-doc-core.workspace = true
                     )
                     self.assertFalse(output.exists())
 
-    def test_only_used_dependencies_and_inherited_settings_are_retained(self):
+    def test_only_used_dependencies_and_inherited_settings_are_retained(self) -> None:
         source = '''[workspace]
 members = ["tools"]
 resolver = "3"
@@ -192,7 +192,7 @@ unicode-ident.workspace = true
         self.assertEqual(result["package"], {"edition": "2024", "publish": False})
         self.assertEqual(result["lints"]["rust"]["unsafe_code"], "forbid")
 
-    def test_dependency_outside_foundation_is_rejected(self):
+    def test_dependency_outside_foundation_is_rejected(self) -> None:
         for path in ["tools", "../other", "crates/languages/doc/core"]:
             source = f'[workspace.dependencies]\nother = {{ path = "{path}" }}\n'
             with self.subTest(path=path), self.assertRaises(ValueError):
@@ -201,7 +201,7 @@ unicode-ident.workspace = true
             workspace_manifest('[workspace.dependencies]\n',
                                ['[dependencies]\nother = { path = "../other" }\n'])
 
-    def test_lock_allows_pruning_but_rejects_version_checksum_and_dependency_changes(self):
+    def test_lock_allows_pruning_but_rejects_version_checksum_and_dependency_changes(self) -> None:
         original = '''version = 4
 [[package]]
 name = "kept"

@@ -15,7 +15,7 @@ class Corpus(unittest.TestCase):
         self.extra = {name: name for name in CASES - old}
         self.raw += ''.join(f'DOC_HTML_CASE {name} {name.encode().hex()}\n' for name in sorted(self.extra)).encode()
 
-    def test_raw_cargo_and_plain_logs_agree(self):
+    def test_raw_cargo_and_plain_logs_agree(self) -> None:
         plain = self.raw.split(b' ... ', 1)[1]
         expected = {'ruby': 'A', 'anno': 'B', 'anno-ruby': 'C', 'ruby-anno': 'D',
                     'ruby-ruby': 'E', 'table-ruby': 'F', 'list-ruby': 'G'}
@@ -23,7 +23,7 @@ class Corpus(unittest.TestCase):
         self.assertEqual(extract_cases(self.raw), expected)
         self.assertEqual(extract_cases(plain), expected)
 
-    def test_missing_duplicate_invalid_or_arbitrary_prefix_fails(self):
+    def test_missing_duplicate_invalid_or_arbitrary_prefix_fails(self) -> None:
         for raw in [self.raw.replace(b'DOC_HTML_CASE ruby 41', b'ignored'),
                     self.raw + b'DOC_HTML_CASE ruby 41\n',
                     self.raw.replace(b'list-ruby 47', b'list-ruby not-hex'),
@@ -34,7 +34,7 @@ class Corpus(unittest.TestCase):
                 extract_cases(raw)
 
 
-    def test_layout_checks_behavior_instead_of_property_support(self):
+    def test_layout_checks_behavior_instead_of_property_support(self) -> None:
         row = {'scripts': 0, 'difference': 0, 'baseline_source_supported': False,
                'annotation_gaps': [0, 1], 'line_gaps': [0, 1],
                'case': 'line-reservation', 'multiline_gap': None,
@@ -46,7 +46,7 @@ class Corpus(unittest.TestCase):
             with self.subTest(change=change):
                 self.assertFalse(valid_measurement(row | change))
 
-    def test_multiline_requires_actual_separate_lines(self):
+    def test_multiline_requires_actual_separate_lines(self) -> None:
         row = {'case': 'ruby-multiline', 'scripts': 0, 'difference': 0,
                'annotation_gaps': [0], 'line_gaps': [], 'multiline_gap': 20,
                'annotation_text_fragments': [1, 1]}

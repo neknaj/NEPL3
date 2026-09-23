@@ -11,12 +11,12 @@ class StructureTests(unittest.TestCase):
     def setUpClass(cls):
         cls.categories = load_forms()
 
-    def test_unclosed_quotes_and_raw_newlines_are_rejected(self):
+    def test_unclosed_quotes_and_raw_newlines_are_rejected(self) -> None:
         for text in ['"unclosed', '"line\nbreak"', '"ok" "unclosed']:
             with self.subTest(text=text), self.assertRaises(AuditError):
                 Parser(text, self.categories)
 
-    def test_text_values_follow_nepl3_scalar_escapes(self):
+    def test_text_values_follow_nepl3_scalar_escapes(self) -> None:
         # Fixed semantic expectations, not a second decoder used as an oracle.
         cases = [
             ('"plain"', 'plain'),
@@ -36,32 +36,32 @@ class StructureTests(unittest.TestCase):
                     {"kind": "Root", "fields": {"title": expected}},
                 )
 
-    def test_json_only_and_invalid_scalar_escapes_are_rejected(self):
+    def test_json_only_and_invalid_scalar_escapes_are_rejected(self) -> None:
         for source in [r'"\u0041"', r'"\b"', r'"\f"', r'"\/"', r'"\uD800"',
                        r'"\u{}"', r'"\u{D800}"', r'"\u{DFFF}"',
                        r'"\u{110000}"', r'"\u{0000041}"', r'"\u{G}"', r'"\u{41"']:
             with self.subTest(source=source), self.assertRaises(AuditError):
                 Parser(source, {}).complete("@Text")
 
-    def test_arity_trailing_tokens_and_unknown_forms_are_rejected(self):
+    def test_arity_trailing_tokens_and_unknown_forms_are_rejected(self) -> None:
         for text in ["frac 1", "frac 1 2 3", "unknown 1 2"]:
             with self.subTest(text=text), self.assertRaises(AuditError):
                 Parser(text, self.categories).complete("Math/Expr")
 
-    def test_nested_input_is_bounded(self):
+    def test_nested_input_is_bounded(self) -> None:
         with self.assertRaises(AuditError):
             Parser("cons 1 " * (MAX_DEPTH + 1) + "nil", self.categories).complete({"list": "Math/Expr"})
 
-    def test_duplicate_form_is_rejected(self):
+    def test_duplicate_form_is_rejected(self) -> None:
         form = {"kind": "Form", "fields": {"category": "Expr", "spelling": "test", "kind": "Test", "fields": []}}
         with self.assertRaises(AuditError):
             signatures({"fields": {"declarations": [form, form]}}, "Math")
 
-    def test_duplicate_json_key_is_rejected(self):
+    def test_duplicate_json_key_is_rejected(self) -> None:
         with self.assertRaises(AuditError):
             json.loads('{"x":1,"x":2}', object_pairs_hook=unique_object)
 
-    def test_sentence_internals_are_not_evaluated(self):
+    def test_sentence_internals_are_not_evaluated(self) -> None:
         # A malformed Ruby inside a closed quote remains one opaque token here.
         # Sentence semantic acceptance belongs to the real Doc reader, not this audit.
         tree = Parser('"[broken/"', self.categories).complete("Doc/Sentence")

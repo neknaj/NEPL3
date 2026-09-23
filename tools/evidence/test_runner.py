@@ -17,7 +17,7 @@ class RunnerTests(unittest.TestCase):
         git('add','spec.json'); git('commit','-m','fixture')
         return root,spec,parent/'evidence'
 
-    def test_records_command_logs_without_source_copy_and_refuses_overwrite(self):
+    def test_records_command_logs_without_source_copy_and_refuses_overwrite(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root,spec,out=self.fixture(Path(directory).resolve())
             self.assertTrue(run(root,spec,out))
@@ -28,13 +28,13 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual({p.name for p in out.iterdir()},{'spec.json','manifest.json','probe.stdout','probe.stderr'})
             with self.assertRaises(FileExistsError): run(root,spec,out)
 
-    def test_failed_command_is_sealed_but_not_successful(self):
+    def test_failed_command_is_sealed_but_not_successful(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root,spec,out=self.fixture(Path(directory).resolve(),'import sys; print("failed"); sys.exit(3)')
             self.assertFalse(run(root,spec,out))
             self.assertEqual(verify(out)['commands'][0]['exit_code'],3)
 
-    def test_log_command_scope_and_file_set_tampering_rejected(self):
+    def test_log_command_scope_and_file_set_tampering_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root,spec,out=self.fixture(Path(directory).resolve()); run(root,spec,out)
             raw=(out/'manifest.json').read_bytes()
@@ -46,20 +46,20 @@ class RunnerTests(unittest.TestCase):
             (out/'probe.stdout').write_bytes(b'changed')
             with self.assertRaises(ValueError): verify(out)
 
-    def test_dirty_source_and_untracked_input_rejected(self):
+    def test_dirty_source_and_untracked_input_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root,spec,out=self.fixture(Path(directory).resolve())
             (root/'new.py').write_text('pass',encoding='utf-8')
             with self.assertRaises(ValueError): run(root,spec,out)
             self.assertFalse(out.exists())
 
-    def test_historical_working_directory_is_not_executable(self):
+    def test_historical_working_directory_is_not_executable(self) -> None:
         value=dict(version=1,scope='boundary',commands=[dict(id='probe',argv=['python','seal.py.fixture'],cwd='conformance/results/old',timeout_seconds=5)])
         for cwd in ['conformance/results/old','./conformance/results/old','CONFORMANCE/RESULTS/old']:
             value['commands'][0]['cwd']=cwd
             with self.subTest(cwd=cwd),self.assertRaises(ValueError): specification(value)
 
-    def test_timeout_is_unknown_and_does_not_run_next_command(self):
+    def test_timeout_is_unknown_and_does_not_run_next_command(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root,spec,out=self.fixture(Path(directory).resolve(),'import time; time.sleep(10)')
             value=json.loads(spec.read_text(encoding='utf-8'))
@@ -72,7 +72,7 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(len(report['commands']),1)
             self.assertEqual(report['commands'][0]['outcome'],'unknown')
 
-    def test_tracked_source_mutation_is_not_success(self):
+    def test_tracked_source_mutation_is_not_success(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root,spec,out=self.fixture(Path(directory).resolve(),'from pathlib import Path; Path("spec.json").write_text("changed")')
             self.assertFalse(run(root,spec,out))

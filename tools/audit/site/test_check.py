@@ -30,7 +30,7 @@ class ArtifactRejection(unittest.TestCase):
         with self.assertRaises(AssertionError): check([receipt, receipt])
         with self.assertRaises(AssertionError): check([])
 
-    def test_expected_checkout_rejects_stale_missing_or_mixed_inputs(self):
+    def test_expected_checkout_rejects_stale_missing_or_mixed_inputs(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / 'doc').mkdir()
@@ -70,7 +70,7 @@ class ArtifactRejection(unittest.TestCase):
                 with self.subTest(failure=failure), self.assertRaises(AssertionError):
                     expected_inputs(b, m, d, pages, root, 'config.json', renderer)
 
-    def test_empty_site_and_duplicate_manifest_records_are_rejected(self):
+    def test_empty_site_and_duplicate_manifest_records_are_rejected(self) -> None:
         for duplicate in [False, True]:
             with tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
@@ -84,7 +84,7 @@ class ArtifactRejection(unittest.TestCase):
                 with self.assertRaisesRegex(AssertionError, message):
                     verify(root)
 
-    def test_modified_bytes_missing_resource_and_missing_fragment(self):
+    def test_modified_bytes_missing_resource_and_missing_fragment(self) -> None:
         for html, damage in [
             ('<h1>Original</h1>', True),
             ('<link rel="stylesheet" href="missing.css">', False),

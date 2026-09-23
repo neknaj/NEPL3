@@ -35,13 +35,13 @@ class ArtifactTests(unittest.TestCase):
                     workflow_run=dict(id=8, repository_id=9, head_repository_id=9, head_sha=commit))
         return meta, archive, kwargs, tar
 
-    def test_real_doc_tar_is_preserved(self):
+    def test_real_doc_tar_is_preserved(self) -> None:
         meta, archive, kwargs, tar = self.fixture()
         result = selected(json.dumps(meta).encode(), archive, **kwargs)
         self.assertEqual(result.data, tar)
         self.assertEqual(result.files, 22)
 
-    def test_metadata_substitution_and_archive_corruption(self):
+    def test_metadata_substitution_and_archive_corruption(self) -> None:
         meta, archive, kwargs, _ = self.fixture()
         for key, value in [('id', True), ('expired', True), ('name', 'other'), ('digest', 'sha256:'+'0'*64),
                            ('size_in_bytes', 1), ('archive_download_url', 'https://other.invalid/')]:
@@ -54,21 +54,21 @@ class ArtifactTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             selected(json.dumps(meta).encode(), archive+b'x', **kwargs)
 
-    def test_untrusted_receipt_cannot_override_expected_identity(self):
+    def test_untrusted_receipt_cannot_override_expected_identity(self) -> None:
         for change in [dict(files=True), dict(tar_bytes=0), dict(version=True),
                        dict(tar_sha256='0'*64), dict(publication_verified=True)]:
             meta, archive, kwargs, _ = self.fixture(receipt_change=change)
             with self.subTest(change=change), self.assertRaises(ValueError):
                 selected(json.dumps(meta).encode(), archive, **kwargs)
 
-    def test_unsafe_and_duplicate_zip_entries(self):
+    def test_unsafe_and_duplicate_zip_entries(self) -> None:
         link = zipfile.ZipInfo('alias'); link.create_system = 3; link.external_attr = 0o120777 << 16
         for entry in [('../escape', b'x'), ('PAGES.TAR', b'x'), (link, b'pages.tar')]:
             meta, archive, kwargs, _ = self.fixture(extra=entry)
             with self.subTest(entry=str(entry[0])), self.assertRaises(ValueError):
                 selected(json.dumps(meta).encode(), archive, **kwargs)
 
-    def test_matching_metadata_does_not_change_payload_source(self):
+    def test_matching_metadata_does_not_change_payload_source(self) -> None:
         meta, archive, kwargs, _ = self.fixture()
         kwargs['source_commit'] = '0'*40
         meta['name'] = 'doc-browser-'+'0'*40
@@ -76,7 +76,7 @@ class ArtifactTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'payload source'):
             selected(json.dumps(meta).encode(), archive, **kwargs)
 
-    def test_file_prefix_and_mismatched_directory_mode_are_rejected(self):
+    def test_file_prefix_and_mismatched_directory_mode_are_rejected(self) -> None:
         wrong_kind = zipfile.ZipInfo('directory'); wrong_kind.create_system = 3
         wrong_kind.external_attr = 0o040755 << 16
         for entry in [('pages.tar/child', b'x'), (wrong_kind, b'')]:

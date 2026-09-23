@@ -17,7 +17,7 @@ class CreationGateTests(unittest.TestCase):
     def gate(self, state):
         require_creation_receipts(state, owner='neknaj', repository='NEPL3')
 
-    def test_pairs_validate_original_response_for_both_intent_kinds(self):
+    def test_pairs_validate_original_response_for_both_intent_kinds(self) -> None:
         self.gate(Snapshot(None, (), ()))
         for kind, receipt in [('DeployIntent', 'DeployReceipt'), ('RecoveryIntent', 'RecoveryReceipt')]:
             event = Event(kind, 'tx', 1, 1, 'a'*40, 'b'*64)
@@ -25,7 +25,7 @@ class CreationGateTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.gate(self.snapshot([event, replace(event, kind=receipt)], raw=b'{}'))
 
-    def test_later_events_cannot_hide_unresolved_or_forged_pair(self):
+    def test_later_events_cannot_hide_unresolved_or_forged_pair(self) -> None:
         intent = Event('DeployIntent', 'tx', 1, 1, 'a'*40, 'b'*64)
         receipt = replace(intent, kind='DeployReceipt')
         cases = [[intent], [receipt], [intent, replace(intent, kind='Healthy')],

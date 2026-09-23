@@ -49,7 +49,7 @@ class Wrapper(unittest.TestCase):
             "firmware_sha256": record["firmware_sha256"]}), encoding="utf-8")
         return record
 
-    def test_exit_zero_cannot_reuse_old_success(self):
+    def test_exit_zero_cannot_reuse_old_success(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             folder = Path(temporary)
             self.fixture(folder)
@@ -73,7 +73,7 @@ class Wrapper(unittest.TestCase):
                 with patch.object(firmware.subprocess, "run", side_effect=run):
                     self.assertEqual(firmware.execute(folder), 0 if correct else 1)
 
-    def test_timeout_nonzero_and_corrupted_input_fail(self):
+    def test_timeout_nonzero_and_corrupted_input_fail(self) -> None:
         for failure in ["timeout", "nonzero", "corrupt"]:
             with self.subTest(failure=failure), tempfile.TemporaryDirectory() as temporary:
                 folder = Path(temporary)
@@ -89,7 +89,7 @@ class Wrapper(unittest.TestCase):
                     if failure == "corrupt":
                         run.assert_not_called()
 
-    def test_invalid_json_shapes_replace_prior_success(self):
+    def test_invalid_json_shapes_replace_prior_success(self) -> None:
         for shape in [[], None, "invalid", 1]:
             with self.subTest(shape=shape), tempfile.TemporaryDirectory() as temporary:
                 folder = Path(temporary)

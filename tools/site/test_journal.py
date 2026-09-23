@@ -22,7 +22,7 @@ def initialize(path, bare=True):
 
 
 class JournalTests(unittest.TestCase):
-    def test_shallow_boundary_cannot_hide_an_invalid_parent(self):
+    def test_shallow_boundary_cannot_hide_an_invalid_parent(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repo = Path(directory).resolve() / 'journal.git'; initialize(repo)
             first = append(repo, None, event(), b'{}')
@@ -34,7 +34,7 @@ class JournalTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'shallow journal'): load(repo)
             with self.assertRaisesRegex(ValueError, 'shallow journal'): append(repo, second, event(), b'{}')
 
-    def test_fast_forward_rewriting_old_event_is_rejected_on_reload(self):
+    def test_fast_forward_rewriting_old_event_is_rejected_on_reload(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repo = Path(directory).resolve() / 'journal.git'; initialize(repo)
             first = append(repo, None, event(), b'{}')
@@ -53,7 +53,7 @@ class JournalTests(unittest.TestCase):
             with self.assertRaises(ValueError): append(repo, altered, event(), b'{}')
             self.assertEqual(store.git(repo, 'rev-parse', store.REF).decode().strip(), altered)
 
-    def test_real_git_reload_retains_exact_evidence_and_parent(self):
+    def test_real_git_reload_retains_exact_evidence_and_parent(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repo = Path(directory).resolve() / 'journal.git'; initialize(repo)
             self.assertIsNone(load(repo).head)
@@ -88,7 +88,7 @@ class JournalTests(unittest.TestCase):
             self.assertIn(final.head, results)
             self.assertEqual(final.events[0], event())
 
-    def test_invalid_boundary_does_not_change_ref(self):
+    def test_invalid_boundary_does_not_change_ref(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repo = Path(directory).resolve() / 'journal.git'; initialize(repo)
             first = append(repo, None, event(), b'{}')
@@ -102,7 +102,7 @@ class JournalTests(unittest.TestCase):
                 append(repo, first, event(), b'{}')
             self.assertEqual(load(repo).head, first)
 
-    def test_nonbare_source_repo_is_not_modified(self):
+    def test_nonbare_source_repo_is_not_modified(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repo = Path(directory).resolve() / 'source'; initialize(repo, bare=False)
             (repo / 'keep').write_bytes(b'user work')

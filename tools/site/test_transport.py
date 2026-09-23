@@ -52,7 +52,7 @@ class TransportTests(unittest.TestCase):
     def receipt(self):
         return Receipt("123", "https://api.github.com/repos/neknaj/NEPL3/pages/deployments/123", "a" * 64)
 
-    def test_real_http_parser_binds_response_and_retains_bytes(self):
+    def test_real_http_parser_binds_response_and_retains_bytes(self) -> None:
         with server() as seen:
             result = status(self.receipt(), "test-token")
         self.assertEqual(result.observation.phase, Phase.SUCCEEDED)
@@ -62,7 +62,7 @@ class TransportTests(unittest.TestCase):
         self.assertEqual(seen[0][1]["Authorization"], "Bearer test-token")
         self.assertEqual(seen[0][1]["X-GitHub-Api-Version"], "2026-03-10")
 
-    def test_redirect_error_encoding_mime_and_limit_rejected(self):
+    def test_redirect_error_encoding_mime_and_limit_rejected(self) -> None:
         for code, body, headers in [
             (302, b'', {"Location": "https://evil.invalid/"}),
             (404, b'secret response', None),
@@ -78,7 +78,7 @@ class TransportTests(unittest.TestCase):
                 self.assertNotIn("secret response", str(error.exception))
                 self.assertEqual(len(seen), 1)
 
-    def test_invalid_token_timeout_and_connection_failure(self):
+    def test_invalid_token_timeout_and_connection_failure(self) -> None:
         with patch("deployment.transport.HTTPSConnection") as factory:
             for token in ["", "token\r\nX-Injected: yes", None]:
                 with self.assertRaises(ValueError): status(self.receipt(), token)
@@ -92,7 +92,7 @@ class TransportTests(unittest.TestCase):
             self.assertIsNone(error.exception.__cause__)
             factory.return_value.close.assert_called_once()
 
-    def test_public_boundary_passes_credentials_on_stdin_and_revalidates(self):
+    def test_public_boundary_passes_credentials_on_stdin_and_revalidates(self) -> None:
         with patch("deployment.transport.subprocess.run") as run:
             run.return_value = subprocess.CompletedProcess([], 0, base64.b64encode(b'{"status":"succeed"}'), b'')
             result = bounded_status(self.receipt(), "private-token")
@@ -112,7 +112,7 @@ class TransportTests(unittest.TestCase):
                 bounded_status(self.receipt(), "private-token", timeout=0.2)
         self.assertLess(time.monotonic() - start, 5)
 
-    def test_short_body_and_ambiguous_framing_fail(self):
+    def test_short_body_and_ambiguous_framing_fail(self) -> None:
         for length, extras in [("120", ()), ("-1", ()), ("20,20", ()),
                                (None, (("Content-Length", "20"),)),
                                (None, (("Transfer-Encoding", "chunked"),))]:

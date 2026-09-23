@@ -8,7 +8,7 @@ class DeploymentTests(unittest.TestCase):
     def receipt(self):
         return created(b'{"id":"abc123","status_url":"https://api.github.com/repos/neknaj/NEPL3/pages/deployments/abc123/status"}', owner="neknaj", repository="NEPL3")
 
-    def test_documented_receipt_and_status_are_bound_to_request(self):
+    def test_documented_receipt_and_status_are_bound_to_request(self) -> None:
         receipt = self.receipt()
         self.assertEqual(receipt.status_endpoint, "https://api.github.com/repos/neknaj/NEPL3/pages/deployments/abc123")
         result = observed(b'{"status":"succeed"}', receipt=receipt, request_url=receipt.status_endpoint)
@@ -17,7 +17,7 @@ class DeploymentTests(unittest.TestCase):
         # Success of this ID is not evidence of which deployment is current.
         self.assertFalse(hasattr(result, "current_publication"))
 
-    def test_response_cannot_redirect_authenticated_status_request(self):
+    def test_response_cannot_redirect_authenticated_status_request(self) -> None:
         for url in ["https://evil.invalid/", "https://api.github.com/repos/other/NEPL3/pages/deployments/abc123/status",
                     "https://api.github.com/repos/neknaj/NEPL3/pages/deployments/other/status"]:
             with self.subTest(url=url), self.assertRaises(ValueError):
@@ -26,7 +26,7 @@ class DeploymentTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             observed(b'{"status":"succeed"}', receipt=receipt, request_url=receipt.status_endpoint + "-other")
 
-    def test_unknown_pending_and_failed_do_not_become_success(self):
+    def test_unknown_pending_and_failed_do_not_become_success(self) -> None:
         receipt = self.receipt()
         for status, phase in [("deployment_queued", Phase.PENDING), ("deployment_in_progress", Phase.PENDING),
                               ("deployment_failed", Phase.FAILED), ("future_status", Phase.UNKNOWN)]:
@@ -34,14 +34,14 @@ class DeploymentTests(unittest.TestCase):
                 result = observed(('{"status":"' + status + '"}').encode(), receipt=receipt, request_url=receipt.status_endpoint)
                 self.assertEqual(result.phase, phase)
 
-    def test_malformed_duplicate_and_oversized_responses_rejected(self):
+    def test_malformed_duplicate_and_oversized_responses_rejected(self) -> None:
         receipt = self.receipt()
         for raw in [b'[]', b'{"status":true}', b'{"status":"succeed","status":"deployment_failed"}',
                     b'{"status":"succeed","x":NaN}', b' ' * 65537, b'']:
             with self.subTest(raw=raw[:80]), self.assertRaises(ValueError):
                 observed(raw, receipt=receipt, request_url=receipt.status_endpoint)
 
-    def test_direct_receipt_construction_cannot_misattribute_status(self):
+    def test_direct_receipt_construction_cannot_misattribute_status(self) -> None:
         good = self.receipt()
         for ident, url, sha in [("different-id", good.status_endpoint, good.response_sha256),
                                 (good.deployment_id, good.status_endpoint, "not-a-sha256"),

@@ -18,7 +18,7 @@ class ReleaseTests(unittest.TestCase):
             row.update(size=asset.size, digest="sha256:" + asset.sha256)
         return json.dumps(metadata).encode(), kwargs
 
-    def test_recover_returns_original_real_doc_tar_after_both_checks(self):
+    def test_recover_returns_original_real_doc_tar_after_both_checks(self) -> None:
         root = Path(__file__).resolve().parents[2]
         data = gzip.decompress((root / "tools/site/fixtures/pages.tar.gz.fixture").read_bytes())
         raw, kwargs = self.stored_payload(data)
@@ -35,7 +35,7 @@ class ReleaseTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "immutable"):
             recover(json.dumps(changed).encode(), expected_manifest=manifest, **kwargs)
 
-    def test_matching_storage_hash_does_not_make_invalid_tar_recoverable(self):
+    def test_matching_storage_hash_does_not_make_invalid_tar_recoverable(self) -> None:
         import tarfile
         raw, kwargs = self.stored_payload(b"not a tar archive")
         verify(raw, **kwargs)  # Storage integrity alone is insufficient.
@@ -52,7 +52,7 @@ class ReleaseTests(unittest.TestCase):
         kwargs = dict(owner="neknaj", repository="NEPL3", release_id=7, tag="site-recovery/tx-1", assets=assets, downloads=downloads)
         return metadata, kwargs
 
-    def test_storage_identity_and_actual_downloads(self):
+    def test_storage_identity_and_actual_downloads(self) -> None:
         data, kwargs = self.fixture()
         receipt = verify(json.dumps(data).encode(), **kwargs)
         self.assertEqual(receipt.release_id, 7)
@@ -60,7 +60,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertFalse(hasattr(receipt, "last_known_good"))
         # This is storage-byte validation only, not a valid tar/smoke assertion.
 
-    def test_mutable_draft_wrong_release_or_corrupt_download_fails(self):
+    def test_mutable_draft_wrong_release_or_corrupt_download_fails(self) -> None:
         data, kwargs = self.fixture()
         for key, value in [("immutable", False), ("immutable", 1), ("draft", True), ("id", True),
                            ("id", 8), ("tag_name", "site-recovery/other"), ("published_at", None)]:
@@ -71,7 +71,7 @@ class ReleaseTests(unittest.TestCase):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 verify(json.dumps(data).encode(), **dict(kwargs, downloads=broken))
 
-    def test_incomplete_duplicate_or_wrong_asset_metadata_fails(self):
+    def test_incomplete_duplicate_or_wrong_asset_metadata_fails(self) -> None:
         data, kwargs = self.fixture()
         for key, value in [("id", 999), ("size", True), ("digest", "sha256:"+"0"*64),
                            ("state", "starter"), ("url", "https://evil.invalid/")]:
@@ -82,7 +82,7 @@ class ReleaseTests(unittest.TestCase):
         for rows in [[], data["assets"][:2], data["assets"]+[data["assets"][0]]]:
             with self.assertRaises(ValueError): verify(json.dumps(dict(data, assets=rows)).encode(), **kwargs)
 
-    def test_malformed_types_and_duplicate_keys_are_rejected(self):
+    def test_malformed_types_and_duplicate_keys_are_rejected(self) -> None:
         data, kwargs = self.fixture()
         for value in [[], {}, None, True]:
             altered = copy.deepcopy(data); altered["assets"][0]["name"] = value

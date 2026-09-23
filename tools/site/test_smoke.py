@@ -68,7 +68,7 @@ def fixture(mode='normal'):
 
 
 class SmokeTests(unittest.TestCase):
-    def test_actual_http_checks_documents_assets_directory_routes_and_404(self):
+    def test_actual_http_checks_documents_assets_directory_routes_and_404(self) -> None:
         with fixture() as (root, identity, url, seen, _):
             result = run(root, identity, url, local=True)
             self.assertEqual(result['result'], 'passed', result)
@@ -83,7 +83,7 @@ class SmokeTests(unittest.TestCase):
             self.assertEqual(sum(r['query'] == 'nepl3-smoke=' + identity for r in seen), 2)
             self.assertTrue(any(r['path'] == '/NEPL3/docs/' and r['query'] == '' for r in seen))
 
-    def test_failures_are_not_passed_and_redirect_is_not_followed(self):
+    def test_failures_are_not_passed_and_redirect_is_not_followed(self) -> None:
         for mode in ['changed', 'extra-byte', 'mime', 'missing', 'spa', 'redirect', 'query-only']:
             with self.subTest(mode=mode), fixture(mode) as (root, identity, url, seen, _):
                 result = run(root, identity, url, local=True)
@@ -91,7 +91,7 @@ class SmokeTests(unittest.TestCase):
                 self.assertFalse(result['publication_verified'])
                 self.assertNotIn('/redirected', [r['path'] for r in seen])
 
-    def test_outer_deadline_terminates_a_stalled_request(self):
+    def test_outer_deadline_terminates_a_stalled_request(self) -> None:
         with fixture('slow') as (root, identity, url, _, started):
             before = time.monotonic()
             result = run(root, identity, url, local=True, timeout=1)
@@ -99,7 +99,7 @@ class SmokeTests(unittest.TestCase):
             self.assertEqual(result['reason'], 'deadline')
             self.assertLess(time.monotonic() - before, 2)
 
-    def test_https_and_exact_base_are_required(self):
+    def test_https_and_exact_base_are_required(self) -> None:
         endpoint('https://neknaj.github.io/NEPL3/', '/NEPL3/', False)
         for url in ['http://example.com/NEPL3/', 'https://x/other/', 'https://u:p@x/NEPL3/',
                     'https://x/NEPL3/?q=1', 'https://x/NEPL3/#a', 'https://x:444/NEPL3/']:
