@@ -1008,9 +1008,7 @@ fn with_input<T>(
         .collect();
     // Each runtime registration identifies the actual source serving that operation.
     let implementation_for = |operation: &nepl3_core::value::OperationRef| {
-        if operation.schema.package == "nepl3.doc.reader" {
-            Digest::of(include_bytes!("../src/doc/reader.rs"))
-        } else if operation.schema.package == "nepl3.sentence.reader" {
+        if operation.schema.package == "nepl3.sentence.reader" {
             Digest::of(include_bytes!("../src/sentence/reader.rs"))
         } else {
             Digest::of(include_bytes!(
@@ -1255,9 +1253,7 @@ fn read_source_as(
                             .context
                             .check(&mut codec, &declared, r, b)
                             .map_err(|_| nepl3_reader::runtime::ReaderError::Context)?;
-                        (if operation.schema.package == "nepl3.doc.reader" {
-                            nepl3_tools::doc::reader::read
-                        } else if operation.schema.package == "nepl3.sentence.reader" {
+                        (if operation.schema.package == "nepl3.sentence.reader" {
                             nepl3_tools::sentence::reader::read
                         } else {
                             nepl3_reader::builtin::provider::read
