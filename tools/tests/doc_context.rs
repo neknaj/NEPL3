@@ -1,13 +1,15 @@
 //! The source host must use the resolved registrations, not its four-language
 //! fixture's names, order, root categories or reader modes.
-use super::*;
+use nepl3_core::source::{Digest, SourceAdmission, SourceId, SourceSnapshot};
+use nepl3_engine::profile::*;
+use nepl3_tools::doc::source::{budget, compiled, err, with_input};
 
 #[test]
 fn source_host_rejects_unavailable_implementation_on_both_routes() -> Result<(), String> {
     let compiled = compiled()?;
     with_input(
         &compiled,
-        "article en \"Host\" body nil",
+        "article en sentence \"Host\" body nil",
         "Article",
         |_, original, _, _| {
             let mut profile = original.profile().clone();
@@ -47,7 +49,7 @@ fn source_host_rejects_unavailable_implementation_on_both_routes() -> Result<(),
                     SourceId("provider-check".into()),
                     0,
                     "memory:provider-check".into(),
-                    b"text \"kept\"".to_vec(),
+                    b"anchor mark text \"kept\"".to_vec(),
                     &mut b,
                 )
                 .map_err(err)?;
@@ -78,7 +80,7 @@ fn source_host_uses_registered_aliases_and_default_categories() -> Result<(), St
     compiled.doc.package.modes.push(alternate);
     with_input(
         &compiled,
-        "article en \"Host\" body nil",
+        "article en sentence \"Host\" body nil",
         "Article",
         |_, original, _, _| {
             let mut profile = original.profile().clone();
@@ -126,7 +128,7 @@ fn source_host_uses_registered_aliases_and_default_categories() -> Result<(), St
                     SourceId("registered-alias".into()),
                     0,
                     "memory:registered-alias".into(),
-                    b"text \"kept\"".to_vec(),
+                    b"anchor mark text \"kept\"".to_vec(),
                     &mut b,
                 )
                 .map_err(err)?;

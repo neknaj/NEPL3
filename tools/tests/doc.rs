@@ -6,8 +6,6 @@ mod annotated;
 mod annotated_blocks;
 #[path = "doc/annotated_pages.rs"]
 mod annotated_pages;
-#[path = "doc/context.rs"]
-mod context;
 #[path = "doc/export.rs"]
 mod export;
 #[path = "doc/external.rs"]
