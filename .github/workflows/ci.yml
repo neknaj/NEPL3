@@ -100,6 +100,12 @@ jobs:
           python -m unittest tools.extensions.test_run tools.extensions.test_distribution
           python tools/extensions/run.py
           python tools/extensions/run.py --distribution --output dist/foundation-extension
+      - name: Extract Doc against standalone Foundation
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          python tools/extensions/distribution.py "$RUNNER_TEMP/doc-foundation"
+          python tools/extensions/distribution.py "$RUNNER_TEMP/doc-language" --doc "$RUNNER_TEMP/doc-foundation"
+          cargo test --locked --manifest-path "$RUNNER_TEMP/doc-language/Cargo.toml" --workspace
       - name: Preserve external consumer evidence
         if: always() && matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

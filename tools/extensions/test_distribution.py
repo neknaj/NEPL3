@@ -5,10 +5,99 @@ from pathlib import Path
 import tempfile
 from unittest.mock import patch
 
-from tools.extensions.distribution import MEMBERS, SUPPORT, check_lock, export, workspace_manifest
+from tools.extensions.distribution import (
+    DOC_MEMBERS, MEMBERS, SUPPORT, check_foundation, check_lock, check_metadata,
+    export, export_doc, workspace_manifest,
+)
 
 
 class DistributionTests(unittest.TestCase):
+    def test_metadata_checks_target_sources_and_manifests(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            allowed = root / "allowed"
+            package = {"source": None, "manifest_path": str(allowed / "Cargo.toml"),
+                       "targets": [{"src_path": str(allowed / "src/lib.rs")}]}
+            check_metadata({"packages": [package]}, [allowed])
+            package["targets"][0]["src_path"] = str(root / "original/lib.rs")
+            with self.assertRaises(ValueError):
+                check_metadata({"packages": [package]}, [allowed])
+            package["targets"] = []
+            package["manifest_path"] = str(root / "original/Cargo.toml")
+            with self.assertRaises(ValueError):
+                check_metadata({"packages": [package]}, [allowed])
+
+    def test_foundation_requires_identical_files_and_refuses_symlinks(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            root, external = base / "source", base / "external"
+            relative = Path(MEMBERS[0]) / "src/lib.rs"
+            for parent in (root, external):
+                (parent / relative).parent.mkdir(parents=True)
+                (parent / relative).write_bytes(b"original")
+            with patch("tools.extensions.distribution.subprocess.check_output",
+                       return_value=(relative.as_posix() + "\0").encode()):
+                check_foundation(root, external)
+                (external / relative).write_bytes(b"changed")
+                with self.assertRaises(ValueError):
+                    check_foundation(root, external)
+                (external / relative).write_bytes(b"original")
+                with patch.object(Path, "is_symlink", lambda path: path == external / relative):
+                    with self.assertRaises(ValueError):
+                        check_foundation(root, external)
+                extra = external / MEMBERS[0] / "extra.rs"
+                extra.write_bytes(b"extra")
+                with self.assertRaises(ValueError):
+                    check_foundation(root, external)
+
+    def test_doc_members_use_only_explicit_external_foundation(self):
+        source = '''[workspace.dependencies]
+nepl3-core = { path = "crates/foundation/core" }
+nepl3-doc-core = { path = "crates/languages/doc/core" }
+unused = { path = "tools" }
+'''
+        manifest = '''[dependencies]
+nepl3-core.workspace = true
+nepl3-doc-core.workspace = true
+'''
+        path = Path('/external/𠮷田/"foundation/core')
+        output = tomllib.loads(workspace_manifest(
+            source, [manifest], members=DOC_MEMBERS,
+            external={"crates/foundation/core": path},
+        ))["workspace"]
+        self.assertEqual(output["members"], list(DOC_MEMBERS))
+        self.assertEqual(output["dependencies"]["nepl3-core"]["path"], path.as_posix())
+        self.assertEqual(output["dependencies"]["nepl3-doc-core"]["path"], DOC_MEMBERS[0])
+        self.assertNotIn("unused", output["dependencies"])
+        with self.assertRaises(ValueError):
+            workspace_manifest(source, [manifest], members=DOC_MEMBERS)
+        with self.assertRaises(ValueError):
+            workspace_manifest(source, [manifest])
+
+    def test_doc_refuses_monorepo_as_foundation(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with self.assertRaises(ValueError):
+                export_doc(root, root / "output", root)
+            self.assertFalse((root / "output").exists())
+
+    def test_doc_refuses_missing_or_wrong_foundation_packages(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            root = base / "source"
+            foundation = base / "foundation"
+            output = base / "doc"
+            with self.assertRaises(ValueError):
+                export_doc(root, output, foundation)
+            directory = foundation / MEMBERS[0]
+            directory.mkdir(parents=True)
+            (directory / "Cargo.toml").write_text(
+                '[package]\nname = "wrong"\n', encoding="utf-8",
+            )
+            with self.assertRaises(ValueError):
+                export_doc(root, output, foundation)
+            self.assertFalse(output.exists())
+
     def test_every_root_input_is_checked_before_output_is_created(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
