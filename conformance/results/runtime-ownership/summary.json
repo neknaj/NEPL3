@@ -2,6 +2,7 @@
   "format": "nepl3.development-slice/1",
   "scope": "T11/T12: native scheduler and process-provider result ownership, correlation and cancellation",
   "source_revision": "011d4162126a059da39553c9cdee53b62967c2f0",
+  "source_preservation_ref": "archive/runtime-ownership-2026-09-23",
   "result": "passed-within-recorded-scope",
   "manifest": "conformance/results/runtime-ownership/manifest.json",
   "raw_evidence": {
