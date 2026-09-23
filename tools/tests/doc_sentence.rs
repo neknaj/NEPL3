@@ -45,15 +45,14 @@ fn text_failure_identifies_the_second_sentence_arena() -> Result<(), String> {
     // Both Sentence arenas have a Text node 0. The failing one is Doc embed 2
     // (title is 0 and the first paragraph sentence is 1).
     let expected = "Sentence { embed: EmbedRef(2), node: 0, issue: Text }";
-    assert_eq!(
-        projection::from_source(&compiled, source).expect_err("control character"),
-        expected
-    );
-    assert_eq!(
-        projection::annotated::host::from_source(&compiled, source, &[])
-            .expect_err("control character"),
-        expected
-    );
+    let Err(plain) = projection::from_source(&compiled, source) else {
+        return Err("control character accepted by plain projection".into());
+    };
+    let Err(annotated) = projection::annotated::host::from_source(&compiled, source, &[]) else {
+        return Err("control character accepted by annotated projection".into());
+    };
+    assert_eq!(plain, expected);
+    assert_eq!(annotated, expected);
     Ok(())
 }
 

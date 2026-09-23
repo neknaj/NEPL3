@@ -1,6 +1,5 @@
 use super::*;
 use nepl3_core::source::Digest;
-use nepl3_core::value_codec::FoundationValueCodec;
 
 #[test]
 fn sentence_surface_compiles_from_production_grammar_with_own_root_and_payload()
@@ -253,41 +252,78 @@ fn sentence_surface_compiles_from_production_grammar_with_own_root_and_payload()
                         assert_eq!(syntax.origins, bundle.origins);
                         assert_eq!(syntax.source_maps, bundle.source_maps);
                         assert_eq!(syntax.views.len(), bundle.tokens.len());
-                        let doc = nepl3_suite::adapters::sentence::document(
+                        let portable = nepl3_sentence_core::portable::syntax::to_value(
                             &syntax,
                             resolved.registry(),
+                            &mut codec,
                             budget,
-                            codec.source_admission(),
                         )
                         .map_err(err)?;
-                        assert_eq!(doc.sources, syntax.sources);
-                        assert_eq!(doc.origins, syntax.origins);
-                        assert_eq!(doc.source_maps, syntax.source_maps);
-                        assert_eq!(doc.value.nodes.len(), syntax.value.nodes.len());
+                        let value = match &portable {
+                            nepl3_core::value::NdfValue::Record(value) => {
+                                nepl3_core::value::TypedValue::Record(value.clone())
+                            }
+                            nepl3_core::value::NdfValue::Variant(value) => {
+                                nepl3_core::value::TypedValue::Variant(value.clone())
+                            }
+                            _ => return Err("typed Sentence payload".into()),
+                        };
+                        let placement = nepl3_doc_core::model::DocEmbed {
+                            kind: nepl3_doc_core::model::EmbedKind::Sentence,
+                            content: nepl3_doc_core::model::DocContent::Value { value },
+                        };
+                        let restored = nepl3_suite::adapters::document::sentence::lower(
+                            &placement,
+                            &root.schema,
+                            &[],
+                            resolved.registry(),
+                            &mut codec,
+                            budget,
+                        )
+                        .map_err(err)?;
+                        // Doc retains the independent Sentence, including every
+                        // source/view mapping, without copying its meaning arena.
+                        assert_eq!(restored.value, syntax.value);
+                        assert_eq!(restored.locations, syntax.locations);
+                        assert_eq!(restored.origins, syntax.origins);
+                        assert_eq!(restored.views, syntax.views);
+                        assert_eq!(restored.source_maps, syntax.source_maps);
+                        // Portable sources use canonical identity order; mappings use SnapshotId.
+                        assert_eq!(restored.sources.len(), syntax.sources.len());
+                        for source in &syntax.sources {
+                            assert!(restored.sources.iter().any(|actual| actual == source));
+                        }
                         if input == printed {
-                            use nepl3_doc_core::model::{DocKind, LinkTarget};
-                            assert!(doc.value.nodes.iter().any(
-                                |n| matches!(&n.kind,DocKind::InlineCode { text } if text == "code")
-                            ));
+                            use nepl3_sentence_core::model::Kind;
                             assert!(
-                                doc.value
+                                restored
+                                    .value
                                     .nodes
                                     .iter()
-                                    .any(|n| matches!(n.kind, DocKind::Break))
+                                    .any(|n| matches!(n,Kind::Code { text } if text == "code"))
                             );
                             assert!(
-                                doc.value
+                                restored
+                                    .value
                                     .nodes
                                     .iter()
-                                    .any(|n| matches!(n.kind, DocKind::Emphasis { .. }))
+                                    .any(|n| matches!(n, Kind::Break))
                             );
                             assert!(
-                                doc.value
+                                restored
+                                    .value
                                     .nodes
                                     .iter()
-                                    .any(|n| matches!(n.kind, DocKind::Strong { .. }))
+                                    .any(|n| matches!(n, Kind::Emphasis { .. }))
                             );
-                            assert!(doc.value.nodes.iter().any(|n| matches!(&n.kind,DocKind::Link { target:LinkTarget::External { uri }, .. } if uri == "https://example.invalid/")));
+                            assert!(
+                                restored
+                                    .value
+                                    .nodes
+                                    .iter()
+                                    .any(|n| matches!(n, Kind::Strong { .. }))
+                            );
+                            assert!(restored.value.nodes.iter().any(|n| matches!(n,Kind::ExternalLink { uri, .. } if uri == "https://example.invalid/")));
                         }
                         if input.starts_with("sentence cons ruby text \"漢\"") {
                             assert_eq!(
