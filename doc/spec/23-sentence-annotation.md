@@ -273,8 +273,9 @@ Doc SentencePayloadであり、同じschema identityで独立Sentence payloadを
 生成manifestに記録する。Markdownの出自はページ固有のsourceと実際の参照入力に対応する。
 正本から生成し、本文・リンク・注釈の一致とmanifestの整合を確認する。
 この接続はDoc本文の解析を独立Sentenceへ移す段階である。重複parserの撤去後も、Doc意味schemaの
-Sentence所有、現行lowerが受信するDoc SentencePayload、Mathとの既存bridgeは残る。
-これらは後続のconsumer所有移行で整理する。
+Sentence所有と、現行lowerが受信するDoc SentencePayloadは残る。
+DocのInlineMath・DisplayMathをMath表示へ接続するadapterも引き続き必要である。
+Mathの文章注釈は独立Sentenceを直接使用する。Doc本文の二重所有は後続のconsumer所有移行で整理する。
 
 ## hostが選択するforeign Inlineの構築
 
@@ -290,7 +291,8 @@ Doc hostは、この経路でSentenceのInlineへ`math Expr`を追加し、Math�
 Math注釈のprinterはSentenceを構造としてlowerし、foreign MathをMath printerへ渡す。
 共有guestの呼出しには最深の出現位置を使用し、呼出元のDepthと累積Budgetを保持する。
 HTMLのforeign adapterはMathの出力操作を選択し、内側Sentenceの本文・読みの対応を最終HTMLへ保持する。
-再解析後の構造比較、旧consumer試験と生成物の更新は、Math所有移行の残件として検証する。
+再解析後の構造比較、NDF受信後の表示、source対応、旧Doc注釈headの拒否をconsumer試験で検査する。
+Mathの数値評価は注釈のSentence内部へ進入せず、注釈の表示と印字は選択したhost操作が担当する。
 
 ## 注釈と移行完了条件
 

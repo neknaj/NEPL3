@@ -295,14 +295,13 @@ fn annotation_boundaries_preserve_grouping_and_reject_hostile_output() -> Result
                     let mut request = host.render(guest, b)?.markup;
                     // IDs are supplied by the host. Two individually valid
                     // fragments must still reject a collision on composition.
-                    if source.starts_with("add") {
-                        if let HtmlNode::Element { attributes, .. } =
+                    if source.starts_with("add")
+                        && let HtmlNode::Element { attributes, .. } =
                             &mut request.fragment.nodes[request.fragment.root as usize]
-                        {
-                            attributes.push(HtmlAttribute::Id {
-                                value: "same".into(),
-                            });
-                        }
+                    {
+                        attributes.push(HtmlAttribute::Id {
+                            value: "same".into(),
+                        });
                     }
                     Ok::<_, GuestError<_>>(request)
                 },

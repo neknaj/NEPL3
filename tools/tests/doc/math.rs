@@ -6,7 +6,7 @@ use nepl3_tools::doc::math::{Error, MathDisplayHost};
 #[test]
 fn article_math_nodes_select_display_without_evaluating_code() -> Result<(), String> {
     let compiled = compiled()?;
-    let input = r#"article en "Math" body cons paragraph cons sentence cons math Math frac 1 0 nil nil cons display Math label add x y Doc "[字/じ]" cons code Math frac 1 0 nil"#;
+    let input = r#"article en "Math" body cons paragraph cons sentence cons math Math frac 1 0 nil nil cons display Math label add x y Sentence "[字/じ]" cons code Math frac 1 0 nil"#;
     with_input(&compiled, input, "Article", |tree, profile, b, a| {
         let checked = tree
             .tree()
@@ -26,9 +26,6 @@ fn article_math_nodes_select_display_without_evaluating_code() -> Result<(), Str
             &mut codec,
         )
         .map_err(err)?;
-        let options = nepl3_doc_html::RenderOptions {
-            parallel: nepl3_doc_html::ParallelMode::Rows,
-        };
         let raw = nepl3_doc_core::portable::to_value(
             &document,
             profile.registry(),
@@ -54,8 +51,7 @@ fn article_math_nodes_select_display_without_evaluating_code() -> Result<(), Str
         let mut host = MathDisplayHost {
             registry: profile.registry(),
             math_surface: &compiled.others[0].schema,
-            doc_surface: Some(&compiled.doc.package.schema),
-            doc_options: &options,
+            sentence_surface: Some(&compiled.others[3].schema),
             codec: &mut codec,
         };
         let mut seen = 0;
@@ -73,8 +69,7 @@ fn article_math_nodes_select_display_without_evaluating_code() -> Result<(), Str
                     let mut receiver = MathDisplayHost {
                         registry: profile.registry(),
                         math_surface: &compiled.others[0].schema,
-                        doc_surface: Some(&compiled.doc.package.schema),
-                        doc_options: &options,
+                        sentence_surface: Some(&compiled.others[3].schema),
                         codec: &mut receiver_codec,
                     };
                     let received_output = receiver
@@ -226,16 +221,16 @@ fn article_math_nodes_select_display_without_evaluating_code() -> Result<(), Str
                         assert_eq!(result.annotations.len(), 1);
                         let annotation = &result.annotations[0];
                         assert!(annotation.embed < result.syntax.value.embeds.len() as u64);
-                        assert!(!annotation.document.sources.is_empty());
+                        assert!(!annotation.sentence.sources.is_empty());
                         assert!(!annotation.origins.is_empty());
-                        host.doc_surface = None;
+                        host.sentence_surface = None;
                         assert!(matches!(
                             host.render_node(&document, i as u64, &mut budget()),
                             Err(Error::Render(
                                 nepl3_math_mathml::Error::AnnotationRequiresPreparation(_)
                             ))
                         ));
-                        host.doc_surface = Some(&compiled.doc.package.schema);
+                        host.sentence_surface = Some(&compiled.others[3].schema);
                     }
                     assert_eq!(
                         result.rendered.node_roots.len(),
@@ -264,7 +259,7 @@ fn article_math_nodes_select_display_without_evaluating_code() -> Result<(), Str
                         assert_eq!(record.origins.first().map(|o| o.element), Some(root.markup));
                         for origin in &record.origins {
                             assert!(origin.element < html.markup.fragment.nodes.len() as u64);
-                            assert!(origin.node < record.document.value.nodes.len() as u64);
+                            assert!(origin.node < record.sentence.value.nodes.len() as u64);
                         }
                     }
                     for resource in 0..4 {
