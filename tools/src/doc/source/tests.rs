@@ -228,12 +228,13 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
     use crate::doc::annotations::{Error, SentenceAnnotationRenderer, document};
     enum Expected {
         Dependency,
+        External,
         Label,
         Duplicate,
         Composed,
     }
-    let compiled =
-        compiled_with_sentence_forms(&[nepl3_grammar_core::compile::package::ForeignForm {
+    let compiled = compiled_with_sentence_forms(&[
+        nepl3_grammar_core::compile::package::ForeignForm {
             kind: "DocumentInline",
             category: "Inline",
             spelling: "doc",
@@ -241,11 +242,25 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
             alias: "Doc",
             guest_category: "Inline",
             origin_reason: "document fragment test",
-        }])?;
+        },
+        nepl3_grammar_core::compile::package::ForeignForm {
+            kind: "InlineMath",
+            category: "Inline",
+            spelling: "math",
+            field: "syntax",
+            alias: "Math",
+            guest_category: "Expr",
+            origin_reason: "label math test",
+        },
+    ])?;
     for (body, expected) in [
         (
-            "cons doc link external \"https://example.test/\" text \"label\" nil",
+            "cons doc link relative \"other.html\" none text \"label\" nil",
             Expected::Dependency,
+        ),
+        (
+            "cons link \"https://example.test/\" text \"label\" nil",
+            Expected::External,
         ),
         ("cons doc ref missing text \"label\" nil", Expected::Label),
         (
@@ -253,12 +268,12 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
             Expected::Duplicate,
         ),
         (
-            "cons doc ref target math Math 7 cons doc anchor target text \"定義\" nil",
+            "cons doc ref target math 7 cons doc anchor target text \"定義\" nil",
             Expected::Composed,
         ),
     ] {
         let source = format!(
-            "article en \"Title\" body cons display Math label x Sentence sentence {body} nil"
+            "article en sentence \"Title\" body cons display Math label x Sentence sentence {body} nil"
         );
         for native in [false, true] {
             with_input_route(
@@ -508,8 +523,41 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
                             };
                             assert!(
                                 matches!(plan.requirements.as_slice(), [nepl3_doc_core::prepare::DocRequirement::Link {
-                            target: nepl3_doc_core::model::LinkTarget::External { uri }, ..
-                        }] if uri == "https://example.test/")
+                            target: nepl3_doc_core::model::LinkTarget::Relative { path, fragment: None }, ..
+                        }, nepl3_doc_core::prepare::DocRequirement::Foreign {
+                            embed: nepl3_doc_core::model::EmbedRef(0),
+                            kind: nepl3_doc_core::model::EmbedKind::SentenceInline, ..
+                        }] if path == "other.html"),
+                                "{:?}",
+                                plan.requirements
+                            );
+                        }
+                        Expected::External => {
+                            let output = result.map_err(err)?;
+                            assert!(output.foreign.is_empty());
+                            assert!(output.sentence.value.nodes.iter().any(|node| matches!(node,
+                                Kind::ExternalLink { uri, .. } if uri == "https://example.test/")));
+                            assert!(
+                                output
+                                    .markup
+                                    .fragment
+                                    .nodes
+                                    .iter()
+                                    .any(|node| matches!(node,
+                                nepl3_markup::html::HtmlNode::Element { attributes, .. }
+                                if attributes.iter().any(|attribute| matches!(attribute,
+                                    nepl3_markup::html::HtmlAttribute::Href {
+                                        value: nepl3_markup::html::HtmlHref::External { uri }
+                                    } if uri == "https://example.test/"))))
+                            );
+                            assert!(
+                                output
+                                    .markup
+                                    .fragment
+                                    .nodes
+                                    .iter()
+                                    .any(|node| matches!(node,
+                                nepl3_markup::html::HtmlNode::Text { text } if text == "label"))
                             );
                         }
                         Expected::Label => {
@@ -595,8 +643,8 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
         },
     ])?;
     let sentence = compiled.others.last().ok_or("Sentence package")?;
-    let source = r#"article en "Title" body cons display Math label x Sentence sentence cons doc anchor target math Math label 7 Sentence sentence cons doc ruby text "字" text "じ" nil nil nil"#;
-    let expected = "sentence cons doc anchor target math Math label 7 Sentence sentence cons doc ruby text \"字\" text \"じ\" nil nil";
+    let source = r#"article en sentence "Title" body cons display Math label x Sentence sentence cons doc anchor target math label 7 Sentence sentence cons doc anchor inner ruby text "字" text "じ" nil nil nil"#;
+    let expected = "sentence cons doc anchor target math label 7 Sentence sentence cons doc anchor inner ruby text \"字\" text \"じ\" nil nil";
     for native in [false, true] {
         with_input_route(
             native,
@@ -676,7 +724,11 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
                 printer.math_surface = None;
                 assert!(matches!(
                     printer.print(guest, &mut budget()),
-                    Err(crate::doc::printing::Error::Selection)
+                    Err(crate::doc::printing::Error::Lower(
+                        nepl3_sentence_core::lower::presentation::Error::Prefix(
+                            nepl3_sentence_core::lower::Error::Unsupported(_)
+                        )
+                    ))
                 ));
                 let mut host = crate::doc::math::MathDisplayHost {
                     registry,
@@ -704,7 +756,7 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
                 };
                 assert_eq!(
                     outer.document.value.embeds[nested.embed.0 as usize].kind,
-                    nepl3_doc_core::model::EmbedKind::InlineMath
+                    nepl3_doc_core::model::EmbedKind::SentenceInline
                 );
                 let [annotation] = document_math(nested)?.annotations.as_slice() else {
                     return Err("inner annotation".into());
@@ -714,7 +766,15 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
                 else {
                     return Err("inner Doc record".into());
                 };
-                assert!(inner.foreign.is_empty());
+                let [inner_label] = inner.foreign.as_slice() else {
+                    return Err("one inner label".into());
+                };
+                let crate::doc::annotations::DocumentOutput::Sentence(inner_label) =
+                    &inner_label.output
+                else {
+                    return Err("inner Sentence label".into());
+                };
+                assert!(inner_label.foreign.is_empty());
                 // Exercise the public Doc boundary with independently supplied
                 // host output: a callback's successful return is not validation.
                 use nepl3_doc_html::{
@@ -801,54 +861,43 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
                     ),
                     Err(ForeignRenderError::Render(RenderError::OutputDepth { .. }))
                 ));
-                let owner = outer
-                    .document
-                    .value
-                    .nodes
-                    .iter()
-                    .position(|node| matches!(node.kind, DocKind::InlineMath { .. }))
-                    .ok_or("Math owner")? as u64;
-                let mut shared = outer
-                    .document
-                    .fragment(
-                        nepl3_doc_core::model::DocRoot::Inline(nepl3_doc_core::model::InlineRef(
-                            owner,
-                        )),
-                        registry,
-                        &mut budget(),
-                        codec.source_admission(),
-                    )
-                    .map_err(err)?;
-                let nepl3_doc_core::model::DocRoot::Inline(owner) = shared.value.root else {
-                    return Err("Inline fragment".into());
+                let crate::doc::annotations::DocumentOutput::Sentence(label) = &nested.output
+                else {
+                    return Err("outer Sentence label".into());
+                };
+                let mut shared = label.syntax.clone();
+                let nepl3_sentence_core::model::Root::Inline(owner) = shared.value.root else {
+                    return Err("Inline label".into());
                 };
                 let owner = owner.0;
                 let root = shared.value.nodes.len() as u64;
-                shared.value.nodes.push(nepl3_doc_core::model::DocNode {
-                    kind: DocKind::Concat {
-                        inlines: vec![nepl3_doc_core::model::InlineRef(owner); 2],
-                    },
-                    span: None,
-                    origin: None,
-                    locations: vec![],
+                shared.value.nodes.push(Kind::Concat {
+                    inlines: vec![nepl3_sentence_core::model::InlineRef(owner); 2],
                 });
-                shared.value.root =
-                    nepl3_doc_core::model::DocRoot::Inline(nepl3_doc_core::model::InlineRef(root));
-                let prepared = nepl3_doc_html::prepare_inline_with_foreign(
-                    &shared,
-                    &options,
-                    registry,
-                    &mut codec,
-                    &mut budget(),
-                )
-                .map_err(err)?;
+                let origin = nepl3_core::origin::OriginId(shared.origins.len() as u64);
+                shared.origins.push(nepl3_core::origin::Origin::Synthetic {
+                    reason: "shared guest presentation test".into(),
+                    anchor: None,
+                });
+                shared
+                    .locations
+                    .push(nepl3_sentence_core::syntax::NodeLocation {
+                        origin,
+                        head: None,
+                        cover: None,
+                    });
+                shared.value.root = nepl3_sentence_core::model::Root::Inline(
+                    nepl3_sentence_core::model::InlineRef(root),
+                );
+                use nepl3_suite::adapters::sentence::html as sentence_html;
                 let mut calls = 0;
-                let shared_result = nepl3_doc_html::render_inline_with_foreign(
-                    &prepared,
+                let shared_result = sentence_html::render_with_foreign(
+                    &shared,
+                    registry,
                     &mut |actual, embed, _| {
                         calls += 1;
                         assert_eq!(actual, &shared.value.embeds[embed.0 as usize]);
-                        Ok::<_, ()>(HtmlRequest {
+                        Ok::<_, StopReason>(HtmlRequest {
                             fragment: HtmlFragment {
                                 root: 0,
                                 nodes: vec![HtmlNode::Text {
@@ -860,17 +909,20 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
                         })
                     },
                     &mut budget(),
+                    codec.source_admission(),
                 )
                 .map_err(err)?;
+                let (_, _, shared_origins, shared_foreign) = shared_result.into_parts();
                 assert_eq!(calls, 2);
                 let mut stopped = budget();
                 let mut calls = 0;
-                let failed = nepl3_doc_html::render_inline_with_foreign(
-                    &prepared,
+                let failed = sentence_html::render_with_foreign(
+                    &shared,
+                    registry,
                     &mut |_, _, b| {
                         calls += 1;
                         b.stop(StopReason::WorkLimit);
-                        Ok::<_, ()>(HtmlRequest {
+                        Ok::<_, StopReason>(HtmlRequest {
                             fragment: HtmlFragment {
                                 root: 0,
                                 nodes: vec![HtmlNode::Text {
@@ -882,39 +934,35 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
                         })
                     },
                     &mut stopped,
+                    codec.source_admission(),
                 );
                 assert_eq!(calls, 1);
                 assert!(matches!(
                     failed,
-                    Err(ForeignRenderError::Render(RenderError::Stopped(
-                        StopReason::WorkLimit
-                    )))
+                    Err(sentence_html::RenderFailure::Sentence(
+                        sentence_html::Error::Stopped(StopReason::WorkLimit)
+                    ))
                 ));
                 assert_eq!(stopped.poll(), Err(StopReason::WorkLimit));
-                assert_eq!(shared_result.foreign.len(), 2);
-                assert_eq!(
-                    shared_result.foreign[0].embed,
-                    shared_result.foreign[1].embed
-                );
+                assert_eq!(shared_foreign.len(), 2);
+                assert_eq!(shared_foreign[0].embed, shared_foreign[1].embed);
                 assert_ne!(
-                    shared_result.foreign[0].first_element,
-                    shared_result.foreign[1].first_element
+                    shared_foreign[0].first_element,
+                    shared_foreign[1].first_element
                 );
-                for placement in &shared_result.foreign {
+                for placement in &shared_foreign {
                     assert_eq!(placement.elements, 1);
                     assert!(
-                        shared_result
-                            .fragment
-                            .origins
+                        shared_origins
                             .iter()
                             .any(|origin| origin.element == placement.first_element
                                 && origin.node == owner)
                     );
                 }
                 for text in ["字", "じ"] {
-                    assert!(inner.origins.iter().any(|origin| {
-                        matches!(&inner.document.value.nodes[origin.node as usize].kind,
-                            DocKind::Text { text: value } if value == text)
+                    assert!(inner_label.origins.iter().any(|origin| {
+                        matches!(&inner_label.syntax.value.nodes[origin.node as usize],
+                            Kind::Text { text: value } if value == text)
                         && matches!(rendered.markup.fragment.nodes.get(origin.element as usize),
                             Some(nepl3_markup::html::HtmlNode::Text { text: value }) if value == text)
                     }), "final HTML owner for {text}");
@@ -960,8 +1008,9 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
         )?;
         // The expected text is independently specified and accepted by the
         // selected reader profile as a nested Sentence, on both routes.
-        let reprinted =
-            format!("article en \"Title\" body cons display Math label x Sentence {expected} nil");
+        let reprinted = format!(
+            "article en sentence \"Title\" body cons display Math label x Sentence {expected} nil"
+        );
         with_input_route(
             native,
             &compiled,
