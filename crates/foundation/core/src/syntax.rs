@@ -198,12 +198,15 @@ impl SyntaxBundle {
             budget.observe_depth(depth)?;
             bundle.node(bundle.root)?;
             let mut sources = SourceStore::default();
-            for (index, source) in bundle.sources.iter().enumerate() {
+            for source in &bundle.sources {
                 admission.admit_existing(source, budget)?;
-                budget.charge(Resource::Work, index as u64 + 1)?;
-                if bundle.sources[..index]
-                    .iter()
-                    .any(|prior| prior.identity() == source.identity())
+                if sources
+                    .get_revision_with_budget(
+                        &source.identity().source,
+                        source.identity().revision,
+                        budget,
+                    )?
+                    .is_some()
                 {
                     return Err(SyntaxError::DuplicateSource);
                 }

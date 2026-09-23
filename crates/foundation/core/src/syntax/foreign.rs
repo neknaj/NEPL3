@@ -48,19 +48,13 @@ impl ForeignClosure {
             return Err(SyntaxError::Environment);
         }
         let mut store = SourceStore::default();
-        for (index, source) in self.owner_sources.iter().enumerate() {
+        for source in &self.owner_sources {
             admission.admit_existing(source, b)?;
-            for prior in &self.owner_sources[..index] {
-                b.charge(
-                    Resource::Work,
-                    (prior.identity().source.0.len() + source.identity().source.0.len()) as u64
-                        + 40,
-                )?;
-                if prior.identity().source == source.identity().source
-                    && prior.identity().revision == source.identity().revision
-                {
-                    return Err(SyntaxError::DuplicateSource);
-                }
+            if store
+                .get_revision_with_budget(&source.identity().source, source.identity().revision, b)?
+                .is_some()
+            {
+                return Err(SyntaxError::DuplicateSource);
             }
             store.insert_with_budget(source.clone_with_budget(b)?, b)?;
         }

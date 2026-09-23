@@ -1,4 +1,6 @@
 use nepl3_core::{budget::*, origin::*, schema::*, source::*, syntax::*, value::*, view::*};
+#[path = "syntax/sources.rs"]
+mod sources;
 fn budget() -> Budget {
     Budget::new(Limits {
         source_bytes: 1_000_000,
