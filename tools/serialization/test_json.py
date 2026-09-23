@@ -30,11 +30,18 @@ class JsonBoundaryTests(unittest.TestCase):
             _ = decode('NaN', reject_nonfinite=True)
 
     def test_float_overflow_is_rejected_at_any_depth(self) -> None:
-        for source in ('1e999', '-1e999', '{"items":[1e999]}'):
+        for source in ('1e999', '-1e999', '{"items":[1e999]}', 'Infinity', '-Infinity'):
             with self.subTest(source=source), self.assertRaisesRegex(ValueError, "nonfinite JSON number"):
                 _ = decode(source, reject_nonfinite=True)
         self.assertEqual(decode('1e999'), math.inf)
         self.assertEqual(decode('1.25', reject_nonfinite=True), 1.25)
+        for value in (0.0, -0.0, 5e-324, -5e-324, 1.7976931348623157e308, -1.7976931348623157e308):
+            with self.subTest(finite=value):
+                decoded = decode(repr(value), reject_nonfinite=True)
+                if not isinstance(decoded, float):
+                    self.fail("floating-point input must remain a float")
+                self.assertEqual(decoded, value)
+                self.assertEqual(math.copysign(1.0, decoded), math.copysign(1.0, value))
 
     def test_field_narrowing_rejects_wrong_types(self) -> None:
         with self.assertRaisesRegex(ValueError, "expected JSON integer"):

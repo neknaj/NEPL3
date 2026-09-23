@@ -6,7 +6,6 @@ their own domain records before performing internal operations.
 
 from collections.abc import Mapping, Sequence
 import json
-import math
 from typing import cast
 
 type JsonValue = None | bool | int | float | str | list[JsonValue] | dict[str, JsonValue]
@@ -45,7 +44,9 @@ def _nonfinite(value: str) -> float:
 
 def _finite_float(value: str) -> float:
     result = float(value)
-    if not math.isfinite(result):
+    # Avoid importing math here: direct generator entrypoints include their
+    # directory on sys.path, where tools/generate/math.py owns that name.
+    if not -float("inf") < result < float("inf"):
         return _nonfinite(value)
     return result
 
