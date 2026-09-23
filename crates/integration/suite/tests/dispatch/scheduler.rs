@@ -7,6 +7,8 @@ mod outcomes;
 mod profile;
 #[path = "scheduler/retention.rs"]
 mod retention;
+#[path = "scheduler/terminal.rs"]
+mod terminal;
 use nepl3_core::operation::{Continuation, OperationReply, Resume};
 use nepl3_suite::{
     dispatch::{resume, suspending},
