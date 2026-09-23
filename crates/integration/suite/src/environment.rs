@@ -6,10 +6,11 @@ use nepl3_core::{
     schema::{SchemaError, TypeDescriptor},
     source::SourceStore,
     syntax::{
-        Environment, EnvironmentBinding, NamespaceRef, ResourceContent, SyntaxError,
-        ValidatedEnvironment,
+        Environment, EnvironmentBinding, EnvironmentEntry, NamespaceRef, ResourceContent,
+        SyntaxError, ValidatedEnvironment,
     },
     value::SchemaRef,
+    value_codec::{FoundationCodecError, FoundationValueCodec},
 };
 
 /// Select one source binding and publish its unchanged typed value under an
@@ -59,7 +60,70 @@ pub struct ProjectedEnvironment<'a> {
     value: Environment,
     context: ValidatedEnvironment<'a>,
 }
-impl ProjectedEnvironment<'_> {
+
+/// Portable entry and the exact provenance arena required by its local IDs.
+/// Encoding the entry does not encode these origins or grant source access.
+/// The host transports the required context explicitly; receivers validate the
+/// decoded environment against that context before authorizing an invocation.
+pub struct PublishedEnvironment<'a> {
+    entry: EnvironmentEntry,
+    origins: &'a [Origin],
+    sources: &'a SourceStore,
+}
+impl PublishedEnvironment<'_> {
+    pub fn entry(&self) -> &EnvironmentEntry {
+        &self.entry
+    }
+    pub fn origins(&self) -> &[Origin] {
+        self.origins
+    }
+    pub fn sources(&self) -> &SourceStore {
+        self.sources
+    }
+}
+
+#[derive(Debug)]
+pub enum PublishError<E> {
+    Stopped(StopReason),
+    Codec(E),
+}
+impl<E: FoundationCodecError> PublishError<E> {
+    pub fn stop_reason(&self) -> Option<StopReason> {
+        match self {
+            Self::Stopped(reason) => Some(*reason),
+            Self::Codec(error) => error.stop_reason(),
+        }
+    }
+}
+
+impl<'a> ProjectedEnvironment<'a> {
+    /// Move selected values into an existing portable EnvironmentEntry without
+    /// cloning them. The host-selected Foundation codec computes its canonical
+    /// content digest with this Budget. Both success and failure consume the
+    /// projection; failure publishes no entry. The digest identifies the value
+    /// and its local Origin IDs, not the separately retained provenance context.
+    pub fn publish<C: FoundationValueCodec>(
+        self,
+        id: u64,
+        codec: &mut C,
+        budget: &mut Budget,
+    ) -> Result<PublishedEnvironment<'a>, PublishError<C::Error>> {
+        budget.poll().map_err(PublishError::Stopped)?;
+        let digest = codec
+            .environment_digest(&self.value, budget)
+            .map_err(PublishError::Codec)?;
+        budget.poll().map_err(PublishError::Stopped)?;
+        Ok(PublishedEnvironment {
+            entry: EnvironmentEntry {
+                id,
+                digest,
+                value: self.value,
+            },
+            origins: self.context.origins(),
+            sources: self.context.sources(),
+        })
+    }
+
     pub fn value(&self) -> &Environment {
         &self.value
     }
