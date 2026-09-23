@@ -112,6 +112,41 @@ fn typed_sentence_value_prints_inside_a_source_less_list() -> Result<(), String>
         let identity = print::identity(&document, profile.registry(), &mut codec, &mut budget())
             .map_err(err)?;
         assert_eq!(identity.guests.len(), 1);
+        let encoded = nepl3_doc_core::portable::to_value(
+            &document,
+            profile.registry(),
+            &mut codec,
+            &mut budget(),
+        )
+        .map_err(err)?;
+        let bytes = nepl3_wire::encode(&encoded, &mut budget()).map_err(err)?;
+        let mut receiver_admission = SourceAdmission::default();
+        let mut receiver =
+            FoundationCodec::new(profile.registry(), &empty, &mut receiver_admission)
+                .map_err(err)?;
+        let received = nepl3_doc_core::portable::from_value(
+            &nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?,
+            profile.registry(),
+            &mut receiver,
+            &mut budget(),
+        )
+        .map_err(err)?;
+        assert_doc_retention(&document, &received)?;
+        assert_eq!(
+            print::identity(&received, profile.registry(), &mut receiver, &mut budget())
+                .map_err(err)?,
+            identity
+        );
+        let received_content = nepl3_suite::adapters::document::sentence::lower(
+            &received.value.embeds[0],
+            received.value.embeds[0].schema(),
+            &[],
+            profile.registry(),
+            &mut receiver,
+            &mut budget(),
+        )
+        .map_err(err)?;
+        assert_eq!(received_content, content);
         let printed =
             nepl3_sentence_core::print::prefix(&content.value, &mut budget()).map_err(err)?;
         for mode in [PrintMode::Prefix, PrintMode::Compact] {
@@ -132,6 +167,19 @@ fn typed_sentence_value_prints_inside_a_source_less_list() -> Result<(), String>
             };
             let reply = print::print(&request, profile.registry(), &mut codec, &mut budget())
                 .map_err(err)?;
+            let mut received_request = request.clone();
+            received_request.document = received.clone();
+            assert_eq!(
+                print::print(
+                    &received_request,
+                    profile.registry(),
+                    &mut receiver,
+                    &mut budget()
+                )
+                .map_err(err)?
+                .outcome,
+                reply.outcome
+            );
             let PrintOutcome::Complete { artifact } = reply.outcome else {
                 return Err(format!("typed list: {reply:?}"));
             };
