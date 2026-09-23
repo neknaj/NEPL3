@@ -7,7 +7,7 @@ use nepl3_doc_core::{
     portable::text as wire,
     text::{
         self, AnnotationPolicy::*, PlainTextFailure, PlainTextOutcome, PlainTextRequest,
-        ResolvedInlineText,
+        ResolutionMismatch, ResolvedInlineText,
     },
 };
 use nepl3_tools::doc::source::{budget, compiled, err, with_input};
@@ -17,8 +17,16 @@ fn with_document<T>(
     input: &str,
     f: impl FnOnce(DocumentSyntax, &nepl3_core::schema::SchemaRegistry) -> Result<T, String>,
 ) -> Result<T, String> {
+    with_document_root(input, "Sentence", Category::Sentence, f)
+}
+fn with_document_root<T>(
+    input: &str,
+    category: &str,
+    root: Category,
+    f: impl FnOnce(DocumentSyntax, &nepl3_core::schema::SchemaRegistry) -> Result<T, String>,
+) -> Result<T, String> {
     let compiled = compiled()?;
-    with_input(&compiled, input, "Sentence", |tree, profile, b, a| {
+    with_input(&compiled, input, category, |tree, profile, b, a| {
         let checked = tree
             .tree()
             .bundle
@@ -31,7 +39,7 @@ fn with_document<T>(
         let doc = lower::document(
             &checked,
             &compiled.doc.package.schema,
-            Category::Sentence,
+            root,
             profile.registry(),
             &mut budget(),
             &mut codec,
@@ -316,6 +324,131 @@ fn plain_text_preserves_output_work_allocation_depth_and_cancel_stops() -> Resul
         assert!(matches!(reply.outcome, PlainTextOutcome::Complete { .. }));
         assert!(b.usage().depth > 7);
         assert_eq!(b.current_depth(), 0);
+        Ok(())
+    })
+}
+
+#[test]
+fn plain_text_first_receiver_rejects_old_source_other_guest_and_owner_environment()
+-> Result<(), String> {
+    let input = r#"paragraph cons sentence "A" cons sentence "B" nil"#;
+    with_document_root(input, "Block", Category::Block, |doc, r| {
+        let empty = SourceStore::default();
+        let mut a = SourceAdmission::default();
+        let mut c = FoundationCodec::new(r, &empty, &mut a).map_err(err)?;
+        let prepared = text::prepare(&doc, r, &mut c, &mut budget()).map_err(err)?;
+        let identity = prepared.identity().clone();
+        assert_eq!(identity.embeds.len(), 2);
+        let sentence = SentenceRef(doc.value.nodes.iter().position(|node|
+            matches!(node.kind, DocKind::Sentence { syntax } if syntax == identity.embeds[0].embed)
+        ).ok_or("first Sentence")? as u64);
+        let original = ResolvedInlineText {
+            document_digest: identity.document_digest,
+            embed: identity.embeds[0].embed,
+            guest_digest: identity.embeds[0].guest_digest,
+            policy: BaseOnly,
+            text: "A".into(),
+        };
+        let receive = |request: &PlainTextRequest| -> Result<PlainTextOutcome, String> {
+            let bytes = {
+                let mut a = SourceAdmission::default();
+                let mut c = FoundationCodec::new(r, &empty, &mut a).map_err(err)?;
+                nepl3_wire::encode(
+                    &wire::request_to_value(request, r, &mut c, &mut budget()).map_err(err)?,
+                    &mut budget(),
+                )
+                .map_err(err)?
+            };
+            let mut a = SourceAdmission::default();
+            let mut c = FoundationCodec::new(r, &empty, &mut a).map_err(err)?;
+            let request = wire::request_from_value(
+                &nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?,
+                r,
+                &mut c,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            Ok(text::plain_text(&request, r, &mut c, &mut budget())
+                .map_err(err)?
+                .outcome)
+        };
+        assert_eq!(
+            receive(&PlainTextRequest {
+                document: doc.clone(),
+                sentence,
+                policy: BaseOnly,
+                resolved: vec![original.clone()]
+            })?,
+            PlainTextOutcome::Complete { text: "A".into() }
+        );
+        let newer_source = with_document_root(
+            r#"paragraph cons sentence "Z" cons sentence "B" nil"#,
+            "Block",
+            Category::Block,
+            |doc, _| Ok(doc),
+        )?;
+        for mode in 0..3 {
+            let mut changed = doc.clone();
+            match mode {
+                0 => {
+                    // Reparse a same-length edit under the same source ID and
+                    // revision. Every actual source/span now has the new digest.
+                    changed = newer_source.clone();
+                }
+                1 => {
+                    changed.value.embeds.swap(0, 1);
+                }
+                _ => {
+                    let DocContent::Syntax { closure } = &mut changed.value.embeds[0].content
+                    else {
+                        return Err("Sentence syntax closure".into());
+                    };
+                    closure.owner_environment.value.resources.push(
+                        nepl3_core::syntax::ResourceContent {
+                            id: "host-context".into(),
+                            digest: Digest::of(b"new context"),
+                            bytes: b"new context".to_vec(),
+                        },
+                    );
+                    let digest = c
+                        .environment_digest(&closure.owner_environment.value, &mut budget())
+                        .map_err(err)?;
+                    closure.owner_environment.digest = digest;
+                    closure.syntax.environment.digest = digest;
+                }
+            }
+            let mut fresh_admission = SourceAdmission::default();
+            let mut fresh_codec =
+                FoundationCodec::new(r, &empty, &mut fresh_admission).map_err(err)?;
+            let actual =
+                text::prepare(&changed, r, &mut fresh_codec, &mut budget()).map_err(err)?;
+            assert_ne!(actual.identity().document_digest, identity.document_digest);
+            let mut stale = original.clone();
+            if mode > 0 {
+                // Correct current document hash cannot authorize stale guest text.
+                stale.document_digest = actual.identity().document_digest;
+                assert_ne!(actual.identity().embeds[0].guest_digest, stale.guest_digest);
+            }
+            let request = PlainTextRequest {
+                sentence,
+                document: changed,
+                policy: BaseOnly,
+                resolved: vec![stale],
+            };
+            assert_eq!(
+                receive(&request)?,
+                PlainTextOutcome::Invalid {
+                    error: PlainTextFailure::InvalidResolution {
+                        entry: 0,
+                        reason: if mode == 0 {
+                            ResolutionMismatch::Document
+                        } else {
+                            ResolutionMismatch::Guest
+                        }
+                    }
+                }
+            );
+        }
         Ok(())
     })
 }
