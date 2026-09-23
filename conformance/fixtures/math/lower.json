@@ -133,7 +133,7 @@
     },
     {
       "kind": "Label",
-      "source": "label x Doc \"note\"",
+      "source": "label x Sentence \"note\"",
       "entry": "Expr"
     },
     {
@@ -152,9 +152,9 @@
       "entry": "Row"
     },
     {
-      "kind": "DocGuest",
-      "source": "Doc \"[x/ex]\"",
-      "entry": "DocGuest"
+      "kind": "SentenceGuest",
+      "source": "Sentence \"[x/ex]\"",
+      "entry": "SentenceGuest"
     }
   ]
 }

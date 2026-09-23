@@ -41,7 +41,7 @@ fn lower_syntax(compiled: &Compiled, source: &str, entry: &str) -> Result<MathSy
         let category = match entry {
             "Expr" => Category::Expr,
             "Row" => Category::Row,
-            _ => Category::DocGuest,
+            _ => Category::SentenceGuest,
         };
         output = Some(
             nepl3_math_core::lower::expression(
@@ -78,7 +78,7 @@ fn explicit_print_requests_bind_guest_assertions_and_preserve_stops() -> Result<
     let compiled = compiled()?;
     let registry = &compiled.doc.registry;
     let empty = SourceStore::default();
-    let syntax = lower_syntax(&compiled, "label frac 1 0 Doc \"note\"", "Expr")?;
+    let syntax = lower_syntax(&compiled, "label frac 1 0 Sentence \"note\"", "Expr")?;
     let mut admission = SourceAdmission::default();
     let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
     let identity = op::identity(&syntax, registry, &mut codec, &mut budget()).map_err(err)?;
@@ -88,9 +88,9 @@ fn explicit_print_requests_bind_guest_assertions_and_preserve_stops() -> Result<
         wire::identity_from_value(&raw, registry, &mut codec, &mut budget()).map_err(err)?,
         identity
     );
-    let mut host = nepl3_tools::doc::printing::DocGuestPrinter {
+    let mut host = nepl3_tools::doc::printing::SentenceGuestPrinter {
         registry,
-        surface: &compiled.doc.package.schema,
+        surface: &compiled.others[3].schema,
         math_surface: None,
         codec: &mut codec,
     };
@@ -99,7 +99,7 @@ fn explicit_print_requests_bind_guest_assertions_and_preserve_stops() -> Result<
         .map_err(err)?;
     let request = MathPrintRequest {
         syntax,
-        doc_schema: Some(compiled.doc.package.schema.clone()),
+        sentence_schema: Some(compiled.others[3].schema.clone()),
         guests: vec![MathPrintedGuest {
             syntax_digest: identity.syntax_digest,
             guest_digest: identity.guests[0],
@@ -109,7 +109,7 @@ fn explicit_print_requests_bind_guest_assertions_and_preserve_stops() -> Result<
     };
     let expected = MathPrintResult::Complete {
         artifact: MathSourceArtifact {
-            text: "label frac 1 0 Doc sentence cons text \"note\" nil".into(),
+            text: "label frac 1 0 Sentence sentence cons text \"note\" nil".into(),
             entry: MathCategory::Expr,
         },
     };
@@ -166,11 +166,11 @@ fn explicit_print_requests_bind_guest_assertions_and_preserve_stops() -> Result<
                 MathPrintFailure::DuplicateGuest { embed: EmbedRef(0) }
             }
             4 => {
-                bad.doc_schema = None;
+                bad.sentence_schema = None;
                 MathPrintFailure::MissingBinding { embed: EmbedRef(0) }
             }
             5 => {
-                bad.doc_schema = Some(compiled.others[0].schema.clone());
+                bad.sentence_schema = Some(compiled.others[0].schema.clone());
                 MathPrintFailure::GuestCategory { embed: EmbedRef(0) }
             }
             6 => {
@@ -229,7 +229,7 @@ fn explicit_print_requests_bind_guest_assertions_and_preserve_stops() -> Result<
     }
     let named = MathPrintRequest {
         syntax: named,
-        doc_schema: None,
+        sentence_schema: None,
         guests: vec![],
     };
     let mut named_admission = SourceAdmission::default();
@@ -294,7 +294,7 @@ fn portable_source_artifacts_recheck_the_requested_input() -> Result<(), String>
     for (source, entry, expected) in [
         ("frac 1 0", "Expr", "frac 1 0"),
         ("row cons 1 cons -2 nil", "Row", "row cons 1 cons -2 nil"),
-        ("Doc \"note\"", "DocGuest", "Doc \"note\""),
+        ("Sentence \"note\"", "SentenceGuest", "Sentence \"note\""),
     ] {
         let value = lower_value(&compiled, source, entry)?;
         let shape = value.validate_shape(&mut budget()).map_err(err)?;
@@ -386,16 +386,13 @@ fn portable_source_artifacts_recheck_the_requested_input() -> Result<(), String>
 }
 
 #[test]
-fn doc_guest_depths_follow_deepest_shared_occurrence() -> Result<(), String> {
-    use nepl3_doc_core::{
-        model::{DocKind, DocNode, InlineRef},
-        print::guest_depths,
-    };
+fn sentence_guest_depths_follow_deepest_shared_occurrence() -> Result<(), String> {
+    use nepl3_sentence_core::model::{InlineRef, Kind, Root};
     let compiled = compiled()?;
     let registry = &compiled.doc.registry;
     let math = lower_value(
         &compiled,
-        "label x Doc sentence cons math Math x nil",
+        "label x Sentence sentence cons math x nil",
         "Expr",
     )?;
     let closure = &math.embeds[0];
@@ -407,51 +404,47 @@ fn doc_guest_depths_follow_deepest_shared_occurrence() -> Result<(), String> {
         .bundle
         .validate_with_sources(registry, &mut budget(), &mut SourceAdmission::default())
         .map_err(err)?;
-    let mut document = nepl3_doc_core::lower::document(
+    let mut document = nepl3_sentence_core::lower::presentation::sentence_with_foreign(
         &checked,
-        &compiled.doc.package.schema,
-        nepl3_doc_core::check::Category::Sentence,
+        &compiled.others[3].schema,
+        &[nepl3_sentence_core::lower::ForeignInlineForm {
+            kind: "Form:InlineMath",
+            guest_schema: &compiled.others[0].schema,
+            guest_category: "Expr",
+        }],
         registry,
-        &mut budget(),
         &mut codec,
+        &mut budget(),
     )
     .map_err(err)?;
     let root = match document.value.root {
-        nepl3_doc_core::model::DocRoot::Sentence(id) => id.0 as usize,
+        Root::Sentence(id) => id.0 as usize,
         _ => return Err("sentence".into()),
     };
-    let guest = match &document.value.nodes[root].kind {
-        DocKind::Sentence { inlines } => inlines[0],
+    let guest = match &document.value.nodes[root] {
+        Kind::Sentence { inlines } => inlines[0],
         _ => return Err("sentence node".into()),
     };
     let wrapper = document.value.nodes.len() as u64;
-    document.value.nodes.push(DocNode {
-        kind: DocKind::Strong { inline: guest },
-        locations: vec![],
-        origin: None,
-        span: None,
-    });
+    document.value.nodes.push(Kind::Strong { inline: guest });
     for inlines in [
         vec![guest, InlineRef(wrapper)],
         vec![InlineRef(wrapper), guest],
     ] {
-        document.value.nodes[root].kind = DocKind::Sentence { inlines };
+        document.value.nodes[root] = Kind::Sentence { inlines };
         let shape = document.value.validate_shape(&mut budget()).map_err(err)?;
         let mut b = budget();
-        assert_eq!(guest_depths(&shape, &mut b).map_err(err)?, vec![3]);
+        assert_eq!(shape.foreign_depths(&mut b).map_err(err)?, vec![3]);
         let used = b.usage();
         let mut nested = budget();
         let depths = nested
-            .with_depth_at_least(7, |b| guest_depths(&shape, b))
+            .with_depth_at_least(7, |b| shape.foreign_depths(b))
             .map_err(err)?;
         assert_eq!(depths, vec![3]);
-        assert_eq!(nested.usage().depth, 10);
+        // The query returns relative depths; the host accounts for traversal.
+        assert_eq!(nested.usage().depth, 7);
         assert_eq!(nested.current_depth(), 0);
-        for reason in [
-            StopReason::WorkLimit,
-            StopReason::AllocationLimit,
-            StopReason::DepthLimit,
-        ] {
+        for reason in [StopReason::WorkLimit, StopReason::AllocationLimit] {
             let mut limits = budget().limits();
             match reason {
                 StopReason::WorkLimit => limits.work = used.work - 1,
@@ -459,7 +452,8 @@ fn doc_guest_depths_follow_deepest_shared_occurrence() -> Result<(), String> {
                 _ => limits.depth = 2,
             }
             let mut b = Budget::new(limits);
-            assert_eq!(guest_depths(&shape, &mut b), Err(reason));
+            assert!(matches!(shape.foreign_depths(&mut b),
+                Err(nepl3_sentence_core::check::Error::Stopped(actual)) if actual == reason));
             assert_eq!(b.poll(), Err(reason));
         }
     }
@@ -467,27 +461,27 @@ fn doc_guest_depths_follow_deepest_shared_occurrence() -> Result<(), String> {
 }
 
 #[test]
-fn selected_math_doc_printers_compose_without_evaluation() -> Result<(), String> {
+fn selected_math_sentence_printers_compose_without_evaluation() -> Result<(), String> {
     let compiled = compiled()?;
     let registry = &compiled.doc.registry;
     let empty = SourceStore::default();
     for (source, expected) in [
         (
-            "label x Doc sentence cons math Math add 1 2 nil",
-            "label symbol \"x\" Doc sentence cons math Math add 1 2 nil",
+            "label x Sentence sentence cons math add 1 2 nil",
+            "label symbol \"x\" Sentence sentence cons math add 1 2 nil",
         ),
         (
-            "label x Doc sentence cons math Math label frac 1 0 Doc \"[漢字/かんじ]\" nil",
-            "label symbol \"x\" Doc sentence cons math Math label frac 1 0 Doc sentence cons ruby text \"漢字\" text \"かんじ\" nil nil",
+            "label x Sentence sentence cons math label frac 1 0 Sentence \"[漢字/かんじ]\" nil",
+            "label symbol \"x\" Sentence sentence cons math label frac 1 0 Sentence sentence cons ruby text \"漢字\" text \"かんじ\" nil nil",
         ),
     ] {
         let value = lower_value(&compiled, source, "Expr")?;
         let shape = value.validate_shape(&mut budget()).map_err(err)?;
         let mut admission = SourceAdmission::default();
         let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
-        let mut host = nepl3_tools::doc::printing::DocGuestPrinter {
+        let mut host = nepl3_tools::doc::printing::SentenceGuestPrinter {
             registry,
-            surface: &compiled.doc.package.schema,
+            surface: &compiled.others[3].schema,
             math_surface: Some(&compiled.others[0].schema),
             codec: &mut codec,
         };
@@ -501,22 +495,26 @@ fn selected_math_doc_printers_compose_without_evaluation() -> Result<(), String>
         let used = full.usage();
         let mut wrong_surface = compiled.others[0].schema.clone();
         wrong_surface.digest.0[0] ^= 1;
-        let mut wrong_host = nepl3_tools::doc::printing::DocGuestPrinter {
+        let mut wrong_host = nepl3_tools::doc::printing::SentenceGuestPrinter {
             registry,
-            surface: &compiled.doc.package.schema,
+            surface: &compiled.others[3].schema,
             math_surface: Some(&wrong_surface),
             codec: &mut codec,
         };
         assert!(matches!(
             print::prefix(&shape, &mut wrong_host, &mut budget()),
             Err(print::PrintError::Guest {
-                error: nepl3_tools::doc::printing::Error::Selection,
+                error: nepl3_tools::doc::printing::Error::Lower(
+                    nepl3_sentence_core::lower::presentation::Error::Prefix(
+                        nepl3_sentence_core::lower::Error::Operand { field: 0, .. }
+                    )
+                ),
                 ..
             })
         ));
-        let mut host = nepl3_tools::doc::printing::DocGuestPrinter {
+        let mut host = nepl3_tools::doc::printing::SentenceGuestPrinter {
             registry,
-            surface: &compiled.doc.package.schema,
+            surface: &compiled.others[3].schema,
             math_surface: Some(&compiled.others[0].schema),
             codec: &mut codec,
         };
@@ -547,9 +545,9 @@ fn selected_math_doc_printers_compose_without_evaluation() -> Result<(), String>
             }
             let mut admission = SourceAdmission::default();
             let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
-            let mut host = nepl3_tools::doc::printing::DocGuestPrinter {
+            let mut host = nepl3_tools::doc::printing::SentenceGuestPrinter {
                 registry,
-                surface: &compiled.doc.package.schema,
+                surface: &compiled.others[3].schema,
                 math_surface: Some(&compiled.others[0].schema),
                 codec: &mut codec,
             };
@@ -564,28 +562,28 @@ fn selected_math_doc_printers_compose_without_evaluation() -> Result<(), String>
 }
 
 #[test]
-fn production_doc_guest_printer_preserves_annotation_semantics() -> Result<(), String> {
+fn production_sentence_guest_printer_preserves_annotation_semantics() -> Result<(), String> {
     use nepl3_math_core::print::GuestPrinter;
     let compiled = compiled()?;
     let registry = &compiled.doc.registry;
     let empty = SourceStore::default();
     for source in [
-        "label x Doc \"[漢字/かんじ]{語/word}\"",
-        "label frac 1 0 Doc sentence cons ruby text \"漢字\" text \"かんじ\" cons break cons anno text \"語\" cons text \"word\" nil nil",
-        "label x Doc sentence cons strong text \"a\\n b\" cons code \"x < y\" nil",
+        "label x Sentence \"[漢字/かんじ]{語/word}\"",
+        "label frac 1 0 Sentence sentence cons ruby text \"漢字\" text \"かんじ\" cons break cons anno text \"語\" cons text \"word\" nil nil",
+        "label x Sentence sentence cons strong text \"a\\n b\" cons code \"x < y\" nil",
     ] {
         let mut admission = SourceAdmission::default();
         let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
         let value = lower_value(&compiled, source, "Expr")?;
         let shape = value.validate_shape(&mut budget()).map_err(err)?;
-        let mut host = nepl3_tools::doc::printing::DocGuestPrinter {
+        let mut host = nepl3_tools::doc::printing::SentenceGuestPrinter {
             registry,
-            surface: &compiled.doc.package.schema,
+            surface: &compiled.others[3].schema,
             math_surface: None,
             codec: &mut codec,
         };
         let printed = print::prefix(&shape, &mut host, &mut budget()).map_err(err)?;
-        assert!(printed.text.contains("Doc sentence"));
+        assert!(printed.text.contains("Sentence sentence"));
         let actual = lower_value(&compiled, &printed.text, "Expr")?;
         assert_eq!(notation(&value), notation(&actual));
         let mut documents = Vec::new();
@@ -599,31 +597,27 @@ fn production_doc_guest_printer_preserves_annotation_semantics() -> Result<(), S
                 .bundle
                 .validate_with_sources(registry, &mut budget(), &mut SourceAdmission::default())
                 .map_err(err)?;
-            let doc = nepl3_doc_core::lower::document(
+            let doc = nepl3_sentence_core::lower::presentation::sentence_with_foreign(
                 &checked,
-                &compiled.doc.package.schema,
-                nepl3_doc_core::check::Category::Sentence,
+                &compiled.others[3].schema,
+                &[],
                 registry,
-                &mut budget(),
                 &mut codec,
+                &mut budget(),
             )
             .map_err(err)?;
             documents.push(doc);
         }
         assert_eq!(documents[0].value.root, documents[1].value.root);
-        let kinds = |doc: &nepl3_doc_core::model::DocumentSyntax| {
-            doc.value
-                .nodes
-                .iter()
-                .map(|n| n.kind.clone())
-                .collect::<Vec<_>>()
-        };
-        assert_eq!(kinds(&documents[0]), kinds(&documents[1]), "{source}");
+        assert_eq!(
+            documents[0].value.nodes, documents[1].value.nodes,
+            "{source}"
+        );
         let mut wrong = value.embeds[0].clone();
         wrong.syntax.category = "Body".into();
-        let mut host = nepl3_tools::doc::printing::DocGuestPrinter {
+        let mut host = nepl3_tools::doc::printing::SentenceGuestPrinter {
             registry,
-            surface: &compiled.doc.package.schema,
+            surface: &compiled.others[3].schema,
             math_surface: None,
             codec: &mut codec,
         };
@@ -642,21 +636,23 @@ fn production_doc_guest_printer_preserves_annotation_semantics() -> Result<(), S
     }
     let nested = lower_value(
         &compiled,
-        "label x Doc sentence cons math Math add 1 2 nil",
+        "label x Sentence sentence cons math add 1 2 nil",
         "Expr",
     )?;
     let mut admission = SourceAdmission::default();
     let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
-    let mut host = nepl3_tools::doc::printing::DocGuestPrinter {
+    let mut host = nepl3_tools::doc::printing::SentenceGuestPrinter {
         registry,
-        surface: &compiled.doc.package.schema,
+        surface: &compiled.others[3].schema,
         math_surface: None,
         codec: &mut codec,
     };
     assert!(matches!(
         host.print(&nested.embeds[0], &mut budget()),
-        Err(nepl3_tools::doc::printing::Error::Print(
-            nepl3_doc_core::print::PrintFailure::MissingBinding { .. }
+        Err(nepl3_tools::doc::printing::Error::Lower(
+            nepl3_sentence_core::lower::presentation::Error::Prefix(
+                nepl3_sentence_core::lower::Error::Unsupported(_)
+            )
         ))
     ));
     Ok(())
@@ -674,11 +670,11 @@ fn prefix_print_reparses_every_math_constructor_without_evaluation() -> Result<(
         let entry = case["entry"].as_str().ok_or("entry")?;
         let value = lower_value(&compiled, source, entry)?;
         let shape = value.validate_shape(&mut budget()).map_err(err)?;
-        // Explicit test host supplies the fixture's known Doc Sentence. This is
+        // Explicit test host supplies the fixture's known Sentence Sentence. This is
         // not a production fallback that trusts retained source spans.
         let mut guest = FixtureGuest {
             expected: value.embeds.first(),
-            text: if entry == "DocGuest" {
+            text: if entry == "SentenceGuest" {
                 "\"[x/ex]\""
             } else {
                 "\"note\""
@@ -692,7 +688,7 @@ fn prefix_print_reparses_every_math_constructor_without_evaluation() -> Result<(
             match entry {
                 "Expr" => Category::Expr,
                 "Row" => Category::Row,
-                _ => Category::DocGuest,
+                _ => Category::SentenceGuest,
             }
         );
         let reparsed = lower_value(&compiled, &printed.text, entry)
@@ -823,7 +819,7 @@ fn prefix_print_preserves_limits_and_rejects_unprintable_host_inputs() -> Result
         print::prefix(&shape, &mut guest, &mut budget()),
         Err(print::PrintError::UnprintableName { .. })
     ));
-    let doc = lower_value(&compiled, "Doc \"note\"", "DocGuest")?;
+    let doc = lower_value(&compiled, "Sentence \"note\"", "SentenceGuest")?;
     let shape = doc.validate_shape(&mut budget()).map_err(err)?;
     struct DepthGuest {
         seen: u64,
