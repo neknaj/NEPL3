@@ -62,6 +62,173 @@ fn with_program(
 }
 
 #[test]
+fn received_plan_uses_typed_execution_and_admitted_source_mapping() -> Result<(), String> {
+    with_program(
+        "add framed frame neg 7 2",
+        |program, sources, runtime, registry| {
+            let schema = &runtime.operations[0].schema;
+            let encoded = transfer::encode(program, schema, &mut budget()).map_err(error)?;
+            let TypedValue::Record(record) = encoded else {
+                return Err("plan record".into());
+            };
+            let bytes =
+                nepl3_wire::encode(&NdfValue::Record(record), &mut budget()).map_err(error)?;
+            let NdfValue::Record(ref record) =
+                nepl3_wire::decode(&bytes, &mut budget()).map_err(error)?
+            else {
+                return Err("received plan record".into());
+            };
+            let received = TypedValue::Record(record.clone());
+            let foundation = nepl3_core::schema::foundation::descriptor(&mut budget())
+                .map_err(error)?
+                .reference(&mut budget())
+                .map_err(error)?;
+            // Transport each host-admitted Span through the existing Foundation
+            // codec. The receiving source store remains an explicit permission.
+            let mut heads = Vec::new();
+            for node in program.nodes() {
+                let head = if let Some(span) = node.head {
+                    let bytes =
+                        nepl3_wire::source::encode_span(span, &foundation, registry, &mut budget())
+                            .map_err(error)?;
+                    assert!(
+                        nepl3_wire::source::decode_span(
+                            &bytes,
+                            &foundation,
+                            registry,
+                            &SourceStore::default(),
+                            &mut budget(),
+                        )
+                        .is_err()
+                    );
+                    Some(
+                        nepl3_wire::source::decode_span(
+                            &bytes,
+                            &foundation,
+                            registry,
+                            sources,
+                            &mut budget(),
+                        )
+                        .map_err(error)?,
+                    )
+                } else {
+                    None
+                };
+                heads.push(head);
+            }
+            let checked =
+                || transfer::validate(&received, schema, registry, &mut budget()).map_err(error);
+            assert!(matches!(
+                checked()?.program(&[], sources, &mut budget()),
+                Err(transfer::Error::Reference)
+            ));
+            assert!(matches!(
+                checked()?.program(&heads, &SourceStore::default(), &mut budget()),
+                Err(transfer::Error::Source(SourceError::MissingSnapshot))
+            ));
+            let mut limits = budget().limits();
+            limits.allocation_units = 0;
+            assert!(matches!(
+                checked()?.program(&heads, sources, &mut Budget::new(limits)),
+                Err(transfer::Error::Stopped(StopReason::AllocationLimit))
+            ));
+            let admitted = checked()?
+                .program(&heads, sources, &mut budget())
+                .map_err(error)?;
+            assert_eq!(admitted.nodes().len(), program.nodes().len());
+            for (received, original) in admitted.nodes().iter().zip(program.nodes()) {
+                assert_eq!(received.language, original.language);
+                assert_eq!(received.head, original.head);
+            }
+            let result = runtime
+                .run(
+                    &admitted,
+                    sources,
+                    registry,
+                    &mut budget(),
+                    &mut budget(),
+                    |_, _| {},
+                    |_| {},
+                )
+                .map_err(error)?;
+            let OperationResult::Complete {
+                value: TypedValue::Record(value),
+                ..
+            } = result
+            else {
+                return Err("received plan evaluation".into());
+            };
+            assert_eq!(value.fields, vec![NdfValue::Integer(Integer::from(-5_i64))]);
+            let packet =
+                transfer::envelope::encode(program, schema, &foundation, registry, &mut budget())
+                    .map_err(error)?;
+            assert!(
+                transfer::envelope::decode(
+                    &packet,
+                    schema,
+                    &foundation,
+                    registry,
+                    &SourceStore::default(),
+                    &mut budget()
+                )
+                .is_err()
+            );
+            let received = transfer::envelope::decode(
+                &packet,
+                schema,
+                &foundation,
+                registry,
+                sources,
+                &mut budget(),
+            )
+            .map_err(error)?;
+            let remote = received.program(sources, &mut budget()).map_err(error)?;
+            let result = runtime
+                .run(
+                    &remote,
+                    sources,
+                    registry,
+                    &mut budget(),
+                    &mut budget(),
+                    |_, _| {},
+                    |_| {},
+                )
+                .map_err(error)?;
+            let OperationResult::Complete {
+                value: TypedValue::Record(value),
+                ..
+            } = result
+            else {
+                return Err("envelope evaluation".into());
+            };
+            assert_eq!(value.fields, vec![NdfValue::Integer(Integer::from(-5_i64))]);
+            for (node, original) in remote.nodes().iter().zip(program.nodes()) {
+                assert_eq!(node.head, original.head);
+            }
+            let mut malformed = nepl3_wire::decode(&packet, &mut budget()).map_err(error)?;
+            if let NdfValue::Record(record) = &mut malformed
+                && let [_, NdfValue::List(heads)] = record.fields.as_mut_slice()
+            {
+                heads.pop();
+            }
+            let malformed = nepl3_wire::encode(&malformed, &mut budget()).map_err(error)?;
+            assert!(matches!(
+                transfer::envelope::decode(
+                    &malformed,
+                    schema,
+                    &foundation,
+                    registry,
+                    sources,
+                    &mut budget()
+                ),
+                Err(transfer::Error::Reference)
+            ));
+            Ok(())
+        },
+    )
+}
+
+#[test]
 fn source_admission_rejects_missing_and_changed_snapshots_before_execution() -> Result<(), String> {
     with_program(
         "add framed frame neg 7 2",

@@ -1,12 +1,15 @@
 //! Flat, schema-checked transport of a dependency plan to native callbacks.
 //! The host retains source spans in Program; node indices identify occurrences.
-use super::{Instruction, Program};
+pub mod envelope;
+use super::{Instruction, Node, Program, ValueId};
+use crate::syntax::Language;
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::{
         FieldDescriptor, NamedType, OperationDescriptor, SchemaDescriptor, SchemaError,
         SchemaRegistry, TypeDescriptor, TypeRef, TypeShape, VariantDescriptor,
     },
+    source::{SourceError, SourceStore, Span},
     value::{NdfValue, Record, SchemaRef, TypedValue, Variant},
 };
 
@@ -18,6 +21,8 @@ pub enum Error {
     Schema(SchemaError),
     Shape,
     Reference,
+    Source(SourceError),
+    Wire(nepl3_wire::WireError),
 }
 impl From<StopReason> for Error {
     fn from(reason: StopReason) -> Self {
@@ -60,6 +65,21 @@ pub fn descriptor(budget: &mut Budget) -> Result<SchemaDescriptor, StopReason> {
         package: PACKAGE.into(),
         revision: 1,
         types: vec![
+            NamedType {
+                name: "Envelope".into(),
+                constraints: vec![],
+                shape: TypeShape::Record {
+                    fields: vec![
+                        field("plan", named("Plan")),
+                        field(
+                            "heads",
+                            TypeDescriptor::List(Box::new(TypeDescriptor::Option(Box::new(
+                                TypeDescriptor::Bytes,
+                            )))),
+                        ),
+                    ],
+                },
+            },
             NamedType {
                 name: "PlanIdentity".into(),
                 constraints: vec![],
@@ -179,6 +199,80 @@ impl<'a> Checked<'a> {
     pub fn nodes(&self) -> &'a [NdfValue] {
         self.nodes
     }
+
+    /// Build the native typed view of received, validated plan data. The host
+    /// supplies one provenance entry per occurrence from its admitted source
+    /// mapping. This checks snapshot identity and bounds; it does not infer a
+    /// semantic correspondence between an instruction and arbitrary source text.
+    /// Numeric payloads and spans remain borrowed for the returned plan's life.
+    pub fn program(
+        self,
+        heads: &'a [Option<Span>],
+        sources: &SourceStore,
+        budget: &mut Budget,
+    ) -> Result<Program<'a>, Error> {
+        budget.poll()?;
+        if heads.len() != self.nodes.len() {
+            return Err(Error::Reference);
+        }
+        let bytes = self
+            .nodes
+            .len()
+            .checked_mul(core::mem::size_of::<Node<'a>>())
+            .ok_or_else(|| budget.stop(StopReason::AllocationLimit))?;
+        budget.charge(Resource::AllocationUnits, bytes as u64)?;
+        budget.charge(Resource::Nodes, self.nodes.len() as u64)?;
+        let mut nodes = Vec::new();
+        nodes
+            .try_reserve_exact(self.nodes.len())
+            .map_err(|_| budget.stop(StopReason::AllocationLimit))?;
+        let id = |value: u64| {
+            usize::try_from(value)
+                .map(ValueId)
+                .map_err(|_| Error::Reference)
+        };
+        for (value, head) in self.nodes.iter().zip(heads) {
+            budget.charge(Resource::Work, 1)?;
+            if let Some(span) = head {
+                let identity = span.snapshot_ref();
+                let source = sources
+                    .get_revision_with_budget(&identity.source, identity.revision, budget)?
+                    .ok_or(Error::Source(SourceError::MissingSnapshot))?;
+                source.slice(span).map_err(Error::Source)?;
+            }
+            let NdfValue::Variant(node) = value else {
+                return Err(Error::Shape);
+            };
+            let instruction = match (node.variant.as_str(), node.fields.as_slice()) {
+                ("Natural", [NdfValue::Integer(value)]) => Instruction::Natural(value),
+                ("Neg", [NdfValue::U64(child)]) => Instruction::Neg(id(*child)?),
+                ("Add", [NdfValue::U64(left), NdfValue::U64(right)]) => {
+                    Instruction::Add(id(*left)?, id(*right)?)
+                }
+                ("Mul", [NdfValue::U64(left), NdfValue::U64(right)]) => {
+                    Instruction::Mul(id(*left)?, id(*right)?)
+                }
+                ("Framed", [NdfValue::U64(child)]) => Instruction::Framed(id(*child)?),
+                ("Frame", [NdfValue::U64(child)]) => Instruction::Frame(id(*child)?),
+                _ => return Err(Error::Shape),
+            };
+            let language = if matches!(instruction, Instruction::Frame(_)) {
+                Language::Frame
+            } else {
+                Language::MiniExpr
+            };
+            nodes.push(Node {
+                instruction,
+                language,
+                head: head.as_ref(),
+            });
+        }
+        let root = nodes.len().checked_sub(1).ok_or(Error::Shape)?;
+        Ok(Program {
+            nodes,
+            root: ValueId(root),
+        })
+    }
 }
 
 pub fn validate<'a>(
@@ -202,6 +296,10 @@ pub fn validate<'a>(
     registry
         .validate_typed(value, budget)
         .map_err(Error::Schema)?;
+    validate_record(record, budget)
+}
+
+fn validate_record<'a>(record: &'a Record, budget: &mut Budget) -> Result<Checked<'a>, Error> {
     let [NdfValue::List(nodes)] = record.fields.as_slice() else {
         return Err(Error::Shape);
     };
