@@ -1,6 +1,7 @@
 """Typed projections of Cargo metadata and lock records used by extraction."""
 
 from dataclasses import dataclass
+from collections.abc import Mapping
 from pathlib import Path
 
 from tools.serialization import json, toml
@@ -58,3 +59,47 @@ def toolchain(source: str) -> str:
 
 def package_name(source: str) -> str:
     return toml.string(toml.table(toml.decode(source)["package"])["name"])
+
+
+@dataclass(frozen=True, slots=True)
+class Package:
+    identity: str
+    name: str
+    manifest: Path
+
+
+@dataclass(frozen=True, slots=True)
+class ConsumerMetadata:
+    packages: tuple[Package, ...]
+    members: tuple[str, ...]
+    workspace: Path
+    root: str | None
+
+
+def consumer_metadata(source: bytes) -> ConsumerMetadata:
+    value = json.object_value(json.decode(source))
+    packages: list[Package] = []
+    for item in json.array(value["packages"]):
+        package = json.object_value(item)
+        packages.append(Package(json.string(package["id"]), json.string(package["name"]),
+                                Path(json.string(package["manifest_path"]))))
+    root = json.object_value(value["resolve"])["root"]
+    return ConsumerMetadata(tuple(packages), tuple(json.string(item) for item in json.array(value["workspace_members"])),
+                            Path(json.string(value["workspace_root"])), None if root is None else json.string(root))
+
+
+def check_consumer(metadata: ConsumerMetadata, directory: Path, packages: Mapping[str, Path]) -> None:
+    consumers = [package for package in metadata.packages if package.name == "external-hello-language"]
+    if len(consumers) != 1:
+        raise RuntimeError("expected exactly one external consumer")
+    consumer = consumers[0]
+    if (metadata.members != (consumer.identity,) or metadata.root != consumer.identity
+            or metadata.workspace.resolve() != directory
+            or consumer.manifest.resolve() != directory / "Cargo.toml"):
+        raise RuntimeError("consumer shares a workspace with foundation")
+    foundation = [package for package in metadata.packages if package.name.startswith("nepl3-")]
+    if len(foundation) != len(packages):
+        raise RuntimeError("unexpected or duplicate foundation packages")
+    actual = {package.name: package.manifest.parent.resolve() for package in foundation}
+    if actual != {name: path.resolve() for name, path in packages.items()}:
+        raise RuntimeError("unexpected domain, app, tools, or substituted foundation dependency")
