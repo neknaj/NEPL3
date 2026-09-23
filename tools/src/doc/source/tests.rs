@@ -991,7 +991,7 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
         sentence.schema,
         default.others.last().ok_or("default Sentence")?.schema
     );
-    let source = r#"article en "Title" body cons display Math label x Sentence sentence cons document anchor target ruby text "字" text "じ" nil nil"#;
+    let source = r#"article en sentence "Title" body cons display Math label x Sentence sentence cons document anchor target ruby text "字" text "じ" nil nil"#;
     for native in [false, true] {
         assert!(
             with_input_route(native, &default, source, "Article", |_, _, _, _| Ok(())).is_err()
@@ -1046,8 +1046,8 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                         doc_surface: Some(&compiled.doc.package.schema),
                         codec: &mut codec,
                     };
-                    // Doc owns the anchor and Ruby label; Sentence owns only
-                    // the explicitly selected one-field foreign form.
+                    // Doc owns the anchor; its Ruby label is selected Sentence
+                    // Inline syntax, with independent source provenance.
                     assert_eq!(
                         printer.print(guest, b).map_err(err)?,
                         "sentence cons document anchor target ruby text \"字\" text \"じ\" nil"
@@ -1127,15 +1127,28 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                     return Err("anchor kind required".into());
                 };
                 assert_eq!(id, "target");
-                let DocKind::Ruby { base, reading } = &inline.value.nodes[label.0 as usize].kind
+                let label_value = nepl3_suite::adapters::document::sentence::lower(
+                    &inline.value.embeds[label.0 as usize],
+                    &sentence.schema,
+                    &[],
+                    registry,
+                    &mut codec,
+                    b,
+                )
+                .map_err(err)?;
+                let nepl3_sentence_core::model::Root::Inline(label_root) = label_value.value.root
+                else {
+                    return Err("Sentence Inline label required".into());
+                };
+                let Kind::Ruby { base, reading } = &label_value.value.nodes[label_root.0 as usize]
                 else {
                     return Err("anchor Ruby label required".into());
                 };
                 assert!(
-                    matches!(&inline.value.nodes[base.0 as usize].kind, DocKind::Text { text } if text == "字")
+                    matches!(&label_value.value.nodes[base.0 as usize], Kind::Text { text } if text == "字")
                 );
                 assert!(
-                    matches!(&inline.value.nodes[reading.0 as usize].kind, DocKind::Text { text } if text == "じ")
+                    matches!(&label_value.value.nodes[reading.0 as usize], Kind::Text { text } if text == "じ")
                 );
                 // The namespace operand is owned by Doc and retains the original
                 // byte selection through Doc -> Math -> Sentence -> Doc re-entry.
@@ -1150,22 +1163,43 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                 assert_eq!(span.end(), start + 6);
                 assert_eq!(span.snapshot_ref().source, SourceId("doc-input".into()));
                 assert_eq!(span.snapshot_ref().digest, Digest::of(source.as_bytes()));
-                let options = nepl3_doc_html::RenderOptions {
-                    parallel: nepl3_doc_html::ParallelMode::Rows,
+                let mut sentence_host = crate::doc::annotations::SentenceAnnotationRenderer {
+                    registry,
+                    surface: &sentence.schema,
+                    math_surface: None,
+                    doc_surface: Some(&compiled.doc.package.schema),
+                    codec: &mut codec,
                 };
-                let prepared = nepl3_doc_html::prepare_local_inline(
-                    &inline, &options, registry, &mut codec, b,
-                )
-                .map_err(err)?;
-                let rendered = nepl3_doc_html::render_inline(&prepared, b).map_err(err)?;
+                let rendered = sentence_host
+                    .render_syntax(sentence_value, b)
+                    .map_err(err)?;
                 assert_eq!(rendered.markup.slot, nepl3_markup::html::HtmlSlot::Phrasing);
+                let [crate::doc::annotations::ForeignRecord::Document(direct)] =
+                    rendered.foreign.as_slice()
+                else {
+                    return Err("one directly rendered Doc owner".into());
+                };
+                let [direct_label] = direct.foreign.as_slice() else {
+                    return Err("one directly rendered Sentence label".into());
+                };
+                let crate::doc::annotations::DocumentOutput::Sentence(direct_label) =
+                    &direct_label.output
+                else {
+                    return Err("Sentence label output".into());
+                };
+                assert_eq!(direct_label.syntax, label_value);
                 for (owner, expected) in [(base.0, "字"), (reading.0, "じ")] {
-                    assert!(rendered.origins.iter().any(|origin| origin.node == owner
-                        && matches!(
+                    assert!(
+                        direct_label
+                            .origins
+                            .iter()
+                            .any(|origin| origin.node == owner
+                                && matches!(
                             &rendered.markup.fragment.nodes[origin.element as usize],
-                            nepl3_markup::html::HtmlNode::Text { text } if text == expected)));
+                            nepl3_markup::html::HtmlNode::Text { text } if text == expected))
+                    );
                 }
-                assert!(rendered.origins.iter().any(|origin| origin.node == root.0 && matches!(
+                assert!(direct.origins.iter().any(|origin| origin.node == root.0 && matches!(
                     &rendered.markup.fragment.nodes[origin.element as usize],
                     nepl3_markup::html::HtmlNode::Element { attributes, .. }
                     if attributes.iter().any(|attribute| matches!(attribute,
@@ -1196,11 +1230,20 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                     return Err("one Doc Inline record expected".into());
                 };
                 assert_eq!(*record.document, inline);
-                assert_eq!(record.document_digest, rendered.document_digest);
+                assert_eq!(record.document_digest, direct.document_digest);
+                let [composed_label] = record.foreign.as_slice() else {
+                    return Err("one composed Sentence label".into());
+                };
+                let crate::doc::annotations::DocumentOutput::Sentence(composed_label) =
+                    &composed_label.output
+                else {
+                    return Err("composed Sentence label output".into());
+                };
+                assert_eq!(composed_label.syntax, label_value);
                 for text in ["字", "じ"] {
-                    assert!(record.origins.iter().any(
-                        |origin| matches!(&record.document.value.nodes[origin.node as usize].kind,
-                            DocKind::Text { text: value } if value == text)
+                    assert!(composed_label.origins.iter().any(
+                        |origin| matches!(&composed_label.syntax.value.nodes[origin.node as usize],
+                            Kind::Text { text: value } if value == text)
                             && matches!(&composed.markup.fragment.nodes[origin.element as usize],
                             nepl3_markup::html::HtmlNode::Text { text: value } if value == text)
                     ));
