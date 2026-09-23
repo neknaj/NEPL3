@@ -414,6 +414,136 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
         );
     }
     assert_eq!(shared, original);
+    // References across two Sentence occurrences are resolved by the complete
+    // document. Pending parts retain their input owner and element mapping.
+    for duplicate in [false, true] {
+        let mut complete = HtmlFragment {
+            root: 0,
+            nodes: vec![HtmlNode::Element {
+                tag: HtmlTag::Div,
+                attributes: vec![],
+                children: vec![],
+            }],
+        };
+        let mut policy = HtmlPolicy { classes: vec![] };
+        for definition in [false, true] {
+            let mut adapter = |_: &ForeignClosure, _, _: &mut Budget| {
+                let anchor = definition || duplicate;
+                Ok::<_, Error>(HtmlRequest {
+                    fragment: HtmlFragment {
+                        root: 0,
+                        nodes: vec![HtmlNode::Element {
+                            tag: if anchor { HtmlTag::Span } else { HtmlTag::A },
+                            attributes: vec![if anchor {
+                                HtmlAttribute::Id {
+                                    value: "across-sentences".into(),
+                                }
+                            } else {
+                                HtmlAttribute::Href {
+                                    value: HtmlHref::Fragment {
+                                        id: "across-sentences".into(),
+                                    },
+                                }
+                            }],
+                            children: vec![],
+                        }],
+                    },
+                    slot: HtmlSlot::Phrasing,
+                    policy: HtmlPolicy { classes: vec![] },
+                })
+            };
+            let mut measured = b();
+            let pending = html::render_part_with_foreign(
+                &input,
+                &r,
+                &mut adapter,
+                &mut measured,
+                &mut SourceAdmission::default(),
+            )
+            .map_err(err)?;
+            if !definition && !duplicate {
+                let usage = measured.usage();
+                for (used, reason) in [
+                    (usage.work, StopReason::WorkLimit),
+                    (usage.allocation_units, StopReason::AllocationLimit),
+                    (usage.nodes, StopReason::NodeLimit),
+                    (usage.depth, StopReason::DepthLimit),
+                ] {
+                    assert!(used > 0);
+                    for exact in [false, true] {
+                        let mut limits = b().limits();
+                        let value = used - u64::from(!exact);
+                        match reason {
+                            StopReason::WorkLimit => limits.work = value,
+                            StopReason::AllocationLimit => limits.allocation_units = value,
+                            StopReason::NodeLimit => limits.nodes = value,
+                            StopReason::DepthLimit => limits.depth = value,
+                            _ => return Err("pending resource".into()),
+                        }
+                        let mut bounded = Budget::new(limits);
+                        let result = html::render_part_with_foreign(
+                            &input,
+                            &r,
+                            &mut adapter,
+                            &mut bounded,
+                            &mut SourceAdmission::default(),
+                        );
+                        if exact {
+                            result.map_err(err)?;
+                        } else {
+                            assert!(
+                                matches!(result, Err(html::RenderFailure::Sentence(Error::Stopped(actual))) if actual == reason)
+                            );
+                        }
+                        assert_eq!(bounded.current_depth(), 0);
+                    }
+                }
+            }
+            assert!(core::ptr::eq(pending.input(), &input));
+            let (owner, mut part, origins, placements) = pending.into_parts();
+            assert!(core::ptr::eq(owner, &input));
+            assert_eq!(placements.len(), 1);
+            assert!(origins.iter().any(|origin| origin.element == placements[0].first_element && origin.node == 0));
+            if !definition && !duplicate {
+                assert!(matches!(
+                    validate(&part.fragment, part.slot, &part.policy, &mut b()),
+                    Err(HtmlError::MissingFragment(_))
+                ));
+            }
+            let offset = complete.nodes.len() as u64;
+            let root = offset + part.fragment.root;
+            for node in &mut part.fragment.nodes {
+                if let HtmlNode::Element { children, .. } | HtmlNode::MathElement { children, .. } =
+                    node
+                {
+                    for child in children {
+                        *child += offset;
+                    }
+                }
+            }
+            let HtmlNode::Element { children, .. } = &mut complete.nodes[0] else {
+                return Err("document root".into());
+            };
+            children.push(root);
+            complete.nodes.extend(part.fragment.nodes);
+            for class in part.policy.classes {
+                if !policy.classes.contains(&class) {
+                    policy.classes.push(class);
+                }
+            }
+        }
+        let checked = validate(&complete, HtmlSlot::Block, &policy, &mut b());
+        if duplicate {
+            assert!(matches!(checked, Err(HtmlError::DuplicateId(_))));
+        } else {
+            let checked = checked.map_err(err)?;
+            let output = serialize_xhtml(&checked, &mut b()).map_err(err)?;
+            assert!(
+                output.contains("href=\"#across-sentences\"")
+                    && output.contains("id=\"across-sentences\"")
+            );
+        }
+    }
     // A forward reference belongs to the composed Sentence namespace, while
     // each guest must already satisfy the structural phrasing contract.
     for duplicate in [false, true] {

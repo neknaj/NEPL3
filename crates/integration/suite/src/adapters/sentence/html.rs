@@ -87,6 +87,33 @@ pub struct RenderedSentence<'a> {
     origins: Vec<ElementOrigin>,
     foreign: Vec<ForeignPlacement>,
 }
+/// Phrasing structure checked for insertion into a larger document namespace.
+/// Fragment targets and duplicate IDs remain pending. The composing host must
+/// validate the complete output before serialization, preserving all origins.
+/// ```compile_fail
+/// use nepl3_core::budget::Budget;
+/// use nepl3_suite::adapters::sentence::html::PendingSentence;
+/// fn serialize(part: &PendingSentence<'_>, budget: &mut Budget) {
+///     nepl3_markup::html::serialize_xhtml(part, budget);
+/// }
+/// ```
+pub struct PendingSentence<'a>(RenderedSentence<'a>);
+impl<'a> PendingSentence<'a> {
+    pub fn input(&self) -> &'a SentenceSyntax {
+        self.0.input
+    }
+    /// Raw parts carry no complete-output validation proof.
+    pub fn into_parts(
+        self,
+    ) -> (
+        &'a SentenceSyntax,
+        HtmlRequest,
+        Vec<ElementOrigin>,
+        Vec<ForeignPlacement>,
+    ) {
+        self.0.into_parts()
+    }
+}
 impl<'a> RenderedSentence<'a> {
     pub fn input(&self) -> &'a SentenceSyntax {
         self.input
@@ -159,7 +186,8 @@ impl Builder<'_> {
             .saturating_add(self.depths[parent as usize]);
         self.b.with_depth_at_least::<_, Error>(depth, |b| {
             // References may target a later sibling guest. The complete
-            // Sentence is validated before RenderedSentence is returned.
+            // Standalone rendering validates the complete Sentence; pending
+            // rendering delegates namespace validation to the outer document.
             check_part(&markup.fragment, HtmlSlot::Phrasing, &markup.policy, b)?;
             Ok(())
         })?;
@@ -319,6 +347,51 @@ pub fn render_with_foreign<'a, E: From<StopReason>>(
     b: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> Result<RenderedSentence<'a>, RenderFailure<E>> {
+    let output = build_with_foreign(input, registry, adapter, b, admission)?;
+    validate(
+        &output.markup.fragment,
+        output.markup.slot,
+        &output.markup.policy,
+        b,
+    )
+    .map_err(Error::from)?;
+    Ok(output)
+}
+/// Render a Sentence occurrence for an explicitly composed document namespace.
+/// Every guest remains subject to phrasing and source validation. Only the
+/// complete document's ID/fragment resolution is deferred to its compositor.
+pub fn render_part_with_foreign<'a, E: From<StopReason>>(
+    input: &'a SentenceSyntax,
+    registry: &SchemaRegistry,
+    adapter: &mut impl FnMut(
+        &nepl3_core::syntax::ForeignClosure,
+        EmbedRef,
+        &mut Budget,
+    ) -> Result<HtmlRequest, E>,
+    b: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<PendingSentence<'a>, RenderFailure<E>> {
+    let output = build_with_foreign(input, registry, adapter, b, admission)?;
+    check_part(
+        &output.markup.fragment,
+        output.markup.slot,
+        &output.markup.policy,
+        b,
+    )
+    .map_err(Error::from)?;
+    Ok(PendingSentence(output))
+}
+fn build_with_foreign<'a, E: From<StopReason>>(
+    input: &'a SentenceSyntax,
+    registry: &SchemaRegistry,
+    adapter: &mut impl FnMut(
+        &nepl3_core::syntax::ForeignClosure,
+        EmbedRef,
+        &mut Budget,
+    ) -> Result<HtmlRequest, E>,
+    b: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<RenderedSentence<'a>, RenderFailure<E>> {
     input
         .validate(registry, b, admission)
         .map_err(Error::from)?;
@@ -444,7 +517,6 @@ pub fn render_with_foreign<'a, E: From<StopReason>>(
         slot: HtmlSlot::Phrasing,
         policy: HtmlPolicy { classes },
     };
-    validate(&markup.fragment, markup.slot, &markup.policy, builder.b).map_err(Error::from)?;
     Ok(RenderedSentence {
         input,
         markup,

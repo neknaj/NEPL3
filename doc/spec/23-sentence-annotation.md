@@ -340,6 +340,10 @@ Doc断片の選択とlowerは、suiteの`adapters::sentence::document_guests::co
 同じembedは最深の出現位置で一度解析し、表示順と共有を保持する。処理は`no_std + alloc`で成立し、I/O・HTML・原子的参照カウントを要求しない。
 他言語のguestは各adapterが担当し、名前解決と表示は後段で実行する。開発hostはこの結果を既存のnamespaceとHTML処理へ接続する。
 このnamespaceは一つのSentence表示に属する。外側のArticle全体とのnamespace共有、およびDocの旧Sentence所有の撤去はconsumer所有移行の残件である。
+複数のSentenceを一つの文書へ配置するrendererは、suiteの`html::render_part_with_foreign`で`PendingSentence`を取得できる。
+この値は局所syntax・guest closure・Phrasing構造の検査と要素の由来を保持し、HTML IDの重複とfragment参照の解決を合成後の文書検査へ委譲する。
+各Sentenceのsource所有者を保持して要素位置を再対応させ、完成したHTML全体を検証した後にserializeする。
+`PendingSentence`はserializerへ直接渡せない。単独表示の`render_with_foreign`は従来どおり文全体のIDと参照を検査する。
 
 ## 注釈と移行完了条件
 
