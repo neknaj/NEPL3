@@ -14,6 +14,53 @@ use nepl3_markup::html::*;
 pub struct PreparedNamespace<'a> {
     members: Vec<prepare::PreparedRendering<'a>>,
 }
+/// Structurally checked markup with namespace references still pending.
+/// A composing renderer must validate the final complete HTML. This value is
+/// not accepted by the HTML serializers and carries no complete-output proof.
+pub struct PendingPart {
+    member: MemberId,
+    fragment: crate::RenderedFragment,
+}
+impl PendingPart {
+    pub fn into_parts(self) -> (MemberId, Digest, HtmlRequest, Vec<crate::ElementOrigin>) {
+        (
+            self.member,
+            self.fragment.document_digest,
+            self.fragment.markup,
+            self.fragment.origins,
+        )
+    }
+}
+#[derive(Debug, Eq, PartialEq)]
+pub enum PartError {
+    Member(MemberId),
+    Render(RenderError),
+}
+/// Render one exact selected occurrence for insertion by a composing host.
+/// Its local identities remain pending until the destination completes the
+/// namespace; malformed markup is rejected before it crosses this boundary.
+pub fn render_part(
+    prepared: &PreparedNamespace<'_>,
+    member: MemberId,
+    budget: &mut Budget,
+) -> Result<PendingPart, PartError> {
+    budget
+        .poll()
+        .map_err(|reason| PartError::Render(RenderError::Stopped(reason)))?;
+    let input = usize::try_from(member.0)
+        .ok()
+        .and_then(|index| prepared.members.get(index))
+        .ok_or(PartError::Member(member))?;
+    let fragment = build::namespace_member(input, budget).map_err(PartError::Render)?;
+    check_part(
+        &fragment.markup.fragment,
+        fragment.markup.slot,
+        &fragment.markup.policy,
+        budget,
+    )
+    .map_err(|error| PartError::Render(error.into()))?;
+    Ok(PendingPart { member, fragment })
+}
 /// Prepare every selected member. Links, assets and foreign operations retain
 /// explicit resolution requirements; this entry handles the local Doc subset.
 pub fn prepare<'a, C: FoundationValueCodec>(

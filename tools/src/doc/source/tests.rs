@@ -128,6 +128,24 @@ fn composed_doc_namespace_keeps_fragment_source_identity() -> Result<(), String>
                     return Ok(());
                 }
                 let prepared = prepared.map_err(err)?;
+                let part = nepl3_doc_html::namespace::render_part(&prepared, MemberId(0), b)
+                    .map_err(err)?;
+                let (member, _, pending, origins) = part.into_parts();
+                assert_eq!(member, MemberId(0));
+                assert!(!origins.is_empty());
+                assert!(matches!(
+                    nepl3_markup::html::validate(
+                        &pending.fragment,
+                        pending.slot,
+                        &pending.policy,
+                        b
+                    ),
+                    Err(nepl3_markup::html::HtmlError::MissingFragment(_))
+                ));
+                assert!(matches!(
+                    nepl3_doc_html::namespace::render_part(&prepared, MemberId(2), b),
+                    Err(nepl3_doc_html::namespace::PartError::Member(MemberId(2)))
+                ));
                 let mut measured = budget();
                 let rendered =
                     nepl3_doc_html::namespace::render(&prepared, &mut measured).map_err(err)?;

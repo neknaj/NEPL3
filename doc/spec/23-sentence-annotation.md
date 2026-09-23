@@ -316,9 +316,13 @@ guestのHTMLもDoc出力の深さ上限256と、呼出元の累積Budgetに従�
 同じ定義を持つmemberの複数出現とmember間の名前重複を拒否する。未選択の断片やforeign closure内部の定義は自動導入しない。
 名前索引は宣言順のidentityを保持し、比較・確保を共通Budgetへ計上する。名前解決のproofは選択した不変のmember列へ束縛する。
 Doc HTMLの`namespace::prepare`はこのproofから全memberを取得し、共通codec・registry・source admissionで再検査する。
-`namespace::render`はmember順にHTMLを合成し、全体のID・参照・構造と深さ上限を検査してから出力する。中間の未検証HTMLは公開しない。
+`namespace::render`はmember順にHTMLを合成し、全体のID・参照・構造と深さ上限を検査してから出力する。
 出力はmemberごとの文書digestとDoc node・HTML要素の対応を保持する。合成用wrapperへ架空のDoc ownerを割り当てない。
 表示言語の選択によって参照先が出力されない場合は最終検査で拒否する。この入口ではlink・asset・foreign操作の未解決要求を返す。
+hostがSentence内の位置へ挿入する場合は、`namespace::render_part`から構造検査済みの`PendingPart`を取得する。
+この値はmember・文書digest・Doc node対応を保持し、文書内参照を未確定のまま合成先へ渡す。単体のserialize用proofは付与しない。
+共通HTMLの`check_part`は構造・属性・挿入slotを検査し、Sentence rendererは全guestの合成後にID重複と参照解決を確定する。
+参照先のguestが未配置の場合はSentenceの表示全体を拒否し、部分HTMLを完成結果として返さない。
 Sentence内の表示位置を指定したnamespace合成、foreign操作との統合、およびDocの旧Sentence所有の撤去は、consumer所有移行の残件である。
 
 ## 注釈と移行完了条件

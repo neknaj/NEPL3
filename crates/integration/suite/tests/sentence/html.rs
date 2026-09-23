@@ -414,6 +414,100 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
         );
     }
     assert_eq!(shared, original);
+    // A forward reference belongs to the composed Sentence namespace, while
+    // each guest must already satisfy the structural phrasing contract.
+    for duplicate in [false, true] {
+        let mut calls = 0;
+        let result = html::render_with_foreign(
+            &shared,
+            &r,
+            &mut |_, _, _| {
+                calls += 1;
+                let attribute = if calls == 1 && !duplicate {
+                    HtmlAttribute::Href {
+                        value: HtmlHref::Fragment { id: "later".into() },
+                    }
+                } else {
+                    HtmlAttribute::Id {
+                        value: "later".into(),
+                    }
+                };
+                Ok::<_, Error>(HtmlRequest {
+                    fragment: HtmlFragment {
+                        root: 0,
+                        nodes: vec![
+                            HtmlNode::Element {
+                                tag: if calls == 1 && !duplicate {
+                                    HtmlTag::A
+                                } else {
+                                    HtmlTag::Span
+                                },
+                                attributes: vec![attribute],
+                                children: vec![1],
+                            },
+                            HtmlNode::Text {
+                                text: format!("part{calls}"),
+                            },
+                        ],
+                    },
+                    slot: HtmlSlot::Phrasing,
+                    policy: HtmlPolicy { classes: vec![] },
+                })
+            },
+            &mut b(),
+            &mut SourceAdmission::default(),
+        );
+        assert_eq!(calls, 2);
+        if duplicate {
+            assert!(matches!(
+                result,
+                Err(html::RenderFailure::Sentence(Error::Markup(
+                    HtmlError::DuplicateId(_)
+                )))
+            ));
+        } else {
+            let output = result.map_err(err)?;
+            let validated = validate(
+                &output.markup().fragment,
+                HtmlSlot::Phrasing,
+                &output.markup().policy,
+                &mut b(),
+            )
+            .map_err(err)?;
+            let text = serialize_xhtml(&validated, &mut b()).map_err(err)?;
+            assert!(text.contains("href=\"#later\"") && text.contains("id=\"later\""));
+        }
+    }
+    let missing = html::render_with_foreign(
+        &shared,
+        &r,
+        &mut |_, _, _| {
+            Ok::<_, Error>(HtmlRequest {
+                fragment: HtmlFragment {
+                    root: 0,
+                    nodes: vec![HtmlNode::Element {
+                        tag: HtmlTag::A,
+                        attributes: vec![HtmlAttribute::Href {
+                            value: HtmlHref::Fragment {
+                                id: "missing".into(),
+                            },
+                        }],
+                        children: vec![],
+                    }],
+                },
+                slot: HtmlSlot::Phrasing,
+                policy: HtmlPolicy { classes: vec![] },
+            })
+        },
+        &mut b(),
+        &mut SourceAdmission::default(),
+    );
+    assert!(matches!(
+        missing,
+        Err(html::RenderFailure::Sentence(Error::Markup(
+            HtmlError::MissingFragment(_)
+        )))
+    ));
     for (resource, amount, reason) in [
         (0, full.usage().work, StopReason::WorkLimit),
         (

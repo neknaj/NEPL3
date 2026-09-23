@@ -158,7 +158,9 @@ impl Builder<'_> {
             .current_depth()
             .saturating_add(self.depths[parent as usize]);
         self.b.with_depth_at_least::<_, Error>(depth, |b| {
-            validate(&markup.fragment, HtmlSlot::Phrasing, &markup.policy, b)?;
+            // References may target a later sibling guest. The complete
+            // Sentence is validated before RenderedSentence is returned.
+            check_part(&markup.fragment, HtmlSlot::Phrasing, &markup.policy, b)?;
             Ok(())
         })?;
         let offset = self.nodes.len() as u64;
