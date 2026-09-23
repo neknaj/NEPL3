@@ -1,4 +1,4 @@
-use crate::{check::ValidatedDocShape, model::DocKind};
+use crate::check::ValidatedDocShape;
 use alloc::vec::Vec;
 use nepl3_core::budget::{Budget, Resource, StopReason};
 
@@ -30,15 +30,7 @@ pub fn guest_depths(shape: &ValidatedDocShape<'_>, b: &mut Budget) -> Result<Vec
         let depth = depths[id];
         b.observe_depth(depth)?;
         let kind = &value.nodes[id].kind;
-        let embed = match kind {
-            DocKind::Guest { syntax, .. }
-            | DocKind::InlineMath { syntax }
-            | DocKind::DisplayMath { syntax }
-            | DocKind::CircuitFigure { syntax, .. }
-            | DocKind::Code { syntax } => Some(*syntax),
-            _ => None,
-        };
-        if let Some(embed) = embed {
+        if let Some((embed, _)) = kind.embedded() {
             guests[embed.0 as usize] = guests[embed.0 as usize].max(depth);
         }
         let mut index = 0;

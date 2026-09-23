@@ -106,8 +106,10 @@ where
             push(&mut links, (link.node, href), budget)?;
             page_links = rest;
         }
+        let contents = Contents::prepare(&input.document, registry, codec, budget)?;
         let rendered = render_resolved(
             &input.document,
+            &contents,
             budget,
             aliases[page],
             &links,

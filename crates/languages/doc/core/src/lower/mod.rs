@@ -220,7 +220,7 @@ fn run(
             (node.schema.package.len() + surface.package.len() + node.kind.len()) as u64 + 33,
         )?;
         if &node.schema != surface {
-            return Err(LowerError::Unsupported { node: id }.into());
+            return Err(LowerError::Unsupported { node: id });
         }
         push(&mut order, index, a.b)?;
         done[index] = true;
@@ -256,7 +256,7 @@ fn run(
     }
     let Some(Mapped::Node(root_id)) = a.mapping.get(bundle.root.0 as usize).copied().flatten()
     else {
-        return Err(LowerError::Unsupported { node: bundle.root }.into());
+        return Err(LowerError::Unsupported { node: bundle.root });
     };
     let mut output = DocumentSyntax {
         value: DocValue {

@@ -65,11 +65,17 @@ impl Adapter<'_, '_> {
                     admission,
                 )?;
                 let syntax = EmbedRef(self.embeds.len() as u64);
+                self.b.charge(
+                    Resource::AllocationUnits,
+                    core::mem::size_of::<ForeignClosure>() as u64,
+                )?;
                 push(
                     &mut self.embeds,
                     DocEmbed {
                         kind: EmbedKind::Guest,
-                        content: DocContent::Syntax { closure },
+                        content: DocContent::Syntax {
+                            closure: alloc::boxed::Box::new(closure),
+                        },
                     },
                     self.b,
                 )?;

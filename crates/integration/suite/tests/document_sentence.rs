@@ -120,7 +120,7 @@ fn input() -> Result<(SchemaRegistry, SchemaRef, DocEmbed), String> {
     let embed = DocEmbed {
         kind: EmbedKind::Sentence,
         content: DocContent::Syntax {
-            closure: ForeignClosure {
+            closure: Box::new(ForeignClosure {
                 syntax: ForeignSyntax {
                     schema: identity.clone(),
                     category: "Sentence".into(),
@@ -159,7 +159,7 @@ fn input() -> Result<(SchemaRegistry, SchemaRef, DocEmbed), String> {
                 owner_origins: vec![],
                 owner_sources: vec![],
                 owner_source_maps: vec![],
-            },
+            }),
         },
     };
     Ok((registry, identity, embed))

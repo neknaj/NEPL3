@@ -1,5 +1,5 @@
 use super::*;
-use alloc::string::String;
+use alloc::{boxed::Box, string::String};
 use nepl3_core::{source::Digest, value::NdfValue};
 impl Adapter<'_, '_> {
     pub(super) fn child(
@@ -214,11 +214,17 @@ impl Adapter<'_, '_> {
         let closure =
             ForeignClosure::capture(foreign, self.checked, self.registry, self.b, admission)?;
         let index = EmbedRef(self.embeds.len() as u64);
+        self.b.charge(
+            Resource::AllocationUnits,
+            core::mem::size_of::<ForeignClosure>() as u64,
+        )?;
         push(
             &mut self.embeds,
             DocEmbed {
                 kind,
-                content: DocContent::Syntax { closure },
+                content: DocContent::Syntax {
+                    closure: Box::new(closure),
+                },
             },
             self.b,
         )?;
@@ -240,11 +246,17 @@ impl Adapter<'_, '_> {
         let closure =
             ForeignClosure::capture(foreign, self.checked, self.registry, self.b, admission)?;
         let index = EmbedRef(self.embeds.len() as u64);
+        self.b.charge(
+            Resource::AllocationUnits,
+            core::mem::size_of::<ForeignClosure>() as u64,
+        )?;
         push(
             &mut self.embeds,
             DocEmbed {
                 kind,
-                content: DocContent::Syntax { closure },
+                content: DocContent::Syntax {
+                    closure: Box::new(closure),
+                },
             },
             self.b,
         )?;

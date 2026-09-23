@@ -16,6 +16,25 @@ use nepl3_core::{
     view::ViewBundle,
 };
 mod generated;
+impl<T: Value> Value for Box<T> {
+    fn put<C: FoundationValueCodec>(
+        &self,
+        s: &SchemaRef,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<NdfValue, PortableError<C::Error>> {
+        self.as_ref().put(s, c, b)
+    }
+    fn read<C: FoundationValueCodec>(
+        v: &NdfValue,
+        s: &SchemaRef,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<Self, PortableError<C::Error>> {
+        b.charge(Resource::AllocationUnits, core::mem::size_of::<T>() as u64)?;
+        Ok(Box::new(T::read(v, s, c, b)?))
+    }
+}
 impl Value for TypedValue {
     fn put<C: FoundationValueCodec>(
         &self,

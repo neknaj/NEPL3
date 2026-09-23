@@ -107,20 +107,28 @@ where
     for requirement in &plan.requirements {
         check_pending(requirement, budget)?;
     }
-    Ok(render_resolved(document, budget, aliases, &[], plan.document_digest)?.0)
+    let contents = Contents::prepare(document, registry, codec, budget)?;
+    Ok(render_resolved(
+        document,
+        &contents,
+        budget,
+        aliases,
+        &[],
+        plan.document_digest,
+    )?
+    .0)
 }
 
-fn check_pending(requirement: &prepare::DocRequirement, budget: &mut Budget) -> Result<(), Error> {
+pub(super) fn check_pending(
+    requirement: &prepare::DocRequirement,
+    budget: &mut Budget,
+) -> Result<(), Error> {
     budget.charge(Resource::Work, 1)?;
     match requirement {
-        prepare::DocRequirement::Link {
-            node,
-            target: LinkTarget::External { uri },
-        } => {
-            if !nepl3_markup::html::external_uri(uri, budget)? {
-                return Err(Error::Text { node: *node });
-            }
-        }
+        prepare::DocRequirement::Foreign {
+            kind: EmbedKind::Sentence | EmbedKind::SentenceInline,
+            ..
+        } => {}
         _ => return Err(Error::NeedsResolution),
     }
     Ok(())
@@ -130,6 +138,7 @@ fn check_pending(requirement: &prepare::DocRequirement, budget: &mut Budget) -> 
 // borrowed PageSet. A decoded plan/digest is never an admission proof.
 fn render_resolved(
     document: &DocumentSyntax,
+    contents: &Contents,
     budget: &mut Budget,
     aliases: &[Alias],
     links: &[(u64, String)],
@@ -171,6 +180,7 @@ fn render_resolved(
     let mut writer = Annotated {
         plain: Writer {
             doc: document,
+            contents,
             budget,
             output: String::new(),
         },
@@ -226,20 +236,21 @@ struct Annotated<'a, 'b> {
 }
 #[derive(Clone, Copy)]
 enum Piece<'a> {
-    Text(u64, &'a str),
-    Code(u64, &'a str),
-    Break(u64),
+    Text(Position, &'a str),
+    Code(Position, &'a str),
+    Break(Position),
     Tag(&'static str),
     /// Ruby base/reading boundaries separate adjacent code spans.
     RubyTag(&'static str),
-    LinkStart(u64),
-    LinkEnd(u64, &'a str),
+    LinkStart(Position),
+    LinkEnd(Position, &'a str),
 }
 enum Task<'a> {
     Node(u64, u64),
+    Sentence(EmbedRef, u64, u64),
     Piece(Piece<'a>),
 }
-fn push<T>(items: &mut Vec<T>, item: T, budget: &mut Budget) -> Result<(), Error> {
+pub(super) fn push<T>(items: &mut Vec<T>, item: T, budget: &mut Budget) -> Result<(), Error> {
     budget.charge(Resource::Work, 1)?;
     budget.charge(Resource::Nodes, 1)?;
     if items.len() == items.capacity() {
@@ -327,95 +338,159 @@ impl<'a> Annotated<'a, '_> {
                         .checked_add(1)
                         .ok_or_else(|| self.plain.budget.stop(StopReason::DepthLimit))?;
                     match self.plain.kind(node) {
-                        DocKind::Sentence { inlines } | DocKind::Concat { inlines } => {
+                        DocKind::Sentence { syntax } => {
+                            let (_, root) = self.plain.contents.sentence(*syntax)?;
+                            push(
+                                &mut stack,
+                                Task::Sentence(*syntax, root, next),
+                                self.plain.budget,
+                            )?;
+                        }
+                        DocKind::Link { label, .. } => {
+                            let mut href = None;
+                            for (actual, value) in self.links {
+                                self.plain.budget.charge(Resource::Work, 1)?;
+                                if *actual == node {
+                                    href = Some(value.as_str());
+                                    break;
+                                }
+                            }
+                            let uri = href.ok_or(Error::NeedsResolution)?;
+                            let sentence = self.plain.contents.get(*label)?;
+                            let nepl3_sentence_core::model::Root::Inline(root) =
+                                sentence.value.root
+                            else {
+                                return Err(Error::NeedsResolution);
+                            };
+                            push(
+                                &mut stack,
+                                Task::Piece(Piece::LinkEnd(Position::Doc(node), uri)),
+                                self.plain.budget,
+                            )?;
+                            push(
+                                &mut stack,
+                                Task::Sentence(*label, root.0, next),
+                                self.plain.budget,
+                            )?;
+                            push(
+                                &mut stack,
+                                Task::Piece(Piece::LinkStart(Position::Doc(node))),
+                                self.plain.budget,
+                            )?;
+                        }
+                        _ => return Err(Error::Unsupported { node }),
+                    }
+                }
+                Task::Sentence(embed, node, depth) => {
+                    self.plain.budget.observe_depth(depth)?;
+                    self.plain.budget.charge(Resource::Work, 1)?;
+                    let next = depth
+                        .checked_add(1)
+                        .ok_or_else(|| self.plain.budget.stop(StopReason::DepthLimit))?;
+                    let sentence = self.plain.contents.get(embed)?;
+                    let kind = &sentence.value.nodes[node as usize];
+                    let position = Position::Sentence { embed, node };
+                    match kind {
+                        SentenceKind::Sentence { inlines } | SentenceKind::Concat { inlines } => {
                             for child in inlines.iter().rev() {
-                                push(&mut stack, Task::Node(child.0, next), self.plain.budget)?;
+                                push(
+                                    &mut stack,
+                                    Task::Sentence(embed, child.0, next),
+                                    self.plain.budget,
+                                )?;
                             }
                         }
-                        DocKind::Text { text } if text.is_empty() => {}
-                        DocKind::Text { text } => {
-                            push(&mut pieces, Piece::Text(node, text), self.plain.budget)?
+                        SentenceKind::Text { text } if text.is_empty() => {}
+                        SentenceKind::Text { text } => {
+                            push(&mut pieces, Piece::Text(position, text), self.plain.budget)?
                         }
-                        DocKind::InlineCode { text } => {
-                            push(&mut pieces, Piece::Code(node, text), self.plain.budget)?
+                        SentenceKind::Code { text } => {
+                            push(&mut pieces, Piece::Code(position, text), self.plain.budget)?
                         }
-                        DocKind::Break => push(&mut pieces, Piece::Break(node), self.plain.budget)?,
-                        DocKind::Ruby { base, reading } => {
+                        SentenceKind::Break => {
+                            push(&mut pieces, Piece::Break(position), self.plain.budget)?
+                        }
+                        SentenceKind::Ruby { base, reading } => {
                             for task in [
                                 Task::Piece(Piece::RubyTag("</rt></ruby>")),
-                                Task::Node(reading.0, next),
+                                Task::Sentence(embed, reading.0, next),
                                 Task::Piece(Piece::RubyTag("<rt>")),
-                                Task::Node(base.0, next),
+                                Task::Sentence(embed, base.0, next),
                                 Task::Piece(Piece::Tag("<ruby>")),
                             ] {
                                 push(&mut stack, task, self.plain.budget)?;
                             }
                         }
-                        DocKind::Anno { base, notes } => {
+                        SentenceKind::InlineAnno { base, notes } => {
                             push(
                                 &mut stack,
-                                Task::Piece(Piece::Text(node, "}")),
+                                Task::Piece(Piece::Text(position, "}")),
                                 self.plain.budget,
                             )?;
                             for (index, note) in notes.iter().enumerate().rev() {
-                                push(&mut stack, Task::Node(note.0, next), self.plain.budget)?;
+                                push(
+                                    &mut stack,
+                                    Task::Sentence(embed, note.0, next),
+                                    self.plain.budget,
+                                )?;
                                 if index != 0 {
                                     push(
                                         &mut stack,
-                                        Task::Piece(Piece::Text(node, "/")),
+                                        Task::Piece(Piece::Text(position, "/")),
                                         self.plain.budget,
                                     )?;
                                 }
                             }
                             push(
                                 &mut stack,
-                                Task::Piece(Piece::Text(node, "{")),
+                                Task::Piece(Piece::Text(position, "{")),
                                 self.plain.budget,
                             )?;
-                            push(&mut stack, Task::Node(base.0, next), self.plain.budget)?;
+                            push(
+                                &mut stack,
+                                Task::Sentence(embed, base.0, next),
+                                self.plain.budget,
+                            )?;
                         }
-                        DocKind::Strong { inline } | DocKind::Emphasis { inline } => {
-                            let strong = matches!(self.plain.kind(node), DocKind::Strong { .. });
+                        SentenceKind::Strong { inline } | SentenceKind::Emphasis { inline } => {
+                            let strong = matches!(kind, SentenceKind::Strong { .. });
                             push(
                                 &mut stack,
                                 Task::Piece(Piece::Tag(if strong { "</strong>" } else { "</em>" })),
                                 self.plain.budget,
                             )?;
-                            push(&mut stack, Task::Node(inline.0, next), self.plain.budget)?;
+                            push(
+                                &mut stack,
+                                Task::Sentence(embed, inline.0, next),
+                                self.plain.budget,
+                            )?;
                             push(
                                 &mut stack,
                                 Task::Piece(Piece::Tag(if strong { "<strong>" } else { "<em>" })),
                                 self.plain.budget,
                             )?;
                         }
-                        DocKind::Link { target, label } => {
-                            let uri = match target {
-                                LinkTarget::External { uri } => uri.as_str(),
-                                _ => {
-                                    let mut href = None;
-                                    for (actual, value) in self.links {
-                                        self.plain.budget.charge(Resource::Work, 1)?;
-                                        if *actual == node {
-                                            href = Some(value.as_str());
-                                            break;
-                                        }
-                                    }
-                                    href.ok_or(Error::NeedsResolution)?
-                                }
-                            };
+                        SentenceKind::ExternalLink { uri, label } => {
+                            if !nepl3_markup::html::external_uri(uri, self.plain.budget)? {
+                                return Err(position.text());
+                            }
                             push(
                                 &mut stack,
-                                Task::Piece(Piece::LinkEnd(node, uri)),
+                                Task::Piece(Piece::LinkEnd(position, uri)),
                                 self.plain.budget,
                             )?;
-                            push(&mut stack, Task::Node(label.0, next), self.plain.budget)?;
                             push(
                                 &mut stack,
-                                Task::Piece(Piece::LinkStart(node)),
+                                Task::Sentence(embed, label.0, next),
+                                self.plain.budget,
+                            )?;
+                            push(
+                                &mut stack,
+                                Task::Piece(Piece::LinkStart(position)),
                                 self.plain.budget,
                             )?;
                         }
-                        _ => return Err(Error::Unsupported { node }),
+                        _ => return Err(position.unsupported()),
                     }
                 }
             }
@@ -441,17 +516,22 @@ impl<'a> Annotated<'a, '_> {
                 node: sentences.first().copied().unwrap_or(0),
             });
         }
-        if matches!(visible.first(), Some(Piece::Text(_, s)) if s.starts_with(char::is_whitespace))
-            || matches!(visible.last(), Some(Piece::Text(_, s)) if s.ends_with(char::is_whitespace))
+        if let Some(Piece::Text(position, text)) = visible.first()
+            && text.starts_with(char::is_whitespace)
         {
-            return Err(Error::Text { node: sentences[0] });
+            return Err(position.text());
+        }
+        if let Some(Piece::Text(position, text)) = visible.last()
+            && text.ends_with(char::is_whitespace)
+        {
+            return Err(position.text());
         }
         for pair in visible.windows(2) {
             self.plain.budget.charge(Resource::Work, 1)?;
             if matches!(pair[0], Piece::Code(_, _))
                 && let Piece::Code(node, _) = pair[1]
             {
-                return Err(Error::Unsupported { node: *node });
+                return Err(node.unsupported());
             }
         }
         for (index, piece) in visible.iter().enumerate() {
@@ -464,7 +544,7 @@ impl<'a> Annotated<'a, '_> {
                     || matches!(visible[index - 1], Piece::Text(_, s) if s.ends_with(char::is_whitespace))
                     || matches!(visible[index + 1], Piece::Text(_, s) if s.starts_with(char::is_whitespace)))
             {
-                return Err(Error::Unsupported { node: *node });
+                return Err(node.unsupported());
             }
         }
         let mut previous_code = false;
@@ -472,17 +552,22 @@ impl<'a> Annotated<'a, '_> {
         for piece in pieces {
             match piece {
                 Piece::Text(node, text) => {
-                    self.plain.text(node, text, false)?;
+                    self.plain
+                        .text(node.node(), text, false)
+                        .map_err(|e| node.map(e))?;
                     previous_code = false;
                 }
                 Piece::Code(node, text) => {
                     if previous_code {
-                        return Err(Error::Unsupported { node });
+                        return Err(node.unsupported());
                     }
                     if table_cell {
-                        self.table_code(node, text)?;
+                        self.table_code(node.node(), text)
+                            .map_err(|e| node.map(e))?;
                     } else {
-                        self.plain.text(node, text, true)?;
+                        self.plain
+                            .text(node.node(), text, true)
+                            .map_err(|e| node.map(e))?;
                     }
                     previous_code = true;
                 }
@@ -492,7 +577,7 @@ impl<'a> Annotated<'a, '_> {
                 }
                 Piece::LinkStart(node) => {
                     if link.is_some() {
-                        return Err(Error::Unsupported { node });
+                        return Err(node.unsupported());
                     }
                     link = Some(node);
                     self.plain.emit("[")?;
@@ -500,23 +585,25 @@ impl<'a> Annotated<'a, '_> {
                 }
                 Piece::LinkEnd(node, uri) => {
                     if link != Some(node) {
-                        return Err(Error::Unsupported { node });
+                        return Err(node.unsupported());
                     }
                     link = None;
                     self.plain.emit("](<")?;
                     // Destinations also decode Markdown escapes/entities.
                     // Escape punctuation so a literal &amp; stays &amp;.
-                    self.plain.text(node, uri, false)?;
+                    self.plain
+                        .text(node.node(), uri, false)
+                        .map_err(|e| node.map(e))?;
                     self.plain.emit(">)")?;
                     previous_code = false;
                 }
                 Piece::Break(node) => {
                     if link.is_some() {
-                        return Err(Error::Unsupported { node });
+                        return Err(node.unsupported());
                     }
                     self.plain.emit("\\\n")?;
                     self.plain
-                        .emit(continuation.ok_or(Error::Unsupported { node: 0 })?)?;
+                        .emit(continuation.ok_or_else(|| node.unsupported())?)?;
                     previous_code = false;
                 }
             }

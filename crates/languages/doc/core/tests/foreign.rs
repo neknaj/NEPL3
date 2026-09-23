@@ -114,7 +114,7 @@ fn code_guest_stays_syntax_through_doc_structure_and_cbor() -> Result<(), String
             embeds: vec![DocEmbed {
                 kind: EmbedKind::Code,
                 content: DocContent::Syntax {
-                    closure: closure(&r)?,
+                    closure: Box::new(closure(&r)?),
                 },
             }],
         },
@@ -183,7 +183,7 @@ fn shared_embed_validation_composes_its_deepest_doc_owner() -> Result<(), String
             embeds: vec![DocEmbed {
                 kind: EmbedKind::Sentence,
                 content: DocContent::Syntax {
-                    closure: closure(&r)?,
+                    closure: Box::new(closure(&r)?),
                 },
             }],
         },
@@ -193,6 +193,11 @@ fn shared_embed_validation_composes_its_deepest_doc_owner() -> Result<(), String
         source_maps: vec![],
     };
     let mut full = b();
+    let shape = doc.value.validate_shape(&mut b()).map_err(err)?;
+    assert_eq!(
+        nepl3_doc_core::print::guest_depths(&shape, &mut b()).map_err(err)?,
+        vec![21]
+    );
     doc.validate_structure(&r, &mut full, &mut SourceAdmission::default())
         .map_err(err)?;
     assert!(full.usage().depth > 21);
@@ -239,7 +244,9 @@ fn sentence_slots_preserve_shared_closures_and_reject_role_substitution() -> Res
             ],
             embeds: vec![DocEmbed {
                 kind: EmbedKind::Sentence,
-                content: DocContent::Syntax { closure: guest },
+                content: DocContent::Syntax {
+                    closure: Box::new(guest),
+                },
             }],
         },
         sources: vec![],
@@ -304,6 +311,11 @@ fn sentence_slots_preserve_shared_closures_and_reject_role_substitution() -> Res
         Err(ShapeError::Embed(0))
     ));
     label.value.embeds[0].kind = EmbedKind::SentenceInline;
+    let shape = label.value.validate_shape(&mut b()).map_err(err)?;
+    assert_eq!(
+        nepl3_doc_core::print::guest_depths(&shape, &mut b()).map_err(err)?,
+        vec![1]
+    );
     let DocContent::Syntax { closure } = &mut label.value.embeds[0].content else {
         return Err("syntax fixture".into());
     };

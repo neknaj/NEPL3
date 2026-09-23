@@ -4,15 +4,66 @@
 use nepl3_core::{budget::*, schema::SchemaRegistry, value_codec::FoundationValueCodec};
 use nepl3_doc_core::{model::*, prepare};
 pub mod annotated;
+mod content;
+use content::Contents;
+use nepl3_sentence_core::model::Kind as SentenceKind;
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum Error {
     Stopped(StopReason),
     Invalid(String),
     NeedsResolution,
-    Unsupported { node: u64 },
-    Text { node: u64 },
+    Unsupported {
+        node: u64,
+    },
+    Text {
+        node: u64,
+    },
+    Sentence {
+        embed: EmbedRef,
+        node: u64,
+        issue: SentenceIssue,
+    },
     OutputLimit,
+}
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum SentenceIssue {
+    Unsupported,
+    Text,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum Position {
+    Doc(u64),
+    Sentence { embed: EmbedRef, node: u64 },
+}
+impl Position {
+    fn node(self) -> u64 {
+        match self {
+            Self::Doc(node) | Self::Sentence { node, .. } => node,
+        }
+    }
+    fn map(self, error: Error) -> Error {
+        match (self, error) {
+            (Self::Sentence { embed, .. }, Error::Unsupported { node }) => Error::Sentence {
+                embed,
+                node,
+                issue: SentenceIssue::Unsupported,
+            },
+            (Self::Sentence { embed, .. }, Error::Text { node }) => Error::Sentence {
+                embed,
+                node,
+                issue: SentenceIssue::Text,
+            },
+            (_, error) => error,
+        }
+    }
+    fn unsupported(self) -> Error {
+        self.map(Error::Unsupported { node: self.node() })
+    }
+    fn text(self) -> Error {
+        self.map(Error::Text { node: self.node() })
+    }
 }
 impl From<StopReason> for Error {
     fn from(value: StopReason) -> Self {
@@ -35,14 +86,16 @@ where
         prepare::PreparationError::Stopped(s) => Error::Stopped(s),
         e => Error::Invalid(format!("{e:?}")),
     })?;
-    if !plan.requirements.is_empty() {
-        return Err(Error::NeedsResolution);
+    for requirement in &plan.requirements {
+        annotated::check_pending(requirement, budget)?;
     }
+    let contents = Contents::prepare(document, registry, codec, budget)?;
     let DocRoot::Article(root) = document.value.root else {
         return Err(Error::Unsupported { node: 0 });
     };
     let mut writer = Writer {
         doc: document,
+        contents: &contents,
         budget,
         output: String::new(),
     };
@@ -58,6 +111,7 @@ where
 
 struct Writer<'a, 'b> {
     doc: &'a DocumentSyntax,
+    contents: &'a Contents,
     budget: &'b mut Budget,
     output: String,
 }
@@ -133,50 +187,64 @@ impl<'a> Writer<'a, '_> {
         previous_code: &mut bool,
     ) -> Result<(), Error> {
         self.budget.charge(Resource::Work, 1)?;
-        let DocKind::Sentence { inlines } = self.kind(node) else {
+        let DocKind::Sentence { syntax } = self.kind(node) else {
             return Err(Error::Unsupported { node });
         };
-        if inlines.is_empty() {
+        let (sentence, root) = self.contents.sentence(*syntax)?;
+        let kind = |id: u64| &sentence.value.nodes[id as usize];
+        let SentenceKind::Sentence { inlines } = kind(root) else {
             return Err(Error::Unsupported { node });
-        }
-        if (first && inlines.first().is_some_and(|r| matches!(self.kind(r.0), DocKind::Text { text } if text.starts_with(char::is_whitespace))))
-            || (last && inlines.last().is_some_and(|r| matches!(self.kind(r.0), DocKind::Text { text } if text.ends_with(char::is_whitespace)))) {
-            return Err(Error::Text { node });
-        }
-        for (index, child) in inlines.iter().enumerate() {
-            let is_code = matches!(self.kind(child.0), DocKind::InlineCode { .. });
-            if is_code && *previous_code {
-                return Err(Error::Unsupported { node: child.0 });
+        };
+        let result = (|| {
+            if inlines.is_empty() {
+                return Err(Error::Unsupported { node: root });
             }
-            *previous_code = is_code;
-            match self.kind(child.0) {
-                DocKind::Text { text } => self.text(child.0, text, false)?,
-                DocKind::InlineCode { text } => self.text(child.0, text, true)?,
-                DocKind::Break => {
-                    let Some(indent) = continuation else {
-                        return Err(Error::Unsupported { node: child.0 });
-                    };
-                    // CommonMark drops breaks at block edges; an empty physical
-                    // line terminates a paragraph. Refuse those lossy shapes.
-                    if index == 0 || index + 1 == inlines.len() {
-                        return Err(Error::Unsupported { node: child.0 });
-                    }
-                    let before = self.kind(inlines[index - 1].0);
-                    let after = self.kind(inlines[index + 1].0);
-                    if matches!(before, DocKind::Break)
-                        || matches!(after, DocKind::Break)
-                        || matches!(before, DocKind::Text { text } if text.ends_with(char::is_whitespace))
-                        || matches!(after, DocKind::Text { text } if text.starts_with(char::is_whitespace))
-                    {
-                        return Err(Error::Unsupported { node: child.0 });
-                    }
-                    self.emit("\\\n")?;
-                    self.emit(indent)?;
+            if (first && inlines.first().is_some_and(|r| matches!(kind(r.0), SentenceKind::Text { text } if text.starts_with(char::is_whitespace))))
+            || (last && inlines.last().is_some_and(|r| matches!(kind(r.0), SentenceKind::Text { text } if text.ends_with(char::is_whitespace)))) {
+            return Err(Error::Text { node: root });
+        }
+            for (index, child) in inlines.iter().enumerate() {
+                let is_code = matches!(kind(child.0), SentenceKind::Code { .. });
+                if is_code && *previous_code {
+                    return Err(Error::Unsupported { node: child.0 });
                 }
-                _ => return Err(Error::Unsupported { node: child.0 }),
+                *previous_code = is_code;
+                match kind(child.0) {
+                    SentenceKind::Text { text } => self.text(child.0, text, false)?,
+                    SentenceKind::Code { text } => self.text(child.0, text, true)?,
+                    SentenceKind::Break => {
+                        let Some(indent) = continuation else {
+                            return Err(Error::Unsupported { node: child.0 });
+                        };
+                        // CommonMark drops breaks at block edges; an empty physical
+                        // line terminates a paragraph. Refuse those lossy shapes.
+                        if index == 0 || index + 1 == inlines.len() {
+                            return Err(Error::Unsupported { node: child.0 });
+                        }
+                        let before = kind(inlines[index - 1].0);
+                        let after = kind(inlines[index + 1].0);
+                        if matches!(before, SentenceKind::Break)
+                            || matches!(after, SentenceKind::Break)
+                            || matches!(before, SentenceKind::Text { text } if text.ends_with(char::is_whitespace))
+                            || matches!(after, SentenceKind::Text { text } if text.starts_with(char::is_whitespace))
+                        {
+                            return Err(Error::Unsupported { node: child.0 });
+                        }
+                        self.emit("\\\n")?;
+                        self.emit(indent)?;
+                    }
+                    _ => return Err(Error::Unsupported { node: child.0 }),
+                }
             }
-        }
-        Ok(())
+            Ok(())
+        })();
+        result.map_err(|e| {
+            Position::Sentence {
+                embed: *syntax,
+                node: root,
+            }
+            .map(e)
+        })
     }
     fn paragraph(&mut self, node: u64, continuation: &str) -> Result<(), Error> {
         let DocKind::Paragraph { items } = self.kind(node) else {

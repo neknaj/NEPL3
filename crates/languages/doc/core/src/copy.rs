@@ -37,7 +37,13 @@ impl DocumentSyntax {
                 core::mem::size_of::<DocEmbed>() as u64,
             )?;
             match &embed.content {
-                DocContent::Syntax { closure } => closure.charge_clone(b)?,
+                DocContent::Syntax { closure } => {
+                    b.charge(
+                        Resource::AllocationUnits,
+                        core::mem::size_of_val(closure.as_ref()) as u64,
+                    )?;
+                    closure.charge_clone(b)?;
+                }
                 DocContent::Value { value } => {
                     let (schema, name, tag, fields) = match value {
                         nepl3_core::value::TypedValue::Record(v) => {

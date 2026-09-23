@@ -1,6 +1,6 @@
 //! Typed arena references make recursive paragraphs and annotations shallow to
 //! drop. A public reference is raw data until the category/graph checks succeed.
-use alloc::{string::String, vec::Vec};
+use alloc::{boxed::Box, string::String, vec::Vec};
 use nepl3_core::{
     origin::{Mapping, Origin, OriginId},
     source::{Digest, SourceSnapshot, Span},
@@ -311,7 +311,7 @@ pub struct DocEmbed {
 /// portable SentenceSyntax; the selected consumer validates its semantic type.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DocContent {
-    Syntax { closure: ForeignClosure },
+    Syntax { closure: Box<ForeignClosure> },
     Value { value: TypedValue },
 }
 impl DocEmbed {
