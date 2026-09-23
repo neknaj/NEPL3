@@ -7,6 +7,15 @@ pub enum SettlementError {
     Stopped(StopReason),
 }
 
+/// A stopped local operation retains any value it already returned. The host
+/// determines whether that value contains admitted results or transport errors;
+/// retaining it does not confer validation or authorization.
+#[derive(Debug, Eq, PartialEq)]
+pub struct LocalFailure<T> {
+    pub reason: StopReason,
+    pub output: Option<T>,
+}
+
 /// Relative additive quotas and an absolute depth peak. This value is issued
 /// after request/provider authorization and ancestor ceiling selection. It is
 /// host accounting state, not a wire capability or a provider observation.
@@ -123,13 +132,21 @@ impl<'a> IssuedBudget<'a> {
     pub fn run_local<T>(
         &mut self,
         operation: impl FnOnce(&mut Budget) -> Result<T, StopReason>,
-    ) -> Result<T, StopReason> {
+    ) -> Result<T, LocalFailure<T>> {
         let result = self.parent.with_ceiling(self.local, operation);
-        if let Err(reason) = result {
-            return Err(self.parent.stop(reason));
+        match result {
+            Err(reason) => Err(LocalFailure {
+                reason: self.parent.stop(reason),
+                output: None,
+            }),
+            Ok(output) => match self.parent.poll() {
+                Ok(()) => Ok(output),
+                Err(reason) => Err(LocalFailure {
+                    reason,
+                    output: Some(output),
+                }),
+            },
         }
-        self.parent.poll()?;
-        result
     }
 
     /// Consume one independently authenticated observation, including when

@@ -7,7 +7,7 @@ use nepl3_core::{
 };
 use nepl3_suite::{
     grants::AuthorizedInvoke,
-    suspension::delegation::{IssuedBudget, SettlementError},
+    suspension::delegation::{IssuedBudget, LocalFailure, SettlementError},
 };
 
 #[derive(Debug)]
@@ -74,7 +74,7 @@ impl<'request, 'budget> IssuedInvocation<'request, 'budget> {
     pub fn run_local<T>(
         &mut self,
         operation: impl FnOnce(&mut Budget) -> Result<T, StopReason>,
-    ) -> Result<T, StopReason> {
+    ) -> Result<T, LocalFailure<T>> {
         self.budget.run_local(operation)
     }
 

@@ -1,5 +1,5 @@
 use nepl3_core::budget::{Budget, Limits, Resource, StopReason, Usage};
-use nepl3_suite::suspension::delegation::{IssuedBudget, SettlementError};
+use nepl3_suite::suspension::delegation::{IssuedBudget, LocalFailure, SettlementError};
 
 fn settled(result: Result<(), SettlementError>) -> Result<(), StopReason> {
     match result {
@@ -52,12 +52,14 @@ fn reserved_capacity_and_actual_usage_remain_distinct() -> Result<(), StopReason
     let mut issued = IssuedBudget::issue(&mut parent, limits(4))?;
     assert_eq!(issued.parent_usage(), usage(3));
     assert_eq!(issued.limits(), limits(4));
-    issued.run_local(|b| {
-        for (resource, _) in resources() {
-            b.charge(resource, 3)?;
-        }
-        b.observe_depth(5)
-    })?;
+    issued
+        .run_local(|b| {
+            for (resource, _) in resources() {
+                b.charge(resource, 3)?;
+            }
+            b.observe_depth(5)
+        })
+        .map_err(|failure| failure.reason)?;
     settled(issued.settle(usage(4)))?;
     assert_eq!(
         parent.usage(),
@@ -75,7 +77,13 @@ fn local_exhaustion_keeps_remote_capacity_and_first_stop() -> Result<(), StopRea
     for (resource, reason) in resources() {
         let mut parent = Budget::new(limits(10));
         let mut issued = IssuedBudget::issue(&mut parent, limits(4))?;
-        assert_eq!(issued.run_local(|b| b.charge(resource, 7)), Err(reason));
+        assert_eq!(
+            issued.run_local(|b| b.charge(resource, 7)),
+            Err(LocalFailure {
+                reason,
+                output: None
+            })
+        );
         // Authenticated work already completed remotely is still recorded.
         assert_eq!(
             issued.settle(usage(4)),
@@ -133,7 +141,9 @@ fn oversized_or_unknown_observations_never_enter_accounting() -> Result<(), Stop
 fn nested_grants_cannot_duplicate_available_capacity() -> Result<(), StopReason> {
     let mut parent = Budget::new(limits(10));
     let mut outer = IssuedBudget::issue(&mut parent, limits(4))?;
-    outer.run_local(|local| settled(IssuedBudget::issue(local, limits(6))?.settle(usage(6))))?;
+    outer
+        .run_local(|local| settled(IssuedBudget::issue(local, limits(6))?.settle(usage(6))))
+        .map_err(|failure| failure.reason)?;
     settled(outer.settle(usage(4)))?;
     assert_eq!(
         parent.usage(),
@@ -196,7 +206,9 @@ fn ancestor_scope_covers_local_and_delegated_work() -> Result<(), StopReason> {
     let scope = ExecutionScope::root(&mut parent, limits(10))?;
     scope.run(&mut parent, |parent| {
         let mut issued = IssuedBudget::issue(parent, limits(6))?;
-        issued.run_local(|local| local.charge(Resource::Work, 4))?;
+        issued
+            .run_local(|local| local.charge(Resource::Work, 4))
+            .map_err(|failure| failure.reason)?;
         let mut remote = Budget::new(issued.limits());
         remote.charge(Resource::Work, 6)?;
         remote.observe_depth(3)?;
