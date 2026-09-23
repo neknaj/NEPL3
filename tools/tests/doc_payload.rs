@@ -239,3 +239,151 @@ fn sentence_payload_cannot_be_reassigned_to_another_doc_occurrence() -> Result<(
         },
     )
 }
+
+#[test]
+fn generated_sentence_views_keep_explicit_mapping_and_closed_sources() -> Result<(), String> {
+    use nepl3_core::{
+        origin::{Mapping, MappingKind},
+        value::{NdfValue, TypedValue},
+        view::{ViewField, ViewRef},
+    };
+    use nepl3_doc_core::model::{DocContent, DocEmbed, EmbedKind};
+    use nepl3_sentence_core::{portable, syntax};
+    use nepl3_suite::adapters::document::sentence;
+    let compiled = compiled()?;
+    nepl3_tools::doc::source::with_input(
+        &compiled,
+        r#"sentence "漢𝄞""#,
+        "Sentence",
+        |tree, profile, b, a| {
+            let empty = SourceStore::default();
+            let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
+            let doc = lower::document(
+                tree.syntax(),
+                &compiled.doc.package.schema,
+                Category::Sentence,
+                profile.registry(),
+                b,
+                &mut codec,
+            )
+            .map_err(err)?;
+            let [embed] = doc.value.embeds.as_slice() else {
+                return Err("one Sentence".into());
+            };
+            let mut input = sentence::lower(
+                embed,
+                embed.schema(),
+                &[],
+                profile.registry(),
+                &mut codec,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            let mut child = input.views[0].view.elements[0].clone();
+            let source_span = child.span.clone();
+            let owner = input
+                .sources
+                .iter()
+                .find(|source| source.identity() == source_span.snapshot_ref())
+                .ok_or("owner")?;
+            let content = owner
+                .text()
+                .get(source_span.start() as usize..source_span.end() as usize)
+                .ok_or("source slice")?;
+            let generated = SourceSnapshot::new(
+                SourceId("generated-sentence".into()),
+                0,
+                "memory:generated-sentence".into(),
+                content.as_bytes().to_vec(),
+                &mut budget(),
+            )
+            .map_err(err)?;
+            let target = generated.span(0, content.len() as u64).map_err(err)?;
+            child.span = target.clone();
+            let index = input.views[0].view.elements.len() as u64;
+            input.views[0].view.elements[0].fields.push(ViewField {
+                name: "generated".into(),
+                children: vec![ViewRef(index)],
+            });
+            input.views[0].view.elements.push(child);
+            input.sources.push(generated);
+            assert!(matches!(
+                input.validate(
+                    profile.registry(),
+                    &mut budget(),
+                    &mut SourceAdmission::default()
+                ),
+                Err(syntax::Error::View(_))
+            ));
+            input.source_maps.push(Mapping {
+                source: source_span,
+                target,
+                kind: MappingKind::Exact,
+            });
+            let encoded =
+                portable::syntax::to_value(&input, profile.registry(), &mut codec, &mut budget())
+                    .map_err(err)?;
+            let bytes = nepl3_wire::encode(&encoded, &mut budget()).map_err(err)?;
+            let received = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+            let NdfValue::Record(record) = &received else {
+                return Err("SentenceSyntax record".into());
+            };
+            let placement = DocEmbed {
+                kind: EmbedKind::Sentence,
+                content: DocContent::Value {
+                    value: TypedValue::Record(record.clone()),
+                },
+            };
+            let mut admission = SourceAdmission::default();
+            let mut receiver =
+                FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
+            let actual = sentence::lower(
+                &placement,
+                embed.schema(),
+                &[],
+                profile.registry(),
+                &mut receiver,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            assert_eq!(actual.value, input.value);
+            assert_eq!(actual.locations, input.locations);
+            assert_eq!(actual.origins, input.origins);
+            assert_eq!(actual.views, input.views);
+            assert_eq!(actual.source_maps, input.source_maps);
+            assert_eq!(actual.sources.len(), input.sources.len());
+            for source in &input.sources {
+                assert!(actual.sources.contains(source));
+            }
+            // The ambient store contains both snapshots. An omitted declaration
+            // must still fail at the closed SentenceSyntax boundary.
+            let mut ambient = SourceStore::default();
+            for source in &input.sources {
+                ambient.insert(source.clone()).map_err(err)?;
+            }
+            let mut admission = SourceAdmission::default();
+            let mut receiver =
+                FoundationCodec::new(profile.registry(), &ambient, &mut admission).map_err(err)?;
+            let mut missing = placement;
+            let DocContent::Value {
+                value: TypedValue::Record(record),
+            } = &mut missing.content
+            else {
+                return Err("record placement".into());
+            };
+            record.fields[2] = NdfValue::List(vec![]);
+            assert!(matches!(
+                sentence::lower(
+                    &missing,
+                    embed.schema(),
+                    &[],
+                    profile.registry(),
+                    &mut receiver,
+                    &mut budget()
+                ),
+                Err(sentence::Error::Value(_))
+            ));
+            Ok(())
+        },
+    )
+}
