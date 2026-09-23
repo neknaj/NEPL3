@@ -1,37 +1,25 @@
 """Run the public-API consumer outside the repository, without private test imports."""
 import argparse
-from collections.abc import MutableMapping
 import hashlib
 import json
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import tomllib
-import tomlkit
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+from tools.extensions.manifests import external_manifest as external_manifest
 
 if __package__:
     from .distribution import export
 else:
     from distribution import export
 
-ROOT = Path(__file__).resolve().parents[2]
 FOUNDATION = ROOT / "crates" / "foundation"
 PACKAGES = {f"nepl3-{name}": FOUNDATION / name for name in ("core", "reader", "engine", "wire")}
-
-
-def external_manifest(source, packages):
-    """Change dependency path values in a parsed TOML document."""
-    manifest = tomlkit.parse(source)
-    dependencies = manifest.get("dependencies")
-    if not isinstance(dependencies, MutableMapping):
-        raise ValueError("consumer manifest requires a dependencies table")
-    for name, path in packages.items():
-        dependency = dependencies.get(name)
-        if not isinstance(dependency, MutableMapping) or not isinstance(dependency.get("path"), str):
-            raise ValueError(f"consumer dependency {name} requires an explicit path")
-        dependency["path"] = path.as_posix()
-    return tomlkit.dumps(manifest)
 
 
 def fingerprint():

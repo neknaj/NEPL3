@@ -1,15 +1,16 @@
 """Export standalone Foundation and dependent Doc source workspaces."""
 import argparse
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 import json
-from pathlib import Path
+from pathlib import Path, PurePath
 import shutil
 import subprocess
+import sys
 import tomllib
 
-import tomlkit
-
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+from tools.extensions import manifests as manifest_adapter
 MEMBERS = tuple(f"crates/foundation/{name}" for name in ("core", "wire", "reader", "engine"))
 SUPPORT = ("Cargo.lock", "rust-toolchain.toml", "LICENSE")
 DOC_MEMBERS = ("crates/languages/doc/core", "crates/languages/doc/html", "crates/output/markup")
@@ -24,39 +25,14 @@ def check_lock(original, extracted):
             raise ValueError(f"extraction changed a locked package: {package['name']}")
 
 
-def workspace_manifest(source, manifests, *, members=MEMBERS, external=None):
+def workspace_manifest(
+    source: str, manifests: Sequence[str], *, members: Sequence[str] = MEMBERS,
+    external: Mapping[str, PurePath] | None = None,
+) -> str:
     """Retain inherited settings and the dependencies actually used by the crates."""
-    document = tomlkit.parse(source)
-    workspace = document["workspace"]
-    dependencies = workspace["dependencies"]
-    external = external or {}
-    required = set()
-    for manifest in manifests:
-        crate = tomlkit.parse(manifest)
-        tables = [crate]
-        tables.extend(crate.get("target", {}).values())
-        for table in tables:
-            for kind in ("dependencies", "dev-dependencies", "build-dependencies"):
-                for name, dependency in table.get(kind, {}).items():
-                    if isinstance(dependency, Mapping) and dependency.get("workspace") is True:
-                        required.add(name)
-                    elif isinstance(dependency, Mapping) and "path" in dependency:
-                        raise ValueError(f"unreviewed crate-relative dependency: {name}")
-    for name in required:
-        dependency = dependencies[name]
-        if isinstance(dependency, Mapping) and "path" in dependency:
-            path = dependency["path"]
-            if path in external:
-                dependency["path"] = external[path].as_posix()
-            elif path not in members:
-                raise ValueError(f"dependency escapes distribution: {name}")
-    for name in list(dependencies):
-        if name not in required:
-            del dependencies[name]
-    workspace["members"] = list(members)
-    workspace.pop("default-members", None)
-    workspace.pop("exclude", None)
-    return tomlkit.dumps(document)
+    return manifest_adapter.workspace_manifest(
+        source, manifests, members=members, external=external if external is not None else {},
+    )
 
 
 def export(root, destination):
