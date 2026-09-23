@@ -9,7 +9,9 @@ body
     nil
   cons section expression "1. [表現/ひょうげん]" body
     cons paragraph
-      cons "[各/かく]constructorのsignatureはmath-signaturesを[参照/さんしょう]する。"
+      cons "Mathの[式/しき]は、[数値/すうち]・[記号/きごう]・[演算/えんざん]・[表示構造/ひょうじこうぞう]を[表/あらわ]すconstructorから[構成/こうせい]する。"
+      cons "[各/かく]constructorの[子/こ]の[種類/しゅるい]と[個数/こすう]は、math-signaturesに[定/さだ]める。" nil
+    cons paragraph
       cons "Numberは[有限十進/ゆうげんじっしん]の[原表記/げんひょうき]を[持/も]ち、[意味値/いみち]はBigRationalへ[正確/せいかく]に[変換/へんかん]する。"
       cons "[有理数/ゆうりすう]p/qは、[分母/ぶんぼ]q>0、gcd(|p|,q)=1を[満/み]たす[形/かたち]へ[正規化/せいきか]し、ゼロは0/1で[表/あらわ]す。"
       cons "Numberに[格納/かくのう]できる[値/あたい]は、[約分後/やくぶんご]のqの[素因数/そいんすう]が2と5だけの[有理数/ゆうりすう]に[限/かぎ]る。"
@@ -19,34 +21,38 @@ body
       cons sentence cons ruby text "任意有理数" text "にんいゆうりすう" cons text "から" cons ruby text "式" text "しき" cons text "を" cons ruby text "作" text "つく" cons text "るconstructor helper " cons code "expression_from_rational" cons text " は、" cons ruby text "有限十進" text "ゆうげんじっしん" cons text "ならNumber、それ" cons ruby text "以外" text "いがい" cons text "なら" cons ruby text "整数" text "せいすう" cons text "Numberを" cons ruby text "子" text "こ" cons text "とするFrac(Number(p), Number(q))を" cons ruby text "返" text "かえ" cons text "す。" nil
       cons "[元/もと]の[構文/こうぶん]をlowerする[場合/ばあい]は、[著者/ちょしゃ]が[指定/してい]したFracの[構造/こうぞう]を[保持/ほじ]する。"
       cons sentence cons code "frac 1 2" cons text " はFracのまま" cons ruby text "保持" text "ほじ" cons text "する。" nil
-      cons "Numberのprintはcanonicalな[整数/せいすう]または[有限十進/ゆうげんじっしん]（[指数表記/しすうひょうき]なし、[冗長/じょうちょう]な[末尾/まつび]zeroなし、zeroは0）で、[意味値/いみち]とsnapshotの[一致/いっち]を[確認/かくにん]した[場合/ばあい]には[元/もと]lexemeを[表示/ひょうじ]に[利用/りよう]できる。"
-      cons "Number(1/3)をprint[時/じ]だけFracへ[変換/へんかん]する[設計/せっけい]にはしない。" nil
+      cons "Numberのprintは、[整数/せいすう]または[有限十進/ゆうげんじっしん]のcanonical[表記/ひょうき]を[出力/しゅつりょく]する。"
+      cons "canonical[表記/ひょうき]は[指数表記/しすうひょうき]と[冗長/じょうちょう]な[小数部末尾/しょうすうぶまつび]の0を[省/はぶ]き、ゼロを0で[表/あらわ]す。"
+      cons "[意味値/いみち]とsnapshotの[一致/いっち]を[確認/かくにん]した[場合/ばあい]は、[元/もと]のlexemeを[表示/ひょうじ]に[利用/りよう]できる。"
+      cons "Number(1/3)は[構築/こうちく]・decode[時/じ]に[拒否/きょひ]し、print[時/じ]のFracへの[変換/へんかん]で[補正/ほせい]することを[禁止/きんし]する。" nil
     cons paragraph
       cons "Identifier leafは[数学記号/すうがくきごう]を[表/あらわ]す。"
       cons "{[自由記号/じゆうきごう]/free symbol}は、[束縛/そくばく]されていない[記号/きごう]として[受理/じゅり]し、[意味上/いみじょう]の[入力要求/にゅうりょくようきゅう]に[列挙/れっきょ]する。"
       cons "[自由記号/じゆうきごう]にUnresolvedNameは[適用/てきよう]しない。"
       cons sentence cons code "symbol \"...\"" cons text " で" cons ruby text "予約語" text "よやくご" cons text "と" cons ruby text "同" text "おな" cons text "じ" cons ruby text "綴" text "つづ" cons text "りや" cons ruby text "複数文字" text "ふくすうもじ" cons text "の" cons ruby text "名前" text "なまえ" cons text "を" cons ruby text "明示" text "めいじ" cons text "できる。" nil
-      cons "[裸/はだか]のNameとsymbolの[同/おな]じ[綴/つづ]りは[同/おな]じ[名前解決規則/なまえかいけつきそく]を[使/つか]う。" nil
+      cons "Nameを[直接記述/ちょくせつきじゅつ]した[場合/ばあい]とsymbolで[指定/してい]した[場合/ばあい]は、[同/おな]じ[綴/つづ]りに[同/おな]じ[名前解決規則/なまえかいけつきそく]を[適用/てきよう]する。" nil
     cons paragraph
-      cons "letのinitは[外側/そとがわ]のscopeで[読/よ]み、bodyは[新/あたら]しい[記号/きごう]scopeで[読/よ]む。"
-      cons "sum/integralのindexはbodyだけで[有効/ゆうこう]であり、lower/upperでは[外側/そとがわ]を[参照/さんしょう]する。"
+      cons "letはbodyに[記号/きごう]のscopeを[導入/どうにゅう]する。"
+      cons "initは[外側/そとがわ]のscope、bodyは[導入後/どうにゅうご]のscopeで[読/よ]み[取/と]る。"
+      cons "sumとintegralのindexの[有効範囲/ゆうこうはんい]はbodyとし、lowerとupperは[外側/そとがわ]のscopeを[参照/さんしょう]する。"
       cons "[自由記号/じゆうきごう]に[架空/かくう]の[定義位置/ていぎいち]を[与/あた]えない。" nil
     cons paragraph
       cons "subscript・superscript・scriptsは、[添字/そえじ]の[配置/はいち]を[指定/してい]する[表示構造/ひょうじこうぞう]である。"
       cons "[一般/いっぱん]の[添字/そえじ]を[配列/はいれつ]アクセスや[指数演算/しすうえんざん]に[暗黙変換/あんもくへんかん]しない。"
       cons "[代数的/だいすうてき]な[累乗/るいじょう]にはpowを[使/つか]う。"
-      cons sentence cons code "call" cons text "は" cons ruby text "数学" text "すうがく" cons text "の" cons ruby text "関数適用表現" text "かんすうてきようひょうげん" cons text "で、" cons ruby text "任意" text "にんい" cons text "のFnコード" cons ruby text "実行" text "じっこう" cons text "ではない。" nil nil
+      cons sentence cons code "call" cons text "は、" cons ruby text "関数" text "かんすう" cons text "と" cons ruby text "引数" text "ひきすう" cons text "からなる" cons ruby text "数学的" text "すうがくてき" cons text "な" cons ruby text "関数適用" text "かんすうてきよう" cons text "を" cons ruby text "表" text "あらわ" cons text "す。" nil
+      cons "callの[評価/ひょうか]は[本章/ほんしょう]のevaluate[規則/きそく]に[従/したが]い、[任意/にんい]のFnコードの[実行/じっこう]を[禁止/きんし]する。" nil
     nil
   cons section structure "2. [構造検査/こうぞうけんさ]" body
     cons paragraph
       cons "matrixは[一/ひと]つ[以上/いじょう]のrowを[持/も]ち、すべてのrowが[同/おな]じ[正/せい]の[列数/れつすう]を[持/も]つ。"
       cons "vectorは[一/ひと]つ[以上/いじょう]の[要素/ようそ]を[持/も]つ。"
       cons "fenceの[左右/さゆう]には、それぞれ0[個/こ]または1[個/こ]のUnicode scalarを[指定/してい]する。"
-      cons "[空文字/からもじ]で[片側/かたがわ]だけの[括弧/かっこ]を[表/あらわ]せる。" nil
+      cons "[片側/かたがわ]を[空文字列/くうもじれつ]にすると、もう[片側/かたがわ]の[括弧/かっこ]だけを[表示/ひょうじ]する。" nil
     cons paragraph
       cons "rootのdegreeが0の[数値/すうち]literalである[場合/ばあい]は、InvalidRootDegreeを[返/かえ]す。"
-      cons "その[他/ほか]の[定義域/ていぎいき]はevaluate[時/じ]にも[検査/けんさ]する。"
-      cons "[表示/ひょうじ]だけの[式/しき]に[実数/じっすう]/[複素数/ふくそすう]の[数値領域/すうちりょういき]を[勝手/かって]に[割/わ]り[当/あ]てない。" nil
+      cons "[演算/えんざん]の[定義域/ていぎいき]は、evaluate[時/じ]にも[検査/けんさ]する。"
+      cons "[表示/ひょうじ]だけを[目的/もくてき]とする[式/しき]への、[実数/じっすう]・[複素数/ふくそすう]の[数値領域/すうちりょういき]の[暗黙/あんもく]の[割当/わりあて]を[禁止/きんし]する。" nil
     cons paragraph
       cons "CheckedExpressionは、[構造/こうぞう]・binding・[既知/きち]の[局所制約/きょくしょせいやく]を[満/み]たすことを[保証/ほしょう]する。"
       cons "[各記号/かくきごう]の[値/あたい]と[各演算/かくえんざん]の[数値評価可能性/すうちひょうかかのうせい]は、[評価時/ひょうかじ]に[確認/かくにん]する。" nil
@@ -64,8 +70,10 @@ body
       cons "[大文字/おおもじ]・[小文字/こもじ]とUnicode[表記/ひょうき]は、[入力/にゅうりょく]のまま[保持/ほじ]する。"
       cons "[空/から]の[環境/かんきょう]と[未使用/みしよう]の[代入/だいにゅう]も[受理/じゅり]し、[使用/しよう]の[有無/うむ]を[問/と]わずすべての[値/あたい]の[形状/けいじょう]を[検査/けんさ]する。"
       cons "[検査済/けんさず]み[環境/かんきょう]は[元/もと]の[不変入力/ふへんにゅうりょく]を[借用/しゃくよう]し、[名前/なまえ]を[二分探索/にぶんたんさく]する。"
-      cons "[名前/なまえ]の[未存在/みそんざい]は[不正入力/ふせいにゅうりょく]や[資源停止/しげんていし]と[区別/くべつ]し、[自由記号/じゆうきごう]が[未解決/みかいけつ]の[場合/ばあい]のSymbolic[結果/けっか]に[利用/りよう]する。"
-      cons "この[検査/けんさ]は[式/しき]の[全要求/ぜんようきゅう]の[充足/じゅうそく]を[証明/しょうめい]せず、NDF[受信時/じゅしんじ]にも[順序/じゅんじょ]と[値/あたい]を[再検査/さいけんさ]する。" nil
+      cons "[自由記号/じゆうきごう]に[対応/たいおう]する[名前/なまえ]が[環境/かんきょう]に[存在/そんざい]しない[場合/ばあい]は、[未解決/みかいけつ]の[要求/ようきゅう]としてSymbolic[結果/けっか]へ[反映/はんえい]する。"
+      cons "[不正入力/ふせいにゅうりょく]と[資源停止/しげんていし]は、それぞれの[失敗/しっぱい]・[停止結果/ていしけっか]として[扱/あつか]う。"
+      cons "[環境/かんきょう]の[検査/けんさ]は、assignmentsの[順序/じゅんじょ]と[値/あたい]の[妥当性/だとうせい]を[保証/ほしょう]する。"
+      cons "[式/しき]が[要求/ようきゅう]する[値/あたい]の[充足/じゅうそく]は[評価時/ひょうかじ]に[確認/かくにん]し、NDF[受信時/じゅしんじ]には[順序/じゅんじょ]と[値/あたい]を[再検査/さいけんさ]する。" nil
     cons paragraph
       cons "MathExactValueは[評価値/ひょうかち]を[交換/こうかん]するための[言語中立/げんごちゅうりつ]schemaである。"
       cons "[評価対象/ひょうかたいしょう]の[式/しき]はMathValueで[表/あらわ]し、その[評価値/ひょうかち]をMathExactValueで[表/あらわ]す。"
@@ -73,7 +81,8 @@ body
       cons "Vectorは[一/ひと]つ[以上/いじょう]の[要素/ようそ]を[持/も]つ。"
       cons "Matrixのrowsとcolsは[正/せい]とし、valuesにはrowsとcolsの[積/せき]に[等/ひと]しい[個数/こすう]の[要素/ようそ]を[行優先順/ぎょうゆうせんじゅん]で[格納/かくのう]する。"
       cons "[次元/じげん]の[積/せき]のU64 overflowも[拒否/きょひ]し、NDFの[受信/じゅしん]でも[同/おな]じ[形状検査/けいじょうけんさ]を[行/おこな]う。"
-      cons "この[値/あたい]の[検査/けんさ]だけで[元式/もとしき]の[評価/ひょうか]や[演算/えんざん]の[定義域/ていぎいき]が[証明/しょうめい]されたとは[扱/あつか]わない。" nil
+      cons "MathExactValueの[検査/けんさ]は[交換/こうかん]する[評価値/ひょうかち]の[形状/けいじょう]と[有理数/ゆうりすう]の[正規形/せいきけい]を[保証/ほしょう]する。"
+      cons "[元/もと]の[式/しき]との[対応/たいおう]と[演算/えんざん]の[定義域/ていぎいき]は、[式/しき]の[評価処理/ひょうかしょり]で[確認/かくにん]する。" nil
     cons paragraph
       cons "[評価/ひょうか]は[純粋/じゅんすい]な[操作/そうさ]であり、source[順/じゅん]に[左/ひだり]から[右/みぎ]へ[進/すす]む。"
       cons "letはinitを[評価/ひょうか]してからbodyを[評価/ひょうか]する。"
