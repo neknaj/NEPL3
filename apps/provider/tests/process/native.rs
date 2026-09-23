@@ -18,6 +18,7 @@ use std::{
     sync::mpsc,
     time::{Duration, Instant},
 };
+mod deadline;
 mod model;
 mod reference;
 mod routing;
@@ -456,6 +457,9 @@ fn run_process(
 }
 
 pub fn run() -> Result<(), String> {
+    if let Some(mode) = deadline::child_mode() {
+        return deadline::child(mode);
+    }
     if std::env::args().any(|arg| arg == "--routing-child") {
         return routing::child();
     }
@@ -469,12 +473,13 @@ pub fn run() -> Result<(), String> {
         run_case(input).map_err(|e| format!("input {input}: {e}"))?;
     }
     schema_failure::run()?;
+    deadline::run()?;
     routing::run()?;
     run_process("--provider-child", |connection| {
         exchange(connection, 41, true)
     })?;
     println!(
-        "process_protocol: 8 passed (3 schema failures; 3 native/process comparisons; 1 suspended cancellation; 1 reverse-order routing)"
+        "process_protocol: 10 passed (3 schema failures; 3 native/process comparisons; 1 suspended cancellation; 1 reverse-order routing; 2 blocked-read deadlines)"
     );
     Ok(())
 }
