@@ -1,4 +1,6 @@
 from contextlib import contextmanager
+from collections.abc import Generator
+from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
@@ -6,14 +8,25 @@ import tempfile
 import threading
 import time
 import unittest
+from typing import Literal, override
 from urllib.parse import urlsplit
 
 from payload import digest
 from smoke import endpoint, run
 
 
+type Mode = Literal['normal', 'redirect', 'slow', 'changed', 'extra-byte', 'mime', 'missing', 'query-only', 'spa']
+
+
+@dataclass(frozen=True, slots=True)
+class Request:
+    path: str
+    query: str
+    cache: str | None
+
+
 @contextmanager
-def fixture(mode='normal'):
+def fixture(mode: Mode = 'normal') -> Generator[tuple[Path, str, str, list[Request], threading.Event]]:
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory).resolve()
         files = {'index.html': b'<h1>Home</h1>', 'docs/index.html': b'<h1>Docs</h1>',
@@ -24,16 +37,15 @@ def fixture(mode='normal'):
                                                      for n, b in files.items()])).encode()
         files['manifest.json'] = manifest
         for name, data in files.items():
-            p = root / name; p.parent.mkdir(parents=True, exist_ok=True); p.write_bytes(data)
-        seen = []
+            p = root / name; p.parent.mkdir(parents=True, exist_ok=True); _ = p.write_bytes(data)
+        seen: list[Request] = []
         started = threading.Event()
 
         class Handler(BaseHTTPRequestHandler):
-            def do_GET(self):
+            def do_GET(self) -> None:
                 started.set()
                 parsed = urlsplit(self.path)
-                seen.append(dict(path=parsed.path, query=parsed.query,
-                                 cache=self.headers.get('Cache-Control')))
+                seen.append(Request(parsed.path, parsed.query, self.headers.get('Cache-Control')))
                 name = parsed.path.removeprefix('/NEPL3/')
                 if not name or name.endswith('/'):
                     name += 'index.html'
@@ -45,7 +57,7 @@ def fixture(mode='normal'):
                 if mode == 'slow':
                     time.sleep(2)
                 if mode == 'changed' and name == 'docs/chapter.html': data = b'old'
-                if mode == 'extra-byte' and name == 'docs/chapter.html': data += b'x'
+                if mode == 'extra-byte' and name == 'docs/chapter.html': data = files[name] + b'x'
                 if mode == 'mime' and name.endswith('.css'): mime = 'text/plain'
                 if mode == 'missing' and name == 'docs/chapter.html': code = 404
                 if mode == 'query-only' and not parsed.query: code = 503
@@ -53,11 +65,12 @@ def fixture(mode='normal'):
                 self.send_response(code); self.send_header('Content-Type', mime)
                 self.send_header('Content-Length', str(len(data or b''))); self.end_headers()
                 try:
-                    self.wfile.write(data or b'')
+                    _ = self.wfile.write(data or b'')
                 except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
                     pass
 
-            def log_message(self, *args): pass
+            @override
+            def log_message(self, format: str, *args: object) -> None: pass
 
         server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
         thread = threading.Thread(target=server.serve_forever, daemon=True); thread.start()
@@ -68,44 +81,45 @@ def fixture(mode='normal'):
 
 
 class SmokeTests(unittest.TestCase):
-    def test_actual_http_checks_documents_assets_directory_routes_and_404(self):
+    def test_actual_http_checks_documents_assets_directory_routes_and_404(self) -> None:
         with fixture() as (root, identity, url, seen, _):
-            result = run(root, identity, url, local=True)
+            result = run(root, identity, url, local=True).representation()
             self.assertEqual(result['result'], 'passed', result)
             self.assertEqual(result['transport'], 'loopback-http')
             self.assertFalse(result['publication_verified'])
-            paths = [r['path'] for r in seen]
+            paths = [r.path for r in seen]
             self.assertIn('/NEPL3/docs/', paths)
             self.assertIn('/NEPL3/', paths)
             self.assertEqual(paths.count('/NEPL3/build.json'), 3)
             self.assertNotIn('/NEPL3/.nojekyll', paths)
-            self.assertTrue(all(r['cache'] == 'no-cache' for r in seen))
-            self.assertEqual(sum(r['query'] == 'nepl3-smoke=' + identity for r in seen), 2)
-            self.assertTrue(any(r['path'] == '/NEPL3/docs/' and r['query'] == '' for r in seen))
+            self.assertTrue(all(r.cache == 'no-cache' for r in seen))
+            self.assertEqual(sum(r.query == 'nepl3-smoke=' + identity for r in seen), 2)
+            self.assertTrue(any(r.path == '/NEPL3/docs/' and r.query == '' for r in seen))
 
-    def test_failures_are_not_passed_and_redirect_is_not_followed(self):
-        for mode in ['changed', 'extra-byte', 'mime', 'missing', 'spa', 'redirect', 'query-only']:
+    def test_failures_are_not_passed_and_redirect_is_not_followed(self) -> None:
+        modes: tuple[Mode, ...] = ('changed', 'extra-byte', 'mime', 'missing', 'spa', 'redirect', 'query-only')
+        for mode in modes:
             with self.subTest(mode=mode), fixture(mode) as (root, identity, url, seen, _):
-                result = run(root, identity, url, local=True)
+                result = run(root, identity, url, local=True).representation()
                 self.assertEqual(result['result'], 'failed', result)
                 self.assertFalse(result['publication_verified'])
-                self.assertNotIn('/redirected', [r['path'] for r in seen])
+                self.assertNotIn('/redirected', [r.path for r in seen])
 
-    def test_outer_deadline_terminates_a_stalled_request(self):
+    def test_outer_deadline_terminates_a_stalled_request(self) -> None:
         with fixture('slow') as (root, identity, url, _, started):
             before = time.monotonic()
-            result = run(root, identity, url, local=True, timeout=1)
+            result = run(root, identity, url, local=True, timeout=1).representation()
             self.assertTrue(started.is_set())
             self.assertEqual(result['reason'], 'deadline')
             self.assertLess(time.monotonic() - before, 2)
 
-    def test_https_and_exact_base_are_required(self):
-        endpoint('https://neknaj.github.io/NEPL3/', '/NEPL3/', False)
+    def test_https_and_exact_base_are_required(self) -> None:
+        _ = endpoint('https://neknaj.github.io/NEPL3/', '/NEPL3/', False)
         for url in ['http://example.com/NEPL3/', 'https://x/other/', 'https://u:p@x/NEPL3/',
                     'https://x/NEPL3/?q=1', 'https://x/NEPL3/#a', 'https://x:444/NEPL3/']:
-            with self.subTest(url=url), self.assertRaises(ValueError): endpoint(url, '/NEPL3/', False)
-        with self.assertRaises(ValueError): endpoint('http://example.com:80/NEPL3/', '/NEPL3/', True)
+            with self.subTest(url=url), self.assertRaises(ValueError): _ = endpoint(url, '/NEPL3/', False)
+        with self.assertRaises(ValueError): _ = endpoint('http://example.com:80/NEPL3/', '/NEPL3/', True)
 
 
 if __name__ == '__main__':
-    unittest.main()
+    _ = unittest.main()

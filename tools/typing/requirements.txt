@@ -1,0 +1,3 @@
+# Developer-only static analysis. Runtime adapters retain their own requirements.
+basedpyright==1.40.1
+nodejs-wheel-binaries==24.19.0

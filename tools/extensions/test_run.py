@@ -3,15 +3,17 @@ import json
 from pathlib import Path, PurePosixPath
 import subprocess
 import tempfile
-import tomllib
 import unittest
 from unittest.mock import patch
+from collections.abc import Sequence
+from typing import Literal
 
 from tools.extensions import run
+from tools.serialization import json as wire, toml
 
 
 class ManifestTests(unittest.TestCase):
-    def test_paths_are_toml_values_and_other_values_are_preserved(self):
+    def test_paths_are_toml_values_and_other_values_are_preserved(self) -> None:
         source = '''[package]
 name = "consumer"
 description = "../../../crates/foundation/core"
@@ -30,37 +32,44 @@ optional = true
                 paths = {package: PurePosixPath("/tmp") / name / package
                          for package in ("nepl3-core", "nepl3-reader")}
                 output = run.external_manifest(source, paths)
-                expected = tomllib.loads(source)
+                expected = dict(toml.decode(source))
+                dependencies = dict(toml.table(expected["dependencies"]))
                 for package, path in paths.items():
-                    expected["dependencies"][package]["path"] = path.as_posix()
-                self.assertEqual(tomllib.loads(output), expected)
+                    entry = dict(toml.table(dependencies[package]))
+                    entry["path"] = path.as_posix()
+                    dependencies[package] = entry
+                expected["dependencies"] = dependencies
+                self.assertEqual(toml.decode(output), expected)
                 self.assertIn('# The same text in a comment is not a path field: "../../../crates/foundation/core"', output)
 
-    def test_missing_or_non_path_dependencies_are_rejected(self):
+    def test_missing_or_non_path_dependencies_are_rejected(self) -> None:
         for source in ['[package]\nname="consumer"', '[dependencies]',
                        '[dependencies]\nnepl3-core="1"',
                        '[dependencies]\nnepl3-core={version="1"}',
                        '[dependencies]\nnepl3-core={path=1}']:
             with self.subTest(source=source), self.assertRaises(ValueError):
-                run.external_manifest(source, {"nepl3-core": PurePosixPath("/tmp/core")})
+                _ = run.external_manifest(source, {"nepl3-core": PurePosixPath("/tmp/core")})
+
+
+type Fault = Literal["duplicate", "wrong-workspace", "changed", "timeout", "failed-test", "metadata-stderr"]
 
 
 class RunnerFailures(unittest.TestCase):
-    def exercise(self, fault):
+    def exercise(self, fault: Fault) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary) / "evidence"
 
-            def command(args, cwd, **kwargs):
+            def command(args: Sequence[str], cwd: Path, **kwargs: object) -> subprocess.CompletedProcess[bytes]:
                 if "metadata" in args:
                     self.assertTrue((Path(cwd) / "tests/packages.rs").is_file())
-                    consumer = {"id": "hello", "name": "external-hello-language",
+                    consumer: dict[str, wire.JsonValue] = {"id": "hello", "name": "external-hello-language",
                                 "manifest_path": str(Path(cwd) / "Cargo.toml")}
-                    packages = [{"id": name, "name": name, "manifest_path": str(path / "Cargo.toml")}
+                    packages: list[wire.JsonValue] = [{"id": name, "name": name, "manifest_path": str(path / "Cargo.toml")}
                                 for name, path in run.PACKAGES.items()]
                     if fault == "duplicate":
                         packages.insert(0, {"id": "other-core", "name": "nepl3-core",
                                             "manifest_path": str(Path(cwd) / "other" / "Cargo.toml")})
-                    metadata = {"packages": [consumer] + packages, "workspace_members": ["hello"],
+                    metadata: dict[str, wire.JsonValue] = {"packages": [consumer, *packages], "workspace_members": ["hello"],
                                 "resolve": {"root": "hello"}, "workspace_root": str(cwd)}
                     if fault == "wrong-workspace":
                         metadata["workspace_root"] = str(run.ROOT)
@@ -77,44 +86,45 @@ class RunnerFailures(unittest.TestCase):
             fingerprints = [{"source": "before"}, {"source": "after" if fault == "changed" else "before"}]
             with patch("sys.argv", ["run.py", "--output", str(output)]), \
                     patch.object(run, "fingerprint", side_effect=fingerprints), \
-                    patch.object(run.subprocess, "check_output", return_value=b"fixture-commit"), \
-                    patch.object(run.subprocess, "run", side_effect=command):
+                    patch.object(subprocess, "check_output", return_value=b"fixture-commit"), \
+                    patch.object(subprocess, "run", side_effect=command):
                 if fault == "metadata-stderr":
                     run.main()
                 else:
                     with self.assertRaises((RuntimeError, subprocess.TimeoutExpired)):
                         run.main()
-            record = json.loads((output / "result.json").read_text(encoding="utf-8"))
+            record = wire.object_value(wire.decode((output / "result.json").read_text(encoding="utf-8")))
             self.assertEqual(record["result"], "passed" if fault == "metadata-stderr" else "failed")
             if fault == "metadata-stderr":
-                self.assertIn(str(Path("tests") / "packages.rs"), record["consumer"])
+                self.assertIn(str(Path("tests") / "packages.rs"), wire.object_value(record["consumer"]))
                 self.assertEqual((output / "metadata.json.stderr.log").read_bytes(), b"Downloading crates ...\n")
-                json.loads((output / "metadata.json").read_bytes())
+                _ = wire.decode((output / "metadata.json").read_bytes())
             if fault == "timeout":
                 self.assertIn(b"partial test output", (output / "test.log").read_bytes())
-                self.assertEqual(record["commands"][-1]["error"], "TimeoutExpired")
-                self.assertIsNone(record["commands"][-1]["exit_code"])
+                terminal = wire.object_value(wire.array(record["commands"])[-1])
+                self.assertEqual(terminal["error"], "TimeoutExpired")
+                self.assertIsNone(terminal["exit_code"])
             if fault == "changed":
                 self.assertFalse(record["foundation_unchanged"])
 
-    def test_duplicate_package_cannot_hide_behind_same_name(self):
+    def test_duplicate_package_cannot_hide_behind_same_name(self) -> None:
         self.exercise("duplicate")
 
-    def test_wrong_workspace_is_rejected(self):
+    def test_wrong_workspace_is_rejected(self) -> None:
         self.exercise("wrong-workspace")
 
-    def test_changed_source_cannot_publish_passed(self):
+    def test_changed_source_cannot_publish_passed(self) -> None:
         self.exercise("changed")
 
-    def test_timeout_preserves_partial_output_and_command(self):
+    def test_timeout_preserves_partial_output_and_command(self) -> None:
         self.exercise("timeout")
 
-    def test_failed_test_cannot_publish_passed(self):
+    def test_failed_test_cannot_publish_passed(self) -> None:
         self.exercise("failed-test")
 
-    def test_dependency_download_progress_does_not_corrupt_metadata(self):
+    def test_dependency_download_progress_does_not_corrupt_metadata(self) -> None:
         self.exercise("metadata-stderr")
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

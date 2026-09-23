@@ -5,10 +5,11 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+from dataclasses import dataclass, field
 
 from journal.model import hex_id
 from payload import checked
-from .receipt import created, endpoint
+from .receipt import Receipt, created, endpoint
 from .transport import request
 
 
@@ -16,36 +17,50 @@ class CreationUnknown(ValueError):
     """The API may have accepted the attempt; preserve its durable intent."""
 
 
-def validate(owner, repository, artifact_id, build_version, token, oidc_token, timeout):
-    endpoint(owner, repository, "validate")
+@dataclass(frozen=True, slots=True)
+class Credentials:
+    token: str = field(repr=False)
+    oidc_token: str = field(repr=False)
+
+
+def credential(value: object, maximum: int) -> str:
+    if not isinstance(value, str) or not 0 < len(value) <= maximum or not re.fullmatch(r"[A-Za-z0-9_.-]+", value):
+        raise ValueError('invalid credential')
+    return value
+
+
+def validate(owner: str, repository: str, artifact_id: int, build_version: str,
+             token: object, oidc_token: object, timeout: float) -> Credentials:
+    _ = endpoint(owner, repository, "validate")
     checked(type(artifact_id) is int and 0 < artifact_id < 2**53, "invalid artifact ID")
     hex_id(build_version, 40)
-    for secret, maximum in ((token, 4096), (oidc_token, 16384)):
-        checked(isinstance(secret, str) and 0 < len(secret) <= maximum
-                and re.fullmatch(r"[A-Za-z0-9_.-]+", secret), "invalid credential")
+    credentials = Credentials(credential(token, 4096), credential(oidc_token, 16384))
     checked(type(timeout) in (int, float) and 0 < timeout <= 10, "invalid creation timeout")
+    return credentials
 
 
-def _create(owner, repository, artifact_id, build_version, token, oidc_token, timeout):
-    validate(owner, repository, artifact_id, build_version, token, oidc_token, timeout)
+def direct_create(owner: str, repository: str, artifact_id: int, build_version: str,
+                  token: object, oidc_token: object, timeout: float) -> bytes:
+    credentials = validate(owner, repository, artifact_id, build_version, token, oidc_token, timeout)
     body = json.dumps(dict(artifact_id=artifact_id, pages_build_version=build_version,
-                           environment="github-pages", oidc_token=oidc_token)).encode()
-    raw = request(f"/repos/{owner}/{repository}/pages/deployments", token, timeout=timeout, body=body)
-    created(raw, owner=owner, repository=repository)
+                           environment="github-pages", oidc_token=credentials.oidc_token)).encode()
+    raw = request(f"/repos/{owner}/{repository}/pages/deployments", credentials.token, timeout=timeout, body=body)
+    _ = created(raw, owner=owner, repository=repository)
     return raw
 
 
-def create(owner, repository, artifact_id, build_version, token, oidc_token, *, timeout=10):
+def create(owner: str, repository: str, artifact_id: int, build_version: str,
+           token: object, oidc_token: object, *, timeout: float = 10) -> tuple[Receipt, bytes]:
     """Caller must durably confirm intent and all publication gates beforehand.
 
     This transport does not authorize deployment, obtain OIDC credentials, check
     artifact provenance, or automatically repeat any POST. Raw response bytes
     must be persisted by the publisher before continuing.
     """
-    validate(owner, repository, artifact_id, build_version, token, oidc_token, timeout)
+    credentials = validate(owner, repository, artifact_id, build_version, token, oidc_token, timeout)
     payload = json.dumps(dict(owner=owner, repository=repository, artifact_id=artifact_id,
-                              build_version=build_version, token=token,
-                              oidc_token=oidc_token, timeout=timeout)).encode()
+                              build_version=build_version, token=credentials.token,
+                              oidc_token=credentials.oidc_token, timeout=timeout)).encode()
     try:
         result = subprocess.run([sys.executable, "-I", str(Path(__file__).with_name("create_worker.py"))],
                                 input=payload, capture_output=True, timeout=timeout, check=False)

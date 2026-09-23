@@ -12,7 +12,7 @@ import tarfile
 from payload import MAX_BYTES, MAX_FILES, checked, digest, path_name, tar_bytes, validate_files
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Payload:
     data: bytes
     tar_sha256: str
@@ -20,11 +20,11 @@ class Payload:
     files: int
 
 
-def verify(data, expected_tar, expected_manifest):
-    checked(isinstance(data, bytes) and 0 < len(data) <= MAX_BYTES + MAX_FILES * 2048, 'raw tar size limit')
-    checked(isinstance(expected_tar, str) and re.fullmatch('[0-9a-f]{64}', expected_tar), 'invalid tar identity')
+def verify(data: bytes, expected_tar: str, expected_manifest: str) -> Payload:
+    checked(0 < len(data) <= MAX_BYTES + MAX_FILES * 2048, 'raw tar size limit')
+    checked(re.fullmatch('[0-9a-f]{64}', expected_tar), 'invalid tar identity')
     checked(digest(data) == expected_tar, 'saved tar digest mismatch')
-    files = {}
+    files: dict[str, bytes] = {}
     total = 0
     # mode r: deliberately excludes compression wrappers. The recovery record
     # identifies the original raw Pages tar, not a transport-specific wrapper.
@@ -34,12 +34,15 @@ def verify(data, expected_tar, expected_manifest):
             name = path_name(member.name)
             checked(name not in files and len(files) < MAX_FILES, 'duplicate or excessive tar members')
             checked(member.size >= 0 and total + member.size <= MAX_BYTES, 'tar content size limit')
-            with archive.extractfile(member) as stream:
+            stream = archive.extractfile(member)
+            if stream is None:
+                raise ValueError('missing recovery member data')
+            with stream:
                 value = stream.read(member.size + 1)
             checked(len(value) == member.size, 'truncated recovery member')
             total += len(value)
             files[name] = value
-    validate_files(files, expected_manifest)
+    _ = validate_files(files, expected_manifest)
     # Reject hidden extra archives, trailing noncanonical bytes, unknown PAX
     # attributes and altered metadata. This comparison never replaces the
     # recovered payload with newly serialized bytes.

@@ -17,7 +17,19 @@ Doc inventoryの明示的なbaseline監査は固定commitのGit objectを必要�
 
 開発toolchainは1.97.0、現時点で宣言・検査するMSRVは1.97です。元設計の「1.85以上」は選定可能な下限であり、1.85での実行証拠を意味しません。初期段階では実際に検査するtoolchainとMSRVを一致させ、未検証の旧版対応を広告しない方針を採ります。将来MSRVを変更するときはCargo.toml、toolchainとCIの検査対象を合わせて見直します。
 
-独立した構造監査にはPython 3.13を使用します。これは標準ライブラリだけで動く開発host用の補助検査で、productionの依存ではありません。Rustの共通parserの完成を示すものでもありません。
+Pythonの開発ツールにはPython 3.13を使用する。仮想環境を作成し、`tools/typing/requirements.txt`、`tools/extensions/requirements.txt`、`tools/audit/doc_html/requirements.txt` の固定依存を導入する。型検査器は開発専用の依存として `tools/typing/requirements.txt` で管理する。
+
+`pyproject.toml` のbasedpyright設定は、試験を含む `tools/` の全Pythonを `all` モードで検査する。仮想環境のPythonと型検査器を使用し、別の環境から起動する場合は `basedpyright --pythonpath <仮想環境のPython>` で対象を指定する。警告・エラーは失敗として扱う。repository検査は、管理対象のPythonが検査範囲内にあり、隠しディレクトリや仮想環境の自動除外に含まれないことも確認する。
+
+JSON・TOMLの入力検証は `tools/serialization/`、文法の型付き定義は `tools/catalog/` が担当する。監査は `tools/audit/`、生成は `tools/generate/`、bootstrapは `tools/bootstrap/`、実行環境との接続は `tools/emulators/`、証拠収集は `tools/evidence/`、外部consumerの検査は `tools/extensions/`、サイト公開は `tools/site/` が担当する。外部入力を検証して型付きの値へ変換し、各責務の内部処理へ渡す。
+
+仮想環境を有効にした後、次を実行する。ブラウザを使用する試験では、別途 `python -m playwright install` で対応ブラウザを導入する。
+
+```sh
+python -m pip install -r tools/typing/requirements.txt -r tools/extensions/requirements.txt -r tools/audit/doc_html/requirements.txt
+basedpyright
+python -m unittest tools.serialization.test_json tools.serialization.test_toml tools.catalog.test_forms tools.generate.test_adapters tools.extensions.test_cargo tools.extensions.test_execution tools.audit.allocation.test_run tools.audit.math.test_visual tools.audit.math.test_annotations
+```
 
 テキストはUTF-8、通常はLFです。PowerShellのファイルI/Oでは `Get-Content -Encoding UTF8`、`Set-Content -Encoding UTF8` など、encodingを明示します。source位置試験のfixtureと取り込み元の証拠ファイルは元byte列を維持します。
 

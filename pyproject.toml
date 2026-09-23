@@ -1,0 +1,21 @@
+[tool.basedpyright]
+include = ["tools"]
+pythonVersion = "3.13"
+pythonPlatform = "All"
+typeCheckingMode = "all"
+failOnWarnings = true
+reportAny = "error"
+reportExplicitAny = "error"
+reportIgnoreCommentWithoutRule = "error"
+reportMissingTypeStubs = "error"
+
+executionEnvironments = [
+  { root = "tools/site", extraPaths = ["tools/site", "."] },
+  { root = "tools/audit/site", extraPaths = ["tools/audit/site", "."] },
+  { root = "tools/audit/doc_html", extraPaths = ["tools/audit/doc_html", "."] },
+  { root = "tools/audit", extraPaths = ["tools/audit", "."] },
+  { root = "tools/bootstrap", extraPaths = ["tools/bootstrap", "."] },
+  { root = "tools/emulators/wasmtime", extraPaths = ["tools/emulators/wasmtime", "."] },
+  { root = "tools/emulators/rp2040js", extraPaths = ["tools/emulators/rp2040js", "."] },
+  { root = "." },
+]

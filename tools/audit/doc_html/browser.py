@@ -11,15 +11,22 @@ import json
 import re
 from importlib.metadata import version
 from pathlib import Path
+from collections.abc import Mapping
+from types import MappingProxyType
+import sys
 
-CASES = {"ruby", "anno", "anno-ruby", "ruby-anno", "ruby-ruby", "table-ruby",
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from tools.audit.doc_html.layout import (Browser, CaseName, Engine, Failed, Incomplete, LineHeight,
+                                       Outcome, Passed, Report, Row, case_name, geometry, valid_measurement)
+
+CASES: frozenset[CaseName] = frozenset({"ruby", "anno", "anno-ruby", "ruby-anno", "ruby-ruby", "table-ruby",
          "list-ruby", "ruby-multiline", "anno-multiline", "reading-ruby",
-         "notes-ruby", "anno-anno", "line-reservation"}
-BROWSERS = ["chromium", "firefox", "webkit"]
+         "notes-ruby", "anno-anno", "line-reservation"})
+BROWSERS: tuple[Engine, ...] = ('chromium', 'firefox', 'webkit')
 
 
-def extract_cases(corpus):
-    cases = {}
+def extract_cases(corpus: bytes) -> Mapping[CaseName, str]:
+    cases: dict[CaseName, str] = {}
     for line in corpus.decode("utf-8-sig").splitlines():
         # libtest can put the serialized test name before the first marker.
         line = re.sub(r"^test [A-Za-z0-9_:]+ \.\.\. (?=DOC_HTML_CASE )", "", line)
@@ -27,10 +34,10 @@ def extract_cases(corpus):
             _, name, text = line.split()
             if name in cases:
                 raise ValueError("duplicate case: " + name)
-            cases[name] = bytes.fromhex(text).decode("utf-8")
-    if cases.keys() != CASES:
+            cases[case_name(name)] = bytes.fromhex(text).decode("utf-8")
+    if frozenset(cases) != CASES:
         raise ValueError("missing or unexpected corpus cases")
-    return cases
+    return MappingProxyType(cases)
 
 
 # A and B use the same font and size: their text rectangle bottoms must match.
@@ -76,51 +83,46 @@ MEASURE = """caseName => {
     lineGaps = [annotation.top - rect(one('Z')).bottom,
                 rect(one('Y')).top - annotation.bottom];
   }
-  return {difference: rect(one('B')).bottom - rect(one('A')).bottom,
+  return JSON.stringify({difference: rect(one('B')).bottom - rect(one('A')).bottom,
           baseline_source_supported: CSS.supports('baseline-source','first') && CSS.supports('baseline-source','last'),
           annotation_gaps: gaps, line_gaps: lineGaps, multiline_gap: multilineGap,
           annotation_text_fragments: textFragments,
           display: getComputedStyle(annotations[0]).display,
-          scripts: document.scripts.length};
+          scripts: document.scripts.length});
 }"""
 
 
-def valid_measurement(row):
-    if len(row["line_gaps"]) != (2 if row["case"] == "line-reservation" else 0):
-        return False
-    if row["case"] in {"ruby-multiline", "anno-multiline"}:
-        if row["multiline_gap"] is None or row["multiline_gap"] <= .1:
-            return False
-    return (row["scripts"] == 0 and abs(row["difference"]) < .1
-            and bool(row["annotation_text_fragments"])
-            and all(count == 1 for count in row["annotation_text_fragments"])
-            and bool(row["annotation_gaps"])
-            and all(gap >= -.1 for gap in row["annotation_gaps"])
-            and all(gap >= -.1 for gap in row["line_gaps"]))
+class Arguments(argparse.Namespace):
+    corpus: Path = Path()
+    css: Path = Path()
+    output: Path = Path()
+    chromium: Path | None = None
+    firefox: Path | None = None
+    webkit: Path | None = None
 
 
-def main():
+def main() -> None:
     from playwright.sync_api import sync_playwright
 
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ["corpus", "css", "output"]:
-        parser.add_argument("--" + name, required=True, type=Path)
+        _ = parser.add_argument("--" + name, required=True, type=Path)
     for name in BROWSERS:
-        parser.add_argument("--" + name, type=Path)
-    args = parser.parse_args()
+        _ = parser.add_argument("--" + name, type=Path)
+    args = parser.parse_args(namespace=Arguments())
     corpus, css = args.corpus.read_bytes(), args.css.read_bytes()
     cases = extract_cases(corpus)
-    result = {"corpus_sha256": hashlib.sha256(corpus).hexdigest(),
-              "css_sha256": hashlib.sha256(css).hexdigest(),
-              "playwright": version("playwright"), "browsers": {}, "result": "failed"}
+    corpus_sha256, css_sha256 = hashlib.sha256(corpus).hexdigest(), hashlib.sha256(css).hexdigest()
+    playwright_version = version('playwright')
+    browsers: list[Browser] = []
+    outcome: Outcome = Incomplete()
     try:
         with sync_playwright() as playwright:
-            for name in BROWSERS:
-                executable = getattr(args, name)
-                options = {"executable_path": str(executable)} if executable else {}
-                browser = getattr(playwright, name).launch(headless=True, **options)
-                rows = []
-                result["browsers"][name] = {"version": browser.version, "measurements": rows}
+            implementations = (playwright.chromium, playwright.firefox, playwright.webkit)
+            paths = (args.chromium, args.firefox, args.webkit)
+            for name, implementation, executable in zip(BROWSERS, implementations, paths, strict=True):
+                browser = implementation.launch(headless=True, executable_path=executable)
+                rows: list[Row] = []
                 try:
                     for width in [375, 1280]:
                         context = browser.new_context(java_script_enabled=False,
@@ -128,25 +130,27 @@ def main():
                         page = context.new_page()
                         for case, html in cases.items():
                             for size in [12, 20, 32]:
-                                for height in ["normal", "1.2", "2"]:
+                                heights: tuple[LineHeight, ...] = ('normal', '1.2', '2')
+                                for height in heights:
                                     page.set_content("<!DOCTYPE html><meta charset=utf-8><style>" + css.decode("utf-8")
                                                      + f".nepl-doc{{font-family:Arial,sans-serif;font-size:{size}px;line-height:{height}}}"
                                                      + "</style>" + html)
-                                    measured = page.evaluate(MEASURE, case)
-                                    rows.append({"case": case, "width": width, "size": size,
-                                                 "line_height": height, **measured})
+                                    measured: object = page.evaluate(MEASURE, case)  # pyright: ignore[reportAny]
+                                    rows.append(Row(case, width, size, height, geometry(measured)))
                         context.close()
                 finally:
+                    browsers.append(Browser(name, browser.version, tuple(rows)))
                     browser.close()
-        if any(not valid_measurement(row) for b in result["browsers"].values() for row in b["measurements"]):
+        if any(not valid_measurement(row) for browser in browsers for row in browser.measurements):
             raise ValueError("annotation layout or scriptless document check failed; see output")
-        result["result"] = "passed"
+        outcome = Passed()
     except Exception as error:
-        result["error"] = str(error)
+        outcome = Failed(str(error))
         raise
     finally:
-        args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n")
-    count = sum(len(b["measurements"]) for b in result["browsers"].values())
+        report = Report(corpus_sha256, css_sha256, playwright_version, tuple(browsers), outcome)
+        _ = args.output.write_text(json.dumps(report.representation(), indent=2) + "\n", encoding="utf-8", newline="\n")
+    count = sum(len(browser.measurements) for browser in browsers)
     print(f"Doc HTML: {count} actual-output layout checks passed in three browsers with document JavaScript disabled.")
 
 

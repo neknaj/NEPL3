@@ -3,22 +3,20 @@ import argparse
 from pathlib import Path
 import struct
 
+from elf import segments
+
 FLASH = 0x10000000
 SIZE = 2 * 1024 * 1024
 FAMILY = 0xE48BFF56
 
 
-def convert(elf):
-    if len(elf) < 52 or elf[:7] != b"\x7fELF\x01\x01\x01":
-        raise ValueError("expected ELF32 little endian")
-    _, kind, machine, version, _, phoff, _, _, ehsize, phsize, count, _, _, _ = struct.unpack_from("<16sHHIIIIIHHHHHH", elf)
-    if (kind, machine, version, ehsize, phsize) != (2, 40, 1, 52, 32) or not count or phoff + count * phsize > len(elf):
-        raise ValueError("invalid ARM executable headers")
-    pages, used = {}, set()
-    for i in range(count):
-        typ, offset, _, address, size, memsize, _, _ = struct.unpack_from("<8I", elf, phoff + i * phsize)
-        if typ != 1 or not size:
+def convert(elf: bytes | bytearray) -> bytes:
+    pages: dict[int, bytearray] = {}
+    used: set[int] = set()
+    for segment in segments(elf):
+        if segment.kind != 1 or not segment.size:
             continue
+        offset, address, size, memsize = segment.offset, segment.address, segment.size, segment.memory_size
         if size > memsize or offset + size > len(elf) or not FLASH <= address < address + size <= FLASH + SIZE:
             raise ValueError("load segment outside RP2040 flash image")
         for index, byte in enumerate(elf[offset:offset + size], address):
@@ -36,9 +34,18 @@ def convert(elf):
     return bytes(output)
 
 
-if __name__ == "__main__":
+class Arguments(argparse.Namespace):
+    elf: Path = Path()
+    uf2: Path = Path()
+
+
+def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("elf", type=Path)
-    parser.add_argument("uf2", type=Path)
-    args = parser.parse_args()
-    args.uf2.write_bytes(convert(args.elf.read_bytes()))
+    _ = parser.add_argument("elf", type=Path)
+    _ = parser.add_argument("uf2", type=Path)
+    args = parser.parse_args(namespace=Arguments())
+    _ = args.uf2.write_bytes(convert(args.elf.read_bytes()))
+
+
+if __name__ == "__main__":
+    main()

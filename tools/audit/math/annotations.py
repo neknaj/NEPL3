@@ -7,23 +7,55 @@ It does not establish general Math accessibility or Playground acceptance.
 import argparse
 import json
 from pathlib import Path
+from dataclasses import dataclass
+from typing import Literal
+import sys
 
 from playwright.sync_api import sync_playwright
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from tools.serialization.json import JsonValue
 
-def run(corpus, css):
+type Engine = Literal['chromium', 'firefox', 'webkit']
+
+
+@dataclass(frozen=True, slots=True)
+class Case:
+    engine: Engine
+    version: str
+    width: int
+    font_size: int
+
+    def representation(self) -> dict[str, JsonValue]:
+        return dict(engine=self.engine, version=self.version, width=self.width, font_size=self.font_size)
+
+
+@dataclass(frozen=True, slots=True)
+class Report:
+    cases: tuple[Case, ...]
+
+    def representation(self) -> dict[str, JsonValue]:
+        return dict(passed=len(self.cases), cases=[case.representation() for case in self.cases])
+
+
+def fragment_from(corpus: str) -> str:
     marker = "MATH_RECURSIVE_HTML "
     records = [line.split(marker, 1)[1].strip()
-               for line in corpus.read_text(encoding="utf-8-sig").splitlines()
+               for line in corpus.splitlines()
                if marker in line]
     if len(records) != 1:
         raise ValueError("expected one recursive Math HTML record")
-    fragment = bytes.fromhex(records[0]).decode("utf-8")
+    return bytes.fromhex(records[0]).decode("utf-8")
+
+
+def run(corpus: Path, css: Path) -> Report:
+    fragment = fragment_from(corpus.read_text(encoding="utf-8-sig"))
     stylesheet = css.read_text(encoding="utf-8")
-    results = []
+    results: list[Case] = []
     with sync_playwright() as p:
-        for engine in ["chromium", "firefox", "webkit"]:
-            browser = getattr(p, engine).launch()
+        engines: tuple[Engine, ...] = ('chromium', 'firefox', 'webkit')
+        for engine, implementation in zip(engines, (p.chromium, p.firefox, p.webkit), strict=True):
+            browser = implementation.launch()
             try:
                 for width in [375, 1280]:
                     context = browser.new_context(java_script_enabled=False,
@@ -50,18 +82,26 @@ def run(corpus, css):
                             assert abs((a["x"] + a["width"] / 2)
                                        - (b["x"] + b["width"] / 2)) < 1, (engine, a, b)
                             assert page.locator("math math mn").text_content() == "7"
-                            results.append({"engine": engine, "version": browser.version,
-                                            "width": width, "font_size": size})
+                            results.append(Case(engine, browser.version, width, size))
                     finally:
                         context.close()
             finally:
                 browser.close()
-    return {"passed": len(results), "cases": results}
+    return Report(tuple(results))
+
+
+class Arguments(argparse.Namespace):
+    corpus: Path = Path()
+    css: Path = Path()
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    _ = parser.add_argument("--corpus", type=Path, required=True)
+    _ = parser.add_argument("--css", type=Path, required=True)
+    args = parser.parse_args(namespace=Arguments())
+    print(json.dumps(run(args.corpus, args.css).representation()))
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--corpus", type=Path, required=True)
-    parser.add_argument("--css", type=Path, required=True)
-    args = parser.parse_args()
-    print(json.dumps(run(args.corpus, args.css)))
+    main()

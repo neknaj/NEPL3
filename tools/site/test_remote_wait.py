@@ -1,35 +1,40 @@
 import tempfile
+from pathlib import Path
 import unittest
 from unittest.mock import patch
 
 from deployment.journal import record_created, status_history, wait_remote
-from deployment.receipt import observed
+from deployment.receipt import Receipt, observed
 from deployment.transport import Result
-from deployment.poll import Stop
+from deployment.poll import Report, Stop
 from journal import Event, append, load, remote
 import test_journal_remote
 from test_receipt_journal import RAW
 
 
 class RemoteWaitTests(unittest.TestCase):
-    def prepare(self, directory):
+    def prepare(self, directory: str) -> tuple[Path, Path, str, Receipt]:
         server, (mirror, _) = test_journal_remote.RemoteJournalTests().setup_repositories(directory)
         intent = Event("DeployIntent", "tx1", 23, 1, "a" * 40, "b" * 64)
         first = append(mirror, None, intent, b'{}')
-        remote.publish(mirror, str(server), None, first)
+        _ = remote.publish(mirror, str(server), None, first)
         head, receipt = record_created(mirror, first, intent, RAW, owner="neknaj", repository="NEPL3")
-        remote.publish(mirror, str(server), first, head)
+        _ = remote.publish(mirror, str(server), first, head)
         return server, mirror, head, receipt
 
-    def run_wait(self, server, mirror, head):
+    def run_wait(self, server: Path, mirror: Path, head: str) -> tuple[str, Report]:
         return wait_remote(mirror, head, "test-token", expected_url=str(server),
                            owner="neknaj", repository="NEPL3", remaining_seconds=60)
 
-    def test_next_request_and_success_require_remote_observation(self):
+    def test_next_request_and_success_require_remote_observation(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             server, mirror, head, receipt = self.prepare(directory)
-            calls = []
-            def fetch(*args, **kwargs):
+            calls: list[bytes] = []
+            def fetch(actual: Receipt, token: str, *, timeout: float) -> Result:
+                self.assertEqual(actual, receipt)
+                self.assertEqual(token, "test-token")
+                self.assertGreater(timeout, 0)
+                self.assertLessEqual(timeout, 10)
                 history = status_history(server, owner="neknaj", repository="NEPL3")
                 self.assertEqual(len(history.observations), len(calls))
                 raw = b'{"status":"deployment_in_progress"}' if not calls else b'{"status":"succeed"}'
@@ -41,7 +46,7 @@ class RemoteWaitTests(unittest.TestCase):
             self.assertEqual(load(server).head, final)
             self.assertEqual([r.raw_response for r in status_history(server, owner="neknaj", repository="NEPL3").observations], calls)
 
-    def test_remote_failure_keeps_local_evidence_and_stops_requests(self):
+    def test_remote_failure_keeps_local_evidence_and_stops_requests(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             server, mirror, head, receipt = self.prepare(directory)
             raw = b'{"status":"deployment_in_progress"}'
@@ -49,21 +54,23 @@ class RemoteWaitTests(unittest.TestCase):
             with patch('deployment.transport.status', return_value=result) as fetch, \
                  patch.object(remote, 'publish', side_effect=ValueError('acknowledgement lost')):
                 with self.assertRaisesRegex(ValueError, 'acknowledgement lost'):
-                    self.run_wait(server, mirror, head)
+                    _ = self.run_wait(server, mirror, head)
             self.assertEqual(fetch.call_count, 1)
             self.assertEqual(load(server).head, head)
             history = status_history(mirror, owner="neknaj", repository="NEPL3")
             self.assertEqual(history.observations[0].raw_response, raw)
             # Retry cannot silently skip the locally recorded, unconfirmed event.
             with patch('deployment.transport.status') as fetch, self.assertRaises(ValueError):
-                self.run_wait(server, mirror, history.head)
+                _ = self.run_wait(server, mirror, history.head)
             fetch.assert_not_called()
 
-    def test_initial_remote_confirmation_consumes_same_budget(self):
+    def test_initial_remote_confirmation_consumes_same_budget(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             server, mirror, head, _ = self.prepare(directory)
             now = [0.0]
-            def delayed_confirmation(*args):
+            def delayed_confirmation(actual_mirror: Path, expected_url: str) -> str:
+                self.assertEqual(actual_mirror, mirror)
+                self.assertEqual(expected_url, str(server))
                 now[0] = 61.0
                 return head
             with patch('time.monotonic', side_effect=lambda: now[0]), \

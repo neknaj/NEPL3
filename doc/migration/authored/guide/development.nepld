@@ -135,9 +135,22 @@ body
       cons "[初期段階/しょきだんかい]では[実際/じっさい]に[検査/けんさ]するtoolchainとMSRVを[一致/いっち]させ、[未検証/みけんしょう]の[旧版対応/きゅうばんたいおう]を[広告/こうこく]しない[方針/ほうしん]を[採/と]ります。"
       cons "[将来/しょうらい]MSRVを[変更/へんこう]するときはCargo.toml、toolchainとCIの[検査対象/けんさたいしょう]を[合/あ]わせて[見直/みなお]します。" nil
     cons paragraph
-      cons "[独立/どくりつ]した[構造監査/こうぞうかんさ]にはPython 3.13を[使用/しよう]します。"
-      cons "これは[標準/ひょうじゅん]ライブラリだけで[動/うご]く[開発/かいはつ]host[用/よう]の[補助検査/ほじょけんさ]で、productionの[依存/いぞん]ではありません。"
-      cons "Rustの[共通/きょうつう]parserの[完成/かんせい]を[示/しめ]すものでもありません。" nil
+      cons "Pythonの[開発/かいはつ]ツールにはPython 3.13を[使用/しよう]する。"
+      cons "[仮想環境/かそうかんきょう]を[作成/さくせい]し、tools/typing/requirements.txt、tools/extensions/requirements.txt、tools/audit/doc_html/requirements.txtの[固定依存/こていいぞん]を[導入/どうにゅう]する。"
+      cons "[型検査器/かたけんさき]は[開発専用/かいはつせんよう]の[依存/いぞん]としてtools/typing/requirements.txtで[管理/かんり]する。" nil
+    cons paragraph
+      cons "pyproject.tomlのbasedpyright[設定/せってい]は、[試験/しけん]を[含/ふく]むtools/の[全/ぜん]Pythonをallモードで[検査/けんさ]する。"
+      cons sentence cons ruby text "仮想環境" text "かそうかんきょう" cons text "のPythonと" cons ruby text "型検査器" text "かたけんさき" cons text "を" cons ruby text "使用" text "しよう" cons text "し、" cons ruby text "別" text "べつ" cons text "の" cons ruby text "環境" text "かんきょう" cons text "から" cons ruby text "起動" text "きどう" cons text "する" cons ruby text "場合" text "ばあい" cons text "は " cons code "basedpyright --pythonpath <仮想環境のPython>" cons text " で" cons ruby text "対象" text "たいしょう" cons text "を" cons ruby text "指定" text "してい" cons text "する。" nil
+      cons "[警告/けいこく]・エラーは[失敗/しっぱい]として[扱/あつか]う。"
+      cons "repository[検査/けんさ]は、[管理対象/かんりたいしょう]のPythonが[検査範囲内/けんさはんいない]にあり、[隠/かく]しディレクトリや[仮想環境/かそうかんきょう]の[自動除外/じどうじょがい]に[含/ふく]まれないことも[確認/かくにん]する。" nil
+    cons paragraph
+      cons "JSON・TOMLの[入力検証/にゅうりょくけんしょう]はtools/serialization/、[文法/ぶんぽう]の[型付/かたつ]き[定義/ていぎ]はtools/catalog/が[担当/たんとう]する。"
+      cons "[監査/かんさ]はtools/audit/、[生成/せいせい]はtools/generate/、bootstrapはtools/bootstrap/、[実行環境/じっこうかんきょう]との[接続/せつぞく]はtools/emulators/、[証拠収集/しょうこしゅうしゅう]はtools/evidence/、[外部/がいぶ]consumerの[検査/けんさ]はtools/extensions/、サイト[公開/こうかい]はtools/site/が[担当/たんとう]する。"
+      cons "[外部入力/がいぶにゅうりょく]を[検証/けんしょう]して[型付/かたつ]きの[値/あたい]へ[変換/へんかん]し、[各責務/かくせきむ]の[内部処理/ないぶしょり]へ[渡/わた]す。" nil
+    cons paragraph
+      cons "[仮想環境/かそうかんきょう]を[有効/ゆうこう]にした[後/あと]、[次/つぎ]を[実行/じっこう]する。"
+      cons sentence cons text "ブラウザを" cons ruby text "使用" text "しよう" cons text "する" cons ruby text "試験" text "しけん" cons text "では、" cons ruby text "別途" text "べっと" cons text " " cons code "python -m playwright install" cons text " で" cons ruby text "対応" text "たいおう" cons text "ブラウザを" cons ruby text "導入" text "どうにゅう" cons text "する。" nil nil
+    cons rawcode some "sh" "python -m pip install -r tools/typing/requirements.txt -r tools/extensions/requirements.txt -r tools/audit/doc_html/requirements.txt\nbasedpyright\npython -m unittest tools.serialization.test_json tools.serialization.test_toml tools.catalog.test_forms tools.generate.test_adapters tools.extensions.test_cargo tools.extensions.test_execution tools.audit.allocation.test_run tools.audit.math.test_visual tools.audit.math.test_annotations\n"
     cons paragraph
       cons "テキストはUTF-8、[通常/つうじょう]はLFです。"
       cons sentence cons text "PowerShellのファイルI/Oでは " cons code "Get-Content -Encoding UTF8" cons text "、" cons code "Set-Content -Encoding UTF8" cons text " など、encodingを" cons ruby text "明示" text "めいじ" cons text "します。" nil

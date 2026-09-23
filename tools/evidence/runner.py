@@ -7,135 +7,142 @@ import platform
 import re
 import subprocess
 import sys
+from typing import Literal
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+from tools.serialization.json import JsonValue, decode
+from tools.evidence.records import (
+    Command, Environment, Exited, File, Incomplete, Interrupted, Report, Result,
+    report, specification as specification,
+)
 
 
-def digest(data): return hashlib.sha256(data).hexdigest()
+def digest(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
 
 
-def unique(pairs):
-    result={}
-    for key,value in pairs:
-        if key in result: raise ValueError('duplicate JSON key')
-        result[key]=value
-    return result
+def read_json(path: Path) -> JsonValue:
+    return decode(path.read_bytes(), reject_duplicates=True, reject_nonfinite=True)
 
 
-def read_json(path):
-    return json.loads(path.read_bytes().decode('utf-8'),object_pairs_hook=unique,
-                      parse_constant=lambda value: (_ for _ in ()).throw(ValueError('nonfinite JSON')))
+def git(root: Path, *args: str) -> bytes:
+    return subprocess.run(['git', '-C', str(root), *args], check=True, capture_output=True).stdout
 
 
-def specification(value):
-    if not isinstance(value,dict) or set(value)!={'version','scope','commands'} or type(value['version']) is not int or value['version']!=1:
-        raise ValueError('invalid specification')
-    if not isinstance(value['scope'],str) or not value['scope'].strip(): raise ValueError('scope required')
-    if not isinstance(value['commands'],list) or not value['commands']: raise ValueError('commands required')
-    names=set()
-    for command in value['commands']:
-        if not isinstance(command,dict) or set(command)!={'id','argv','cwd','timeout_seconds'}: raise ValueError('invalid command')
-        name=command['id']
-        if not isinstance(name,str) or not re.fullmatch('[a-z0-9-]{1,80}',name) or name in names: raise ValueError('invalid command ID')
-        names.add(name)
-        argv=command['argv']
-        if not isinstance(argv,list) or not argv or any(not isinstance(arg,str) or not arg or '\0' in arg for arg in argv): raise ValueError('invalid argv')
-        if any('conformance/results/' in arg.replace('\\','/') for arg in argv): raise ValueError('do not execute historical evidence')
-        cwd=command['cwd']
-        if not isinstance(cwd,str) or Path(cwd).is_absolute() or '..' in Path(cwd).parts: raise ValueError('invalid cwd')
-        normalized='/'.join(Path(cwd).parts).replace('\\','/').lower()
-        if normalized=='conformance/results' or normalized.startswith('conformance/results/'): raise ValueError('historical evidence is not an execution directory')
-        timeout=command['timeout_seconds']
-        if type(timeout) is not int or not 0 < timeout <= 3600: raise ValueError('invalid timeout')
-    return value
-
-
-def git(root,*args):
-    return subprocess.run(['git','-C',str(root),*args],check=True,capture_output=True).stdout
-
-
-def run(root,spec_path,output):
-    root=root.resolve(strict=True)
-    spec_raw=spec_path.read_bytes(); spec=specification(read_json(spec_path))
-    revision=git(root,'rev-parse','HEAD').decode().strip()
+def run(root: Path, spec_path: Path, output: Path) -> bool:
+    root = root.resolve(strict=True)
+    spec_raw = spec_path.read_bytes()
+    spec = specification(read_json(spec_path))
+    revision = git(root, 'rev-parse', 'HEAD').decode().strip()
     # A reviewed source revision must exist. No full source snapshot is copied.
-    if git(root,'diff','HEAD','--binary'): raise ValueError('commit tracked changes before recording evidence')
-    if git(root,'ls-files','--others','--exclude-standard','-z'): raise ValueError('untracked files require review before recording evidence')
-    for command in spec['commands']:
-        cwd=(root/command['cwd']).resolve(strict=True)
-        if not cwd.is_relative_to(root) or not cwd.is_dir(): raise ValueError('cwd escapes repository')
-        if cwd.is_relative_to((root/'conformance/results').resolve()): raise ValueError('historical evidence is not an execution directory')
-    output.mkdir(parents=True,exist_ok=False)
-    (output/'spec.json').write_bytes(spec_raw)
-    rows=[]
-    for command in spec['commands']:
-        argv=list(command['argv'])
-        if argv[0]=='python': argv[0]=sys.executable
-        record=dict(id=command['id'],argv=argv,cwd=command['cwd'],timeout_seconds=command['timeout_seconds'])
-        with (output/(command['id']+'.stdout')).open('xb') as stdout, (output/(command['id']+'.stderr')).open('xb') as stderr:
+    if git(root, 'diff', 'HEAD', '--binary'):
+        raise ValueError('commit tracked changes before recording evidence')
+    if git(root, 'ls-files', '--others', '--exclude-standard', '-z'):
+        raise ValueError('untracked files require review before recording evidence')
+    for command in spec.commands:
+        cwd = (root / command.cwd).resolve(strict=True)
+        if not cwd.is_relative_to(root) or not cwd.is_dir():
+            raise ValueError('cwd escapes repository')
+        if cwd.is_relative_to((root / 'conformance/results').resolve()):
+            raise ValueError('historical evidence is not an execution directory')
+    output.mkdir(parents=True, exist_ok=False)
+    _ = (output / 'spec.json').write_bytes(spec_raw)
+    rows: list[Result] = []
+    for command in spec.commands:
+        argv = list(command.argv)
+        if argv[0] == 'python':
+            argv[0] = sys.executable
+        executed = Command(command.id, tuple(argv), command.cwd, command.timeout_seconds)
+        with (output / (command.id + '.stdout')).open('xb') as stdout, (output / (command.id + '.stderr')).open('xb') as stderr:
+            outcome: Exited | Interrupted
             try:
-                completed=subprocess.run(argv,cwd=root/command['cwd'],stdout=stdout,stderr=stderr,timeout=command['timeout_seconds'])
-                record.update(outcome='passed' if completed.returncode==0 else 'failed',exit_code=completed.returncode)
+                completed = subprocess.run(argv, cwd=root / command.cwd, stdout=stdout, stderr=stderr,
+                                           timeout=command.timeout_seconds)
+                outcome = Exited(completed.returncode)
             except subprocess.TimeoutExpired:
-                record.update(outcome='unknown',exit_code=None,reason='timeout; descendant completion and final log bytes not established')
+                outcome = Interrupted(Incomplete.UNKNOWN, 'timeout; descendant completion and final log bytes not established')
             except OSError:
-                record.update(outcome='not-run',exit_code=None,reason='process could not start')
-        rows.append(record)
-        if record['outcome'] in ('unknown','not-run'): break
-    files=[]
+                outcome = Interrupted(Incomplete.NOT_RUN, 'process could not start')
+        rows.append(Result(executed, outcome))
+        if isinstance(outcome, Interrupted):
+            break
+    files: list[File] = []
     for path in sorted(output.iterdir()):
-        data=path.read_bytes(); files.append(dict(path=path.name,bytes=len(data),sha256=digest(data)))
-    changed=bool(git(root,'diff','HEAD','--binary')) or git(root,'rev-parse','HEAD').decode().strip()!=revision
-    report=dict(version=1,kind='command-evidence',scope=spec['scope'],source_revision=revision,
-                runner_sha256=digest(Path(__file__).read_bytes()),source_changed=changed,
-                source_check='tracked HEAD and diff before/after; ignored inputs and transient changes are not covered',
-                environment=dict(python=sys.version,python_executable=sys.executable,platform=platform.platform(),machine=platform.machine()),
-                commands=rows,files=files,acceptance_decision=False)
-    (output/'manifest.json').write_text(json.dumps(report,indent=2,ensure_ascii=False)+'\n',encoding='utf-8',newline='\n')
-    verify(output)
-    return not changed and len(rows)==len(spec['commands']) and all(r['outcome']=='passed' for r in rows)
+        data = path.read_bytes()
+        files.append(File(path.name, len(data), digest(data)))
+    changed = bool(git(root, 'diff', 'HEAD', '--binary')) or git(root, 'rev-parse', 'HEAD').decode().strip() != revision
+    result = Report(spec.scope, revision, digest(Path(__file__).read_bytes()), changed,
+                    'tracked HEAD and diff before/after; ignored inputs and transient changes are not covered',
+                    Environment(sys.version, sys.executable, platform.platform(), platform.machine()),
+                    tuple(rows), tuple(files))
+    _ = (output / 'manifest.json').write_text(json.dumps(result.representation(), indent=2, ensure_ascii=False) + '\n',
+                                             encoding='utf-8', newline='\n')
+    _ = verify(output)
+    return not changed and len(rows) == len(spec.commands) and all(row.passed for row in rows)
 
 
-def verify(output):
-    value=read_json(output/'manifest.json')
-    if type(value.get('version')) is not int or value['version']!=1 or value.get('kind')!='command-evidence' or value.get('acceptance_decision') is not False: raise ValueError('wrong evidence kind')
-    if type(value.get('source_changed')) is not bool: raise ValueError('source change state missing')
-    if not re.fullmatch('[0-9a-f]{40}',value.get('source_revision','')): raise ValueError('source revision missing')
-    names=set()
-    for entry in value['files']:
-        name=entry['path']
-        if not isinstance(name,str) or not re.fullmatch('[a-z0-9.-]+',name) or name in ('.','..','manifest.json') or name in names: raise ValueError('invalid evidence path')
-        names.add(name); path=output/name
-        if path.is_symlink() or not path.is_file(): raise ValueError('evidence must be regular data')
-        data=path.read_bytes()
-        if type(entry['bytes']) is not int or len(data)!=entry['bytes'] or digest(data)!=entry['sha256']: raise ValueError('evidence hash mismatch')
-    if {p.name for p in output.iterdir()}!=names|{'manifest.json'}: raise ValueError('evidence file set changed')
-    spec=specification(read_json(output/'spec.json'))
-    if value.get('scope')!=spec['scope']: raise ValueError('scope mismatch')
-    if not 0<len(value['commands'])<=len(spec['commands']): raise ValueError('missing or extra command results')
-    if len(value['commands'])<len(spec['commands']) and value['commands'][-1]['outcome'] not in ('unknown','not-run'): raise ValueError('unexplained missing results')
-    for row,command in zip(value['commands'],spec['commands']):
-        if row['id']!=command['id'] or row['cwd']!=command['cwd'] or row['timeout_seconds']!=command['timeout_seconds']: raise ValueError('command identity mismatch')
-        expected=list(command['argv'])
-        if expected[0]=='python': expected[0]=value['environment']['python_executable']
-        if row['argv']!=expected: raise ValueError('command argv mismatch')
-        if row['outcome'] not in ('passed','failed','unknown','not-run'): raise ValueError('invalid outcome')
-        if row['outcome'] in ('passed','failed'):
-            if type(row['exit_code']) is not int or (row['exit_code']==0)!=(row['outcome']=='passed'): raise ValueError('contradictory outcome')
-        elif row['exit_code'] is not None: raise ValueError('unexecuted exit code')
-        if not {row['id']+'.stdout',row['id']+'.stderr'}<=names: raise ValueError('missing raw logs')
+def verify(output: Path) -> Report:
+    value = report(read_json(output / 'manifest.json'))
+    names: set[str] = set()
+    for entry in value.files:
+        name = entry.path
+        if not re.fullmatch('[a-z0-9.-]+', name) or name in ('.', '..', 'manifest.json') or name in names:
+            raise ValueError('invalid evidence path')
+        names.add(name)
+        path = output / name
+        if path.is_symlink() or not path.is_file():
+            raise ValueError('evidence must be regular data')
+        data = path.read_bytes()
+        if len(data) != entry.bytes or digest(data) != entry.sha256:
+            raise ValueError('evidence hash mismatch')
+    if {p.name for p in output.iterdir()} != names | {'manifest.json'}:
+        raise ValueError('evidence file set changed')
+    spec = specification(read_json(output / 'spec.json'))
+    if value.scope != spec.scope:
+        raise ValueError('scope mismatch')
+    if not 0 < len(value.commands) <= len(spec.commands):
+        raise ValueError('missing or extra command results')
+    if len(value.commands) < len(spec.commands) and not isinstance(value.commands[-1].outcome, Interrupted):
+        raise ValueError('unexplained missing results')
+    for row, command in zip(value.commands, spec.commands):
+        if (row.command.id != command.id or row.command.cwd != command.cwd
+                or row.command.timeout_seconds != command.timeout_seconds):
+            raise ValueError('command identity mismatch')
+        expected = list(command.argv)
+        if expected[0] == 'python':
+            expected[0] = value.environment.python_executable
+        if row.command.argv != tuple(expected):
+            raise ValueError('command argv mismatch')
+        if not {row.command.id + '.stdout', row.command.id + '.stderr'} <= names:
+            raise ValueError('missing raw logs')
     return value
 
 
-def main():
-    parser=argparse.ArgumentParser(description=__doc__)
-    sub=parser.add_subparsers(dest='operation',required=True)
-    collect=sub.add_parser('run'); collect.add_argument('spec',type=Path); collect.add_argument('output',type=Path)
-    check=sub.add_parser('verify'); check.add_argument('output',type=Path)
-    args=parser.parse_args()
+class Arguments(argparse.Namespace):
+    operation: Literal['run', 'verify'] = 'verify'
+    spec: Path = Path()
+    output: Path = Path()
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    sub = parser.add_subparsers(dest='operation', required=True)
+    collect = sub.add_parser('run')
+    _ = collect.add_argument('spec', type=Path)
+    _ = collect.add_argument('output', type=Path)
+    check = sub.add_parser('verify')
+    _ = check.add_argument('output', type=Path)
+    args = parser.parse_args(namespace=Arguments())
     try:
-        if args.operation=='verify': verify(args.output); return 0
-        return 0 if run(Path.cwd(),args.spec,args.output) else 1
-    except (ValueError,OSError,KeyError,TypeError,subprocess.SubprocessError) as error:
-        print(type(error).__name__+': evidence operation failed',file=sys.stderr); return 1
+        if args.operation == 'verify':
+            _ = verify(args.output)
+            return 0
+        return 0 if run(Path.cwd(), args.spec, args.output) else 1
+    except (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError) as error:
+        print(type(error).__name__ + ': evidence operation failed', file=sys.stderr)
+        return 1
 
 
-if __name__=='__main__': sys.exit(main())
+if __name__ == '__main__':
+    sys.exit(main())
