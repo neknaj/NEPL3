@@ -49,6 +49,214 @@ fn with_document_root<T>(
     })
 }
 #[test]
+fn nested_foreign_text_obeys_sentence_policy_before_doc_transport() -> Result<(), String> {
+    use nepl3_sentence_core::{model::EmbedRef as SentenceEmbed, text as st};
+    let compiled = compiled()?;
+    let input = r#"sentence sentence cons ruby text "A" math add 1 2 cons anno text "B" cons math mul 3 4 cons ruby text "C" text "see" nil cons break cons code "[]{}" nil"#;
+    with_document(input, |doc, r| {
+        let empty = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(r, &empty, &mut admission).map_err(err)?;
+        let [embed] = doc.value.embeds.as_slice() else {
+            return Err("one Sentence".into());
+        };
+        let syntax = nepl3_suite::adapters::document::sentence::lower(
+            embed,
+            embed.schema(),
+            &[nepl3_sentence_core::lower::ForeignInlineForm {
+                kind: "Form:InlineMath",
+                guest_schema: &compiled.others[0].schema,
+                guest_category: "Expr",
+            }],
+            r,
+            &mut codec,
+            &mut budget(),
+        )
+        .map_err(err)?;
+        assert_eq!(syntax.value.embeds.len(), 2);
+        let prepared =
+            st::prepare(&syntax.value, r, &mut budget(), codec.source_admission()).map_err(err)?;
+        let resolved = [
+            prepared
+                .resolve(SentenceEmbed(0), "three", &mut budget())
+                .map_err(err)?,
+            prepared
+                .resolve(SentenceEmbed(1), "twelve", &mut budget())
+                .map_err(err)?,
+        ];
+        // Omitted annotations still cannot carry duplicate or wrong-scope data.
+        let duplicate = [
+            prepared
+                .resolve(SentenceEmbed(1), "x", &mut budget())
+                .map_err(err)?,
+            prepared
+                .resolve(SentenceEmbed(1), "y", &mut budget())
+                .map_err(err)?,
+        ];
+        assert_eq!(
+            prepared.render(st::AnnotationPolicy::BaseOnly, &duplicate, &mut budget()),
+            Err(st::Error::Duplicate(SentenceEmbed(1)))
+        );
+        let other_value = syntax.value.clone();
+        let other =
+            st::prepare(&other_value, r, &mut budget(), codec.source_admission()).map_err(err)?;
+        let foreign = other
+            .resolve(SentenceEmbed(1), "x", &mut budget())
+            .map_err(err)?;
+        assert_eq!(
+            prepared.render(st::AnnotationPolicy::BaseOnly, &[foreign], &mut budget()),
+            Err(st::Error::WrongScope)
+        );
+        let identity = text::prepare(&doc, r, &mut codec, &mut budget())
+            .map_err(err)?
+            .identity()
+            .clone();
+        assert_eq!(identity.embeds.len(), 1);
+        for (policy, inner, count, expected) in [
+            (BaseOnly, st::AnnotationPolicy::BaseOnly, 0, "AB\n[]{}"),
+            (
+                WithReadings,
+                st::AnnotationPolicy::WithReadings,
+                1,
+                "A[three]B\n[]{}",
+            ),
+            (
+                WithAllNotes,
+                st::AnnotationPolicy::WithAllNotes,
+                2,
+                "A[three]B{twelve/C[see]}\n[]{}",
+            ),
+        ] {
+            let output = prepared
+                .render(inner, &resolved[..count], &mut budget())
+                .map_err(err)?;
+            assert_eq!(output, expected);
+            if count > 0 {
+                assert_eq!(
+                    prepared.render(inner, &resolved[..count - 1], &mut budget()),
+                    Err(st::Error::Unresolved(SentenceEmbed((count - 1) as u64)))
+                );
+            }
+            let target = &identity.embeds[0];
+            let request = PlainTextRequest {
+                document: doc.clone(),
+                sentence: root(&doc)?,
+                policy,
+                resolved: vec![ResolvedInlineText {
+                    document_digest: identity.document_digest,
+                    embed: target.embed,
+                    guest_digest: target.guest_digest,
+                    policy,
+                    text: output,
+                }],
+            };
+            let value =
+                wire::request_to_value(&request, r, &mut codec, &mut budget()).map_err(err)?;
+            for reason in [
+                ResolutionMismatch::Document,
+                ResolutionMismatch::Guest,
+                ResolutionMismatch::Embed,
+                ResolutionMismatch::Duplicate,
+                ResolutionMismatch::Policy,
+            ] {
+                let mut invalid = request.clone();
+                let entry = match reason {
+                    ResolutionMismatch::Document => {
+                        invalid.resolved[0].document_digest = Digest::of(b"other");
+                        0
+                    }
+                    ResolutionMismatch::Guest => {
+                        invalid.resolved[0].guest_digest = Digest::of(b"other");
+                        0
+                    }
+                    ResolutionMismatch::Embed => {
+                        invalid.resolved[0].embed = EmbedRef(u64::MAX);
+                        0
+                    }
+                    ResolutionMismatch::Duplicate => {
+                        invalid.resolved.push(invalid.resolved[0].clone());
+                        1
+                    }
+                    ResolutionMismatch::Policy => {
+                        invalid.resolved[0].policy = if policy == BaseOnly {
+                            WithReadings
+                        } else {
+                            BaseOnly
+                        };
+                        0
+                    }
+                };
+                assert_eq!(
+                    text::plain_text(&invalid, r, &mut codec, &mut budget())
+                        .map_err(err)?
+                        .outcome,
+                    PlainTextOutcome::Invalid {
+                        error: PlainTextFailure::InvalidResolution { entry, reason }
+                    }
+                );
+            }
+            let bytes = nepl3_wire::encode(&value, &mut budget()).map_err(err)?;
+            let mut a = SourceAdmission::default();
+            let mut receiver = FoundationCodec::new(r, &empty, &mut a).map_err(err)?;
+            let received = wire::request_from_value(
+                &nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?,
+                r,
+                &mut receiver,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            assert_eq!(
+                text::prepare(&received.document, r, &mut receiver, &mut budget())
+                    .map_err(err)?
+                    .identity(),
+                &identity
+            );
+            let reply =
+                text::plain_text(&received, r, &mut receiver, &mut budget()).map_err(err)?;
+            assert_eq!(
+                reply.outcome,
+                PlainTextOutcome::Complete {
+                    text: expected.into()
+                }
+            );
+            let wire_reply =
+                wire::reply_to_value(&reply, &received.document, r, &mut receiver, &mut budget())
+                    .map_err(err)?;
+            let bytes = nepl3_wire::encode(&wire_reply, &mut budget()).map_err(err)?;
+            assert_eq!(
+                wire::reply_from_value(
+                    &nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?,
+                    &received.document,
+                    r,
+                    &mut receiver,
+                    &mut budget()
+                )
+                .map_err(err)?,
+                reply
+            );
+            for length in [31, 33] {
+                let mut malformed = value.clone();
+                let NdfValue::Record(record) = &mut malformed else {
+                    return Err("request".into());
+                };
+                let NdfValue::List(entries) = &mut record.fields[3] else {
+                    return Err("resolved".into());
+                };
+                let NdfValue::Record(entry) = &mut entries[0] else {
+                    return Err("entry".into());
+                };
+                entry.fields[0] = NdfValue::Bytes(vec![0; length]);
+                assert!(matches!(
+                    wire::request_from_value(&malformed, r, &mut receiver, &mut budget()),
+                    Err(nepl3_doc_core::portable::PortableError::Shape)
+                ));
+            }
+        }
+        Ok(())
+    })
+}
+
+#[test]
 fn independent_sentence_text_is_bound_to_doc_policy_and_portable_identity() -> Result<(), String> {
     with_document(r#"sentence "a[字/じ]{b/note}""#, |doc, r| {
         let empty = SourceStore::default();
