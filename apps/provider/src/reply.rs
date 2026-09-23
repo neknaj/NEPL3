@@ -7,7 +7,7 @@ use nepl3_core::{
 };
 use nepl3_suite::dispatch::suspending;
 mod routing;
-pub use routing::{ReplyContext, ReplyRoutes, RouteError};
+pub use routing::{ActiveReplyFailure, ReplyContext, ReplyRoutes, RouteError, UncommittedReply};
 
 #[derive(Debug)]
 pub enum ReplyError {

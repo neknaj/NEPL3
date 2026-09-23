@@ -23,6 +23,45 @@ impl From<StopReason> for RouteError {
     }
 }
 
+/// A structurally checked reply whose lifetime correlation did not commit.
+/// The saved request and diagnostic grants stay borrowed from the original
+/// route table. This value does not authorize delivery, replay or Resume.
+pub struct UncommittedReply<'a, S> {
+    pub route_index: usize,
+    pub saved: &'a ReplyContext<'a, S>,
+    pub reply: OperationReply,
+}
+
+/// Retains a received reply when only the final lifetime check failed.
+/// Decode, routing and output-validation failures carry no checked reply.
+/// Inline ownership avoids an allocation after either Budget has stopped.
+pub struct ActiveReplyFailure<'a, S> {
+    pub cause: RouteError,
+    pub uncommitted: Option<UncommittedReply<'a, S>>,
+}
+impl<S> From<RouteError> for ActiveReplyFailure<'_, S> {
+    fn from(cause: RouteError) -> Self {
+        Self {
+            cause,
+            uncommitted: None,
+        }
+    }
+}
+impl<S> core::fmt::Debug for ActiveReplyFailure<'_, S> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("ActiveReplyFailure")
+            .field("cause", &self.cause)
+            .field(
+                "uncommitted_request",
+                &self
+                    .uncommitted
+                    .as_ref()
+                    .map(|r| r.saved.request.request_id),
+            )
+            .finish()
+    }
+}
+
 /// Host-saved requests in strictly increasing request-ID order. The borrow
 /// keeps IDs, contexts and grants unchanged after the single ordering check.
 /// This table is an index, not execution authorization or a lifetime table.
@@ -66,10 +105,10 @@ impl<R: Read, W: Write> Connection<R, W> {
     /// it must not block or panic. Terminal requests receive no notification.
     /// The table must contain only requests owned by this connection. The host
     /// retains responsibility for process termination/reaping and Await setup.
-    #[allow(clippy::too_many_arguments)]
-    pub fn receive_managed_reply<S: DiagnosticSourceResolver>(
+    #[allow(clippy::too_many_arguments, clippy::result_large_err)]
+    pub fn receive_managed_reply<'a, S: DiagnosticSourceResolver>(
         &mut self,
-        routes: &ReplyRoutes<'_, S>,
+        routes: &'a ReplyRoutes<'a, S>,
         lifetimes: &mut RequestLifetimes,
         registry: &SchemaRegistry,
         sources: &SourceStore,
@@ -77,7 +116,7 @@ impl<R: Read, W: Write> Connection<R, W> {
         transport: &mut Budget,
         validation: &mut Budget,
         cancel: impl FnMut(u64),
-    ) -> Result<(usize, OperationReply), RouteError> {
+    ) -> Result<(usize, OperationReply), ActiveReplyFailure<'a, S>> {
         let result = self.receive_active_reply(
             routes, lifetimes, registry, sources, admission, transport, validation,
         );
@@ -92,17 +131,17 @@ impl<R: Read, W: Write> Connection<R, W> {
     /// as Finished before returning. Await remains Running until the host checks
     /// dependency grants and commits suspend; do so before receiving again.
     /// On failure the host must cancel its remaining connection lifetimes.
-    #[allow(clippy::too_many_arguments)]
-    pub fn receive_active_reply<S: DiagnosticSourceResolver>(
+    #[allow(clippy::too_many_arguments, clippy::result_large_err)]
+    pub fn receive_active_reply<'a, S: DiagnosticSourceResolver>(
         &mut self,
-        routes: &ReplyRoutes<'_, S>,
+        routes: &'a ReplyRoutes<'a, S>,
         lifetimes: &mut RequestLifetimes,
         registry: &SchemaRegistry,
         sources: &SourceStore,
         admission: &mut SourceAdmission,
         transport: &mut Budget,
         validation: &mut Budget,
-    ) -> Result<(usize, OperationReply), RouteError> {
+    ) -> Result<(usize, OperationReply), ActiveReplyFailure<'a, S>> {
         let result = (|| {
             let (index, reply) = self.receive_routed_reply(
                 routes, registry, sources, admission, transport, validation,
@@ -112,7 +151,7 @@ impl<R: Read, W: Write> Connection<R, W> {
                 LifetimeError::Stopped(reason) => RouteError::Stopped(reason),
                 other => RouteError::Lifetime(other),
             };
-            if matches!(reply, OperationReply::Result(_)) {
+            let accepted = if matches!(reply, OperationReply::Result(_)) {
                 lifetimes.finish_reply(
                     saved.request.request_id,
                     &saved.request.operation,
@@ -126,8 +165,17 @@ impl<R: Read, W: Write> Connection<R, W> {
                     saved.context,
                     validation,
                 )
+            };
+            if let Err(error) = accepted {
+                return Err(ActiveReplyFailure {
+                    cause: map(error),
+                    uncommitted: Some(UncommittedReply {
+                        route_index: index,
+                        saved,
+                        reply,
+                    }),
+                });
             }
-            .map_err(map)?;
             Ok((index, reply))
         })();
         if result.is_err() {
