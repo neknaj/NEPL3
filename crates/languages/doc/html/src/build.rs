@@ -198,6 +198,14 @@ pub fn render_sentence(
 ) -> Result<RenderedFragment, RenderError> {
     render_prepared(&prepared.0, &[], budget)
 }
+/// Render a prepared Inline fragment as checked phrasing markup, preserving
+/// each emitted element's Doc node owner.
+pub fn render_inline(
+    prepared: &PreparedLocalInline<'_>,
+    budget: &mut Budget,
+) -> Result<RenderedFragment, RenderError> {
+    render_prepared(&prepared.0, &[], budget)
+}
 pub(crate) fn render_prepared(
     prepared: &crate::prepare::PreparedRendering<'_>,
     links: &[(u64, HtmlHref)],
@@ -216,6 +224,7 @@ pub(crate) fn render_prepared(
     let (root, slot) = match prepared.document.value.root {
         DocRoot::Article(root) => (root.0, HtmlSlot::Block),
         DocRoot::Sentence(root) => (root.0, HtmlSlot::Phrasing),
+        DocRoot::Inline(root) => (root.0, HtmlSlot::Phrasing),
         _ => return Err(RenderError::InternalShape),
     };
     let article = w.element(

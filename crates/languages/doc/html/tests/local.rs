@@ -232,3 +232,168 @@ fn output_budget_and_browser_depth_never_silently_flatten_the_document() -> Resu
     assert_eq!(req.document.value.nodes.len(), 804);
     Ok(())
 }
+
+fn inline_request() -> LocalHtmlRequest {
+    let mut req = request();
+    req.document.value.root = DocRoot::Inline(InlineRef(0));
+    req.document.value.nodes = vec![
+        DocKind::Concat {
+            inlines: vec![InlineRef(1), InlineRef(2)],
+        },
+        DocKind::Reference {
+            target: "target".into(),
+            label: InlineRef(3),
+        },
+        DocKind::Anchor {
+            id: "target".into(),
+            label: InlineRef(3),
+        },
+        DocKind::Ruby {
+            base: InlineRef(4),
+            reading: InlineRef(5),
+        },
+        DocKind::Text { text: "字".into() },
+        DocKind::Text { text: "じ".into() },
+    ]
+    .into_iter()
+    .map(|kind| DocNode {
+        kind,
+        locations: vec![],
+        origin: None,
+        span: None,
+    })
+    .collect();
+    req
+}
+
+#[test]
+fn inline_fragment_resolves_forward_labels_and_preserves_ruby_owners() -> Result<(), String> {
+    use nepl3_markup::html::{HtmlAttribute, HtmlHref, HtmlNode, HtmlSlot};
+    let r = registry()?;
+    let store = SourceStore::default();
+    let mut a = SourceAdmission::default();
+    let mut c = FoundationCodec::new(&r, &store, &mut a).map_err(err)?;
+    let req = inline_request();
+    let checked = nepl3_doc_core::labels::check_inline(
+        &req.document,
+        &r,
+        &mut b(),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    assert_eq!(checked.definitions().len(), 1);
+    assert_eq!(checked.references().len(), 1);
+    assert_eq!(
+        checked.references()[0].target,
+        nepl3_doc_core::labels::DocLabelId(0)
+    );
+    assert_eq!(checked.definitions()[0].node, 2);
+    let p = prepare_local_inline(&req.document, &req.options, &r, &mut c, &mut b()).map_err(err)?;
+    let rendered = render_inline(&p, &mut b()).map_err(err)?;
+    assert_eq!(rendered.markup.slot, HtmlSlot::Phrasing);
+    let mut ids = 0;
+    let mut refs = 0;
+    for node in &rendered.markup.fragment.nodes {
+        if let HtmlNode::Element { attributes, .. } = node {
+            for attr in attributes {
+                match attr {
+                    HtmlAttribute::Id { value } if value == "n-746172676574" => ids += 1,
+                    HtmlAttribute::Href {
+                        value: HtmlHref::Fragment { id },
+                    } if id == "n-746172676574" => refs += 1,
+                    _ => {}
+                }
+            }
+        }
+    }
+    assert_eq!((ids, refs), (1, 1));
+    // Both display occurrences retain the same semantic Text owners.
+    for (owner, text) in [(4, "字"), (5, "じ")] {
+        assert_eq!(rendered.origins.iter().filter(|origin| origin.node == owner
+            && matches!(&rendered.markup.fragment.nodes[origin.element as usize], HtmlNode::Text { text: value } if value == text)).count(), 2);
+    }
+    assert_eq!(req.document.value.nodes.len(), 6);
+    Ok(())
+}
+
+#[test]
+fn inline_fragment_rejects_wrong_root_labels_dependencies_and_stops() -> Result<(), String> {
+    use nepl3_doc_core::{
+        labels::LabelError,
+        prepare::{DocRequirement, PreparationError},
+    };
+    let r = registry()?;
+    let store = SourceStore::default();
+    let mut a = SourceAdmission::default();
+    let mut c = FoundationCodec::new(&r, &store, &mut a).map_err(err)?;
+    let article = request();
+    assert!(matches!(
+        prepare_local_inline(&article.document, &article.options, &r, &mut c, &mut b()),
+        Err(LocalPreparationError::Input(PreparationError::Label(
+            LabelError::ExpectedInline
+        )))
+    ));
+    let mut req = inline_request();
+    req.document.value.nodes[2].kind = DocKind::Anchor {
+        id: "other".into(),
+        label: InlineRef(3),
+    };
+    assert!(matches!(
+        prepare_local_inline(&req.document, &req.options, &r, &mut c, &mut b()),
+        Err(LocalPreparationError::Input(PreparationError::Label(
+            LabelError::Unresolved { .. }
+        )))
+    ));
+    req.document.value.nodes[1].kind = DocKind::Anchor {
+        id: "other".into(),
+        label: InlineRef(3),
+    };
+    assert!(matches!(
+        prepare_local_inline(&req.document, &req.options, &r, &mut c, &mut b()),
+        Err(LocalPreparationError::Input(PreparationError::Label(
+            LabelError::Duplicate { .. }
+        )))
+    ));
+    req.document.value.nodes[1].kind = DocKind::Link {
+        target: LinkTarget::External {
+            uri: "https://example.test/".into(),
+        },
+        label: InlineRef(3),
+    };
+    let Err(LocalPreparationError::NeedsResolution(plan)) =
+        prepare_local_inline(&req.document, &req.options, &r, &mut c, &mut b())
+    else {
+        return Err("external link must remain an explicit requirement".into());
+    };
+    assert!(
+        matches!(plan.requirements.as_slice(), [DocRequirement::Link { node: 1, target: LinkTarget::External { uri } }] if uri == "https://example.test/")
+    );
+    let req = inline_request();
+    let p = prepare_local_inline(&req.document, &req.options, &r, &mut c, &mut b()).map_err(err)?;
+    for reason in [
+        StopReason::WorkLimit,
+        StopReason::AllocationLimit,
+        StopReason::DepthLimit,
+    ] {
+        let mut limits = b().limits();
+        match reason {
+            StopReason::WorkLimit => limits.work = 0,
+            StopReason::AllocationLimit => limits.allocation_units = 0,
+            StopReason::DepthLimit => limits.depth = 0,
+            _ => unreachable!("fixed test cases"),
+        }
+        let mut limited = Budget::new(limits);
+        assert!(
+            matches!(prepare_local_inline(&req.document, &req.options, &r, &mut c, &mut limited),
+            Err(LocalPreparationError::Stopped(actual)) if actual == reason)
+        );
+        assert_eq!(limited.poll(), Err(reason));
+        let mut limited = Budget::new(limits);
+        assert_eq!(
+            render_inline(&p, &mut limited),
+            Err(RenderError::Stopped(reason))
+        );
+        assert_eq!(limited.poll(), Err(reason));
+    }
+    Ok(())
+}

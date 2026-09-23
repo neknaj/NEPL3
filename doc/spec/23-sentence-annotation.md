@@ -294,6 +294,16 @@ HTMLのforeign adapterはMathの出力操作を選択し、内側Sentenceの本�
 再解析後の構造比較、NDF受信後の表示、source対応、旧Doc注釈headの拒否をconsumer試験で検査する。
 Mathの数値評価は注釈のSentence内部へ進入せず、注釈の表示と印字は選択したhost操作が担当する。
 
+hostはSentenceのInlineへDocのInlineを選択するformも登録できる。
+printerは選択したLanguagePackageのformから綴りを取得し、Doc InlineをDoc printerへ渡す。
+Doc内のMathと、その注釈のSentenceへ再入する場合も、各言語のschema・categoryと累積Budgetを検査する。
+
+Doc Inlineの局所HTML表示は`prepare_local_inline`と`render_inline`を使用する。
+準備段階でfragment内のlabel、前方参照、重複出現を検査し、link・asset・foreign guestの依存要求を返す。
+外部の依存要求を持たない入力から、専用の準備済み型とPhrasingのHTMLを生成する。
+HTML要素は元のDoc nodeへの対応を保持する。外側の文書のnamespaceと複数fragment間の参照はcomposition側で解決する。
+この局所入口とSentence foreign HTMLの統合、文書全体の参照解決、Docの旧Sentence所有の撤去は、consumer所有移行の残件である。
+
 ## 注釈と移行完了条件
 
 以下は移行後にも維持する注釈契約と、旧経路を除去する際の受入条件である。実施順・各段階の残件はT07と実装状態で管理する。旧コメントの認識だけを先に削除する変更はmainへ統合しない。

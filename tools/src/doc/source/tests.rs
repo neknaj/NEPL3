@@ -308,6 +308,26 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                 assert_eq!(span.end(), start + 6);
                 assert_eq!(span.snapshot_ref().source, SourceId("doc-input".into()));
                 assert_eq!(span.snapshot_ref().digest, Digest::of(source.as_bytes()));
+                let options = nepl3_doc_html::RenderOptions {
+                    parallel: nepl3_doc_html::ParallelMode::Rows,
+                };
+                let prepared = nepl3_doc_html::prepare_local_inline(
+                    &inline, &options, registry, &mut codec, b,
+                )
+                .map_err(err)?;
+                let rendered = nepl3_doc_html::render_inline(&prepared, b).map_err(err)?;
+                assert_eq!(rendered.markup.slot, nepl3_markup::html::HtmlSlot::Phrasing);
+                for (owner, expected) in [(base.0, "字"), (reading.0, "じ")] {
+                    assert!(rendered.origins.iter().any(|origin| origin.node == owner
+                        && matches!(
+                            &rendered.markup.fragment.nodes[origin.element as usize],
+                            nepl3_markup::html::HtmlNode::Text { text } if text == expected)));
+                }
+                assert!(rendered.origins.iter().any(|origin| origin.node == root.0 && matches!(
+                    &rendered.markup.fragment.nodes[origin.element as usize],
+                    nepl3_markup::html::HtmlNode::Element { attributes, .. }
+                    if attributes.iter().any(|attribute| matches!(attribute,
+                        nepl3_markup::html::HtmlAttribute::Id { value } if value == "n-746172676574")))));
                 Ok(())
             },
         )?;
