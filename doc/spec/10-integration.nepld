@@ -129,7 +129,7 @@ body
       cons "[交換時/こうかんじ]のenvironment identityは、[既存/きそん]のportable codecで[計算/けいさん]する。" nil
     cons paragraph
       cons "[配布/はいふ]bridgeはMathのfree symbol[値/あたい]をRenderContextから[明示的/めいじてき]に[受/う]け[取/と]り、DocLabelとCircuitSignalは[自動/じどう]exportしない。"
-      cons "Doc annotation[内/ない]のlabelはそのsentenceの[局所/きょくしょ]scopeで[検査/けんさ]する。"
+      cons "Mathの[文章注釈/ぶんしょうちゅうしゃく]は[独立/どくりつ]Sentenceが[所有/しょゆう]する。Sentenceの[型/かた]・source・foreign[境界/きょうかい]は[選択/せんたく]したadapterで[検査/けんさ]し、[表示結果/ひょうじけっか]をMathへ[接続/せつぞく]する。"
       cons "[呼出/よびだ]し[側/がわ]のlabel[参照/さんしょう]が[必要/ひつよう]ならprofileのprojectionで[明示/めいじ]する。" nil
     nil
   cons section artifacts "5. artifactの[準備/じゅんび]" body

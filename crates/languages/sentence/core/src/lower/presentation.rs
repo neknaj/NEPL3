@@ -1,5 +1,5 @@
 //! Standard literal/prefix entry preserving the source presentation boundary.
-use super::{literal, prefix};
+use super::{ForeignInlineForm, literal, prefix_with_foreign};
 use crate::{
     model::Root,
     syntax::{NodeLocation, SentenceSyntax, SentenceView},
@@ -75,13 +75,33 @@ pub fn sentence<C: FoundationValueCodec>(
     codec: &mut C,
     b: &mut Budget,
 ) -> Result<SentenceSyntax, Error<C::Error>> {
+    sentence_with_foreign(input, surface, &[], registry, codec, b)
+}
+
+/// Preserve the source closure for host-selected foreign-inline forms. Guest
+/// syntax remains unevaluated and keeps its own local provenance identifiers.
+pub fn sentence_with_foreign<C: FoundationValueCodec>(
+    input: &ValidatedSyntaxBundle<'_>,
+    surface: &SchemaRef,
+    foreign_forms: &[ForeignInlineForm<'_>],
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<SentenceSyntax, Error<C::Error>> {
     let bundle = input.bundle();
     let root = bundle.node(bundle.root).map_err(super::Error::from)?;
     b.charge(Resource::Work, root.kind.len() as u64 + 1)?;
     if root.kind == "Leaf:SentenceLiteral" {
         return Ok(literal::sentence(input, surface, registry, codec, b)?);
     }
-    let projected = prefix(input, surface, registry, b, codec.source_admission())?;
+    let projected = prefix_with_foreign(
+        input,
+        surface,
+        foreign_forms,
+        registry,
+        b,
+        codec.source_admission(),
+    )?;
     let root = match projected.value.root {
         Root::Sentence(r) => r.0,
         Root::Inline(r) => r.0,

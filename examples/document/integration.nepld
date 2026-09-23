@@ -8,7 +8,7 @@ body
       nil
     nil
   cons display Math
-    label frac 5 6 Doc "[厳密値/げんみつち]"
+    label frac 5 6 Sentence "[厳密値/げんみつち]"
   cons circuit "半加算器"
     Circuit
       design

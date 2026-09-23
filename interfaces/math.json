@@ -20,7 +20,7 @@
       ],
       "constraints": []
     },
-    "DocGuestRef": {
+    "SentenceGuestRef": {
       "record": [
         [
           "index",
@@ -64,14 +64,14 @@
             }
           ]
         ],
-        "DocGuest": [
+        "SentenceGuest": [
           [
             "value",
             {
               "named": {
                 "package": "nepl3.math",
                 "revision": 1,
-                "name": "DocGuestRef"
+                "name": "SentenceGuestRef"
               }
             }
           ]
@@ -664,7 +664,7 @@
               "named": {
                 "package": "nepl3.math",
                 "revision": 1,
-                "name": "DocGuestRef"
+                "name": "SentenceGuestRef"
               }
             }
           ]
@@ -701,7 +701,7 @@
             }
           ]
         ],
-        "DocGuest": [
+        "SentenceGuest": [
           [
             "syntax",
             {
@@ -1214,7 +1214,7 @@
       "variant": {
         "Expr": [],
         "Row": [],
-        "DocGuest": []
+        "SentenceGuest": []
       },
       "constraints": []
     },
@@ -1292,7 +1292,7 @@
           }
         ],
         [
-          "docSchema",
+          "sentenceSchema",
           {
             "option": {
               "named": {

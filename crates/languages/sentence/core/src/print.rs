@@ -6,6 +6,8 @@ use crate::{
 };
 use alloc::{string::String, vec::Vec};
 use nepl3_core::budget::{Budget, Resource, StopReason};
+mod foreign;
+pub use foreign::{PreparedPrint, ResolvedInlineSource, prepare};
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum Error {
@@ -13,6 +15,9 @@ pub enum Error {
     Shape(check::Error),
     /// The selected standard surface has no form for this foreign closure.
     AdapterRequired(EmbedRef),
+    WrongScope,
+    Embed(EmbedRef),
+    Duplicate(EmbedRef),
 }
 impl From<StopReason> for Error {
     fn from(e: StopReason) -> Self {
@@ -28,8 +33,8 @@ impl From<check::Error> for Error {
     }
 }
 enum Part<'a> {
-    Node(u64),
-    List(&'a [InlineRef]),
+    Node(u64, u64),
+    List(&'a [InlineRef], u64),
     Word(&'static str),
     Text(&'a str),
 }
@@ -92,29 +97,41 @@ fn quoted(out: &mut String, text: &str, b: &mut Budget) -> Result<(), Error> {
 /// and stops return no partial string. This is not an HTML safety proof.
 pub fn prefix(value: &SentenceValue, b: &mut Budget) -> Result<String, Error> {
     value.validate_shape(b)?;
+    emit_prefix(value, None, b)
+}
+
+fn emit_prefix(
+    value: &SentenceValue,
+    foreign: Option<&[Option<&str>]>,
+    b: &mut Budget,
+) -> Result<String, Error> {
     let mut out = String::new();
     let mut stack = Vec::new();
     let root = match value.root {
         Root::Sentence(r) => r.0,
         Root::Inline(r) => r.0,
     };
-    push(&mut stack, Part::Node(root), b)?;
+    push(&mut stack, Part::Node(root, 1), b)?;
     while let Some(part) = stack.pop() {
         b.charge(Resource::Work, 1)?;
         match part {
             Part::Word(word) => emit(&mut out, word, b)?,
             Part::Text(text) => quoted(&mut out, text, b)?,
-            Part::List(items) => {
+            Part::List(items, depth) => {
                 if let Some((first, rest)) = items.split_first() {
                     emit(&mut out, "cons ", b)?;
-                    push(&mut stack, Part::List(rest), b)?;
+                    push(&mut stack, Part::List(rest, depth), b)?;
                     push(&mut stack, Part::Word(" "), b)?;
-                    push(&mut stack, Part::Node(first.0), b)?;
+                    push(&mut stack, Part::Node(first.0, depth), b)?;
                 } else {
                     emit(&mut out, "nil", b)?;
                 }
             }
-            Part::Node(id) => {
+            Part::Node(id, depth) => {
+                b.observe_depth(depth)?;
+                let child_depth = depth
+                    .checked_add(1)
+                    .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
                 let node = value
                     .nodes
                     .get(id as usize)
@@ -130,7 +147,7 @@ pub fn prefix(value: &SentenceValue, b: &mut Budget) -> Result<String, Error> {
                             },
                             b,
                         )?;
-                        push(&mut stack, Part::List(inlines), b)?;
+                        push(&mut stack, Part::List(inlines, child_depth), b)?;
                     }
                     Kind::Text { text } | Kind::Code { text } => {
                         emit(
@@ -146,15 +163,15 @@ pub fn prefix(value: &SentenceValue, b: &mut Budget) -> Result<String, Error> {
                     }
                     Kind::Ruby { base, reading } => {
                         emit(&mut out, "ruby ", b)?;
-                        push(&mut stack, Part::Node(reading.0), b)?;
+                        push(&mut stack, Part::Node(reading.0, child_depth), b)?;
                         push(&mut stack, Part::Word(" "), b)?;
-                        push(&mut stack, Part::Node(base.0), b)?;
+                        push(&mut stack, Part::Node(base.0, child_depth), b)?;
                     }
                     Kind::InlineAnno { base, notes } => {
                         emit(&mut out, "anno ", b)?;
-                        push(&mut stack, Part::List(notes), b)?;
+                        push(&mut stack, Part::List(notes, child_depth), b)?;
                         push(&mut stack, Part::Word(" "), b)?;
-                        push(&mut stack, Part::Node(base.0), b)?;
+                        push(&mut stack, Part::Node(base.0, child_depth), b)?;
                     }
                     Kind::Emphasis { inline } | Kind::Strong { inline } => {
                         emit(
@@ -166,16 +183,24 @@ pub fn prefix(value: &SentenceValue, b: &mut Budget) -> Result<String, Error> {
                             },
                             b,
                         )?;
-                        push(&mut stack, Part::Node(inline.0), b)?;
+                        push(&mut stack, Part::Node(inline.0, child_depth), b)?;
                     }
                     Kind::Break => emit(&mut out, "break", b)?,
                     Kind::ExternalLink { uri, label } => {
                         emit(&mut out, "link ", b)?;
-                        push(&mut stack, Part::Node(label.0), b)?;
+                        push(&mut stack, Part::Node(label.0, child_depth), b)?;
                         push(&mut stack, Part::Word(" "), b)?;
                         push(&mut stack, Part::Text(uri), b)?;
                     }
-                    Kind::ForeignInline { syntax } => return Err(Error::AdapterRequired(*syntax)),
+                    Kind::ForeignInline { syntax } => {
+                        let text = usize::try_from(syntax.0)
+                            .ok()
+                            .and_then(|index| foreign.and_then(|values| values.get(index)))
+                            .copied()
+                            .flatten()
+                            .ok_or(Error::AdapterRequired(*syntax))?;
+                        emit(&mut out, text, b)?;
+                    }
                 }
             }
         }

@@ -1,5 +1,4 @@
-//! Host composition of Math source printing with the production Doc lowerer and
-//! source printer. Neither language core depends on the other.
+//! Selected Math/Sentence printers; each language owns its meaning.
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::SchemaRegistry,
@@ -7,18 +6,16 @@ use nepl3_core::{
     value::SchemaRef,
     value_codec::FoundationValueCodec,
 };
-use nepl3_doc_core::{lower, print};
+use nepl3_sentence_core::{lower, print};
 
 #[derive(Debug)]
 pub enum Error<E> {
     Stopped(StopReason),
     Selection,
     Syntax(SyntaxError),
-    Lower(lower::DocumentLowerError<E>),
-    Portable(nepl3_doc_core::portable::PortableError<E>),
-    Print(print::PrintFailure),
-    Entry,
-    Shape(nepl3_doc_core::check::ShapeError),
+    Lower(lower::presentation::Error<E>),
+    Print(print::Error),
+    Shape(nepl3_sentence_core::check::Error),
     MathLower(nepl3_math_core::lower::LowerError),
     MathShape(nepl3_math_core::check::ShapeError),
     MathPrint(Box<nepl3_math_core::print::PrintError<Error<E>>>),
@@ -28,175 +25,148 @@ impl<E> From<StopReason> for Error<E> {
         Self::Stopped(reason)
     }
 }
-
-/// Explicitly selected Doc Sentence source adapter. This validates/lower/prints
-/// the supplied closure, rather than copying its retained source text. Embedded
-/// Math inside Doc is enabled only by an explicit `math_surface` selection.
-/// This synchronous host adapter imposes a 64-level total depth ceiling on its
-/// recursive composition, retaining the caller's stricter limits and sticky
-/// stops. Other guest languages still require separate host adapters.
-pub struct DocGuestPrinter<'a, C> {
+/// Selected Sentence annotation printer with optional `math` Inline support.
+/// The selected surface must declare that concrete form. Recursive calls retain
+/// caller limits and use an additional depth ceiling of 64.
+pub struct SentenceGuestPrinter<'a, C> {
     pub registry: &'a SchemaRegistry,
     pub surface: &'a SchemaRef,
     pub math_surface: Option<&'a SchemaRef>,
     pub codec: &'a mut C,
 }
-impl<C: FoundationValueCodec> nepl3_math_core::print::GuestPrinter for DocGuestPrinter<'_, C> {
+impl<C: FoundationValueCodec> nepl3_math_core::print::GuestPrinter for SentenceGuestPrinter<'_, C> {
     type Error = Error<C::Error>;
     fn print(&mut self, guest: &ForeignClosure, b: &mut Budget) -> Result<String, Self::Error> {
         let mut ceiling = b.limits();
         ceiling.depth = ceiling.depth.min(64);
-        let result = b.with_ceiling(ceiling, |b| self.document(guest, b));
+        let result = b.with_ceiling(ceiling, |b| self.sentence(guest, b));
         b.poll()?;
         result
     }
 }
-impl<C: FoundationValueCodec> DocGuestPrinter<'_, C> {
-    fn document(
+impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
+    fn sentence(
         &mut self,
         guest: &ForeignClosure,
         b: &mut Budget,
     ) -> Result<String, Error<C::Error>> {
-        b.poll().map_err(Error::Stopped)?;
+        b.poll()?;
         b.charge(
             Resource::Work,
-            (guest.syntax.schema.package.len() as u64)
-                .saturating_add(self.surface.package.len() as u64)
-                .saturating_add(guest.syntax.category.len() as u64)
-                .saturating_add(64),
-        )
-        .map_err(Error::Stopped)?;
+            (guest.syntax.schema.package.len()
+                + self.surface.package.len()
+                + guest.syntax.category.len()) as u64
+                + 64,
+        )?;
         if &guest.syntax.schema != self.surface || guest.syntax.category != "Sentence" {
             return Err(Error::Selection);
         }
         guest
             .validate(self.registry, b, self.codec.source_admission())
-            .map_err(|e| match e.stop_reason() {
-                Some(s) => Error::Stopped(s),
-                None => Error::Syntax(e),
-            })?;
-        let syntax = guest
+            .map_err(Error::Syntax)?;
+        let input = guest
             .syntax
             .bundle
             .validate_with_sources(self.registry, b, self.codec.source_admission())
-            .map_err(|e| match e.stop_reason() {
-                Some(s) => Error::Stopped(s),
-                None => Error::Syntax(e),
-            })?;
-        let document = lower::document(
-            &syntax,
+            .map_err(Error::Syntax)?;
+        let forms = self.math_surface.map(|surface| lower::ForeignInlineForm {
+            kind: "Form:InlineMath",
+            guest_schema: surface,
+            guest_category: "Expr",
+        });
+        let sentence = lower::presentation::sentence_with_foreign(
+            &input,
             self.surface,
-            nepl3_doc_core::check::Category::Sentence,
+            forms.as_slice(),
+            self.registry,
+            self.codec,
+            b,
+        )
+        .map_err(Error::Lower)?;
+        let shape = sentence.value.validate_shape(b).map_err(Error::Shape)?;
+        let depths = shape.foreign_depths(b).map_err(Error::Shape)?;
+        let prepared = print::prepare(
+            &sentence.value,
             self.registry,
             b,
-            self.codec,
+            self.codec.source_admission(),
         )
-        .map_err(|e| match e {
-            lower::DocumentLowerError::Stopped(s) => Error::Stopped(s),
-            e => Error::Lower(e),
-        })?;
-        let mut request = print::PrintRequest {
-            document,
-            mode: print::PrintMode::Prefix,
-            bindings: vec![],
-            guests: vec![],
-        };
-        if !request.document.value.embeds.is_empty()
-            && let Some(surface) = self.math_surface
-        {
-            let identity = print::identity(&request.document, self.registry, self.codec, b)
-                .map_err(Error::Portable)?;
-            let shape = request
-                .document
-                .value
-                .validate_shape(b)
-                .map_err(Error::Shape)?;
-            let depths = print::guest_depths(&shape, b)?;
+        .map_err(Error::Print)?;
+        b.charge(
+            Resource::AllocationUnits,
+            (sentence.value.embeds.len() as u64).saturating_mul(
+                (core::mem::size_of::<String>()
+                    + core::mem::size_of::<print::ResolvedInlineSource<'_, '_>>())
+                    as u64,
+            ),
+        )?;
+        let mut sources = Vec::with_capacity(sentence.value.embeds.len());
+        let base = b.current_depth();
+        for (closure, depth) in sentence.value.embeds.iter().zip(depths) {
+            let surface = self.math_surface.ok_or(Error::Selection)?;
             b.charge(
-                Resource::AllocationUnits,
-                (identity.guests.len() as u64)
-                    .saturating_mul(core::mem::size_of::<print::PrintedGuest>() as u64)
-                    .saturating_add(core::mem::size_of::<print::GuestBinding>() as u64)
-                    .saturating_add(surface.package.len() as u64)
-                    .saturating_add(4),
+                Resource::Work,
+                (closure.syntax.schema.package.len()
+                    + surface.package.len()
+                    + closure.syntax.category.len()) as u64
+                    + 64,
             )?;
-            request
-                .guests
-                .try_reserve_exact(identity.guests.len())
-                .map_err(|_| b.stop(StopReason::AllocationLimit))?;
-            request
-                .bindings
-                .try_reserve_exact(1)
-                .map_err(|_| b.stop(StopReason::AllocationLimit))?;
-            request.bindings.push(print::GuestBinding {
-                schema: surface.clone(),
-                category: "Expr".into(),
-                language: nepl3_doc_core::model::GuestLanguage::Math,
-            });
-            let base = b.current_depth();
-            for (index, target) in identity.guests.iter().enumerate() {
-                let closure = &request.document.value.embeds[index].closure;
-                b.charge(
-                    Resource::Work,
-                    (closure.syntax.schema.package.len() as u64)
-                        .saturating_add(surface.package.len() as u64)
-                        .saturating_add(closure.syntax.category.len() as u64)
-                        .saturating_add(64),
-                )?;
-                if &closure.syntax.schema != surface || closure.syntax.category != "Expr" {
-                    return Err(Error::Selection);
-                }
-                let text = b.with_depth_at_least(base.saturating_add(depths[index]), |b| {
-                    closure
-                        .validate(self.registry, b, self.codec.source_admission())
-                        .map_err(Error::Syntax)?;
-                    let syntax = closure
-                        .syntax
-                        .bundle
-                        .validate_with_sources(self.registry, b, self.codec.source_admission())
-                        .map_err(Error::Syntax)?;
-                    let math = nepl3_math_core::lower::expression(
-                        &syntax,
-                        surface,
-                        nepl3_math_core::check::Category::Expr,
-                        self.registry,
+            if &closure.syntax.schema != surface || closure.syntax.category != "Expr" {
+                return Err(Error::Selection);
+            }
+            let source = b.with_depth_at_least(base.saturating_add(depth), |b| {
+                let input = closure
+                    .syntax
+                    .bundle
+                    .validate_with_sources(self.registry, b, self.codec.source_admission())
+                    .map_err(Error::Syntax)?;
+                let math = nepl3_math_core::lower::expression(
+                    &input,
+                    surface,
+                    nepl3_math_core::check::Category::Expr,
+                    self.registry,
+                    b,
+                    self.codec.source_admission(),
+                )
+                .map_err(Error::MathLower)?;
+                let shape = math.value.validate_shape(b).map_err(Error::MathShape)?;
+                let result = nepl3_math_core::print::prefix(&shape, self, b);
+                b.poll()?;
+                result.map(|artifact| artifact.text).map_err(|error| {
+                    if let Err(reason) = b.charge(
+                        Resource::AllocationUnits,
+                        core::mem::size_of_val(&error) as u64,
+                    ) {
+                        return Error::Stopped(reason);
+                    }
+                    Error::MathPrint(Box::new(error))
+                })
+            })?;
+            // Serialize the selected one-field Inline form around Math output.
+            let len = source
+                .len()
+                .checked_add(5)
+                .ok_or_else(|| b.stop(StopReason::AllocationLimit))?;
+            b.charge(Resource::Work, len as u64)?;
+            b.charge(Resource::AllocationUnits, len as u64)?;
+            b.charge(Resource::OutputBytes, len as u64)?;
+            let mut inline = String::with_capacity(len);
+            inline.push_str("math ");
+            inline.push_str(&source);
+            sources.push(inline);
+        }
+        let mut resolved = Vec::with_capacity(sources.len());
+        for (index, source) in sources.iter().enumerate() {
+            resolved.push(
+                prepared
+                    .resolve(
+                        nepl3_sentence_core::model::EmbedRef(index as u64),
+                        source,
                         b,
-                        self.codec.source_admission(),
                     )
-                    .map_err(Error::MathLower)?;
-                    let shape = math.value.validate_shape(b).map_err(Error::MathShape)?;
-                    let result = nepl3_math_core::print::prefix(&shape, self, b);
-                    b.poll()?;
-                    result.map(|artifact| artifact.text).map_err(|e| {
-                        if let Err(reason) =
-                            b.charge(Resource::AllocationUnits, core::mem::size_of_val(&e) as u64)
-                        {
-                            return Error::Stopped(reason);
-                        }
-                        Error::MathPrint(Box::new(e))
-                    })
-                })?;
-                request.guests.push(print::PrintedGuest {
-                    document_digest: identity.document_digest,
-                    embed: target.embed,
-                    guest_digest: target.guest_digest,
-                    text,
-                });
-            }
+                    .map_err(Error::Print)?,
+            );
         }
-        let reply = print::print(&request, self.registry, self.codec, b).map_err(|e| match e {
-            nepl3_doc_core::portable::PortableError::Stopped(s) => Error::Stopped(s),
-            e => Error::Portable(e),
-        })?;
-        match reply.outcome {
-            print::PrintOutcome::Complete { artifact }
-                if artifact.entry == print::PrintEntry::Sentence =>
-            {
-                Ok(artifact.text)
-            }
-            print::PrintOutcome::Complete { .. } => Err(Error::Entry),
-            print::PrintOutcome::Invalid { error } => Err(Error::Print(error)),
-            print::PrintOutcome::Stopped { reason } => Err(Error::Stopped(b.stop(reason))),
-        }
+        prepared.render(&resolved, b).map_err(Error::Print)
     }
 }

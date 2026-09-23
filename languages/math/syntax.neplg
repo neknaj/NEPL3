@@ -13,7 +13,7 @@ nil
 cons namespace Symbol open
 cons category Expr Code
 cons category Row Code
-cons category DocGuest Code
+cons category SentenceGuest Code
 cons form Add Expr "add"
 cons field left local Expr
 cons field right local Expr
@@ -205,7 +205,7 @@ nil
 cons style head "marker" nil
 cons form Label Expr "label"
 cons field value local Expr
-cons field annotation local DocGuest
+cons field annotation local SentenceGuest
 nil
 group cons visit value
 cons visit annotation
@@ -219,8 +219,8 @@ nil
 group cons visit values
 nil
 cons style head "marker" nil
-cons form DocGuest DocGuest "Doc"
-cons field syntax foreign Doc Sentence
+cons form SentenceGuest SentenceGuest "Sentence"
+cons field syntax foreign Sentence Sentence
 nil
 group cons visit syntax
 nil

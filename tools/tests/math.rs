@@ -1,4 +1,4 @@
-//! Production four-language profile for Math parsing, including real Doc reader callbacks.
+//! Production composition for Math parsing, including independent Sentence callbacks.
 #[path = "math/annotations.rs"]
 mod annotations;
 #[path = "math/mathml.rs"]
@@ -13,14 +13,32 @@ use nepl3_core::{
     value::NdfValue,
 };
 use nepl3_engine::{parse::*, profile::*, tree::ValidatedParseTree};
-use nepl3_grammar_core::compile::package::CompiledLanguage;
 use nepl3_reader::{
     model::{ProviderCall, ReadRequest, ReaderContext},
     runtime::ProviderReply,
 };
+use nepl3_tools::doc::source::Compiled;
 use nepl3_wire::{environment::environment_digest, foundation::FoundationCodec};
 fn err(v: impl std::fmt::Debug) -> String {
     format!("{v:?}")
+}
+
+fn compiled() -> Result<Compiled, String> {
+    let mut compiled = nepl3_tools::doc::source::compiled()?;
+    // Portable Math operations need the meaning schema in addition to the
+    // surface schemas used by the shared source parser.
+    let descriptor = nepl3_math_core::schema::descriptor(&mut budget()).map_err(err)?;
+    compiled
+        .doc
+        .registry
+        .register(
+            descriptor.reference(&mut budget()).map_err(err)?,
+            descriptor,
+            &mut budget(),
+        )
+        .map_err(err)?;
+    compiled.doc.registry.finalize(&mut budget()).map_err(err)?;
+    Ok(compiled)
 }
 
 #[test]
@@ -477,7 +495,7 @@ fn math_source_evaluates_through_native_and_portable_syntax() -> Result<(), Stri
             1,
         ),
         (
-            "label 7 Doc sentence cons anno text \"\" cons text \"note\" nil nil",
+            "label 7 Sentence sentence cons anno text \"\" cons text \"note\" nil nil",
             7,
             1,
         ),
@@ -992,6 +1010,8 @@ fn with_input<T>(
     let implementation_for = |operation: &nepl3_core::value::OperationRef| {
         if operation.schema.package == "nepl3.doc.reader" {
             Digest::of(include_bytes!("../src/doc/reader.rs"))
+        } else if operation.schema.package == "nepl3.sentence.reader" {
+            Digest::of(include_bytes!("../src/sentence/reader.rs"))
         } else {
             Digest::of(include_bytes!(
                 "../../crates/foundation/reader/src/builtin/provider.rs"
@@ -1059,6 +1079,7 @@ fn with_input<T>(
                 ("Math", "Expr"),
                 ("Circuit", "Design"),
                 ("Grammar", "Root"),
+                ("Sentence", "Sentence"),
             ])
             .map(|(p, (alias, category))| {
                 Ok(LanguageRegistration {
@@ -1122,6 +1143,23 @@ fn parse_source_as(
     b: &mut Budget,
     a: &mut SourceAdmission,
 ) -> Result<nepl3_engine::recovery::ParseTree, String> {
+    match read_source_as(source, resolved, alias, category, b, a)? {
+        ParseOutcome::Complete { tree, cursor, .. } => {
+            assert_eq!(cursor, source.text().len() as u64);
+            Ok(tree)
+        }
+        other => Err(format!("candidate: {other:?}")),
+    }
+}
+
+fn read_source_as(
+    source: &SourceSnapshot,
+    resolved: &ResolvedParseProfile<'_>,
+    alias: &str,
+    category: &str,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+) -> Result<ParseOutcome, String> {
     let r = resolved.registry();
     let foundation = r.selected("nepl3.foundation", 1).ok_or("foundation")?;
     let mut store = SourceStore::default();
@@ -1137,6 +1175,7 @@ fn parse_source_as(
         ("Math", "Expr"),
         ("Circuit", "Design"),
         ("Grammar", "Root"),
+        ("Sentence", "Sentence"),
     ] {
         let owner = resolved.language(alias, b).map_err(err)?;
         contexts.push(ReaderContext {
@@ -1159,17 +1198,18 @@ fn parse_source_as(
             .collect::<Result<Vec<_>, String>>()?;
         let inputs = checked
             .iter()
-            .zip(["Doc", "Math", "Circuit", "Grammar"])
+            .zip(["Doc", "Math", "Circuit", "Grammar", "Sentence"])
             .map(|(context, alias)| EnvironmentInput { alias, context })
             .collect::<Vec<_>>();
         ParseEnvironmentSet::prepare(resolved, &inputs, &store, &mut codec, b)
             .map_err(|e| format!("environments: {e:?}"))?
     };
     let entry = resolved.entry(alias, Some(category), b).map_err(err)?;
-    let states = ["Doc", "Math", "Circuit", "Grammar"].map(|alias| LanguageReaderState {
-        alias: alias.into(),
-        state: NdfValue::Unit,
-    });
+    let states =
+        ["Doc", "Math", "Circuit", "Grammar", "Sentence"].map(|alias| LanguageReaderState {
+            alias: alias.into(),
+            state: NdfValue::Unit,
+        });
     let mut parser =
         ParseSession::new("doc-parse".into(), resolved, &environments, b).map_err(err)?;
     let mut result = parser
@@ -1217,6 +1257,8 @@ fn parse_source_as(
                             .map_err(|_| nepl3_reader::runtime::ReaderError::Context)?;
                         (if operation.schema.package == "nepl3.doc.reader" {
                             nepl3_tools::doc::reader::read
+                        } else if operation.schema.package == "nepl3.sentence.reader" {
+                            nepl3_tools::sentence::reader::read
                         } else {
                             nepl3_reader::builtin::provider::read
                         })(
@@ -1257,11 +1299,7 @@ fn parse_source_as(
                     .reserve(&continuation, &reserved, &store, b, a)
                     .map_err(err)?;
             }
-            ParseOutcome::Complete { tree, cursor, .. } => {
-                assert_eq!(cursor, source.text().len() as u64);
-                return Ok(tree);
-            }
-            other => return Err(format!("candidate: {other:?}")),
+            other => return Ok(other),
         }
     }
 }
@@ -1278,70 +1316,6 @@ fn budget() -> Budget {
         events: 1000,
     })
 }
-struct Compiled {
-    doc: CompiledLanguage,
-    others: Vec<nepl3_engine::package::LanguagePackage>,
-}
-fn compiled() -> Result<Compiled, String> {
-    let document = nepl3_tools::bootstrap::load(
-        include_bytes!("../../conformance/fixtures/doc/syntax.json"),
-        &mut budget(),
-        &mut SourceAdmission::default(),
-    )
-    .map_err(err)?;
-    let mut doc = nepl3_tools::doc::catalog::compile(
-        &document,
-        "standard.doc",
-        &mut budget(),
-        &mut SourceAdmission::default(),
-    )?;
-    let mut others = Vec::new();
-    for (name, seed) in [
-        (
-            "math",
-            include_bytes!("../../conformance/fixtures/doc/math.json").as_slice(),
-        ),
-        (
-            "circuit",
-            include_bytes!("../../conformance/fixtures/doc/circuit.json").as_slice(),
-        ),
-        (
-            "grammar",
-            include_bytes!("../../conformance/fixtures/doc/grammar.json").as_slice(),
-        ),
-    ] {
-        let document =
-            nepl3_tools::bootstrap::load(seed, &mut budget(), &mut SourceAdmission::default())
-                .map_err(err)?;
-        let other = nepl3_tools::doc::catalog::compile(
-            &document,
-            &format!("standard.{name}"),
-            &mut budget(),
-            &mut SourceAdmission::default(),
-        )?;
-        let schema = other.package.schema.clone();
-        let descriptor = other
-            .registry
-            .descriptor(&schema)
-            .ok_or("surface descriptor")?
-            .clone();
-        doc.registry
-            .register(schema, descriptor, &mut budget())
-            .map_err(err)?;
-        others.push(other.package);
-    }
-    let descriptor = nepl3_math_core::schema::descriptor(&mut budget()).map_err(err)?;
-    doc.registry
-        .register(
-            descriptor.reference(&mut budget()).map_err(err)?,
-            descriptor,
-            &mut budget(),
-        )
-        .map_err(err)?;
-    doc.registry.finalize(&mut budget()).map_err(err)?;
-    Ok(Compiled { doc, others })
-}
-
 #[test]
 fn all_math_constructors_lower_from_the_actual_parser_and_first_receiver() -> Result<(), String> {
     use nepl3_math_core::{check::Category, model::MathRoot};
@@ -1370,7 +1344,7 @@ fn all_math_constructors_lower_from_the_actual_parser_and_first_receiver() -> Re
         let category = match entry {
             "Expr" => Category::Expr,
             "Row" => Category::Row,
-            "DocGuest" => Category::DocGuest,
+            "SentenceGuest" => Category::SentenceGuest,
             _ => return Err("entry fixture".into()),
         };
         with_input(&compiled, input, entry, |tree, profile, b, a| {
@@ -1391,7 +1365,7 @@ fn all_math_constructors_lower_from_the_actual_parser_and_first_receiver() -> Re
             )
             .map_err(err)?;
             assert_eq!(tree.tree(), &original_tree);
-            if kind == "Label" || entry == "DocGuest" {
+            if kind == "Label" || entry == "SentenceGuest" {
                 let shape = original.value.validate_shape(&mut budget()).map_err(err)?;
                 let bindings =
                     nepl3_math_core::binding::analyze(&shape, &mut budget()).map_err(err)?;
@@ -1409,7 +1383,7 @@ fn all_math_constructors_lower_from_the_actual_parser_and_first_receiver() -> Re
             let root = match original.value.root {
                 MathRoot::Expr(v) => v.0,
                 MathRoot::Row(v) => v.0,
-                MathRoot::DocGuest(v) => v.0,
+                MathRoot::SentenceGuest(v) => v.0,
             };
             let empty = SourceStore::default();
             let mut admission = SourceAdmission::default();
@@ -1540,7 +1514,7 @@ fn math_lower_failures_keep_original_constructor_and_sticky_resource_reason() ->
     }
     for input in [
         "let x frac 1 2 add x y",
-        "label x Doc sentence cons anno text \"\" cons text \"note\" nil nil",
+        "label x Sentence sentence cons anno text \"\" cons text \"note\" nil nil",
     ] {
         with_input(&compiled, input, "Expr", |tree, profile, b, a| {
             let checked = tree
@@ -1559,7 +1533,7 @@ fn math_lower_failures_keep_original_constructor_and_sticky_resource_reason() ->
                 &mut SourceAdmission::default(),
             )
             .map_err(err)?;
-            // Doc annotation remains syntax, including its invalid empty Anno.
+            // Sentence annotation remains syntax, including its invalid empty Anno.
             assert_eq!(
                 baseline.value.embeds.len(),
                 usize::from(input.starts_with("label"))

@@ -149,6 +149,13 @@ prefix parse/check/printは別の受入である。
 foreign-inlineは登録されたadapterが別の具体formで導入する。全guestを列挙するformや、
 任意の文字列を未検査foreign値へ変換する入口は標準Sentence packageへ追加しない。
 
+`lower::prefix_with_foreign`は、hostが選択した追加Inline formを受け取る。
+選択にはformのkind、guestの完全なschema identity、categoryを指定する。
+追加formは単一のforeign fieldを持ち、照合後にForeignClosureを保持する。
+標準constructorの上書き、重複した選択、未選択のform、guest identityとcategoryの不一致を拒否する。
+`lower::presentation::sentence_with_foreign`は同じ選択を使い、意味nodeとSource/Origin/Viewの対応を保持する。
+この変換が行う操作は構造の取込みであり、guestの実行は別途認可された操作が担当する。
+
 SentenceのCode modeは空白（space/tab/CR/LF）だけをskipする。独立comment・annotationや
 directiveをskipに入れない。旧Docのcomment readerをSentenceへ再利用せず、旧`#`入力、
 arity不足、未消費の末尾入力を成功文書にしない。既存Docの旧comment撤去は別の移行境界である。
@@ -196,6 +203,13 @@ AdapterRequiredを返す。印字は元の綴り・Source/Origin・共有index�
 本番packageで標準prefixのparse/lower/print一致とText payload復元を検査する。
 foreign adapterを含む全意味往復とDoc consumer移行の完了とは区別する。
 
+`print::prepare`はSentenceの構造とforeign closureを検証し、不変借用する。
+hostは選択したguest printerから、foreign Inline form全体のsourceを取得し、
+`PreparedPrint::resolve`で入力とembedへ対応付ける。`render`はそのsourceを出現順に組み込む。
+別入力の結果、同じembedの重複指定、未解決のembedを拒否する。
+sourceの文法と意味対応はhost側adapterの検証対象である。
+出力時にもWork・Allocation・OutputBytes・Depthを計上し、停止時は部分文字列を返さない。
+
 ## Sentenceのplain-text生成
 
 Sentence coreのnative API `text::prepare`は`SentenceValue`の構造とforeign closureを検証し、
@@ -229,9 +243,14 @@ hostは対応するstylesheetの出自と配置を管理する。外部URIと出
 Work・Nodes・AllocationUnits・Depthを生成と検証に計上し、失敗・停止時は部分fragmentを返さない。
 serializeのOutputBytesはmarkup側で計上する。
 
-現行の入口は標準Inlineを対象とし、ForeignInlineには`ForeignAdapterRequired`を返す。
-guestの意味処理・出力は明示的なrole adapterで接続する。Mathの文章注釈の所有移行では、
-この出力境界、foreign処理、既存のsyntax identityとsource対応を一貫して接続する。
+標準入口はForeignInlineへ`ForeignAdapterRequired`を返す。`render_with_foreign`では、
+入力closureの検証後に、hostが選択したcallbackを各出現について実行する。
+callbackのowned markupは呼出元のDepthを保持してphrasingとして検査し、arenaを移動して結合する。
+`ForeignPlacement`はembedと出力arena内の連続範囲を対応付ける。guest内部の意味nodeとの対応は、
+その言語の出力metadataを保持するhostが、この配置情報に従って更新する。
+callback後にBudgetの停止を確認し、停止後に返された成功値と後続callbackを公開・実行しない。
+Mathの文章注釈では、内側Mathのnode対応と注釈対応をSentenceの配置へ移し、
+外側MathMLからHTMLへの変換でも同じ対応を更新する。
 
 ## Doc本文readerへの接続
 
@@ -254,8 +273,26 @@ Doc SentencePayloadであり、同じschema identityで独立Sentence payloadを
 生成manifestに記録する。Markdownの出自はページ固有のsourceと実際の参照入力に対応する。
 正本から生成し、本文・リンク・注釈の一致とmanifestの整合を確認する。
 この接続はDoc本文の解析を独立Sentenceへ移す段階である。重複parserの撤去後も、Doc意味schemaの
-Sentence所有、現行lowerが受信するDoc SentencePayload、Mathとの既存bridgeは残る。
-これらは後続のconsumer所有移行で整理する。
+Sentence所有と、現行lowerが受信するDoc SentencePayloadは残る。
+DocのInlineMath・DisplayMathをMath表示へ接続するadapterも引き続き必要である。
+Mathの文章注釈は独立Sentenceを直接使用する。Doc本文の二重所有は後続のconsumer所有移行で整理する。
+
+## hostが選択するforeign Inlineの構築
+
+hostは、Grammar compilerの型付き`ForeignForm`を通じて、既存categoryへ単一のforeign fieldを持つformを追加できる。
+宣言にはkind、category、spelling、field、foreign alias、guest category、生成理由を指定する。
+compilerは追加宣言を含めてsurface descriptorを生成し、そのidentityでreaderと全formを構築する。
+既存kindとの衝突、重複kind、空の宣言情報、未定義category、同一読取りcontextでのspelling衝突を拒否する。
+元の文法sourceと由来を保持し、hostが生成した宣言には独立したSynthetic Originを付ける。
+foreign aliasの実schemaとcategoryはParseProfileの解決時に検査する。
+
+Doc hostは、この経路でSentenceのInlineへ`math Expr`を追加し、MathのExprを明示的に選択する。
+標準Sentence単独のpackageは従来の宣言集合を保持する。選択後のsurfaceは追加宣言に対応するschema identityを持つ。
+Math注釈のprinterはSentenceを構造としてlowerし、foreign MathをMath printerへ渡す。
+共有guestの呼出しには最深の出現位置を使用し、呼出元のDepthと累積Budgetを保持する。
+HTMLのforeign adapterはMathの出力操作を選択し、内側Sentenceの本文・読みの対応を最終HTMLへ保持する。
+再解析後の構造比較、NDF受信後の表示、source対応、旧Doc注釈headの拒否をconsumer試験で検査する。
+Mathの数値評価は注釈のSentence内部へ進入せず、注釈の表示と印字は選択したhost操作が担当する。
 
 ## 注釈と移行完了条件
 

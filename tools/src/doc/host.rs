@@ -15,9 +15,9 @@ pub fn native<'a>(
 ) -> Result<NativeHost<'a>, ParseError> {
     b.charge(
         Resource::AllocationUnits,
-        4 * core::mem::size_of::<NativeReader>() as u64,
+        5 * core::mem::size_of::<NativeReader>() as u64,
     )?;
-    let mut readers = Vec::with_capacity(4);
+    let mut readers = Vec::with_capacity(5);
     for kind in [
         BuiltinReader::Name,
         BuiltinReader::Number,
@@ -31,6 +31,10 @@ pub fn native<'a>(
     readers.push(NativeReader {
         operation: super::reader::signature(registry, b)?.operation,
         read: super::reader::read,
+    });
+    readers.push(NativeReader {
+        operation: crate::sentence::reader::signature(registry, b)?.operation,
+        read: crate::sentence::reader::read,
     });
     NativeHost::new(registry, implementation, prefix, readers, b)
 }

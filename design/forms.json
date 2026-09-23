@@ -1139,7 +1139,7 @@
             },
             {
               "name": "annotation",
-              "read": "Math/DocGuest"
+              "read": "Math/SentenceGuest"
             }
           ]
         }
@@ -1162,14 +1162,14 @@
       },
       "leaf": null
     },
-    "Math/DocGuest": {
+    "Math/SentenceGuest": {
       "forms": {
-        "Doc": {
-          "kind": "DocGuest",
+        "Sentence": {
+          "kind": "SentenceGuest",
           "fields": [
             {
               "name": "syntax",
-              "read": "Doc/Sentence"
+              "read": "Sentence/Sentence"
             }
           ]
         }

@@ -8,7 +8,7 @@ OUTPUT=ROOT/"crates/languages/math/core/src/portable/value/generated.rs"
 def generate():
     types=json.loads((ROOT/"interfaces/math.json").read_text(encoding="utf-8"))["types"]
     out=["// Generated from interfaces/math.json by tools/generate/math.py. Do not edit.","use super::*;","#[rustfmt::skip]","mod adapters {", "use super::*;"]
-    rename={"languageHint":"language_hint","sourceMaps":"source_maps","documentDigest":"document_digest","guestDigest":"guest_digest","syntaxDigest":"syntax_digest","docSchema":"doc_schema"}
+    rename={"languageHint":"language_hint","sourceMaps":"source_maps","documentDigest":"document_digest","guestDigest":"guest_digest","syntaxDigest":"syntax_digest","sentenceSchema":"sentence_schema"}
     for name,shape in types.items():
         if name in ("MathSyntax","MathPrintRequest") or name.startswith("View:"): continue
         out.append(f"impl Value for {name} {{")

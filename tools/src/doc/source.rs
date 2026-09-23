@@ -4,6 +4,8 @@
 use nepl3_core::{budget::*, source::*};
 use nepl3_engine::{profile::*, tree::ValidatedParseTree};
 use nepl3_grammar_core::compile::package::CompiledLanguage;
+#[cfg(test)]
+mod tests;
 pub fn err(v: impl std::fmt::Debug) -> String {
     format!("{v:?}")
 }
@@ -15,6 +17,11 @@ pub fn host_identity() -> Digest {
             include_str!("../source/host.rs"),
             include_str!("../source/driver.rs"),
             include_str!("reader.rs"),
+            include_str!("../sentence/reader.rs"),
+            include_str!("../sentence/reader/descriptor.rs"),
+            include_str!("../sentence/catalog.rs"),
+            include_str!("../bootstrap/runtime.rs"),
+            include_str!("../bootstrap/runtime/host.rs"),
             include_str!("../../../crates/integration/suite/src/adapters/sentence/document.rs"),
             include_str!("../../../crates/foundation/reader/src/builtin/provider.rs")
         )
@@ -136,6 +143,7 @@ pub fn with_named_input_limits<T>(
                 "nepl3.engine",
                 "nepl3.doc",
                 "nepl3.doc.reader",
+                "nepl3.sentence.reader",
                 "nepl3.grammar",
             ]
             .iter()
@@ -155,6 +163,7 @@ pub fn with_named_input_limits<T>(
                 ("Math", "Expr"),
                 ("Circuit", "Design"),
                 ("Grammar", "Root"),
+                ("Sentence", "Sentence"),
             ])
             .map(|(p, (alias, category))| {
                 Ok(LanguageRegistration {
@@ -309,6 +318,37 @@ pub fn compiled() -> Result<Compiled, String> {
             .map_err(err)?;
         others.push(other.package);
     }
+    let sentence = crate::sentence::catalog::standard_with_foreign_forms(
+        host_identity(),
+        &[nepl3_grammar_core::compile::package::ForeignForm {
+            kind: "InlineMath",
+            category: "Inline",
+            spelling: "math",
+            field: "syntax",
+            alias: "Math",
+            guest_category: "Expr",
+            origin_reason: "Doc host selects Math expressions in Sentence Inline",
+        }],
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    for schema in [
+        &sentence.package.schema,
+        sentence
+            .registry
+            .selected("nepl3.sentence.reader", 1)
+            .ok_or("Sentence reader schema")?,
+    ] {
+        let descriptor = sentence
+            .registry
+            .descriptor(schema)
+            .ok_or("Sentence descriptor")?
+            .clone();
+        doc.registry
+            .register(schema.clone(), descriptor, &mut budget())
+            .map_err(err)?;
+    }
+    others.push(sentence.package);
     doc.registry.finalize(&mut budget()).map_err(err)?;
     Ok(Compiled { doc, others })
 }

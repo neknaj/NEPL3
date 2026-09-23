@@ -56,6 +56,28 @@ pub struct ElementOrigin {
     pub element: u64,
     pub node: u64,
 }
+/// Contiguous copy of one selected guest's markup arena in the final output.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ForeignPlacement {
+    pub embed: EmbedRef,
+    pub first_element: u64,
+    pub elements: u64,
+}
+#[derive(Debug)]
+pub enum RenderFailure<E> {
+    Sentence(Error),
+    Foreign(E),
+}
+impl<E> From<Error> for RenderFailure<E> {
+    fn from(error: Error) -> Self {
+        Self::Sentence(error)
+    }
+}
+impl<E> From<StopReason> for RenderFailure<E> {
+    fn from(reason: StopReason) -> Self {
+        Self::Sentence(Error::Stopped(reason))
+    }
+}
 
 /// Immutable output and correspondence bound to the live original syntax.
 /// No generated-source Span or transferable validation identity is invented.
@@ -63,6 +85,7 @@ pub struct RenderedSentence<'a> {
     input: &'a SentenceSyntax,
     markup: HtmlRequest,
     origins: Vec<ElementOrigin>,
+    foreign: Vec<ForeignPlacement>,
 }
 impl<'a> RenderedSentence<'a> {
     pub fn input(&self) -> &'a SentenceSyntax {
@@ -76,6 +99,22 @@ impl<'a> RenderedSentence<'a> {
     }
     pub fn into_markup(self) -> HtmlRequest {
         self.markup
+    }
+
+    /// Transfer the generated tree and all element correspondences together.
+    /// The borrowed input identifies the origin arena for every `node` index.
+    /// A composing host retains that input and remaps every `element` when it
+    /// inserts this fragment into a larger output tree. These raw parts confer
+    /// no portable validation proof after mutation or transport.
+    pub fn into_parts(
+        self,
+    ) -> (
+        &'a SentenceSyntax,
+        HtmlRequest,
+        Vec<ElementOrigin>,
+        Vec<ForeignPlacement>,
+    ) {
+        (self.input, self.markup, self.origins, self.foreign)
     }
 }
 
@@ -102,9 +141,84 @@ struct Builder<'b> {
     depths: Vec<u64>,
     origins: Vec<ElementOrigin>,
     jobs: Vec<Job>,
+    classes: Vec<String>,
+    foreign: Vec<ForeignPlacement>,
     b: &'b mut Budget,
 }
 impl Builder<'_> {
+    fn guest(
+        &mut self,
+        parent: u64,
+        cause: u64,
+        embed: EmbedRef,
+        markup: HtmlRequest,
+    ) -> Result<(), Error> {
+        let depth = self
+            .b
+            .current_depth()
+            .saturating_add(self.depths[parent as usize]);
+        self.b.with_depth_at_least::<_, Error>(depth, |b| {
+            validate(&markup.fragment, HtmlSlot::Phrasing, &markup.policy, b)?;
+            Ok(())
+        })?;
+        let offset = self.nodes.len() as u64;
+        let count = markup.fragment.nodes.len() as u64;
+        let root = offset
+            .checked_add(markup.fragment.root)
+            .ok_or(Error::InternalShape)?;
+        for mut node in markup.fragment.nodes {
+            self.b.charge(Resource::Nodes, 1)?;
+            match &mut node {
+                HtmlNode::Element { children, .. } | HtmlNode::MathElement { children, .. } => {
+                    for child in children {
+                        self.b.charge(Resource::Work, 1)?;
+                        *child = offset.checked_add(*child).ok_or(Error::InternalShape)?;
+                    }
+                }
+                HtmlNode::Text { .. } => {}
+            }
+            let element = self.nodes.len() as u64;
+            push(&mut self.nodes, node, self.b)?;
+            // Guest children are complete; the Sentence builder adds no nodes to them.
+            push(&mut self.depths, 0, self.b)?;
+            push(
+                &mut self.origins,
+                ElementOrigin {
+                    element,
+                    node: cause,
+                },
+                self.b,
+            )?;
+        }
+        let Some(HtmlNode::Element { children, .. }) = self.nodes.get_mut(parent as usize) else {
+            return Err(Error::InternalShape);
+        };
+        push(children, root, self.b)?;
+        for class in markup.policy.classes {
+            let mut present = false;
+            for existing in &self.classes {
+                self.b
+                    .charge(Resource::Work, existing.len().min(class.len()) as u64 + 1)?;
+                if existing == &class {
+                    present = true;
+                    break;
+                }
+            }
+            if !present {
+                push(&mut self.classes, class, self.b)?;
+            }
+        }
+        push(
+            &mut self.foreign,
+            ForeignPlacement {
+                embed,
+                first_element: offset,
+                elements: count,
+            },
+            self.b,
+        )?;
+        Ok(())
+    }
     fn add(&mut self, parent: Option<u64>, cause: u64, node: HtmlNode) -> Result<u64, Error> {
         let depth = match parent {
             Some(p) => self
@@ -178,7 +292,34 @@ pub fn render<'a>(
     b: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> Result<RenderedSentence<'a>, Error> {
-    input.validate(registry, b, admission)?;
+    match render_with_foreign(
+        input,
+        registry,
+        &mut |_, embed, _| Err(Error::ForeignAdapterRequired(embed)),
+        b,
+        admission,
+    ) {
+        Ok(value) => Ok(value),
+        Err(RenderFailure::Sentence(error) | RenderFailure::Foreign(error)) => Err(error),
+    }
+}
+/// Invoke an explicitly selected host adapter for each foreign occurrence.
+/// Input closure validation precedes callbacks. Returned markup is checked as
+/// phrasing content under the current depth and joined by moving its arena.
+pub fn render_with_foreign<'a, E: From<StopReason>>(
+    input: &'a SentenceSyntax,
+    registry: &SchemaRegistry,
+    adapter: &mut impl FnMut(
+        &nepl3_core::syntax::ForeignClosure,
+        EmbedRef,
+        &mut Budget,
+    ) -> Result<HtmlRequest, E>,
+    b: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<RenderedSentence<'a>, RenderFailure<E>> {
+    input
+        .validate(registry, b, admission)
+        .map_err(Error::from)?;
     let root = match input.value.root {
         Root::Sentence(r) => r.0,
         Root::Inline(r) => r.0,
@@ -188,13 +329,15 @@ pub fn render<'a>(
         depths: Vec::new(),
         origins: Vec::new(),
         jobs: Vec::new(),
+        classes: Vec::new(),
+        foreign: Vec::new(),
         b,
     };
     let output_root = builder.element(None, root, HtmlTag::Span)?;
     builder.class(output_root, "nepl-sentence")?;
     builder.job(root, output_root)?;
     while let Some(Job { node, parent }) = builder.jobs.pop() {
-        builder.b.charge(Resource::Work, 1)?;
+        builder.b.charge(Resource::Work, 1).map_err(Error::from)?;
         match input
             .value
             .nodes
@@ -264,11 +407,30 @@ pub fn render<'a>(
                 builder.jobs[start..].reverse();
                 builder.job(base.0, base_target)?;
             }
-            Kind::ForeignInline { syntax } => return Err(Error::ForeignAdapterRequired(*syntax)),
+            Kind::ForeignInline { syntax } => {
+                let closure = &input.value.embeds[syntax.0 as usize];
+                let depth = builder
+                    .b
+                    .current_depth()
+                    .saturating_add(builder.depths[parent as usize]);
+                let markup = builder
+                    .b
+                    .with_depth_at_least(depth, |b| adapter(closure, *syntax, b))
+                    .map_err(RenderFailure::Foreign)?;
+                builder.b.poll().map_err(Error::from)?;
+                builder.guest(parent, node, *syntax, markup)?;
+            }
         }
     }
-    let mut classes = Vec::new();
+    let mut classes = builder.classes;
     for name in CLASSES {
+        builder.b.charge(
+            Resource::Work,
+            (classes.len() as u64).saturating_mul(name.len() as u64 + 1),
+        )?;
+        if classes.iter().any(|value| value == name) {
+            continue;
+        }
         let name = copy(name, builder.b)?;
         push(&mut classes, name, builder.b)?;
     }
@@ -280,10 +442,11 @@ pub fn render<'a>(
         slot: HtmlSlot::Phrasing,
         policy: HtmlPolicy { classes },
     };
-    validate(&markup.fragment, markup.slot, &markup.policy, builder.b)?;
+    validate(&markup.fragment, markup.slot, &markup.policy, builder.b).map_err(Error::from)?;
     Ok(RenderedSentence {
         input,
         markup,
         origins: builder.origins,
+        foreign: builder.foreign,
     })
 }

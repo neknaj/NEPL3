@@ -443,7 +443,7 @@ where
                 let args = out.fence("(", ")", args)?;
                 out.element(Tag::Row, &[f, args])?
             }
-            K::DocGuest { syntax } => {
+            K::SentenceGuest { syntax } => {
                 let render = renderer
                     .as_mut()
                     .ok_or(Error::AnnotationRequiresPreparation(i as u64))?;
