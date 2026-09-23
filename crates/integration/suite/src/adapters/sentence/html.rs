@@ -8,6 +8,7 @@ use nepl3_core::{
 };
 use nepl3_markup::html::*;
 use nepl3_sentence_core::{model::*, syntax::SentenceSyntax};
+mod classes;
 pub mod paragraph;
 
 const CLASSES: &[&str] = &[
@@ -169,7 +170,7 @@ struct Builder<'b> {
     depths: Vec<u64>,
     origins: Vec<ElementOrigin>,
     jobs: Vec<Job>,
-    classes: Vec<String>,
+    classes: classes::Classes,
     foreign: Vec<ForeignPlacement>,
     b: &'b mut Budget,
 }
@@ -226,18 +227,7 @@ impl Builder<'_> {
         };
         push(children, root, self.b)?;
         for class in markup.policy.classes {
-            let mut present = false;
-            for existing in &self.classes {
-                self.b
-                    .charge(Resource::Work, existing.len().min(class.len()) as u64 + 1)?;
-                if existing == &class {
-                    present = true;
-                    break;
-                }
-            }
-            if !present {
-                push(&mut self.classes, class, self.b)?;
-            }
+            self.classes.push(class, self.b)?;
         }
         push(
             &mut self.foreign,
@@ -405,7 +395,7 @@ fn build_with_foreign<'a, E: From<StopReason>>(
         depths: Vec::new(),
         origins: Vec::new(),
         jobs: Vec::new(),
-        classes: Vec::new(),
+        classes: classes::Classes::default(),
         foreign: Vec::new(),
         b,
     };
@@ -500,16 +490,10 @@ fn build_with_foreign<'a, E: From<StopReason>>(
     }
     let mut classes = builder.classes;
     for name in CLASSES {
-        builder.b.charge(
-            Resource::Work,
-            (classes.len() as u64).saturating_mul(name.len() as u64 + 1),
-        )?;
-        if classes.iter().any(|value| value == name) {
-            continue;
-        }
         let name = copy(name, builder.b)?;
-        push(&mut classes, name, builder.b)?;
+        classes.push(name, builder.b)?;
     }
+    let classes = classes.finish(builder.b)?;
     let markup = HtmlRequest {
         fragment: HtmlFragment {
             root: output_root,
