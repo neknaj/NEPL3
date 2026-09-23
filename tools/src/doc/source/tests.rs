@@ -5,6 +5,134 @@ use nepl3_sentence_core::model::Kind;
 use nepl3_wire::foundation::FoundationCodec;
 
 #[test]
+fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(), String> {
+    use crate::doc::annotations::{Error, SentenceAnnotationRenderer, document};
+    enum Expected {
+        Dependency,
+        Label,
+        Duplicate,
+    }
+    let compiled =
+        compiled_with_sentence_forms(&[nepl3_grammar_core::compile::package::ForeignForm {
+            kind: "DocumentInline",
+            category: "Inline",
+            spelling: "doc",
+            field: "syntax",
+            alias: "Doc",
+            guest_category: "Inline",
+            origin_reason: "document fragment test",
+        }])?;
+    for (body, expected) in [
+        (
+            "cons doc link external \"https://example.test/\" text \"label\" nil",
+            Expected::Dependency,
+        ),
+        ("cons doc ref missing text \"label\" nil", Expected::Label),
+        (
+            "cons doc anchor same text \"first\" cons doc anchor same text \"second\" nil",
+            Expected::Duplicate,
+        ),
+    ] {
+        let source = format!(
+            "article en \"Title\" body cons display Math label x Sentence sentence {body} nil"
+        );
+        for native in [false, true] {
+            with_input_route(
+                native,
+                &compiled,
+                &source,
+                "Article",
+                |tree, profile, b, a| {
+                    let registry = profile.registry();
+                    let input = tree
+                        .tree()
+                        .bundle
+                        .validate_with_sources(registry, b, a)
+                        .map_err(err)?;
+                    let store = SourceStore::default();
+                    let mut admission = SourceAdmission::default();
+                    let mut codec =
+                        FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+                    let doc = lower::document(
+                        &input,
+                        &compiled.doc.package.schema,
+                        Category::Article,
+                        registry,
+                        b,
+                        &mut codec,
+                    )
+                    .map_err(err)?;
+                    let input = doc.value.embeds[0]
+                        .closure
+                        .syntax
+                        .bundle
+                        .validate_with_sources(registry, b, codec.source_admission())
+                        .map_err(err)?;
+                    let math = nepl3_math_core::lower::expression(
+                        &input,
+                        &compiled.others[0].schema,
+                        nepl3_math_core::check::Category::Expr,
+                        registry,
+                        b,
+                        codec.source_admission(),
+                    )
+                    .map_err(err)?;
+                    let mut host = SentenceAnnotationRenderer {
+                        registry,
+                        surface: &compiled.others[3].schema,
+                        math_surface: None,
+                        doc_surface: Some(&compiled.doc.package.schema),
+                        codec: &mut codec,
+                    };
+                    let result = host.render(&math.value.embeds[0], b);
+                    match &expected {
+                        Expected::Dependency => {
+                            let Err(Error::Document(error)) = result else {
+                                return Err("Doc dependency failure required".into());
+                            };
+                            let document::Error::NeedsResolution(plan) = *error else {
+                                return Err("resolution plan required".into());
+                            };
+                            assert!(
+                                matches!(plan.requirements.as_slice(), [nepl3_doc_core::prepare::DocRequirement::Link {
+                            target: nepl3_doc_core::model::LinkTarget::External { uri }, ..
+                        }] if uri == "https://example.test/")
+                            );
+                        }
+                        Expected::Label => {
+                            let Err(Error::Document(error)) = result else {
+                                return Err("Doc label failure required".into());
+                            };
+                            let document::Error::Label(diagnostic) = *error else {
+                                return Err("owned label diagnostic required".into());
+                            };
+                            assert_eq!(diagnostic.code, "UnresolvedLabel");
+                            let span = diagnostic
+                                .primary
+                                .as_ref()
+                                .ok_or("label diagnostic source")?;
+                            let start = source.find("missing").ok_or("label fixture")? as u64;
+                            assert_eq!((span.start(), span.end()), (start, start + 7));
+                            assert_eq!(span.snapshot_ref().digest, Digest::of(source.as_bytes()));
+                        }
+                        Expected::Duplicate => assert!(matches!(
+                            result,
+                            Err(Error::Render(
+                                nepl3_suite::adapters::sentence::html::Error::Markup(
+                                    nepl3_markup::html::HtmlError::DuplicateId(_)
+                                )
+                            ))
+                        )),
+                    }
+                    Ok(())
+                },
+            )?;
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn doc_inline_printing_reenters_math_sentence_and_obeys_limits() -> Result<(), String> {
     use nepl3_core::budget::StopReason;
     use nepl3_grammar_core::compile::package::ForeignForm;
@@ -328,6 +456,73 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                     nepl3_markup::html::HtmlNode::Element { attributes, .. }
                     if attributes.iter().any(|attribute| matches!(attribute,
                         nepl3_markup::html::HtmlAttribute::Id { value } if value == "n-746172676574")))));
+                let mut host = crate::doc::math::MathDisplayHost {
+                    registry,
+                    math_surface: &compiled.others[0].schema,
+                    sentence_surface: Some(&sentence.schema),
+                    doc_surface: Some(&compiled.doc.package.schema),
+                    codec: &mut codec,
+                };
+                let mut measured = budget();
+                let composed = host
+                    .render(
+                        &document.value.embeds[0].closure,
+                        nepl3_markup::mathml::Display::Block,
+                        &mut measured,
+                    )
+                    .map_err(err)?
+                    .into_html(&mut measured)
+                    .map_err(err)?;
+                let [annotation] = composed.annotations.as_slice() else {
+                    return Err("one Sentence annotation expected".into());
+                };
+                let [crate::doc::annotations::ForeignRecord::Document(record)] =
+                    annotation.foreign.as_slice()
+                else {
+                    return Err("one Doc Inline record expected".into());
+                };
+                assert_eq!(record.document, inline);
+                assert_eq!(record.document_digest, rendered.document_digest);
+                for text in ["字", "じ"] {
+                    assert!(record.origins.iter().any(
+                        |origin| matches!(&record.document.value.nodes[origin.node as usize].kind,
+                            DocKind::Text { text: value } if value == text)
+                            && matches!(&composed.markup.fragment.nodes[origin.element as usize],
+                            nepl3_markup::html::HtmlNode::Text { text: value } if value == text)
+                    ));
+                }
+                assert!(record.origins.iter().any(|origin| origin.node == root.0 && matches!(
+                    &composed.markup.fragment.nodes[origin.element as usize],
+                    nepl3_markup::html::HtmlNode::Element { attributes, .. }
+                    if attributes.iter().any(|attribute| matches!(attribute,
+                        nepl3_markup::html::HtmlAttribute::Id { value } if value == "n-746172676574")))));
+                let used = measured.usage();
+                for reason in [
+                    nepl3_core::budget::StopReason::WorkLimit,
+                    nepl3_core::budget::StopReason::AllocationLimit,
+                    nepl3_core::budget::StopReason::DepthLimit,
+                ] {
+                    let mut limits = measured.limits();
+                    match reason {
+                        nepl3_core::budget::StopReason::WorkLimit => limits.work = used.work - 1,
+                        nepl3_core::budget::StopReason::AllocationLimit => {
+                            limits.allocation_units = used.allocation_units - 1
+                        }
+                        nepl3_core::budget::StopReason::DepthLimit => limits.depth = used.depth - 1,
+                        _ => unreachable!("fixed shortage cases"),
+                    }
+                    let mut limited = Budget::new(limits);
+                    let result = host
+                        .render(
+                            &document.value.embeds[0].closure,
+                            nepl3_markup::mathml::Display::Block,
+                            &mut limited,
+                        )
+                        .map_err(err)
+                        .and_then(|rendered| rendered.into_html(&mut limited).map_err(err));
+                    assert!(result.is_err());
+                    assert_eq!(limited.poll(), Err(reason));
+                }
                 Ok(())
             },
         )?;
@@ -400,6 +595,7 @@ fn math_sentence_math_printing_preserves_recursive_source() -> Result<(), String
                     registry: profile.registry(),
                     math_surface: &compiled.others[0].schema,
                     sentence_surface: Some(&sentence.schema),
+                    doc_surface: None,
                     codec: &mut codec,
                 };
                 let html = host
@@ -410,7 +606,9 @@ fn math_sentence_math_printing_preserves_recursive_source() -> Result<(), String
                 assert_eq!(html.annotations.len(), 1);
                 let outer = &html.annotations[0];
                 assert_eq!(outer.foreign.len(), 1);
-                let inner = &outer.foreign[0];
+                let crate::doc::annotations::ForeignRecord::Math(inner) = &outer.foreign[0] else {
+                    return Err("Math record required".into());
+                };
                 assert_eq!(inner.annotations.len(), 1);
                 for text in ["字", "じ"] {
                     assert!(inner.annotations[0].origins.iter().any(|origin| {
@@ -497,6 +695,7 @@ fn math_annotation_uses_registered_sentence_on_both_reader_routes() -> Result<()
                     registry: profile.registry(),
                     math_surface: &compiled.others[0].schema,
                     sentence_surface: Some(&sentence.schema),
+                    doc_surface: None,
                     codec: &mut codec,
                 };
                 let rendered = host

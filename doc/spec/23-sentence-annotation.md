@@ -302,7 +302,11 @@ Doc Inlineの局所HTML表示は`prepare_local_inline`と`render_inline`を使�
 準備段階でfragment内のlabel、前方参照、重複出現を検査し、link・asset・foreign guestの依存要求を返す。
 外部の依存要求を持たない入力から、専用の準備済み型とPhrasingのHTMLを生成する。
 HTML要素は元のDoc nodeへの対応を保持する。外側の文書のnamespaceと複数fragment間の参照はcomposition側で解決する。
-この局所入口とSentence foreign HTMLの統合、文書全体の参照解決、Docの旧Sentence所有の撤去は、consumer所有移行の残件である。
+Sentenceのforeign HTML adapterは、hostが選択したDoc Inlineをこの局所入口へ渡す。
+合成結果はMathとDocの由来を型で区別し、保持した構文とHTML要素の対応を各合成段階で更新する。
+未解決labelはsource付き診断、link・asset・foreign guestは依存要求として返す。
+複数fragmentのHTML IDが衝突した場合は合成を拒否し、停止時は部分HTMLを成功結果として返さない。
+Doc内のforeign依存の表示、文書全体の参照解決、Docの旧Sentence所有の撤去は、consumer所有移行の残件である。
 
 ## 注釈と移行完了条件
 

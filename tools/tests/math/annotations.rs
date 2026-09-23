@@ -103,6 +103,7 @@ fn sentence_annotations_survive_mathml_and_reject_unsafe_links() -> Result<(), S
                 registry: profile.registry(),
                 surface: &compiled.others[3].schema,
                 math_surface: Some(&compiled.others[0].schema),
+                doc_surface: None,
                 codec: &mut codec,
             };
             let mut records = Vec::new();
@@ -160,6 +161,7 @@ fn sentence_annotations_survive_mathml_and_reject_unsafe_links() -> Result<(), S
                     registry: profile.registry(),
                     surface: &compiled.others[3].schema,
                     math_surface: Some(&compiled.others[0].schema),
+                    doc_surface: None,
                     codec: &mut received_codec,
                 };
                 let received_output = nepl3_math_mathml::render_with_annotations(
@@ -191,6 +193,7 @@ fn sentence_annotations_survive_mathml_and_reject_unsafe_links() -> Result<(), S
                     registry: profile.registry(),
                     surface: &wrong,
                     math_surface: Some(&compiled.others[0].schema),
+                    doc_surface: None,
                     codec: &mut codec,
                 };
                 assert!(matches!(
@@ -210,6 +213,7 @@ fn sentence_annotations_survive_mathml_and_reject_unsafe_links() -> Result<(), S
                         registry: profile.registry(),
                         surface: &compiled.others[3].schema,
                         math_surface: Some(&compiled.others[0].schema),
+                        doc_surface: None,
                         codec: &mut codec,
                     };
                     let result = nepl3_math_mathml::render_with_annotations(
@@ -286,6 +290,7 @@ fn annotation_boundaries_preserve_grouping_and_reject_hostile_output() -> Result
                 registry: profile.registry(),
                 surface: &compiled.others[3].schema,
                 math_surface: Some(&compiled.others[0].schema),
+                doc_surface: None,
                 codec: &mut codec,
             };
             let output = nepl3_math_mathml::render_with_annotations(

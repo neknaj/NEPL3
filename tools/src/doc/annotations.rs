@@ -10,6 +10,7 @@ use nepl3_core::{
 };
 use nepl3_sentence_core::{lower, portable, syntax::SentenceSyntax};
 use nepl3_suite::adapters::sentence::html;
+pub mod document;
 
 #[derive(Debug)]
 pub enum Error<E> {
@@ -22,6 +23,7 @@ pub enum Error<E> {
     Render(html::Error),
     Math(Box<super::math::Error<E>>),
     Projection(super::math::ProjectionError),
+    Document(Box<document::Error<E>>),
 }
 impl<E> From<StopReason> for Error<E> {
     fn from(reason: StopReason) -> Self {
@@ -34,7 +36,44 @@ pub struct RenderedAnnotation {
     pub sentence_digest: Digest,
     pub markup: nepl3_markup::html::HtmlRequest,
     pub origins: Vec<html::ElementOrigin>,
-    pub foreign: Vec<ForeignMathRecord>,
+    pub foreign: Vec<ForeignRecord>,
+}
+pub enum ForeignRecord {
+    Math(ForeignMathRecord),
+    Document(ForeignDocumentRecord),
+}
+pub struct ForeignDocumentRecord {
+    pub embed: nepl3_sentence_core::model::EmbedRef,
+    pub document: nepl3_doc_core::model::DocumentSyntax,
+    pub document_digest: Digest,
+    pub origins: Vec<nepl3_doc_html::ElementOrigin>,
+}
+impl ForeignRecord {
+    pub fn embed(&self) -> nepl3_sentence_core::model::EmbedRef {
+        match self {
+            Self::Math(record) => record.embed,
+            Self::Document(record) => record.embed,
+        }
+    }
+    pub fn remap(
+        &mut self,
+        map: &mut impl FnMut(u64) -> Result<u64, super::math::ProjectionError>,
+        b: &mut Budget,
+    ) -> Result<(), super::math::ProjectionError> {
+        match self {
+            Self::Math(record) => record.remap(map, b),
+            Self::Document(record) => {
+                for origin in &mut record.origins {
+                    b.charge(Resource::Work, 1)?;
+                    if origin.node >= record.document.value.nodes.len() as u64 {
+                        return Err(super::math::ProjectionError::Mapping(origin.node));
+                    }
+                    origin.element = map(origin.element)?;
+                }
+                Ok(())
+            }
+        }
+    }
 }
 pub struct ForeignMathRecord {
     pub embed: nepl3_sentence_core::model::EmbedRef,
@@ -82,6 +121,7 @@ pub struct SentenceAnnotationRenderer<'a, C> {
     pub registry: &'a SchemaRegistry,
     pub surface: &'a SchemaRef,
     pub math_surface: Option<&'a SchemaRef>,
+    pub doc_surface: Option<&'a SchemaRef>,
     pub codec: &'a mut C,
 }
 impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
@@ -120,11 +160,26 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
             .bundle
             .validate_with_sources(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
-        let forms = self.math_surface.map(|surface| lower::ForeignInlineForm {
-            kind: "Form:InlineMath",
-            guest_schema: surface,
-            guest_category: "Expr",
-        });
+        let mut forms = Vec::new();
+        for (kind, category, surface) in [
+            ("Form:InlineMath", "Expr", self.math_surface),
+            ("Form:DocumentInline", "Inline", self.doc_surface),
+        ] {
+            if let Some(surface) = surface {
+                b.charge(
+                    Resource::AllocationUnits,
+                    core::mem::size_of::<lower::ForeignInlineForm<'_>>() as u64,
+                )?;
+                forms
+                    .try_reserve_exact(1)
+                    .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+                forms.push(lower::ForeignInlineForm {
+                    kind,
+                    guest_schema: surface,
+                    guest_category: category,
+                });
+            }
+        }
         let sentence = lower::presentation::sentence_with_foreign(
             &input,
             self.surface,
@@ -151,11 +206,45 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
             &sentence,
             self.registry,
             &mut |closure, embed, b| {
+                if let Some(surface) = self.doc_surface {
+                    b.charge(
+                        Resource::Work,
+                        (surface.package.len()
+                            + closure.syntax.schema.package.len()
+                            + closure.syntax.category.len()) as u64
+                            + 70,
+                    )?;
+                    if &closure.syntax.schema == surface && closure.syntax.category == "Inline" {
+                        let (document, rendered) =
+                            document::render(closure, surface, self.registry, self.codec, b)
+                                .map_err(|error| {
+                                    match b.charge(
+                                        Resource::AllocationUnits,
+                                        core::mem::size_of_val(&error) as u64,
+                                    ) {
+                                        Ok(()) => Error::Document(Box::new(error)),
+                                        Err(reason) => Error::Stopped(reason),
+                                    }
+                                })?;
+                        b.charge(
+                            Resource::AllocationUnits,
+                            (core::mem::size_of::<ForeignRecord>() as u64).saturating_mul(2),
+                        )?;
+                        foreign.push(ForeignRecord::Document(ForeignDocumentRecord {
+                            embed,
+                            document,
+                            document_digest: rendered.document_digest,
+                            origins: rendered.origins,
+                        }));
+                        return Ok(rendered.markup);
+                    }
+                }
                 let math_surface = self.math_surface.ok_or(Error::Selection)?;
                 let mut host = super::math::MathDisplayHost {
                     registry: self.registry,
                     math_surface,
                     sentence_surface: Some(self.surface),
+                    doc_surface: self.doc_surface,
                     codec: self.codec,
                 };
                 let result = host
@@ -173,15 +262,15 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
                     .map_err(Error::Projection)?;
                 b.charge(
                     Resource::AllocationUnits,
-                    (core::mem::size_of::<ForeignMathRecord>() as u64).saturating_mul(2),
+                    (core::mem::size_of::<ForeignRecord>() as u64).saturating_mul(2),
                 )?;
-                foreign.push(ForeignMathRecord {
+                foreign.push(ForeignRecord::Math(ForeignMathRecord {
                     embed,
                     syntax: result.syntax,
                     node_roots: result.node_roots,
                     annotation_roots: result.annotation_roots,
                     annotations: result.annotations,
-                });
+                }));
                 Ok::<_, Error<C::Error>>(result.markup)
             },
             b,
@@ -196,7 +285,7 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
             return Err(Error::Selection);
         }
         for (record, placement) in foreign.iter_mut().zip(placements) {
-            if record.embed != placement.embed {
+            if record.embed() != placement.embed {
                 return Err(Error::Selection);
             }
             record

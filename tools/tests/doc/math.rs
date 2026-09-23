@@ -52,6 +52,7 @@ fn article_math_nodes_select_display_without_evaluating_code() -> Result<(), Str
             registry: profile.registry(),
             math_surface: &compiled.others[0].schema,
             sentence_surface: Some(&compiled.others[3].schema),
+            doc_surface: None,
             codec: &mut codec,
         };
         let mut seen = 0;
@@ -70,6 +71,7 @@ fn article_math_nodes_select_display_without_evaluating_code() -> Result<(), Str
                         registry: profile.registry(),
                         math_surface: &compiled.others[0].schema,
                         sentence_surface: Some(&compiled.others[3].schema),
+                        doc_surface: None,
                         codec: &mut receiver_codec,
                     };
                     let received_output = receiver
