@@ -1,9 +1,18 @@
 import unittest
-from browser import CASES, extract_cases, valid_measurement
+from dataclasses import replace
+from typing import override
+from collections.abc import Mapping
+from types import MappingProxyType
+from browser import CASES, extract_cases
+from tools.audit.doc_html.layout import CaseName, Geometry, Row, valid_measurement
 
 
 class Corpus(unittest.TestCase):
-    def setUp(self):
+    raw: bytes = b''
+    extra: Mapping[str, str] = MappingProxyType({})
+
+    @override
+    def setUp(self) -> None:
         self.raw = (
             b'test html::browser_layout_corpus_from_real_doc_source ... DOC_HTML_CASE ruby 41\n'
             b'DOC_HTML_CASE anno 42\nDOC_HTML_CASE anno-ruby 43\n'
@@ -31,30 +40,30 @@ class Corpus(unittest.TestCase):
                                      b'untrusted log prefix '),
                     self.raw.replace(b'list-ruby 47', b'list-ruby ff')]:
             with self.subTest(raw=raw), self.assertRaises((ValueError, UnicodeError)):
-                extract_cases(raw)
+                _ = extract_cases(raw)
 
 
     def test_layout_checks_behavior_instead_of_property_support(self) -> None:
-        row = {'scripts': 0, 'difference': 0, 'baseline_source_supported': False,
-               'annotation_gaps': [0, 1], 'line_gaps': [0, 1],
-               'case': 'line-reservation', 'multiline_gap': None,
-               'annotation_text_fragments': [1, 1]}
+        geometry = Geometry(0, False, (0, 1), (0, 1), None, (1, 1), 'inline-grid', 0)
+        row = Row('line-reservation', 375, 12, 'normal', geometry)
         self.assertTrue(valid_measurement(row))
-        for change in [{'difference': 10}, {'scripts': 1}, {'annotation_gaps': []},
-                       {'annotation_gaps': [-1]}, {'line_gaps': [-1]}, {'line_gaps': []},
-                       {'annotation_text_fragments': [2]}, {'annotation_text_fragments': []}]:
+        for change in (replace(geometry, difference=10), replace(geometry, scripts=1),
+                       replace(geometry, annotation_gaps=()), replace(geometry, annotation_gaps=(-1,)),
+                       replace(geometry, line_gaps=(-1,)), replace(geometry, line_gaps=()),
+                       replace(geometry, annotation_text_fragments=(2,)),
+                       replace(geometry, annotation_text_fragments=())):
             with self.subTest(change=change):
-                self.assertFalse(valid_measurement(row | change))
+                self.assertFalse(valid_measurement(replace(row, geometry=change)))
 
     def test_multiline_requires_actual_separate_lines(self) -> None:
-        row = {'case': 'ruby-multiline', 'scripts': 0, 'difference': 0,
-               'annotation_gaps': [0], 'line_gaps': [], 'multiline_gap': 20,
-               'annotation_text_fragments': [1, 1]}
-        for case in ['ruby-multiline', 'anno-multiline']:
-            self.assertTrue(valid_measurement(row | {'case': case}))
+        geometry = Geometry(0, False, (0,), (), 20, (1, 1), 'inline-grid', 0)
+        cases: tuple[CaseName, ...] = ('ruby-multiline', 'anno-multiline')
+        for case in cases:
+            row = Row(case, 375, 12, 'normal', geometry)
+            self.assertTrue(valid_measurement(row))
             for gap in [None, 0, -20]:
-                self.assertFalse(valid_measurement(row | {'case': case, 'multiline_gap': gap}))
+                self.assertFalse(valid_measurement(replace(row, geometry=replace(geometry, multiline_gap=gap))))
 
 
 if __name__ == '__main__':
-    unittest.main()
+    _ = unittest.main()
