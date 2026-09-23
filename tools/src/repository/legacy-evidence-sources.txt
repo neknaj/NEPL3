@@ -213,9 +213,6 @@ conformance/results/doc-canonical-math/scripts/check06.py.fixture
 conformance/results/doc-canonical-math/scripts/generate06.py.fixture
 conformance/results/doc-canonical-math/scripts/prepare06.py.fixture
 conformance/results/doc-canonical-math/scripts/restore06.py.fixture
-conformance/results/doc-pages-payload/final-review/check.py.fixture
-conformance/results/doc-pages-payload/final-review/reviewed-payload.py.fixture
-conformance/results/doc-pages-payload/final-review/reviewed-test_payload.py.fixture
 conformance/results/doc-pages/ci-parent/compare.py
 conformance/results/doc-pages/core/actual-ascii-setup.rs
 conformance/results/doc-pages/core/managed.py
