@@ -16,6 +16,7 @@ use std::{
     time::{Duration, Instant},
 };
 mod model;
+mod suspension;
 use model::*;
 
 fn child(text: &str, no_grant: bool) -> Result<(), String> {
@@ -118,6 +119,9 @@ enum Case {
     Corrupt,
     NoGrant,
     WrongOperation,
+    Suspending,
+    Cancel,
+    Stopped,
 }
 
 fn exchange(
@@ -126,6 +130,15 @@ fn exchange(
     expected: i64,
     case: Case,
 ) -> Result<(), String> {
+    if matches!(case, Case::Suspending | Case::Cancel | Case::Stopped) {
+        return suspension::exchange(
+            connection,
+            text,
+            expected,
+            matches!(case, Case::Cancel),
+            matches!(case, Case::Stopped),
+        );
+    }
     let model = model()?;
     let (mut bytes, sources, native) = packet(text, &model)?;
     if matches!(case, Case::Corrupt) {
@@ -204,6 +217,9 @@ fn exchange(
 fn run_case(text: &'static str, expected: i64, case: Case) -> Result<(), String> {
     let mut command = Command::new(std::env::current_exe().map_err(error)?);
     command.arg("--child").arg(text);
+    if matches!(case, Case::Suspending | Case::Cancel | Case::Stopped) {
+        command.arg("--suspending");
+    }
     command.stderr(Stdio::piped());
     if matches!(case, Case::NoGrant) {
         command.arg("--no-grant");
@@ -272,11 +288,16 @@ fn run_case(text: &'static str, expected: i64, case: Case) -> Result<(), String>
         return Err(format!("{reason}; worker: {result:?}"));
     }
     result?;
-    if status.success() != matches!(case, Case::Valid) {
+    if status.success()
+        != matches!(
+            case,
+            Case::Valid | Case::Suspending | Case::Cancel | Case::Stopped
+        )
+    {
         return Err(format!("unexpected child exit {status} for {case:?}"));
     }
     let expected_diagnostic = match case {
-        Case::Valid => "",
+        Case::Valid | Case::Suspending | Case::Cancel | Case::Stopped => "",
         Case::Corrupt => "Error: \"Wire(InvalidType)\"",
         Case::NoGrant => "Error: \"Source\"",
         Case::WrongOperation => "Error: \"OperationMismatch\"",
@@ -288,6 +309,9 @@ fn run_case(text: &'static str, expected: i64, case: Case) -> Result<(), String>
 pub fn run() -> Result<(), String> {
     let args = std::env::args().collect::<Vec<_>>();
     if args.get(1).is_some_and(|arg| arg == "--child") {
+        if args.iter().any(|arg| arg == "--suspending") {
+            return suspension::child(args.get(2).ok_or("missing fixture input")?);
+        }
         return child(
             args.get(2).ok_or("missing fixture input")?,
             args.iter().any(|arg| arg == "--no-grant"),
@@ -298,8 +322,20 @@ pub fn run() -> Result<(), String> {
     for case in [Case::Corrupt, Case::NoGrant, Case::WrongOperation] {
         run_case("add framed frame neg 7 2", -5, case)?;
     }
+    run_case("add framed frame neg 7 2", -5, Case::Suspending)?;
+    run_case("mul neg 3 add 4 2", -18, Case::Suspending)?;
+    run_case("add framed frame neg 7 2", -5, Case::Cancel)?;
+    run_case(
+        concat!(
+            "add framed frame mul ",
+            "1234567890123456789012345678901234567890123456789012345678901234567890 ",
+            "1234567890123456789012345678901234567890123456789012345678901234567890 2"
+        ),
+        0,
+        Case::Stopped,
+    )?;
     println!(
-        "process: 5 passed (2 native/process arithmetic comparisons; corrupt packet, source grant and operation rejection)"
+        "process: 9 passed (4 native/process comparisons; 3 admission failures; explicit and stopped-dependency cancellation)"
     );
     Ok(())
 }

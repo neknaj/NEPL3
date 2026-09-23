@@ -62,6 +62,92 @@ fn with_program(
 }
 
 #[test]
+fn session_registrations_bind_environment_and_full_source_closure() -> Result<(), String> {
+    with_program("neg 7", |program, sources, runtime, registry| {
+        let session = runtime
+            .prepare(program, sources, registry, budget().limits(), &mut budget())
+            .map_err(error)?;
+        session
+            .with_registrations(
+                &mut budget(),
+                |registrations, validation| -> Result<(), String> {
+                    let registration = &registrations[0];
+                    let root = session.root();
+                    let context = (registration.context)(
+                        root,
+                        registration.invoke.implementation,
+                        validation,
+                    )
+                    .map_err(error)?;
+                    let mut changed = root.clone();
+                    let TypedValue::Record(environment) = &mut changed.environment else {
+                        return Err("environment record".into());
+                    };
+                    let [NdfValue::Bytes(digest)] = environment.fields.as_mut_slice() else {
+                        return Err("plan digest".into());
+                    };
+                    digest[0] ^= 1;
+                    assert!(matches!(
+                        registration.grants.admit(&changed, validation),
+                        Err(GrantError::Environment)
+                    ));
+
+                    let mut subset = root.clone();
+                    subset.sources.clear();
+                    // Generic authority permits a subset; the plan-bound operation must
+                    // reject it before producing a full-context continuation.
+                    registration
+                        .grants
+                        .admit(&subset, validation)
+                        .map_err(error)?;
+                    let result = suspending::invoke(
+                        &registration.invoke,
+                        registration.invoke.implementation,
+                        &subset,
+                        context,
+                        registry,
+                        sources,
+                        &mut budget(),
+                        validation,
+                    )
+                    .map_err(error)?;
+                    assert!(matches!(
+                        result,
+                        OperationReply::Result(OperationResult::Invalid { .. })
+                    ));
+
+                    registration.grants.admit(root, validation).map_err(error)?;
+                    let result = suspending::invoke(
+                        &registration.invoke,
+                        registration.invoke.implementation,
+                        root,
+                        context,
+                        registry,
+                        sources,
+                        &mut budget(),
+                        validation,
+                    )
+                    .map_err(error)?;
+                    let OperationReply::Await {
+                        calls,
+                        continuation,
+                        ..
+                    } = result
+                    else {
+                        return Err("expected root Await".into());
+                    };
+                    assert_eq!(calls.len(), 1);
+                    assert_eq!(calls[0].request_id, 1);
+                    assert_eq!(continuation.snapshot_digest, context);
+                    assert_eq!(continuation.parent_request, root.request_id);
+                    Ok(())
+                },
+            )
+            .map_err(error)?
+    })
+}
+
+#[test]
 fn received_plan_uses_typed_execution_and_admitted_source_mapping() -> Result<(), String> {
     with_program(
         "add framed frame neg 7 2",

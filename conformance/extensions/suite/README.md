@@ -76,7 +76,13 @@ slot even when evaluation succeeds; all charges remain cumulative. A stop during
 preparation uses the host failure context. Frame forwarding and request preparation
 also retain that host context rather than constructing a Report after exhaustion.
 
-Native Invoke and Resume callbacks borrow one immutable, schema-checked plan.
+`Runtime::prepare` creates an immutable `Session` for one schema-checked plan,
+source closure, registry and executable identity pair. `Session::with_registrations`
+borrows the same Invoke/Resume implementations for native scheduling or checked
+provider dispatch. The host retains request lifetimes and cumulative execution
+budgets. Grants require the bound plan identity; callbacks require the complete
+ordered source closure before returning a continuation with its cached context.
+Native Invoke and Resume callbacks borrow this immutable plan.
 The request environment carries a `PlanIdentity` containing the digest of the
 canonical NDF plan. Child requests copy this fixed-size identity and select one
 occurrence; they share the plan through the callback's Rust lifetime. Plan encoding,
@@ -93,8 +99,8 @@ its typed Program borrows admitted payloads. Source correspondence is a host
 responsibility. Tests exercise
 the actual NDF codec, native evaluation and rejection
 of missing source permissions, mismatched mapping length and allocation stops.
-Remaining integration: additional failure and large-input cost cases, distributed
-Await/Resume execution and independent review. Regression tests cover successful
+Remaining integration: additional failure and large-input cost cases, general
+distributed scheduling and independent review. Regression tests cover successful
 nesting depths 1, 8 and 24, Depth=1 rejection, and sampled Work/Allocation stops.
 They check unique cancellation and preserve inspectable accepted child outcomes.
 
@@ -129,10 +135,19 @@ Run this stage independently with:
 cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml --test process
 ```
 
-This is a test-only aggregate operation with a fixed, host-authorized fixture
-source. Nested Await/Resume calls execute inside the child. Distributed child
-operation scheduling, stopped-child outcome transfer, general package loading,
-process-tree containment and cross-process cumulative resource accounting remain
-unimplemented. Host protocol/validation failures terminate the fixture process;
-they do not produce a successful operation result. WASI explicitly skips this
-OS process harness while executing the 13 portable consumer tests.
+The aggregate cases use a test-only operation with a fixed, host-authorized
+fixture source. Additional cases independently install the same fixture plan in
+both hosts and dispatch the actual MiniExpr root in the child process. Its Await
+dependencies execute through the parent's native scheduler; their checked results
+return in Resume. Both arithmetic examples agree with the native reference.
+Explicit cancellation and a Work-stopped guest multiplication cancel the remote
+parent without Resume. The latter retains the host's accepted child Report with
+its own operation, request ID and `mul` source range `17..20`. Close produces no
+duplicate cancellation notification in the child.
+
+The process harness has nine cases. It covers a remote root and native dependency
+subtrees. General routing across multiple providers, transferring stopped child
+outcomes between processes, dynamic package loading, process-tree containment and
+cross-process cumulative resource accounting remain unimplemented. Host protocol
+and validation failures terminate the fixture process. WASI explicitly skips this
+OS process harness while executing the portable consumer tests.
