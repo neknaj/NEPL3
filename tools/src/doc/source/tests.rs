@@ -5,13 +5,140 @@ use nepl3_sentence_core::model::Kind;
 use nepl3_wire::foundation::FoundationCodec;
 
 #[test]
+fn doc_inline_printing_reenters_math_sentence_and_obeys_limits() -> Result<(), String> {
+    use nepl3_core::budget::StopReason;
+    use nepl3_grammar_core::compile::package::ForeignForm;
+    use nepl3_math_core::print::GuestPrinter;
+    let compiled = compiled_with_sentence_forms(&[
+        ForeignForm {
+            kind: "DocumentInline",
+            category: "Inline",
+            spelling: "doc",
+            field: "syntax",
+            alias: "Doc",
+            guest_category: "Inline",
+            origin_reason: "document namespace consumer",
+        },
+        ForeignForm {
+            kind: "InlineMath",
+            category: "Inline",
+            spelling: "math",
+            field: "syntax",
+            alias: "Math",
+            guest_category: "Expr",
+            origin_reason: "inline expression consumer",
+        },
+    ])?;
+    let sentence = compiled.others.last().ok_or("Sentence package")?;
+    let source = r#"article en "Title" body cons display Math label x Sentence sentence cons doc anchor target math Math label 7 Sentence sentence cons doc ruby text "字" text "じ" nil nil nil"#;
+    let expected = "sentence cons doc anchor target math Math label 7 Sentence sentence cons doc ruby text \"字\" text \"じ\" nil nil";
+    for native in [false, true] {
+        with_input_route(
+            native,
+            &compiled,
+            source,
+            "Article",
+            |tree, profile, b, a| {
+                let registry = profile.registry();
+                let input = tree
+                    .tree()
+                    .bundle
+                    .validate_with_sources(registry, b, a)
+                    .map_err(err)?;
+                let store = SourceStore::default();
+                let mut admission = SourceAdmission::default();
+                let mut codec =
+                    FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+                let document = lower::document(
+                    &input,
+                    &compiled.doc.package.schema,
+                    Category::Article,
+                    registry,
+                    b,
+                    &mut codec,
+                )
+                .map_err(err)?;
+                let closure = &document.value.embeds.first().ok_or("Math closure")?.closure;
+                let input = closure
+                    .syntax
+                    .bundle
+                    .validate_with_sources(registry, b, codec.source_admission())
+                    .map_err(err)?;
+                let math = nepl3_math_core::lower::expression(
+                    &input,
+                    &compiled.others[0].schema,
+                    nepl3_math_core::check::Category::Expr,
+                    registry,
+                    b,
+                    codec.source_admission(),
+                )
+                .map_err(err)?;
+                let guest = math.value.embeds.first().ok_or("Sentence closure")?;
+                let mut printer = crate::doc::printing::SentenceGuestPrinter {
+                    registry,
+                    sentence_package: sentence,
+                    math_surface: Some(&compiled.others[0].schema),
+                    doc_surface: Some(&compiled.doc.package.schema),
+                    codec: &mut codec,
+                };
+                let mut measured = budget();
+                assert_eq!(printer.print(guest, &mut measured).map_err(err)?, expected);
+                let usage = measured.usage();
+                assert!(usage.depth > 1);
+                // Exercise shortages near successful totals, including the combined
+                // owner depth. No stage may replace the caller's remaining budget.
+                for reason in [
+                    StopReason::WorkLimit,
+                    StopReason::AllocationLimit,
+                    StopReason::OutputLimit,
+                    StopReason::DepthLimit,
+                ] {
+                    let mut limits = measured.limits();
+                    match reason {
+                        StopReason::WorkLimit => limits.work = usage.work - 1,
+                        StopReason::AllocationLimit => {
+                            limits.allocation_units = usage.allocation_units - 1
+                        }
+                        StopReason::OutputLimit => limits.output_bytes = usage.output_bytes - 1,
+                        StopReason::DepthLimit => limits.depth = usage.depth - 1,
+                        _ => unreachable!("fixed resource cases"),
+                    }
+                    let mut limited = Budget::new(limits);
+                    assert!(matches!(printer.print(guest, &mut limited),
+                    Err(crate::doc::printing::Error::Stopped(actual)) if actual == reason));
+                    assert_eq!(limited.poll(), Err(reason));
+                }
+                printer.math_surface = None;
+                assert!(matches!(
+                    printer.print(guest, &mut budget()),
+                    Err(crate::doc::printing::Error::Selection)
+                ));
+                Ok(())
+            },
+        )?;
+        // The expected text is independently specified and accepted by the
+        // selected reader profile as a nested Sentence, on both routes.
+        let reprinted =
+            format!("article en \"Title\" body cons display Math label x Sentence {expected} nil");
+        with_input_route(
+            native,
+            &compiled,
+            &reprinted,
+            "Article",
+            |_, _, _, _| Ok(()),
+        )?;
+    }
+    Ok(())
+}
+
+#[test]
 fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Result<(), String> {
     let default = compiled()?;
     let compiled =
         compiled_with_sentence_forms(&[nepl3_grammar_core::compile::package::ForeignForm {
             kind: "DocumentInline",
             category: "Inline",
-            spelling: "doc",
+            spelling: "document",
             field: "syntax",
             alias: "Doc",
             guest_category: "Inline",
@@ -22,7 +149,7 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
         sentence.schema,
         default.others.last().ok_or("default Sentence")?.schema
     );
-    let source = r#"article en "Title" body cons display Math label x Sentence sentence cons doc anchor target ruby text "字" text "じ" nil nil"#;
+    let source = r#"article en "Title" body cons display Math label x Sentence sentence cons document anchor target ruby text "字" text "じ" nil nil"#;
     for native in [false, true] {
         assert!(
             with_input_route(native, &default, source, "Article", |_, _, _, _| Ok(())).is_err()
@@ -68,6 +195,40 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                 )
                 .map_err(err)?;
                 let guest = math.value.embeds.first().ok_or("Sentence closure")?;
+                {
+                    use nepl3_math_core::print::GuestPrinter;
+                    let mut printer = crate::doc::printing::SentenceGuestPrinter {
+                        registry,
+                        sentence_package: sentence,
+                        math_surface: None,
+                        doc_surface: Some(&compiled.doc.package.schema),
+                        codec: &mut codec,
+                    };
+                    // Doc owns the anchor and Ruby label; Sentence owns only
+                    // the explicitly selected one-field foreign form.
+                    assert_eq!(
+                        printer.print(guest, b).map_err(err)?,
+                        "sentence cons document anchor target ruby text \"字\" text \"じ\" nil"
+                    );
+                    printer.doc_surface = None;
+                    assert!(matches!(
+                        printer.print(guest, b),
+                        Err(crate::doc::printing::Error::Lower(
+                            nepl3_sentence_core::lower::presentation::Error::Prefix(
+                                nepl3_sentence_core::lower::Error::Unsupported(_)
+                            )
+                        ))
+                    ));
+                    printer.doc_surface = Some(&compiled.others[0].schema);
+                    assert!(matches!(
+                        printer.print(guest, b),
+                        Err(crate::doc::printing::Error::Lower(
+                            nepl3_sentence_core::lower::presentation::Error::Prefix(
+                                nepl3_sentence_core::lower::Error::Operand { field: 0, .. }
+                            )
+                        ))
+                    ));
+                }
                 let input = guest
                     .syntax
                     .bundle
@@ -204,8 +365,9 @@ fn math_sentence_math_printing_preserves_recursive_source() -> Result<(), String
                 let shape = math.value.validate_shape(b).map_err(err)?;
                 let mut printer = crate::doc::printing::SentenceGuestPrinter {
                     registry: profile.registry(),
-                    surface: &sentence.schema,
+                    sentence_package: sentence,
                     math_surface: Some(&compiled.others[0].schema),
+                    doc_surface: None,
                     codec: &mut codec,
                 };
                 let output =
@@ -350,8 +512,8 @@ fn math_annotation_uses_registered_sentence_on_both_reader_routes() -> Result<()
                 assert!(!annotation.origins.is_empty());
                 let shape = rendered.syntax.value.validate_shape(b).map_err(err)?;
                 let mut printer = crate::doc::printing::SentenceGuestPrinter {
-                    registry: profile.registry(), surface: &sentence.schema,
-                    math_surface: None, codec: &mut codec,
+                    registry: profile.registry(), sentence_package: sentence,
+                    math_surface: None, doc_surface: None, codec: &mut codec,
                 };
                 let printed = nepl3_math_core::print::prefix(&shape, &mut printer, b)
                     .map_err(err)?;

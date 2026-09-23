@@ -90,7 +90,8 @@ fn explicit_print_requests_bind_guest_assertions_and_preserve_stops() -> Result<
     );
     let mut host = nepl3_tools::doc::printing::SentenceGuestPrinter {
         registry,
-        surface: &compiled.others[3].schema,
+        sentence_package: &compiled.others[3],
+        doc_surface: None,
         math_surface: None,
         codec: &mut codec,
     };
@@ -481,7 +482,8 @@ fn selected_math_sentence_printers_compose_without_evaluation() -> Result<(), St
         let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
         let mut host = nepl3_tools::doc::printing::SentenceGuestPrinter {
             registry,
-            surface: &compiled.others[3].schema,
+            sentence_package: &compiled.others[3],
+            doc_surface: None,
             math_surface: Some(&compiled.others[0].schema),
             codec: &mut codec,
         };
@@ -497,7 +499,8 @@ fn selected_math_sentence_printers_compose_without_evaluation() -> Result<(), St
         wrong_surface.digest.0[0] ^= 1;
         let mut wrong_host = nepl3_tools::doc::printing::SentenceGuestPrinter {
             registry,
-            surface: &compiled.others[3].schema,
+            sentence_package: &compiled.others[3],
+            doc_surface: None,
             math_surface: Some(&wrong_surface),
             codec: &mut codec,
         };
@@ -514,7 +517,8 @@ fn selected_math_sentence_printers_compose_without_evaluation() -> Result<(), St
         ));
         let mut host = nepl3_tools::doc::printing::SentenceGuestPrinter {
             registry,
-            surface: &compiled.others[3].schema,
+            sentence_package: &compiled.others[3],
+            doc_surface: None,
             math_surface: Some(&compiled.others[0].schema),
             codec: &mut codec,
         };
@@ -547,7 +551,8 @@ fn selected_math_sentence_printers_compose_without_evaluation() -> Result<(), St
             let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
             let mut host = nepl3_tools::doc::printing::SentenceGuestPrinter {
                 registry,
-                surface: &compiled.others[3].schema,
+                sentence_package: &compiled.others[3],
+                doc_surface: None,
                 math_surface: Some(&compiled.others[0].schema),
                 codec: &mut codec,
             };
@@ -578,7 +583,8 @@ fn production_sentence_guest_printer_preserves_annotation_semantics() -> Result<
         let shape = value.validate_shape(&mut budget()).map_err(err)?;
         let mut host = nepl3_tools::doc::printing::SentenceGuestPrinter {
             registry,
-            surface: &compiled.others[3].schema,
+            sentence_package: &compiled.others[3],
+            doc_surface: None,
             math_surface: None,
             codec: &mut codec,
         };
@@ -617,7 +623,8 @@ fn production_sentence_guest_printer_preserves_annotation_semantics() -> Result<
         wrong.syntax.category = "Body".into();
         let mut host = nepl3_tools::doc::printing::SentenceGuestPrinter {
             registry,
-            surface: &compiled.others[3].schema,
+            sentence_package: &compiled.others[3],
+            doc_surface: None,
             math_surface: None,
             codec: &mut codec,
         };
@@ -643,7 +650,8 @@ fn production_sentence_guest_printer_preserves_annotation_semantics() -> Result<
     let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
     let mut host = nepl3_tools::doc::printing::SentenceGuestPrinter {
         registry,
-        surface: &compiled.others[3].schema,
+        sentence_package: &compiled.others[3],
+        doc_surface: None,
         math_surface: None,
         codec: &mut codec,
     };
