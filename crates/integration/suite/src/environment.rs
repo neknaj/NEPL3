@@ -6,8 +6,8 @@ use nepl3_core::{
     schema::{SchemaError, TypeDescriptor},
     source::SourceStore,
     syntax::{
-        Environment, EnvironmentBinding, EnvironmentEntry, NamespaceRef, ResourceContent,
-        SyntaxError, ValidatedEnvironment,
+        Environment, EnvironmentBinding, EnvironmentContext, EnvironmentEntry, NamespaceRef,
+        ResourceContent, SyntaxError, ValidatedEnvironment,
     },
     value::SchemaRef,
     value_codec::{FoundationCodecError, FoundationValueCodec},
@@ -58,7 +58,7 @@ impl From<SyntaxError> for ProjectionError {
 /// A host must explicitly grant sources for each operation through Grants.
 pub struct ProjectedEnvironment<'a> {
     value: Environment,
-    context: ValidatedEnvironment<'a>,
+    context: EnvironmentContext<'a>,
 }
 
 /// Portable entry and the exact provenance arena required by its local IDs.
@@ -156,22 +156,9 @@ pub fn project<'a>(
     budget.poll()?;
     let mut selected = Vec::new();
     for rule in bindings {
-        let mut found = None;
-        for binding in &source.value().bindings {
-            let width = (binding.name.len() as u64)
-                .saturating_add(rule.name.len() as u64)
-                .saturating_add(binding.namespace.name.len() as u64)
-                .saturating_add(rule.namespace.name.len() as u64)
-                .saturating_add(binding.namespace.schema.package.len() as u64)
-                .saturating_add(rule.namespace.schema.package.len() as u64)
-                .saturating_add(40);
-            budget.charge(Resource::Work, width)?;
-            if binding.namespace == *rule.namespace && binding.name == rule.name {
-                found = Some(binding);
-                break;
-            }
-        }
-        let binding = found.ok_or(ProjectionError::MissingBinding)?;
+        let binding = source
+            .binding(rule.namespace, rule.name, budget)?
+            .ok_or(ProjectionError::MissingBinding)?;
         source
             .registry()
             .validate_typed_as(rule.expected, &binding.value, budget)?;
@@ -196,20 +183,9 @@ pub fn project<'a>(
     }
     let mut selected_resources = Vec::new();
     for id in resources {
-        let mut found = None;
-        for resource in &source.value().resources {
-            budget.charge(
-                Resource::Work,
-                (resource.id.len() as u64)
-                    .saturating_add(id.len() as u64)
-                    .saturating_add(1),
-            )?;
-            if resource.id == *id {
-                found = Some(resource);
-                break;
-            }
-        }
-        let resource = found.ok_or(ProjectionError::MissingResource)?;
+        let resource = source
+            .resource(id, budget)?
+            .ok_or(ProjectionError::MissingResource)?;
         budget.charge(Resource::Work, resource.bytes.len() as u64)?;
         budget.charge(
             Resource::AllocationUnits,
@@ -229,6 +205,6 @@ pub fn project<'a>(
     source.validate_value(&value, budget)?;
     Ok(ProjectedEnvironment {
         value,
-        context: *source,
+        context: source.context(),
     })
 }

@@ -7,6 +7,234 @@ use nepl3_core::{
 use nepl3_suite::environment::*;
 
 #[test]
+fn indexed_environment_rejects_duplicates_and_preserves_input_at_every_stop() -> Result<(), String>
+{
+    let (registry, call) = fixture()?;
+    let mut source = environment(&call);
+    let binding = source.bindings[0].clone();
+    source.bindings = ["丙", "甲", "乙"]
+        .into_iter()
+        .map(|name| EnvironmentBinding {
+            name: name.into(),
+            ..binding.clone()
+        })
+        .collect();
+    let resource = source.resources[0].clone();
+    source.resources = ["三", "一", "二"]
+        .into_iter()
+        .map(|id| ResourceContent {
+            id: id.into(),
+            ..resource.clone()
+        })
+        .collect();
+    let before = source.clone();
+    let origins = [Origin::Synthetic {
+        reason: "fixture".into(),
+        anchor: None,
+    }];
+    let sources = SourceStore::default();
+    let mut measured = budget();
+    let proof = source
+        .validate(&origins, &sources, &registry, &mut measured)
+        .map_err(|e| format!("{e:?}"))?;
+    for binding in &source.bindings {
+        assert_eq!(
+            proof
+                .binding(&binding.namespace, &binding.name, &mut budget())
+                .map_err(|e| format!("{e:?}"))?,
+            Some(binding)
+        );
+        let mut other = binding.namespace.clone();
+        other.schema.revision += 1;
+        assert!(
+            proof
+                .binding(&other, &binding.name, &mut budget())
+                .map_err(|e| format!("{e:?}"))?
+                .is_none()
+        );
+    }
+    for resource in &source.resources {
+        assert_eq!(
+            proof
+                .resource(&resource.id, &mut budget())
+                .map_err(|e| format!("{e:?}"))?,
+            Some(resource)
+        );
+    }
+    assert!(
+        proof
+            .resource("missing", &mut budget())
+            .map_err(|e| format!("{e:?}"))?
+            .is_none()
+    );
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert_eq!(
+        proof
+            .resource("missing", &mut cancelled)
+            .err()
+            .and_then(|e| e.stop_reason()),
+        Some(StopReason::Cancelled)
+    );
+    assert_eq!(
+        proof
+            .binding(&binding.namespace, "missing", &mut cancelled)
+            .err()
+            .and_then(|e| e.stop_reason()),
+        Some(StopReason::Cancelled)
+    );
+    let usage = measured.usage();
+    for (axis, maximum) in [usage.work, usage.allocation_units].into_iter().enumerate() {
+        for limit in 0..maximum {
+            let mut limits = budget().limits();
+            let reason = if axis == 0 {
+                limits.work = limit;
+                StopReason::WorkLimit
+            } else {
+                limits.allocation_units = limit;
+                StopReason::AllocationLimit
+            };
+            let error = source
+                .validate(&origins, &sources, &registry, &mut Budget::new(limits))
+                .err()
+                .ok_or("insufficient construction budget accepted")?;
+            assert_eq!(error.stop_reason(), Some(reason));
+            assert_eq!(source, before);
+        }
+    }
+    let mut duplicate = source.clone();
+    duplicate.bindings[2] = duplicate.bindings[0].clone();
+    assert!(matches!(
+        duplicate.validate(&origins, &sources, &registry, &mut budget()),
+        Err(SyntaxError::Environment)
+    ));
+    let mut duplicate = source.clone();
+    duplicate.resources[2] = duplicate.resources[0].clone();
+    assert!(matches!(
+        duplicate.validate(&origins, &sources, &registry, &mut budget()),
+        Err(SyntaxError::ResourceDigest)
+    ));
+    assert_eq!(source, before);
+    Ok(())
+}
+
+#[test]
+fn indexed_environment_growth_preserves_order_and_scales_across_input_axes() -> Result<(), String> {
+    fn measure(
+        bindings: usize,
+        selected: usize,
+        resources: usize,
+        width: usize,
+    ) -> Result<(u64, u64), String> {
+        let (registry, call) = fixture()?;
+        let mut source = environment(&call);
+        let binding = source.bindings[0].clone();
+        let resource = source.resources[0].clone();
+        // Reverse declaration order prevents a sorted-input-only fast path.
+        source.bindings = (0..bindings)
+            .rev()
+            .map(|id| EnvironmentBinding {
+                name: format!("{}-{id:04}", "名".repeat(width)),
+                ..binding.clone()
+            })
+            .collect();
+        source.resources = (0..resources)
+            .rev()
+            .map(|id| ResourceContent {
+                id: format!("{}-{id:04}", "源".repeat(width)),
+                ..resource.clone()
+            })
+            .collect();
+        let before = source.clone();
+        let origins = [Origin::Synthetic {
+            reason: "fixture".into(),
+            anchor: None,
+        }];
+        let sources = SourceStore::default();
+        let limits = Limits {
+            work: 100_000_000,
+            allocation_units: 100_000_000,
+            ..budget().limits()
+        };
+        let mut construction = Budget::new(limits);
+        let proof = source
+            .validate(&origins, &sources, &registry, &mut construction)
+            .map_err(|e| format!("{e:?}"))?;
+        let expected = TypeDescriptor::TypedValue;
+        let rules: Vec<_> = source
+            .bindings
+            .iter()
+            .rev()
+            .take(selected)
+            .map(|binding| BindingProjection {
+                namespace: &binding.namespace,
+                name: &binding.name,
+                target_namespace: &binding.namespace,
+                target_name: &binding.name,
+                expected: &expected,
+            })
+            .collect();
+        let resource_ids: Vec<_> = source
+            .resources
+            .iter()
+            .rev()
+            .map(|r| r.id.as_str())
+            .collect();
+        let mut selection = Budget::new(limits);
+        let projected =
+            project(&proof, &rules, &resource_ids, &mut selection).map_err(|e| format!("{e:?}"))?;
+        assert_eq!(projected.value().bindings.len(), selected);
+        for (actual, expected) in projected
+            .value()
+            .bindings
+            .iter()
+            .zip(source.bindings.iter().rev())
+        {
+            assert_eq!(actual, expected);
+        }
+        assert_eq!(
+            projected.value().resources,
+            source.resources.iter().rev().cloned().collect::<Vec<_>>()
+        );
+        assert_eq!(projected.origins(), origins);
+        assert_eq!(source, before);
+        // A retained index serves a second projection with identical cost.
+        let mut repeated = Budget::new(limits);
+        let again =
+            project(&proof, &rules, &resource_ids, &mut repeated).map_err(|e| format!("{e:?}"))?;
+        assert_eq!(again.value(), projected.value());
+        assert_eq!(repeated.usage(), selection.usage());
+        Ok((construction.usage().work, selection.usage().work))
+    }
+    for axis in 0..4 {
+        let mut previous = None;
+        for size in [64, 128, 256] {
+            let (bindings, selected, resources, width) = match axis {
+                0 => (size, 16, 0, 1),
+                1 => (512, size, 0, 1),
+                2 => (1, 1, size, 1),
+                _ => (128, 64, 64, size / 8),
+            };
+            let usage = measure(bindings, selected, resources, width)?;
+            if let Some((build, project)) = previous {
+                // Doubling each independent axis allows logarithmic sorting
+                // overhead while rejecting repeated all-pairs comparisons.
+                assert!(
+                    usage.0 < build * 3,
+                    "axis {axis}: build {previous:?} -> {usage:?}"
+                );
+                assert!(
+                    usage.1 < project * 3,
+                    "axis {axis}: project {previous:?} -> {usage:?}"
+                );
+            }
+            previous = Some(usage);
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn projection_keeps_unicode_provenance_and_rejects_missing_sources() -> Result<(), String> {
     let (registry, call) = fixture()?;
     let snapshot = SourceSnapshot::new(

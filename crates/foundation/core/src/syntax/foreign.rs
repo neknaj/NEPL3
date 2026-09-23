@@ -150,8 +150,9 @@ pub(super) fn environment(
     origins: usize,
     registry: &SchemaRegistry,
     b: &mut Budget,
-) -> Result<(), SyntaxError> {
-    for (index, binding) in value.bindings.iter().enumerate() {
+) -> Result<super::environment::EnvironmentIndex, SyntaxError> {
+    b.poll()?;
+    for binding in &value.bindings {
         b.charge(
             Resource::Work,
             (binding.name.len() + binding.namespace.name.len()) as u64 + 1,
@@ -160,48 +161,31 @@ pub(super) fn environment(
         if binding.name.is_empty() || binding.namespace.name.is_empty() {
             return Err(SyntaxError::Environment);
         }
-        for prior in &value.bindings[..index] {
-            b.charge(
-                Resource::Work,
-                (prior.name.len()
-                    + binding.name.len()
-                    + prior.namespace.name.len()
-                    + binding.namespace.name.len()
-                    + prior.namespace.schema.package.len()
-                    + binding.namespace.schema.package.len()) as u64
-                    + 40,
-            )?;
-            if prior.namespace == binding.namespace && prior.name == binding.name {
-                return Err(SyntaxError::Environment);
-            }
-        }
         if binding.origin.is_some_and(|id| id.0 >= origins as u64) {
             return Err(SyntaxError::Reference);
         }
         registry.validate_typed(&binding.value, b)?;
     }
-    resources(&value.resources, b)
+    resource_contents(&value.resources, b)?;
+    super::environment::EnvironmentIndex::new(value, b)
 }
 
 /// Verify content digests and unique, nonempty resource identities.
 pub fn resources(values: &[ResourceContent], b: &mut Budget) -> Result<(), SyntaxError> {
+    resource_contents(values, b)?;
+    super::environment::resource_index(values, b)?;
+    Ok(())
+}
+
+fn resource_contents(values: &[ResourceContent], b: &mut Budget) -> Result<(), SyntaxError> {
     b.poll()?;
-    for (index, resource) in values.iter().enumerate() {
+    for resource in values {
         b.charge(
             Resource::Work,
             (resource.bytes.len() + resource.id.len()) as u64 + 1,
         )?;
         if resource.id.is_empty() || resource.digest != Digest::of(&resource.bytes) {
             return Err(SyntaxError::ResourceDigest);
-        }
-        for prior in &values[..index] {
-            b.charge(
-                Resource::Work,
-                (prior.id.len() + resource.id.len()) as u64 + 1,
-            )?;
-            if prior.id == resource.id {
-                return Err(SyntaxError::ResourceDigest);
-            }
         }
     }
     Ok(())
