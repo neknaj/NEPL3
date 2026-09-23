@@ -235,6 +235,42 @@ fn sentence_payload_cannot_be_reassigned_to_another_doc_occurrence() -> Result<(
                 }
                 assert_eq!(first, &original);
             }
+            // Keep the same owner but change the payload's view span. A valid
+            // zero-width span must not replace the reader's original view.
+            let mut changed = first.clone();
+            let DocContent::Syntax { closure } = &mut changed.content else {
+                return Err("first syntax".into());
+            };
+            let bundle = &mut closure.syntax.bundle;
+            let root = bundle.root;
+            let token_id = bundle.node(root).map_err(err)?.token.ok_or("token")?;
+            let token = &mut bundle.tokens[token_id.0 as usize];
+            let mut views = token.views.clone();
+            let span = &views.elements[0].span;
+            let source = bundle
+                .sources
+                .iter()
+                .find(|s| s.identity() == span.snapshot_ref())
+                .ok_or("view source")?;
+            views.elements[0].span = source.span(span.start(), span.start()).map_err(err)?;
+            let mut sources = SourceStore::default();
+            for source in &bundle.sources {
+                sources.insert(source.clone()).map_err(err)?;
+            }
+            let encoded = codec
+                .scoped(&sources)
+                .encode_views(&views, &mut budget())
+                .map_err(err)?;
+            let nepl3_core::value::NdfValue::Record(payload) = &mut token.payload else {
+                return Err("payload".into());
+            };
+            let nepl3_core::value::NdfValue::Record(view) = &mut payload.fields[3] else {
+                return Err("view".into());
+            };
+            view.fields[2] = encoded;
+            assert!(
+                matches!(sentence::lower(&changed, changed.schema(), &[], profile.registry(), &mut codec, &mut budget()), Err(sentence::Error::Lower(presentation::Error::Literal(literal::Error::TokenMismatch(id)))) if id == root)
+            );
             Ok(())
         },
     )
@@ -320,6 +356,29 @@ fn generated_sentence_views_keep_explicit_mapping_and_closed_sources() -> Result
                 target,
                 kind: MappingKind::Exact,
             });
+            let mut wrong = input.clone();
+            let mapping = &mut wrong.source_maps[0];
+            let owner = wrong
+                .sources
+                .iter()
+                .find(|s| s.identity() == mapping.source.snapshot_ref())
+                .ok_or("mapping owner")?;
+            mapping.source = owner
+                .span(0, mapping.source.end() - mapping.source.start())
+                .map_err(err)?;
+            mapping.kind = MappingKind::Transformed;
+            // Equal-length ranges in the same snapshot are insufficient: the
+            // mapping must connect this generated view to its owning head.
+            let rejected = wrong.validate(
+                profile.registry(),
+                &mut budget(),
+                &mut SourceAdmission::default(),
+            );
+            assert!(
+                matches!(rejected, Err(syntax::Error::View(_))),
+                "{:?}",
+                rejected.err()
+            );
             let encoded =
                 portable::syntax::to_value(&input, profile.registry(), &mut codec, &mut budget())
                     .map_err(err)?;
