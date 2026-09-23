@@ -188,6 +188,7 @@ body
       cons "T16[以外/いがい]のタスクのcompleteには、[当該/とうがい]deliverableの[実装/じっそう]、scopeを[限定/げんてい]した[検証証拠/けんしょうしょうこ]、[依存/いぞん]タスクのcomplete、および[関連/かんれん]する[未解消/みかいしょう]の[設計/せっけい]blockerがないことを[要求/ようきゅう]する。"
       cons sentence cons ruby text "証拠" text "しょうこ" cons text "は " cons code "conformance/results/" cons text " " cons ruby text "以下" text "いか" cons text "のJSONとし、" cons code "task_id" cons text "、" cons code "checks" cons text "（" cons ruby text "空" text "から" cons text "でない" cons ruby text "文字列" text "もじれつ" cons text "の" cons ruby text "非空" text "ひくう" cons text "list）、" cons code "commands" cons text "（" cons ruby text "同" text "どう" cons text "）、" cons code "targets" cons text "（" cons ruby text "同" text "どう" cons text "）、" cons code "result" cons text "（passed）、" cons code "excluded_acceptance_portions" cons text "（" cons ruby text "未検証範囲" text "みけんしょうはんい" cons text "の" cons ruby text "文字列" text "もじれつ" cons text "list、" cons ruby text "明示的" text "めいじてき" cons text "な" cons ruby text "空" text "から" cons text "listを" cons ruby text "許可" text "きょか" cons text "）を" cons ruby text "持" text "も" cons text "つ。" nil
       cons "implementation-statusの[当該/とうがい]タスクからファイルを[参照/さんしょう]する。"
+      cons "in-progressの[段階記録/だんかいきろく]にはinterfaces/stage-history.schema.jsonに[従/したが]うGit revision[参照/さんしょう]も[使用/しよう]できる。[参照/さんしょう]は[過去/かこ]の[実行範囲/じっこうはんい]を[特定/とくてい]し、completeには[上記/じょうき]のTaskEvidenceを[要求/ようきゅう]する。"
       cons "[形/かたち]だけの[証拠/しょうこ]ファイルではなく、[記載/きさい]したコマンドの[実行結果/じっこうけっか]をレビューする。" nil
     cons paragraph
       cons "[例/たと]えばT01のsource[契約試験/けいやくしけん]を[実行/じっこう]してT01をcompleteにしても、E03/E04のエディタ[操作/そうさ]を[実装/じっそう]・[検査/けんさ]していなければ[当該群/とうがいぐん]はnot-runのままとする。"
@@ -207,7 +208,8 @@ body
       cons sentence cons code "kind: review" cons text " はtarget、reviewer" cons ruby text "識別子" text "しきべつし" cons text "、independent=true、decision（approved/rejected）、" cons ruby text "非空" text "ひくう" cons text "scope、log、log_sha256を" cons ruby text "持" text "も" cons text "つ。" nil
       cons "[意味同等性/いみどうとうせい]レビューのために[架空/かくう]のshell commandや[終了/しゅうりょう]コードを[作/つく]らない。" nil
     cons paragraph
-      cons sentence cons text "logは " cons code "conformance/results/" cons text " " cons ruby text "内" text "ない" cons text "の" cons ruby text "非空" text "ひくう" cons text ".txtまたは.logファイルとし、" cons ruby text "証拠" text "しょうこ" cons text "JSON" cons ruby text "自身" text "じしん" cons text "を" cons ruby text "実行" text "じっこう" cons text "logにしない。" nil
+      cons "logはdist/evidence/[内/ない]の[非空/ひくう].txtまたは.logファイルとし、[検証時/けんしょうじ]に[取得/しゅとく]してSHA-256を[照合/しょうごう]する。"
+      cons "conformance/results/は[状態索引/じょうたいさくいん]が[参照/さんしょう]する[型付/かたつ]きJSONを[所有/しょゆう]する。[実行/じっこう]logはCI artifactまたは[外部保存先/がいぶほぞんさき]で[管理/かんり]し、[取得不能/しゅとくふのう]の[証拠/しょうこ]は[検証失敗/けんしょうしっぱい]とする。"
       cons "[実在/じつざい]logとdigestを[検査/けんさ]し、[別/べつ]ID、[古/ふる]いsource/spec/design、[未登録/みとうろく]target、target[種別不一致/しゅべつふいっち]、[改変/かいへん]logを[拒否/きょひ]する。"
       cons "passedには[全/ぜん]command runがpassedかつexit_code=0、[全/ぜん]reviewがapproved、[全/ぜん]required targetの[実行/じっこう]・レビューを[要求/ようきゅう]する。"
       cons "failedは[少/すく]なくとも[一/ひと]つの[非/ひ]zero[終了/しゅうりょう]の[失敗/しっぱい]runまたはrejected reviewを[含/ふく]み、[早期停止/そうきていし]による[未実行/みじっこう]targetを[許/ゆる]すがpassedへ[変更/へんこう]できない。"

@@ -8,6 +8,8 @@
 
 ## レビュー履歴
 
+以下の `conformance/results/` 内のpathは、当時の記録を示す。元byte列は固定revisionから取得する。[履歴索引](../conformance/history.md)にrevisionと取得手順を記載する。
+
 このレビューは、実装担当とは別のエージェントが2026-09-06に行った。対象は取り込んだr1設計の14章、signature表、文法source、意味モデル、操作表、profile、依存・タスク表、例とconformance入力。設計として有用な責務分割は維持し、以下の矛盾を修正対象とした。全仕様の正しさや処理系の完成を認定するものではない。
 
 同日のr3追補では、ユーザーが提示したWeb/TEA/Pages要件と最終Doc移行の指示、および提供された追補 `nepl3-web-pages-tea-2026-09-06-r1` の展開済み7ファイルを全て読んだ。独立にmanifestの6 payloadのSHA-256とUTF-8を検査し一致した。sandboxのZIPを直接取得したという記録ではない。元資料の検査報告はruntime実行の証拠へ転用しない。取り込み元は [記録](history/web-tea-import.json)、仕様上の訂正は [決定0003](decisions/0003-web-tea-doc-migration.md) に残す。
@@ -131,7 +133,7 @@ readerの26件はnative VM、UTF-8分割、Unicode 16、巻戻し、消費する
 
 次段 `feat/reader-builtins` はfirst sliceの `3bccd48d49ee1a7564335c4fa703960791ea4bc3` から継続する。R020では、1 byteのExact mappingと100,000 byteのSourceIdを使い、allocation_units=0の `SourceMap::insert` がStoppedを返す前に100,000 bytesを割り当てることを独立確認した。最初のignored `--bin map_allocation` によるSystem allocator計測はinsert呼出し区間だけを対象とした。SourceMapのpoint構築がsnapshot identityを複製してからstackの予算を検査する経路であり、前段R018の訂正範囲をこの未検査経路へ広げない。
 
-Pointを借用identityへ訂正後、同じ測定は0 bytesとなった。mapsの管理対象2試験も成功したが、返却値と論理予算だけの試験は旧版でも成功するため、この先行heap allocationを捕捉する回帰とは呼ばない。そこで [独立計測器](../tools/audit/allocation/run.py) を管理対象へ置き、[開発文書](development.md) でdev専用GlobalAlloc wrapperの限定的unsafeを明示した。production/workspaceのforbidは変えない。固定Rust 1.97.0のCargo-selected rlibへリンクし、4,096 bytesのpositive controlを通してから測定する。同一計測器を旧commitの別worktreeへ適用すると100,000 bytes・終了1、修正treeでは0 bytes・終了0となった。[旧版log](../conformance/results/reader-builtins/allocation-baseline.log) と [修正中treeのlog](../conformance/results/reader-builtins/allocation-working.log) を保存した。native CIへの必須step追加も確認し、この具体的な先行割当をR020 correctedとする。後者のlogはfreeze前の部分記録であり、最終treeの証拠は統合時に別途採取する。
+Pointを借用identityへ訂正後、同じ測定は0 bytesとなった。mapsの管理対象2試験も成功したが、返却値と論理予算だけの試験は旧版でも成功するため、この先行heap allocationを捕捉する回帰とは呼ばない。そこで [独立計測器](../tools/audit/allocation/run.py) を管理対象へ置き、[開発文書](development.md) でdev専用GlobalAlloc wrapperの限定的unsafeを明示した。production/workspaceのforbidは変えない。固定Rust 1.97.0のCargo-selected rlibへリンクし、4,096 bytesのpositive controlを通してから測定する。同一計測器を旧commitの別worktreeへ適用すると100,000 bytes・終了1、修正treeでは0 bytes・終了0となった。[旧版log](https://github.com/neknaj/NEPL3/blob/fd8057199f2f32fb36455210df36e78015b77fab/conformance/results/reader-builtins/allocation-baseline.log) と [修正中treeのlog](https://github.com/neknaj/NEPL3/blob/fd8057199f2f32fb36455210df36e78015b77fab/conformance/results/reader-builtins/allocation-working.log) を保存した。native CIへの必須step追加も確認し、この具体的な先行割当をR020 correctedとする。後者のlogはfreeze前の部分記録であり、最終treeの証拠は統合時に別途採取する。
 
 R021は別のWork計上不備である。公開builtin Textへ3 byteの入力と100,007 byteの予約URIを渡すと、Work上限1,000でもMatched、Usage.work=7となった。URI末尾だけを不正spaceにすると、長いURIを検査後にLocator、work=1となった。`--bin builtin_reservation` で再現し、builtin内部の予約検査と、Budget付きsource constructor/importのlocator再検査へ事前Work計上を要求した。低水準の所有値validatorの責任と、Budgetを受け取る操作内部の責任を区別し、先行heap allocationを測るR020とは別に追跡する。
 

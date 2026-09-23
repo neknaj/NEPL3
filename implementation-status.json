@@ -6,57 +6,56 @@
       "id": "T01",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/foundation-slice/validation.json"
+        "conformance/results/stages/T01.json"
       ]
     },
     {
       "id": "T02",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/foundation-slice/validation.json"
+        "conformance/results/stages/T02.json"
       ]
     },
     {
       "id": "T03",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/reader-builtins/validation.json"
+        "conformance/results/stages/T03.json"
       ]
     },
     {
       "id": "T04",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/prefix-engine/validation.json"
+        "conformance/results/stages/T04.json"
       ]
     },
     {
       "id": "T05",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/grammar-bootstrap/validation.json"
+        "conformance/results/stages/T05.json"
       ]
     },
     {
       "id": "T06",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/analysis-key/validation.json"
+        "conformance/results/stages/T06.json"
       ]
     },
     {
       "id": "T07",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/doc-prepare/validation.json",
-        "conformance/results/doc-print/validation.json"
+        "conformance/results/stages/T07.json"
       ]
     },
     {
       "id": "T08",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/math-notation/validation.json"
+        "conformance/results/stages/T08.json"
       ]
     },
     {
@@ -68,21 +67,21 @@
       "id": "T10",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/markup-html/validation.json"
+        "conformance/results/stages/T10.json"
       ]
     },
     {
       "id": "T11",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/runtime-ownership/summary.json"
+        "conformance/results/stages/T11.json"
       ]
     },
     {
       "id": "T12",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/runtime-ownership/summary.json"
+        "conformance/results/stages/T12.json"
       ]
     },
     {
@@ -119,8 +118,7 @@
       "id": "T19",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/doc-site-build/seal.json",
-        "conformance/results/doc-site-build/README.md"
+        "conformance/results/stages/T19.json"
       ]
     },
     {
@@ -132,28 +130,29 @@
       "id": "T21",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/doc-canonical-conformance/payloads.json",
-        "conformance/results/doc-canonical-conformance/README.md"
+        "conformance/results/stages/T21.json"
       ]
     },
     {
       "id": "T22",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/math-notation/validation.json"
+        "conformance/results/stages/T22.json"
       ]
     },
     {
       "id": "T23",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/markup-html/validation.json"
+        "conformance/results/stages/T23.json"
       ]
     },
     {
       "id": "T24",
       "status": "in-progress",
-      "evidence": ["conformance/results/math-katex/node.json"]
+      "evidence": [
+        "conformance/results/stages/T24.json"
+      ]
     },
     {
       "id": "T25",
@@ -164,7 +163,7 @@
       "id": "T26",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/external-extension-consumer/execution/external-extension-final/result.json"
+        "conformance/results/stages/T26.json"
       ]
     }
   ],

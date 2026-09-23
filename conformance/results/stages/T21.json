@@ -1,0 +1,16 @@
+{
+    "schema":  "nepl3.stage-history/1",
+    "task_id":  "T21",
+    "records":  [
+                    {
+                        "revision":  "fd8057199f2f32fb36455210df36e78015b77fab",
+                        "path":  "conformance/results/doc-canonical-conformance/payloads.json",
+                        "sha256":  "3260daa3bf1f2bb6b6784d9414f061011029011f1f2253ee1c943ac327cb7c1e"
+                    },
+                    {
+                        "revision":  "fd8057199f2f32fb36455210df36e78015b77fab",
+                        "path":  "conformance/results/doc-canonical-conformance/README.md",
+                        "sha256":  "23ee5a719e57f8628fdb58cdba889ecb197c948cce8d9b61355c4a945731a0ac"
+                    }
+                ]
+}

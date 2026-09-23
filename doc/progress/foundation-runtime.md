@@ -8,7 +8,7 @@
 
 ## 初期実装からの履歴
 
-最初の実装区切りはcore 45件、reader 27件、wire 18件のproduction API試験を独立実行し、予算停止時のreport保持、長いSourceIdの割当前検査、Contextのsource閉包・同一性衝突、typed requestのNDF往復を確認した。統括の検査コマンド・source/spec identity・実行target・結果・未検証範囲は [区切りの検証記録](../../conformance/results/foundation-slice/validation.json) に保存する。この記録は開発途中のscope付き検証で、task完了や受入群全体のpassedを示さない。
+最初の実装区切りはcore 45件、reader 27件、wire 18件のproduction API試験を独立実行し、予算停止時のreport保持、長いSourceIdの割当前検査、Contextのsource閉包・同一性衝突、typed requestのNDF往復を確認した。統括の検査コマンド・source/spec identity・実行target・結果・未検証範囲は [固定revisionの検証記録](https://github.com/neknaj/NEPL3/blob/fd8057199f2f32fb36455210df36e78015b77fab/conformance/results/foundation-slice/validation.json) に記録した。これは当時の開発範囲に対する検証記録である。
 
 開始点は `6c9dd5f07376a3920a52ef61022d0adc011cca9f`。統括agentがcleanなworktree `C:/projects/NEPL3-runtime` とbranch `feat/foundation-runtime` を作成した。目標はNEPL3の最終仕様全体であり、最初の実装段階としてT01 core、T02 wire、T03 reader、T04 engine、T05 Grammar bootstrapを進める。
 
@@ -49,7 +49,7 @@ readerはReadReplyとcheckpointに生成sourceとSourceMapを保持するが、�
 
 ## 次段: builtin・tokenizerと構文のsource対応
 
-開始commitは`3bccd48d49ee1a7564335c4fa703960791ea4bc3`、作業branchは`feat/reader-builtins`。直前節までの記録は最初のsliceの状態であり、その固定証拠は`conformance/results/foundation-slice/`に保管する。
+開始commitは`3bccd48d49ee1a7564335c4fa703960791ea4bc3`、作業branchは`feat/reader-builtins`。直前節までの記録は最初のsliceの状態である。過去のpathと取得方法は[履歴索引](../../conformance/history.md)に示す。
 
 SyntaxBundleにSourceMapを接続し、別snapshotのviewが全対応経路を通じて所有tokenの範囲へ帰着することをnativeとwireで検査した。欠損・一部だけ外部の出自・guest source未宣言・空のdecode結果も検査する。readerは全terminalの正式reportが参照する生成source/mapsを保持し、対応するrequestの宣言tableと合わせて閉じる。無関係なhost storeから不足を補わない。
 
@@ -61,7 +61,7 @@ SyntaxBundleにSourceMapを接続し、別snapshotのviewが全対応経路を�
 
 統合試験では、複数の制約IDを持つSyntaxBundleを追加したことでhost生成器とproduction canonical writerの順序不一致を検出した。制約は名前の集合なのでhost側も正準sortし、重複・不正IDの拒否と順序交換の回帰試験を追加した。field・choice・binding子列の意味順序は維持する。独立レビュー担当も元の失敗と修正後の3試験を実行して確認した。
 
-コマンド、target、実行ログとhash、対象source/spec、未検証範囲は [builtin/tokenizerの統合記録](../../conformance/results/reader-builtins/validation.json) に保存する。直前のmainへ統合された最初のsliceの3 OS・WASI CIとsource artifactの確認は [過去commitのCI記録](../../conformance/results/foundation-slice/main-ci.json) に分ける。次の実装はprefix engine、Profile解決、Grammar compilerとbootstrapであり、この区切りを最初のbootstrap節目やT16の達成とは扱わない。
+コマンド、target、実行ログとhash、対象source/spec、未検証範囲は [builtin/tokenizerの統合記録](https://github.com/neknaj/NEPL3/blob/fd8057199f2f32fb36455210df36e78015b77fab/conformance/results/reader-builtins/validation.json) に記録した。直前のmainへ統合された最初のsliceの3 OS・WASI CIとsource artifactの確認は [過去commitのCI記録](https://github.com/neknaj/NEPL3/blob/fd8057199f2f32fb36455210df36e78015b77fab/conformance/results/foundation-slice/main-ci.json) にある。当時の後続課題はprefix engine、Profile解決、Grammar compilerとbootstrapである。現在の到達点は状態索引を参照する。
 
 ## 次段: prefix engineとGrammar compilerの途中checkpoint
 

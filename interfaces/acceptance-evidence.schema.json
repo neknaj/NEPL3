@@ -76,7 +76,7 @@
             "tools": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/version"}}
           }
         },
-        "log": {"type": "string", "pattern": "^conformance/results/.+\\.(txt|log)$"},
+        "log": {"type": "string", "pattern": "^dist/evidence/.+\\.(txt|log)$"},
         "log_sha256": {"$ref": "#/$defs/digest"}
       },
       "allOf": [
@@ -98,7 +98,7 @@
         "independent": {"const": true},
         "decision": {"enum": ["approved", "rejected"]},
         "scope": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/nonempty"}},
-        "log": {"type": "string", "pattern": "^conformance/results/.+\\.(txt|log)$"},
+        "log": {"type": "string", "pattern": "^dist/evidence/.+\\.(txt|log)$"},
         "log_sha256": {"$ref": "#/$defs/digest"}
       }
     }

@@ -1,8 +1,0 @@
-[
-  {"section": null, "name": "13-再現性schema識別契約の判定"},
-  {"section": "policy", "name": "方針"},
-  {"section": "semantic", "name": "package意味正規形"},
-  {"section": "execution", "name": "具体実行identity"},
-  {"section": "wire", "name": "2-native値とwire値"},
-  {"section": "limits", "name": "4-limitsとproviderの互換"}
-]
