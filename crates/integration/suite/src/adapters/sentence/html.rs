@@ -8,6 +8,7 @@ use nepl3_core::{
 };
 use nepl3_markup::html::*;
 use nepl3_sentence_core::{model::*, syntax::SentenceSyntax};
+pub mod paragraph;
 
 const CLASSES: &[&str] = &[
     "nepl-sentence",

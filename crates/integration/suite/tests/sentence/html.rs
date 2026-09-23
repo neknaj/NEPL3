@@ -299,6 +299,90 @@ fn resource_limits_preserve_input_and_publish_no_partial_fragment() -> Result<()
 }
 
 #[test]
+fn paragraph_composition_preserves_owners_and_resource_boundaries() -> Result<(), String> {
+    let registry = registry()?;
+    let first = syntax(
+        vec![Kind::Text {
+            text: "first".into(),
+        }],
+        Root::Inline(InlineRef(0)),
+    );
+    let second = syntax(
+        vec![Kind::Text {
+            text: "後続".into(),
+        }],
+        Root::Inline(InlineRef(0)),
+    );
+    let run = |budget: &mut Budget| {
+        let mut parts = Vec::new();
+        for input in [&first, &second] {
+            parts.push(
+                html::render_part_with_foreign(
+                    input,
+                    &registry,
+                    &mut |_, _, _| Err::<HtmlRequest, Error>(Error::InternalShape),
+                    &mut b(),
+                    &mut SourceAdmission::default(),
+                )
+                .map_err(err)?,
+            );
+        }
+        Ok::<_, String>(html::paragraph::compose(parts, budget))
+    };
+    let mut measured = b();
+    let paragraph = run(&mut measured)?.map_err(err)?;
+    assert!(core::ptr::eq(paragraph.placements()[0].input(), &first));
+    assert!(core::ptr::eq(paragraph.placements()[1].input(), &second));
+    let markup = paragraph.markup();
+    let (_, children) = element(&markup.fragment, 0, HtmlTag::P)?;
+    assert_eq!(children.len(), 2);
+    let checked = validate(&markup.fragment, markup.slot, &markup.policy, &mut b()).map_err(err)?;
+    let printed = serialize_xhtml(&checked, &mut b()).map_err(err)?;
+    assert!(printed.find("first").ok_or("first")? < printed.find("後続").ok_or("second")?);
+    let usage = measured.usage();
+    for (used, reason) in [
+        (usage.work, StopReason::WorkLimit),
+        (usage.allocation_units, StopReason::AllocationLimit),
+        (usage.nodes, StopReason::NodeLimit),
+        (usage.depth, StopReason::DepthLimit),
+    ] {
+        assert!(used > 0);
+        for exact in [false, true] {
+            let mut limits = b().limits();
+            let value = used - u64::from(!exact);
+            match reason {
+                StopReason::WorkLimit => limits.work = value,
+                StopReason::AllocationLimit => limits.allocation_units = value,
+                StopReason::NodeLimit => limits.nodes = value,
+                StopReason::DepthLimit => limits.depth = value,
+                _ => return Err("paragraph resource".into()),
+            }
+            let mut bounded = Budget::new(limits);
+            let result = run(&mut bounded)?;
+            if exact {
+                result.map_err(err)?;
+            } else {
+                assert!(matches!(result, Err(Error::Stopped(actual)) if actual == reason));
+            }
+            assert_eq!(bounded.current_depth(), 0);
+        }
+    }
+    let mut cancelled = b();
+    cancelled.cancel();
+    assert!(matches!(
+        run(&mut cancelled)?,
+        Err(Error::Stopped(StopReason::Cancelled))
+    ));
+    let empty = html::paragraph::compose([], &mut b()).map_err(err)?;
+    assert!(empty.placements().is_empty());
+    assert!(
+        element(&empty.markup().fragment, 0, HtmlTag::P)?
+            .1
+            .is_empty()
+    );
+    Ok(())
+}
+#[test]
 fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<(), String> {
     use nepl3_core::syntax::*;
     let r = registry()?;
@@ -417,15 +501,7 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
     // References across two Sentence occurrences are resolved by the complete
     // document. Pending parts retain their input owner and element mapping.
     for duplicate in [false, true] {
-        let mut complete = HtmlFragment {
-            root: 0,
-            nodes: vec![HtmlNode::Element {
-                tag: HtmlTag::Div,
-                attributes: vec![],
-                children: vec![],
-            }],
-        };
-        let mut policy = HtmlPolicy { classes: vec![] };
+        let mut parts = Vec::new();
         for definition in [false, true] {
             let mut adapter = |_: &ForeignClosure, _, _: &mut Budget| {
                 let anchor = definition || duplicate;
@@ -500,43 +576,58 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
                 }
             }
             assert!(core::ptr::eq(pending.input(), &input));
-            let (owner, mut part, origins, placements) = pending.into_parts();
-            assert!(core::ptr::eq(owner, &input));
-            assert_eq!(placements.len(), 1);
-            assert!(origins.iter().any(|origin| origin.element == placements[0].first_element && origin.node == 0));
             if !definition && !duplicate {
+                let lone = html::render_part_with_foreign(
+                    &input,
+                    &r,
+                    &mut adapter,
+                    &mut b(),
+                    &mut SourceAdmission::default(),
+                )
+                .map_err(err)?;
                 assert!(matches!(
-                    validate(&part.fragment, part.slot, &part.policy, &mut b()),
-                    Err(HtmlError::MissingFragment(_))
+                    html::paragraph::compose([lone], &mut b()),
+                    Err(Error::Markup(HtmlError::MissingFragment(_)))
                 ));
             }
-            let offset = complete.nodes.len() as u64;
-            let root = offset + part.fragment.root;
-            for node in &mut part.fragment.nodes {
-                if let HtmlNode::Element { children, .. } | HtmlNode::MathElement { children, .. } =
-                    node
-                {
-                    for child in children {
-                        *child += offset;
-                    }
-                }
-            }
-            let HtmlNode::Element { children, .. } = &mut complete.nodes[0] else {
-                return Err("document root".into());
-            };
-            children.push(root);
-            complete.nodes.extend(part.fragment.nodes);
-            for class in part.policy.classes {
-                if !policy.classes.contains(&class) {
-                    policy.classes.push(class);
-                }
-            }
+            parts.push(pending);
         }
-        let checked = validate(&complete, HtmlSlot::Block, &policy, &mut b());
+        let result = html::paragraph::compose(parts, &mut b());
         if duplicate {
-            assert!(matches!(checked, Err(HtmlError::DuplicateId(_))));
+            assert!(matches!(
+                result,
+                Err(Error::Markup(HtmlError::DuplicateId(_)))
+            ));
         } else {
-            let checked = checked.map_err(err)?;
+            let paragraph = result.map_err(err)?;
+            assert_eq!(paragraph.placements().len(), 2);
+            let mut end = 1;
+            for placement in paragraph.placements() {
+                assert!(core::ptr::eq(placement.input(), &input));
+                assert_eq!(placement.first_element(), end);
+                end += placement.elements();
+                let [foreign] = placement.foreign() else {
+                    return Err("one guest".into());
+                };
+                assert_eq!(foreign.embed, EmbedRef(0));
+                assert!(
+                    placement
+                        .origins()
+                        .iter()
+                        .all(|origin| origin.element >= placement.first_element()
+                            && origin.element < end)
+                );
+                assert!(
+                    placement
+                        .origins()
+                        .iter()
+                        .any(|origin| origin.element == foreign.first_element && origin.node == 0)
+                );
+            }
+            assert_eq!(end as usize, paragraph.markup().fragment.nodes.len());
+            let markup = paragraph.markup();
+            let checked =
+                validate(&markup.fragment, markup.slot, &markup.policy, &mut b()).map_err(err)?;
             let output = serialize_xhtml(&checked, &mut b()).map_err(err)?;
             assert!(
                 output.contains("href=\"#across-sentences\"")

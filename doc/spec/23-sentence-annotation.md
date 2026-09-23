@@ -344,6 +344,10 @@ Doc断片の選択とlowerは、suiteの`adapters::sentence::document_guests::co
 この値は局所syntax・guest closure・Phrasing構造の検査と要素の由来を保持し、HTML IDの重複とfragment参照の解決を合成後の文書検査へ委譲する。
 各Sentenceのsource所有者を保持して要素位置を再対応させ、完成したHTML全体を検証した後にserializeする。
 `PendingSentence`はserializerへ直接渡せない。単独表示の`render_with_foreign`は従来どおり文全体のIDと参照を検査する。
+`html::paragraph::compose`はSentence断片を表示順に消費し、段落のHTMLを構成する。
+各出現の入力Sentence、要素範囲、nodeの由来、foreign要素の位置を保持し、移動先の要素番号へ対応させる。
+段落全体の参照・重複ID・構造・深さを共通Budgetで検査し、失敗時は部分出力を返さない。
+この段落合成はHTMLの操作であり、Docの文書モデルとArticle全体の名前解決への接続は引き続きconsumer移行で扱う。
 
 ## 注釈と移行完了条件
 
