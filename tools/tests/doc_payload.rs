@@ -1243,3 +1243,114 @@ fn doc_auxiliary_fragments_and_parent_operands_have_typed_boundaries() -> Result
     }
     Ok(())
 }
+
+#[test]
+fn doc_prefix_limits_preserve_typed_stops_and_caller_depth() -> Result<(), String> {
+    use nepl3_core::budget::{Budget, StopReason};
+    use nepl3_doc_core::{
+        check::Category,
+        lower::{self, LowerError},
+    };
+    let compiled = compiled()?;
+    with_input(
+        &compiled,
+        "list unordered cons item unchecked body cons list unordered cons item unchecked body nil nil nil nil",
+        "Block",
+        |tree, profile, b, a| {
+            let original = tree.tree().bundle.clone_with_budget(b).map_err(err)?;
+            let bundle = tree
+                .tree()
+                .bundle
+                .validate_with_sources(profile.registry(), b, a)
+                .map_err(err)?;
+            for selector in 0..5 {
+                let mut stopped = 0;
+                let mut completed = 0;
+                for cap in [0, 1, 8, 64, 512, 4096, 32768, 262144] {
+                    let mut limits = budget().limits();
+                    let expected = match selector {
+                        0 => {
+                            limits.work = cap;
+                            StopReason::WorkLimit
+                        }
+                        1 => {
+                            limits.allocation_units = cap;
+                            StopReason::AllocationLimit
+                        }
+                        2 => {
+                            limits.source_bytes = cap;
+                            StopReason::SourceLimit
+                        }
+                        3 => {
+                            limits.nodes = cap;
+                            StopReason::NodeLimit
+                        }
+                        _ => {
+                            limits.depth = cap;
+                            StopReason::DepthLimit
+                        }
+                    };
+                    let mut operation = Budget::new(limits);
+                    let mut admission = SourceAdmission::default();
+                    let result = operation.with_depth_at_least(7, |b| {
+                        lower::prefix(
+                            &bundle,
+                            &compiled.doc.package.schema,
+                            Category::Block,
+                            profile.registry(),
+                            b,
+                            &mut admission,
+                        )
+                    });
+                    assert_eq!(operation.current_depth(), 0);
+                    assert_eq!(tree.tree().bundle, original);
+                    match result {
+                        Ok(doc) => {
+                            completed += 1;
+                            assert_eq!(
+                                doc.value
+                                    .nodes
+                                    .iter()
+                                    .filter(|node| matches!(
+                                        node.kind,
+                                        nepl3_doc_core::model::DocKind::List { .. }
+                                    ))
+                                    .count(),
+                                2
+                            );
+                            doc.validate_structure(
+                                profile.registry(),
+                                &mut budget(),
+                                &mut SourceAdmission::default(),
+                            )
+                            .map_err(err)?;
+                        }
+                        Err(LowerError::Stopped(reason)) => {
+                            stopped += 1;
+                            assert_eq!(reason, expected);
+                            assert_eq!(operation.poll(), Err(expected));
+                        }
+                        Err(other) => {
+                            return Err(format!("cap {cap}, resource {selector}: {other:?}"));
+                        }
+                    }
+                }
+                assert!(stopped > 0 && completed > 0, "resource {selector}");
+            }
+            let mut cancelled = budget();
+            cancelled.cancel();
+            assert!(matches!(
+                lower::prefix(
+                    &bundle,
+                    &compiled.doc.package.schema,
+                    Category::Block,
+                    profile.registry(),
+                    &mut cancelled,
+                    &mut SourceAdmission::default()
+                ),
+                Err(LowerError::Stopped(StopReason::Cancelled))
+            ));
+            Ok(())
+        },
+    )
+}
