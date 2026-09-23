@@ -546,3 +546,145 @@ fn mixed_lower_stops_keep_original_tree_and_caller_depth() -> Result<(), String>
         },
     )
 }
+
+#[test]
+fn doc_guest_retains_syntax_until_selected_sentence_meaning_check() -> Result<(), String> {
+    use nepl3_doc_core::model::{DocKind, DocRoot, EmbedKind};
+    use nepl3_sentence_core::{
+        check, lower as sentence_lower,
+        model::{Kind, Root},
+    };
+    use nepl3_suite::adapters::document::sentence;
+    let compiled = compiled()?;
+    let source = r#"paragraph cons code Doc article en sentence "Guest title" body cons paragraph cons sentence sentence cons ruby text "" text "r" nil nil nil cons sentence "host-tail" nil"#;
+    nepl3_tools::doc::source::with_input(&compiled, source, "Block", |tree, profile, b, a| {
+        let empty = SourceStore::default();
+        let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
+        let doc = lower::document(
+            tree.syntax(),
+            &compiled.doc.package.schema,
+            Category::Block,
+            profile.registry(),
+            b,
+            &mut codec,
+        )
+        .map_err(err)?;
+        assert_eq!(doc.value.embeds.len(), 2);
+        let tail = doc
+            .value
+            .embeds
+            .iter()
+            .find(|e| e.kind == EmbedKind::Sentence)
+            .ok_or("tail Sentence")?;
+        let tail = sentence::lower(
+            tail,
+            tail.schema(),
+            &[],
+            profile.registry(),
+            &mut codec,
+            &mut budget(),
+        )
+        .map_err(err)?;
+        let Root::Sentence(root) = tail.value.root else {
+            return Err("tail root".into());
+        };
+        let Kind::Sentence { inlines } = &tail.value.nodes[root.0 as usize] else {
+            return Err("tail node".into());
+        };
+        assert_eq!(inlines.len(), 1);
+        assert!(
+            matches!(&tail.value.nodes[inlines[0].0 as usize], Kind::Text { text } if text == "host-tail")
+        );
+        let guest = doc
+            .value
+            .embeds
+            .iter()
+            .find(|e| e.kind != EmbedKind::Sentence)
+            .ok_or("code guest")?
+            .syntax()
+            .ok_or("guest syntax")?;
+        let proof = guest
+            .validate(profile.registry(), &mut budget(), codec.source_admission())
+            .map_err(err)?;
+        let article = lower::document(
+            proof.syntax(),
+            &compiled.doc.package.schema,
+            Category::Article,
+            profile.registry(),
+            &mut budget(),
+            &mut codec,
+        )
+        .map_err(err)?;
+        let DocRoot::Article(root) = article.value.root else {
+            return Err("guest Article".into());
+        };
+        let DocKind::Article { body, .. } = article.value.nodes[root.0 as usize].kind else {
+            return Err("Article node".into());
+        };
+        let DocKind::Body { blocks } = &article.value.nodes[body.0 as usize].kind else {
+            return Err("body".into());
+        };
+        let DocKind::Paragraph { items } = &article.value.nodes[blocks[0].0 as usize].kind else {
+            return Err("paragraph".into());
+        };
+        let DocKind::Sentence { syntax } = article.value.nodes[items[0].0 as usize].kind else {
+            return Err("Sentence placement".into());
+        };
+        let invalid = &article.value.embeds[syntax.0 as usize];
+        let result = sentence::lower(
+            invalid,
+            invalid.schema(),
+            &[],
+            profile.registry(),
+            &mut codec,
+            &mut budget(),
+        );
+        assert!(
+            matches!(
+                result,
+                Err(sentence::Error::Lower(
+                    sentence_lower::presentation::Error::Prefix(sentence_lower::Error::Shape(
+                        check::Error::EmptyAnnotationPart(_)
+                    ))
+                ))
+            ),
+            "{result:?}"
+        );
+        // Portable transport preserves the unexecuted guest, including its
+        // semantic error. Successful transport certifies no guest operation.
+        let wire =
+            nepl3_doc_core::portable::to_value(&doc, profile.registry(), &mut codec, &mut budget())
+                .map_err(err)?;
+        let bytes = nepl3_wire::encode(&wire, &mut budget()).map_err(err)?;
+        let mut admission = SourceAdmission::default();
+        let mut receiver =
+            FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
+        let received = nepl3_doc_core::portable::from_value(
+            &nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?,
+            profile.registry(),
+            &mut receiver,
+            &mut budget(),
+        )
+        .map_err(err)?;
+        assert_eq!(received.value.root, doc.value.root);
+        assert_eq!(received.value.nodes, doc.value.nodes);
+        assert_eq!(received.origins, doc.origins);
+        assert_eq!(received.views, doc.views);
+        assert_eq!(received.source_maps, doc.source_maps);
+        assert_eq!(
+            nepl3_wire::encode(
+                &nepl3_doc_core::portable::to_value(
+                    &received,
+                    profile.registry(),
+                    &mut receiver,
+                    &mut budget()
+                )
+                .map_err(err)?,
+                &mut budget()
+            )
+            .map_err(err)?,
+            bytes
+        );
+        Ok(())
+    })
+}
