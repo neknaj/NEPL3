@@ -26,7 +26,7 @@ pub fn child() -> Result<(), String> {
     };
     for call in calls.iter().rev() {
         let approved = authority.admit(call, &mut budget()).map_err(error)?;
-        connection
+        let result = connection
             .dispatch_invoke(
                 &registration,
                 identity(),
@@ -41,6 +41,7 @@ pub fn child() -> Result<(), String> {
                 &mut budget(),
             )
             .map_err(error)?;
+        result.delivery.map_err(error)?;
     }
     match connection
         .receive(&registry, &sources, &mut admission, &mut budget())

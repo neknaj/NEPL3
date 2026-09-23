@@ -14,10 +14,23 @@ pub enum DispatchError {
     Transport(TransportError),
 }
 
+/// A validated operation reply and its independent delivery outcome. A failed
+/// send closes the stream; retain the reply for diagnostics/lifetime cleanup and
+/// cancel the remaining requests. Never repeat the executed callback to retry
+/// delivery. Owning the reply requires no additional allocation on failure.
+#[derive(Debug)]
+#[must_use = "inspect delivery status and retain the checked operation reply"]
+pub struct ReplyDelivery {
+    pub request_id: u64,
+    pub reply: OperationReply,
+    pub delivery: Result<(), TransportError>,
+}
+
 impl<R: Read, W: Write> Connection<R, W> {
     /// Deliver a decoded Resume using the original host-saved Await and grants.
     /// All checks and the Await-to-Running transition use the suite boundary.
-    /// On error the connection closes; the host cancels its active lifetimes.
+    /// Dispatch errors and failed delivery outcomes close the connection; the
+    /// host cancels its active lifetimes and can retain any checked reply.
     /// A callback that began execution consumes the generation even if sending
     /// its reply fails. The returned reply may request another Await generation.
     #[allow(clippy::too_many_arguments)]
@@ -35,7 +48,7 @@ impl<R: Read, W: Write> Connection<R, W> {
         execution: &mut Budget,
         validation: &mut Budget,
         transport: &mut Budget,
-    ) -> Result<OperationReply, DispatchError> {
+    ) -> Result<ReplyDelivery, DispatchError> {
         self.operation_phase().map_err(DispatchError::Transport)?;
         let result = (|| {
             let reply = resume::execute(
@@ -50,14 +63,14 @@ impl<R: Read, W: Write> Connection<R, W> {
                 validation,
             )
             .map_err(DispatchError::Resume)?;
-            self.send_operation_reply(
+            Ok(self.send_operation_reply(
                 saved.parent.request_id,
                 reply,
                 registry,
                 sources,
                 admission,
                 transport,
-            )
+            ))
         })();
         if result.is_err() {
             self.closed = true;
@@ -71,8 +84,9 @@ impl<R: Read, W: Write> Connection<R, W> {
     ///
     /// The returned reply is retained by the host for terminal lifetime closure
     /// or Await/Resume scheduling. The host must not execute this call again on
-    /// a send failure: the operation may already have run. Any error closes this
-    /// stream and requires host cancellation of its outstanding requests.
+    /// a send failure: the operation has already run. Dispatch errors and failed
+    /// ReplyDelivery outcomes close the stream and require host cancellation of
+    /// outstanding requests. Only checked replies enter ReplyDelivery.
     #[allow(clippy::too_many_arguments)]
     pub fn dispatch_invoke(
         &mut self,
@@ -87,7 +101,7 @@ impl<R: Read, W: Write> Connection<R, W> {
         execution: &mut Budget,
         validation: &mut Budget,
         transport: &mut Budget,
-    ) -> Result<OperationReply, DispatchError> {
+    ) -> Result<ReplyDelivery, DispatchError> {
         self.operation_phase().map_err(DispatchError::Transport)?;
         let request = authorized.request();
         let result = (|| {
@@ -102,14 +116,14 @@ impl<R: Read, W: Write> Connection<R, W> {
                 validation,
             )
             .map_err(DispatchError::Operation)?;
-            self.send_operation_reply(
+            Ok(self.send_operation_reply(
                 request.request_id,
                 reply,
                 registry,
                 sources,
                 admission,
                 transport,
-            )
+            ))
         })();
         if result.is_err() {
             self.closed = true;
@@ -125,14 +139,20 @@ impl<R: Read, W: Write> Connection<R, W> {
         sources: &SourceStore,
         admission: &mut SourceAdmission,
         transport: &mut Budget,
-    ) -> Result<OperationReply, DispatchError> {
+    ) -> ReplyDelivery {
         let frame = ProviderFrame::Reply { request_id, reply };
-        self.send(&frame, registry, sources, admission, transport)
-            .map_err(DispatchError::Transport)?;
+        let delivery = self.send(&frame, registry, sources, admission, transport);
+        if delivery.is_err() {
+            self.closed = true;
+        }
         // The frame was constructed locally with the sole Reply variant.
         let ProviderFrame::Reply { reply, .. } = frame else {
             unreachable!()
         };
-        Ok(reply)
+        ReplyDelivery {
+            request_id,
+            reply,
+            delivery,
+        }
     }
 }

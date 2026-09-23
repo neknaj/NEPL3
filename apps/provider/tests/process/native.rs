@@ -80,11 +80,12 @@ fn child() -> Result<(), String> {
                         &mut budget(),
                     )
                     .map_err(error)?;
+                reply.delivery.map_err(error)?;
                 let OperationReply::Await {
                     continuation,
                     calls,
                     ..
-                } = reply
+                } = reply.reply
                 else {
                     return Err("expected fixture Await".into());
                 };
@@ -131,7 +132,8 @@ fn child() -> Result<(), String> {
                         &mut budget(),
                     )
                     .map_err(error)?;
-                if !matches!(result, OperationReply::Result(_)) {
+                result.delivery.map_err(error)?;
+                if !matches!(result.reply, OperationReply::Result(_)) {
                     return Err("expected terminal result".into());
                 }
                 lifetimes

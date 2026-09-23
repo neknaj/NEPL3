@@ -162,6 +162,7 @@ fn decoded_resume_runs_saved_callback_once_and_returns_dependency_value() -> Res
         )
         .map_err(error)?;
     let work = execution.usage().work;
+    reply.delivery.map_err(error)?;
     assert!(work >= 17);
     assert_eq!(
         lifetimes.phase(17, &mut budget()),
@@ -190,7 +191,7 @@ fn decoded_resume_runs_saved_callback_once_and_returns_dependency_value() -> Res
     let mut client = Connection::new(Cursor::new(bytes), Vec::new());
     let portable =
         receive(&mut client, &parent, context, &registry, &mut budget()).map_err(error)?;
-    assert_eq!(portable, reply);
+    assert_eq!(portable, reply.reply);
     let OperationReply::Result(OperationResult::Complete {
         value: TypedValue::Record(record),
         ..
@@ -252,8 +253,8 @@ fn resume_write_failure_consumes_lifetime_and_closes_transport() -> Result<(), S
         .map_err(error)?;
     let mut server = Connection::new(io::empty(), Broken);
     let mut execution = budget();
-    assert!(matches!(
-        server.dispatch_resume(
+    let result = server
+        .dispatch_resume(
             &registration,
             identity,
             &saved,
@@ -265,11 +266,14 @@ fn resume_write_failure_consumes_lifetime_and_closes_transport() -> Result<(), S
             &mut SourceAdmission::default(),
             &mut execution,
             &mut budget(),
-            &mut budget()
-        ),
-        Err(nepl3_provider::dispatch::DispatchError::Transport(
-            TransportError::Io(_)
-        ))
+            &mut budget(),
+        )
+        .map_err(error)?;
+    assert!(matches!(result.delivery, Err(TransportError::Io(_))));
+    assert_eq!(result.request_id, parent.request_id);
+    assert!(matches!(
+        result.reply,
+        OperationReply::Result(OperationResult::Invalid { partial: None, .. })
     ));
     assert_eq!(execution.usage().work, 4);
     assert_eq!(

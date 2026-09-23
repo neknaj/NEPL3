@@ -10,6 +10,8 @@ use nepl3_suite::grants::Grants;
 mod control;
 #[path = "reply/delegation.rs"]
 mod delegation;
+#[path = "reply/delivery.rs"]
+mod delivery;
 #[path = "reply/resume.rs"]
 mod resume;
 #[path = "reply/routing.rs"]
@@ -153,11 +155,12 @@ fn wire_invoke_executes_native_callback_and_returns_the_checked_result() -> Resu
         )
         .map_err(error)?;
     assert!(execution.usage().work > 0);
+    native.delivery.map_err(error)?;
     let (_, bytes) = server.into_parts();
     let mut client = Connection::new(Cursor::new(bytes), Vec::new());
     let portable =
         receive(&mut client, &request, context, &registry, &mut budget()).map_err(error)?;
-    assert_eq!(portable, native);
+    assert_eq!(portable, native.reply);
     let OperationReply::Result(OperationResult::Complete {
         value: TypedValue::Record(record),
         ..
@@ -307,12 +310,17 @@ fn failed_reply_write_keeps_execution_work_and_prevents_callback_retry() -> Resu
         &mut budget(),
         &mut budget(),
     );
-    assert!(matches!(
-        result,
-        Err(nepl3_provider::dispatch::DispatchError::Transport(
-            TransportError::Io(_)
-        ))
-    ));
+    let result = result.map_err(error)?;
+    assert!(matches!(result.delivery, Err(TransportError::Io(_))));
+    assert_eq!(result.request_id, request.request_id);
+    let OperationReply::Result(OperationResult::Complete {
+        value: TypedValue::Record(record),
+        ..
+    }) = result.reply
+    else {
+        return Err("checked Complete was lost on send failure".into());
+    };
+    assert_eq!(record.fields, vec![NdfValue::U64(42)]);
     assert!(server.is_closed());
     let work = execution.usage().work;
     assert!(work > 0);
