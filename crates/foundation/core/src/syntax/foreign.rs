@@ -14,10 +14,17 @@ pub struct ForeignClosure {
 }
 pub struct ValidatedForeignClosure<'a> {
     value: &'a ForeignClosure,
+    syntax: ValidatedSyntaxBundle<'a>,
 }
 impl<'a> ValidatedForeignClosure<'a> {
     pub fn value(&self) -> &'a ForeignClosure {
         self.value
+    }
+    /// Reuse the guest graph proof established by this closure validation.
+    /// The immutable closure borrow protects the guest and its source tables.
+    /// Domain semantics and canonical environment hashes require their own checks.
+    pub fn syntax(&self) -> &ValidatedSyntaxBundle<'a> {
+        &self.syntax
     }
 }
 impl ForeignClosure {
@@ -31,7 +38,8 @@ impl ForeignClosure {
         admission: &mut SourceAdmission,
     ) -> Result<ValidatedForeignClosure<'a>, SyntaxError> {
         b.poll()?;
-        self.syntax
+        let syntax = self
+            .syntax
             .bundle
             .validate_with_sources(registry, b, admission)?;
         require_schema(registry, &self.syntax.schema)?;
@@ -66,7 +74,10 @@ impl ForeignClosure {
             registry,
             b,
         )?;
-        Ok(ValidatedForeignClosure { value: self })
+        Ok(ValidatedForeignClosure {
+            value: self,
+            syntax,
+        })
     }
     /// Capture a foreign field of this exact checked owner. Tables retain owner
     /// IDs and are copied with a budget; the owner's syntax nodes are not copied.

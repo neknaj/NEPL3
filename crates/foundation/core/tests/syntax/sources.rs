@@ -30,6 +30,40 @@ fn snapshot(id: &str, revision: u64, text: &str) -> Result<SourceSnapshot, Sourc
 }
 
 #[test]
+fn closure_retains_guest_proof_only_after_owner_validation() -> Result<(), SyntaxError> {
+    let (registry, schema) = registry()?;
+    let mut input = closure(&schema, vec![]);
+    let mut b = budget();
+    let checked = input.validate(&registry, &mut b, &mut SourceAdmission::default())?;
+    let usage = b.usage();
+    assert!(core::ptr::eq(
+        checked.syntax().bundle(),
+        &input.syntax.bundle
+    ));
+    assert!(core::ptr::eq(checked.value(), &input));
+    assert_eq!(checked.syntax().bundle().root, NodeRef(0));
+    assert_eq!(b.usage(), usage);
+
+    // A valid guest alone cannot establish the closure proof: the owner
+    // environment must still match. No guest proof is returned on that failure.
+    input.owner_environment.id += 1;
+    assert_eq!(
+        input
+            .validate(&registry, &mut budget(), &mut SourceAdmission::default())
+            .err(),
+        Some(SyntaxError::Environment)
+    );
+    input.owner_environment.id -= 1;
+    input.syntax.bundle.root = NodeRef(u64::MAX);
+    assert!(
+        input
+            .validate(&registry, &mut budget(), &mut SourceAdmission::default())
+            .is_err()
+    );
+    Ok(())
+}
+
+#[test]
 fn indexed_source_validation_preserves_duplicate_conflict_and_revision_rules()
 -> Result<(), SyntaxError> {
     let (registry, schema) = registry()?;

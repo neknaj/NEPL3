@@ -69,16 +69,16 @@ pub fn lower<C: FoundationValueCodec>(
                 if closure.syntax.category != category {
                     return Err(Error::Category);
                 }
-                closure
+                let checked = closure
                     .validate(registry, budget, codec.source_admission())
                     .map_err(Error::Closure)?;
-                let checked = closure
-                    .syntax
-                    .bundle
-                    .validate_with_sources(registry, budget, codec.source_admission())
-                    .map_err(Error::Closure)?;
                 lower::presentation::sentence_with_foreign(
-                    &checked, surface, forms, registry, codec, budget,
+                    checked.syntax(),
+                    surface,
+                    forms,
+                    registry,
+                    codec,
+                    budget,
                 )
                 .map_err(Error::Lower)?
             }

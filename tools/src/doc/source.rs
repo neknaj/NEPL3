@@ -205,9 +205,13 @@ pub fn with_named_input_limits<T>(
     )
     .map_err(err)?;
     let tree = parse_source_route(&source, &resolved, "Doc", category, &mut b, &mut a, native)?;
-    let checked = tree
-        .validate(&resolved, &mut b, &mut a)
-        .map_err(|e| format!("tree validation: {e:?}; usage={:?}", b.usage()))?;
+    let parse_usage = b.usage();
+    let checked = tree.validate(&resolved, &mut b, &mut a).map_err(|e| {
+        format!(
+            "tree validation: {e:?}; parse_usage={parse_usage:?}; usage={:?}",
+            b.usage()
+        )
+    })?;
     finish(&checked, &resolved, &mut b, &mut a)
 }
 
@@ -271,15 +275,27 @@ pub struct Compiled {
     pub others: Vec<nepl3_engine::package::LanguagePackage>,
 }
 pub fn compiled() -> Result<Compiled, String> {
-    compiled_with_sentence_forms(&[nepl3_grammar_core::compile::package::ForeignForm {
-        kind: "InlineMath",
-        category: "Inline",
-        spelling: "math",
-        field: "syntax",
-        alias: "Math",
-        guest_category: "Expr",
-        origin_reason: "Doc host selects Math expressions in Sentence Inline",
-    }])
+    use nepl3_grammar_core::compile::package::ForeignForm;
+    compiled_with_sentence_forms(&[
+        ForeignForm {
+            kind: "InlineMath",
+            category: "Inline",
+            spelling: "math",
+            field: "syntax",
+            alias: "Math",
+            guest_category: "Expr",
+            origin_reason: "Doc host selects Math expressions in Sentence Inline",
+        },
+        ForeignForm {
+            kind: "DocumentInline",
+            category: "Inline",
+            spelling: "doc",
+            field: "syntax",
+            alias: "Doc",
+            guest_category: "Inline",
+            origin_reason: "Doc host selects document references and anchors in Sentence Inline",
+        },
+    ])
 }
 /// Compile the parsing profile with the host's explicit Sentence extensions.
 /// Rendering and document namespace resolution require corresponding adapters;

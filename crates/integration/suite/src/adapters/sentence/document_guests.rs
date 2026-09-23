@@ -140,16 +140,18 @@ fn collect_inner<C: FoundationValueCodec>(
             Some(id) => id,
             None => {
                 let document = b.with_depth_at_least(base.saturating_add(depths[index]), |b| {
-                    closure
+                    let checked = closure
                         .validate(registry, b, codec.source_admission())
                         .map_err(Error::Closure)?;
-                    let input = closure
-                        .syntax
-                        .bundle
-                        .validate_with_sources(registry, b, codec.source_admission())
-                        .map_err(Error::Closure)?;
-                    lower::document(&input, surface, Category::Inline, registry, b, codec)
-                        .map_err(Error::Lower)
+                    lower::document(
+                        checked.syntax(),
+                        surface,
+                        Category::Inline,
+                        registry,
+                        b,
+                        codec,
+                    )
+                    .map_err(Error::Lower)
                 })?;
                 let id = DocumentId(selected.documents.len());
                 push(&mut selected.documents, document, b)?;
