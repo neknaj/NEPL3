@@ -651,7 +651,6 @@ fn stopped_guest_arithmetic_report_keeps_its_source_and_request() -> Result<(), 
             };
             assert_eq!(report.usage, execution.usage());
             assert_eq!(*reason, StopReason::WorkLimit);
-            assert_eq!(report.usage, execution.usage());
             assert!(partial.is_none());
             assert_eq!(report.diagnostics.len(), 1);
             let diagnostic = &report.diagnostics[0];
