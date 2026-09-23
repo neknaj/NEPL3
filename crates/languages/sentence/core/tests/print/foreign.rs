@@ -8,6 +8,40 @@ use nepl3_core::{
 fn err(e: impl core::fmt::Debug) -> String {
     format!("{e:?}")
 }
+
+#[test]
+fn caller_depth_is_counted_once_at_the_exact_limit() -> Result<(), String> {
+    let value = SentenceValue {
+        root: Root::Inline(InlineRef(0)),
+        nodes: vec![Kind::Text { text: "x".into() }],
+        embeds: vec![],
+    };
+    let registry = SchemaRegistry::default();
+    let prepared = print::prepare(&value, &registry, &mut b(), &mut SourceAdmission::default())
+        .map_err(err)?;
+    for prepared_path in [false, true] {
+        for limit in [1, 2] {
+            let mut limits = b().limits();
+            limits.depth = limit;
+            let mut budget = Budget::new(limits);
+            let result = budget.with_depth(|budget| {
+                if prepared_path {
+                    prepared.render(&[], budget)
+                } else {
+                    print::prefix(&value, budget)
+                }
+            });
+            if limit == 2 {
+                assert_eq!(result, Ok("text \"x\"".into()));
+                assert_eq!(budget.usage().depth, 2);
+            } else {
+                assert_eq!(result, Err(Error::Stopped(StopReason::DepthLimit)));
+            }
+            assert_eq!(budget.current_depth(), 0);
+        }
+    }
+    Ok(())
+}
 fn fixture() -> Result<(SchemaRegistry, SentenceValue), String> {
     let mut registry = SchemaRegistry::default();
     let descriptor = nepl3_core::schema::foundation::descriptor(&mut b()).map_err(err)?;

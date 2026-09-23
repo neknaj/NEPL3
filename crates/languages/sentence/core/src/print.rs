@@ -111,7 +111,6 @@ fn emit_prefix(
         Root::Sentence(r) => r.0,
         Root::Inline(r) => r.0,
     };
-    let base_depth = b.current_depth();
     push(&mut stack, Part::Node(root, 1), b)?;
     while let Some(part) = stack.pop() {
         b.charge(Resource::Work, 1)?;
@@ -129,10 +128,7 @@ fn emit_prefix(
                 }
             }
             Part::Node(id, depth) => {
-                let total_depth = base_depth
-                    .checked_add(depth)
-                    .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
-                b.observe_depth(total_depth)?;
+                b.observe_depth(depth)?;
                 let child_depth = depth
                     .checked_add(1)
                     .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
