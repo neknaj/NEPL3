@@ -6,12 +6,13 @@ It tests generated static pages, not Playground or live Pages deployment.
 """
 if not __debug__:
     raise RuntimeError('site audit requires Python assertions')
-import argparse, hashlib, json, threading, subprocess, re
+import argparse, hashlib, json, subprocess, re, sys
 from pathlib import Path
 from html.parser import HTMLParser
 from urllib.parse import urlsplit, unquote, urljoin
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-from playwright.sync_api import sync_playwright
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from browser import observe
 
 class Document(HTMLParser):
 
@@ -170,48 +171,8 @@ def verify(root, source_root=None, config_path='site/config.json', renderer=None
             if sized:
                 assert record['bytes'] == files[record['path']].stat().st_size, 'nested size mismatch'
 
-    class Handler(SimpleHTTPRequestHandler):
-
-        def __init__(self, *args, **kw):
-            super().__init__(*args, directory=str(root), **kw)
-
-        def do_GET(self):
-            path = urlsplit(self.path).path
-            if not path.startswith(base):
-                self.send_error(404)
-                return
-            self.path = '/' + path[len(base):]
-            super().do_GET()
-
-        def log_message(self, *args):
-            pass
-    server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    rows = []
-    try:
-        with sync_playwright() as p:
-            for engine in ['chromium', 'firefox', 'webkit']:
-                browser = getattr(p, engine).launch()
-                for width in [375, 1280]:
-                    context = browser.new_context(java_script_enabled=False, viewport={'width': width, 'height': 900})
-                    page = context.new_page()
-                    fail = []
-                    page.on('requestfailed', lambda r: fail.append(r.url))
-                    page.on('response', lambda r: fail.append(r.url) if r.status >= 400 else None)
-                    for name in docs:
-                        response = page.goto(f'http://127.0.0.1:{server.server_port}' + base + name, wait_until='networkidle')
-                        state = page.evaluate('()=>({scripts:document.scripts.length,styles:document.styleSheets.length,overflow:document.documentElement.scrollWidth>innerWidth,title:document.title})')
-                        assert response.status == 200 and (not fail) and (state['scripts'] == 0) and (state['styles'] > 0) and (not state['overflow']), (name, state, fail)
-                        if name == 'examples/index.html':
-                            expected_sources = [files[e['path']].read_bytes().decode('utf-8').replace('\r\n', '\n').replace('\r', '\n') for e in examples['examples']]
-                            assert page.locator('pre > code').all_text_contents() == expected_sources, 'example display differs from source'
-                        rows.append(dict(engine=engine, version=browser.version, width=width, page=name, **state))
-                    context.close()
-                browser.close()
-    finally:
-        server.shutdown()
-        server.server_close()
+    expected_sources = [files[e['path']].read_bytes().decode('utf-8').replace('\r\n', '\n').replace('\r', '\n') for e in examples['examples']]
+    rows = [case.representation() for case in observe(root, base, tuple(docs), expected_sources)]
     return dict(result='passed', base=base, source_commit=build['source_commit'], manifest_sha256=hashlib.sha256((root / 'manifest.json').read_bytes()).hexdigest(), files=len(files), cases=rows)
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
