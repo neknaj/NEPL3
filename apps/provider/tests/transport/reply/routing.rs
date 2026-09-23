@@ -2,6 +2,154 @@ use super::*;
 use nepl3_provider::reply::{ReplyContext, ReplyRoutes, RouteError};
 
 #[test]
+fn terminal_reply_commits_with_exact_binding_budget_and_preserves_results() -> Result<(), String> {
+    use nepl3_core::{
+        diagnostic::{Diagnostic, Severity},
+        operation::lifetime::{RequestLifetimes, RequestPhase},
+    };
+    let (registry, request) = fixture()?;
+    let sources = SourceStore::default();
+    let context = Digest::of(b"saved");
+    let entries = [ReplyContext {
+        request: &request,
+        context,
+        authorized_sources: &sources,
+    }];
+    let routes = ReplyRoutes::new(&entries, &mut budget()).map_err(error)?;
+    for mode in 0..3 {
+        let report = Report {
+            usage: nepl3_core::budget::Usage {
+                diagnostics: 1,
+                ..Default::default()
+            },
+            diagnostics: vec![Diagnostic {
+                schema: request.operation.schema.clone(),
+                code: "terminal-child".into(),
+                severity: Severity::Information,
+                stage: "invoke".into(),
+                arguments: request.input.clone(),
+                primary: None,
+                related: vec![],
+                fixes: vec![],
+            }],
+            ..Report::default()
+        };
+        let expected = OperationReply::Result(match mode {
+            0 => OperationResult::Complete {
+                value: request.input.clone(),
+                report,
+            },
+            1 => OperationResult::Invalid {
+                partial: Some(request.input.clone()),
+                report,
+            },
+            _ => OperationResult::Stopped {
+                reason: StopReason::WorkLimit,
+                partial: Some(request.input.clone()),
+                report,
+            },
+        });
+        let frame = ProviderFrame::Reply {
+            request_id: request.request_id,
+            reply: expected.clone(),
+        };
+        let mut lifetimes = RequestLifetimes::default();
+        lifetimes
+            .begin(
+                request.request_id,
+                request.operation.clone(),
+                context,
+                &mut budget(),
+            )
+            .map_err(error)?;
+        lifetimes
+            .begin(100, request.operation.clone(), context, &mut budget())
+            .map_err(error)?;
+        // Admission consists of payload validation and the saved Running binding.
+        // Finishing an already located entry needs no second index search.
+        let mut measured = budget();
+        connection(&frame, &registry)?
+            .receive_routed_reply(
+                &routes,
+                &registry,
+                &sources,
+                &mut SourceAdmission::default(),
+                &mut budget(),
+                &mut measured,
+            )
+            .map_err(error)?;
+        lifetimes
+            .check_reply(
+                request.request_id,
+                &request.operation,
+                context,
+                &mut measured,
+            )
+            .map_err(error)?;
+        let mut insufficient = Budget::new(Limits {
+            work: measured.usage().work - 1,
+            ..budget().limits()
+        });
+        let mut rejected = connection(&frame, &registry)?;
+        assert!(
+            rejected
+                .receive_active_reply(
+                    &routes,
+                    &mut lifetimes,
+                    &registry,
+                    &sources,
+                    &mut SourceAdmission::default(),
+                    &mut budget(),
+                    &mut insufficient,
+                )
+                .is_err()
+        );
+        assert!(rejected.is_closed());
+        assert_eq!(insufficient.poll(), Err(StopReason::WorkLimit));
+        assert_eq!(
+            lifetimes
+                .phase(request.request_id, &mut budget())
+                .map_err(error)?,
+            RequestPhase::Running
+        );
+        let mut validation = Budget::new(Limits {
+            work: measured.usage().work,
+            ..budget().limits()
+        });
+        let mut transport = connection(&frame, &registry)?;
+        let mut cancelled = vec![];
+        let (index, actual) = transport
+            .receive_managed_reply(
+                &routes,
+                &mut lifetimes,
+                &registry,
+                &sources,
+                &mut SourceAdmission::default(),
+                &mut budget(),
+                &mut validation,
+                |id| cancelled.push(id),
+            )
+            .map_err(error)?;
+        assert_eq!(index, 0);
+        assert_eq!(actual, expected);
+        assert_eq!(validation.poll(), Ok(()));
+        assert_eq!(
+            lifetimes
+                .phase(request.request_id, &mut budget())
+                .map_err(error)?,
+            RequestPhase::Finished
+        );
+        lifetimes.close(|id| cancelled.push(id));
+        assert_eq!(
+            cancelled,
+            [100],
+            "only the other Running request is cancelled"
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn managed_reply_failure_cancels_remaining_requests_once_after_budget_stop() -> Result<(), String> {
     use nepl3_core::operation::lifetime::{RequestLifetimes, RequestPhase};
     let (registry, request) = fixture()?;
@@ -154,8 +302,8 @@ fn await_and_validation_stops_preserve_running_until_host_commit() -> Result<(),
             observed_work = validation.usage().work;
         }
     }
-    // Every insufficient validation allowance, including the final finish lookup,
-    // must preserve Running and close transport rather than publish completion.
+    // Every insufficient validation allowance must preserve Running and close
+    // transport. Successful binding validation commits without a second lookup.
     for work in 0..observed_work {
         let mut lifetimes = RequestLifetimes::default();
         lifetimes
