@@ -185,27 +185,56 @@ fn sentence_payload_cannot_be_reassigned_to_another_doc_occurrence() -> Result<(
                 &mut budget(),
             )
             .map_err(err)?;
-            let mut changed = first.clone();
-            let DocContent::Syntax { closure } = &mut changed.content else {
-                return Err("first syntax".into());
-            };
-            let bundle = &mut closure.syntax.bundle;
-            let root = bundle.root;
-            let token = bundle.node(root).map_err(err)?.token.ok_or("first token")?;
-            bundle.tokens[token.0 as usize].payload = second_token.payload.clone();
-            let result = sentence::lower(
-                &changed,
-                changed.schema(),
-                &[],
-                profile.registry(),
-                &mut codec,
-                &mut budget(),
-            );
-            assert!(
-                matches!(result, Err(sentence::Error::Lower(presentation::Error::Literal(literal::Error::TokenMismatch(id)))) if id == root),
-                "{result:?}"
-            );
-            assert_eq!(first, &original);
+            // SentenceLiteralPayload fields are value, locations, origins and
+            // view. Each substituted field remains schema-valid on its own.
+            // Rejection must therefore come from its owner association.
+            for field in [None, Some(1), Some(2), Some(3)] {
+                let mut changed = first.clone();
+                let DocContent::Syntax { closure } = &mut changed.content else {
+                    return Err("first syntax".into());
+                };
+                let bundle = &mut closure.syntax.bundle;
+                let root = bundle.root;
+                let token = bundle.node(root).map_err(err)?.token.ok_or("first token")?;
+                let payload = &mut bundle.tokens[token.0 as usize].payload;
+                if let Some(field) = field {
+                    let (
+                        nepl3_core::value::NdfValue::Record(first),
+                        nepl3_core::value::NdfValue::Record(second),
+                    ) = (payload, &second_token.payload)
+                    else {
+                        return Err("Sentence literal records".into());
+                    };
+                    first.fields[field] = second.fields[field].clone();
+                } else {
+                    *payload = second_token.payload.clone();
+                }
+                let result = sentence::lower(
+                    &changed,
+                    changed.schema(),
+                    &[],
+                    profile.registry(),
+                    &mut codec,
+                    &mut budget(),
+                );
+                if field.is_none() {
+                    assert!(
+                        matches!(result, Err(sentence::Error::Lower(presentation::Error::Literal(literal::Error::TokenMismatch(id)))) if id == root),
+                        "{result:?}"
+                    );
+                } else {
+                    assert!(
+                        matches!(
+                            result,
+                            Err(sentence::Error::Lower(presentation::Error::Literal(
+                                literal::Error::Payload(_)
+                            )))
+                        ),
+                        "field {field:?}: {result:?}"
+                    );
+                }
+                assert_eq!(first, &original);
+            }
             Ok(())
         },
     )
