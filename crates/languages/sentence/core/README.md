@@ -25,6 +25,13 @@ without repeating the document's source bytes in every token payload. It checks
 root ownership and source containment; generated/mapped syntax uses the general
 closed syntax envelope. This codec is not the reader/provider implementation.
 
+`text::prepare` validates a native value and its foreign closures while borrowing
+the value and registry immutably. Its `render` method produces plain text with
+base-only, Ruby-reading or all-note output. A host supplies foreign text through
+input-bound `resolve` values. Work, allocation, depth and output limits apply;
+errors return no partial string. The native projection and its limits are defined
+in spec 23; portable operation registration remains a separate integration step.
+
 The development host now compiles the independent LanguagePackage and parses
 literal/prefix sources with the production engine. The standard prefix printer
 handles all ten forms; foreign output requires a surface adapter. Standard prefix

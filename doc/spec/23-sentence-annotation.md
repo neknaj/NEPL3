@@ -196,6 +196,24 @@ AdapterRequiredを返す。印字は元の綴り・Source/Origin・共有index�
 本番packageで標準prefixのparse/lower/print一致とText payload復元を検査する。
 foreign adapterを含む全意味往復とDoc consumer移行の完了とは区別する。
 
+## Sentenceのplain-text生成
+
+Sentence coreのnative API `text::prepare`は`SentenceValue`の構造とforeign closureを検証し、
+入力とregistryの不変借用を保持する。`PreparedText::render`は標準Inlineの順序に従って文章を生成する。
+TextとCodeは内容を保持し、強調と外部リンクは本文を、BreakはLFを出力する。
+共有nodeは各出現位置で出力する。
+
+`BaseOnly`は注釈のbase、`WithReadings`は`base[reading]`、`WithAllNotes`はさらに
+`base{note/note}`を出力する。RubyとInlineAnnoの内部にも同じ方針を適用する。
+hostはforeign-inlineの文章を明示的に供給する。`resolve`が供給値を対象入力のembedへ結び付け、
+生成時に所属と重複を検査する。出力対象に必要な供給値が欠けた場合は`Unresolved`を返す。
+注釈方針によって出力から除外される部分も、準備時の構造・foreign closure検査の対象とする。
+供給文章の意味的な正しさとproviderの認証は、hostのadapter契約に従う。
+
+生成はWork・AllocationUnits・OutputBytes・Depthを計上し、失敗・停止時にはErrorを返す。
+成功時の返り値は全文のStringである。元sourceの表記と位置情報は入力側で保持する。
+このAPIの対象はnativeの意味値である。portable operationの追加とDoc consumerの所有移行は後続作業とする。
+
 ## Doc本文readerへの接続
 
 この節はconsumer所有移行中のadapter契約である。Sentenceの恒久的な意味モデルと、現在のDoc payloadへの変換を区別する。移行完了後も必要なforeign adapterと、旧所有を除去するまでの互換変換を同じ完成条件にしない。

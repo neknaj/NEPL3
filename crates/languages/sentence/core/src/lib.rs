@@ -9,3 +9,4 @@ pub mod portable;
 pub mod print;
 pub mod schema;
 pub mod syntax;
+pub mod text;
