@@ -21,7 +21,9 @@ body
         cons "この[図/ず]は[親子関係/おやこかんけい]の[説明用/せつめいよう]の[表記/ひょうき]である。"
         cons "[印字結果/いんじけっか]はsource print: Complete(\"add 1 mul 2 3\")となる。"
         cons "[構文検査/こうぶんけんさ]を[通過/つうか]した[木/き]をsource-backed printerへ[渡/わた]し、[受理/じゅり]した[字句/じく]と[先行/せんこう]する[空白/くうはく]を[保持/ほじ]して[出力/しゅつりょく]する。"
-        cons "[算術評価/さんじゅつひょうか]と[意味的/いみてき]な[正規化/せいきか]は[後続/こうぞく]の[実装対象/じっそうたいしょう]である。"
+        cons "この[章/しょう]のexampleは[構文解析/こうぶんかいせき]・[構文検査/こうぶんけんさ]・[印字/いんじ]を[実行/じっこう]する。"
+        cons "[算術評価/さんじゅつひょうか]はsuite consumerが[提供/ていきょう]する。"
+        cons sentence cons link external "https://github.com/neknaj/NEPL3/blob/main/conformance/extensions/suite/README.md" concat cons text "suite consumerの" cons ruby text "実行手順" text "じっこうてじゅん" nil nil
         nil
       nil
   cons section declaration "[宣言/せんげん]と[子/こ]の[読取規則/よみとりきそく]"

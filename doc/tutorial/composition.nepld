@@ -7,7 +7,9 @@ body
         cons "この[章/しょう]では、MiniExprからFrameへ[入/はい]り、Frameの[内部/ないぶ]でMiniExprへ[再入/さいにゅう]する[入力/にゅうりょく]を[解析/かいせき]する。"
         cons "[使用/しよう]するpackageとaliasはhostがParseProfileへ[静的/せいてき]に[登録/とうろく]する。"
         cons "[前章/ぜんしょう]の[演習/えんしゅう]によるsumへの[変更/へんこう]は[保存/ほぞん]し、この[章/しょう]では[標準/ひょうじゅん]のadd[定義/ていぎ]を[使用/しよう]する。"
-        cons "source[上/じょう]のimport、Sentence・annotationとの[統合/とうごう]、[算術評価/さんじゅつひょうか]は[後続/こうぞく]の[実装対象/じっそうたいしょう]である。"
+        cons "source[上/じょう]のimportとSentence・annotationとの[統合/とうごう]は[後続/こうぞく]の[実装対象/じっそうたいしょう]である。"
+        cons "suite consumerは、[同/おな]じ[言語構成/げんごこうせい]をnativeのInvoke・Await・Resumeへ[接続/せつぞく]して[算術評価/さんじゅつひょうか]を[実行/じっこう]する。"
+        cons sentence cons link external "https://github.com/neknaj/NEPL3/blob/main/conformance/extensions/suite/README.md" concat cons text "suite consumerの" cons ruby text "実行手順" text "じっこうてじゅん" nil nil
         nil
       nil
   cons section observe "[言語境界/げんごきょうかい]と[再入/さいにゅう]を[観察/かんさつ]する"

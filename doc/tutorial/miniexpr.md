@@ -1,4 +1,4 @@
-<!-- Generated from doc/tutorial/miniexpr.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page tutorial&#45;miniexpr; source SHA-256 e05a1b06f8a769f2fa5e6d8f9931125ee2e98a784f3466a462c93efc31557e5a; alias input SHA-256 37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570; page input SHA-256 e975d638bc80b348c54ebb1e60c9d2e8d17cc83ac90580d408f2e1f15b568802. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/tutorial/miniexpr.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page tutorial&#45;miniexpr; source SHA-256 61f61100d2302bb4392a4ac63d1ccb31d1c1f211853adbab31fcf4f4295451c7; alias input SHA-256 37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570; page input SHA-256 27dcc8d604e97fe1b1a5562bd1e451d855026c8895487ade5158a196b85977b3. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 # <ruby>再帰的<rt>さいきてき</rt></ruby>な<ruby>小言語<rt>しょうげんご</rt></ruby>を<ruby>定義<rt>ていぎ</rt></ruby>する
 
@@ -28,7 +28,7 @@ add
     └── 3
 ```
 
-この<ruby>図<rt>ず</rt></ruby>は<ruby>親子関係<rt>おやこかんけい</rt></ruby>の<ruby>説明用<rt>せつめいよう</rt></ruby>の<ruby>表記<rt>ひょうき</rt></ruby>である。<ruby>印字結果<rt>いんじけっか</rt></ruby>はsource print\: Complete\(\"add 1 mul 2 3\"\)となる。<ruby>構文検査<rt>こうぶんけんさ</rt></ruby>を<ruby>通過<rt>つうか</rt></ruby>した<ruby>木<rt>き</rt></ruby>をsource\-backed printerへ<ruby>渡<rt>わた</rt></ruby>し、<ruby>受理<rt>じゅり</rt></ruby>した<ruby>字句<rt>じく</rt></ruby>と<ruby>先行<rt>せんこう</rt></ruby>する<ruby>空白<rt>くうはく</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>して<ruby>出力<rt>しゅつりょく</rt></ruby>する。<ruby>算術評価<rt>さんじゅつひょうか</rt></ruby>と<ruby>意味的<rt>いみてき</rt></ruby>な<ruby>正規化<rt>せいきか</rt></ruby>は<ruby>後続<rt>こうぞく</rt></ruby>の<ruby>実装対象<rt>じっそうたいしょう</rt></ruby>である。
+この<ruby>図<rt>ず</rt></ruby>は<ruby>親子関係<rt>おやこかんけい</rt></ruby>の<ruby>説明用<rt>せつめいよう</rt></ruby>の<ruby>表記<rt>ひょうき</rt></ruby>である。<ruby>印字結果<rt>いんじけっか</rt></ruby>はsource print\: Complete\(\"add 1 mul 2 3\"\)となる。<ruby>構文検査<rt>こうぶんけんさ</rt></ruby>を<ruby>通過<rt>つうか</rt></ruby>した<ruby>木<rt>き</rt></ruby>をsource\-backed printerへ<ruby>渡<rt>わた</rt></ruby>し、<ruby>受理<rt>じゅり</rt></ruby>した<ruby>字句<rt>じく</rt></ruby>と<ruby>先行<rt>せんこう</rt></ruby>する<ruby>空白<rt>くうはく</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>して<ruby>出力<rt>しゅつりょく</rt></ruby>する。この<ruby>章<rt>しょう</rt></ruby>のexampleは<ruby>構文解析<rt>こうぶんかいせき</rt></ruby>・<ruby>構文検査<rt>こうぶんけんさ</rt></ruby>・<ruby>印字<rt>いんじ</rt></ruby>を<ruby>実行<rt>じっこう</rt></ruby>する。<ruby>算術評価<rt>さんじゅつひょうか</rt></ruby>はsuite consumerが<ruby>提供<rt>ていきょう</rt></ruby>する。[suite consumerの<ruby>実行手順<rt>じっこうてじゅん</rt></ruby>](<https\:\/\/github\.com\/neknaj\/NEPL3\/blob\/main\/conformance\/extensions\/suite\/README\.md>)
 
 <a name="n-6465636c61726174696f6e"></a>
 
