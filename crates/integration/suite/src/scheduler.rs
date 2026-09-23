@@ -506,11 +506,9 @@ fn run_inner(
             suspending::PreparedReply::Result(result) => {
                 let id = call.request_id;
                 let context = current.context;
-                current.terminal = Some(result);
                 if let Some(parent) = ancestors.last_mut() {
                     let pending = &mut parent.active.as_mut().ok_or(Error::State)?.pending;
-                    let result = current.terminal.take().ok_or(Error::State)?;
-                    if let Err(rejected) = pending.try_accept_active(
+                    if let Err(rejected) = pending.try_accept_validated(
                         id,
                         context,
                         result,
@@ -523,6 +521,7 @@ fn run_inner(
                         return Err(Error::Dependency(rejected.cause));
                     }
                 } else {
+                    current.terminal = Some(result.into_inner());
                     lifetimes.finish(id, validation).map_err(Error::Lifetime)?;
                     return current.terminal.take().ok_or(Error::State);
                 }

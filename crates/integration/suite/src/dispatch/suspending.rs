@@ -2,6 +2,7 @@
 use super::*;
 use crate::suspension::{self, AwaitError};
 use nepl3_core::operation::OperationReply;
+use nepl3_core::{operation::validation::ValidatedResult, source::SourceStore};
 
 pub type Operation =
     fn(&Invoke, Digest, &SchemaRegistry, &mut Budget) -> Result<OperationReply, StopReason>;
@@ -25,27 +26,27 @@ pub enum Error {
 // This short-lived value moves straight into a scheduler frame. Keep admission
 // free of an additional fallible heap allocation solely for enum indirection.
 #[allow(clippy::large_enum_variant)]
-pub(crate) enum PreparedReply<'a, S> {
-    Result(OperationResult<TypedValue>),
-    Await(suspension::host::PreparedAwait<'a, S>),
+pub(crate) enum PreparedReply<'request, 'scope> {
+    Result(ValidatedResult<'scope>),
+    Await(suspension::host::PreparedAwait<'request, SourceStore>),
 }
 
-pub(crate) fn prepare_reply<'a, S: DiagnosticSourceResolver>(
+pub(crate) fn prepare_reply<'request, 'scope: 'request>(
     reply: OperationReply,
-    request: &'a Invoke,
+    request: &'request Invoke,
     context: Digest,
-    registry: &'a SchemaRegistry,
-    sources: &'a S,
+    registry: &'scope SchemaRegistry,
+    sources: &'scope SourceStore,
     validation: &mut Budget,
-) -> Result<PreparedReply<'a, S>, Error> {
+) -> Result<PreparedReply<'request, 'scope>, Error> {
     match reply {
         OperationReply::Result(result) => {
-            result
-                .validate_for(&request.operation, registry, sources, validation)
-                .map_err(|e| match e {
-                    ResultValidationError::Stopped(s) => Error::Stopped(s),
-                    e => Error::Dispatch(DispatchError::Output(e)),
-                })?;
+            let result =
+                ValidatedResult::new(result, &request.operation, registry, sources, validation)
+                    .map_err(|e| match e {
+                        ResultValidationError::Stopped(s) => Error::Stopped(s),
+                        e => Error::Dispatch(DispatchError::Output(e)),
+                    })?;
             Ok(PreparedReply::Result(result))
         }
         reply => {

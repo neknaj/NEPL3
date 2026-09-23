@@ -1,4 +1,6 @@
 use super::*;
+#[path = "validation/reuse.rs"]
+mod reuse;
 use nepl3_core::{
     diagnostic::{OperationResult, Report, TraceOverflow},
     operation::validation::ResultValidationError,

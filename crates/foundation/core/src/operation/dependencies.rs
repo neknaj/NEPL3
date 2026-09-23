@@ -199,24 +199,16 @@ impl<'a> PendingDependencies<'a> {
         lifetimes: &mut RequestLifetimes,
         b: &mut Budget,
     ) -> Result<(), RejectedResult> {
-        let position = (|| {
-            let position = self.validate_result(id, &result, registry, sources, b)?;
-            lifetimes
-                .finish_reply(id, &self.calls[position].operation, context, b)
-                .map_err(|e| match e {
-                    LifetimeError::Stopped(s) => DependencyError::Stopped(s),
-                    e => DependencyError::Lifetime(e),
-                })?;
-            Ok(position)
-        })();
+        let position = self.active_position(id, context, lifetimes, b, |operation, b| {
+            result.validate_for(operation, registry, sources, b)
+        });
         let position = match position {
             Ok(position) => position,
             Err(cause) => return Err(RejectedResult { cause, result }),
         };
         // Binding validation is the last fallible operation. Commit the result
         // into its reserved slot after the same lifetime index was finished.
-        self.results[position] = Some(result);
-        self.remaining -= 1;
+        self.store_result(position, result);
         Ok(())
     }
     fn validate_result(
@@ -227,6 +219,62 @@ impl<'a> PendingDependencies<'a> {
         sources: &impl DiagnosticSourceResolver,
         b: &mut Budget,
     ) -> Result<usize, DependencyError> {
+        let position = self.result_position(id, b)?;
+        result.validate_for(&self.calls[position].operation, registry, sources, b)?;
+        Ok(position)
+    }
+
+    /// Accept a value whose output/report proof remains tied to immutable
+    /// registry/source scopes. Request correlation and lifetime commitment use
+    /// the same checks as raw acceptance. Every rejection returns the value.
+    #[allow(clippy::too_many_arguments, clippy::result_large_err)]
+    pub fn try_accept_validated(
+        &mut self,
+        id: u64,
+        context: Digest,
+        result: super::validation::ValidatedResult<'_>,
+        registry: &SchemaRegistry,
+        sources: &crate::source::SourceStore,
+        lifetimes: &mut RequestLifetimes,
+        b: &mut Budget,
+    ) -> Result<(), RejectedResult> {
+        let position = self.active_position(id, context, lifetimes, b, |operation, b| {
+            result.validate_for(operation, registry, sources, b)
+        });
+        let result = result.into_inner();
+        let position = match position {
+            Ok(position) => position,
+            Err(cause) => return Err(RejectedResult { cause, result }),
+        };
+        self.store_result(position, result);
+        Ok(())
+    }
+
+    fn active_position(
+        &self,
+        id: u64,
+        context: Digest,
+        lifetimes: &mut RequestLifetimes,
+        b: &mut Budget,
+        validate: impl FnOnce(&OperationRef, &mut Budget) -> Result<(), ResultValidationError>,
+    ) -> Result<usize, DependencyError> {
+        let position = self.result_position(id, b)?;
+        validate(&self.calls[position].operation, b)?;
+        lifetimes
+            .finish_reply(id, &self.calls[position].operation, context, b)
+            .map_err(|e| match e {
+                LifetimeError::Stopped(s) => DependencyError::Stopped(s),
+                e => DependencyError::Lifetime(e),
+            })?;
+        Ok(position)
+    }
+
+    fn store_result(&mut self, position: usize, result: OperationResult<TypedValue>) {
+        self.results[position] = Some(result);
+        self.remaining -= 1;
+    }
+
+    fn result_position(&self, id: u64, b: &mut Budget) -> Result<usize, DependencyError> {
         b.poll()?;
         if self.consumed {
             return Err(DependencyError::Consumed);
@@ -247,7 +295,6 @@ impl<'a> PendingDependencies<'a> {
         if self.results[position].is_some() {
             return Err(DependencyError::DuplicateReply);
         }
-        result.validate_for(&self.calls[position].operation, registry, sources, b)?;
         Ok(position)
     }
     pub fn remaining(&self) -> usize {

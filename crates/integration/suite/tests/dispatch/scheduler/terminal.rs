@@ -4,7 +4,15 @@ use std::cell::Cell;
 
 #[test]
 fn checked_terminal_results_survive_root_and_child_acceptance_stops() -> Result<(), String> {
-    for mode in 0..4 {
+    // Both root delivery and child acceptance must retain all terminal kinds.
+    for (child, mode) in [
+        (false, 0),
+        (false, 1),
+        (false, 2),
+        (true, 0),
+        (true, 1),
+        (true, 2),
+    ] {
         let (registry, root) = fixture()?;
         let sources = SourceStore::default();
         let grants = Grants::new(&root.environment, &sources, &[], &mut budget())
@@ -13,7 +21,7 @@ fn checked_terminal_results_survive_root_and_child_acceptance_stops() -> Result<
         let resumed = Cell::new(0);
         let corrupt = Cell::new(false);
         let invoke = |call: &Invoke, context, _: &SchemaRegistry, b: &mut Budget| {
-            if mode > 0 && call.request_id == root.request_id {
+            if child && call.request_id == root.request_id {
                 return suspend_with(call, context, 99, &[10], b);
             }
             let mut value = call.input.clone_with_budget(b)?;
@@ -35,11 +43,11 @@ fn checked_terminal_results_survive_root_and_child_acceptance_stops() -> Result<
                 fixes: vec![],
             });
             Ok(OperationReply::Result(match mode {
-                2 => OperationResult::Invalid {
+                1 => OperationResult::Invalid {
                     partial: Some(value),
                     report,
                 },
-                3 => OperationResult::Stopped {
+                2 => OperationResult::Stopped {
                     reason: StopReason::Cancelled,
                     partial: Some(value),
                     report,
@@ -81,8 +89,43 @@ fn checked_terminal_results_survive_root_and_child_acceptance_stops() -> Result<
             )
         };
         let mut full = budget();
-        let result = run(&mut full, &mut vec![]);
-        assert_eq!(result.is_ok(), mode != 3);
+        let mut cancelled = vec![];
+        let result = run(&mut full, &mut cancelled);
+        assert_eq!(result.is_ok(), !child || mode != 2);
+        assert_eq!(resumed.get(), usize::from(child && mode != 2));
+        if !child {
+            let result = result.as_ref().map_err(|e| format!("{e:?}"))?;
+            let (value, report) = match (mode, result) {
+                (0, OperationResult::Complete { value, report }) => (value, report),
+                (
+                    1,
+                    OperationResult::Invalid {
+                        partial: Some(value),
+                        report,
+                    },
+                ) => (value, report),
+                (
+                    2,
+                    OperationResult::Stopped {
+                        reason: StopReason::Cancelled,
+                        partial: Some(value),
+                        report,
+                    },
+                ) => (value, report),
+                _ => return Err("root terminal kind or partial changed".into()),
+            };
+            assert_eq!(value, &root.input);
+            assert_eq!(report.diagnostics.len(), 1);
+            assert_eq!(report.diagnostics[0].code, "terminal-retained");
+            assert!(cancelled.is_empty());
+        } else if mode == 2 {
+            let failure = result
+                .as_ref()
+                .err()
+                .ok_or("stopped child must prevent Resume")?;
+            assert_eq!(failure.accepted_results().count(), 1);
+            assert_eq!(cancelled, [root.request_id]);
+        }
         let mut retained = 0;
         for work in 0..full.usage().work {
             let mut cancelled = vec![];
@@ -116,12 +159,18 @@ fn checked_terminal_results_survive_root_and_child_acceptance_stops() -> Result<
                     } => (value, report),
                     _ => return Err("lost terminal partial".into()),
                 };
-                if mode == 0 || outcome.request_id != root.request_id {
+                if !child || outcome.request_id != root.request_id {
                     retained += 1;
                     assert_eq!(resumed.get(), 0);
+                    assert!(matches!(
+                        (mode, outcome.result),
+                        (0, OperationResult::Complete { .. })
+                            | (1, OperationResult::Invalid { .. })
+                            | (2, OperationResult::Stopped { .. })
+                    ));
                     assert_eq!(
                         number(value),
-                        if mode == 0 {
+                        if !child {
                             number(&root.input)
                         } else {
                             Some(10)
@@ -138,7 +187,10 @@ fn checked_terminal_results_survive_root_and_child_acceptance_stops() -> Result<
             unique.dedup();
             assert_eq!(unique.len(), cancelled.len());
         }
-        assert!(retained > 0, "mode {mode}: acceptance stop not exercised");
+        assert!(
+            retained > 0,
+            "child={child}, mode={mode}: acceptance stop not exercised"
+        );
         corrupt.set(true);
         let Err(failure) = run(&mut budget(), &mut vec![]) else {
             return Err("invalid output must fail".into());
