@@ -422,6 +422,10 @@ jobs:
           cargo test --locked -p nepl3-tools --test doc html::browser_layout_corpus_from_real_doc_source -- --exact --nocapture > dist/doc-browser/corpus.log 2> dist/doc-browser/corpus.stderr
       - name: Check scriptless document layout in three real browsers
         run: python tools/audit/doc_html/browser.py --corpus dist/doc-browser/corpus.log --css crates/languages/doc/html/assets/doc.css --output dist/doc-browser/results.json
+      - name: Check recursive Math and Sentence annotations in three browsers
+        run: |
+          cargo test --locked -p nepl3-tools --lib doc::source::tests::math_sentence_math_printing_preserves_recursive_source -- --exact --nocapture > dist/doc-browser/math-annotations.log
+          python tools/audit/math/annotations.py --corpus dist/doc-browser/math-annotations.log --css crates/languages/doc/html/assets/doc.css > dist/doc-browser/math-annotations.json
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: math-visual-${{ github.sha }}

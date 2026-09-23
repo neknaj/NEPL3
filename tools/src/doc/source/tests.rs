@@ -9,6 +9,7 @@ fn math_sentence_math_printing_preserves_recursive_source() -> Result<(), String
     let compiled = compiled()?;
     let sentence = compiled.others.last().ok_or("Sentence package")?;
     let input = r#"article en "Math" body cons display Math label x Sentence sentence cons math label 7 Sentence "[字/じ]" nil nil"#;
+    let mut outputs = Vec::new();
     for native in [false, true] {
         with_input_route(
             native,
@@ -93,10 +94,27 @@ fn math_sentence_math_printing_preserves_recursive_source() -> Result<(), String
                         .iter()
                         .all(|id| (*id as usize) < html.markup.fragment.nodes.len())
                 );
+                let proof = nepl3_markup::html::validate(
+                    &html.markup.fragment,
+                    html.markup.slot,
+                    &html.markup.policy,
+                    b,
+                )
+                .map_err(err)?;
+                outputs.push(nepl3_markup::html::serialize_xhtml(&proof, b).map_err(err)?);
                 Ok(())
             },
         )?;
     }
+    assert_eq!(outputs[0], outputs[1]);
+    println!(
+        "MATH_RECURSIVE_HTML {}",
+        outputs[0]
+            .as_bytes()
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>()
+    );
     Ok(())
 }
 
