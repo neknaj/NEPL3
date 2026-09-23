@@ -650,8 +650,42 @@ fn doc_sentence_provider_failures_have_typed_report_positions_and_stops() -> Res
     let operation = nepl3_tools::doc::reader::signature(r, &mut b)
         .map_err(err)?
         .operation;
+    let descriptor = r.descriptor(&operation.schema).ok_or("reader descriptor")?;
+    assert_eq!(descriptor.operations.len(), 1);
+    assert_eq!(descriptor.operations[0].name, "sentenceReferenced");
     let mut codec = FoundationCodec::new(r, &store, &mut a).map_err(err)?;
     let checked = context.check(&mut codec, &store, r, &mut b).map_err(err)?;
+    let mut obsolete = operation.clone();
+    obsolete.name = "sentence".into();
+    // Reconstruct the retired descriptor independently: its old digest must
+    // not authorize the retained operation under the new selected contract.
+    let mut legacy = descriptor.clone();
+    let mut legacy_operation = legacy.operations[0].clone();
+    legacy_operation.name = "sentence".into();
+    legacy.operations.insert(0, legacy_operation);
+    let mut stale = operation.clone();
+    stale.schema = legacy.reference(&mut b).map_err(err)?;
+    assert_ne!(stale.schema, operation.schema);
+    for obsolete in [obsolete, stale] {
+        assert!(matches!(
+            nepl3_tools::doc::reader::read(
+                &obsolete,
+                ReadRequest {
+                    snapshot: &source,
+                    start: 0,
+                    limit: source.text().len() as u64,
+                    final_input: true,
+                    context: &checked,
+                    state: &NdfValue::Unit
+                },
+                r,
+                &store,
+                &mut b,
+                &mut a,
+            ),
+            Err(nepl3_reader::runtime::ReaderError::ProviderContract)
+        ));
+    }
     let reply = nepl3_tools::doc::reader::read(
         &operation,
         ReadRequest {

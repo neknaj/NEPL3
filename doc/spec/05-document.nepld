@@ -209,7 +209,8 @@ body
     cons paragraph
       cons sentence cons ruby text "標準文法" text "ひょうじゅんぶんぽう" cons text "は " cons code "doc.reader/sentence-v2" cons text " を" cons ruby text "明示" text "めいじ" cons text "して" cons ruby text "選択" text "せんたく" cons text "し、" cons code "nepl3.doc.reader" cons text " の " cons code "sentenceReferenced" cons text " " cons ruby text "操作" text "そうさ" cons text "を" cons ruby text "呼" text "よ" cons text "ぶ。" nil
       cons "[包絡/ほうらく]はReadRequest/ReadReplyのままで、ProviderSignatureのvalue[出力/しゅつりょく]をSentencePayloadとする。"
-      cons sentence cons ruby text "従来" text "じゅうらい" cons text "の " cons code "sentence" cons text " " cons ruby text "操作" text "そうさ" cons text "およびDocumentSyntaxの" cons ruby text "交換型" text "こうかんがた" cons text "とは" cons ruby text "識別" text "しきべつ" cons text "を" cons ruby text "分" text "わ" cons text "け、Profileの" cons ruby text "解決済" text "かいけつず" cons text "み" cons ruby text "署名" text "しょめい" cons text "・" cons ruby text "文法" text "ぶんぽう" cons text "source・provider identityを" cons ruby text "更新" text "こうしん" cons text "する。" nil
+      cons "readerの[操作/そうさ]descriptorはsentenceReferencedだけを[公開/こうかい]し、[旧/きゅう]sentence[操作/そうさ]の[要求/ようきゅう]を[拒否/きょひ]する。"
+      cons "Profileの[解決済/かいけつず]み[署名/しょめい]・[文法/ぶんぽう]source・provider identityを[現行/げんこう]descriptorに[対応/たいおう]させる。"
       cons "lowerは[受信/じゅしん]recordの[型/かた]を[選/えら]んでから[対応/たいおう]するcodecを[一度/いちど]だけ[呼/よ]び、SentencePayloadの[検査失敗/けんさしっぱい]を[旧/きゅう]codecで[再試行/さいしこう]しない。" nil
     cons paragraph
       cons "[意味値/いみち]からliteralを[出力/しゅつりょく]するprinterはText/Ruby/Annoだけの[表現/ひょうげん]ならescapeを[行/おこな]ってliteral[化/か]できる。"
