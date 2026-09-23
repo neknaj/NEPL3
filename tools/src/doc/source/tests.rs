@@ -22,6 +22,21 @@ fn math_closure(
     guest.syntax().ok_or_else(|| "Math syntax".into())
 }
 
+fn document_math(
+    record: &crate::doc::annotations::DocumentForeignRecord,
+) -> Result<&crate::doc::annotations::MathRecord, String> {
+    use crate::doc::annotations::{DocumentOutput, ForeignRecord};
+    match &record.output {
+        DocumentOutput::Math(math) => Ok(math),
+        DocumentOutput::Sentence(sentence) => {
+            let [ForeignRecord::Math(math)] = sentence.foreign.as_slice() else {
+                return Err("one label Math output".into());
+            };
+            Ok(&math.output)
+        }
+    }
+}
+
 #[test]
 fn composed_doc_namespace_keeps_fragment_source_identity() -> Result<(), String> {
     use nepl3_doc_core::labels::namespace::{self, MemberId};
@@ -312,8 +327,16 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
                                 return Err("ordered document owners".into());
                             };
                             assert_eq!(reference.foreign.len(), 1);
-                            assert!(definition.foreign.is_empty());
-                            for root in &reference.foreign[0].output.node_roots {
+                            let [definition_label] = definition.foreign.as_slice() else {
+                                return Err("one definition label".into());
+                            };
+                            let crate::doc::annotations::DocumentOutput::Sentence(label) =
+                                &definition_label.output
+                            else {
+                                return Err("Sentence-owned definition label".into());
+                            };
+                            assert!(label.foreign.is_empty());
+                            for root in &document_math(&reference.foreign[0])?.node_roots {
                                 assert!(matches!(
                                     output.markup.fragment.nodes[*root as usize],
                                     HtmlNode::MathElement { .. }
@@ -451,8 +474,8 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
                                     assert_eq!(first.document_digest, second.document_digest);
                                     assert_ne!(first.origins[0].element, second.origins[0].element);
                                     assert_ne!(
-                                        first.foreign[0].output.node_roots,
-                                        second.foreign[0].output.node_roots
+                                        document_math(&first.foreign[0])?.node_roots,
+                                        document_math(&second.foreign[0])?.node_roots
                                     );
                                 }
                             }
@@ -683,7 +706,7 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
                     outer.document.value.embeds[nested.embed.0 as usize].kind,
                     nepl3_doc_core::model::EmbedKind::InlineMath
                 );
-                let [annotation] = nested.output.annotations.as_slice() else {
+                let [annotation] = document_math(nested)?.annotations.as_slice() else {
                     return Err("inner annotation".into());
                 };
                 let [crate::doc::annotations::ForeignRecord::Document(inner)] =
@@ -897,8 +920,7 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
                     }), "final HTML owner for {text}");
                 }
                 assert!(
-                    nested
-                        .output
+                    document_math(nested)?
                         .node_roots
                         .iter()
                         .all(|element| (*element as usize) < rendered.markup.fragment.nodes.len())

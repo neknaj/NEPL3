@@ -8,6 +8,176 @@ use nepl3_tools::doc::source::{compiled, err, with_input_route};
 use nepl3_wire::foundation::FoundationCodec;
 
 #[test]
+fn html_keeps_sentence_label_owners_after_document_composition() -> Result<(), String> {
+    use nepl3_markup::html::{HtmlAttribute, HtmlNode};
+    use nepl3_tools::doc::annotations::{
+        DocumentOutput, ForeignRecord, SentenceAnnotationRenderer,
+    };
+    let compiled = compiled()?;
+    let input = r#"article en sentence "T" body cons paragraph cons sentence sentence
+        cons doc anchor target ruby concat cons text "漢字" cons math 7 nil text "かんじ"
+        cons doc ref target text "reference" nil nil nil"#;
+    for native in [false, true] {
+        with_input_route(
+            native,
+            &compiled,
+            input,
+            "Article",
+            |tree, profile, b, a| {
+                let registry = profile.registry();
+                let store = SourceStore::default();
+                let mut codec = FoundationCodec::new(registry, &store, a).map_err(err)?;
+                let document = lower::document(
+                    tree.syntax(),
+                    &compiled.doc.package.schema,
+                    Category::Article,
+                    registry,
+                    b,
+                    &mut codec,
+                )
+                .map_err(err)?;
+                let surface = registry
+                    .selected("nepl3.syntax.sentence", 1)
+                    .ok_or("Sentence schema")?;
+                let forms = [ForeignInlineForm {
+                    kind: "Form:DocumentInline",
+                    guest_schema: &compiled.doc.package.schema,
+                    guest_category: "Inline",
+                }];
+                let content = sentence::lower(
+                    &document.value.embeds[1],
+                    surface,
+                    &forms,
+                    registry,
+                    &mut codec,
+                    b,
+                )
+                .map_err(err)?;
+                let run = |limits| -> Result<_, String> {
+                    // Copy the immutable fixture before measurement. Each render then
+                    // owns its input and starts with a fresh source admission ledger.
+                    let input = content.clone();
+                    let mut admission = nepl3_core::source::SourceAdmission::default();
+                    let mut codec =
+                        FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+                    let mut host = SentenceAnnotationRenderer {
+                        registry,
+                        surface,
+                        math_surface: registry.selected("standard.math", 1),
+                        doc_surface: Some(&compiled.doc.package.schema),
+                        codec: &mut codec,
+                    };
+                    let mut b = nepl3_core::budget::Budget::new(limits);
+                    let result = host.render_syntax(input, &mut b);
+                    Ok((result, b.usage()))
+                };
+                let limits = nepl3_tools::doc::source::budget().limits();
+                let (rendered, usage) = run(limits)?;
+                let rendered = rendered.map_err(err)?;
+                {
+                    let mut host = SentenceAnnotationRenderer {
+                        registry,
+                        surface,
+                        math_surface: registry.selected("standard.math", 1),
+                        doc_surface: Some(&compiled.doc.package.schema),
+                        codec: &mut codec,
+                    };
+                    assert!(matches!(
+                        host.render_inline_syntax(
+                            content.clone(),
+                            &mut nepl3_tools::doc::source::budget()
+                        ),
+                        Err(nepl3_tools::doc::annotations::Error::Selection)
+                    ));
+                }
+                for reason in [
+                    nepl3_core::budget::StopReason::WorkLimit,
+                    nepl3_core::budget::StopReason::AllocationLimit,
+                    nepl3_core::budget::StopReason::DepthLimit,
+                    nepl3_core::budget::StopReason::OutputLimit,
+                ] {
+                    for shortage in [0, 1] {
+                        use nepl3_core::budget::StopReason;
+                        let mut limits = limits;
+                        match reason {
+                            StopReason::WorkLimit => limits.work = usage.work - shortage,
+                            StopReason::AllocationLimit => {
+                                limits.allocation_units = usage.allocation_units - shortage
+                            }
+                            StopReason::DepthLimit => limits.depth = usage.depth - shortage,
+                            StopReason::OutputLimit => {
+                                limits.output_bytes = usage.output_bytes - shortage
+                            }
+                            _ => unreachable!(),
+                        }
+                        let (result, _) = run(limits)?;
+                        if shortage == 0 {
+                            assert_eq!(result.map_err(err)?.markup, rendered.markup);
+                        } else {
+                            assert!(
+                                matches!(result, Err(nepl3_tools::doc::annotations::Error::Stopped(actual)) if actual == reason),
+                                "HTML: {reason:?}"
+                            );
+                        }
+                    }
+                }
+                assert_eq!(rendered.foreign.len(), 2);
+                for (foreign, expected) in rendered
+                    .foreign
+                    .iter()
+                    .zip([vec!["漢字", "かんじ"], vec!["reference"]])
+                {
+                    let ForeignRecord::Document(record) = foreign else {
+                        return Err("Doc owner".into());
+                    };
+                    let [label] = record.foreign.as_slice() else {
+                        return Err("one Sentence label".into());
+                    };
+                    let DocumentOutput::Sentence(label) = &label.output else {
+                        return Err("Sentence owner".into());
+                    };
+                    if expected.len() == 2 {
+                        let [ForeignRecord::Math(math)] = label.foreign.as_slice() else {
+                            return Err("nested label Math".into());
+                        };
+                        assert!(!math.output.node_roots.is_empty());
+                        for root in &math.output.node_roots {
+                            assert!(matches!(
+                                rendered.markup.fragment.nodes.get(*root as usize),
+                                Some(HtmlNode::MathElement { .. })
+                            ));
+                        }
+                        assert!(
+                            rendered
+                                .markup
+                                .fragment
+                                .nodes
+                                .iter()
+                                .any(|node| matches!(node, HtmlNode::Text { text } if text == "7"))
+                        );
+                    }
+                    for text in expected {
+                        assert!(label.origins.iter().any(|origin|
+                    matches!(&label.syntax.value.nodes[origin.node as usize], Kind::Text { text: actual } if actual == text)
+                    && matches!(&rendered.markup.fragment.nodes[origin.element as usize], HtmlNode::Text { text: actual } if actual == text)
+                    && label.syntax.locations[origin.node as usize].cover.as_ref().is_some_and(|span|
+                        span.snapshot_ref().source.0 == "doc-input"
+                        && input.get(span.start() as usize..span.end() as usize).is_some_and(|source| source.contains(text)))
+                ), "label provenance: {text}");
+                    }
+                }
+                assert!(rendered.markup.fragment.nodes.iter().any(|node| matches!(node,
+            HtmlNode::Element { attributes, .. } if attributes.iter().any(|a| matches!(a, HtmlAttribute::Id { value } if value == "n-746172676574")))));
+                assert!(rendered.markup.fragment.nodes.iter().any(|node| matches!(node,
+            HtmlNode::Element { attributes, .. } if attributes.iter().any(|a| matches!(a, HtmlAttribute::Href { value: nepl3_markup::html::HtmlHref::Fragment { id } } if id == "n-746172676574")))));
+                Ok(())
+            },
+        )?;
+    }
+    Ok(())
+}
+
+#[test]
 fn printer_reenters_document_from_a_sentence_label() -> Result<(), String> {
     let compiled = compiled()?;
     let input = r#"article en sentence "T" body cons paragraph cons sentence sentence

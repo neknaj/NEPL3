@@ -47,11 +47,45 @@ pub struct ForeignDocumentRecord {
     pub document: std::sync::Arc<nepl3_doc_core::model::DocumentSyntax>,
     pub document_digest: Digest,
     pub origins: Vec<nepl3_doc_html::ElementOrigin>,
-    pub foreign: Vec<DocumentMathRecord>,
+    pub foreign: Vec<DocumentForeignRecord>,
 }
-pub struct DocumentMathRecord {
+pub struct DocumentForeignRecord {
     pub embed: nepl3_doc_core::model::EmbedRef,
-    pub output: MathRecord,
+    pub output: DocumentOutput,
+}
+pub enum DocumentOutput {
+    Math(MathRecord),
+    Sentence(SentenceRecord),
+}
+pub struct SentenceRecord {
+    pub syntax: SentenceSyntax,
+    pub digest: Digest,
+    pub origins: Vec<html::ElementOrigin>,
+    pub foreign: Vec<ForeignRecord>,
+}
+impl DocumentOutput {
+    pub fn remap(
+        &mut self,
+        map: &mut impl FnMut(u64) -> Result<u64, super::math::ProjectionError>,
+        b: &mut Budget,
+    ) -> Result<(), super::math::ProjectionError> {
+        match self {
+            Self::Math(output) => output.remap(map, b),
+            Self::Sentence(output) => b.with_depth(|b| {
+                for origin in &mut output.origins {
+                    b.charge(Resource::Work, 1)?;
+                    if origin.node >= output.syntax.value.nodes.len() as u64 {
+                        return Err(super::math::ProjectionError::Mapping(origin.node));
+                    }
+                    origin.element = map(origin.element)?;
+                }
+                for foreign in &mut output.foreign {
+                    foreign.remap(map, b)?;
+                }
+                Ok(())
+            }),
+        }
+    }
 }
 impl ForeignRecord {
     pub fn embed(&self) -> nepl3_sentence_core::model::EmbedRef {
@@ -146,7 +180,25 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
         let mut ceiling = b.limits();
         ceiling.depth = ceiling.depth.min(64);
         let result = b.with_ceiling(ceiling, |b| {
-            b.with_depth(|b| self.render_sentence(sentence, b))
+            b.with_depth(|b| {
+                self.render_sentence(sentence, nepl3_sentence_core::check::Category::Sentence, b)
+            })
+        });
+        b.poll()?;
+        result
+    }
+    /// Render an independently owned Inline label with its local provenance.
+    pub fn render_inline_syntax(
+        &mut self,
+        sentence: SentenceSyntax,
+        b: &mut Budget,
+    ) -> Result<RenderedAnnotation, Error<C::Error>> {
+        let mut ceiling = b.limits();
+        ceiling.depth = ceiling.depth.min(64);
+        let result = b.with_ceiling(ceiling, |b| {
+            b.with_depth(|b| {
+                self.render_sentence(sentence, nepl3_sentence_core::check::Category::Inline, b)
+            })
         });
         b.poll()?;
         result
@@ -215,17 +267,24 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
             b,
         )
         .map_err(Error::Lower)?;
-        self.render_sentence(sentence, b)
+        self.render_sentence(sentence, nepl3_sentence_core::check::Category::Sentence, b)
     }
 
     fn render_sentence(
         &mut self,
         sentence: SentenceSyntax,
+        category: nepl3_sentence_core::check::Category,
         b: &mut Budget,
     ) -> Result<RenderedAnnotation, Error<C::Error>> {
         if !matches!(
-            sentence.value.root,
-            nepl3_sentence_core::model::Root::Sentence(_)
+            (category, sentence.value.root),
+            (
+                nepl3_sentence_core::check::Category::Sentence,
+                nepl3_sentence_core::model::Root::Sentence(_)
+            ) | (
+                nepl3_sentence_core::check::Category::Inline,
+                nepl3_sentence_core::model::Root::Inline(_)
+            )
         ) {
             return Err(Error::Selection);
         }

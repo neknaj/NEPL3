@@ -27,6 +27,8 @@ pub struct NamespaceOwner {
 #[derive(Debug)]
 pub enum Error<E> {
     Selection,
+    SentenceInput(nepl3_suite::adapters::document::sentence::Error<E>),
+    Sentence(Box<super::Error<E>>),
     Math(Box<super::super::math::Error<E>>),
     Projection(super::super::math::ProjectionError),
     Guests(nepl3_suite::adapters::sentence::document_guests::Error),
@@ -66,7 +68,7 @@ pub(super) fn render_member<C: FoundationValueCodec>(
 ) -> Result<
     (
         nepl3_doc_html::namespace::PendingPart,
-        Vec<super::DocumentMathRecord>,
+        Vec<super::DocumentForeignRecord>,
     ),
     Error<C::Error>,
 > {
@@ -75,6 +77,69 @@ pub(super) fn render_member<C: FoundationValueCodec>(
         prepared,
         member,
         &mut |guest, embed, b| {
+            if matches!(guest.kind, EmbedKind::Sentence | EmbedKind::SentenceInline) {
+                let mut forms = Vec::new();
+                for (kind, category, surface) in [
+                    ("Form:InlineMath", "Expr", host.math_surface),
+                    ("Form:DocumentInline", "Inline", host.doc_surface),
+                ] {
+                    if let Some(surface) = surface {
+                        b.charge(
+                            Resource::AllocationUnits,
+                            core::mem::size_of::<nepl3_sentence_core::lower::ForeignInlineForm<'_>>(
+                            ) as u64,
+                        )?;
+                        forms
+                            .try_reserve_exact(1)
+                            .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+                        forms.push(nepl3_sentence_core::lower::ForeignInlineForm {
+                            kind,
+                            guest_schema: surface,
+                            guest_category: category,
+                        });
+                    }
+                }
+                let syntax = nepl3_suite::adapters::document::sentence::lower(
+                    guest,
+                    host.surface,
+                    &forms,
+                    host.registry,
+                    host.codec,
+                    b,
+                )
+                .map_err(Error::SentenceInput)?;
+                let result = match guest.kind {
+                    EmbedKind::Sentence => host.render_syntax(syntax, b),
+                    EmbedKind::SentenceInline => host.render_inline_syntax(syntax, b),
+                    _ => return Err(Error::Selection),
+                }
+                .map_err(|error| {
+                    match b.charge(
+                        Resource::AllocationUnits,
+                        core::mem::size_of_val(&error) as u64,
+                    ) {
+                        Ok(()) => Error::Sentence(Box::new(error)),
+                        Err(reason) => Error::Stopped(reason),
+                    }
+                })?;
+                b.charge(
+                    Resource::AllocationUnits,
+                    core::mem::size_of::<super::DocumentForeignRecord>() as u64,
+                )?;
+                foreign
+                    .try_reserve_exact(1)
+                    .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+                foreign.push(super::DocumentForeignRecord {
+                    embed,
+                    output: super::DocumentOutput::Sentence(super::SentenceRecord {
+                        syntax: result.sentence,
+                        digest: result.sentence_digest,
+                        origins: result.origins,
+                        foreign: result.foreign,
+                    }),
+                });
+                return Ok(result.markup);
+            }
             if guest.kind != EmbedKind::InlineMath {
                 return Err(Error::Selection);
             }
@@ -104,19 +169,19 @@ pub(super) fn render_member<C: FoundationValueCodec>(
                 .map_err(Error::Projection)?;
             b.charge(
                 Resource::AllocationUnits,
-                core::mem::size_of::<super::DocumentMathRecord>() as u64,
+                core::mem::size_of::<super::DocumentForeignRecord>() as u64,
             )?;
             foreign
                 .try_reserve_exact(1)
                 .map_err(|_| b.stop(StopReason::AllocationLimit))?;
-            foreign.push(super::DocumentMathRecord {
+            foreign.push(super::DocumentForeignRecord {
                 embed,
-                output: super::MathRecord {
+                output: super::DocumentOutput::Math(super::MathRecord {
                     syntax: result.syntax,
                     node_roots: result.node_roots,
                     annotation_roots: result.annotation_roots,
                     annotations: result.annotations,
-                },
+                }),
             });
             Ok(result.markup)
         },
