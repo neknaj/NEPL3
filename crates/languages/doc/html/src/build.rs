@@ -311,6 +311,7 @@ pub(crate) fn render_prepared(
         links,
         &mut |_, _, _| Err(RenderError::InternalShape),
         budget,
+        true,
     )
     .map(|rendered| rendered.fragment)
     .map_err(|error| match error {
@@ -326,7 +327,26 @@ pub fn render_inline_with_foreign<E>(
     adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
     budget: &mut Budget,
 ) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
-    render_prepared_with_foreign(&prepared.0, &[], adapter, budget)
+    render_prepared_with_foreign(&prepared.0, &[], adapter, budget, true)
+}
+
+/// Private construction step. Only namespace assembly may consume this output;
+/// all members are validated together before any public result is returned.
+pub(super) fn namespace_member(
+    prepared: &crate::prepare::PreparedRendering<'_>,
+    budget: &mut Budget,
+) -> Result<RenderedFragment, RenderError> {
+    render_prepared_with_foreign(
+        prepared,
+        &[],
+        &mut |_, _, _| Err(RenderError::InternalShape),
+        budget,
+        false,
+    )
+    .map(|value| value.fragment)
+    .map_err(|error| match error {
+        ForeignRenderError::Render(error) | ForeignRenderError::Foreign(error) => error,
+    })
 }
 
 fn render_prepared_with_foreign<E>(
@@ -334,6 +354,7 @@ fn render_prepared_with_foreign<E>(
     links: &[(u64, HtmlHref)],
     adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
     budget: &mut Budget,
+    validate_final: bool,
 ) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
     budget.poll()?;
     let mut w = Builder {
@@ -429,7 +450,9 @@ fn render_prepared_with_foreign<E>(
         slot,
         policy: HtmlPolicy { classes },
     };
-    validate(&markup.fragment, markup.slot, &markup.policy, w.b)?;
+    if validate_final {
+        validate(&markup.fragment, markup.slot, &markup.policy, w.b)?;
+    }
     // Bind even visually identical outputs to their actual generation options.
     let parallel = match &prepared.options.parallel {
         ParallelMode::Rows => ParallelMode::Rows,

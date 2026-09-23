@@ -8,7 +8,7 @@ use nepl3_wire::foundation::FoundationCodec;
 fn composed_doc_namespace_keeps_fragment_source_identity() -> Result<(), String> {
     use nepl3_doc_core::labels::namespace::{self, MemberId};
     let compiled = compiled()?;
-    for native in [false, true] {
+    for (native, conflicting) in [(false, false), (true, false), (false, true), (true, true)] {
         let mut documents = Vec::new();
         for (name, source) in [
             ("reference-fragment", "ref target text \"参照\""),
@@ -18,7 +18,7 @@ fn composed_doc_namespace_keeps_fragment_source_identity() -> Result<(), String>
                 native,
                 &compiled,
                 source,
-                name,
+                if conflicting { "shared-fragment" } else { name },
                 "Inline",
                 |tree, profile, b, a| {
                     let registry = profile.registry();
@@ -53,11 +53,17 @@ fn composed_doc_namespace_keeps_fragment_source_identity() -> Result<(), String>
             &compiled,
             "text \"context\"",
             "Inline",
-            |_, profile, b, a| {
+            |_, profile, b, _| {
                 let inputs = documents
                     .iter()
                     .map(|document| {
-                        namespace::inspect(document, profile.registry(), b, a).map_err(err)
+                        namespace::inspect(
+                            document,
+                            profile.registry(),
+                            b,
+                            &mut SourceAdmission::default(),
+                        )
+                        .map_err(err)
                     })
                     .collect::<Result<Vec<_>, _>>()?;
                 let members: Vec<_> = inputs.iter().collect();
@@ -89,6 +95,76 @@ fn composed_doc_namespace_keeps_fragment_source_identity() -> Result<(), String>
                     checked.document(MemberId(0)).ok_or("reference owner")?,
                     &documents[0]
                 ));
+                let store = SourceStore::default();
+                let mut admission = SourceAdmission::default();
+                let mut codec = FoundationCodec::new(profile.registry(), &store, &mut admission)
+                    .map_err(err)?;
+                let options = nepl3_doc_html::RenderOptions {
+                    parallel: nepl3_doc_html::ParallelMode::Rows,
+                };
+                let prepared = nepl3_doc_html::namespace::prepare(
+                    &checked,
+                    &options,
+                    profile.registry(),
+                    &mut codec,
+                    b,
+                );
+                if conflicting {
+                    assert!(
+                        matches!(
+                            prepared,
+                            Err(nepl3_doc_html::LocalPreparationError::Input(
+                                nepl3_doc_core::prepare::PreparationError::Boundary(
+                                    nepl3_doc_core::portable::PortableError::Structure(
+                                        nepl3_doc_core::check::StructureError::Source(
+                                            nepl3_core::source::SourceError::IdentityConflict
+                                        )
+                                    )
+                                )
+                            ))
+                        ),
+                        "common admission must reject conflicting snapshots"
+                    );
+                    return Ok(());
+                }
+                let prepared = prepared.map_err(err)?;
+                let mut measured = budget();
+                let rendered =
+                    nepl3_doc_html::namespace::render(&prepared, &mut measured).map_err(err)?;
+                assert_eq!(rendered.documents.len(), 2);
+                use nepl3_markup::html::{HtmlAttribute, HtmlHref, HtmlNode};
+                for (member, is_reference) in [(MemberId(0), true), (MemberId(1), false)] {
+                    let nepl3_doc_core::model::DocRoot::Inline(owner) =
+                        documents[member.0 as usize].value.root
+                    else {
+                        return Err("Inline owner".into());
+                    };
+                    assert!(rendered.origins.iter().any(|origin| {
+                        origin.member == member && origin.node == owner.0 && matches!(&rendered.markup.fragment.nodes[origin.element as usize], HtmlNode::Element { attributes, .. } if attributes.iter().any(|attribute| {
+                            if is_reference { matches!(attribute, HtmlAttribute::Href { value: HtmlHref::Fragment { id } } if id == "n-746172676574") }
+                            else { matches!(attribute, HtmlAttribute::Id { value } if value == "n-746172676574") }
+                        }))
+                    }));
+                }
+                let used = measured.usage();
+                for reason in [
+                    nepl3_core::budget::StopReason::WorkLimit,
+                    nepl3_core::budget::StopReason::AllocationLimit,
+                    nepl3_core::budget::StopReason::DepthLimit,
+                ] {
+                    let mut limits = measured.limits();
+                    match reason {
+                        nepl3_core::budget::StopReason::WorkLimit => limits.work = used.work - 1,
+                        nepl3_core::budget::StopReason::AllocationLimit => {
+                            limits.allocation_units = used.allocation_units - 1
+                        }
+                        nepl3_core::budget::StopReason::DepthLimit => limits.depth = used.depth - 1,
+                        _ => unreachable!("fixed resource cases"),
+                    }
+                    let mut limited = Budget::new(limits);
+                    assert!(nepl3_doc_html::namespace::render(&prepared, &mut limited).is_err());
+                    assert_eq!(limited.poll(), Err(reason));
+                }
                 Ok(())
             },
         )?;

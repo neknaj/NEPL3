@@ -94,6 +94,9 @@ pub struct CheckedNamespace<'m, 'a> {
     references: Vec<NamespaceReference<'a>>,
 }
 impl<'a> CheckedNamespace<'_, 'a> {
+    pub fn documents(&self) -> impl ExactSizeIterator<Item = &'a DocumentSyntax> + '_ {
+        self.members.iter().map(|member| member.document)
+    }
     pub fn document(&self, member: MemberId) -> Option<&'a DocumentSyntax> {
         usize::try_from(member.0)
             .ok()

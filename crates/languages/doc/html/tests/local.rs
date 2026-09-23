@@ -1,3 +1,4 @@
+use nepl3_core::value_codec::FoundationValueCodec;
 use nepl3_core::{
     budget::{Budget, Limits, StopReason},
     schema::SchemaRegistry,
@@ -264,6 +265,188 @@ fn inline_request() -> LocalHtmlRequest {
     })
     .collect();
     req
+}
+
+#[test]
+fn namespace_checks_final_selected_markup_and_rejects_unresolved_dependencies() -> Result<(), String>
+{
+    use nepl3_doc_core::labels::namespace as labels;
+    let registry = registry()?;
+    let mut req = request();
+    req.document.value.nodes = vec![
+        DocKind::Article {
+            language: "en".into(),
+            title: SentenceRef(1),
+            body: BodyRef(2),
+        },
+        DocKind::Sentence { inlines: vec![] },
+        DocKind::Body {
+            blocks: vec![BlockRef(3)],
+        },
+        DocKind::Paragraph {
+            items: vec![FlowRef(4)],
+        },
+        DocKind::Parallel {
+            variants: vec![VariantRef(5), VariantRef(8)],
+        },
+        DocKind::Variant {
+            language: "en".into(),
+            sentence: SentenceRef(6),
+        },
+        DocKind::Sentence {
+            inlines: vec![InlineRef(7)],
+        },
+        DocKind::Reference {
+            target: "target".into(),
+            label: InlineRef(11),
+        },
+        DocKind::Variant {
+            language: "ja".into(),
+            sentence: SentenceRef(9),
+        },
+        DocKind::Sentence {
+            inlines: vec![InlineRef(10)],
+        },
+        DocKind::Anchor {
+            id: "target".into(),
+            label: InlineRef(11),
+        },
+        DocKind::Text {
+            text: "label".into(),
+        },
+    ]
+    .into_iter()
+    .map(|kind| DocNode {
+        kind,
+        locations: vec![],
+        origin: None,
+        span: None,
+    })
+    .collect();
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let member =
+        labels::inspect(&req.document, &registry, &mut b(), &mut admission).map_err(err)?;
+    let members = [&member];
+    let checked = labels::resolve(&members, &mut b()).map_err(err)?;
+    let mut codec = FoundationCodec::new(&registry, &store, &mut admission).map_err(err)?;
+    for reason in [
+        StopReason::WorkLimit,
+        StopReason::AllocationLimit,
+        StopReason::Cancelled,
+    ] {
+        let mut limits = b().limits();
+        match reason {
+            StopReason::WorkLimit => limits.work = 0,
+            StopReason::AllocationLimit => limits.allocation_units = 0,
+            _ => {}
+        }
+        let mut limited = Budget::new(limits);
+        if reason == StopReason::Cancelled {
+            limited.cancel();
+        }
+        assert!(
+            matches!(namespace::prepare(&checked, &req.options, &registry, &mut codec, &mut limited), Err(LocalPreparationError::Stopped(actual)) if actual == reason)
+        );
+        assert_eq!(limited.poll(), Err(reason));
+    }
+    let all =
+        namespace::prepare(&checked, &req.options, &registry, &mut codec, &mut b()).map_err(err)?;
+    namespace::render(&all, &mut b()).map_err(err)?;
+    let single = RenderOptions {
+        parallel: ParallelMode::Single {
+            language: "en".into(),
+            fallbacks: vec![],
+        },
+    };
+    let selected =
+        namespace::prepare(&checked, &single, &registry, &mut codec, &mut b()).map_err(err)?;
+    assert!(matches!(
+        namespace::render(&selected, &mut b()),
+        Err(namespace::Error::Render(RenderError::Markup(
+            nepl3_markup::html::HtmlError::MissingFragment(_)
+        )))
+    ));
+    // A label proof grants no permission to resolve a network resource.
+    let mut external = inline_request();
+    external.document.value.nodes = vec![
+        DocNode {
+            kind: DocKind::Link {
+                target: LinkTarget::External {
+                    uri: "https://example.test/".into(),
+                },
+                label: InlineRef(1),
+            },
+            locations: vec![],
+            origin: None,
+            span: None,
+        },
+        DocNode {
+            kind: DocKind::Text {
+                text: "link".into(),
+            },
+            locations: vec![],
+            origin: None,
+            span: None,
+        },
+    ];
+    let member = labels::inspect(
+        &external.document,
+        &registry,
+        &mut b(),
+        codec.source_admission(),
+    )
+    .map_err(err)?;
+    let members = [&member];
+    let checked = labels::resolve(&members, &mut b()).map_err(err)?;
+    assert!(matches!(
+        namespace::prepare(&checked, &req.options, &registry, &mut codec, &mut b()),
+        Err(LocalPreparationError::NeedsResolution(_))
+    ));
+    Ok(())
+}
+
+#[test]
+fn namespace_wrapper_is_included_in_the_output_depth_envelope() -> Result<(), String> {
+    use nepl3_doc_core::labels::namespace as labels;
+    let registry = registry()?;
+    let mut req = inline_request();
+    req.document.value.nodes = (0..254)
+        .map(|index| DocNode {
+            kind: DocKind::Concat {
+                inlines: vec![InlineRef(index + 1)],
+            },
+            locations: vec![],
+            origin: None,
+            span: None,
+        })
+        .collect();
+    req.document.value.nodes.push(DocNode {
+        kind: DocKind::Text {
+            text: "leaf".into(),
+        },
+        locations: vec![],
+        origin: None,
+        span: None,
+    });
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let member =
+        labels::inspect(&req.document, &registry, &mut b(), &mut admission).map_err(err)?;
+    let members = [&member];
+    let checked = labels::resolve(&members, &mut b()).map_err(err)?;
+    let mut codec = FoundationCodec::new(&registry, &store, &mut admission).map_err(err)?;
+    // Local span + 254 Concat spans + Text reaches exactly 256.
+    let local = prepare_local_inline(&req.document, &req.options, &registry, &mut codec, &mut b())
+        .map_err(err)?;
+    render_inline(&local, &mut b()).map_err(err)?;
+    let combined =
+        namespace::prepare(&checked, &req.options, &registry, &mut codec, &mut b()).map_err(err)?;
+    assert!(matches!(
+        namespace::render(&combined, &mut b()),
+        Err(namespace::Error::OutputDepth { .. })
+    ));
+    Ok(())
 }
 
 #[test]

@@ -2,6 +2,7 @@
 extern crate alloc;
 
 mod build;
+pub mod namespace;
 pub mod pages;
 pub mod portable;
 mod prepare;

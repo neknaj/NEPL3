@@ -173,6 +173,37 @@ pub(crate) fn requirements<'a, C: FoundationValueCodec>(
 ) -> Result<Vec<DocRequirement>, PreparationError<'a, C::Error>> {
     discover(checked.document(), c, b)
 }
+/// Discover all members of one resolved namespace in its exact occurrence order.
+/// Each document is rechecked against this codec/registry and shared source
+/// admission before its digest and requirements can become rendering inputs.
+pub fn inspect_namespace<'a, C: FoundationValueCodec>(
+    namespace: &labels::namespace::CheckedNamespace<'_, 'a>,
+    registry: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<Vec<DocPreparationPlan>, PreparationError<'a, C::Error>> {
+    b.poll()?;
+    let mut plans = Vec::new();
+    for document in namespace.documents() {
+        let value = portable::to_value(document, registry, c, b)?;
+        let document_digest = c
+            .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
+            .map_err(boundary)?;
+        let requirements = discover(document, c, b)?;
+        b.charge(
+            Resource::AllocationUnits,
+            core::mem::size_of::<DocPreparationPlan>() as u64,
+        )?;
+        plans
+            .try_reserve_exact(1)
+            .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+        plans.push(DocPreparationPlan {
+            document_digest,
+            requirements,
+        });
+    }
+    Ok(plans)
+}
 fn discover<'a, C: FoundationValueCodec>(
     document: &'a DocumentSyntax,
     c: &mut C,
