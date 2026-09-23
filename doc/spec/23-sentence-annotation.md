@@ -302,11 +302,16 @@ Doc Inlineの局所HTML表示は`prepare_local_inline`と`render_inline`を使�
 準備段階でfragment内のlabel、前方参照、重複出現を検査し、link・asset・foreign guestの依存要求を返す。
 外部の依存要求を持たない入力から、専用の準備済み型とPhrasingのHTMLを生成する。
 HTML要素は元のDoc nodeへの対応を保持する。外側の文書のnamespaceと複数fragment間の参照はcomposition側で解決する。
-Sentenceのforeign HTML adapterは、hostが選択したDoc Inlineをこの局所入口へ渡す。
+Sentenceのforeign HTML adapterは、hostが選択したDoc Inlineを専用の準備・表示入口へ渡す。
+`prepare_inline_with_foreign`は、未解決要求がforeign guestだけであることを検査する。
+`render_inline_with_foreign`は、準備済み文書が所有するclosureをhostへ渡し、返されたHTMLのPhrasing適合と合成後の構造を検査する。
+hostはDoc内のInlineMathを選択したMath出力へ接続し、その注釈のSentenceとDocへの再入を処理する。
+各guestの表示位置は出現ごとに記録し、共有embedの複数出現も独立したHTML要素へ対応付ける。
 合成結果はMathとDocの由来を型で区別し、保持した構文とHTML要素の対応を各合成段階で更新する。
-未解決labelはsource付き診断、link・asset・foreign guestは依存要求として返す。
+未解決labelはsource付き診断、link・assetは依存要求として返す。未選択のguest操作は明示的に拒否する。
 複数fragmentのHTML IDが衝突した場合は合成を拒否し、停止時は部分HTMLを成功結果として返さない。
-Doc内のforeign依存の表示、文書全体の参照解決、Docの旧Sentence所有の撤去は、consumer所有移行の残件である。
+guestのHTMLもDoc出力の深さ上限256と、呼出元の累積Budgetに従う。
+文書全体の参照解決とDocの旧Sentence所有の撤去は、consumer所有移行の残件である。
 
 ## 注釈と移行完了条件
 

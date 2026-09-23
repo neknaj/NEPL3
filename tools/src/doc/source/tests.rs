@@ -133,7 +133,7 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
 }
 
 #[test]
-fn doc_inline_printing_reenters_math_sentence_and_obeys_limits() -> Result<(), String> {
+fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Result<(), String> {
     use nepl3_core::budget::StopReason;
     use nepl3_grammar_core::compile::package::ForeignForm;
     use nepl3_math_core::print::GuestPrinter;
@@ -241,6 +241,284 @@ fn doc_inline_printing_reenters_math_sentence_and_obeys_limits() -> Result<(), S
                     printer.print(guest, &mut budget()),
                     Err(crate::doc::printing::Error::Selection)
                 ));
+                let mut host = crate::doc::math::MathDisplayHost {
+                    registry,
+                    math_surface: &compiled.others[0].schema,
+                    sentence_surface: Some(&sentence.schema),
+                    doc_surface: Some(&compiled.doc.package.schema),
+                    codec: &mut codec,
+                };
+                let mut measured = budget();
+                let rendered = host
+                    .render(closure, nepl3_markup::mathml::Display::Block, &mut measured)
+                    .map_err(err)?
+                    .into_html(&mut measured)
+                    .map_err(err)?;
+                let [annotation] = rendered.annotations.as_slice() else {
+                    return Err("outer annotation".into());
+                };
+                let [crate::doc::annotations::ForeignRecord::Document(outer)] =
+                    annotation.foreign.as_slice()
+                else {
+                    return Err("outer Doc record".into());
+                };
+                let [nested] = outer.foreign.as_slice() else {
+                    return Err("Doc Math record".into());
+                };
+                assert_eq!(
+                    outer.document.value.embeds[nested.embed.0 as usize].kind,
+                    nepl3_doc_core::model::EmbedKind::InlineMath
+                );
+                let [annotation] = nested.output.annotations.as_slice() else {
+                    return Err("inner annotation".into());
+                };
+                let [crate::doc::annotations::ForeignRecord::Document(inner)] =
+                    annotation.foreign.as_slice()
+                else {
+                    return Err("inner Doc record".into());
+                };
+                assert!(inner.foreign.is_empty());
+                // Exercise the public Doc boundary with independently supplied
+                // host output: a callback's successful return is not validation.
+                use nepl3_doc_html::{
+                    ForeignRenderError, ParallelMode, RenderError, RenderOptions,
+                };
+                use nepl3_markup::html::{
+                    HtmlError, HtmlFragment, HtmlNode, HtmlPolicy, HtmlRequest, HtmlSlot, HtmlTag,
+                };
+                let options = RenderOptions {
+                    parallel: ParallelMode::Rows,
+                };
+                let prepared = nepl3_doc_html::prepare_inline_with_foreign(
+                    &outer.document,
+                    &options,
+                    registry,
+                    &mut codec,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                for (nodes, expected) in [
+                    (
+                        vec![HtmlNode::Element {
+                            tag: HtmlTag::Div,
+                            attributes: vec![],
+                            children: vec![],
+                        }],
+                        HtmlError::Content(0),
+                    ),
+                    (
+                        vec![HtmlNode::Element {
+                            tag: HtmlTag::Span,
+                            attributes: vec![],
+                            children: vec![4],
+                        }],
+                        HtmlError::Reference(4),
+                    ),
+                ] {
+                    let mut calls = 0;
+                    let result = nepl3_doc_html::render_inline_with_foreign(
+                        &prepared,
+                        &mut |_, _, _| {
+                            calls += 1;
+                            Ok::<_, ()>(HtmlRequest {
+                                fragment: HtmlFragment {
+                                    root: 0,
+                                    nodes: nodes.clone(),
+                                },
+                                slot: HtmlSlot::Phrasing,
+                                policy: HtmlPolicy { classes: vec![] },
+                            })
+                        },
+                        &mut budget(),
+                    );
+                    assert_eq!(calls, 1);
+                    assert!(
+                        matches!(result, Err(ForeignRenderError::Render(RenderError::Markup(actual))) if actual == expected)
+                    );
+                }
+                let mut deep = Vec::new();
+                for index in 0..256 {
+                    deep.push(HtmlNode::Element {
+                        tag: HtmlTag::Span,
+                        attributes: vec![],
+                        children: vec![index + 1],
+                    });
+                }
+                deep.push(HtmlNode::Text {
+                    text: "leaf".into(),
+                });
+                assert!(matches!(
+                    nepl3_doc_html::render_inline_with_foreign(
+                        &prepared,
+                        &mut |_, _, _| {
+                            Ok::<_, ()>(HtmlRequest {
+                                fragment: HtmlFragment {
+                                    root: 0,
+                                    nodes: deep.clone(),
+                                },
+                                slot: HtmlSlot::Phrasing,
+                                policy: HtmlPolicy { classes: vec![] },
+                            })
+                        },
+                        &mut budget()
+                    ),
+                    Err(ForeignRenderError::Render(RenderError::OutputDepth { .. }))
+                ));
+                let owner = outer
+                    .document
+                    .value
+                    .nodes
+                    .iter()
+                    .position(|node| matches!(node.kind, DocKind::InlineMath { .. }))
+                    .ok_or("Math owner")? as u64;
+                let mut shared = outer
+                    .document
+                    .fragment(
+                        nepl3_doc_core::model::DocRoot::Inline(nepl3_doc_core::model::InlineRef(
+                            owner,
+                        )),
+                        registry,
+                        &mut budget(),
+                        codec.source_admission(),
+                    )
+                    .map_err(err)?;
+                let nepl3_doc_core::model::DocRoot::Inline(owner) = shared.value.root else {
+                    return Err("Inline fragment".into());
+                };
+                let owner = owner.0;
+                let root = shared.value.nodes.len() as u64;
+                shared.value.nodes.push(nepl3_doc_core::model::DocNode {
+                    kind: DocKind::Concat {
+                        inlines: vec![nepl3_doc_core::model::InlineRef(owner); 2],
+                    },
+                    span: None,
+                    origin: None,
+                    locations: vec![],
+                });
+                shared.value.root =
+                    nepl3_doc_core::model::DocRoot::Inline(nepl3_doc_core::model::InlineRef(root));
+                let prepared = nepl3_doc_html::prepare_inline_with_foreign(
+                    &shared,
+                    &options,
+                    registry,
+                    &mut codec,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                let mut calls = 0;
+                let shared_result = nepl3_doc_html::render_inline_with_foreign(
+                    &prepared,
+                    &mut |actual, embed, _| {
+                        calls += 1;
+                        assert_eq!(actual, &shared.value.embeds[embed.0 as usize]);
+                        Ok::<_, ()>(HtmlRequest {
+                            fragment: HtmlFragment {
+                                root: 0,
+                                nodes: vec![HtmlNode::Text {
+                                    text: "guest".into(),
+                                }],
+                            },
+                            slot: HtmlSlot::Phrasing,
+                            policy: HtmlPolicy { classes: vec![] },
+                        })
+                    },
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                assert_eq!(calls, 2);
+                let mut stopped = budget();
+                let mut calls = 0;
+                let failed = nepl3_doc_html::render_inline_with_foreign(
+                    &prepared,
+                    &mut |_, _, b| {
+                        calls += 1;
+                        b.stop(StopReason::WorkLimit);
+                        Ok::<_, ()>(HtmlRequest {
+                            fragment: HtmlFragment {
+                                root: 0,
+                                nodes: vec![HtmlNode::Text {
+                                    text: "discard".into(),
+                                }],
+                            },
+                            slot: HtmlSlot::Phrasing,
+                            policy: HtmlPolicy { classes: vec![] },
+                        })
+                    },
+                    &mut stopped,
+                );
+                assert_eq!(calls, 1);
+                assert!(matches!(
+                    failed,
+                    Err(ForeignRenderError::Render(RenderError::Stopped(
+                        StopReason::WorkLimit
+                    )))
+                ));
+                assert_eq!(stopped.poll(), Err(StopReason::WorkLimit));
+                assert_eq!(shared_result.foreign.len(), 2);
+                assert_eq!(
+                    shared_result.foreign[0].embed,
+                    shared_result.foreign[1].embed
+                );
+                assert_ne!(
+                    shared_result.foreign[0].first_element,
+                    shared_result.foreign[1].first_element
+                );
+                for placement in &shared_result.foreign {
+                    assert_eq!(placement.elements, 1);
+                    assert!(
+                        shared_result
+                            .fragment
+                            .origins
+                            .iter()
+                            .any(|origin| origin.element == placement.first_element
+                                && origin.node == owner)
+                    );
+                }
+                for text in ["字", "じ"] {
+                    assert!(inner.origins.iter().any(|origin| {
+                        matches!(&inner.document.value.nodes[origin.node as usize].kind,
+                            DocKind::Text { text: value } if value == text)
+                        && matches!(rendered.markup.fragment.nodes.get(origin.element as usize),
+                            Some(nepl3_markup::html::HtmlNode::Text { text: value }) if value == text)
+                    }), "final HTML owner for {text}");
+                }
+                assert!(
+                    nested
+                        .output
+                        .node_roots
+                        .iter()
+                        .all(|element| (*element as usize) < rendered.markup.fragment.nodes.len())
+                );
+                let usage = measured.usage();
+                let mut host = crate::doc::math::MathDisplayHost {
+                    registry,
+                    math_surface: &compiled.others[0].schema,
+                    sentence_surface: Some(&sentence.schema),
+                    doc_surface: Some(&compiled.doc.package.schema),
+                    codec: &mut codec,
+                };
+                for reason in [
+                    StopReason::WorkLimit,
+                    StopReason::AllocationLimit,
+                    StopReason::DepthLimit,
+                ] {
+                    let mut limits = measured.limits();
+                    match reason {
+                        StopReason::WorkLimit => limits.work = usage.work - 1,
+                        StopReason::AllocationLimit => {
+                            limits.allocation_units = usage.allocation_units - 1
+                        }
+                        StopReason::DepthLimit => limits.depth = usage.depth - 1,
+                        _ => unreachable!("fixed resource cases"),
+                    }
+                    let mut limited = Budget::new(limits);
+                    let result = host
+                        .render(closure, nepl3_markup::mathml::Display::Block, &mut limited)
+                        .map_err(err)
+                        .and_then(|output| output.into_html(&mut limited).map_err(err));
+                    assert!(result.is_err(), "no partial HTML after {reason:?}");
+                    assert_eq!(limited.poll(), Err(reason));
+                }
                 Ok(())
             },
         )?;
@@ -609,10 +887,10 @@ fn math_sentence_math_printing_preserves_recursive_source() -> Result<(), String
                 let crate::doc::annotations::ForeignRecord::Math(inner) = &outer.foreign[0] else {
                     return Err("Math record required".into());
                 };
-                assert_eq!(inner.annotations.len(), 1);
+                assert_eq!(inner.output.annotations.len(), 1);
                 for text in ["字", "じ"] {
-                    assert!(inner.annotations[0].origins.iter().any(|origin| {
-                        matches!(&inner.annotations[0].sentence.value.nodes[origin.node as usize],
+                    assert!(inner.output.annotations[0].origins.iter().any(|origin| {
+                        matches!(&inner.output.annotations[0].sentence.value.nodes[origin.node as usize],
                             Kind::Text { text: value } if value == text)
                         && matches!(html.markup.fragment.nodes.get(origin.element as usize),
                             Some(nepl3_markup::html::HtmlNode::Text { text: value }) if value == text)
@@ -620,6 +898,7 @@ fn math_sentence_math_printing_preserves_recursive_source() -> Result<(), String
                 }
                 assert!(
                     inner
+                        .output
                         .node_roots
                         .iter()
                         .all(|id| (*id as usize) < html.markup.fragment.nodes.len())

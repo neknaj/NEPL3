@@ -68,8 +68,103 @@ struct Builder<'a, 'b> {
     depths: Vec<u64>,
     origins: Vec<ElementOrigin>,
     jobs: Vec<Job>,
+    classes: Vec<String>,
+    foreign: Vec<ForeignPlacement>,
 }
 impl Builder<'_, '_> {
+    fn guest(&mut self, job: Job, embed: EmbedRef, markup: HtmlRequest) -> Result<(), RenderError> {
+        let depth = self
+            .b
+            .current_depth()
+            .saturating_add(self.depths[job.parent as usize]);
+        self.b.with_depth_at_least::<_, RenderError>(depth, |b| {
+            validate(&markup.fragment, HtmlSlot::Phrasing, &markup.policy, b)?;
+            Ok(())
+        })?;
+        // Preserve the backend's output envelope across the guest boundary.
+        // Validation above establishes references and acyclicity; this walk
+        // measures each occurrence relative to its actual Doc parent.
+        let mut pending = Vec::new();
+        push(
+            &mut pending,
+            (markup.fragment.root, self.depths[job.parent as usize] + 1),
+            self.b,
+        )?;
+        while let Some((index, depth)) = pending.pop() {
+            self.b.charge(Resource::Work, 1)?;
+            if depth > 256 {
+                return Err(RenderError::OutputDepth { node: job.node });
+            }
+            match &markup.fragment.nodes[index as usize] {
+                HtmlNode::Element { children, .. } | HtmlNode::MathElement { children, .. } => {
+                    for child in children {
+                        push(&mut pending, (*child, depth + 1), self.b)?;
+                    }
+                }
+                HtmlNode::Text { .. } => {}
+            }
+        }
+        let offset = self.nodes.len() as u64;
+        let count = markup.fragment.nodes.len() as u64;
+        let root = offset
+            .checked_add(markup.fragment.root)
+            .ok_or(RenderError::InternalShape)?;
+        for mut node in markup.fragment.nodes {
+            self.b.charge(Resource::Nodes, 1)?;
+            match &mut node {
+                HtmlNode::Element { children, .. } | HtmlNode::MathElement { children, .. } => {
+                    for child in children {
+                        self.b.charge(Resource::Work, 1)?;
+                        *child = offset
+                            .checked_add(*child)
+                            .ok_or(RenderError::InternalShape)?;
+                    }
+                }
+                HtmlNode::Text { .. } => {}
+            }
+            let element = self.nodes.len() as u64;
+            push(&mut self.nodes, node, self.b)?;
+            // Imported subtrees are complete; local jobs never attach to them.
+            push(&mut self.depths, 0, self.b)?;
+            push(
+                &mut self.origins,
+                ElementOrigin {
+                    element,
+                    node: job.node,
+                },
+                self.b,
+            )?;
+        }
+        let Some(HtmlNode::Element { children, .. }) = self.nodes.get_mut(job.parent as usize)
+        else {
+            return Err(RenderError::InternalShape);
+        };
+        push(children, root, self.b)?;
+        for class in markup.policy.classes {
+            let mut present = false;
+            for prior in &self.classes {
+                self.b
+                    .charge(Resource::Work, prior.len().min(class.len()) as u64 + 1)?;
+                if prior == &class {
+                    present = true;
+                    break;
+                }
+            }
+            if !present {
+                push(&mut self.classes, class, self.b)?;
+            }
+        }
+        push(
+            &mut self.foreign,
+            ForeignPlacement {
+                embed,
+                first_element: offset,
+                elements: count,
+            },
+            self.b,
+        )?;
+        Ok(())
+    }
     fn attr(&mut self, node: u64, attr: HtmlAttribute) -> Result<(), RenderError> {
         let Some(HtmlNode::Element { attributes, .. }) = self.nodes.get_mut(node as usize) else {
             return Err(RenderError::InternalShape);
@@ -211,6 +306,35 @@ pub(crate) fn render_prepared(
     links: &[(u64, HtmlHref)],
     budget: &mut Budget,
 ) -> Result<RenderedFragment, RenderError> {
+    render_prepared_with_foreign(
+        prepared,
+        links,
+        &mut |_, _, _| Err(RenderError::InternalShape),
+        budget,
+    )
+    .map(|rendered| rendered.fragment)
+    .map_err(|error| match error {
+        ForeignRenderError::Render(error) | ForeignRenderError::Foreign(error) => error,
+    })
+}
+
+/// Invoke the explicitly selected host adapter for each InlineMath occurrence.
+/// The callback receives the closure from the immutable preparation input;
+/// malformed/non-phrasing output and unresolved non-guest requirements fail.
+pub fn render_inline_with_foreign<E>(
+    prepared: &PreparedInlineWithForeign<'_>,
+    adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
+    budget: &mut Budget,
+) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
+    render_prepared_with_foreign(&prepared.0, &[], adapter, budget)
+}
+
+fn render_prepared_with_foreign<E>(
+    prepared: &crate::prepare::PreparedRendering<'_>,
+    links: &[(u64, HtmlHref)],
+    adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
+    budget: &mut Budget,
+) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
     budget.poll()?;
     let mut w = Builder {
         prepared,
@@ -220,12 +344,14 @@ pub(crate) fn render_prepared(
         depths: Vec::new(),
         origins: Vec::new(),
         jobs: Vec::new(),
+        classes: Vec::new(),
+        foreign: Vec::new(),
     };
     let (root, slot) = match prepared.document.value.root {
         DocRoot::Article(root) => (root.0, HtmlSlot::Block),
         DocRoot::Sentence(root) => (root.0, HtmlSlot::Phrasing),
         DocRoot::Inline(root) => (root.0, HtmlSlot::Phrasing),
-        _ => return Err(RenderError::InternalShape),
+        _ => return Err(RenderError::InternalShape.into()),
     };
     let article = w.element(
         None,
@@ -244,7 +370,7 @@ pub(crate) fn render_prepared(
             body,
         } = &prepared.document.value.nodes[root as usize].kind
         else {
-            return Err(RenderError::InternalShape);
+            return Err(RenderError::InternalShape.into());
         };
         let lang = copy(language, w.b)?;
         w.attr(article, HtmlAttribute::Lang { value: lang })?;
@@ -257,12 +383,41 @@ pub(crate) fn render_prepared(
     while let Some(job) = w.jobs.pop() {
         w.b.charge(Resource::Work, 1)?;
         let kind = &prepared.document.value.nodes[job.node as usize].kind;
+        if let DocKind::InlineMath { syntax } = kind {
+            let embed = prepared
+                .document
+                .value
+                .embeds
+                .get(syntax.0 as usize)
+                .ok_or(RenderError::InternalShape)?;
+            let depth =
+                w.b.current_depth()
+                    .saturating_add(w.depths[job.parent as usize]);
+            let result = w
+                .b
+                .with_depth_at_least(depth, |b| Ok::<_, RenderError>(adapter(embed, *syntax, b)))?;
+            w.b.poll()?;
+            let markup = result.map_err(ForeignRenderError::Foreign)?;
+            w.guest(job, *syntax, markup)?;
+            continue;
+        }
         if !w.block(job, kind)? {
             w.inline(job, kind)?;
         }
     }
-    let mut classes = Vec::new();
+    let mut classes = w.classes;
     for class in CLASSES {
+        let mut present = false;
+        for prior in &classes {
+            w.b.charge(Resource::Work, prior.len().min(class.len()) as u64 + 1)?;
+            if prior == class {
+                present = true;
+                break;
+            }
+        }
+        if present {
+            continue;
+        }
         let value = copy(class, w.b)?;
         push(&mut classes, value, w.b)?;
     }
@@ -295,10 +450,13 @@ pub(crate) fn render_prepared(
             }
         }
     };
-    Ok(RenderedFragment {
-        document_digest: prepared.identity,
-        options: RenderOptions { parallel },
-        markup,
-        origins: w.origins,
+    Ok(RenderedInlineWithForeign {
+        fragment: RenderedFragment {
+            document_digest: prepared.identity,
+            options: RenderOptions { parallel },
+            markup,
+            origins: w.origins,
+        },
+        foreign: w.foreign,
     })
 }
