@@ -156,6 +156,35 @@ pub(crate) fn with_profile<T>(
         &mut FoundationCodec<'_>,
     ) -> Result<T, String>,
 ) -> Result<T, String> {
+    with_registered_profile(
+        input,
+        final_input,
+        stopped,
+        configuration,
+        identity,
+        &[],
+        inspect,
+    )
+}
+
+/// Parse with caller-selected Profile requirements and an independent host
+/// provider catalog. The callback borrows the exact resolved Profile used by
+/// parsing, so consumers can connect later operations to the same identity.
+/// Resource-backed providers require a separate resource admission path.
+pub fn with_registered_profile<T>(
+    input: &str,
+    final_input: bool,
+    stopped: bool,
+    configuration: (Languages<'_>, ParseProfile),
+    identity: (&str, &str),
+    providers: &[ProviderImplementation],
+    inspect: impl FnOnce(
+        ParseReply,
+        &ResolvedParseProfile<'_>,
+        &SchemaRegistry,
+        &mut FoundationCodec<'_>,
+    ) -> Result<T, String>,
+) -> Result<T, String> {
     let (languages, profile) = configuration;
     let Languages {
         packages: languages,
@@ -172,7 +201,7 @@ pub(crate) fn with_profile<T>(
         .resolve(
             &RuntimeCatalog {
                 packages: &packages,
-                providers: &[],
+                providers,
                 resources: &[],
             },
             &registry,

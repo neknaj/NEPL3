@@ -9,7 +9,7 @@ use nepl3_engine::package::*;
 use nepl3_reader::{builtin::BuiltinReader, plan::ReaderPlan, tokenizer::*};
 
 mod parse;
-pub use parse::{Languages, parse};
+pub use parse::{Languages, parse, with_registered_profile};
 pub mod composition;
 pub mod miniexpr;
 

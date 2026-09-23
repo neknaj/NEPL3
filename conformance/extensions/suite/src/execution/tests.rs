@@ -3,6 +3,7 @@ use crate::{program, syntax::Cursor};
 use external_hello_language::{budget, composition, error};
 use nepl3_core::source::SourceAdmission;
 use nepl3_engine::{parse::ParseOutcome, profile::RuntimeCatalog};
+mod profile;
 
 fn with_program(
     text: &str,

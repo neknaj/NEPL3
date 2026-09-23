@@ -29,6 +29,7 @@ pub enum Error {
     Grants(GrantError),
     Context(nepl3_wire::WireError),
     Execution(scheduler::Failure),
+    Profile(nepl3_suite::profile::Error),
 }
 impl From<StopReason> for Error {
     fn from(value: StopReason) -> Self {
@@ -55,6 +56,11 @@ pub struct Session<'a> {
     contexts: [Digest; 2],
 }
 impl Runtime {
+    /// Exact declared operations for host Profile requirements and catalogs.
+    pub fn operations(&self) -> &[OperationRef; 2] {
+        &self.operations
+    }
+
     pub fn register(
         registry: &mut SchemaRegistry,
         implementations: [Digest; 2],
@@ -183,6 +189,23 @@ impl Runtime {
 }
 
 impl Session<'_> {
+    /// Bind this admitted plan to the independently resolved parsing authority.
+    /// The Profile registry supplies the schema boundary for every operation.
+    pub fn run_in_profile(
+        &self,
+        profile: &nepl3_engine::profile::ResolvedParseProfile<'_>,
+        execution: &mut Budget,
+        validation: &mut Budget,
+        report: impl FnMut(u64, Report),
+        cancel: impl FnMut(u64),
+    ) -> Result<OperationResult<TypedValue>, Error> {
+        self.with_registrations(validation, |registrations, validation| {
+            nepl3_suite::profile::NativeOperations::new(profile, registrations, validation)?
+                .run(&self.root, execution, validation, report, cancel)
+        })?
+        .map_err(Error::Profile)
+    }
+
     pub fn root(&self) -> &Invoke {
         &self.root
     }
