@@ -253,7 +253,7 @@ fn sentence_surface_compiles_from_production_grammar_with_own_root_and_payload()
                         assert_eq!(syntax.origins, bundle.origins);
                         assert_eq!(syntax.source_maps, bundle.source_maps);
                         assert_eq!(syntax.views.len(), bundle.tokens.len());
-                        let doc = nepl3_tools::doc::sentence::document(
+                        let doc = nepl3_suite::adapters::sentence::document(
                             &syntax,
                             resolved.registry(),
                             budget,

@@ -4,6 +4,20 @@ This independent workspace connects the existing MiniExpr and Frame package
 definitions to suite operations. The Foundation-only Hello workspace retains
 its four Foundation dependencies; this host additionally depends on suite.
 
+The optional `doc-sentence` feature tests a public Sentence literal reader,
+`nepl3_suite::adapters::sentence::document`, and Doc's plain-text operation in
+this independent workspace. It preserves source/Origin data and checks the
+Ruby base text against an independent expected value:
+
+```sh
+cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml --features doc-sentence --test sentence
+```
+
+The default feature set keeps the existing language-independent runtime
+consumer. The adapter supports the current Doc Sentence representation;
+Doc's ownership migration and role-specific foreign-inline adapters remain
+separate work. This test uses public crate APIs and has no tools dependency.
+
 ## MiniExpr arithmetic contract
 
 The semantic domain is exact signed integers. Natural literals denote their

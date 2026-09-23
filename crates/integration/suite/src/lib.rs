@@ -2,6 +2,7 @@
 #![no_std]
 extern crate alloc;
 
+pub mod adapters;
 pub mod dispatch;
 pub mod environment;
 pub mod grants;

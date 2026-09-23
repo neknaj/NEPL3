@@ -196,7 +196,10 @@ name = "nepl3-suite"
 version = "0.1.0"
 dependencies = [
  "nepl3-core",
+ "nepl3-doc-core",
  "nepl3-engine",
+ "nepl3-sentence-core",
+ "nepl3-wire",
 ]
 
 [[package]]
@@ -214,6 +217,7 @@ dependencies = [
  "nepl3-math-tex",
  "nepl3-reader",
  "nepl3-sentence-core",
+ "nepl3-suite",
  "nepl3-wire",
  "pulldown-cmark",
  "serde",

@@ -200,8 +200,11 @@ foreign adapterを含む全意味往復とDoc consumer移行の完了とは区�
 
 この節はconsumer所有移行中のadapter契約である。Sentenceの恒久的な意味モデルと、現在のDoc payloadへの変換を区別する。移行完了後も必要なforeign adapterと、旧所有を除去するまでの互換変換を同じ完成条件にしない。
 
-開発hostのDoc readerは独立Sentence coreのliteral読取りを使用し、`tools/src/doc/sentence.rs`の
-明示adapterを通して現在のDoc consumerへ渡す。Doc/Sentence core間の直接依存を追加しない。
+Doc readerは独立Sentence coreのliteral読取りを使用し、suiteの`doc-sentence` featureで公開する
+`nepl3_suite::adapters::sentence::document`を通して現在のDoc consumerへ渡す。
+adapterは`no_std + alloc`で動作し、DocとSentenceの公開型・検査を接続する。
+suiteの既定featureはこのdomain依存を有効にしない。開発hostはfeatureを明示して利用する。
+Doc/Sentence core間の直接依存と、coreからtoolsへの依存を禁止する。
 adapterはSentenceSyntaxを検査し、全標準Inlineを同じarena index・順序でDoc値へ変換した後、
 Doc側でも構造を再検査する。CodeはDocのInlineCode、外部linkはLinkTarget::Externalへ対応し、
 foreign CodeやDoc固有のpage参照へ読み替えない。foreign-inlineは個別adapterを要求する。
@@ -210,8 +213,9 @@ Source/Origin/SourceMapとViewを保持し、元SentenceSyntaxのdense位置・V
 
 Doc catalogはSentenceの実descriptorを登録する。Doc readerの現在の出力は明示変換後の
 Doc SentencePayloadであり、同じschema identityで独立Sentence payloadを装わない。
-本文の意味は保存されるがViewの所有schemaが変わるため、文書identityと生成Markdown headerの
-document digestは変わる。正本から再生成し、本文・リンク・注釈の一致を確認してprojectionを更新する。
+本文の意味を保持し、出力Viewの所有schemaをDoc schemaへ対応させる。文書の内部identityは
+生成manifestに記録する。Markdownの出自はページ固有のsourceと実際の参照入力に対応する。
+正本から生成し、本文・リンク・注釈の一致とmanifestの整合を確認する。
 この接続はDoc本文の解析を独立Sentenceへ移す段階である。重複parserの撤去後も、Doc意味schemaの
 Sentence所有、現行lowerが受信するDoc SentencePayload、Mathとの既存bridgeは残る。
 これらは後続のconsumer所有移行で整理する。

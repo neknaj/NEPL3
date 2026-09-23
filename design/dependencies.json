@@ -135,6 +135,7 @@
         "nepl3-engine",
         "nepl3-grammar-core",
         "nepl3-doc-core",
+        "nepl3-sentence-core",
         "nepl3-math-core",
         "nepl3-circuit-core",
         "nepl3-markup",
@@ -144,7 +145,7 @@
         "nepl3-circuit-svg"
       ],
       "no_std": true,
-      "responsibility": "4言語profile・typed adapter・operation dispatch"
+      "responsibility": "言語profile・typed adapter・operation dispatch。doc-sentence featureは独立Sentenceから現行Doc consumerへの純粋adapterを公開する。既定featureはdomain core依存を有効にしない。dev-only nepl3-wireはforeign closure境界を検証する。"
     },
     {
       "name": "nepl3-ui-core",
