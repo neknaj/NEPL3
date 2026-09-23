@@ -3,6 +3,7 @@
 //! the host. Blocking stream implementations must supply their own deadline and
 //! interruption mechanism; Budget is checked between I/O calls.
 pub mod control;
+pub mod delegation;
 pub mod dispatch;
 #[cfg(not(target_family = "wasm"))]
 pub mod process;
