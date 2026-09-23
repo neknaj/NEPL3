@@ -313,6 +313,7 @@ fn stopped_guest_arithmetic_report_keeps_its_source_and_request() -> Result<(), 
             else {
                 return Err("expected accepted Stopped".into());
             };
+            assert_eq!(report.usage, execution.usage());
             assert_eq!(*reason, StopReason::WorkLimit);
             assert!(partial.is_none());
             assert_eq!(report.diagnostics.len(), 1);
@@ -413,4 +414,82 @@ fn execution_allocation_scales_with_occurrences_without_plan_copies() -> Result<
         );
     }
     Ok(())
+}
+
+#[test]
+fn every_reply_reports_cumulative_execution_usage() -> Result<(), String> {
+    with_program(
+        "add framed frame neg 7 2",
+        |program, sources, runtime, registry| {
+            let mut execution = budget();
+            execution.charge(Resource::Work, 123).map_err(error)?;
+            let mut observations = Vec::new();
+            let result = runtime
+                .run(
+                    program,
+                    sources,
+                    registry,
+                    &mut execution,
+                    &mut budget(),
+                    |id, report| observations.push((id, report.usage)),
+                    |_| {},
+                )
+                .map_err(error)?;
+            let OperationResult::Complete { report, .. } = result else {
+                return Err("expected Complete".into());
+            };
+            assert_eq!(report.usage, execution.usage());
+            assert_eq!(
+                observations.iter().map(|(id, _)| *id).collect::<Vec<_>>(),
+                vec![6, 4, 3, 2]
+            );
+            let mut previous = 123;
+            for (_, usage) in observations {
+                assert!(usage.work > previous);
+                previous = usage.work;
+            }
+            assert!(report.usage.work > previous);
+
+            // A schema-shaped selection with an unknown occurrence is rejected by
+            // the language callback; even that Invalid includes prior consumption.
+            let mut construction = budget();
+            let call = Invoke {
+                request_id: u64::MAX,
+                operation: copy_operation(&runtime.operations[0], &mut construction)
+                    .map_err(error)?,
+                input: record(
+                    &runtime.operations[0].schema,
+                    "Selection",
+                    [NdfValue::U64(0)],
+                    &mut construction,
+                )
+                .map_err(error)?,
+                environment: record(
+                    &runtime.operations[0].schema,
+                    "PlanIdentity",
+                    [NdfValue::Bytes(vec![0; 32])],
+                    &mut construction,
+                )
+                .map_err(error)?,
+                sources: vec![],
+                resources: vec![],
+                limits: execution.limits(),
+            };
+            let before = execution.usage().work;
+            let OperationReply::Result(OperationResult::Invalid { report, .. }) = invoke(
+                program,
+                &call,
+                Digest::of(b"test context"),
+                false,
+                &mut execution,
+            )
+            .map_err(error)?
+            else {
+                return Err("expected Invalid selection".into());
+            };
+            assert_eq!(report.usage, execution.usage());
+            assert!(report.usage.work > before);
+            Ok(())
+        },
+    )
 }

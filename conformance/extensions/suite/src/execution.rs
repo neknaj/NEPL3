@@ -255,10 +255,13 @@ fn record<const N: usize>(
         fields: owned,
     }))
 }
-fn invalid() -> OperationReply {
+fn invalid(b: &Budget) -> OperationReply {
     OperationReply::Result(OperationResult::Invalid {
         partial: None,
-        report: Report::default(),
+        report: Report {
+            usage: b.usage(),
+            ..Report::default()
+        },
     })
 }
 fn selected<'a, 'source>(
@@ -285,10 +288,10 @@ fn invoke(
 ) -> Result<OperationReply, StopReason> {
     b.charge(Resource::Work, 1)?;
     let Some(node) = selected(program, call) else {
-        return Ok(invalid());
+        return Ok(invalid(b));
     };
     if (node.language == Language::Frame) != frame {
-        return Ok(invalid());
+        return Ok(invalid(b));
     }
     let (left, right) = match node.instruction {
         Instruction::Natural(value) => {
@@ -346,7 +349,10 @@ fn invoke(
             state: call.input.clone_with_budget(b)?,
         },
         calls,
-        report: Report::default(),
+        report: Report {
+            usage: b.usage(),
+            ..Report::default()
+        },
     })
 }
 fn copy_integer(value: &Integer, b: &mut Budget) -> Result<Integer, StopReason> {
@@ -362,7 +368,10 @@ fn complete(
 ) -> Result<OperationReply, StopReason> {
     Ok(OperationReply::Result(OperationResult::Complete {
         value: record(schema, "Value", [value], b)?,
-        report: Report::default(),
+        report: Report {
+            usage: b.usage(),
+            ..Report::default()
+        },
     }))
 }
 fn number(reply: &OperationReply) -> Option<&Integer> {
@@ -387,16 +396,16 @@ fn resume_value(
 ) -> Result<OperationReply, StopReason> {
     b.poll()?;
     let Some(node) = selected(program, call) else {
-        return Ok(invalid());
+        return Ok(invalid(b));
     };
     if (node.language == Language::Frame) != frame {
-        return Ok(invalid());
+        return Ok(invalid(b));
     }
     let children = reply.dependency_results.as_slice();
     let application = match (&node.instruction, children) {
         (Instruction::Frame(_) | Instruction::Framed(_), [child]) => {
             let Some(value) = number(child) else {
-                return Ok(invalid());
+                return Ok(invalid(b));
             };
             return complete(
                 &call.operation.schema,
@@ -406,13 +415,13 @@ fn resume_value(
         }
         (Instruction::Neg(_), [child]) => {
             let Some(value) = number(child) else {
-                return Ok(invalid());
+                return Ok(invalid(b));
             };
             Application::Neg(value)
         }
         (Instruction::Add(..) | Instruction::Mul(..), [left, right]) => {
             let (Some(left), Some(right)) = (number(left), number(right)) else {
-                return Ok(invalid());
+                return Ok(invalid(b));
             };
             if matches!(node.instruction, Instruction::Add(..)) {
                 Application::Add(left, right)
@@ -420,7 +429,7 @@ fn resume_value(
                 Application::Mul(left, right)
             }
         }
-        _ => return Ok(invalid()),
+        _ => return Ok(invalid(b)),
     };
     // Reserve the owned diagnostic before arithmetic can exhaust the Budget.
     // Failure during preparation remains a host failure with active source

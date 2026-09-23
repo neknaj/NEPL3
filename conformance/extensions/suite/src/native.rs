@@ -80,7 +80,10 @@ fn invoke(
     let TypedValue::Record(input) = &call.input else {
         return Ok(OperationResult::Invalid {
             partial: None,
-            report: Report::default(),
+            report: Report {
+                usage: budget.usage(),
+                ..Report::default()
+            },
         });
     };
     let application = match (call.operation.name.as_str(), input.fields.as_slice()) {
@@ -94,7 +97,10 @@ fn invoke(
         _ => {
             return Ok(OperationResult::Invalid {
                 partial: None,
-                report: Report::default(),
+                report: Report {
+                    usage: budget.usage(),
+                    ..Report::default()
+                },
             });
         }
     };
@@ -116,7 +122,10 @@ fn invoke(
             kind: "Value".into(),
             fields: vec![NdfValue::Integer(value)],
         }),
-        report: Report::default(),
+        report: Report {
+            usage: budget.usage(),
+            ..Report::default()
+        },
     })
 }
 
@@ -159,6 +168,8 @@ mod tests {
         };
         let registrations = arithmetic.registrations();
         let sources = SourceStore::default();
+        let mut execution = budget();
+        execution.charge(Resource::Work, 123).map_err(error)?;
         let result = invoke_terminal(
             &registrations,
             operation,
@@ -166,13 +177,15 @@ mod tests {
             &call,
             &registry,
             &sources,
-            &mut budget(),
+            &mut execution,
             &mut budget(),
         )
         .map_err(error)?;
-        let OperationResult::Complete { value, .. } = result else {
+        let OperationResult::Complete { value, report } = result else {
             return Err("expected Complete".into());
         };
+        assert_eq!(report.usage, execution.usage());
+        assert!(report.usage.work > 123);
         assert_eq!(
             value,
             record("Value", vec![NdfValue::Integer(Integer::from(-5_i64))])
