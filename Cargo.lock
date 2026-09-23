@@ -196,6 +196,7 @@ name = "nepl3-suite"
 version = "0.1.0"
 dependencies = [
  "nepl3-core",
+ "nepl3-engine",
 ]
 
 [[package]]

@@ -50,6 +50,13 @@ body
       cons sentence cons text "Profile identityにはheadProviders keyを" cons ruby text "含" text "ふく" cons text "め、alias/category" cons ruby text "順" text "じゅん" cons text "の " cons code "[alias,category,shapeOperation,childContextOperation]" cons text " " cons ruby text "列" text "れつ" cons text "で" cons ruby text "記述" text "きじゅつ" cons text "する。" nil
       cons "[列挙順/れっきょじゅん]だけの[変更/へんこう]はidentityを[変/か]えず、[操作/そうさ]の[役割/やくわり]・alias/categoryへの[割当変更/わりあてへんこう]は[変/か]える。" nil
     cons paragraph
+      cons "native operationの[接続/せつぞく]では、[解決済/かいけつず]みParseProfileのallowlistとprovider[実装/じっそう]identityを、hostが[登録/とうろく]したInvoke・Resumeの[組/くみ]と[照合/しょうごう]する。"
+      cons "[登録/とうろく]するoperationは[重複/ちょうふく]を[拒否/きょひ]し、InvokeとResumeは[同/おな]じoperationと[実装/じっそう]identityを[使用/しよう]する。"
+      cons "[実行/じっこう]contextのdigestは、ASCIIのNEPL3.Suite.Context.v1、zero byte、[解決済/かいけつず]みProfileの32 byte digest、host contextの32 byte digestをこの[順/じゅん]に[連結/れんけつ]したSHA-256とする。"
+      cons "rootと[各依存要求/かくいぞんようきゅう]にこの[規則/きそく]を[適用/てきよう]し、continuationとResumeは[確定済/かくていず]みcontextを[保持/ほじ]・[照合/しょうごう]する。"
+      cons "[操作開始時/そうさかいしじ]には、root[要求/ようきゅう]と[共有実行/きょうゆうじっこう]Budgetの[全資源上限/ぜんしげんじょうげん]をProfile[上限以下/じょうげんいか]に[制限/せいげん]し、[超過/ちょうか]をcallback[実行前/じっこうまえ]に[拒否/きょひ]する。"
+      cons "hostは[各要求/かくようきゅう]のenvironmentとsourceの[権限/けんげん]を[供給/きょうきゅう]し、schedulerは[既存/きそん]の[権限検査/けんげんけんさ]と[累積資源管理/るいせきしげんかんり]を[適用/てきよう]する。" nil
+    cons paragraph
       cons "ここでのallowlistはoperation[呼出可否/よびだしかひ]を[表/あらわ]す。"
       cons "providerのtransport、[隔離/かくり]、ネットワーク[等/とう]の[権限/けんげん]、[強制停止方法/きょうせいていしほうほう]、bridge、EnvironmentProjectionを[含/ふく]むfull suite Profileの[契約/けいやく]は[引/ひ]き[続/つづ]き[実装対象/じっそうたいしょう]である。"
       cons "R009の[完了/かんりょう]には、[解析/かいせき]projectionとfull suite Profileの[契約/けいやく]をともに[満/み]たす[必要/ひつよう]がある。"

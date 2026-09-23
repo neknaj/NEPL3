@@ -31,6 +31,23 @@ pub struct Registration<'a> {
     pub context: &'a Context<'a>,
 }
 
+fn scoped_context(
+    registration: &Registration<'_>,
+    request: &Invoke,
+    scope: Option<Digest>,
+    validation: &mut Budget,
+) -> Result<Digest, StopReason> {
+    let host = (registration.context)(request, registration.invoke.implementation, validation)?;
+    let Some(scope) = scope else { return Ok(host) };
+    const DOMAIN: &[u8] = b"NEPL3.Suite.Context.v1\0";
+    let mut bytes = [0; DOMAIN.len() + 64];
+    validation.charge(Resource::Work, bytes.len() as u64)?;
+    bytes[..DOMAIN.len()].copy_from_slice(DOMAIN);
+    bytes[DOMAIN.len()..DOMAIN.len() + 32].copy_from_slice(&scope.0);
+    bytes[DOMAIN.len() + 32..].copy_from_slice(&host.0);
+    Ok(Digest::of(&bytes))
+}
+
 #[derive(Debug)]
 pub enum Error {
     Stopped(StopReason),
@@ -221,8 +238,31 @@ pub fn run(
     registry: &SchemaRegistry,
     execution: &mut Budget,
     validation: &mut Budget,
+    report: impl FnMut(u64, Report),
+    cancel: impl FnMut(u64),
+) -> Result<OperationResult<TypedValue>, Failure> {
+    run_scoped(
+        registrations,
+        root,
+        registry,
+        execution,
+        validation,
+        report,
+        cancel,
+        None,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn run_scoped(
+    registrations: &[Registration<'_>],
+    root: &Invoke,
+    registry: &SchemaRegistry,
+    execution: &mut Budget,
+    validation: &mut Budget,
     mut report: impl FnMut(u64, Report),
     mut cancel: impl FnMut(u64),
+    context_scope: Option<Digest>,
 ) -> Result<OperationResult<TypedValue>, Failure> {
     let mut lifetimes = RequestLifetimes::default();
     let mut stack = Vec::new();
@@ -235,6 +275,7 @@ pub fn run(
         &mut lifetimes,
         &mut report,
         &mut stack,
+        context_scope,
     );
     match result {
         Ok(result) => Ok(result),
@@ -259,13 +300,10 @@ fn run_inner(
     lifetimes: &mut RequestLifetimes,
     report: &mut impl FnMut(u64, Report),
     stack: &mut Vec<Frame>,
+    context_scope: Option<Digest>,
 ) -> Result<OperationResult<TypedValue>, Error> {
     let selected = select(registrations, root, validation)?;
-    let context = (registrations[selected].context)(
-        root,
-        registrations[selected].invoke.implementation,
-        validation,
-    )?;
+    let context = scoped_context(&registrations[selected], root, context_scope, validation)?;
     let scope = ExecutionScope::root(execution, root.limits)?;
     reserve(stack, 1, validation)?;
     stack.push(frame(registrations, root, context, scope, validation)?);
@@ -378,11 +416,7 @@ fn run_inner(
                 reserve(&mut completed_sources, calls.len(), validation)?;
                 for dependency in calls {
                     let r = &registrations[select(registrations, dependency, validation)?];
-                    contexts.push((r.context)(
-                        dependency,
-                        r.invoke.implementation,
-                        validation,
-                    )?);
+                    contexts.push(scoped_context(r, dependency, context_scope, validation)?);
                 }
                 let mut active = prepared
                     .activate(&policy, &contexts, lifetimes, validation)

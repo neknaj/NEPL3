@@ -9,6 +9,7 @@ publish.workspace = true
 
 [dependencies]
 nepl3-core.workspace = true
+nepl3-engine.workspace = true
 
 [lints]
 workspace = true
