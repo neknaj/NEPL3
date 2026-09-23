@@ -122,6 +122,7 @@ enum Case {
     Suspending,
     Cancel,
     Stopped,
+    RemoteStopped,
 }
 
 fn exchange(
@@ -130,13 +131,17 @@ fn exchange(
     expected: i64,
     case: Case,
 ) -> Result<(), String> {
-    if matches!(case, Case::Suspending | Case::Cancel | Case::Stopped) {
+    if matches!(
+        case,
+        Case::Suspending | Case::Cancel | Case::Stopped | Case::RemoteStopped
+    ) {
         return suspension::exchange(
             connection,
             text,
             expected,
             matches!(case, Case::Cancel),
             matches!(case, Case::Stopped),
+            matches!(case, Case::RemoteStopped),
         );
     }
     let model = model()?;
@@ -217,8 +222,14 @@ fn exchange(
 fn run_case(text: &'static str, expected: i64, case: Case) -> Result<(), String> {
     let mut command = Command::new(std::env::current_exe().map_err(error)?);
     command.arg("--child").arg(text);
-    if matches!(case, Case::Suspending | Case::Cancel | Case::Stopped) {
+    if matches!(
+        case,
+        Case::Suspending | Case::Cancel | Case::Stopped | Case::RemoteStopped
+    ) {
         command.arg("--suspending");
+    }
+    if matches!(case, Case::RemoteStopped) {
+        command.arg("--remote-stop");
     }
     command.stderr(Stdio::piped());
     if matches!(case, Case::NoGrant) {
@@ -291,13 +302,13 @@ fn run_case(text: &'static str, expected: i64, case: Case) -> Result<(), String>
     if status.success()
         != matches!(
             case,
-            Case::Valid | Case::Suspending | Case::Cancel | Case::Stopped
+            Case::Valid | Case::Suspending | Case::Cancel | Case::Stopped | Case::RemoteStopped
         )
     {
         return Err(format!("unexpected child exit {status} for {case:?}"));
     }
     let expected_diagnostic = match case {
-        Case::Valid | Case::Suspending | Case::Cancel | Case::Stopped => "",
+        Case::Valid | Case::Suspending | Case::Cancel | Case::Stopped | Case::RemoteStopped => "",
         Case::Corrupt => "Error: \"Wire(InvalidType)\"",
         Case::NoGrant => "Error: \"Source\"",
         Case::WrongOperation => "Error: \"OperationMismatch\"",
@@ -310,7 +321,10 @@ pub fn run() -> Result<(), String> {
     let args = std::env::args().collect::<Vec<_>>();
     if args.get(1).is_some_and(|arg| arg == "--child") {
         if args.iter().any(|arg| arg == "--suspending") {
-            return suspension::child(args.get(2).ok_or("missing fixture input")?);
+            return suspension::child(
+                args.get(2).ok_or("missing fixture input")?,
+                args.iter().any(|arg| arg == "--remote-stop"),
+            );
         }
         return child(
             args.get(2).ok_or("missing fixture input")?,
@@ -334,8 +348,17 @@ pub fn run() -> Result<(), String> {
         0,
         Case::Stopped,
     )?;
+    run_case(
+        concat!(
+            "mul ",
+            "1234567890123456789012345678901234567890123456789012345678901234567890 ",
+            "1234567890123456789012345678901234567890123456789012345678901234567890"
+        ),
+        0,
+        Case::RemoteStopped,
+    )?;
     println!(
-        "process: 9 passed (4 native/process comparisons; 3 admission failures; explicit and stopped-dependency cancellation)"
+        "process: 10 passed (4 native/process comparisons; 3 admission failures; explicit and stopped-dependency cancellation; remote arithmetic stop)"
     );
     Ok(())
 }

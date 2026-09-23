@@ -151,7 +151,14 @@ parent without Resume. The latter retains the host's accepted child Report with
 its own operation, request ID and `mul` source range `17..20`. Close produces no
 duplicate cancellation notification in the child.
 
-The process harness has nine cases. It covers a remote root and native dependency
+A further case resumes a remote multiplication with completed literal operands.
+Its execution Work limit stops the multiplication in the child process. The
+parent receives the validated Stopped result, checks the root operation and input,
+the `mul` source range `0..3`, and the absence of a partial value. Both hosts mark
+the root Finished; Close produces no cancellation notification. Remote Usage
+remains a claim carried by the Report, and the parent's local Usage is preserved.
+
+The process harness has ten cases. It covers a remote root and native dependency
 subtrees. General routing across multiple providers, transferring stopped child
 outcomes between processes, dynamic package loading, process-tree containment and
 cross-process cumulative resource accounting remain unimplemented. Host protocol
