@@ -1,4 +1,5 @@
 pub(crate) mod json;
+mod python;
 mod results;
 
 use crate::{Result, command};
@@ -111,6 +112,7 @@ pub(crate) fn check(root: &Path) -> Result<usize> {
         ],
     )?)?;
     results::check(root, &files)?;
+    python::check(root, &files)?;
     for name in &files {
         if forbidden(name) {
             return Err(format!("forbidden repository file: {name}").into());
