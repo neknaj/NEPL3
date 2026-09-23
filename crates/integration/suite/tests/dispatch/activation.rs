@@ -5,7 +5,7 @@ use nepl3_core::operation::{
 };
 use nepl3_suite::{
     grants::{Grants, dependencies::OperationGrant},
-    suspension::host::{ActivationError, activate, activate_owned},
+    suspension::host::{ActivationError, activate, activate_owned, prepare_owned},
 };
 
 fn running(parent: &Invoke, context: Digest) -> RequestLifetimes {
@@ -15,6 +15,191 @@ fn running(parent: &Invoke, context: Digest) -> RequestLifetimes {
         Ok(())
     );
     table
+}
+
+#[test]
+fn prepared_await_moves_calls_and_avoids_repeated_validation_cost() -> Result<(), String> {
+    let (registry, parent) = fixture()?;
+    let sources = SourceStore::default();
+    let grants = Grants::new(&parent.environment, &sources, &[], &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let policy = [OperationGrant {
+        operation: &parent.operation,
+        grants: &grants,
+    }];
+    let context = Digest::of(b"prepared await");
+    for count in [1_usize, 8, 32] {
+        let make_reply = || {
+            let mut result = reply(&parent, context);
+            if let OperationReply::Await { calls, .. } = &mut result {
+                calls.clear();
+                // Descending IDs exercise index sorting while preserving wire order.
+                for offset in (1..=count).rev() {
+                    let mut child = parent.clone();
+                    child.request_id = parent.request_id + offset as u64;
+                    if let TypedValue::Record(record) = &mut child.input {
+                        record.fields[0] = NdfValue::U64(3);
+                    }
+                    calls.push(child);
+                }
+            }
+            result
+        };
+        let contexts = vec![context; count];
+        let mut old_budget = budget();
+        let old_reply = make_reply();
+        nepl3_suite::dispatch::suspending::validate_reply(
+            &old_reply,
+            &parent,
+            context,
+            &registry,
+            &sources,
+            &mut old_budget,
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        let old = activate_owned(
+            &parent,
+            context,
+            old_reply,
+            &policy,
+            &contexts,
+            &registry,
+            &sources,
+            &mut running(&parent, context),
+            &mut old_budget,
+        )
+        .map_err(|e| format!("{e:?}"))?;
+
+        let mut measured = budget();
+        let mut table = running(&parent, context);
+        let prepared = prepare_owned(
+            &parent,
+            context,
+            make_reply(),
+            &registry,
+            &sources,
+            &mut measured,
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        assert_eq!(
+            table.phase(parent.request_id, &mut budget()),
+            Ok(RequestPhase::Running)
+        );
+        let calls = prepared.calls().as_ptr();
+        let active = prepared
+            .activate(&policy, &contexts, &mut table, &mut measured)
+            .map_err(|e| format!("{e:?}"))?;
+        // Owned calls survive activation at the same address; the indexed pending
+        // collection moves intact. This compares the old two-stage path's cost.
+        assert_eq!(active.pending.calls().as_ptr(), calls);
+        assert_eq!(active.pending.calls(), old.pending.calls());
+        assert_eq!(active.pending.calls().len(), count);
+        assert!(
+            active
+                .pending
+                .calls()
+                .windows(2)
+                .all(|pair| pair[0].request_id > pair[1].request_id)
+        );
+        assert!(measured.usage().work < old_budget.usage().work);
+        assert!(measured.usage().allocation_units < old_budget.usage().allocation_units);
+        assert_eq!(
+            table.phase(parent.request_id, &mut budget()),
+            Ok(RequestPhase::Awaiting)
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn prepared_await_rejects_parent_and_duplicate_ids_before_publication() -> Result<(), String> {
+    use nepl3_core::operation::dependencies::DependencyError;
+    use nepl3_suite::suspension::AwaitError;
+    let (registry, parent) = fixture()?;
+    let sources = SourceStore::default();
+    let context = Digest::of(b"prepared ID rejection");
+    for duplicate in [false, true] {
+        let mut reply = reply(&parent, context);
+        let OperationReply::Await { calls, .. } = &mut reply else {
+            return Err("expected fixture Await".into());
+        };
+        if duplicate {
+            calls.push(calls[0].clone());
+        } else {
+            calls[0].request_id = parent.request_id;
+        }
+        let result = prepare_owned(&parent, context, reply, &registry, &sources, &mut budget());
+        assert!(matches!(result,
+            Err(ActivationError::Await(AwaitError::Dependencies(error)))
+            if error == if duplicate { DependencyError::DuplicateId } else { DependencyError::ParentId }
+        ));
+    }
+    Ok(())
+}
+
+#[test]
+fn preparation_preserves_activation_policy_lifetime_and_budget_gates() -> Result<(), String> {
+    let (registry, parent) = fixture()?;
+    let sources = SourceStore::default();
+    let grants = Grants::new(&parent.environment, &sources, &[], &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let policy = [OperationGrant {
+        operation: &parent.operation,
+        grants: &grants,
+    }];
+    let context = Digest::of(b"late activation gates");
+    let prepare = || {
+        prepare_owned(
+            &parent,
+            context,
+            reply(&parent, context),
+            &registry,
+            &sources,
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))
+    };
+
+    let mut table = running(&parent, context);
+    assert!(matches!(
+        prepare()?.activate(&[], &[context], &mut table, &mut budget()),
+        Err(ActivationError::Grants(_))
+    ));
+    unchanged(&table, &parent);
+    assert!(matches!(
+        prepare()?.activate(&policy, &[], &mut table, &mut budget()),
+        Err(ActivationError::ContextCount)
+    ));
+    unchanged(&table, &parent);
+
+    let prepared = prepare()?;
+    let mut limits = budget().limits();
+    limits.allocation_units = 0;
+    assert!(matches!(
+        prepared.activate(&policy, &[context], &mut table, &mut Budget::new(limits)),
+        Err(ActivationError::Stopped(StopReason::AllocationLimit))
+    ));
+    unchanged(&table, &parent);
+
+    // Preparation owns no lifetime permission. Cancellation between preparation
+    // and publication must prevent this generation from registering any child.
+    let prepared = prepare()?;
+    table
+        .cancel(parent.request_id, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert!(matches!(
+        prepared.activate(&policy, &[context], &mut table, &mut budget()),
+        Err(ActivationError::Lifetime(_))
+    ));
+    assert_eq!(
+        table.phase(parent.request_id, &mut budget()),
+        Ok(RequestPhase::Cancelled)
+    );
+    assert_eq!(
+        table.phase(parent.request_id + 1, &mut budget()),
+        Err(LifetimeError::UnknownRequest)
+    );
+    Ok(())
 }
 
 #[test]

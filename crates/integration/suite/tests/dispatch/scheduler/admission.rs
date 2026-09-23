@@ -23,6 +23,19 @@ fn cycle(
     })
 }
 
+fn parent_id_reply(
+    call: &Invoke,
+    context: Digest,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<OperationReply, StopReason> {
+    let mut reply = cycle(call, context, registry, b)?;
+    if let OperationReply::Await { calls, .. } = &mut reply {
+        calls[0].request_id = call.request_id;
+    }
+    Ok(reply)
+}
+
 #[test]
 fn scheduler_rejects_missing_ambiguous_registration_and_ancestor_cycle() -> Result<(), String> {
     let (registry, root) = fixture()?;
@@ -97,6 +110,29 @@ fn scheduler_rejects_missing_ambiguous_registration_and_ancestor_cycle() -> Resu
     ));
     assert_eq!(execution.usage(), Usage::default());
     assert!(cancelled.is_empty());
+    let mut malformed = registration();
+    malformed.invoke.invoke = parent_id_reply;
+    assert!(matches!(
+        scheduler::run(
+            &[malformed],
+            &root,
+            &registry,
+            &mut execution,
+            &mut budget(),
+            |_, _| {},
+            |id| cancelled.push(id),
+        ),
+        Err(scheduler::Failure {
+            cause: scheduler::Error::Invoke(suspending::Error::Await(
+                nepl3_suite::suspension::AwaitError::Dependencies(
+                    nepl3_core::operation::dependencies::DependencyError::ParentId
+                )
+            )),
+            ..
+        })
+    ));
+    assert_eq!(cancelled, vec![root.request_id]);
+    cancelled.clear();
     assert!(matches!(
         scheduler::run(
             &[registration()],

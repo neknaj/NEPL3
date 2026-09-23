@@ -4,7 +4,7 @@ use crate::{
     grants::{GrantError, Grants, dependencies::OperationGrant},
     suspension::{
         execution::ExecutionScope,
-        host::{ActivationError, OwnedActiveAwait, activate_owned},
+        host::{ActivationError, OwnedActiveAwait},
     },
 };
 use alloc::vec::Vec;
@@ -12,7 +12,7 @@ use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     diagnostic::{OperationResult, Report},
     operation::{
-        Invoke, OperationReply,
+        Invoke,
         lifetime::{LifetimeError, RequestLifetimes},
     },
     schema::SchemaRegistry,
@@ -304,16 +304,26 @@ fn run_inner(
             current
                 .scope
                 .run(execution, |execution| {
-                    resume::execute(
+                    resume::execute_with(
                         &registration.resume,
                         registration.resume.implementation,
                         &saved,
                         &resume_request,
                         lifetimes,
                         registry,
-                        &current.sources,
                         execution,
                         validation,
+                        |reply, validation| {
+                            suspending::prepare_reply(
+                                reply,
+                                call,
+                                current.context,
+                                registry,
+                                &current.sources,
+                                validation,
+                            )
+                            .map_err(Into::into)
+                        },
                     )
                 })
                 .map_err(Error::Resume)?
@@ -321,21 +331,31 @@ fn run_inner(
             current
                 .scope
                 .run(execution, |execution| {
-                    suspending::invoke(
+                    suspending::invoke_with(
                         &registration.invoke,
                         registration.invoke.implementation,
                         call,
                         current.context,
                         registry,
-                        &current.sources,
                         execution,
                         validation,
+                        |reply, validation| {
+                            suspending::prepare_reply(
+                                reply,
+                                call,
+                                current.context,
+                                registry,
+                                &current.sources,
+                                validation,
+                            )
+                        },
                     )
                 })
                 .map_err(Error::Invoke)?
         };
         match response {
-            OperationReply::Await { ref calls, .. } => {
+            suspending::PreparedReply::Await(prepared) => {
+                let calls = prepared.calls();
                 let mut contexts = Vec::new();
                 reserve(&mut contexts, calls.len(), validation)?;
                 let mut completed_sources = Vec::new();
@@ -348,25 +368,16 @@ fn run_inner(
                         validation,
                     )?);
                 }
-                let mut active = activate_owned(
-                    call,
-                    current.context,
-                    response,
-                    &policy,
-                    &contexts,
-                    registry,
-                    &current.sources,
-                    lifetimes,
-                    validation,
-                )
-                .map_err(Error::Activation)?;
+                let mut active = prepared
+                    .activate(&policy, &contexts, lifetimes, validation)
+                    .map_err(Error::Activation)?;
                 report(call.request_id, core::mem::take(&mut active.report));
                 current.active = Some(active);
                 current.contexts = contexts;
                 current.completed_sources = completed_sources;
                 current.next = 0;
             }
-            OperationReply::Result(result) => {
+            suspending::PreparedReply::Result(result) => {
                 let id = call.request_id;
                 let context = current.context;
                 let finished = stack.pop().ok_or(Error::State)?;

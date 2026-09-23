@@ -27,6 +27,55 @@ pub struct OwnedActiveAwait {
     pub report: Report,
 }
 
+/// Structurally checked, owned Await awaiting host authorization. The original
+/// parent, schema registry and source resolver remain borrowed until activation.
+/// Dependency IDs and result slots are prepared once and moved into the active
+/// generation. No lifetime has been published at this stage.
+pub struct PreparedAwait<'a, S> {
+    parent: &'a Invoke,
+    _registry: &'a SchemaRegistry,
+    _sources: &'a S,
+    pending: PendingDependencies<'static>,
+    report: Report,
+}
+
+impl<S> PreparedAwait<'_, S> {
+    pub fn calls(&self) -> &[Invoke] {
+        self.pending.calls()
+    }
+
+    /// Authorize against the current policy and publish the complete generation
+    /// atomically. Failure consumes the preparation without changing lifetimes.
+    pub fn activate(
+        self,
+        policy: &[OperationGrant<'_>],
+        contexts: &[Digest],
+        lifetimes: &mut RequestLifetimes,
+        budget: &mut Budget,
+    ) -> Result<OwnedActiveAwait, ActivationError> {
+        budget.poll()?;
+        if contexts.len() != self.pending.calls().len() {
+            return Err(ActivationError::ContextCount);
+        }
+        dependencies::authorize(self.pending.calls(), policy, budget).map_err(|e| match e {
+            DependencyGrantError::Stopped(s) => ActivationError::Stopped(s),
+            e => ActivationError::Grants(e),
+        })?;
+        publish(
+            self.parent,
+            self.pending.continuation(),
+            self.pending.calls(),
+            contexts,
+            lifetimes,
+            budget,
+        )?;
+        Ok(OwnedActiveAwait {
+            pending: self.pending,
+            report: self.report,
+        })
+    }
+}
+
 #[derive(Debug)]
 pub enum ActivationError {
     Stopped(StopReason),
@@ -113,6 +162,22 @@ pub fn activate_owned(
     lifetimes: &mut RequestLifetimes,
     budget: &mut Budget,
 ) -> Result<OwnedActiveAwait, ActivationError> {
+    prepare_owned(parent, context, reply, registry, sources, budget)?
+        .activate(policy, contexts, lifetimes, budget)
+}
+
+/// Validate an owned Await and retain its dependency index and result slots.
+/// Callers may inspect immutable calls to compute host contexts before consuming
+/// this value with `activate`. Registry and source permissions remain associated
+/// with this exact preparation; raw mutable reply access is not exposed.
+pub fn prepare_owned<'a, S: DiagnosticSourceResolver>(
+    parent: &'a Invoke,
+    context: Digest,
+    reply: OperationReply,
+    registry: &'a SchemaRegistry,
+    sources: &'a S,
+    budget: &mut Budget,
+) -> Result<PreparedAwait<'a, S>, ActivationError> {
     budget.poll()?;
     let OperationReply::Await {
         continuation,
@@ -122,9 +187,6 @@ pub fn activate_owned(
     else {
         return Err(ActivationError::NotAwait);
     };
-    if contexts.len() != calls.len() {
-        return Err(ActivationError::ContextCount);
-    }
     validate(
         parent,
         context,
@@ -139,24 +201,18 @@ pub fn activate_owned(
         AwaitError::Stopped(s) => ActivationError::Stopped(s),
         e => ActivationError::Await(e),
     })?;
-    dependencies::authorize(&calls, policy, budget).map_err(|e| match e {
-        DependencyGrantError::Stopped(s) => ActivationError::Stopped(s),
-        e => ActivationError::Grants(e),
-    })?;
     let pending =
         PendingDependencies::from_owned(continuation, calls, budget).map_err(|e| match e {
             DependencyError::Stopped(s) => ActivationError::Stopped(s),
             e => ActivationError::Await(AwaitError::Dependencies(e)),
         })?;
-    publish(
+    Ok(PreparedAwait {
         parent,
-        pending.continuation(),
-        pending.calls(),
-        contexts,
-        lifetimes,
-        budget,
-    )?;
-    Ok(OwnedActiveAwait { pending, report })
+        _registry: registry,
+        _sources: sources,
+        pending,
+        report,
+    })
 }
 
 fn publish(
