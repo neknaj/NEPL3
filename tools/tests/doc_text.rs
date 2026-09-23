@@ -13,6 +13,181 @@ use nepl3_doc_core::{
 use nepl3_tools::doc::source::{budget, compiled, err, with_input};
 use nepl3_wire::foundation::FoundationCodec;
 
+// Test host for the explicitly selected Doc label/alt roles. It performs no
+// name lookup or I/O; all visible text comes from the author's Sentence slots.
+fn label_text<C: FoundationValueCodec>(
+    embed: &DocEmbed,
+    doc_surface: &nepl3_core::value::SchemaRef,
+    r: &nepl3_core::schema::SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<String, String>
+where
+    C::Error: std::fmt::Debug,
+{
+    b.with_depth(|b| {
+        Ok::<_, StopReason>((|| {
+            let syntax = nepl3_suite::adapters::document::sentence::lower(
+                embed,
+                embed.schema(),
+                &[nepl3_sentence_core::lower::ForeignInlineForm {
+                    kind: "Form:DocumentInline",
+                    guest_schema: doc_surface,
+                    guest_category: "Inline",
+                }],
+                r,
+                codec,
+                b,
+            )
+            .map_err(err)?;
+            let selected = nepl3_suite::adapters::sentence::document_guests::collect(
+                &syntax,
+                doc_surface,
+                r,
+                codec,
+                b,
+            )
+            .map_err(err)?;
+            let mut texts = Vec::new();
+            for doc in selected.documents() {
+                let DocRoot::Inline(root) = doc.value.root else {
+                    return Err("Doc Inline root".into());
+                };
+                let slot = match &doc.value.nodes[root.0 as usize].kind {
+                    DocKind::Anchor { label, .. }
+                    | DocKind::Reference { label, .. }
+                    | DocKind::Link { label, .. } => *label,
+                    DocKind::InlineImage { alt, .. } => {
+                        let DocKind::Sentence { syntax } = doc.value.nodes[alt.0 as usize].kind
+                        else {
+                            return Err("alt Sentence".into());
+                        };
+                        syntax
+                    }
+                    _ => return Err("unselected text role".into()),
+                };
+                texts.push(label_text(
+                    &doc.value.embeds[slot.0 as usize],
+                    doc_surface,
+                    r,
+                    codec,
+                    b,
+                )?);
+            }
+            let prepared =
+                nepl3_sentence_core::text::prepare(&syntax.value, r, b, codec.source_admission())
+                    .map_err(err)?;
+            let mut resolved = Vec::new();
+            for occurrence in selected.occurrences() {
+                resolved.push(
+                    prepared
+                        .resolve(occurrence.embed, &texts[occurrence.document.index()], b)
+                        .map_err(err)?,
+                );
+            }
+            prepared
+                .render(
+                    nepl3_sentence_core::text::AnnotationPolicy::BaseOnly,
+                    &resolved,
+                    b,
+                )
+                .map_err(err)
+        })())
+    })
+    .map_err(err)?
+}
+
+#[test]
+fn plain_text_uses_explicit_labels_alt_and_author_whitespace() -> Result<(), String> {
+    let compiled = compiled()?;
+    let source = r#"sentence sentence cons em strong doc anchor here doc ref elsewhere link "https://example.invalid" concat cons text " L " cons text "[]" nil cons doc image asset "logo" none sentence sentence cons text "alt\n " nil nil"#;
+    with_document(source, |doc, r| {
+        let empty = SourceStore::default();
+        let mut a = SourceAdmission::default();
+        let mut c = FoundationCodec::new(r, &empty, &mut a).map_err(err)?;
+        let [embed] = doc.value.embeds.as_slice() else {
+            return Err("one Sentence".into());
+        };
+        let output = label_text(
+            embed,
+            &compiled.doc.package.schema,
+            r,
+            &mut c,
+            &mut budget(),
+        )?;
+        assert_eq!(output, " L []alt\n ");
+        let identity = text::prepare(&doc, r, &mut c, &mut budget())
+            .map_err(err)?
+            .identity()
+            .clone();
+        let target = &identity.embeds[0];
+        let resolved = [ResolvedInlineText {
+            document_digest: identity.document_digest,
+            embed: target.embed,
+            guest_digest: target.guest_digest,
+            policy: BaseOnly,
+            text: output,
+        }];
+        // A separate operation admission proves the source cost of Doc's own
+        // validation; the prior host projection grants no paid-work proof.
+        let mut a = SourceAdmission::default();
+        let mut c = FoundationCodec::new(r, &empty, &mut a).map_err(err)?;
+        let mut b = budget();
+        assert_eq!(
+            project(&doc, BaseOnly, &resolved, r, &mut c, &mut b)?.outcome,
+            PlainTextOutcome::Complete {
+                text: " L []alt\n ".into()
+            }
+        );
+        let mut sources = SourceStore::default();
+        for source in &doc.sources {
+            sources.insert(source.clone()).map_err(err)?;
+        }
+        let closure = embed.syntax().ok_or("Sentence closure")?;
+        for source in &closure.owner_sources {
+            sources.insert(source.clone()).map_err(err)?;
+        }
+        let mut pending = vec![&closure.syntax.bundle];
+        while let Some(bundle) = pending.pop() {
+            for source in &bundle.sources {
+                sources.insert(source.clone()).map_err(err)?;
+            }
+            for node in &bundle.nodes {
+                for field in &node.fields {
+                    if let nepl3_core::syntax::FieldValue::Foreign(guest) = field {
+                        pending.push(&guest.bundle);
+                    }
+                }
+            }
+        }
+        assert_eq!(
+            b.usage().source_bytes,
+            sources
+                .snapshots()
+                .iter()
+                .map(|s| s.text().len() as u64)
+                .sum::<u64>()
+        );
+        for node in [u64::MAX, (1u64 << 32) + root(&doc)?.0] {
+            let request = PlainTextRequest {
+                document: doc.clone(),
+                sentence: SentenceRef(node),
+                policy: BaseOnly,
+                resolved: vec![],
+            };
+            assert_eq!(
+                text::plain_text(&request, r, &mut c, &mut budget())
+                    .map_err(err)?
+                    .outcome,
+                PlainTextOutcome::Invalid {
+                    error: PlainTextFailure::ExpectedSentence { node }
+                }
+            );
+        }
+        Ok(())
+    })
+}
+
 fn with_document<T>(
     input: &str,
     f: impl FnOnce(DocumentSyntax, &nepl3_core::schema::SchemaRegistry) -> Result<T, String>,
