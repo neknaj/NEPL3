@@ -22,7 +22,9 @@ CI成功は全受入条件の達成を意味しません。検証範囲は[Found
 
 ## 現在試せる最小の言語
 
-[Helloの導入章](doc/tutorial/hello.md)では、入力を変更し、構文木・UTF-8位置・診断を観察する。続く[MiniExpr](doc/tutorial/miniexpr.md)では再帰的な言語定義、[composition](doc/tutorial/composition.md)では独立した二言語の再入と診断を扱う。[外部Hello言語](conformance/extensions/hello/README.md)は、公開core・reader・engine・wire APIを利用する独立したCargo workspaceである。source上のimport、Sentence・annotationとの統合、算術評価は後続の実装対象である。
+[Helloの導入章](doc/tutorial/hello.md)では、入力を変更し、構文木・UTF-8位置・診断を観察する。続く[MiniExpr](doc/tutorial/miniexpr.md)では再帰的な言語定義、[composition](doc/tutorial/composition.md)では独立した二言語の再入と診断を扱う。
+
+[外部Hello言語](conformance/extensions/hello/README.md)は、公開core・reader・engine・wire APIを利用する独立したCargo workspaceである。[suite consumer](conformance/extensions/suite/README.md)は、MiniExprとFrameの算術評価をnativeのInvoke・Await・Resumeへ接続する。source上のimportとSentence・annotationとの統合は後続の実装対象である。
 
 ## 次の統合設計案
 
