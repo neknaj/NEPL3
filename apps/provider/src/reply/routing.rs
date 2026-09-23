@@ -112,19 +112,22 @@ impl<R: Read, W: Write> Connection<R, W> {
                 LifetimeError::Stopped(reason) => RouteError::Stopped(reason),
                 other => RouteError::Lifetime(other),
             };
-            lifetimes
-                .check_reply(
+            if matches!(reply, OperationReply::Result(_)) {
+                lifetimes.finish_reply(
                     saved.request.request_id,
                     &saved.request.operation,
                     saved.context,
                     validation,
                 )
-                .map_err(map)?;
-            if matches!(reply, OperationReply::Result(_)) {
-                lifetimes
-                    .finish(saved.request.request_id, validation)
-                    .map_err(map)?;
+            } else {
+                lifetimes.check_reply(
+                    saved.request.request_id,
+                    &saved.request.operation,
+                    saved.context,
+                    validation,
+                )
             }
+            .map_err(map)?;
             Ok((index, reply))
         })();
         if result.is_err() {

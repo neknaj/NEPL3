@@ -309,6 +309,32 @@ impl RequestLifetimes {
         snapshot: Digest,
         b: &mut Budget,
     ) -> Result<(), LifetimeError> {
+        self.checked_reply_index(id, provider, snapshot, b)
+            .map(|_| ())
+    }
+    /// Accept a validated terminal reply and finish its saved Running request.
+    /// The host validates the reply's schema and diagnostic grants first.
+    /// All binding checks and accounting precede mutation; after successful
+    /// validation the same index is committed without another fallible lookup.
+    /// Errors leave the request phase unchanged.
+    pub fn finish_reply(
+        &mut self,
+        id: u64,
+        provider: &OperationRef,
+        snapshot: Digest,
+        b: &mut Budget,
+    ) -> Result<(), LifetimeError> {
+        let index = self.checked_reply_index(id, provider, snapshot, b)?;
+        self.entries[index].state = State::Finished;
+        Ok(())
+    }
+    fn checked_reply_index(
+        &self,
+        id: u64,
+        provider: &OperationRef,
+        snapshot: Digest,
+        b: &mut Budget,
+    ) -> Result<usize, LifetimeError> {
         let index = self.active(id, b)?;
         let entry = &self.entries[index];
         if !matches!(entry.state, State::Running) {
@@ -328,7 +354,7 @@ impl RequestLifetimes {
         if entry.snapshot != snapshot {
             return Err(LifetimeError::Binding(ContinuationError::Snapshot));
         }
-        Ok(())
+        Ok(index)
     }
     /// Cancel an active request and every active descendant registered through
     /// `begin_call`. Finished/cancelled descendants retain their terminal state.
