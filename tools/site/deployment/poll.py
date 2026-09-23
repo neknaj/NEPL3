@@ -2,6 +2,8 @@
 from dataclasses import dataclass
 from enum import Enum
 import time
+from collections.abc import Callable
+from typing import Protocol, assert_never
 
 from payload import checked
 from .receipt import Phase, Receipt
@@ -17,28 +19,34 @@ class Stop(Enum):
     TRANSPORT = "transport-failed"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Report:
     deployment_id: str
     stop: Stop
     responses: tuple[Result, ...]
 
 
-def wait(receipt, token, *, timeout=600):
-    return _wait(receipt, token, timeout=timeout, clock=time.monotonic,
+class Fetch(Protocol):
+    def __call__(self, receipt: Receipt, token: str, /, *, timeout: float) -> Result: ...
+
+
+def wait(receipt: Receipt, token: str, *, timeout: float = 600) -> Report:
+    return wait_with(receipt, token, timeout=timeout, clock=time.monotonic,
                  sleep=time.sleep, fetch=status)
 
 
-def _wait(receipt, token, *, timeout, clock, sleep, fetch, on_response=None, absolute_deadline=None):
-    checked(isinstance(receipt, Receipt), "invalid receipt")
+def wait_with(receipt: Receipt, token: str, *, timeout: float,
+              clock: Callable[[], float], sleep: Callable[[float], None], fetch: Fetch,
+              on_response: Callable[[Result], None] | None = None,
+              absolute_deadline: float | None = None) -> Report:
     receipt.validate()
     checked(type(timeout) in (int, float) and 0 < timeout <= 600, "invalid status wait")
     deadline = clock() + timeout
     if absolute_deadline is not None:
         deadline = min(deadline, absolute_deadline)
-    responses = []
+    responses: list[Result] = []
 
-    def done(stop):
+    def done(stop: Stop) -> Report:
         return Report(receipt.deployment_id, stop, tuple(responses))
 
     while True:
@@ -60,11 +68,14 @@ def _wait(receipt, token, *, timeout, clock, sleep, fetch, on_response=None, abs
         if remaining <= 0:
             return done(Stop.DEADLINE)
         phase = result.observation.phase
-        if phase == Phase.SUCCEEDED:
-            return done(Stop.SUCCEEDED)
-        if phase == Phase.FAILED:
-            return done(Stop.FAILED)
-        if phase == Phase.UNKNOWN:
-            return done(Stop.UNKNOWN)
-        checked(phase == Phase.PENDING, "invalid deployment phase")
-        sleep(min(5, remaining))
+        match phase:
+            case Phase.SUCCEEDED:
+                return done(Stop.SUCCEEDED)
+            case Phase.FAILED:
+                return done(Stop.FAILED)
+            case Phase.UNKNOWN:
+                return done(Stop.UNKNOWN)
+            case Phase.PENDING:
+                sleep(min(5, remaining))
+            case _:
+                assert_never(phase)

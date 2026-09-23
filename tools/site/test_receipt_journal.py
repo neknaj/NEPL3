@@ -99,7 +99,7 @@ class ReceiptJournalTests(unittest.TestCase):
             with self.assertRaises(ValueError): status_history(repo, owner="neknaj", repository="NEPL3")
 
     def test_wait_records_before_next_request_and_stops_on_competing_writer(self):
-        from deployment.journal import _wait_recorded
+        from deployment.journal import wait_recorded_with
         from deployment.receipt import observed
         from deployment.transport import Result
         from deployment.poll import Stop
@@ -123,11 +123,11 @@ class ReceiptJournalTests(unittest.TestCase):
                 kwargs = dict(owner="neknaj", repository="NEPL3", remaining_seconds=30,
                               clock=lambda: now[0], sleep=sleep, fetch=fetch)
                 if race:
-                    with self.assertRaises(ValueError): _wait_recorded(repo, head, "token", **kwargs)
+                    with self.assertRaises(ValueError): wait_recorded_with(repo, head, "token", **kwargs)
                     self.assertEqual(len(calls), 1)
                     self.assertEqual(load(repo).events[-1].kind, "RecoveryUnknown")
                 else:
-                    final, report = _wait_recorded(repo, head, "token", **kwargs)
+                    final, report = wait_recorded_with(repo, head, "token", **kwargs)
                     self.assertEqual(report.stop, Stop.SUCCEEDED)
                     self.assertEqual(load(repo).head, final)
                     self.assertEqual(len(status_history(repo, owner="neknaj", repository="NEPL3").observations), 2)
@@ -147,7 +147,7 @@ class ReceiptJournalTests(unittest.TestCase):
                 value = original(*args, **kwargs); now[0] += 6; return value
             with patch.object(bridge, "status_history", slow):
                 with patch("deployment.transport.status") as fetch:
-                    final, report = bridge._wait_recorded(repo, head, "token", owner="neknaj", repository="NEPL3",
+                    final, report = bridge.wait_recorded_with(repo, head, "token", owner="neknaj", repository="NEPL3",
                         remaining_seconds=5, clock=lambda: now[0], sleep=lambda _: None, fetch=fetch)
                     fetch.assert_not_called()
             self.assertEqual(final, head); self.assertEqual(report.stop, Stop.DEADLINE)
