@@ -83,18 +83,22 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: cargo fmt --all -- --check
       - name: Clippy
-        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+        run: cargo clippy --workspace --all-targets --locked --features nepl3-suite/sentence-html -- -D warnings
       - name: Tests
         run: cargo test --workspace --locked
       - name: Composition runtime consumer
         run: cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml
       - name: Test external Sentence Doc adapter
         run: cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml --features doc-sentence --test sentence
+      - name: Test Sentence markup adapter
+        run: cargo test --locked -p nepl3-suite --features sentence-html --test sentence_html
+      - name: Test external Sentence markup consumer
+        run: cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml --features sentence-html --test sentence_html
       - name: Composition consumer formatting and Clippy
         if: matrix.os == 'ubuntu-latest'
         run: |
           cargo fmt --manifest-path conformance/extensions/suite/Cargo.toml -- --check
-          cargo clippy --locked --manifest-path conformance/extensions/suite/Cargo.toml --all-targets --features doc-sentence -- -D warnings
+          cargo clippy --locked --manifest-path conformance/extensions/suite/Cargo.toml --all-targets --features doc-sentence,sentence-html -- -D warnings
       - name: External language public API consumer
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -298,6 +302,7 @@ jobs:
           wasmtime --version
           cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html -p nepl3-provider -p nepl3-suite --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked -p nepl3-suite --features doc-sentence --test sentence --target wasm32-wasip2 -- --test-threads=1
+          cargo test --locked -p nepl3-suite --features sentence-html --test sentence_html --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked -p nepl3-tools --test grammar diagnostic::compiler_report_boundary_without_host_process --target wasm32-wasip2 -- --exact --test-threads=1
           cargo test --locked -p nepl3-tools --test grammar reader::all_reader_constructors --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked -p nepl3-tools --test grammar reader::compiled_reader_streaming_boundaries_and_rollback_keep_raw_positions --target wasm32-wasip2 -- --exact --test-threads=1
@@ -309,8 +314,9 @@ jobs:
           cargo test --locked -p nepl3-tools --test math --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml --features doc-sentence --test sentence --target wasm32-wasip2 -- --test-threads=1
+          cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml --features sentence-html --test sentence_html --target wasm32-wasip2 -- --test-threads=1
       - name: Compile foundation for browser Wasm
-        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html -p nepl3-suite --no-default-features --features nepl3-suite/doc-sentence --target wasm32-unknown-unknown
+        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html -p nepl3-suite --no-default-features --features nepl3-suite/doc-sentence,nepl3-suite/sentence-html --target wasm32-unknown-unknown
       - name: Compare identical foundation components with Pulley64
         env:
           CARGO_TARGET_WASM32_WASIP2_RUNNER: python ${{ github.workspace }}/tools/emulators/wasmtime/compare.py
@@ -342,7 +348,7 @@ jobs:
       - name: Install ARMv6-M target
         run: rustup target add thumbv6m-none-eabi
       - name: Compile every implemented portable core for ARMv6-M
-        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html -p nepl3-suite --no-default-features --features nepl3-suite/doc-sentence --target thumbv6m-none-eabi
+        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html -p nepl3-suite --no-default-features --features nepl3-suite/doc-sentence,nepl3-suite/sentence-html --target thumbv6m-none-eabi
       - name: Validate converter and firmware formatting
         run: |
           python -m unittest discover -s tools/emulators/rp2040js -p 'test_*.py'

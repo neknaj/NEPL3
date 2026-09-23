@@ -1,0 +1,365 @@
+use nepl3_core::{
+    budget::{Budget, Limits, StopReason},
+    origin::{Origin, OriginId},
+    schema::SchemaRegistry,
+    source::{SourceAdmission, SourceId, SourceSnapshot},
+};
+use nepl3_markup::html::*;
+use nepl3_sentence_core::{
+    literal::{self, SentenceOutcome},
+    model::*,
+    syntax::{NodeLocation, SentenceSyntax},
+};
+use nepl3_suite::adapters::sentence::html::{self, Error};
+
+fn b() -> Budget {
+    Budget::new(Limits {
+        work: 100_000_000,
+        allocation_units: 100_000_000,
+        depth: 100_000,
+        nodes: 1_000_000,
+        output_bytes: 1_000_000,
+        source_bytes: 1_000_000,
+        diagnostics: 100,
+        events: 100,
+    })
+}
+fn err(e: impl core::fmt::Debug) -> String {
+    format!("{e:?}")
+}
+fn registry() -> Result<SchemaRegistry, String> {
+    let mut r = SchemaRegistry::default();
+    for d in [
+        nepl3_core::schema::foundation::descriptor(&mut b()),
+        nepl3_sentence_core::schema::descriptor(&mut b()),
+    ] {
+        let d = d.map_err(err)?;
+        r.register(d.reference(&mut b()).map_err(err)?, d, &mut b())
+            .map_err(err)?;
+    }
+    r.finalize(&mut b()).map_err(err)?;
+    Ok(r)
+}
+fn syntax(nodes: Vec<Kind>, root: Root) -> SentenceSyntax {
+    SentenceSyntax {
+        locations: vec![
+            NodeLocation {
+                origin: OriginId(0),
+                head: None,
+                cover: None
+            };
+            nodes.len()
+        ],
+        value: SentenceValue {
+            root,
+            nodes,
+            embeds: vec![],
+        },
+        sources: vec![],
+        views: vec![],
+        source_maps: vec![],
+        origins: vec![Origin::Synthetic {
+            reason: "HTML test".into(),
+            anchor: None,
+        }],
+    }
+}
+fn element(f: &HtmlFragment, id: u64, tag: HtmlTag) -> Result<(&[HtmlAttribute], &[u64]), String> {
+    match f.nodes.get(id as usize) {
+        Some(HtmlNode::Element {
+            tag: actual,
+            attributes,
+            children,
+        }) if *actual == tag => Ok((attributes, children)),
+        other => Err(format!("expected {tag:?} at {id}, got {other:?}")),
+    }
+}
+fn child(f: &HtmlFragment, id: u64, tag: HtmlTag, index: usize) -> Result<u64, String> {
+    element(f, id, tag)?
+        .1
+        .get(index)
+        .copied()
+        .ok_or_else(|| format!("child {index} at {id}"))
+}
+fn text(f: &HtmlFragment, id: u64) -> Result<&str, String> {
+    match f.nodes.get(id as usize) {
+        Some(HtmlNode::Text { text }) => Ok(text),
+        other => Err(format!("text: {other:?}")),
+    }
+}
+
+#[test]
+fn typed_html_preserves_annotation_structure_order_and_origins() -> Result<(), String> {
+    let r = registry()?;
+    let input = syntax(
+        vec![
+            Kind::Text {
+                text: "漢<&".into(),
+            },
+            Kind::Text {
+                text: "かん".into(),
+            },
+            Kind::Ruby {
+                base: InlineRef(0),
+                reading: InlineRef(1),
+            },
+            Kind::Code { text: "n".into() },
+            Kind::InlineAnno {
+                base: InlineRef(2),
+                notes: vec![InlineRef(1), InlineRef(3)],
+            },
+            Kind::Emphasis {
+                inline: InlineRef(4),
+            },
+            Kind::Strong {
+                inline: InlineRef(5),
+            },
+            Kind::ExternalLink {
+                uri: "https://example.org/".into(),
+                label: InlineRef(6),
+            },
+            Kind::Break,
+            Kind::Concat {
+                inlines: vec![InlineRef(7), InlineRef(8), InlineRef(0)],
+            },
+            Kind::Sentence {
+                inlines: vec![InlineRef(9)],
+            },
+        ],
+        Root::Sentence(SentenceRef(10)),
+    );
+    let before = input.clone();
+    let result =
+        html::render(&input, &r, &mut b(), &mut SourceAdmission::default()).map_err(err)?;
+    assert!(core::ptr::eq(result.input(), &input));
+    let m = result.markup();
+    assert_eq!(m.slot, HtmlSlot::Phrasing);
+    let f = &m.fragment;
+    let sentence = child(f, f.root, HtmlTag::Span, 0)?;
+    let concat = child(f, sentence, HtmlTag::Span, 0)?;
+    let link = child(f, concat, HtmlTag::Span, 0)?;
+    assert_eq!(
+        element(f, link, HtmlTag::A)?.0,
+        &[HtmlAttribute::Href {
+            value: HtmlHref::External {
+                uri: "https://example.org/".into()
+            }
+        }]
+    );
+    let strong = child(f, link, HtmlTag::A, 0)?;
+    let emphasis = child(f, strong, HtmlTag::Strong, 0)?;
+    let anno = child(f, emphasis, HtmlTag::Em, 0)?;
+    let base = child(f, anno, HtmlTag::Span, 0)?;
+    let ruby = child(f, base, HtmlTag::Span, 0)?;
+    let ruby_base = child(f, ruby, HtmlTag::Span, 0)?;
+    let reading = child(f, ruby, HtmlTag::Span, 1)?;
+    assert_eq!(text(f, child(f, ruby_base, HtmlTag::Span, 0)?)?, "漢<&");
+    assert_eq!(text(f, child(f, reading, HtmlTag::Span, 0)?)?, "かん");
+    let notes = child(f, anno, HtmlTag::Span, 1)?;
+    assert_eq!(element(f, notes, HtmlTag::Span)?.1.len(), 2);
+    let first = child(f, notes, HtmlTag::Span, 0)?;
+    let second = child(f, notes, HtmlTag::Span, 1)?;
+    assert_eq!(text(f, child(f, first, HtmlTag::Span, 0)?)?, "かん");
+    let code = child(f, second, HtmlTag::Span, 0)?;
+    assert_eq!(text(f, child(f, code, HtmlTag::Code, 0)?)?, "n");
+    element(f, child(f, concat, HtmlTag::Span, 1)?, HtmlTag::Br)?;
+    let shared = child(f, concat, HtmlTag::Span, 2)?;
+    assert_eq!(text(f, shared)?, "漢<&");
+    assert_eq!(result.origins().len(), f.nodes.len());
+    for (index, origin) in result.origins().iter().enumerate() {
+        assert_eq!(origin.element, index as u64);
+        assert!(origin.node < input.value.nodes.len() as u64);
+    }
+    for id in [shared, child(f, ruby_base, HtmlTag::Span, 0)?] {
+        assert_eq!(result.origins()[id as usize].node, 0);
+    }
+    let checked = validate(f, m.slot, &m.policy, &mut b()).map_err(err)?;
+    let serialized = serialize(&checked, &mut b()).map_err(err)?;
+    assert!(serialized.contains("漢&lt;&amp;"));
+    assert_eq!(input, before);
+    Ok(())
+}
+
+#[test]
+fn literal_origin_and_invalid_output_boundaries() -> Result<(), String> {
+    let r = registry()?;
+    let source = SourceSnapshot::new(
+        SourceId("html-sentence".into()),
+        1,
+        "memory:html".into(),
+        "\"世界\"".as_bytes().to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    let parsed = literal::read(
+        &source,
+        0,
+        source.text().len() as u64,
+        true,
+        &r,
+        &mut b(),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    let SentenceOutcome::Matched(parsed) = parsed.outcome else {
+        return Err("literal".into());
+    };
+    let output = html::render(
+        &parsed.syntax,
+        &r,
+        &mut b(),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    for cause in output.origins() {
+        let location = &output.input().locations[cause.node as usize];
+        assert!(location.cover.is_some());
+    }
+    assert_eq!(output.input().sources, vec![source]);
+    let mut invalid = syntax(
+        vec![
+            Kind::Text {
+                text: "label".into(),
+            },
+            Kind::ExternalLink {
+                uri: "javascript:alert(1)".into(),
+                label: InlineRef(0),
+            },
+        ],
+        Root::Inline(InlineRef(1)),
+    );
+    assert!(matches!(
+        html::render(&invalid, &r, &mut b(), &mut SourceAdmission::default()),
+        Err(Error::Markup(_))
+    ));
+    invalid.value.nodes = vec![Kind::Text { text: "\0".into() }];
+    invalid.value.root = Root::Inline(InlineRef(0));
+    invalid.locations.truncate(1);
+    assert!(matches!(
+        html::render(&invalid, &r, &mut b(), &mut SourceAdmission::default()),
+        Err(Error::Markup(_))
+    ));
+    invalid.locations.clear();
+    assert!(matches!(
+        html::render(&invalid, &r, &mut b(), &mut SourceAdmission::default()),
+        Err(Error::Input(_))
+    ));
+    Ok(())
+}
+
+#[test]
+fn resource_limits_preserve_input_and_publish_no_partial_fragment() -> Result<(), String> {
+    let r = registry()?;
+    let mut nodes = vec![Kind::Text { text: "x".into() }];
+    for i in 0..64 {
+        nodes.push(Kind::Strong {
+            inline: InlineRef(i),
+        });
+    }
+    let input = syntax(nodes, Root::Inline(InlineRef(64)));
+    let original = input.clone();
+    let mut baseline = b();
+    html::render(&input, &r, &mut baseline, &mut SourceAdmission::default()).map_err(err)?;
+    let usage = baseline.usage();
+    for (resource, amount, reason) in [
+        (0, usage.work, StopReason::WorkLimit),
+        (1, usage.allocation_units, StopReason::AllocationLimit),
+        (2, usage.nodes, StopReason::NodeLimit),
+        (3, usage.depth, StopReason::DepthLimit),
+    ] {
+        for ceiling in [0, amount - 1, amount] {
+            let mut limits = b().limits();
+            match resource {
+                0 => limits.work = ceiling,
+                1 => limits.allocation_units = ceiling,
+                2 => limits.nodes = ceiling,
+                _ => limits.depth = ceiling,
+            }
+            let result = html::render(
+                &input,
+                &r,
+                &mut Budget::new(limits),
+                &mut SourceAdmission::default(),
+            );
+            if ceiling == amount {
+                result.map_err(err)?;
+            } else {
+                assert!(matches!(result,Err(Error::Stopped(actual)) if actual==reason));
+            }
+        }
+    }
+    assert_eq!(input, original);
+    let mut cancelled = b();
+    cancelled.cancel();
+    assert!(matches!(
+        html::render(&input, &r, &mut cancelled, &mut SourceAdmission::default()),
+        Err(Error::Stopped(StopReason::Cancelled))
+    ));
+    Ok(())
+}
+
+#[test]
+fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<(), String> {
+    use nepl3_core::syntax::*;
+    let r = registry()?;
+    let foundation = r
+        .selected("nepl3.foundation", 1)
+        .ok_or("foundation")?
+        .clone();
+    let environment = Environment {
+        bindings: vec![],
+        resources: vec![],
+    };
+    let digest =
+        nepl3_wire::environment::environment_digest(&environment, &foundation, &r, &mut b())
+            .map_err(err)?;
+    let mut input = syntax(
+        vec![Kind::ForeignInline {
+            syntax: EmbedRef(0),
+        }],
+        Root::Inline(InlineRef(0)),
+    );
+    input.value.embeds.push(ForeignClosure {
+        syntax: ForeignSyntax {
+            schema: foundation.clone(),
+            category: "test-inline".into(),
+            root: NodeRef(0),
+            bundle: SyntaxBundle {
+                sources: vec![],
+                nodes: vec![SyntaxNode {
+                    schema: foundation,
+                    kind: "NodeRef".into(),
+                    fields: vec![],
+                    head: None,
+                    cover: None,
+                    origin: OriginId(0),
+                    token: None,
+                }],
+                origins: input.origins.clone(),
+                root: NodeRef(0),
+                environments: vec![],
+                tokens: vec![],
+                source_maps: vec![],
+            },
+            environment: EnvironmentRef { id: 0, digest },
+        },
+        owner_environment: EnvironmentEntry {
+            id: 0,
+            digest,
+            value: environment,
+        },
+        owner_origins: vec![],
+        owner_sources: vec![],
+        owner_source_maps: vec![],
+    });
+    assert!(matches!(
+        html::render(&input, &r, &mut b(), &mut SourceAdmission::default()),
+        Err(Error::ForeignAdapterRequired(EmbedRef(0)))
+    ));
+    input.value.embeds[0].syntax.bundle.origins.clear();
+    assert!(matches!(
+        html::render(&input, &r, &mut b(), &mut SourceAdmission::default()),
+        Err(Error::Input(_))
+    ));
+    Ok(())
+}

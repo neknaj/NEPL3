@@ -14,14 +14,21 @@ nepl3-wire = { path = "../../../crates/foundation/wire" }
 nepl3-suite = { path = "../../../crates/integration/suite" }
 nepl3-doc-core = { path = "../../../crates/languages/doc/core", optional = true }
 nepl3-sentence-core = { path = "../../../crates/languages/sentence/core", optional = true }
+nepl3-markup = { path = "../../../crates/output/markup", optional = true }
 
 [features]
 default = []
 doc-sentence = ["nepl3-suite/doc-sentence", "dep:nepl3-doc-core", "dep:nepl3-sentence-core"]
+sentence-html = ["nepl3-suite/sentence-html", "dep:nepl3-sentence-core", "dep:nepl3-markup"]
 
 [[test]]
 name = "sentence"
 required-features = ["doc-sentence"]
+
+[[test]]
+name = "sentence_html"
+path = "tests/sentence/html.rs"
+required-features = ["sentence-html"]
 
 [target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
 nepl3-provider = { path = "../../../apps/provider" }
