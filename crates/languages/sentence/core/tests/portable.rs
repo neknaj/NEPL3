@@ -364,6 +364,56 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
         ],
         embeds: vec![closure],
     };
+    {
+        use nepl3_sentence_core::text::{self, AnnotationPolicy::BaseOnly, Error};
+        let proof = text::prepare(&value, &r, &mut budget(), &mut SourceAdmission::default())
+            .map_err(err)?;
+        assert_eq!(
+            proof.render(BaseOnly, &[], &mut budget()),
+            Err(Error::Unresolved(EmbedRef(0)))
+        );
+        let supplied = proof
+            .resolve(EmbedRef(0), "𝄞", &mut budget())
+            .map_err(err)?;
+        assert_eq!(
+            proof
+                .render(BaseOnly, &[supplied], &mut budget())
+                .map_err(err)?,
+            "𝄞𝄞"
+        );
+        let duplicate = [
+            proof
+                .resolve(EmbedRef(0), "a", &mut budget())
+                .map_err(err)?,
+            proof
+                .resolve(EmbedRef(0), "b", &mut budget())
+                .map_err(err)?,
+        ];
+        assert_eq!(
+            proof.render(BaseOnly, &duplicate, &mut budget()),
+            Err(Error::Duplicate(EmbedRef(0)))
+        );
+        assert!(matches!(
+            proof.resolve(EmbedRef(1), "", &mut budget()),
+            Err(Error::Embed(EmbedRef(1)))
+        ));
+        let other = value.clone();
+        let other_proof = text::prepare(&other, &r, &mut budget(), &mut SourceAdmission::default())
+            .map_err(err)?;
+        let supplied = other_proof
+            .resolve(EmbedRef(0), "wrong owner", &mut budget())
+            .map_err(err)?;
+        assert_eq!(
+            proof.render(BaseOnly, &[supplied], &mut budget()),
+            Err(Error::WrongScope)
+        );
+        let mut stopped = budget();
+        stopped.cancel();
+        assert!(matches!(
+            proof.resolve(EmbedRef(0), "", &mut stopped),
+            Err(Error::Stopped(StopReason::Cancelled))
+        ));
+    }
     let raw = encode(&value, &r)?;
     let bytes = nepl3_wire::encode(&raw, &mut budget()).map_err(err)?;
     let decoded = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
@@ -378,6 +428,68 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
     let mut bad_native = value.clone();
     bad_native.embeds[0].owner_sources.clear();
     assert!(encode(&bad_native, &r).is_err());
+    {
+        use nepl3_sentence_core::text::{self, AnnotationPolicy::*, Error};
+        let mut annotated = value.clone();
+        annotated.root = Root::Inline(InlineRef(2));
+        annotated.nodes = vec![
+            Kind::Text {
+                text: "base".into(),
+            },
+            Kind::ForeignInline {
+                syntax: EmbedRef(0),
+            },
+            Kind::InlineAnno {
+                base: InlineRef(0),
+                notes: vec![InlineRef(1)],
+            },
+        ];
+        let prepared = text::prepare(
+            &annotated,
+            &r,
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(err)?;
+        assert_eq!(
+            prepared.render(BaseOnly, &[], &mut budget()).map_err(err)?,
+            "base"
+        );
+        assert_eq!(
+            prepared.render(WithAllNotes, &[], &mut budget()),
+            Err(Error::Unresolved(EmbedRef(0)))
+        );
+        annotated.nodes[2] = Kind::Ruby {
+            base: InlineRef(0),
+            reading: InlineRef(1),
+        };
+        let prepared = text::prepare(
+            &annotated,
+            &r,
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(err)?;
+        assert_eq!(
+            prepared.render(BaseOnly, &[], &mut budget()).map_err(err)?,
+            "base"
+        );
+        assert_eq!(
+            prepared.render(WithReadings, &[], &mut budget()),
+            Err(Error::Unresolved(EmbedRef(0)))
+        );
+        // Even a reading excluded from output must have a valid source closure.
+        annotated.embeds[0].owner_sources.clear();
+        assert!(matches!(
+            text::prepare(
+                &annotated,
+                &r,
+                &mut budget(),
+                &mut SourceAdmission::default()
+            ),
+            Err(Error::Shape(_))
+        ));
+    }
 
     for remove_source in [true, false] {
         let mut bad = raw.clone();

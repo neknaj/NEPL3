@@ -68,6 +68,28 @@ fn sentence_literal_reaches_doc_operation_through_public_adapter() -> Result<(),
     let SentenceOutcome::Matched(parsed) = parsed.outcome else {
         return Err("expected complete Sentence literal".into());
     };
+    let prepared = nepl3_sentence_core::text::prepare(
+        &parsed.syntax.value,
+        &registry,
+        &mut b,
+        &mut SourceAdmission::default(),
+    )
+    .map_err(error)?;
+    for (policy, expected) in [
+        (
+            nepl3_sentence_core::text::AnnotationPolicy::BaseOnly,
+            "漢字を読む。",
+        ),
+        (
+            nepl3_sentence_core::text::AnnotationPolicy::WithReadings,
+            "漢字[かんじ]を読む。",
+        ),
+    ] {
+        assert_eq!(
+            prepared.render(policy, &[], &mut b).map_err(error)?,
+            expected
+        );
+    }
     let document = nepl3_suite::adapters::sentence::document(
         &parsed.syntax,
         &registry,
