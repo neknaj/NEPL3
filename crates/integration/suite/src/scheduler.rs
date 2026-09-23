@@ -17,7 +17,7 @@ use nepl3_core::{
     },
     schema::SchemaRegistry,
     source::{Digest, SourceError, SourceStore},
-    value::TypedValue,
+    value::{OperationRef, TypedValue},
 };
 
 /// The host supplies executable identity, exact grants and a context digest
@@ -79,7 +79,31 @@ pub struct Failure {
     frames: Vec<Frame>,
 }
 
+/// A terminal callback output validated against its operation and source grants,
+/// retained before lifetime/result acceptance committed. It is not a parent
+/// partial result and does not authorize replaying the completed callback.
+pub struct UncommittedResult<'a> {
+    pub request_id: u64,
+    pub operation: &'a OperationRef,
+    pub context: Digest,
+    pub sources: &'a SourceStore,
+    pub result: &'a OperationResult<TypedValue>,
+}
+
 impl Failure {
+    /// Inspect checked terminal outputs whose final acceptance failed. Replies
+    /// which failed their initial output validation never enter this collection.
+    pub fn uncommitted_results(&self) -> impl Iterator<Item = UncommittedResult<'_>> {
+        self.frames.iter().filter_map(|frame| {
+            frame.terminal.as_ref().map(|result| UncommittedResult {
+                request_id: frame.request_id,
+                operation: &frame.operation,
+                context: frame.context,
+                sources: &frame.sources,
+                result,
+            })
+        })
+    }
     /// Request whose execution frame was active when scheduling failed. Before
     /// root activation this is the root ID. A dependency admission/depth failure
     /// is attributed to its active parent; accepted child outcomes retain their
@@ -134,6 +158,8 @@ impl core::fmt::Debug for Failure {
 
 struct Frame {
     request_id: u64,
+    operation: OperationRef,
+    terminal: Option<OperationResult<TypedValue>>,
     registration: usize,
     context: Digest,
     scope: ExecutionScope,
@@ -232,8 +258,14 @@ fn frame(
             .insert_ref_with_budget(source, b)
             .map_err(Error::Source)?;
     }
+    let identity_bytes = (request.operation.name.len() as u64)
+        .saturating_add(request.operation.schema.package.len() as u64);
+    b.charge(Resource::Work, identity_bytes.saturating_add(40))?;
+    b.charge(Resource::AllocationUnits, identity_bytes)?;
     Ok(Frame {
         request_id: request.request_id,
+        operation: request.operation.clone(),
+        terminal: None,
         registration,
         context,
         scope,
@@ -474,29 +506,30 @@ fn run_inner(
             suspending::PreparedReply::Result(result) => {
                 let id = call.request_id;
                 let context = current.context;
-                let finished = stack.pop().ok_or(Error::State)?;
-                if let Some(parent) = stack.last_mut() {
-                    parent
-                        .active
-                        .as_mut()
-                        .ok_or(Error::State)?
-                        .pending
-                        .accept_active(
-                            id,
-                            context,
-                            result,
-                            registry,
-                            &finished.sources,
-                            lifetimes,
-                            validation,
-                        )
-                        .map_err(Error::Dependency)?;
-                    parent.completed_sources.push(finished.sources);
-                    parent.next += 1;
+                current.terminal = Some(result);
+                if let Some(parent) = ancestors.last_mut() {
+                    let pending = &mut parent.active.as_mut().ok_or(Error::State)?.pending;
+                    let result = current.terminal.take().ok_or(Error::State)?;
+                    if let Err(rejected) = pending.try_accept_active(
+                        id,
+                        context,
+                        result,
+                        registry,
+                        &current.sources,
+                        lifetimes,
+                        validation,
+                    ) {
+                        current.terminal = Some(rejected.result);
+                        return Err(Error::Dependency(rejected.cause));
+                    }
                 } else {
                     lifetimes.finish(id, validation).map_err(Error::Lifetime)?;
-                    return Ok(result);
+                    return current.terminal.take().ok_or(Error::State);
                 }
+                let finished = stack.pop().ok_or(Error::State)?;
+                let parent = stack.last_mut().ok_or(Error::State)?;
+                parent.completed_sources.push(finished.sources);
+                parent.next += 1;
             }
         }
     }

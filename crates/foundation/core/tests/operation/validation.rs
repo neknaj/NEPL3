@@ -675,7 +675,7 @@ fn active_dependency_commits_at_the_reply_validation_work_boundary() -> Result<(
                 work,
                 ..budget().limits()
             });
-            let accepted = pending.accept_active(
+            let accepted = pending.try_accept_active(
                 30,
                 context,
                 result.clone(),
@@ -686,7 +686,7 @@ fn active_dependency_commits_at_the_reply_validation_work_boundary() -> Result<(
             );
             let mut cancelled = vec![];
             if work == boundary {
-                assert_eq!(accepted, Ok(()));
+                assert!(accepted.is_ok());
                 assert_eq!(limited.usage().work, boundary);
                 assert_eq!(pending.remaining(), 0);
                 assert_eq!(
@@ -704,10 +704,14 @@ fn active_dependency_commits_at_the_reply_validation_work_boundary() -> Result<(
                     Some((&calls[0], &result))
                 );
             } else {
+                let Err(rejected) = accepted else {
+                    return Err("reply acceptance must stop".into());
+                };
                 assert_eq!(
-                    accepted,
-                    Err(DependencyError::Stopped(StopReason::WorkLimit))
+                    rejected.cause,
+                    DependencyError::Stopped(StopReason::WorkLimit)
                 );
+                assert_eq!(rejected.result, result);
                 assert_eq!(pending.remaining(), 1);
                 assert_eq!(pending.accepted_results().count(), 0);
                 assert_eq!(

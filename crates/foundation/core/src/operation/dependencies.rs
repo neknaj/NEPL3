@@ -17,6 +17,13 @@ pub enum DependencyError {
     Incomplete,
     Consumed,
 }
+
+/// An unaccepted reply returned intact to its owner. The cause can include
+/// output validation failure; this type does not assert that the value is valid.
+pub struct RejectedResult {
+    pub cause: DependencyError,
+    pub result: OperationResult<TypedValue>,
+}
 impl From<StopReason> for DependencyError {
     fn from(reason: StopReason) -> Self {
         Self::Stopped(reason)
@@ -175,14 +182,37 @@ impl<'a> PendingDependencies<'a> {
         lifetimes: &mut RequestLifetimes,
         b: &mut Budget,
     ) -> Result<(), DependencyError> {
-        let position = self.validate_result(id, &result, registry, sources, b)?;
-        let map = |e| match e {
-            LifetimeError::Stopped(s) => DependencyError::Stopped(s),
-            e => DependencyError::Lifetime(e),
+        self.try_accept_active(id, context, result, registry, sources, lifetimes, b)
+            .map_err(|rejected| rejected.cause)
+    }
+    /// Retain ownership of an unaccepted reply on every rejection. Collection
+    /// and lifetime remain unchanged, including on validation-budget stop.
+    /// The inline error requires no allocation after the Budget has stopped.
+    #[allow(clippy::too_many_arguments, clippy::result_large_err)]
+    pub fn try_accept_active(
+        &mut self,
+        id: u64,
+        context: Digest,
+        result: OperationResult<TypedValue>,
+        registry: &SchemaRegistry,
+        sources: &impl DiagnosticSourceResolver,
+        lifetimes: &mut RequestLifetimes,
+        b: &mut Budget,
+    ) -> Result<(), RejectedResult> {
+        let position = (|| {
+            let position = self.validate_result(id, &result, registry, sources, b)?;
+            lifetimes
+                .finish_reply(id, &self.calls[position].operation, context, b)
+                .map_err(|e| match e {
+                    LifetimeError::Stopped(s) => DependencyError::Stopped(s),
+                    e => DependencyError::Lifetime(e),
+                })?;
+            Ok(position)
+        })();
+        let position = match position {
+            Ok(position) => position,
+            Err(cause) => return Err(RejectedResult { cause, result }),
         };
-        lifetimes
-            .finish_reply(id, &self.calls[position].operation, context, b)
-            .map_err(map)?;
         // Binding validation is the last fallible operation. Commit the result
         // into its reserved slot after the same lifetime index was finished.
         self.results[position] = Some(result);
