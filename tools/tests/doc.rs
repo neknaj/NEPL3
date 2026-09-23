@@ -16,8 +16,6 @@ mod html;
 mod input;
 #[path = "doc/labels.rs"]
 mod labels;
-#[path = "doc/math.rs"]
-mod math;
 #[path = "doc/pages.rs"]
 mod pages;
 #[path = "doc/phases.rs"]
