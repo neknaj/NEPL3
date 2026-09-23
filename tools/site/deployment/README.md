@@ -253,6 +253,12 @@ as SmokeFailed with deadline_exceeded. A late push cannot return success; its
 journal evidence remains available to reconciliation. Invalid/oversized reports
 or CAS/push errors are not truncated or turned into a successful smoke.
 
+The HTTP adapter returns immutable `Passed` or `Failed` records. Successful
+records contain typed content and missing-route observations; failures distinguish
+deadline, worker exit and observation errors. The worker response is validated at
+the process boundary. JSON conversion occurs when recording journal evidence or
+printing the CLI result, and retains the existing publication artifact fields.
+
 Call only after successful execute and publisher current-state eligibility
 checks. These adapters do not infer that a recorded late status permits a new
 budget, decide rollback, or promote LKG. Tests inject HTTP reports into this

@@ -1,9 +1,11 @@
 import tempfile
+from dataclasses import replace
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from deployment.smoke import record, _record
+from deployment.smoke import record, record_with
+from observation import Context, Deadline, Failed, Passed
 from deployment.journal import record_created, record_status
 from journal import Event, append, load, remote
 from journal.model import encode, decode
@@ -33,21 +35,21 @@ class RecordSmokeTests(unittest.TestCase):
         remote.publish(mirror, str(server), head, new)
         kwargs = dict(expected_url=str(server), owner='neknaj', repository='NEPL3', remaining_seconds=60)
         args = (mirror, new, root, manifest, 'https://neknaj.github.io/NEPL3/')
-        report = dict(result='passed', source_commit='a'*40, manifest_sha256=manifest,
-                      url=args[-1], transport='https', publication_verified=False)
+        report = Passed(Context(args[-1], manifest, 'https'), 'a'*40, ())
         return server, args, kwargs, report
 
     def test_pass_and_failure_are_recorded_remotely(self) -> None:
         for result in ('passed', 'failed'):
             with self.subTest(result=result), tempfile.TemporaryDirectory() as directory:
                 server, args, kwargs, report = self.prepare(directory)
-                report['result'] = result
+                if result == 'failed':
+                    report = Failed(Deadline(), report.context)
                 with patch('deployment.smoke.http_smoke.run', return_value=report):
                     head, actual = record(*args, **kwargs)
                 state = load(server)
                 self.assertEqual(state.head, head)
                 self.assertEqual(state.events[-1].kind, 'SmokePassed' if result == 'passed' else 'SmokeFailed')
-                self.assertEqual(decode(state.evidence[-1])['report'], actual)
+                self.assertEqual(decode(state.evidence[-1])['report'], actual.representation())
 
     def test_altered_site_does_not_start_http(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -61,10 +63,12 @@ class RecordSmokeTests(unittest.TestCase):
     def test_report_identity_mismatch_is_not_recorded(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             server, args, kwargs, report = self.prepare(directory)
-            for key, value in [('source_commit', 'c'*40), ('manifest_sha256', 'c'*64),
-                               ('url', 'https://other.invalid/'), ('transport', 'loopback-http'),
-                               ('publication_verified', True)]:
-                with self.subTest(key=key), patch('deployment.smoke.http_smoke.run', return_value=dict(report, **{key:value})), self.assertRaises(ValueError):
+            for altered in [replace(report, source_commit='c'*40),
+                            replace(report, context=replace(report.context, manifest_sha256='c'*64)),
+                            replace(report, context=replace(report.context, url='https://other.invalid/')),
+                            replace(report, context=replace(report.context, transport='loopback-http')),
+                            Failed(Deadline())]:
+                with self.subTest(report=altered), patch('deployment.smoke.http_smoke.run', return_value=altered), self.assertRaises(ValueError):
                     record(*args, **kwargs)
                 self.assertEqual(load(server).head, args[1])
 
@@ -76,7 +80,7 @@ class RecordSmokeTests(unittest.TestCase):
                 now[0] = 61
                 return report
             with self.assertRaisesRegex(ValueError, 'deadline'):
-                _record(*args, **kwargs, clock=lambda: now[0], observe=observe)
+                record_with(*args, **kwargs, clock=lambda: now[0], observe=observe)
             state = load(server)
             self.assertEqual(state.events[-1].kind, 'SmokeFailed')
             evidence = decode(state.evidence[-1])
@@ -93,7 +97,7 @@ class RecordSmokeTests(unittest.TestCase):
                 now[0] = 301
                 return report
             with self.assertRaisesRegex(ValueError, 'deadline'):
-                _record(*args, **kwargs, clock=lambda: now[0], observe=observe)
+                record_with(*args, **kwargs, clock=lambda: now[0], observe=observe)
             state = load(server)
             self.assertEqual(state.events[-1].kind, 'SmokeFailed')
             self.assertTrue(decode(state.evidence[-1])['deadline_exceeded'])

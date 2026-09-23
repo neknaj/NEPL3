@@ -33,14 +33,6 @@ def checked(condition: object, reason: str) -> None:
         raise ValueError(reason)
 
 
-def unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
-    result: dict[str, object] = {}
-    for key, value in pairs:
-        checked(key not in result, 'duplicate JSON key')
-        result[key] = value
-    return result
-
-
 def linked(metadata: os.stat_result) -> bool:
     return stat.S_ISLNK(metadata.st_mode) or bool(
         getattr(metadata, 'st_file_attributes', 0) & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0x400))

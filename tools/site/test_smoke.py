@@ -70,7 +70,7 @@ def fixture(mode='normal'):
 class SmokeTests(unittest.TestCase):
     def test_actual_http_checks_documents_assets_directory_routes_and_404(self) -> None:
         with fixture() as (root, identity, url, seen, _):
-            result = run(root, identity, url, local=True)
+            result = run(root, identity, url, local=True).representation()
             self.assertEqual(result['result'], 'passed', result)
             self.assertEqual(result['transport'], 'loopback-http')
             self.assertFalse(result['publication_verified'])
@@ -86,7 +86,7 @@ class SmokeTests(unittest.TestCase):
     def test_failures_are_not_passed_and_redirect_is_not_followed(self) -> None:
         for mode in ['changed', 'extra-byte', 'mime', 'missing', 'spa', 'redirect', 'query-only']:
             with self.subTest(mode=mode), fixture(mode) as (root, identity, url, seen, _):
-                result = run(root, identity, url, local=True)
+                result = run(root, identity, url, local=True).representation()
                 self.assertEqual(result['result'], 'failed', result)
                 self.assertFalse(result['publication_verified'])
                 self.assertNotIn('/redirected', [r['path'] for r in seen])
@@ -94,7 +94,7 @@ class SmokeTests(unittest.TestCase):
     def test_outer_deadline_terminates_a_stalled_request(self) -> None:
         with fixture('slow') as (root, identity, url, _, started):
             before = time.monotonic()
-            result = run(root, identity, url, local=True, timeout=1)
+            result = run(root, identity, url, local=True, timeout=1).representation()
             self.assertTrue(started.is_set())
             self.assertEqual(result['reason'], 'deadline')
             self.assertLess(time.monotonic() - before, 2)
