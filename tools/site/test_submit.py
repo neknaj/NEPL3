@@ -3,7 +3,7 @@ import unittest
 from dataclasses import replace
 from unittest.mock import patch
 
-from deployment.submit import submit, _submit, execute, _execute
+from deployment.submit import submit, submit_with, execute, execute_with
 from deployment.create import CreationUnknown
 from deployment.journal import latest_created, status_history
 from deployment.receipt import observed
@@ -38,7 +38,7 @@ class SubmitTests(unittest.TestCase):
             for budget, elapsed, allowance in [(60, 17, 43), (60, 60, None), (3600, 0, 600)]:
                 with patch('deployment.submit.submit', return_value=('c'*40, None)) as post, \
                      patch('deployment.journal.wait_remote', return_value='result') as wait:
-                    call = lambda: _execute(mirror, None, intent, **dict(kwargs, remaining_seconds=budget),
+                    call = lambda: execute_with(mirror, None, intent, **dict(kwargs, remaining_seconds=budget),
                         clock=iter([0, elapsed]).__next__, submit_attempt=post, wait_attempt=wait)
                     if allowance is None:
                         with self.assertRaises(CreationUnknown): call()
@@ -128,6 +128,6 @@ class SubmitTests(unittest.TestCase):
             server, mirror, intent, kwargs = self.setup(directory)
             with patch('deployment.submit.create') as send:
                 with self.assertRaises(CreationUnknown):
-                    _submit(mirror, None, intent, **kwargs, clock=iter([0, 61]).__next__, send=send)
+                    submit_with(mirror, None, intent, **kwargs, clock=iter([0, 61]).__next__, send=send)
             send.assert_not_called()
             self.assertEqual(load(server).events, (intent,))
