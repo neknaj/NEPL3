@@ -4,7 +4,7 @@ import subprocess
 import sys
 
 
-def main():
+def main() -> int:
     result = subprocess.run(
         ["git", "status", "--porcelain=v1", "--untracked-files=all", "--ignore-submodules=none"],
         stdout=subprocess.PIPE,
@@ -14,7 +14,7 @@ def main():
         return result.returncode
     if result.stdout:
         print("Checkout changed (index, working tree, or untracked files):", flush=True)
-        sys.stdout.buffer.write(result.stdout)
+        _ = sys.stdout.buffer.write(result.stdout)
         return 1
     return 0
 
