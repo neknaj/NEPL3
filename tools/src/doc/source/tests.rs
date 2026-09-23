@@ -5,6 +5,156 @@ use nepl3_sentence_core::model::Kind;
 use nepl3_wire::foundation::FoundationCodec;
 
 #[test]
+fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Result<(), String> {
+    let default = compiled()?;
+    let compiled =
+        compiled_with_sentence_forms(&[nepl3_grammar_core::compile::package::ForeignForm {
+            kind: "DocumentInline",
+            category: "Inline",
+            spelling: "doc",
+            field: "syntax",
+            alias: "Doc",
+            guest_category: "Inline",
+            origin_reason: "explicit document namespace consumer",
+        }])?;
+    let sentence = compiled.others.last().ok_or("Sentence package")?;
+    assert_ne!(
+        sentence.schema,
+        default.others.last().ok_or("default Sentence")?.schema
+    );
+    let source = r#"article en "Title" body cons display Math label x Sentence sentence cons doc anchor target ruby text "字" text "じ" nil nil"#;
+    for native in [false, true] {
+        assert!(
+            with_input_route(native, &default, source, "Article", |_, _, _, _| Ok(())).is_err()
+        );
+        with_input_route(
+            native,
+            &compiled,
+            source,
+            "Article",
+            |tree, profile, b, a| {
+                let registry = profile.registry();
+                let input = tree
+                    .tree()
+                    .bundle
+                    .validate_with_sources(registry, b, a)
+                    .map_err(err)?;
+                let store = SourceStore::default();
+                let mut admission = SourceAdmission::default();
+                let mut codec =
+                    FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+                let document = lower::document(
+                    &input,
+                    &compiled.doc.package.schema,
+                    Category::Article,
+                    registry,
+                    b,
+                    &mut codec,
+                )
+                .map_err(err)?;
+                let math = &document.value.embeds.first().ok_or("Math closure")?.closure;
+                let input = math
+                    .syntax
+                    .bundle
+                    .validate_with_sources(registry, b, codec.source_admission())
+                    .map_err(err)?;
+                let math = nepl3_math_core::lower::expression(
+                    &input,
+                    &compiled.others[0].schema,
+                    nepl3_math_core::check::Category::Expr,
+                    registry,
+                    b,
+                    codec.source_admission(),
+                )
+                .map_err(err)?;
+                let guest = math.value.embeds.first().ok_or("Sentence closure")?;
+                let input = guest
+                    .syntax
+                    .bundle
+                    .validate_with_sources(registry, b, codec.source_admission())
+                    .map_err(err)?;
+                let sentence_value =
+                    nepl3_sentence_core::lower::presentation::sentence_with_foreign(
+                        &input,
+                        &sentence.schema,
+                        &[nepl3_sentence_core::lower::ForeignInlineForm {
+                            kind: "Form:DocumentInline",
+                            guest_schema: &compiled.doc.package.schema,
+                            guest_category: "Inline",
+                        }],
+                        registry,
+                        &mut codec,
+                        b,
+                    )
+                    .map_err(err)?;
+                assert_eq!(sentence_value.value.embeds.len(), 1);
+                assert!(
+                    sentence_value
+                        .value
+                        .nodes
+                        .iter()
+                        .any(|kind| matches!(kind, Kind::ForeignInline { .. }))
+                );
+                let guest = &sentence_value.value.embeds[0];
+                assert_eq!(guest.syntax.schema, compiled.doc.package.schema);
+                assert_eq!(guest.syntax.category, "Inline");
+                let input = guest
+                    .syntax
+                    .bundle
+                    .validate_with_sources(registry, b, codec.source_admission())
+                    .map_err(err)?;
+                let inline = lower::document(
+                    &input,
+                    &compiled.doc.package.schema,
+                    Category::Inline,
+                    registry,
+                    b,
+                    &mut codec,
+                )
+                .map_err(err)?;
+                let nepl3_doc_core::model::DocRoot::Inline(root) = inline.value.root else {
+                    return Err("Doc Inline root required".into());
+                };
+                let anchor = inline
+                    .value
+                    .nodes
+                    .get(root.0 as usize)
+                    .ok_or("anchor root")?;
+                let DocKind::Anchor { id, label } = &anchor.kind else {
+                    return Err("anchor kind required".into());
+                };
+                assert_eq!(id, "target");
+                let DocKind::Ruby { base, reading } = &inline.value.nodes[label.0 as usize].kind
+                else {
+                    return Err("anchor Ruby label required".into());
+                };
+                assert!(
+                    matches!(&inline.value.nodes[base.0 as usize].kind, DocKind::Text { text } if text == "字")
+                );
+                assert!(
+                    matches!(&inline.value.nodes[reading.0 as usize].kind, DocKind::Text { text } if text == "じ")
+                );
+                // The namespace operand is owned by Doc and retains the original
+                // byte selection through Doc -> Math -> Sentence -> Doc re-entry.
+                let location = anchor
+                    .locations
+                    .iter()
+                    .find(|location| location.field == nepl3_doc_core::model::DocField::AnchorId)
+                    .ok_or("anchor ID location")?;
+                let span = location.span.as_ref().ok_or("anchor ID span")?;
+                let start = source.find("target").ok_or("fixture target")? as u64;
+                assert_eq!(span.start(), start);
+                assert_eq!(span.end(), start + 6);
+                assert_eq!(span.snapshot_ref().source, SourceId("doc-input".into()));
+                assert_eq!(span.snapshot_ref().digest, Digest::of(source.as_bytes()));
+                Ok(())
+            },
+        )?;
+    }
+    Ok(())
+}
+
+#[test]
 fn math_sentence_math_printing_preserves_recursive_source() -> Result<(), String> {
     let compiled = compiled()?;
     let sentence = compiled.others.last().ok_or("Sentence package")?;
