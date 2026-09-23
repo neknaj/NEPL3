@@ -185,7 +185,7 @@ fn article_labels_resolve_forward_names_and_keep_operand_selection() -> Result<(
             b,
         )
         .map_err(err)?;
-        assert_doc_retention(doc, &received);
+        assert_doc_retention(doc, &received)?;
         let after = labels::check(&received, r, b, codec.source_admission()).map_err(err)?;
         assert_eq!(checked.definitions(), after.definitions());
         assert_eq!(checked.references(), after.references());

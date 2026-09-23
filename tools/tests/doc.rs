@@ -28,6 +28,9 @@ mod print;
 mod projection;
 #[path = "doc/resources.rs"]
 mod resources;
+#[path = "doc/retention.rs"]
+mod retention;
+use retention::assert_doc_retention;
 #[path = "doc/text.rs"]
 mod text;
 use nepl3_core::value::NdfValue;
@@ -217,7 +220,7 @@ fn doc_auxiliary_fragments_and_parent_operands_have_typed_boundaries() -> Result
                 &mut budget(),
             )
             .map_err(err)?;
-            assert_doc_retention(&doc, &received);
+            assert_doc_retention(&doc, &received)?;
             assert_eq!(
                 nepl3_doc_core::portable::to_value(
                     &received,
@@ -272,108 +275,6 @@ fn doc_auxiliary_fragments_and_parent_operands_have_typed_boundaries() -> Result
         })?;
     }
     Ok(())
-}
-
-#[test]
-fn doc_code_same_alias_keeps_invalid_guest_meaning_and_restores_host() -> Result<(), String> {
-    use nepl3_doc_core::{
-        check::{Category, ShapeError},
-        lower::{self, LowerError},
-        model::*,
-    };
-    let compiled = compiled()?;
-    // Guest syntax is valid, but its Ruby's base has no visible content. Code
-    // must retain it without requiring a successful semantic Doc lower.
-    let source = r#"paragraph cons code Doc article en sentence nil body cons paragraph cons sentence cons ruby text "" text "r" nil nil nil cons sentence cons text "host-tail" nil nil"#;
-    with_input(&compiled, source, "Block", |tree, profile, b, a| {
-        assert_eq!(tree.tree().contexts.len(), 2);
-        let host = tree
-            .tree()
-            .bundle
-            .validate_with_sources(profile.registry(), b, a)
-            .map_err(err)?;
-        let doc = lower::prefix(
-            &host,
-            &compiled.doc.package.schema,
-            Category::Block,
-            profile.registry(),
-            b,
-            a,
-        )
-        .map_err(err)?;
-        assert!(
-            doc.value
-                .nodes
-                .iter()
-                .any(|n| matches!(&n.kind,DocKind::Text{text} if text=="host-tail"))
-        );
-        assert_eq!(doc.value.embeds.len(), 1);
-        let embed = &doc.value.embeds[0];
-        assert_eq!(embed.kind, EmbedKind::Code);
-        assert_eq!(embed.closure.syntax.schema, compiled.doc.package.schema);
-        assert_eq!(embed.closure.syntax.category, "Article");
-        let guest = embed
-            .closure
-            .syntax
-            .bundle
-            .validate_with_sources(profile.registry(), b, a)
-            .map_err(err)?;
-        assert!(matches!(
-            lower::prefix(
-                &guest,
-                &compiled.doc.package.schema,
-                Category::Article,
-                profile.registry(),
-                b,
-                a
-            ),
-            Err(LowerError::Shape(ShapeError::EmptyAnnotationPart(_)))
-        ));
-        let empty = SourceStore::default();
-        let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
-        let value = nepl3_doc_core::portable::to_value(&doc, profile.registry(), &mut codec, b)
-            .map_err(err)?;
-        let received =
-            nepl3_doc_core::portable::from_value(&value, profile.registry(), &mut codec, b)
-                .map_err(err)?;
-        assert_doc_retention(&doc, &received);
-        assert_eq!(
-            nepl3_doc_core::portable::to_value(&received, profile.registry(), &mut codec, b)
-                .map_err(err)?,
-            value
-        );
-        Ok(())
-    })
-}
-
-fn assert_doc_retention(
-    before: &nepl3_doc_core::model::DocumentSyntax,
-    after: &nepl3_doc_core::model::DocumentSyntax,
-) {
-    // Source tables and guest graph coordinates have the common canonical wire
-    // order. Domain nodes and their original provenance are unchanged.
-    assert_eq!(before.value.root, after.value.root);
-    assert_eq!(before.value.nodes, after.value.nodes);
-    assert_eq!(before.origins, after.origins);
-    assert_eq!(before.views, after.views);
-    assert_eq!(before.source_maps, after.source_maps);
-    assert_eq!(before.sources.len(), after.sources.len());
-    for source in &before.sources {
-        assert!(after.sources.iter().any(|other| other == source));
-    }
-    assert_eq!(before.value.embeds.len(), after.value.embeds.len());
-    for (before, after) in before.value.embeds.iter().zip(&after.value.embeds) {
-        assert_eq!(before.kind, after.kind);
-        assert_eq!(
-            before.closure.owner_environment,
-            after.closure.owner_environment
-        );
-        assert_eq!(before.closure.owner_origins, after.closure.owner_origins);
-        assert_eq!(
-            before.closure.owner_source_maps,
-            after.closure.owner_source_maps
-        );
-    }
 }
 
 #[test]

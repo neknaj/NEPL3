@@ -2,6 +2,9 @@ use nepl3_core::{source::*, value_codec::FoundationValueCodec};
 use nepl3_doc_core::{check::Category, lower};
 use nepl3_tools::doc::source::{budget, compiled, err};
 use nepl3_wire::foundation::FoundationCodec;
+#[path = "doc/retention.rs"]
+mod retention;
+use retention::assert_doc_retention;
 #[test]
 fn referenced_sentence_payloads_cross_the_owned_syntax_boundary_without_source_copies()
 -> Result<(), String> {
@@ -607,6 +610,30 @@ fn generated_node_locations_require_owner_mapping_and_survive_wire() -> Result<(
                 for source in &input.sources {
                     assert!(actual.sources.contains(source));
                 }
+                // A Value placement remains a Value across the outer Doc wire
+                // boundary, with the complete independent Sentence payload.
+                let mut value_doc = doc.clone();
+                value_doc.value.embeds[0] = placement;
+                let value = nepl3_doc_core::portable::to_value(
+                    &value_doc,
+                    profile.registry(),
+                    &mut receiver,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                let bytes = nepl3_wire::encode(&value, &mut budget()).map_err(err)?;
+                let value = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+                let mut admission = SourceAdmission::default();
+                let mut fresh = FoundationCodec::new(profile.registry(), &empty, &mut admission)
+                    .map_err(err)?;
+                let received = nepl3_doc_core::portable::from_value(
+                    &value,
+                    profile.registry(),
+                    &mut fresh,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                assert_doc_retention(&value_doc, &received)?;
             }
             Ok(())
         },
@@ -765,10 +792,12 @@ fn doc_guest_retains_syntax_until_selected_sentence_meaning_check() -> Result<()
             .value
             .embeds
             .iter()
-            .find(|e| e.kind != EmbedKind::Sentence)
+            .find(|e| e.kind == EmbedKind::Code)
             .ok_or("code guest")?
             .syntax()
             .ok_or("guest syntax")?;
+        assert_eq!(guest.syntax.schema, compiled.doc.package.schema);
+        assert_eq!(guest.syntax.category, "Article");
         let proof = guest
             .validate(profile.registry(), &mut budget(), codec.source_admission())
             .map_err(err)?;
@@ -832,6 +861,7 @@ fn doc_guest_retains_syntax_until_selected_sentence_meaning_check() -> Result<()
             &mut budget(),
         )
         .map_err(err)?;
+        assert_doc_retention(&doc, &received)?;
         assert_eq!(received.value.root, doc.value.root);
         assert_eq!(received.value.nodes, doc.value.nodes);
         assert_eq!(received.origins, doc.origins);

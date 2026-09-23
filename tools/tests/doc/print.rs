@@ -748,7 +748,7 @@ fn standalone_guest_fragments_keep_concrete_entry_and_foreign_syntax() -> Result
                 &mut budget(),
             )
             .map_err(err)?;
-            assert_doc_retention(&doc, &actual);
+            assert_doc_retention(&doc, &actual)?;
             let mut wrong = doc.value.clone();
             wrong.root = if language == GuestLanguage::Math {
                 DocRoot::CircuitGuest(GuestRef(0))
