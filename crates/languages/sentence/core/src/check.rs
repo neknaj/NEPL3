@@ -1,6 +1,6 @@
 //! Iterative finite-arena checking, including longest paths through shared
 //! subtrees. Does not resolve URLs, validate foreign source closures or execute.
-use crate::model::{Kind, Root, SentenceValue};
+use crate::model::{EmbedRef, InlineRef, Kind, Root, SentenceValue};
 use alloc::{vec, vec::Vec};
 use nepl3_core::budget::{Budget, Resource, StopReason};
 use nepl3_core::{schema::SchemaRegistry, source::SourceAdmission, syntax::SyntaxError};
@@ -43,6 +43,14 @@ pub struct CheckedShape<'a> {
     value: &'a SentenceValue,
     order: Vec<usize>,
 }
+/// One structural occurrence, in ordered-child traversal order. The same node
+/// or embed may occur more than once. Depth is relative to the Sentence root.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ForeignOccurrence {
+    pub node: InlineRef,
+    pub embed: EmbedRef,
+    pub depth: u64,
+}
 impl<'a> CheckedShape<'a> {
     pub fn value(&self) -> &'a SentenceValue {
         self.value
@@ -50,6 +58,62 @@ impl<'a> CheckedShape<'a> {
     /// Each node occurs once, after all of its children.
     pub fn postorder(&self) -> &[usize] {
         &self.order
+    }
+
+    /// Enumerate every foreign occurrence, including readings and notes.
+    /// Hosts can select namespace participants before rendering any guest.
+    /// This is a shape traversal only: closures are neither validated nor run.
+    /// Shared subtrees are expanded under the caller's cumulative budget; no
+    /// partial sequence is returned on a stop. The explicit stack uses O(depth)
+    /// storage, independently of the number of siblings or shared occurrences.
+    pub fn foreign_occurrences(&self, b: &mut Budget) -> Result<Vec<ForeignOccurrence>, Error> {
+        fn push<T>(items: &mut Vec<T>, item: T, b: &mut Budget) -> Result<(), Error> {
+            b.charge(Resource::Work, 1)?;
+            b.charge(
+                Resource::AllocationUnits,
+                2 * core::mem::size_of::<T>() as u64,
+            )?;
+            items.push(item);
+            Ok(())
+        }
+        b.poll()?;
+        let root = match self.value.root {
+            Root::Sentence(root) => root.0,
+            Root::Inline(root) => root.0,
+        };
+        let mut stack = Vec::new();
+        let mut occurrences = Vec::new();
+        push(&mut stack, (root as usize, 0usize), b)?;
+        let base = b.current_depth();
+        while let Some(&(node, next)) = stack.last() {
+            let depth = stack.len() as u64;
+            b.with_depth_at_least::<_, Error>(base.saturating_add(depth), |b| {
+                b.charge(Resource::Work, 1)?;
+                if next == 0
+                    && let Kind::ForeignInline { syntax } = self.value.nodes[node]
+                {
+                    push(
+                        &mut occurrences,
+                        ForeignOccurrence {
+                            node: InlineRef(node as u64),
+                            embed: syntax,
+                            depth,
+                        },
+                        b,
+                    )?;
+                }
+                Ok(())
+            })?;
+            if let Some(child) = self.value.nodes[node].child(next) {
+                if let Some(frame) = stack.last_mut() {
+                    frame.1 += 1;
+                }
+                push(&mut stack, (child.0 as usize, 0), b)?;
+            } else {
+                stack.pop();
+            }
+        }
+        Ok(occurrences)
     }
 
     /// Checks guest closures at their deepest semantic owner occurrence. This

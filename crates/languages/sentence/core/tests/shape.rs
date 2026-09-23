@@ -205,12 +205,11 @@ fn links_are_not_resolved_by_shape_check() -> Result<(), Error> {
     checked(&v, &mut budget())
 }
 
-#[test]
-fn foreign_indices_are_checked_without_claiming_closure_validity() -> Result<(), Error> {
+fn invalid_guest() -> nepl3_core::syntax::ForeignClosure {
     use nepl3_core::{source::Digest, syntax::*, value::SchemaRef};
     // Intentionally invalid guest root. The shape checker only proves arena
     // references; the foreign boundary must independently validate this closure.
-    let closure = ForeignClosure {
+    ForeignClosure {
         syntax: ForeignSyntax {
             schema: SchemaRef {
                 package: "test.invalid-guest".into(),
@@ -244,7 +243,12 @@ fn foreign_indices_are_checked_without_claiming_closure_validity() -> Result<(),
         owner_origins: vec![],
         owner_sources: vec![],
         owner_source_maps: vec![],
-    };
+    }
+}
+
+#[test]
+fn foreign_indices_are_checked_without_claiming_closure_validity() -> Result<(), Error> {
+    let closure = invalid_guest();
     let mut v = SentenceValue {
         root: Root::Inline(InlineRef(0)),
         nodes: vec![Kind::ForeignInline {
@@ -297,6 +301,113 @@ fn foreign_indices_are_checked_without_claiming_closure_validity() -> Result<(),
         syntax: EmbedRef(2),
     };
     assert_eq!(checked(&v, &mut budget()), Err(Error::Embed(2)));
+    Ok(())
+}
+
+#[test]
+fn foreign_occurrences_keep_order_sharing_notes_and_budget_boundaries() -> Result<(), Error> {
+    use nepl3_sentence_core::check::ForeignOccurrence;
+    let v = SentenceValue {
+        root: Root::Sentence(SentenceRef(4)),
+        embeds: vec![invalid_guest(), invalid_guest()],
+        nodes: vec![
+            Kind::ForeignInline {
+                syntax: EmbedRef(1),
+            },
+            Kind::Ruby {
+                base: InlineRef(0),
+                reading: InlineRef(2),
+            },
+            Kind::ForeignInline {
+                syntax: EmbedRef(0),
+            },
+            Kind::InlineAnno {
+                base: InlineRef(1),
+                notes: vec![InlineRef(0), InlineRef(2)],
+            },
+            Kind::Sentence {
+                inlines: vec![InlineRef(2), InlineRef(3), InlineRef(1)],
+            },
+        ],
+    };
+    let shape = v.validate_shape(&mut budget())?;
+    // Explicit child order differs from arena and embed order. Ruby readings,
+    // annotation notes and repeated shared nodes are all namespace occurrences.
+    let expected: Vec<_> = [
+        (2, 0, 2),
+        (0, 1, 4),
+        (2, 0, 4),
+        (0, 1, 3),
+        (2, 0, 3),
+        (0, 1, 3),
+        (2, 0, 3),
+    ]
+    .map(|(node, embed, depth)| ForeignOccurrence {
+        node: InlineRef(node),
+        embed: EmbedRef(embed),
+        depth,
+    })
+    .into();
+    let mut measured = budget();
+    assert_eq!(shape.foreign_occurrences(&mut measured)?, expected);
+    assert_eq!(shape.foreign_depths(&mut budget())?, vec![4, 4]);
+    let used = measured.usage();
+    for (reason, amount) in [
+        (StopReason::WorkLimit, used.work),
+        (StopReason::AllocationLimit, used.allocation_units),
+        (StopReason::DepthLimit, used.depth),
+    ] {
+        for limit in [0, amount - 1, amount] {
+            let mut limits = budget().limits();
+            match reason {
+                StopReason::WorkLimit => limits.work = limit,
+                StopReason::AllocationLimit => limits.allocation_units = limit,
+                StopReason::DepthLimit => limits.depth = limit,
+                _ => unreachable!("fixed resources"),
+            }
+            let mut b = Budget::new(limits);
+            let result = shape.foreign_occurrences(&mut b);
+            if limit == amount {
+                assert_eq!(result?, expected);
+            } else {
+                assert_eq!(result, Err(Error::Stopped(reason)));
+                assert_eq!(b.poll(), Err(reason));
+            }
+            assert_eq!(b.current_depth(), 0);
+        }
+    }
+    let mut b = budget();
+    b.with_depth_at_least::<_, Error>(7, |b| {
+        assert_eq!(shape.foreign_occurrences(b)?, expected);
+        assert_eq!(b.current_depth(), 7);
+        Ok(())
+    })?;
+    assert_eq!(b.usage().depth, 11);
+    b.cancel();
+    assert_eq!(
+        shape.foreign_occurrences(&mut b),
+        Err(Error::Stopped(StopReason::Cancelled))
+    );
+    // Exponential display expansion of a finite DAG is still bounded by Work.
+    let mut dag = SentenceValue {
+        root: Root::Inline(InlineRef(40)),
+        embeds: vec![invalid_guest()],
+        nodes: vec![Kind::ForeignInline {
+            syntax: EmbedRef(0),
+        }],
+    };
+    for parent in 1..=40 {
+        dag.nodes.push(Kind::Concat {
+            inlines: vec![InlineRef(parent - 1); 2],
+        });
+    }
+    let shape = dag.validate_shape(&mut budget())?;
+    let mut limits = budget().limits();
+    limits.work = 1000;
+    assert_eq!(
+        shape.foreign_occurrences(&mut Budget::new(limits)),
+        Err(Error::Stopped(StopReason::WorkLimit))
+    );
     Ok(())
 }
 

@@ -199,6 +199,7 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
         Dependency,
         Label,
         Duplicate,
+        Composed,
     }
     let compiled =
         compiled_with_sentence_forms(&[nepl3_grammar_core::compile::package::ForeignForm {
@@ -219,6 +220,10 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
         (
             "cons doc anchor same text \"first\" cons doc anchor same text \"second\" nil",
             Expected::Duplicate,
+        ),
+        (
+            "cons doc ref target math Math 7 cons doc anchor target text \"定義\" nil",
+            Expected::Composed,
         ),
     ] {
         let source = format!(
@@ -268,12 +273,115 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
                     let mut host = SentenceAnnotationRenderer {
                         registry,
                         surface: &compiled.others[3].schema,
-                        math_surface: None,
+                        math_surface: Some(&compiled.others[0].schema),
                         doc_surface: Some(&compiled.doc.package.schema),
                         codec: &mut codec,
                     };
                     let result = host.render(&math.value.embeds[0], b);
                     match &expected {
+                        Expected::Composed => {
+                            let output = result.map_err(err)?;
+                            use nepl3_markup::html::{HtmlAttribute, HtmlHref, HtmlNode};
+                            assert_eq!(output.foreign.len(), 2);
+                            assert!(output.markup.fragment.nodes.iter().any(|node| matches!(node,
+                                HtmlNode::Element { attributes, .. } if attributes.iter().any(|attribute| matches!(attribute,
+                                    HtmlAttribute::Href { value: HtmlHref::Fragment { id } } if id == "n-746172676574")))));
+                            assert!(output.markup.fragment.nodes.iter().any(|node| matches!(node,
+                                HtmlNode::Element { attributes, .. } if attributes.iter().any(|attribute| matches!(attribute,
+                                    HtmlAttribute::Id { value } if value == "n-746172676574")))));
+                            let [
+                                crate::doc::annotations::ForeignRecord::Document(reference),
+                                crate::doc::annotations::ForeignRecord::Document(definition),
+                            ] = output.foreign.as_slice()
+                            else {
+                                return Err("ordered document owners".into());
+                            };
+                            assert_eq!(reference.foreign.len(), 1);
+                            assert!(definition.foreign.is_empty());
+                            for root in &reference.foreign[0].output.node_roots {
+                                assert!(matches!(
+                                    output.markup.fragment.nodes[*root as usize],
+                                    HtmlNode::MathElement { .. }
+                                ));
+                            }
+                            assert!(output.markup.fragment.nodes.iter().any(
+                                |node| matches!(node, HtmlNode::Text { text } if text == "7")
+                            ));
+                            for duplicate_definition in [false, true] {
+                                let mut shared = output.sentence.clone();
+                                let nepl3_sentence_core::model::Root::Sentence(root) =
+                                    shared.value.root
+                                else {
+                                    return Err("sentence root".into());
+                                };
+                                let Kind::Sentence { inlines } =
+                                    &mut shared.value.nodes[root.0 as usize]
+                                else {
+                                    return Err("sentence node".into());
+                                };
+                                let repeated = inlines[usize::from(duplicate_definition)];
+                                inlines.insert(1, repeated);
+                                let result = host.render_syntax(shared, b);
+                                if duplicate_definition {
+                                    let Err(Error::Document(error)) = result else {
+                                        return Err("shared anchor must be duplicate".into());
+                                    };
+                                    let document::Error::NamespaceDuplicate {
+                                        definition,
+                                        previous,
+                                    } = *error
+                                    else {
+                                        return Err("shared anchor owners".into());
+                                    };
+                                    assert_ne!(definition.member, previous.member);
+                                    assert_eq!(definition.node, previous.node);
+                                    assert!(std::sync::Arc::ptr_eq(
+                                        &definition.document,
+                                        &previous.document
+                                    ));
+                                } else {
+                                    let shared = result.map_err(err)?;
+                                    let [
+                                        crate::doc::annotations::ForeignRecord::Document(first),
+                                        crate::doc::annotations::ForeignRecord::Document(second),
+                                        crate::doc::annotations::ForeignRecord::Document(_),
+                                    ] = shared.foreign.as_slice()
+                                    else {
+                                        return Err("three occurrences".into());
+                                    };
+                                    assert!(std::sync::Arc::ptr_eq(
+                                        &first.document,
+                                        &second.document
+                                    ));
+                                    assert_eq!(first.embed, second.embed);
+                                    assert_eq!(first.document_digest, second.document_digest);
+                                    assert_ne!(first.origins[0].element, second.origins[0].element);
+                                    assert_ne!(
+                                        first.foreign[0].output.node_roots,
+                                        second.foreign[0].output.node_roots
+                                    );
+                                }
+                            }
+                            let mut invalid = output.sentence.clone();
+                            let nepl3_sentence_core::model::Root::Sentence(root) =
+                                invalid.value.root
+                            else {
+                                return Err("sentence root".into());
+                            };
+                            invalid.value.nodes[root.0 as usize] = Kind::Sentence {
+                                inlines: vec![nepl3_sentence_core::model::InlineRef(u64::MAX)],
+                            };
+                            assert!(matches!(
+                                host.render_syntax(invalid, b),
+                                Err(Error::Portable(_))
+                            ));
+                            let mut cancelled = budget();
+                            cancelled.cancel();
+                            assert!(matches!(
+                                host.render_syntax(output.sentence.clone(), &mut cancelled),
+                                Err(Error::Stopped(nepl3_core::budget::StopReason::Cancelled))
+                            ));
+                        }
                         Expected::Dependency => {
                             let Err(Error::Document(error)) = result else {
                                 return Err("Doc dependency failure required".into());
@@ -303,14 +411,34 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
                             assert_eq!((span.start(), span.end()), (start, start + 7));
                             assert_eq!(span.snapshot_ref().digest, Digest::of(source.as_bytes()));
                         }
-                        Expected::Duplicate => assert!(matches!(
-                            result,
-                            Err(Error::Render(
-                                nepl3_suite::adapters::sentence::html::Error::Markup(
-                                    nepl3_markup::html::HtmlError::DuplicateId(_)
-                                )
-                            ))
-                        )),
+                        Expected::Duplicate => {
+                            let Err(Error::Document(error)) = result else {
+                                return Err("namespace duplicate required".into());
+                            };
+                            let document::Error::NamespaceDuplicate {
+                                definition,
+                                previous,
+                            } = *error
+                            else {
+                                return Err("both definition owners required".into());
+                            };
+                            assert_ne!(definition.member, previous.member);
+                            for owner in [definition, previous] {
+                                let span = owner.document.value.nodes[owner.node as usize]
+                                    .locations[0]
+                                    .span
+                                    .as_ref()
+                                    .ok_or("definition source")?;
+                                assert_eq!(
+                                    span.snapshot_ref().digest,
+                                    Digest::of(source.as_bytes())
+                                );
+                                assert_eq!(
+                                    &source[span.start() as usize..span.end() as usize],
+                                    "same"
+                                );
+                            }
+                        }
                     }
                     Ok(())
                 },
@@ -947,7 +1075,7 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                 else {
                     return Err("one Doc Inline record expected".into());
                 };
-                assert_eq!(record.document, inline);
+                assert_eq!(*record.document, inline);
                 assert_eq!(record.document_digest, rendered.document_digest);
                 for text in ["字", "じ"] {
                     assert!(record.origins.iter().any(

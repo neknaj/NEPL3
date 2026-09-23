@@ -44,7 +44,7 @@ pub enum ForeignRecord {
 }
 pub struct ForeignDocumentRecord {
     pub embed: nepl3_sentence_core::model::EmbedRef,
-    pub document: nepl3_doc_core::model::DocumentSyntax,
+    pub document: std::sync::Arc<nepl3_doc_core::model::DocumentSyntax>,
     pub document_digest: Digest,
     pub origins: Vec<nepl3_doc_html::ElementOrigin>,
     pub foreign: Vec<DocumentMathRecord>,
@@ -136,6 +136,21 @@ pub struct SentenceAnnotationRenderer<'a, C> {
     pub codec: &'a mut C,
 }
 impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
+    /// Render an explicitly supplied typed Sentence. Its complete source and
+    /// model boundary is revalidated before namespace preparation or rendering.
+    pub fn render_syntax(
+        &mut self,
+        sentence: SentenceSyntax,
+        b: &mut Budget,
+    ) -> Result<RenderedAnnotation, Error<C::Error>> {
+        let mut ceiling = b.limits();
+        ceiling.depth = ceiling.depth.min(64);
+        let result = b.with_ceiling(ceiling, |b| {
+            b.with_depth(|b| self.render_sentence(sentence, b))
+        });
+        b.poll()?;
+        result
+    }
     pub fn render(
         &mut self,
         guest: &ForeignClosure,
@@ -200,6 +215,20 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
             b,
         )
         .map_err(Error::Lower)?;
+        self.render_sentence(sentence, b)
+    }
+
+    fn render_sentence(
+        &mut self,
+        sentence: SentenceSyntax,
+        b: &mut Budget,
+    ) -> Result<RenderedAnnotation, Error<C::Error>> {
+        if !matches!(
+            sentence.value.root,
+            nepl3_sentence_core::model::Root::Sentence(_)
+        ) {
+            return Err(Error::Selection);
+        }
         let raw = portable::syntax::to_value(&sentence, self.registry, self.codec, b)
             .map_err(Error::Portable)?;
         let sentence_digest = self
@@ -209,6 +238,30 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
                 Some(reason) => Error::Stopped(reason),
                 None => Error::Foundation(error),
             })?;
+        let selected =
+            document::namespace::collect(&sentence, self.doc_surface, self.registry, self.codec, b)
+                .map_err(|error| document_error(error, b))?;
+        let members = document::namespace::inspect(&selected, self.registry, self.codec, b)
+            .map_err(|error| document_error(error, b))?;
+        let member_refs = document::namespace::member_refs(&members, b)?;
+        let namespace =
+            nepl3_doc_core::labels::namespace::resolve(&member_refs, b).map_err(|error| {
+                let error = document::namespace::resolution_error(
+                    error,
+                    &selected,
+                    self.registry,
+                    self.codec,
+                    b,
+                );
+                document_error(error, b)
+            })?;
+        let options = nepl3_doc_html::RenderOptions {
+            parallel: nepl3_doc_html::ParallelMode::Rows,
+        };
+        let prepared =
+            document::namespace::prepare(&namespace, &options, self.registry, self.codec, b)
+                .map_err(|error| document_error(error, b))?;
+        let mut document_position = 0usize;
         let mut foreign = Vec::new();
         // Admission is local to this immutable HTML validation. Guest operations
         // retain the codec's original ledger and cumulative Budget.
@@ -226,36 +279,31 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
                             + 70,
                     )?;
                     if &closure.syntax.schema == surface && closure.syntax.category == "Inline" {
-                        let (document, rendered, nested) = document::render(
-                            closure,
-                            surface,
-                            self.math_surface,
-                            self.surface,
-                            self.registry,
-                            self.codec,
+                        let selected = selected.get(document_position).ok_or(Error::Selection)?;
+                        if selected.embed != embed {
+                            return Err(Error::Selection);
+                        }
+                        let (rendered, nested) = document::render_member(
+                            &prepared,
+                            nepl3_doc_core::labels::namespace::MemberId(document_position as u64),
+                            self,
                             b,
                         )
-                        .map_err(|error| {
-                            match b.charge(
-                                Resource::AllocationUnits,
-                                core::mem::size_of_val(&error) as u64,
-                            ) {
-                                Ok(()) => Error::Document(Box::new(error)),
-                                Err(reason) => Error::Stopped(reason),
-                            }
-                        })?;
+                        .map_err(|error| document_error(error, b))?;
+                        let (_, document_digest, markup, origins) = rendered.into_parts();
+                        document_position += 1;
                         b.charge(
                             Resource::AllocationUnits,
                             (core::mem::size_of::<ForeignRecord>() as u64).saturating_mul(2),
                         )?;
                         foreign.push(ForeignRecord::Document(ForeignDocumentRecord {
                             embed,
-                            document,
-                            document_digest: rendered.document_digest,
-                            origins: rendered.origins,
+                            document: std::sync::Arc::clone(&selected.document),
+                            document_digest,
+                            origins,
                             foreign: nested,
                         }));
-                        return Ok(rendered.markup);
+                        return Ok(markup);
                     }
                 }
                 let math_surface = self.math_surface.ok_or(Error::Selection)?;
@@ -302,7 +350,7 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
             html::RenderFailure::Foreign(error) => error,
         })?;
         let (_, markup, origins, placements) = rendered.into_parts();
-        if placements.len() != foreign.len() {
+        if placements.len() != foreign.len() || document_position != selected.len() {
             return Err(Error::Selection);
         }
         for (record, placement) in foreign.iter_mut().zip(placements) {
@@ -331,5 +379,18 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
             origins,
             foreign,
         })
+    }
+}
+
+fn document_error<E>(error: document::Error<E>, b: &mut Budget) -> Error<E> {
+    match error {
+        document::Error::Stopped(reason) => Error::Stopped(reason),
+        error => match b.charge(
+            Resource::AllocationUnits,
+            core::mem::size_of_val(&error) as u64,
+        ) {
+            Ok(()) => Error::Document(Box::new(error)),
+            Err(reason) => Error::Stopped(reason),
+        },
     }
 }

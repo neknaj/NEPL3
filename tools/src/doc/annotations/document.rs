@@ -15,7 +15,17 @@ use nepl3_doc_core::{
     portable::PortableError,
     prepare::{DocPreparationPlan, PreparationError},
 };
-use nepl3_doc_html::{LocalPreparationError, ParallelMode, RenderOptions, RenderedFragment};
+use nepl3_doc_html::LocalPreparationError;
+use std::sync::Arc;
+
+pub mod namespace;
+
+#[derive(Debug)]
+pub struct NamespaceOwner {
+    pub member: nepl3_doc_core::labels::namespace::MemberId,
+    pub node: u64,
+    pub document: Arc<DocumentSyntax>,
+}
 
 #[derive(Debug)]
 pub enum Error<E> {
@@ -23,6 +33,7 @@ pub enum Error<E> {
     Math(Box<super::super::math::Error<E>>),
     Projection(super::super::math::ProjectionError),
     Syntax(SyntaxError),
+    SentenceShape(nepl3_sentence_core::check::Error),
     Lower(lower::DocumentLowerError<E>),
     Stopped(nepl3_core::budget::StopReason),
     Boundary(PortableError<E>),
@@ -30,10 +41,19 @@ pub enum Error<E> {
     ExpectedRoot(check::Category),
     Label(Box<Diagnostic>),
     LabelDiagnostic(LabelDiagnosticError<E>),
+    NamespaceDuplicate {
+        definition: NamespaceOwner,
+        previous: NamespaceOwner,
+    },
     NeedsResolution(DocPreparationPlan),
     LanguageOptions,
-    MissingVariant { node: u64 },
-    ListStart { node: u64, start: u64 },
+    MissingVariant {
+        node: u64,
+    },
+    ListStart {
+        node: u64,
+        start: u64,
+    },
     Render(nepl3_doc_html::RenderError),
 }
 impl<E> From<StopReason> for Error<E> {
@@ -42,22 +62,13 @@ impl<E> From<StopReason> for Error<E> {
     }
 }
 
-pub(super) fn render<C: FoundationValueCodec>(
+pub(super) fn lower_inline<C: FoundationValueCodec>(
     closure: &ForeignClosure,
     surface: &SchemaRef,
-    math_surface: Option<&SchemaRef>,
-    sentence_surface: &SchemaRef,
     registry: &SchemaRegistry,
     codec: &mut C,
     b: &mut Budget,
-) -> Result<
-    (
-        DocumentSyntax,
-        RenderedFragment,
-        Vec<super::DocumentMathRecord>,
-    ),
-    Error<C::Error>,
-> {
+) -> Result<DocumentSyntax, Error<C::Error>> {
     closure
         .validate(registry, b, codec.source_admission())
         .map_err(Error::Syntax)?;
@@ -66,27 +77,36 @@ pub(super) fn render<C: FoundationValueCodec>(
         .bundle
         .validate_with_sources(registry, b, codec.source_admission())
         .map_err(Error::Syntax)?;
-    let document = lower::document(&input, surface, check::Category::Inline, registry, b, codec)
-        .map_err(Error::Lower)?;
-    let options = RenderOptions {
-        parallel: ParallelMode::Rows,
-    };
-    let prepared =
-        nepl3_doc_html::prepare_inline_with_foreign(&document, &options, registry, codec, b)
-            .map_err(|error| preparation_error(error, &document, registry, codec, b))?;
+    lower::document(&input, surface, check::Category::Inline, registry, b, codec)
+        .map_err(Error::Lower)
+}
+
+pub(super) fn render_member<C: FoundationValueCodec>(
+    prepared: &nepl3_doc_html::namespace::PreparedForeignNamespace<'_>,
+    member: nepl3_doc_core::labels::namespace::MemberId,
+    host: &mut super::SentenceAnnotationRenderer<'_, C>,
+    b: &mut Budget,
+) -> Result<
+    (
+        nepl3_doc_html::namespace::PendingPart,
+        Vec<super::DocumentMathRecord>,
+    ),
+    Error<C::Error>,
+> {
     let mut foreign = Vec::new();
-    let rendered = nepl3_doc_html::render_inline_with_foreign(
-        &prepared,
+    let rendered = nepl3_doc_html::namespace::render_part_with_foreign(
+        prepared,
+        member,
         &mut |guest, embed, b| {
             if guest.kind != EmbedKind::InlineMath {
                 return Err(Error::Selection);
             }
             let mut host = super::super::math::MathDisplayHost {
-                registry,
-                math_surface: math_surface.ok_or(Error::Selection)?,
-                sentence_surface: Some(sentence_surface),
-                doc_surface: Some(surface),
-                codec,
+                registry: host.registry,
+                math_surface: host.math_surface.ok_or(Error::Selection)?,
+                sentence_surface: Some(host.surface),
+                doc_surface: host.doc_surface,
+                codec: host.codec,
             };
             let result = host
                 .render(&guest.closure, nepl3_markup::mathml::Display::Inline, b)
@@ -122,8 +142,13 @@ pub(super) fn render<C: FoundationValueCodec>(
         b,
     )
     .map_err(|error| match error {
-        nepl3_doc_html::ForeignRenderError::Render(error) => Error::Render(error),
-        nepl3_doc_html::ForeignRenderError::Foreign(error) => error,
+        nepl3_doc_html::namespace::ForeignPartError::Member(_) => Error::Selection,
+        nepl3_doc_html::namespace::ForeignPartError::Render(
+            nepl3_doc_html::ForeignRenderError::Render(error),
+        ) => Error::Render(error),
+        nepl3_doc_html::namespace::ForeignPartError::Render(
+            nepl3_doc_html::ForeignRenderError::Foreign(error),
+        ) => error,
     })?;
     if foreign.len() != rendered.foreign.len() {
         return Err(Error::Selection);
@@ -149,7 +174,7 @@ pub(super) fn render<C: FoundationValueCodec>(
             )
             .map_err(Error::Projection)?;
     }
-    Ok((document, rendered.fragment, foreign))
+    Ok((rendered.part, foreign))
 }
 
 fn preparation_error<C: FoundationValueCodec>(

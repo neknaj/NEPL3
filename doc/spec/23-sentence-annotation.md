@@ -326,7 +326,13 @@ hostがSentence内の位置へ挿入する場合は、`namespace::render_part`�
 InlineMathを含むnamespaceは`namespace::prepare_with_foreign`で準備する。対応するguest操作はInlineMathに限定し、他のforeign要素とlink・assetは未解決の依存要求として返す。
 `namespace::render_part_with_foreign`は指定memberのguest操作を実行し、Doc参照を保持した`PendingPart`とguestの表示位置を返す。
 guest出力は局所的に有効なPhrasingを要求し、Doc参照の最終解決は合成先が担当する。停止時はpending出力も返さない。
-Sentence annotation hostによるDoc断片の事前収集と表示位置への接続、およびDocの旧Sentence所有の撤去は、consumer所有移行の残件である。
+Sentence annotation hostは、構造検査済みSentenceの子順からDoc断片の表示出現を事前収集する。
+Rubyの読み・Annoの注釈と共有nodeの反復を含め、出現順に文書namespaceへ登録する。
+同じembedのDoc意味モデルは不変の共有値として保持し、描画結果と由来は表示出現ごとに記録する。
+型付きSentenceを直接渡す`render_syntax`も、文書namespaceの準備前にSentenceの構造・source境界を検査し、同じ累積Budgetと深さ上限を適用する。
+各Doc断片内のInlineMathも既存のMath出力へ接続し、Sentence全体の合成後にHTML参照を検査する。
+未解決参照は元sourceの診断を返し、member間の重複定義は両方の文書・nodeを保持したエラーを返す。
+このnamespaceは一つのSentence表示に属する。外側のArticle全体とのnamespace共有、およびDocの旧Sentence所有の撤去はconsumer所有移行の残件である。
 
 ## 注釈と移行完了条件
 
