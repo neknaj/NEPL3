@@ -5,6 +5,98 @@ use nepl3_sentence_core::model::Kind;
 use nepl3_wire::foundation::FoundationCodec;
 
 #[test]
+fn composed_doc_namespace_keeps_fragment_source_identity() -> Result<(), String> {
+    use nepl3_doc_core::labels::namespace::{self, MemberId};
+    let compiled = compiled()?;
+    for native in [false, true] {
+        let mut documents = Vec::new();
+        for (name, source) in [
+            ("reference-fragment", "ref target text \"参照\""),
+            ("definition-fragment", "anchor target text \"定義\""),
+        ] {
+            with_named_input(
+                native,
+                &compiled,
+                source,
+                name,
+                "Inline",
+                |tree, profile, b, a| {
+                    let registry = profile.registry();
+                    let input = tree
+                        .tree()
+                        .bundle
+                        .validate_with_sources(registry, b, a)
+                        .map_err(err)?;
+                    let store = SourceStore::default();
+                    let mut admission = SourceAdmission::default();
+                    let mut codec =
+                        FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+                    let document = lower::document(
+                        &input,
+                        &compiled.doc.package.schema,
+                        Category::Inline,
+                        registry,
+                        b,
+                        &mut codec,
+                    )
+                    .map_err(err)?;
+                    // Inspect while the exact profile registry/source proof is available.
+                    namespace::inspect(&document, registry, b, codec.source_admission())
+                        .map_err(err)?;
+                    documents.push(document);
+                    Ok(())
+                },
+            )?;
+        }
+        with_input_route(
+            native,
+            &compiled,
+            "text \"context\"",
+            "Inline",
+            |_, profile, b, a| {
+                let inputs = documents
+                    .iter()
+                    .map(|document| {
+                        namespace::inspect(document, profile.registry(), b, a).map_err(err)
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                let members: Vec<_> = inputs.iter().collect();
+                let checked = namespace::resolve(&members, b).map_err(err)?;
+                let [reference] = checked.references() else {
+                    return Err("one reference".into());
+                };
+                assert_eq!(reference.reference.member, MemberId(0));
+                let target = &checked.definitions()[reference.target.0 as usize];
+                assert_eq!(target.member, MemberId(1));
+                let from = reference
+                    .reference
+                    .site
+                    .selection
+                    .ok_or("reference source")?;
+                let to = target.site.selection.ok_or("declaration source")?;
+                assert_eq!((from.start(), from.end()), (4, 10));
+                assert_eq!((to.start(), to.end()), (7, 13));
+                assert_eq!(
+                    from.snapshot_ref().digest,
+                    Digest::of("ref target text \"参照\"".as_bytes())
+                );
+                assert_eq!(
+                    to.snapshot_ref().digest,
+                    Digest::of("anchor target text \"定義\"".as_bytes())
+                );
+                assert_ne!(from.snapshot_ref().digest, to.snapshot_ref().digest);
+                assert!(core::ptr::eq(
+                    checked.document(MemberId(0)).ok_or("reference owner")?,
+                    &documents[0]
+                ));
+                Ok(())
+            },
+        )?;
+    }
+    Ok(())
+}
+
+#[test]
 fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(), String> {
     use crate::doc::annotations::{Error, SentenceAnnotationRenderer, document};
     enum Expected {

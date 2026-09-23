@@ -311,7 +311,11 @@ hostはDoc内のInlineMathを選択したMath出力へ接続し、その注釈�
 未解決labelはsource付き診断、link・assetは依存要求として返す。未選択のguest操作は明示的に拒否する。
 複数fragmentのHTML IDが衝突した場合は合成を拒否し、停止時は部分HTMLを成功結果として返さない。
 guestのHTMLもDoc出力の深さ上限256と、呼出元の累積Budgetに従う。
-文書全体の参照解決とDocの旧Sentence所有の撤去は、consumer所有移行の残件である。
+文書namespaceの名前解決は`labels::namespace`が担当する。hostは構造検査済みのArticle・Sentence・Inline断片を、表示出現順のmember列として明示する。
+検査結果は各定義・参照のmember、Doc node、元source位置を保持し、選択した全memberの定義を収集してから前方参照を解決する。
+同じ定義を持つmemberの複数出現とmember間の名前重複を拒否する。未選択の断片やforeign closure内部の定義は自動導入しない。
+名前索引は宣言順のidentityを保持し、比較・確保を共通Budgetへ計上する。名前解決のproofは選択した不変のmember列へ束縛する。
+このproofとHTML準備・表示の接続、およびDocの旧Sentence所有の撤去は、consumer所有移行の残件である。
 
 ## 注釈と移行完了条件
 

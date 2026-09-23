@@ -12,6 +12,7 @@ use nepl3_core::{
 };
 mod diagnostic;
 mod index;
+pub mod namespace;
 mod occurrences;
 #[cfg(test)]
 mod tests;
@@ -183,6 +184,26 @@ fn collect<'a>(
     root: u64,
     b: &mut Budget,
 ) -> Result<CheckedLabels<'a>, LabelError<'a>> {
+    let (definitions, unresolved) = collect_sites(document, order, root, b)?;
+    let names = index::build(&definitions, b)?;
+    let mut references = Vec::new();
+    for reference in unresolved {
+        let target = index::find(&names, &definitions, reference.name, b)?;
+        let target = target.ok_or(LabelError::Unresolved { reference })?;
+        push(&mut references, ResolvedLabel { reference, target }, b)?;
+    }
+    Ok(CheckedLabels {
+        document,
+        definitions,
+        references,
+    })
+}
+fn collect_sites<'a>(
+    document: &'a DocumentSyntax,
+    order: &[usize],
+    root: u64,
+    b: &mut Budget,
+) -> Result<(Vec<LabelSite<'a>>, Vec<LabelSite<'a>>), LabelError<'a>> {
     occurrences::check(document, order, root, b)?;
     let mut definitions: Vec<LabelSite<'a>> = Vec::new();
     let mut unresolved = Vec::new();
@@ -221,16 +242,5 @@ fn collect<'a>(
         b.charge(Resource::Work, next as u64)?;
         pending[start..].reverse();
     }
-    let names = index::build(&definitions, b)?;
-    let mut references = Vec::new();
-    for reference in unresolved {
-        let target = index::find(&names, &definitions, reference.name, b)?;
-        let target = target.ok_or(LabelError::Unresolved { reference })?;
-        push(&mut references, ResolvedLabel { reference, target }, b)?;
-    }
-    Ok(CheckedLabels {
-        document,
-        definitions,
-        references,
-    })
+    Ok((definitions, unresolved))
 }
