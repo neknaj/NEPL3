@@ -4,11 +4,7 @@ use nepl3_doc_core::print::{self, PrintMode, PrintOutcome, PrintRequest};
 use entry::entry;
 #[path = "print/entry.rs"]
 mod entry;
-use nepl3_doc_core::{
-    check::Category,
-    lower,
-    model::*,
-};
+use nepl3_doc_core::{check::Category, lower, model::*};
 
 #[test]
 fn paragraph_edit_uses_model_span_and_preserves_surrounding_source() -> Result<(), String> {
