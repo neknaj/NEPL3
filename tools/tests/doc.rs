@@ -18,8 +18,6 @@ mod input;
 mod labels;
 #[path = "doc/math.rs"]
 mod math;
-#[path = "doc/mixed.rs"]
-mod mixed;
 #[path = "doc/pages.rs"]
 mod pages;
 #[path = "doc/phases.rs"]

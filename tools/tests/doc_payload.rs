@@ -688,3 +688,116 @@ fn doc_guest_retains_syntax_until_selected_sentence_meaning_check() -> Result<()
         Ok(())
     })
 }
+
+#[test]
+fn literal_and_prefix_share_one_lower_with_source_and_local_view_retention() -> Result<(), String> {
+    let compiled = compiled()?;
+    let mixed = r#"article en sentence "Title" body cons paragraph cons sentence "Before [base/reading]" cons sentence sentence cons text "after" nil nil nil"#;
+    let prefix = r#"article en sentence sentence cons text "Title" nil body cons paragraph cons sentence sentence cons text "Before " cons ruby text "base" text "reading" nil cons sentence sentence cons text "after" nil nil nil"#;
+    let mut values = Vec::new();
+    for source in [mixed, prefix] {
+        values.push(nepl3_tools::doc::source::with_input(
+            &compiled,
+            source,
+            "Article",
+            |tree, profile, b, a| {
+                let raw = &tree.tree().bundle;
+                let checked = raw
+                    .validate_with_sources(profile.registry(), b, a)
+                    .map_err(err)?;
+                let empty = SourceStore::default();
+                let mut operation = budget();
+                let mut admission = SourceAdmission::default();
+                let mut codec = FoundationCodec::new(profile.registry(), &empty, &mut admission)
+                    .map_err(err)?;
+                let doc = lower::document(
+                    &checked,
+                    &compiled.doc.package.schema,
+                    Category::Article,
+                    profile.registry(),
+                    &mut operation,
+                    &mut codec,
+                )
+                .map_err(err)?;
+                assert_eq!(&doc.origins[..raw.origins.len()], raw.origins.as_slice());
+                // Every original token view remains in its own local ID space;
+                // decoding its payload must not publish a duplicate owner.
+                assert_eq!(doc.views.len(), raw.tokens.len());
+                assert_eq!(
+                    operation.usage().source_bytes,
+                    raw.sources
+                        .iter()
+                        .map(|s| s.text().len() as u64)
+                        .sum::<u64>()
+                );
+                let value = nepl3_doc_core::portable::to_value(
+                    &doc,
+                    profile.registry(),
+                    &mut codec,
+                    &mut operation,
+                )
+                .map_err(err)?;
+                let bytes = nepl3_wire::encode(&value, &mut operation).map_err(err)?;
+                let mut fresh = SourceAdmission::default();
+                let mut receiver =
+                    FoundationCodec::new(profile.registry(), &empty, &mut fresh).map_err(err)?;
+                let received = nepl3_doc_core::portable::from_value(
+                    &nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?,
+                    profile.registry(),
+                    &mut receiver,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                assert_eq!(received.value.nodes, doc.value.nodes);
+                assert_eq!(received.origins, doc.origins);
+                assert_eq!(received.views, doc.views);
+                assert_eq!(received.source_maps, doc.source_maps);
+                assert_eq!(
+                    nepl3_wire::encode(
+                        &nepl3_doc_core::portable::to_value(
+                            &received,
+                            profile.registry(),
+                            &mut receiver,
+                            &mut budget()
+                        )
+                        .map_err(err)?,
+                        &mut budget()
+                    )
+                    .map_err(err)?,
+                    bytes
+                );
+                let mut sentences = Vec::new();
+                for embed in &received.value.embeds {
+                    let sentence = nepl3_suite::adapters::document::sentence::lower(
+                        embed,
+                        embed.schema(),
+                        &[],
+                        profile.registry(),
+                        &mut receiver,
+                        &mut budget(),
+                    )
+                    .map_err(err)?;
+                    sentences.push(sentence.value);
+                }
+                Ok((doc.value, sentences))
+            },
+        )?);
+    }
+    assert_eq!(values[0].0.root, values[1].0.root);
+    assert_eq!(
+        values[0]
+            .0
+            .nodes
+            .iter()
+            .map(|n| &n.kind)
+            .collect::<Vec<_>>(),
+        values[1]
+            .0
+            .nodes
+            .iter()
+            .map(|n| &n.kind)
+            .collect::<Vec<_>>()
+    );
+    assert_eq!(values[0].1, values[1].1);
+    Ok(())
+}
