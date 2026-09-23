@@ -213,25 +213,25 @@ impl Session<'_> {
         let context_callbacks: [&scheduler::Context<'_>; 2] = [&mini_context, &frame_context];
         let mini_invoke = |call: &Invoke, context: Digest, _: &SchemaRegistry, b: &mut Budget| {
             if !session_sources(call, &self.root, b)? {
-                return Ok(invalid());
+                return Ok(invalid(b));
             }
             invoke(program, call, context, false, b)
         };
         let frame_invoke = |call: &Invoke, context: Digest, _: &SchemaRegistry, b: &mut Budget| {
             if !session_sources(call, &self.root, b)? {
-                return Ok(invalid());
+                return Ok(invalid(b));
             }
             invoke(program, call, context, true, b)
         };
         let mini_resume = |call: &Invoke, reply: &Resume, _: &SchemaRegistry, b: &mut Budget| {
             if !session_sources(call, &self.root, b)? {
-                return Ok(invalid());
+                return Ok(invalid(b));
             }
             resume_value(program, call, reply, false, b)
         };
         let frame_resume = |call: &Invoke, reply: &Resume, _: &SchemaRegistry, b: &mut Budget| {
             if !session_sources(call, &self.root, b)? {
-                return Ok(invalid());
+                return Ok(invalid(b));
             }
             resume_value(program, call, reply, true, b)
         };

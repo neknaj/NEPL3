@@ -85,11 +85,13 @@ pub fn child(text: &str) -> Result<(), String> {
                 let OperationReply::Await {
                     continuation,
                     calls,
-                    ..
+                    report,
                 } = reply
                 else {
                     return Err("expected root Await".into());
                 };
+                assert_eq!(report.usage, execution.usage());
+                assert!(report.usage.work > 0);
                 lifetimes
                     .suspend(
                         request.request_id,
@@ -136,9 +138,12 @@ pub fn child(text: &str) -> Result<(), String> {
                                 &mut transport,
                             )
                             .map_err(error)?;
-                        if !matches!(result, OperationReply::Result(_)) {
+                        let OperationReply::Result(OperationResult::Complete { report, .. }) =
+                            result
+                        else {
                             return Err("expected terminal root".into());
-                        }
+                        };
+                        assert_eq!(report.usage, execution.usage());
                         lifetimes
                             .finish(request.request_id, validation)
                             .map_err(error)?;
@@ -246,9 +251,11 @@ pub fn exchange(
                         validation,
                     )
                     .map_err(error)?;
-                let OperationReply::Await { calls, .. } = &reply else {
+                let OperationReply::Await { calls, report, .. } = &reply else {
                     return Err("expected remote root Await".into());
                 };
+                let remote_await_usage = report.usage;
+                assert!(remote_await_usage.work > 0);
                 let mut contexts = Vec::new();
                 for call in calls {
                     let registration = registrations
@@ -371,6 +378,7 @@ pub fn exchange(
                             &mut transport,
                         )
                         .map_err(error)?;
+                    let local_usage = execution.usage();
                     let reply = connection
                         .receive_reply(
                             root,
@@ -386,6 +394,12 @@ pub fn exchange(
                     let OperationReply::Result(result) = reply else {
                         return Err("expected remote terminal result".into());
                     };
+                    assert_eq!(execution.usage(), local_usage);
+                    let OperationResult::Complete { report, .. } = &result else {
+                        return Err("Complete required".into());
+                    };
+                    assert!(report.usage.work > remote_await_usage.work);
+                    assert!(report.usage.allocation_units >= remote_await_usage.allocation_units);
                     let actual = complete_value(&result)?;
                     assert_eq!(actual, complete_value(&native)?);
                     let [NdfValue::Integer(value)] = actual.fields.as_slice() else {

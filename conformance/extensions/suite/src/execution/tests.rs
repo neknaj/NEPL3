@@ -62,6 +62,89 @@ fn with_program(
 }
 
 #[test]
+fn replies_report_cumulative_execution_usage_across_await_and_resume() -> Result<(), String> {
+    with_program(
+        "add framed frame neg 7 2",
+        |program, sources, runtime, registry| {
+            let mut execution = budget();
+            execution.charge(Resource::Work, 123).map_err(error)?;
+            let mut reports = Vec::new();
+            let outcome = runtime
+                .run(
+                    program,
+                    sources,
+                    registry,
+                    &mut execution,
+                    &mut budget(),
+                    |id, report| reports.push((id, report.usage)),
+                    |_| {},
+                )
+                .map_err(error)?;
+            let OperationResult::Complete { report, .. } = outcome else {
+                return Err("Complete required".into());
+            };
+            assert_eq!(report.usage, execution.usage());
+            assert_eq!(
+                reports.iter().map(|(id, _)| *id).collect::<Vec<_>>(),
+                [6, 4, 3, 2]
+            );
+            let mut previous = 123;
+            for (_, usage) in &reports {
+                assert!(usage.work > previous);
+                assert!(usage.allocation_units > 0);
+                previous = usage.work;
+            }
+            assert!(report.usage.work > previous);
+
+            let session = runtime
+                .prepare(program, sources, registry, budget().limits(), &mut budget())
+                .map_err(error)?;
+            session
+                .with_registrations(
+                    &mut budget(),
+                    |registrations, validation| -> Result<(), String> {
+                        let mut subset = session.root().clone();
+                        subset.sources.clear();
+                        let registration = &registrations[0];
+                        registration
+                            .grants
+                            .admit(&subset, validation)
+                            .map_err(error)?;
+                        let context = (registration.context)(
+                            &subset,
+                            registration.invoke.implementation,
+                            validation,
+                        )
+                        .map_err(error)?;
+                        let mut execution = budget();
+                        execution.charge(Resource::Work, 77).map_err(error)?;
+                        let outcome = suspending::invoke(
+                            &registration.invoke,
+                            registration.invoke.implementation,
+                            &subset,
+                            context,
+                            registry,
+                            sources,
+                            &mut execution,
+                            validation,
+                        )
+                        .map_err(error)?;
+                        let OperationReply::Result(OperationResult::Invalid { report, .. }) =
+                            outcome
+                        else {
+                            return Err("Invalid required".into());
+                        };
+                        assert_eq!(report.usage, execution.usage());
+                        assert!(report.usage.work > 77);
+                        Ok(())
+                    },
+                )
+                .map_err(error)?
+        },
+    )
+}
+
+#[test]
 fn session_registrations_bind_environment_and_full_source_closure() -> Result<(), String> {
     with_program("neg 7", |program, sources, runtime, registry| {
         let session = runtime
@@ -568,6 +651,7 @@ fn stopped_guest_arithmetic_report_keeps_its_source_and_request() -> Result<(), 
             };
             assert_eq!(report.usage, execution.usage());
             assert_eq!(*reason, StopReason::WorkLimit);
+            assert_eq!(report.usage, execution.usage());
             assert!(partial.is_none());
             assert_eq!(report.diagnostics.len(), 1);
             let diagnostic = &report.diagnostics[0];

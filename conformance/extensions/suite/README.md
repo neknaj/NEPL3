@@ -83,6 +83,12 @@ provider dispatch. The host retains request lifetimes and cumulative execution
 budgets. Grants require the bound plan identity; callbacks require the complete
 ordered source closure before returning a continuation with its cached context.
 Native Invoke and Resume callbacks borrow this immutable plan.
+Every returned Complete, Invalid, Stopped and Await records the cumulative Usage
+of its execution Budget, including charges made before entering the callback.
+Native scheduling shares one Budget across the plan. In the process fixture,
+each host retains its own execution Budget; remote reports preserve that host's
+local cumulative Usage. Receiving a report does not charge the parent's execution
+Budget. These per-host reports do not establish a combined process-wide limit.
 The request environment carries a `PlanIdentity` containing the digest of the
 canonical NDF plan. Child requests copy this fixed-size identity and select one
 occurrence; they share the plan through the callback's Rust lifetime. Plan encoding,
