@@ -87,7 +87,9 @@ fn resume_preparation_retains_results_at_every_work_and_allocation_stop() -> Res
             }
             let mut cancelled = vec![];
             let result = run(&mut Budget::new(limits), &mut cancelled);
-            let failure = result.expect_err("insufficient validation budget");
+            let Err(failure) = result else {
+                return Err("insufficient validation budget must stop".into());
+            };
             assert!(resumed.get() <= 1);
             // Finished children receive no cancellation. If both are finished
             // and Resume has not begun, their complete outcomes remain owned
@@ -129,7 +131,9 @@ fn resume_preparation_retains_results_at_every_work_and_allocation_stop() -> Res
     assert!(preparation_stops.iter().all(|count| *count > 0));
     fail_callback.set(true);
     let mut cancelled = vec![];
-    let failure = run(&mut budget(), &mut cancelled).expect_err("callback stop");
+    let Err(failure) = run(&mut budget(), &mut cancelled) else {
+        return Err("callback must stop".into());
+    };
     assert_eq!(resumed.get(), 1);
     assert_eq!(failure.accepted_results().count(), 0);
     assert_eq!(cancelled, [root.request_id]);
