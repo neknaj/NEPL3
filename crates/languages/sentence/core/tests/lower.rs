@@ -1,5 +1,5 @@
 use nepl3_core::{
-    budget::{Budget, Limits, StopReason},
+    budget::{Budget, Limits, Resource, StopReason},
     origin::{Origin, OriginId},
     schema::*,
     source::SourceAdmission,
@@ -29,6 +29,20 @@ fn fixture() -> Result<(SchemaRegistry, SchemaRef, SyntaxBundle), String> {
         revision: 1,
         operations: vec![],
         types: vec![
+            NamedType {
+                name: "Form:Guest".into(),
+                constraints: vec![],
+                shape: TypeShape::Record {
+                    fields: vec![FieldDescriptor {
+                        name: "syntax".into(),
+                        ty: TypeDescriptor::Named(TypeRef {
+                            package: "nepl3.foundation".into(),
+                            revision: 1,
+                            name: "ForeignSyntax".into(),
+                        }),
+                    }],
+                },
+            },
             NamedType {
                 name: "Leaf:SentenceLiteral".into(),
                 constraints: vec![],
@@ -272,7 +286,7 @@ fn literal_consumer_matches_owner_token_and_returns_typed_stops() -> Result<(), 
         tokens: vec![Token {
             kind: KindRef {
                 schema: surface.clone(),
-                local_kind: 0, // first descriptor type in the explicit fixture
+                local_kind: 1, // SentenceLiteral follows the foreign form in this fixture
             },
             head: read.head.clone(),
             payload,
@@ -335,5 +349,192 @@ fn literal_consumer_matches_owner_token_and_returns_typed_stops() -> Result<(), 
         lower::literal::sentence(&checked, &surface, &r, &mut codec, &mut b()).err(),
         Some(lower::literal::Error::TokenMismatch(NodeRef(0)))
     );
+    Ok(())
+}
+
+#[test]
+fn selected_foreign_inline_retains_closure_and_checks_identity() -> Result<(), String> {
+    let (r, surface, mut bundle) = fixture()?;
+    let environment = Environment {
+        bindings: vec![],
+        resources: vec![],
+    };
+    let digest = nepl3_wire::environment::environment_digest(
+        &environment,
+        r.selected("nepl3.foundation", 1).ok_or("foundation")?,
+        &r,
+        &mut b(),
+    )
+    .map_err(err)?;
+    let guest = ForeignSyntax {
+        schema: surface.clone(),
+        category: "Inline".into(),
+        root: NodeRef(0),
+        bundle: SyntaxBundle {
+            nodes: vec![bundle.nodes[0].clone()],
+            root: NodeRef(0),
+            origins: bundle.origins.clone(),
+            sources: vec![],
+            tokens: vec![],
+            environments: vec![],
+            source_maps: vec![],
+        },
+        environment: EnvironmentRef { id: 7, digest },
+    };
+    bundle.nodes.truncate(1);
+    bundle.root = NodeRef(0);
+    bundle.nodes[0].kind = "Form:Guest".into();
+    bundle.nodes[0].fields = vec![FieldValue::Foreign(Box::new(guest.clone()))];
+    bundle.environments.push(EnvironmentEntry {
+        id: 7,
+        digest,
+        value: environment,
+    });
+    let checked = bundle.validate(&r, &mut b()).map_err(err)?;
+    let selection = |schema| lower::ForeignInlineForm {
+        kind: "Form:Guest",
+        guest_schema: schema,
+        guest_category: "Inline",
+    };
+    assert!(matches!(
+        lower::prefix(
+            &checked,
+            &surface,
+            &r,
+            &mut b(),
+            &mut SourceAdmission::default()
+        ),
+        Err(lower::Error::Unsupported(NodeRef(0)))
+    ));
+    let mut measured = b();
+    let result = lower::prefix_with_foreign(
+        &checked,
+        &surface,
+        &[selection(&surface)],
+        &r,
+        &mut measured,
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    assert_eq!(result.value.root, Root::Inline(InlineRef(0)));
+    assert_eq!(
+        result.value.nodes,
+        vec![Kind::ForeignInline {
+            syntax: EmbedRef(0)
+        }]
+    );
+    assert_eq!(result.syntax_to_meaning, vec![Some(0)]);
+    assert_eq!(result.value.embeds.len(), 1);
+    assert_eq!(result.value.embeds[0].syntax, guest);
+    assert_eq!(
+        result.value.embeds[0].owner_environment,
+        bundle.environments[0]
+    );
+    let empty = nepl3_core::source::SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec =
+        nepl3_wire::foundation::FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let syntax = lower::presentation::sentence_with_foreign(
+        &checked,
+        &surface,
+        &[selection(&surface)],
+        &r,
+        &mut codec,
+        &mut b(),
+    )
+    .map_err(err)?;
+    assert_eq!(syntax.value, result.value);
+    assert_eq!(syntax.locations[0].origin, OriginId(0));
+    assert_eq!(syntax.origins, bundle.origins);
+    let mut wrong = surface.clone();
+    wrong.revision += 1;
+    assert!(matches!(
+        lower::prefix_with_foreign(
+            &checked,
+            &surface,
+            &[selection(&wrong)],
+            &r,
+            &mut b(),
+            &mut SourceAdmission::default()
+        ),
+        Err(lower::Error::Operand {
+            node: NodeRef(0),
+            field: 0
+        })
+    ));
+    assert!(matches!(
+        lower::prefix_with_foreign(
+            &checked,
+            &surface,
+            &[lower::ForeignInlineForm {
+                kind: "Form:Guest",
+                guest_schema: &surface,
+                guest_category: "Other"
+            }],
+            &r,
+            &mut b(),
+            &mut SourceAdmission::default()
+        ),
+        Err(lower::Error::Operand {
+            node: NodeRef(0),
+            field: 0
+        })
+    ));
+    assert!(matches!(
+        lower::prefix_with_foreign(
+            &checked,
+            &surface,
+            &[selection(&surface), selection(&surface)],
+            &r,
+            &mut b(),
+            &mut SourceAdmission::default()
+        ),
+        Err(lower::Error::Unsupported(NodeRef(0)))
+    ));
+    for (resource, amount, reason) in [
+        (Resource::Work, measured.usage().work, StopReason::WorkLimit),
+        (
+            Resource::AllocationUnits,
+            measured.usage().allocation_units,
+            StopReason::AllocationLimit,
+        ),
+    ] {
+        let mut limits = b().limits();
+        match resource {
+            Resource::Work => limits.work = amount - 1,
+            _ => limits.allocation_units = amount - 1,
+        }
+        assert_eq!(
+            lower::prefix_with_foreign(
+                &checked,
+                &surface,
+                &[selection(&surface)],
+                &r,
+                &mut Budget::new(limits),
+                &mut SourceAdmission::default()
+            )
+            .err(),
+            Some(lower::Error::Stopped(reason))
+        );
+    }
+    // A host selection cannot replace the meaning of a standard constructor.
+    let mut standard = bundle.clone();
+    standard.nodes[0].kind = "Form:Emphasis".into();
+    let checked = standard.validate(&r, &mut b()).map_err(err)?;
+    assert!(matches!(
+        lower::prefix_with_foreign(
+            &checked,
+            &surface,
+            &[lower::ForeignInlineForm {
+                kind: "Form:Emphasis",
+                guest_schema: &surface,
+                guest_category: "Inline"
+            }],
+            &r,
+            &mut b(),
+            &mut SourceAdmission::default()
+        ),
+        Err(lower::Error::Unsupported(NodeRef(0)))
+    ));
     Ok(())
 }

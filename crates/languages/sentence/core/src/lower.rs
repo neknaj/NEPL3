@@ -8,7 +8,10 @@ use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::SchemaRegistry,
     source::SourceAdmission,
-    syntax::{FieldValue, NodeRef, SyntaxBundle, SyntaxError, SyntaxNode, ValidatedSyntaxBundle},
+    syntax::{
+        FieldValue, ForeignClosure, NodeRef, SyntaxBundle, SyntaxError, SyntaxNode,
+        ValidatedSyntaxBundle,
+    },
     value::{NdfValue, SchemaRef},
 };
 
@@ -46,6 +49,14 @@ impl From<check::Error> for Error {
 pub struct Projection {
     pub value: SentenceValue,
     pub syntax_to_meaning: Vec<Option<u64>>,
+}
+/// Host-selected one-field Inline form in the selected Sentence surface.
+/// The foreign field must match the complete guest schema identity and category.
+/// This selection captures syntax; it grants no permission to execute a guest.
+pub struct ForeignInlineForm<'a> {
+    pub kind: &'a str,
+    pub guest_schema: &'a SchemaRef,
+    pub guest_category: &'a str,
 }
 fn push<T>(v: &mut Vec<T>, x: T, b: &mut Budget) -> Result<(), Error> {
     b.charge(Resource::AllocationUnits, core::mem::size_of::<T>() as u64)?;
@@ -193,6 +204,20 @@ pub fn prefix(
     b: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> Result<Projection, Error> {
+    prefix_with_foreign(input, surface, &[], registry, b, admission)
+}
+
+/// Lower explicitly selected foreign-inline forms together with the standard
+/// constructors. Each selected form has exactly one foreign field. Unselected
+/// forms, ambiguous selections and different guest identities are rejected.
+pub fn prefix_with_foreign(
+    input: &ValidatedSyntaxBundle<'_>,
+    surface: &SchemaRef,
+    foreign_forms: &[ForeignInlineForm<'_>],
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<Projection, Error> {
     let checked = input
         .bundle()
         .validate_with_sources(registry, b, admission)?;
@@ -209,6 +234,7 @@ pub fn prefix(
         nodes: Vec::new(),
     };
     let mut stack = Vec::new();
+    let mut embeds = Vec::new();
     push(&mut stack, (bundle.root, 0usize), b)?;
     while let Some((id, field)) = stack.last_mut() {
         b.charge(Resource::Work, 1)?;
@@ -223,6 +249,61 @@ pub fn prefix(
         )?;
         if &n.schema != surface {
             return Err(Error::Unsupported(*id));
+        }
+        if let [FieldValue::Foreign(foreign)] = n.fields.as_slice() {
+            b.charge(Resource::Work, n.kind.len() as u64 + 1)?;
+            if !n.kind.starts_with("Form:")
+                || matches!(
+                    n.kind.as_str(),
+                    "Form:Sentence"
+                        | "Form:Text"
+                        | "Form:Concat"
+                        | "Form:Ruby"
+                        | "Form:InlineAnno"
+                        | "Form:Code"
+                        | "Form:Emphasis"
+                        | "Form:Strong"
+                        | "Form:Break"
+                        | "Form:ExternalLink"
+                )
+            {
+                return Err(Error::Unsupported(*id));
+            }
+            let mut selected = None;
+            for form in foreign_forms {
+                b.charge(Resource::Work, (form.kind.len() + n.kind.len()) as u64 + 1)?;
+                if form.kind == n.kind {
+                    if selected.is_some() {
+                        return Err(Error::Unsupported(*id));
+                    }
+                    selected = Some(form);
+                }
+            }
+            let form = selected.ok_or(Error::Unsupported(*id))?;
+            b.charge(
+                Resource::Work,
+                (form.guest_schema.package.len()
+                    + foreign.schema.package.len()
+                    + form.guest_category.len()
+                    + foreign.category.len()) as u64
+                    + 64,
+            )?;
+            if form.guest_schema != &foreign.schema || form.guest_category != foreign.category {
+                return Err(Error::Operand {
+                    node: *id,
+                    field: 0,
+                });
+            }
+            let closure = ForeignClosure::capture(foreign, &checked, registry, b, admission)?;
+            let embed = EmbedRef(embeds.len() as u64);
+            push(&mut embeds, closure, b)?;
+            let index = a.nodes.len() as u64;
+            b.charge(Resource::Nodes, 1)?;
+            push(&mut a.nodes, Kind::ForeignInline { syntax: embed }, b)?;
+            a.mapping[id.0 as usize] = Some(index);
+            done[id.0 as usize] = true;
+            stack.pop();
+            continue;
         }
         if let Some(value) = n.fields.get(*field) {
             let FieldValue::Child(c) = value else {
@@ -255,7 +336,7 @@ pub fn prefix(
     let value = SentenceValue {
         root,
         nodes: a.nodes,
-        embeds: Vec::new(),
+        embeds,
     };
     value.validate_shape(b)?;
     Ok(Projection {

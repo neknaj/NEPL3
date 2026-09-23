@@ -149,6 +149,13 @@ prefix parse/check/printは別の受入である。
 foreign-inlineは登録されたadapterが別の具体formで導入する。全guestを列挙するformや、
 任意の文字列を未検査foreign値へ変換する入口は標準Sentence packageへ追加しない。
 
+`lower::prefix_with_foreign`は、hostが選択した追加Inline formを受け取る。
+選択にはformのkind、guestの完全なschema identity、categoryを指定する。
+追加formは単一のforeign fieldを持ち、照合後にForeignClosureを保持する。
+標準constructorの上書き、重複した選択、未選択のform、guest identityとcategoryの不一致を拒否する。
+`lower::presentation::sentence_with_foreign`は同じ選択を使い、意味nodeとSource/Origin/Viewの対応を保持する。
+この変換が行う操作は構造の取込みであり、guestの実行は別途認可された操作が担当する。
+
 SentenceのCode modeは空白（space/tab/CR/LF）だけをskipする。独立comment・annotationや
 directiveをskipに入れない。旧Docのcomment readerをSentenceへ再利用せず、旧`#`入力、
 arity不足、未消費の末尾入力を成功文書にしない。既存Docの旧comment撤去は別の移行境界である。
