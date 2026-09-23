@@ -1,8 +1,5 @@
 use super::*;
-use nepl3_core::{
-    origin::{Origin, OriginId},
-    value::TypedValue,
-};
+use nepl3_core::origin::{Origin, OriginId};
 use nepl3_sentence_core::{
     model as sentence,
     syntax::{NodeLocation, SentenceSyntax},
@@ -57,16 +54,97 @@ fn typed_sentence_value_prints_inside_a_source_less_list() -> Result<(), String>
         let mut admission = SourceAdmission::default();
         let mut codec =
             FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
-        let raw = nepl3_sentence_core::portable::syntax::to_value(
+        let mut complete = budget();
+        let embed = nepl3_suite::adapters::document::sentence::embed(
             &content,
+            profile.registry(),
+            &mut codec,
+            &mut complete,
+        )
+        .map_err(err)?;
+        assert_eq!(embed.kind, EmbedKind::Sentence);
+        // A minimal Inline has its own role and preserves presentation metadata.
+        let mut inline = content.clone();
+        inline.value.root = sentence::Root::Inline(I(0));
+        inline.value.nodes.truncate(1);
+        inline.locations.truncate(1);
+        let slot = nepl3_suite::adapters::document::sentence::embed(
+            &inline,
             profile.registry(),
             &mut codec,
             &mut budget(),
         )
         .map_err(err)?;
-        let NdfValue::Record(record) = &raw else {
-            return Err("SentenceSyntax record".into());
-        };
+        assert_eq!(slot.kind, EmbedKind::SentenceInline);
+        assert_eq!(
+            nepl3_suite::adapters::document::sentence::lower(
+                &slot,
+                slot.schema(),
+                &[],
+                profile.registry(),
+                &mut codec,
+                &mut budget(),
+            )
+            .map_err(err)?,
+            inline
+        );
+        for invalid in [
+            {
+                let mut v = inline.clone();
+                v.value.root = sentence::Root::Sentence(sentence::SentenceRef(0));
+                v
+            },
+            {
+                let mut v = inline.clone();
+                v.locations.clear();
+                v
+            },
+        ] {
+            assert!(matches!(
+                nepl3_suite::adapters::document::sentence::embed(
+                    &invalid,
+                    profile.registry(),
+                    &mut codec,
+                    &mut budget(),
+                ),
+                Err(nepl3_suite::adapters::document::sentence::Error::Value(_))
+            ));
+        }
+        for (limits, reason) in [
+            (
+                Limits {
+                    work: complete.usage().work - 1,
+                    ..budget().limits()
+                },
+                StopReason::WorkLimit,
+            ),
+            (
+                Limits {
+                    allocation_units: complete.usage().allocation_units - 1,
+                    ..budget().limits()
+                },
+                StopReason::AllocationLimit,
+            ),
+        ] {
+            let mut limited = Budget::new(limits);
+            assert!(matches!(nepl3_suite::adapters::document::sentence::embed(
+                &content, profile.registry(), &mut codec, &mut limited,
+            ), Err(nepl3_suite::adapters::document::sentence::Error::Stopped(actual)) if actual == reason));
+            assert_eq!(limited.poll(), Err(reason));
+        }
+        let mut cancelled = budget();
+        cancelled.cancel();
+        assert!(matches!(
+            nepl3_suite::adapters::document::sentence::embed(
+                &content,
+                profile.registry(),
+                &mut codec,
+                &mut cancelled,
+            ),
+            Err(nepl3_suite::adapters::document::sentence::Error::Stopped(
+                StopReason::Cancelled
+            ))
+        ));
         let document = DocumentSyntax {
             value: DocValue {
                 root: DocRoot::Block(BlockRef(4)),
@@ -97,12 +175,7 @@ fn typed_sentence_value_prints_inside_a_source_less_list() -> Result<(), String>
                     origin: None,
                 })
                 .collect(),
-                embeds: vec![DocEmbed {
-                    kind: EmbedKind::Sentence,
-                    content: DocContent::Value {
-                        value: TypedValue::Record(record.clone()),
-                    },
-                }],
+                embeds: vec![embed],
             },
             sources: vec![],
             origins: vec![],

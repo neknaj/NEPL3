@@ -25,6 +25,39 @@ impl<E> From<StopReason> for Error<E> {
     }
 }
 
+/// Validate and store an independent Sentence presentation in a Doc slot.
+/// The root determines the slot role. Sources, locations and nested closures
+/// retain their Sentence ownership; no source text or positions are invented.
+/// Encoding and the owned record copy share the caller's resource budget.
+pub fn embed<C: FoundationValueCodec>(
+    input: &SentenceSyntax,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<DocEmbed, Error<C::Error>> {
+    budget.poll()?;
+    let result = (|| {
+        let encoded =
+            nepl3_sentence_core::portable::syntax::to_value(input, registry, codec, budget)
+                .map_err(Error::Value)?;
+        let NdfValue::Record(record) = &encoded else {
+            return Err(Error::Value(nepl3_sentence_core::portable::Error::Shape));
+        };
+        encoded.charge_clone(budget)?;
+        Ok(DocEmbed {
+            kind: match input.value.root {
+                Root::Sentence(_) => EmbedKind::Sentence,
+                Root::Inline(_) => EmbedKind::SentenceInline,
+            },
+            content: DocContent::Value {
+                value: TypedValue::Record(record.clone()),
+            },
+        })
+    })();
+    budget.poll()?;
+    result
+}
+
 /// The caller supplies the selected Sentence surface and foreign-inline forms.
 /// Its Budget depth is the owning Doc occurrence's depth. Closure validation,
 /// literal/prefix lowering and semantic root checks share that Budget. This

@@ -130,10 +130,7 @@ impl Builder {
         self.inline(Kind::Ruby { base, reading })
     }
     fn sentence(&mut self, inlines: Vec<SentenceInlineRef>) -> Result<SentenceRef> {
-        use nepl3_core::{
-            origin::{Origin, OriginId},
-            value::{NdfValue, TypedValue},
-        };
+        use nepl3_core::origin::{Origin, OriginId};
         let root = ContentRef(self.inlines.len() as u64);
         self.inlines.push(Kind::Sentence { inlines });
         let nodes = std::mem::take(&mut self.inlines);
@@ -163,26 +160,15 @@ impl Builder {
         let mut admission = SourceAdmission::default();
         let mut codec = FoundationCodec::new(&self.registry, &sources, &mut admission)
             .map_err(super::source::err)?;
-        let encoded = nepl3_sentence_core::portable::syntax::to_value(
+        let embed = nepl3_suite::adapters::document::sentence::embed(
             &syntax,
             &self.registry,
             &mut codec,
             &mut self.budget,
         )
         .map_err(super::source::err)?;
-        encoded
-            .charge_clone(&mut self.budget)
-            .map_err(super::source::err)?;
-        let NdfValue::Record(record) = &encoded else {
-            return Err("SentenceSyntax record".into());
-        };
         let reference = EmbedRef(self.embeds.len() as u64);
-        self.embeds.push(DocEmbed {
-            kind: EmbedKind::Sentence,
-            content: DocContent::Value {
-                value: TypedValue::Record(record.clone()),
-            },
-        });
+        self.embeds.push(embed);
         Ok(SentenceRef(
             self.node(DocKind::Sentence { syntax: reference }),
         ))
