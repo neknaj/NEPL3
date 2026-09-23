@@ -143,7 +143,9 @@ mod tests {
         check(files.root(), &inventory)?;
         bytes.push(b' ');
         files.write(path, &bytes)?;
-        let error = check(files.root(), &inventory).expect_err("one byte above bound");
+        let error = check(files.root(), &inventory)
+            .err()
+            .ok_or("one byte above bound was accepted")?;
         assert!(error.to_string().contains("exceeds 64 KiB"));
         for (pointer, value) in [
             ("/task_id", json!("T02")),
@@ -246,7 +248,8 @@ mod tests {
             files.json(&forbidden, &record)?;
             files.json("implementation-status.json", &json!({"tasks":[{"id":"T01","status":"in-progress","evidence":[forbidden]}],"acceptance":[]}))?;
             let error = check(files.root(), &BTreeSet::from([forbidden]))
-                .expect_err("executable/fixture/log filename must be rejected");
+                .err()
+                .ok_or("executable/fixture/log filename was accepted")?;
             assert!(error.to_string().contains("only typed JSON records"));
         }
         Ok(())

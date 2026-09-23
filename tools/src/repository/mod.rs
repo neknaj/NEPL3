@@ -178,7 +178,7 @@ mod tests {
                     &serde_json::json!({"tasks":[{"id":"T01","status":"in-progress","evidence":["conformance/results/new/run.py"]}],"acceptance":[]}),
                 )?,
             )?;
-            let error = check(&root).expect_err("source filename must be rejected");
+            let error = check(&root).err().ok_or("source filename was accepted")?;
             assert!(error.to_string().contains("only typed JSON records"));
             Ok(())
         })();

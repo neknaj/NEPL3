@@ -2,7 +2,7 @@ article ja "Foundation runtimeの[実装記録/じっそうきろく]"
 body
   cons paragraph
     cons "[最初/さいしょ]の[実装区切/じっそうくぎ]りはcore 45[件/けん]、reader 27[件/けん]、wire 18[件/けん]のproduction API[試験/しけん]を[独立実行/どくりつじっこう]し、[予算停止時/よさんていしじ]のreport[保持/ほじ]、[長/なが]いSourceIdの[割当前検査/わりあてまえけんさ]、Contextのsource[閉包/へいほう]・[同一性衝突/どういつせいしょうとつ]、typed requestのNDF[往復/おうふく]を[確認/かくにん]した。"
-    cons sentence cons text "コマンド・source/spec identity・target・" cons ruby text "検証範囲" text "けんしょうはんい" cons text "は " cons link external "https://github.com/neknaj/NEPL3/blob/fd8057199f2f32fb36455210df36e78015b77fab/conformance/results/foundation-slice/validation.json" none ruby text "固定記録" text "こていきろく" cons text " にある。" nil
+    cons sentence cons text "コマンド・source/spec identity・target・" cons ruby text "検証範囲" text "けんしょうはんい" cons text "は " cons link external "https://github.com/neknaj/NEPL3/blob/fd8057199f2f32fb36455210df36e78015b77fab/conformance/results/foundation-slice/validation.json" ruby text "固定記録" text "こていきろく" cons text " にある。" nil
     cons "この[記録/きろく]は[開発途中/かいはつとちゅう]のscope[付/つ]き[検証/けんしょう]で、task[完了/かんりょう]や[受入群全体/うけいれぐんぜんたい]のpassedを[示/しめ]さない。"
     nil
   cons paragraph
@@ -144,8 +144,8 @@ body
         cons "[独立/どくりつ]レビュー[担当/たんとう]も[元/もと]の[失敗/しっぱい]と[修正後/しゅうせいご]の3[試験/しけん]を[実行/じっこう]して[確認/かくにん]した。"
         nil
       cons paragraph
-        cons sentence cons text "コマンド・target・log・hash・source/spec・" cons ruby text "未検証範囲" text "みけんしょうはんい" cons text "は " cons link external "https://github.com/neknaj/NEPL3/blob/fd8057199f2f32fb36455210df36e78015b77fab/conformance/results/reader-builtins/validation.json" none concat cons text "builtin/tokenizerの" cons ruby text "統合記録" text "とうごうきろく" nil cons text " にある。" nil
-        cons sentence cons text "3 OS・WASI CIとsource artifactの" cons ruby text "確認結果" text "かくにんけっか" cons text "は " cons link external "https://github.com/neknaj/NEPL3/blob/fd8057199f2f32fb36455210df36e78015b77fab/conformance/results/foundation-slice/main-ci.json" none concat cons ruby text "過去" text "かこ" cons text "commitのCI" cons ruby text "記録" text "きろく" nil cons text " にある。" nil
+        cons sentence cons text "コマンド・target・log・hash・source/spec・" cons ruby text "未検証範囲" text "みけんしょうはんい" cons text "は " cons link external "https://github.com/neknaj/NEPL3/blob/fd8057199f2f32fb36455210df36e78015b77fab/conformance/results/reader-builtins/validation.json" concat cons text "builtin/tokenizerの" cons ruby text "統合記録" text "とうごうきろく" nil cons text " にある。" nil
+        cons sentence cons text "3 OS・WASI CIとsource artifactの" cons ruby text "確認結果" text "かくにんけっか" cons text "は " cons link external "https://github.com/neknaj/NEPL3/blob/fd8057199f2f32fb36455210df36e78015b77fab/conformance/results/foundation-slice/main-ci.json" concat cons ruby text "過去" text "かこ" cons text "commitのCI" cons ruby text "記録" text "きろく" nil cons text " にある。" nil
         cons "[次/つぎ]の[実装/じっそう]はprefix engine、Profile[解決/かいけつ]、Grammar compilerとbootstrapであり、この[区切/くぎ]りを[最初/さいしょ]のbootstrap[節目/ふしめ]やT16の[達成/たっせい]とは[扱/あつか]わない。"
         nil
       nil
