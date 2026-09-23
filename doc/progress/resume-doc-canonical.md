@@ -6,6 +6,8 @@
 
 ## 2026年9月12日の静的サイト生成（履歴）
 
+本文中の `conformance/results/` は記録当時のpathである。固定revisionと取得手順は[履歴索引](../../conformance/history.md)を参照する。
+
 第06章はPR #103、第02章はPR #104で、独立レビューと必須CIを確認して統合済み。
 mainは14章をnepld正本として管理する。文単位parallelを維持する文書CSSと、
 登録済みDocから索引付きdocs-onlyサイトを組み立てる実装をPR #105で進めている。

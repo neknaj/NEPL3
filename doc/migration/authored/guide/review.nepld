@@ -259,7 +259,7 @@ body
       cons "production/workspaceのforbidは[変/か]えない。"
       cons "[固定/こてい]Rust 1.97.0のCargo-selected rlibへリンクし、4,096 bytesのpositive controlを[通/とお]してから[測定/そくてい]する。"
       cons "[同一計測器/どういつけいそくき]を[旧/きゅう]commitの[別/べつ]worktreeへ[適用/てきよう]すると100,000 bytes・[終了/しゅうりょう]1、[修正/しゅうせい]treeでは0 bytes・[終了/しゅうりょう]0となった。"
-      cons sentence cons link relative "../conformance/results/reader-builtins/allocation-baseline.log" none concat cons ruby text "旧版" text "きゅうばん" cons text "log" nil cons text " と " cons link relative "../conformance/results/reader-builtins/allocation-working.log" none concat cons ruby text "修正中" text "しゅうせいちゅう" cons text "treeのlog" nil cons text " を" cons ruby text "保存" text "ほぞん" cons text "した。" nil
+      cons sentence cons link external "https://github.com/neknaj/NEPL3/blob/fd8057199f2f32fb36455210df36e78015b77fab/conformance/results/reader-builtins/allocation-baseline.log" none concat cons ruby text "旧版" text "きゅうばん" cons text "log" nil cons text " と " cons link external "https://github.com/neknaj/NEPL3/blob/fd8057199f2f32fb36455210df36e78015b77fab/conformance/results/reader-builtins/allocation-working.log" none concat cons ruby text "修正中" text "しゅうせいちゅう" cons text "treeのlog" nil cons text " を" cons ruby text "保存" text "ほぞん" cons text "した。" nil
       cons "native CIへの[必須/ひっす]step[追加/ついか]も[確認/かくにん]し、この[具体的/ぐたいてき]な[先行割当/せんこうわりあて]をR020 correctedとする。"
       cons "[後者/こうしゃ]のlogはfreeze[前/まえ]の[部分記録/ぶぶんきろく]であり、[最終/さいしゅう]treeの[証拠/しょうこ]は[統合時/とうごうじ]に[別途採取/べっとさいしゅ]する。" nil
     cons paragraph

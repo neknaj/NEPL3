@@ -1079,6 +1079,11 @@ fn synchronized_context_spec_drafts_parse_lower_and_check_labels() -> Result<()>
             "guide/development",
             "doc/migration/authored/guide/development.nepld",
         ),
+        ("guide/review", "doc/migration/authored/guide/review.nepld"),
+        (
+            "progress/foundation-runtime",
+            "doc/migration/authored/progress/foundation-runtime.nepld",
+        ),
     ] {
         let text = fs::read_to_string(repository.join(path))?;
         // Adopted chapters must remain usable with normal page limits; other

@@ -343,7 +343,7 @@ pub(crate) fn acceptance(
 
 fn result_path(root: &Path, path: &str) -> Result<std::path::PathBuf> {
     if !path.starts_with("conformance/results/") {
-        return Err("evidence and logs must be under conformance/results/".into());
+        return Err("evidence JSON must be under conformance/results/".into());
     }
     let full = local_path(root, path)?;
     if !full.is_file() || fs::symlink_metadata(&full)?.file_type().is_symlink() {
@@ -411,6 +411,28 @@ mod tests {
     fn actual_task_loader_accepts_only_matching_complete_attempt() -> Result<()> {
         let (files, _) = fixture()?;
         task::load(files.root())?;
+        crate::repository::check(files.root())?;
+        Ok(())
+    }
+
+    #[test]
+    fn logs_must_be_restored_from_artifacts_before_acceptance() -> Result<()> {
+        let (files, mut report) = fixture()?;
+        // Positive control exercises the same complete attempt before mutation.
+        task::load(files.root())?;
+        let log = fs::read(files.root().join("dist/evidence/native.log"))?;
+        fs::remove_file(files.root().join("dist/evidence/native.log"))?;
+        assert!(task::load(files.root()).is_err());
+        files.write("dist/evidence/native.log", &log)?;
+        task::load(files.root())?;
+        files.write("conformance/results/native.log", &log)?;
+        report["runs"][0]["log"] = json!("conformance/results/native.log");
+        files.json(REPORT, &report)?;
+        let error = task::load(files.root())
+            .err()
+            .ok_or("old log location accepted")?;
+        assert!(error.to_string().contains("dist/evidence/"));
+        assert!(crate::repository::check(files.root()).is_err());
         Ok(())
     }
 

@@ -88,7 +88,7 @@ Math は `cargo test --locked -p nepl3-math-core` と `cargo test --locked -p ne
 
 タスクのacceptance参照はcoverageを示します。T16以外のタスクは自身の成果物・scope付き証拠・依存完了・設計blocker解消で判定し、後段を含む試験群全体の合格は別に記録します。証拠にはtask ID、検査対象、コマンド、target、結果、未検証範囲を残します。T16の完了には登録された全必須群のpassedが必要です。
 
-scope付き証拠は `conformance/results/` 以下へJSONで保存します。次は形式を示す例で、実行済みの記録ではありません。実際の検査名・コマンド・targetと未検証部分に置き換え、実行を確認してから状態を更新してください。
+scope付き証拠は `conformance/results/` 以下へ型付きJSONで保存する。原logはCI artifactまたは外部保存先から `dist/evidence/` へ取得し、検証時にSHA-256を照合する。in-progressの段階記録には、Git revision・path・SHA-256を持つ `nepl3.stage-history/1` を使用できる。completeには次のTaskEvidenceを要求する。例の検査名・コマンド・target・未検証部分を実際の結果に対応させ、実行を確認してから状態を更新する。
 
 ```json
 {

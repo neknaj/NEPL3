@@ -140,10 +140,9 @@ sourceはGit commitとpath/hashで指す。未保存変更を検証する場合�
 
 ## 8. 完了条件
 
-通常のrepository source検査は保全archive refに依存しない。残存する旧source
-342pathだけを `tools/src/repository/legacy-evidence-sources.txt` へ列挙する。
-これは旧pathの移行例外であり、内容の正当性や現在の受入合格を表さない。
-新規review sourceの許可には使用しない。歴史資料の調査だけで旧revisionを取得する。
+通常のrepository source検査は保全archive refに依存しない。2026年9月23日の整理で
+残存sourceとlegacy例外機構を撤去した。resultsは状態索引が所有する型付きJSONに限定する。
+履歴資料は固定revisionから取得し、進行中タスクの段階参照は元pathとSHA-256を保持する。
 Doc inventoryの過去baseline監査は別の操作・契約として残る。
 
 通常main pushの `deliver-source` はGit管理sourceを再archiveするだけで、検査や
@@ -209,9 +208,9 @@ baseline全体を別checkoutへ復元し、現在treeへの部分復元と混ぜ
 既存task/review台帳から参照される記録と現行fixtureは今回の削除対象ではない。
 
 この削減は作業treeの削減であり、Git objectやfresh full cloneの容量削減ではない。
-保全refを同じrepositoryに置く限り旧blobは到達可能なままである。次工程では
-外部archive・復元検査・除去path/ref・commit参照の移行を準備してから履歴rewriteを
-別途判断する。共有historyのforce-pushとremote ref削除は明示承認を要する。
+mainの祖先に属する旧blobは、通常のGit履歴から取得できる。2026年9月23日の整理では
+履歴を維持し、現在treeの複製を削除する。固有commitがないarchive refは確認後に削除し、
+固有commitを持つrefは保全する。共有履歴のrewriteは今回の対象外とする。
 今後のraw実行log・大きな証拠はCI artifact/承認済み外部archiveへ置き、Gitには
 小さな参照・scope・manifestを残す。今回の途中区切りで追加したraw logも最終tree
 から外し、local distの原manifest/logは外部退避の準備用に保全する。

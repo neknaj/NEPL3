@@ -166,8 +166,20 @@ mod tests {
             assert_eq!(check(&root)?, 1);
             let source = root.join("conformance/results/new/run.py");
             fs::create_dir_all(source.parent().ok_or("missing parent")?)?;
-            fs::write(source, "pass\n")?;
-            assert!(check(&root).is_err());
+            fs::write(
+                source,
+                serde_json::to_vec(
+                    &serde_json::json!({"schema":"nepl3.stage-history/1","task_id":"T01","records":[{"revision":"a".repeat(40),"path":"old.json","sha256":"b".repeat(64)}]}),
+                )?,
+            )?;
+            fs::write(
+                root.join("implementation-status.json"),
+                serde_json::to_vec(
+                    &serde_json::json!({"tasks":[{"id":"T01","status":"in-progress","evidence":["conformance/results/new/run.py"]}],"acceptance":[]}),
+                )?,
+            )?;
+            let error = check(&root).expect_err("source filename must be rejected");
+            assert!(error.to_string().contains("only typed JSON records"));
             Ok(())
         })();
         fs::remove_dir_all(&root)?;

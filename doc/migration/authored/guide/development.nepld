@@ -213,7 +213,8 @@ body
       cons "[証拠/しょうこ]にはtask ID、[検査対象/けんさたいしょう]、コマンド、target、[結果/けっか]、[未検証範囲/みけんしょうはんい]を[残/のこ]します。"
       cons "T16の[完了/かんりょう]には[登録/とうろく]された[全必須群/ぜんひっすぐん]のpassedが[必要/ひつよう]です。" nil
     cons paragraph
-      cons sentence cons text "scope" cons ruby text "付" text "つ" cons text "き" cons ruby text "証拠" text "しょうこ" cons text "は " cons code "conformance/results/" cons text " " cons ruby text "以下" text "いか" cons text "へJSONで" cons ruby text "保存" text "ほぞん" cons text "します。" nil
+      cons "scope[付/つ]き[証拠/しょうこ]はconformance/results/[以下/いか]へ[型付/かたつ]きJSONで[保存/ほぞん]する。[原/げん]logはCI artifactからdist/evidence/へ[取得/しゅとく]し、[検証/けんしょう]する。"
+      cons "in-progressの[段階記録/だんかいきろく]にはGit revision・path・SHA-256を[持/も]つnepl3.stage-history/1を[使用/しよう]できる。completeには[実行範囲/じっこうはんい]を[示/しめ]すTaskEvidenceを[要求/ようきゅう]する。"
       cons "[次/つぎ]は[形式/けいしき]を[示/しめ]す[例/れい]で、[実行済/じっこうず]みの[記録/きろく]ではありません。"
       cons "[実際/じっさい]の[検査名/けんさめい]・コマンド・targetと[未検証部分/みけんしょうぶぶん]に[置/お]き[換/か]え、[実行/じっこう]を[確認/かくにん]してから[状態/じょうたい]を[更新/こうしん]してください。" nil
     cons rawcode some "json" "{\n  \"task_id\": \"T01\",\n  \"checks\": [\"実際に検査したsource契約の条件\"],\n  \"commands\": [\"実際に成功した検査コマンド\"],\n  \"targets\": [\"実際のtarget triple\"],\n  \"result\": \"passed\",\n  \"excluded_acceptance_portions\": [\"E03/E04の未実装のエディタ操作\"]\n}\n"

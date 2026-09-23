@@ -21,7 +21,7 @@ Gitには小さなscope・source参照・必要なmanifestを残す。Actions ar
 再利用する回帰probeは通常のtestへ置く。例外的な外部入力や再構成できない資料には
 保存理由を記す。独立レビューは対象commit・scope・指摘・未検証範囲を文章で残す。
 `conformance/results/` は状態索引が直接参照する64 KiB以下の型付きJSONを所有する。
-許可する型は段階履歴参照、完了タスクのTaskEvidence、正式AcceptanceEvidenceである。
+許可する型は段階履歴参照、TaskEvidence、正式AcceptanceEvidenceである。
 未知の型・余剰field・未参照ファイル・source snapshot・実行scriptをrepository checkで拒否する。
 段階履歴参照 `nepl3.stage-history/1` はtask IDと元記録のrevision・path・SHA-256を保持する。
 この参照を使用できる状態はin-progressであり、completeや正式受入へ転用できない。
