@@ -1,10 +1,101 @@
 use nepl3_core::{source::*, value_codec::FoundationValueCodec};
 use nepl3_doc_core::{check::Category, lower};
-use nepl3_tools::doc::source::{budget, compiled, err};
+use nepl3_tools::doc::source::{budget, compiled, err, with_input};
 use nepl3_wire::foundation::FoundationCodec;
 #[path = "doc/retention.rs"]
 mod retention;
 use retention::assert_doc_retention;
+
+#[test]
+fn annotation_meaning_is_checked_by_independent_sentence() -> Result<(), String> {
+    use nepl3_sentence_core::{
+        check, lower as sentence_lower,
+        model::{Kind, Root},
+    };
+    use nepl3_suite::adapters::document::sentence;
+    #[derive(Clone, Copy)]
+    enum Expected {
+        Ruby,
+        EmptyBase,
+        EmptyNotes,
+    }
+    let compiled = compiled()?;
+    for (source, expected) in [
+        (
+            r#"sentence sentence cons ruby concat cons text "" nil text "r" nil"#,
+            Expected::EmptyBase,
+        ),
+        (
+            r#"sentence sentence cons anno text "a" nil nil"#,
+            Expected::EmptyNotes,
+        ),
+        (
+            r#"sentence sentence cons text "a" cons ruby text "b" text "r" nil"#,
+            Expected::Ruby,
+        ),
+    ] {
+        nepl3_tools::doc::source::with_input(
+            &compiled,
+            source,
+            "Sentence",
+            |tree, profile, b, a| {
+                let empty = SourceStore::default();
+                let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
+                let doc = lower::document(
+                    tree.syntax(),
+                    &compiled.doc.package.schema,
+                    Category::Sentence,
+                    profile.registry(),
+                    b,
+                    &mut codec,
+                )
+                .map_err(err)?;
+                let [embed] = doc.value.embeds.as_slice() else {
+                    return Err("one Sentence placement".into());
+                };
+                let result = sentence::lower(
+                    embed,
+                    embed.schema(),
+                    &[],
+                    profile.registry(),
+                    &mut codec,
+                    b,
+                );
+                match expected {
+                    Expected::Ruby => {
+                        let value = result.map_err(err)?;
+                        assert!(matches!(value.value.root, Root::Sentence(_)));
+                        assert!(
+                            value
+                                .value
+                                .nodes
+                                .iter()
+                                .any(|node| matches!(node, Kind::Ruby { .. }))
+                        );
+                    }
+                    Expected::EmptyBase => assert!(matches!(
+                        result,
+                        Err(sentence::Error::Lower(
+                            sentence_lower::presentation::Error::Prefix(
+                                sentence_lower::Error::Shape(check::Error::EmptyAnnotationPart(_))
+                            )
+                        ))
+                    )),
+                    Expected::EmptyNotes => assert!(matches!(
+                        result,
+                        Err(sentence::Error::Lower(
+                            sentence_lower::presentation::Error::Prefix(
+                                sentence_lower::Error::Shape(check::Error::AnnotationNotes(_))
+                            )
+                        ))
+                    )),
+                }
+                Ok(())
+            },
+        )?;
+    }
+    Ok(())
+}
 #[test]
 fn referenced_sentence_payloads_cross_the_owned_syntax_boundary_without_source_copies()
 -> Result<(), String> {
@@ -995,5 +1086,160 @@ fn literal_and_prefix_share_one_lower_with_source_and_local_view_retention() -> 
             .collect::<Vec<_>>()
     );
     assert_eq!(values[0].1, values[1].1);
+    Ok(())
+}
+
+#[test]
+fn doc_auxiliary_fragments_and_parent_operands_have_typed_boundaries() -> Result<(), String> {
+    use nepl3_doc_core::{
+        check::{Category, ShapeError},
+        lower::{self, LowerError},
+        model::*,
+    };
+    let compiled = compiled()?;
+    // Expectations are the explicit signatures and U64/Bytes32 operand ranges,
+    // not values generated from the lowerer's current output.
+    for (category, root, source) in [
+        ("Alignment", Category::Alignment, "left"),
+        (
+            "ListStyle",
+            Category::ListStyle,
+            "ordered 18446744073709551615",
+        ),
+        ("Check", Category::Check, "checked"),
+        ("OptionalText", Category::OptionalText, r#"some "lang""#),
+        ("OptionalRow", Category::OptionalRow, "some row nil"),
+        (
+            "OptionalSentence",
+            Category::OptionalSentence,
+            "some sentence sentence nil",
+        ),
+        (
+            "LinkTarget",
+            Category::Target,
+            r#"page "guide" some "part""#,
+        ),
+        ("Asset", Category::Asset, r#"asset "image" none"#),
+        (
+            "Block",
+            Category::Block,
+            "table cons left nil some row cons sentence sentence nil nil cons row cons sentence sentence nil nil nil",
+        ),
+        (
+            "Block",
+            Category::Block,
+            "list ordered 3 cons item unchecked body nil nil",
+        ),
+        (
+            "Inline",
+            Category::Inline,
+            r#"link page "guide" none text "label""#,
+        ),
+        (
+            "Block",
+            Category::Block,
+            r#"image asset "asset-id" none sentence sentence nil some sentence sentence nil"#,
+        ),
+    ] {
+        with_input(&compiled, source, category, |tree, profile, b, a| {
+            let bundle = tree
+                .tree()
+                .bundle
+                .validate_with_sources(profile.registry(), b, a)
+                .map_err(err)?;
+            let doc = lower::prefix(
+                &bundle,
+                &compiled.doc.package.schema,
+                root,
+                profile.registry(),
+                b,
+                a,
+            )
+            .map_err(err)?;
+            if category == "Block" || category == "Inline" {
+                assert!(!doc.value.nodes.iter().any(|n| matches!(
+                    n.kind,
+                    DocKind::Alignment { .. }
+                        | DocKind::OptionalRow { .. }
+                        | DocKind::ListStyle { .. }
+                        | DocKind::Check { .. }
+                        | DocKind::Target { .. }
+                        | DocKind::Asset { .. }
+                        | DocKind::OptionalText { .. }
+                        | DocKind::OptionalSentence { .. }
+                )));
+            }
+            assert!(!doc.origins.is_empty());
+            assert!(!doc.views.is_empty());
+            let empty = SourceStore::default();
+            let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
+            let wire = nepl3_doc_core::portable::to_value(&doc, profile.registry(), &mut codec, b)
+                .map_err(err)?;
+            let bytes = nepl3_wire::encode(&wire, b).map_err(err)?;
+            let value = nepl3_wire::decode(&bytes, b).map_err(err)?;
+            let mut fresh = SourceAdmission::default();
+            let mut codec =
+                FoundationCodec::new(profile.registry(), &empty, &mut fresh).map_err(err)?;
+            let received = nepl3_doc_core::portable::from_value(
+                &value,
+                profile.registry(),
+                &mut codec,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            assert_doc_retention(&doc, &received)?;
+            assert_eq!(
+                nepl3_doc_core::portable::to_value(
+                    &received,
+                    profile.registry(),
+                    &mut codec,
+                    &mut budget()
+                )
+                .map_err(err)?,
+                value
+            );
+            Ok(())
+        })?;
+    }
+    for (source, category, root, error) in [
+        (
+            "ordered 18446744073709551616",
+            "ListStyle",
+            Category::ListStyle,
+            0,
+        ),
+        (
+            "table cons left nil some row nil nil",
+            "Block",
+            Category::Block,
+            1,
+        ),
+        (r#"asset "a" some "abc""#, "Asset", Category::Asset, 2),
+    ] {
+        with_input(&compiled, source, category, |tree, profile, b, a| {
+            let bundle = tree
+                .tree()
+                .bundle
+                .validate_with_sources(profile.registry(), b, a)
+                .map_err(err)?;
+            let result = lower::prefix(
+                &bundle,
+                &compiled.doc.package.schema,
+                root,
+                profile.registry(),
+                b,
+                a,
+            );
+            assert!(
+                match error {
+                    0 => matches!(result, Err(LowerError::NaturalRange { .. })),
+                    1 => matches!(result, Err(LowerError::Shape(ShapeError::TableWidth(_)))),
+                    _ => matches!(result, Err(LowerError::AssetDigest { .. })),
+                },
+                "{result:?}"
+            );
+            Ok(())
+        })?;
+    }
     Ok(())
 }
