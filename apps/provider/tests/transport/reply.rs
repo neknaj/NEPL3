@@ -8,6 +8,8 @@ use nepl3_provider::reply::ReplyError;
 use nepl3_suite::grants::Grants;
 #[path = "reply/control.rs"]
 mod control;
+#[path = "reply/delegation.rs"]
+mod delegation;
 #[path = "reply/resume.rs"]
 mod resume;
 #[path = "reply/routing.rs"]
