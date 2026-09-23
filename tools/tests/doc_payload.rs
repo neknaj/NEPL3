@@ -133,3 +133,80 @@ fn referenced_sentence_payloads_cross_the_owned_syntax_boundary_without_source_c
     }
     Ok(())
 }
+
+#[test]
+fn sentence_payload_cannot_be_reassigned_to_another_doc_occurrence() -> Result<(), String> {
+    use nepl3_doc_core::model::DocContent;
+    use nepl3_sentence_core::lower::{literal, presentation};
+    use nepl3_suite::adapters::document::sentence;
+    let compiled = compiled()?;
+    nepl3_tools::doc::source::with_input(
+        &compiled,
+        r#"paragraph cons sentence "one" cons sentence "two" nil"#,
+        "Block",
+        |tree, profile, b, a| {
+            let empty = SourceStore::default();
+            let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
+            let document = lower::document(
+                tree.syntax(),
+                &compiled.doc.package.schema,
+                Category::Block,
+                profile.registry(),
+                b,
+                &mut codec,
+            )
+            .map_err(err)?;
+            let [first, second] = document.value.embeds.as_slice() else {
+                return Err("two independently owned Sentence occurrences".into());
+            };
+            let original = first.clone();
+            let second_closure = second.syntax().ok_or("second syntax")?;
+            let second_bundle = &second_closure.syntax.bundle;
+            let second_root = second_bundle.node(second_bundle.root).map_err(err)?;
+            let second_token =
+                &second_bundle.tokens[second_root.token.ok_or("second token")?.0 as usize];
+            // Both valid payloads name the same source snapshot. Only their
+            // token ownership differs; swapping one must fail after decoding.
+            sentence::lower(
+                first,
+                first.schema(),
+                &[],
+                profile.registry(),
+                &mut codec,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            sentence::lower(
+                second,
+                second.schema(),
+                &[],
+                profile.registry(),
+                &mut codec,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            let mut changed = first.clone();
+            let DocContent::Syntax { closure } = &mut changed.content else {
+                return Err("first syntax".into());
+            };
+            let bundle = &mut closure.syntax.bundle;
+            let root = bundle.root;
+            let token = bundle.node(root).map_err(err)?.token.ok_or("first token")?;
+            bundle.tokens[token.0 as usize].payload = second_token.payload.clone();
+            let result = sentence::lower(
+                &changed,
+                changed.schema(),
+                &[],
+                profile.registry(),
+                &mut codec,
+                &mut budget(),
+            );
+            assert!(
+                matches!(result, Err(sentence::Error::Lower(presentation::Error::Literal(literal::Error::TokenMismatch(id)))) if id == root),
+                "{result:?}"
+            );
+            assert_eq!(first, &original);
+            Ok(())
+        },
+    )
+}
