@@ -23,6 +23,25 @@ fn observing_export_preserves_artifacts_and_stage_order() -> Result<(), String> 
     Ok(())
 }
 
+#[test]
+fn failed_export_reports_only_completed_stages() -> Result<(), String> {
+    let compiled = compiled()?;
+    for (source, expected) in [
+        ("unknown", vec![]),
+        (
+            "article en \"T\" body cons paragraph cons sentence cons link external \"https://example.test/\" text \"L\" nil nil nil",
+            vec![export::Stage::ParseAndValidate, export::Stage::Lower],
+        ),
+    ] {
+        let mut stages = Vec::new();
+        assert!(
+            export::generate_observed(&compiled, source, &mut |m| stages.push(m.stage)).is_err()
+        );
+        assert_eq!(stages, expected);
+    }
+    Ok(())
+}
+
 /// Explicit host measurement: no wall-clock threshold and no production Budget
 /// increase. Source construction is parser test input, outside measured stages.
 #[test]

@@ -10,9 +10,14 @@ use std::{fs, io::Read, path::Path};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Stage {
+    /// Elapsed includes native profile/provider setup and resolution. Usage is
+    /// the parsing/validation Budget only; setup uses separate budgets.
     ParseAndValidate,
+    /// Includes creation of the codec and its source admission.
     Lower,
     Prepare,
+    /// Ends after HTML shell serialization; excludes manifest/hash generation
+    /// and destruction of intermediate values.
     RenderAndSerialize,
 }
 
@@ -41,6 +46,8 @@ pub fn generate(compiled: &Compiled, input: &str) -> Result<LocalDocument, Strin
 /// Observe successful stage boundaries in the production export pipeline.
 /// Timing stays in the host callback and never enters generated artifacts.
 /// An error returns normally; no measurement claims completion of that stage.
+/// These timings are stage intervals, not complete export latency. Observer
+/// execution is excluded from the following interval.
 pub fn generate_observed(
     compiled: &Compiled,
     input: &str,
