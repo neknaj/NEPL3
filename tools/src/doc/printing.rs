@@ -6,7 +6,7 @@ use nepl3_core::{
     value::SchemaRef,
     value_codec::FoundationValueCodec,
 };
-use nepl3_sentence_core::{lower, print};
+use nepl3_sentence_core::{check::Category as SentenceCategory, lower, print};
 
 #[derive(Debug)]
 pub enum Error<E> {
@@ -32,7 +32,8 @@ impl<E> From<StopReason> for Error<E> {
 /// Selected Sentence annotation printer with optional Math and Doc Inline forms.
 /// The host supplies the compiled Sentence package from its resolved parse
 /// profile. Foreign heads are taken from that package's declarations. Doc Inline
-/// guests can contain the selected Math language; unsupported guests fail.
+/// guests can contain selected Math and Sentence label content; unsupported
+/// guests fail. Each recursive language owns its printer and local node IDs.
 /// Recursive calls retain caller limits and use an additional depth ceiling of 64.
 pub struct SentenceGuestPrinter<'a, C> {
     pub registry: &'a SchemaRegistry,
@@ -46,7 +47,9 @@ impl<C: FoundationValueCodec> nepl3_math_core::print::GuestPrinter for SentenceG
     fn print(&mut self, guest: &ForeignClosure, b: &mut Budget) -> Result<String, Self::Error> {
         let mut ceiling = b.limits();
         ceiling.depth = ceiling.depth.min(64);
-        let result = b.with_ceiling(ceiling, |b| self.sentence(guest, b));
+        let result = b.with_ceiling(ceiling, |b| {
+            self.sentence(guest, SentenceCategory::Sentence, b)
+        });
         b.poll()?;
         result
     }
@@ -55,6 +58,7 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
     fn sentence(
         &mut self,
         guest: &ForeignClosure,
+        category: SentenceCategory,
         b: &mut Budget,
     ) -> Result<String, Error<C::Error>> {
         b.poll()?;
@@ -65,18 +69,16 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
                 + guest.syntax.category.len()) as u64
                 + 64,
         )?;
-        if guest.syntax.schema != self.sentence_package.schema
-            || guest.syntax.category != "Sentence"
+        let category = match category {
+            SentenceCategory::Sentence => "Sentence",
+            SentenceCategory::Inline => "Inline",
+        };
+        if guest.syntax.schema != self.sentence_package.schema || guest.syntax.category != category
         {
             return Err(Error::Selection);
         }
-        guest
+        let checked = guest
             .validate(self.registry, b, self.codec.source_admission())
-            .map_err(Error::Syntax)?;
-        let input = guest
-            .syntax
-            .bundle
-            .validate_with_sources(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
         let mut forms = Vec::new();
         let count =
@@ -103,7 +105,7 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
             });
         }
         let sentence = lower::presentation::sentence_with_foreign(
-            &input,
+            checked.syntax(),
             &self.sentence_package.schema,
             forms.as_slice(),
             self.registry,
@@ -194,16 +196,11 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
         if !selected(closure, self.math_surface, "Expr", b)? {
             return Err(Error::Selection);
         }
-        closure
+        let checked = closure
             .validate(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
-        let input = closure
-            .syntax
-            .bundle
-            .validate_with_sources(self.registry, b, self.codec.source_admission())
-            .map_err(Error::Syntax)?;
         let math = nepl3_math_core::lower::expression(
-            &input,
+            checked.syntax(),
             &closure.syntax.schema,
             nepl3_math_core::check::Category::Expr,
             self.registry,
@@ -230,17 +227,16 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
         closure: &ForeignClosure,
         b: &mut Budget,
     ) -> Result<String, Error<C::Error>> {
-        use nepl3_doc_core::{check, lower, model::GuestLanguage, print};
-        closure
+        use nepl3_doc_core::{
+            check, lower,
+            model::{EmbedKind, GuestLanguage},
+            print,
+        };
+        let checked = closure
             .validate(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
-        let input = closure
-            .syntax
-            .bundle
-            .validate_with_sources(self.registry, b, self.codec.source_admission())
-            .map_err(Error::Syntax)?;
         let document = lower::document(
-            &input,
+            checked.syntax(),
             &closure.syntax.schema,
             check::Category::Inline,
             self.registry,
@@ -260,6 +256,7 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
         guests
             .try_reserve_exact(document.value.embeds.len())
             .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+        let mut bindings: Vec<print::GuestBinding> = Vec::new();
         let base = b.current_depth();
         for ((embed, target), depth) in document
             .value
@@ -269,30 +266,67 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
             .zip(depths)
         {
             let text = b.with_depth_at_least(base.saturating_add(depth), |b| {
-                self.math(embed.syntax().ok_or(Error::Selection)?, b)
+                let guest = embed.syntax().ok_or(Error::Selection)?;
+                match embed.kind {
+                    EmbedKind::Sentence => self.sentence(guest, SentenceCategory::Sentence, b),
+                    EmbedKind::SentenceInline => self.sentence(guest, SentenceCategory::Inline, b),
+                    EmbedKind::InlineMath => self.math(guest, b),
+                    _ => Err(Error::Selection),
+                }
             })?;
+            let (surface, category, language) = match embed.kind {
+                EmbedKind::Sentence => (
+                    &self.sentence_package.schema,
+                    "Sentence",
+                    GuestLanguage::Sentence,
+                ),
+                EmbedKind::SentenceInline => (
+                    &self.sentence_package.schema,
+                    "Inline",
+                    GuestLanguage::Sentence,
+                ),
+                EmbedKind::InlineMath => (
+                    self.math_surface.ok_or(Error::Selection)?,
+                    "Expr",
+                    GuestLanguage::Math,
+                ),
+                _ => return Err(Error::Selection),
+            };
+            let mut present = false;
+            for binding in &bindings {
+                b.charge(
+                    Resource::Work,
+                    (surface.package.len() + category.len()) as u64 + 40,
+                )?;
+                if binding.schema == *surface && binding.category == category {
+                    present = true;
+                }
+            }
+            if !present {
+                b.charge(
+                    Resource::Work,
+                    (surface.package.len() + category.len()) as u64 + 1,
+                )?;
+                b.charge(
+                    Resource::AllocationUnits,
+                    (core::mem::size_of::<print::GuestBinding>() * 2
+                        + surface.package.len()
+                        + category.len()) as u64,
+                )?;
+                bindings
+                    .try_reserve(1)
+                    .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+                bindings.push(print::GuestBinding {
+                    schema: surface.clone(),
+                    category: category.into(),
+                    language,
+                });
+            }
             guests.push(print::PrintedGuest {
                 document_digest: identity.document_digest,
                 embed: target.embed,
                 guest_digest: target.guest_digest,
                 text,
-            });
-        }
-        let mut bindings = Vec::new();
-        if !guests.is_empty() {
-            let surface = self.math_surface.ok_or(Error::Selection)?;
-            b.charge(Resource::Work, surface.package.len() as u64 + 4)?;
-            b.charge(
-                Resource::AllocationUnits,
-                (core::mem::size_of::<print::GuestBinding>() + surface.package.len() + 4) as u64,
-            )?;
-            bindings
-                .try_reserve_exact(1)
-                .map_err(|_| b.stop(StopReason::AllocationLimit))?;
-            bindings.push(print::GuestBinding {
-                schema: surface.clone(),
-                category: "Expr".into(),
-                language: GuestLanguage::Math,
             });
         }
         let reply = print::print(
