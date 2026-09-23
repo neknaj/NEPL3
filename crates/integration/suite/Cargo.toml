@@ -12,10 +12,12 @@ nepl3-core.workspace = true
 nepl3-engine.workspace = true
 nepl3-doc-core = { workspace = true, optional = true }
 nepl3-sentence-core = { workspace = true, optional = true }
+nepl3-markup = { workspace = true, optional = true }
 
 [features]
 default = []
 doc-sentence = ["dep:nepl3-doc-core", "dep:nepl3-sentence-core"]
+sentence-html = ["dep:nepl3-sentence-core", "dep:nepl3-markup"]
 
 [dev-dependencies]
 nepl3-wire.workspace = true
@@ -23,6 +25,11 @@ nepl3-wire.workspace = true
 [[test]]
 name = "sentence"
 required-features = ["doc-sentence"]
+
+[[test]]
+name = "sentence_html"
+path = "tests/sentence/html.rs"
+required-features = ["sentence-html"]
 
 [lints]
 workspace = true

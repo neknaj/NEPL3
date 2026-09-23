@@ -59,6 +59,7 @@ dependencies = [
  "nepl3-core",
  "nepl3-doc-core",
  "nepl3-engine",
+ "nepl3-markup",
  "nepl3-provider",
  "nepl3-sentence-core",
  "nepl3-suite",
@@ -117,6 +118,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "nepl3-markup"
+version = "0.1.0"
+dependencies = [
+ "nepl3-core",
+]
+
+[[package]]
 name = "nepl3-provider"
 version = "0.1.0"
 dependencies = [
@@ -146,6 +154,7 @@ dependencies = [
  "nepl3-core",
  "nepl3-doc-core",
  "nepl3-engine",
+ "nepl3-markup",
  "nepl3-sentence-core",
 ]
 

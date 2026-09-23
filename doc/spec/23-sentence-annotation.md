@@ -214,6 +214,25 @@ hostはforeign-inlineの文章を明示的に供給する。`resolve`が供給�
 成功時の返り値は全文のStringである。元sourceの表記と位置情報は入力側で保持する。
 このAPIの対象はnativeの意味値である。portable operationの追加とDoc consumerの所有移行は後続作業とする。
 
+## SentenceのHTML出力adapter
+
+suiteの`sentence-html` featureは、`adapters::sentence::html::render`を公開する。
+SentenceSyntaxを検証し、標準Inlineを共通markupのphrasing fragmentへ変換する純粋な処理である。
+このfeatureのdomain依存はSentence coreであり、HTMLの構造検査とserializeはmarkupが担当する。
+Text、Code、強調、Break、外部リンク、Ruby、InlineAnnoの内容・順序を保持する。
+RubyとAnnoには既存の`nepl-ruby`・`nepl-anno`等の表示classを用いる。
+hostは対応するstylesheetの出自と配置を管理する。外部URIと出力文字はmarkupの安全性規則に従う。
+
+返り値は元SentenceSyntaxの不変借用、検査済みの出力構造、各出力要素と意味nodeの対応を保持する。
+共有nodeの各出現は個別の出力要素を持つ。元のSource・Origin・Viewは入力を参照して取得する。
+出力構造を変更するconsumerは、変更後の構造と対応情報を再検証する。
+Work・Nodes・AllocationUnits・Depthを生成と検証に計上し、失敗・停止時は部分fragmentを返さない。
+serializeのOutputBytesはmarkup側で計上する。
+
+現行の入口は標準Inlineを対象とし、ForeignInlineには`ForeignAdapterRequired`を返す。
+guestの意味処理・出力は明示的なrole adapterで接続する。Mathの文章注釈の所有移行では、
+この出力境界、foreign処理、既存のsyntax identityとsource対応を一貫して接続する。
+
 ## Doc本文readerへの接続
 
 この節はconsumer所有移行中のadapter契約である。Sentenceの恒久的な意味モデルと、現在のDoc payloadへの変換を区別する。移行完了後も必要なforeign adapterと、旧所有を除去するまでの互換変換を同じ完成条件にしない。

@@ -198,6 +198,7 @@ dependencies = [
  "nepl3-core",
  "nepl3-doc-core",
  "nepl3-engine",
+ "nepl3-markup",
  "nepl3-sentence-core",
  "nepl3-wire",
 ]
