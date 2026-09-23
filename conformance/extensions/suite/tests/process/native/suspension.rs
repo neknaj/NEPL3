@@ -82,11 +82,12 @@ pub fn child(text: &str) -> Result<(), String> {
                         &mut transport,
                     )
                     .map_err(error)?;
+                reply.delivery.map_err(error)?;
                 let OperationReply::Await {
                     continuation,
                     calls,
                     report,
-                } = reply
+                } = reply.reply
                 else {
                     return Err("expected root Await".into());
                 };
@@ -138,8 +139,9 @@ pub fn child(text: &str) -> Result<(), String> {
                                 &mut transport,
                             )
                             .map_err(error)?;
+                        result.delivery.map_err(error)?;
                         let OperationReply::Result(OperationResult::Complete { report, .. }) =
-                            result
+                            result.reply
                         else {
                             return Err("expected terminal root".into());
                         };
