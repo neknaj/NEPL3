@@ -73,6 +73,18 @@ impl From<StopReason> for Error {
 /// terminal results retain each child's operation, output schema and sources.
 /// Resume preparation retains accepted results until its callback begins.
 /// Generations already transferred to a Resume callback are consumed.
+///
+/// Checked reply ownership follows these commit points:
+///
+/// | State | Owner on failure | Delivery commit |
+/// | --- | --- | --- |
+/// | Terminal checked, acceptance pending | frame / `uncommitted_results` | lifetime finish and result insertion |
+/// | Await prepared, publication pending | frame / `uncommitted_await_reports` | atomic publication, then Report callback |
+/// | Dependency results accepted | active generation / `accepted_results` | Resume callback starts |
+/// | Resume preparing | frame / `accepted_results` | Resume callback starts |
+///
+/// Initial reply validation failures expose no checked reply. Retained diagnostic
+/// data confers no execution permission and does not authorize callback replay.
 pub struct Failure {
     pub cause: Error,
     root_request: u64,
@@ -90,7 +102,33 @@ pub struct UncommittedResult<'a> {
     pub result: &'a OperationResult<TypedValue>,
 }
 
+/// A checked Await Report retained before generation publication. Its contents
+/// remain diagnostic data; dependency authorization and activation may have failed.
+pub struct UncommittedAwaitReport<'a> {
+    pub request_id: u64,
+    pub operation: &'a OperationRef,
+    pub context: Digest,
+    pub sources: &'a SourceStore,
+    pub report: &'a Report,
+}
+
 impl Failure {
+    /// Inspect checked Await Reports without allocating or polling a stopped Budget.
+    /// Successful publication transfers each Report once to the host callback.
+    pub fn uncommitted_await_reports(&self) -> impl Iterator<Item = UncommittedAwaitReport<'_>> {
+        self.frames.iter().filter_map(|frame| {
+            frame
+                .await_report
+                .as_ref()
+                .map(|report| UncommittedAwaitReport {
+                    request_id: frame.request_id,
+                    operation: &frame.operation,
+                    context: frame.context,
+                    sources: &frame.sources,
+                    report,
+                })
+        })
+    }
     /// Inspect checked terminal outputs whose final acceptance failed. Replies
     /// which failed their initial output validation never enter this collection.
     pub fn uncommitted_results(&self) -> impl Iterator<Item = UncommittedResult<'_>> {
@@ -160,6 +198,7 @@ struct Frame {
     request_id: u64,
     operation: OperationRef,
     terminal: Option<OperationResult<TypedValue>>,
+    await_report: Option<Report>,
     registration: usize,
     context: Digest,
     scope: ExecutionScope,
@@ -266,6 +305,7 @@ fn frame(
         request_id: request.request_id,
         operation: request.operation.clone(),
         terminal: None,
+        await_report: None,
         registration,
         context,
         scope,
@@ -484,7 +524,8 @@ fn run_inner(
         };
         current.resume = None;
         match response {
-            suspending::PreparedReply::Await(prepared) => {
+            suspending::PreparedReply::Await(mut prepared) => {
+                current.await_report = Some(prepared.take_report());
                 let calls = prepared.calls();
                 let mut contexts = Vec::new();
                 reserve(&mut contexts, calls.len(), validation)?;
@@ -494,10 +535,13 @@ fn run_inner(
                     let r = &registrations[select(registrations, dependency, validation)?];
                     contexts.push(scoped_context(r, dependency, context_scope, validation)?);
                 }
-                let mut active = prepared
+                let active = prepared
                     .activate(&policy, &contexts, lifetimes, validation)
-                    .map_err(Error::Activation)?;
-                report(call.request_id, core::mem::take(&mut active.report));
+                    .map_err(|failure| Error::Activation(failure.cause))?;
+                report(
+                    call.request_id,
+                    current.await_report.take().ok_or(Error::State)?,
+                );
                 current.active = Some(active);
                 current.contexts = contexts;
                 current.completed_sources = completed_sources;
