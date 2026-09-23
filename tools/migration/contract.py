@@ -6,6 +6,7 @@ The historical Markdown input is not the current specification. Current source
 ownership belongs to doc/canonical.json; this converter does not rewrite it.
 """
 import argparse
+from dataclasses import dataclass, replace
 import hashlib
 import json
 from pathlib import Path
@@ -18,7 +19,34 @@ SOURCE_SHA256 = "4ca8d780d32696bf102774c346ffdf18d01452085f93a2daae9e49acf16b003
 TARGET = ROOT / "doc/migration/00-contract.nepld"
 
 
-def quoted(text, literal=False):
+@dataclass(frozen=True, slots=True)
+class Paragraph:
+    sentence_source: str
+
+
+@dataclass(frozen=True, slots=True)
+class ItemList:
+    sentence_sources: tuple[str, ...]
+
+
+type Block = Paragraph | ItemList
+
+
+@dataclass(frozen=True, slots=True)
+class Section:
+    heading: str
+    blocks: tuple[Block, ...]
+
+
+def block_source(block: Block) -> str:
+    if isinstance(block, Paragraph):
+        return "paragraph cons " + block.sentence_source + " nil"
+    items = ["cons item none body cons paragraph cons " + item + " nil nil"
+             for item in block.sentence_sources]
+    return "list unordered\n      " + "\n      ".join(items) + "\n      nil"
+
+
+def quoted(text: str, literal: bool = False) -> str:
     escaped = text.replace("\\", "\\\\").replace('"', '\\"')
     if literal:
         for character in "[]{}":
@@ -26,7 +54,7 @@ def quoted(text, literal=False):
     return '"' + escaped + '"'
 
 
-def sentence(text):
+def sentence(text: str) -> str:
     parts = text.split("`")
     if len(parts) % 2 == 0 or any(not p or p != p.strip() for p in parts[1::2]):
         raise ValueError("unsupported backtick sequence")
@@ -40,7 +68,7 @@ def sentence(text):
     return "sentence " + " ".join("cons " + item for item in inlines) + " nil"
 
 
-def generate(source):
+def generate(source: str) -> str:
     if "\r" in source or "\t" in source:
         raise ValueError("unexpected line ending/indentation")
     # This deliberately narrow migration does not accept Markdown hard breaks,
@@ -52,41 +80,43 @@ def generate(source):
     if not chunks[0].startswith("# ") or "\n" in chunks[0]:
         raise ValueError("expected one article title")
     title = chunks.pop(0)[2:]
-    sections = []
+    sections: list[Section] = []
     for chunk in chunks:
         if chunk.startswith("## ") and "\n" not in chunk:
-            sections.append((chunk[3:], []))
+            sections.append(Section(chunk[3:], ()))
             continue
         if not sections:
             raise ValueError("expected section before body")
         lines = chunk.split("\n")
         if all(line.startswith("- ") for line in lines):
-            if sections[-1][1] and sections[-1][1][-1].startswith("list "):
+            if sections[-1].blocks and isinstance(sections[-1].blocks[-1], ItemList):
                 raise ValueError("unsupported loose Markdown list")
-            items = ["cons item none body cons paragraph cons " + sentence(line[2:]) + " nil nil"
-                     for line in lines]
-            block = "list unordered\n      " + "\n      ".join(items) + "\n      nil"
+            block = ItemList(tuple(sentence(line[2:]) for line in lines))
         else:
             if any(re.match(r"\s*([-+>#]|\d+[.)]\s|```|~~~|\|)", line) for line in lines):
                 raise ValueError("unsupported block Markdown")
-            block = "paragraph cons " + sentence(" ".join(lines)) + " nil"
-        sections[-1][1].append(block)
+            block = Paragraph(sentence(" ".join(lines)))
+        sections[-1] = replace(sections[-1], blocks=(*sections[-1].blocks, block))
     if len(sections) != 6:
         raise ValueError("contract section inventory changed; review migration")
     out = ["article ja " + sentence(title), "body"]
-    for index, (heading, blocks) in enumerate(sections):
-        out.append(f"  cons section contract_{index} " + sentence(heading))
+    for index, section in enumerate(sections):
+        out.append(f"  cons section contract_{index} " + sentence(section.heading))
         out.append("    body")
-        out.extend("      cons " + block for block in blocks)
+        out.extend("      cons " + block_source(block) for block in section.blocks)
         out.append("      nil")
     out.append("  nil")
     return "\n".join(out) + "\n"
 
 
-def main():
+class Arguments(argparse.Namespace):
+    write: bool = False
+
+
+def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--write", action="store_true")
-    args = parser.parse_args()
+    _ = parser.add_argument("--write", action="store_true")
+    args = parser.parse_args(namespace=Arguments())
     raw = SOURCE.read_bytes()
     # Git's canonical repository text uses LF, independent of checkout settings.
     text = raw.decode("utf-8").replace("\r\n", "\n")
@@ -103,7 +133,7 @@ def main():
     for path, data in [(TARGET, generated), (TARGET.with_suffix(".json"), audit)]:
         if args.write:
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(data, encoding="utf-8", newline="\n")
+            _ = path.write_text(data, encoding="utf-8", newline="\n")
         elif not path.exists() or path.read_bytes() != data.encode():
             raise SystemExit(f"stale migration candidate: {path.relative_to(ROOT)}")
 

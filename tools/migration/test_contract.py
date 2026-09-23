@@ -2,7 +2,7 @@ import unittest
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
-import contract
+from tools.migration import contract
 
 
 class ContractMigration(unittest.TestCase):
@@ -10,8 +10,8 @@ class ContractMigration(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             source = Path(temporary) / "source.md"
             output = Path(temporary) / "output.nepld"
-            source.write_text(contract.SOURCE.read_text(encoding="utf-8") + "\nChanged.\n", encoding="utf-8")
-            output.write_bytes(b"preserved expected fixture")
+            _ = source.write_text(contract.SOURCE.read_text(encoding="utf-8") + "\nChanged.\n", encoding="utf-8")
+            _ = output.write_bytes(b"preserved expected fixture")
             with patch.object(contract, "SOURCE", source), patch.object(contract, "TARGET", output), patch("sys.argv", ["contract.py", "--write"]):
                 with self.assertRaisesRegex(SystemExit, "historical converter input changed"):
                     contract.main()
@@ -36,7 +36,7 @@ class ContractMigration(unittest.TestCase):
             "## new heading", "text\n  continuation", "---", "- first\n\n- second",
         ]:
             with self.subTest(addition=addition), self.assertRaises(ValueError):
-                contract.generate(source + "\n" + addition + "\n")
+                _ = contract.generate(source + "\n" + addition + "\n")
 
     def test_plain_soft_break_and_literal_escape(self) -> None:
         source = contract.SOURCE.read_text(encoding="utf-8")
@@ -45,4 +45,4 @@ class ContractMigration(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()
