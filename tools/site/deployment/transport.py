@@ -1,5 +1,5 @@
 """Pages status GET with a killable process deadline and bounded response."""
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 import base64
 import json
 from pathlib import Path
@@ -13,7 +13,7 @@ from payload import checked
 from .receipt import MAX_RESPONSE, Observation, Receipt, observed
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Result:
     observation: Observation
     raw_response: bytes
@@ -23,16 +23,16 @@ class TransportError(ValueError):
     """Sanitized failure; never contains credentials or the server body."""
 
 
-def validate_request(receipt, token, timeout):
-    checked(isinstance(receipt, Receipt), "invalid receipt")
+def validate_request(receipt: Receipt, token: object, timeout: float) -> str:
     receipt.validate()
-    checked(isinstance(token, str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,4096}", token),
-            "invalid authentication token")
+    if not isinstance(token, str) or not re.fullmatch(r"[A-Za-z0-9_.-]{1,4096}", token):
+        raise ValueError("invalid authentication token")
     checked(type(timeout) in (int, float) and 0 < timeout <= 10, "invalid I/O timeout")
+    return token
 
 
-def _status(receipt, token, *, timeout=10):
-    validate_request(receipt, token, timeout)
+def direct_status(receipt: Receipt, token: object, *, timeout: float = 10) -> Result:
+    token = validate_request(receipt, token, timeout)
     raw = request(urlsplit(receipt.status_endpoint).path, token, timeout=timeout)
     try:
         observation = observed(raw, receipt=receipt, request_url=receipt.status_endpoint)
@@ -41,7 +41,7 @@ def _status(receipt, token, *, timeout=10):
     return Result(observation, raw)
 
 
-def request(path, token, *, timeout, body=None):
+def request(path: str, token: str, *, timeout: float, body: bytes | None = None) -> bytes:
     # Private fixed-host transport shared by status and creation adapters.
     # Callers validate the path, token, timeout and bounded request body.
     # A fixed host and direct HTTPSConnection do not inherit proxy settings,
@@ -65,8 +65,9 @@ def request(path, token, *, timeout, body=None):
             mime = reply.getheader("Content-Type", "").split(";", 1)[0].strip().lower()
             if mime not in ("application/json", "application/vnd.github+json"):
                 raise TransportError("Pages status MIME rejected")
-            lengths = reply.headers.get_all("Content-Length", [])
-            transfers = reply.headers.get_all("Transfer-Encoding", [])
+            headers = reply.getheaders()
+            lengths = [value for name, value in headers if name.lower() == "content-length"]
+            transfers = [value for name, value in headers if name.lower() == "transfer-encoding"]
             if len(lengths) > 1 or len(transfers) > 1 or (lengths and transfers):
                 raise TransportError("Pages status ambiguous framing")
             expected = None
@@ -90,9 +91,11 @@ def request(path, token, *, timeout, body=None):
         connection.close()
 
 
-def status(receipt, token, *, timeout=10):
-    validate_request(receipt, token, timeout)
-    request = json.dumps(dict(receipt=asdict(receipt), token=token, timeout=timeout)).encode()
+def status(receipt: Receipt, token: object, *, timeout: float = 10) -> Result:
+    token = validate_request(receipt, token, timeout)
+    request = json.dumps(dict(receipt=dict(deployment_id=receipt.deployment_id,
+                        status_endpoint=receipt.status_endpoint, response_sha256=receipt.response_sha256),
+                        token=token, timeout=timeout)).encode()
     try:
         completed = subprocess.run(
             [sys.executable, "-I", str(Path(__file__).with_name("worker.py"))],

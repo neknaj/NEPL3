@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch
 
 from deployment.receipt import Receipt, Phase
-from deployment.transport import _status as status, status as bounded_status, TransportError
+from deployment.transport import direct_status as status, status as bounded_status, TransportError
 import subprocess
 import sys
 import time

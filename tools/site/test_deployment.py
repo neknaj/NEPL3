@@ -5,7 +5,7 @@ from deployment.receipt import Phase, Receipt, created, observed
 
 
 class DeploymentTests(unittest.TestCase):
-    def receipt(self):
+    def receipt(self) -> Receipt:
         return created(b'{"id":"abc123","status_url":"https://api.github.com/repos/neknaj/NEPL3/pages/deployments/abc123/status"}', owner="neknaj", repository="NEPL3")
 
     def test_documented_receipt_and_status_are_bound_to_request(self) -> None:
@@ -21,10 +21,10 @@ class DeploymentTests(unittest.TestCase):
         for url in ["https://evil.invalid/", "https://api.github.com/repos/other/NEPL3/pages/deployments/abc123/status",
                     "https://api.github.com/repos/neknaj/NEPL3/pages/deployments/other/status"]:
             with self.subTest(url=url), self.assertRaises(ValueError):
-                created(json.dumps(dict(id="abc123", status_url=url)).encode(), owner="neknaj", repository="NEPL3")
+                _ = created(json.dumps(dict(id="abc123", status_url=url)).encode(), owner="neknaj", repository="NEPL3")
         receipt = self.receipt()
         with self.assertRaises(ValueError):
-            observed(b'{"status":"succeed"}', receipt=receipt, request_url=receipt.status_endpoint + "-other")
+            _ = observed(b'{"status":"succeed"}', receipt=receipt, request_url=receipt.status_endpoint + "-other")
 
     def test_unknown_pending_and_failed_do_not_become_success(self) -> None:
         receipt = self.receipt()
@@ -39,7 +39,7 @@ class DeploymentTests(unittest.TestCase):
         for raw in [b'[]', b'{"status":true}', b'{"status":"succeed","status":"deployment_failed"}',
                     b'{"status":"succeed","x":NaN}', b' ' * 65537, b'']:
             with self.subTest(raw=raw[:80]), self.assertRaises(ValueError):
-                observed(raw, receipt=receipt, request_url=receipt.status_endpoint)
+                _ = observed(raw, receipt=receipt, request_url=receipt.status_endpoint)
 
     def test_direct_receipt_construction_cannot_misattribute_status(self) -> None:
         good = self.receipt()
@@ -47,7 +47,7 @@ class DeploymentTests(unittest.TestCase):
                                 (good.deployment_id, good.status_endpoint, "not-a-sha256"),
                                 (good.deployment_id, good.status_endpoint + "/status", good.response_sha256)]:
             with self.subTest(ident=ident, url=url, sha=sha), self.assertRaises(ValueError):
-                Receipt(ident, url, sha)
+                _ = Receipt(ident, url, sha)
         rebuilt = Receipt(good.deployment_id, good.status_endpoint, good.response_sha256)
         self.assertEqual(observed(b'{"status":"succeed"}', receipt=rebuilt,
                                   request_url=rebuilt.status_endpoint).deployment_id, "abc123")
