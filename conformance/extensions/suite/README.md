@@ -138,6 +138,32 @@ Run `cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml
 WASI uses the same command with `--target wasm32-wasip2` and the Wasmtime runner.
 CI runs this independent workspace on all three native hosts and WASI.
 
+## Projected environment transport
+
+`tests/environment.rs` exercises the suite projection independently of the
+arithmetic plan. The host selects `answer=41` from a namespace that also contains
+`private=99`, renames the selected binding in the guest namespace, and selects one
+resource. `ProjectedEnvironment::publish` moves these values into the existing
+`EnvironmentEntry` and computes its digest through `FoundationValueCodec`.
+The returned publication retains readonly access to the original Origin arena
+and source store. Both publication success and failure consume the projection.
+
+The test encodes the entry in a real NDF Invoke, decodes it, validates the
+environment against the host's explicit provenance context, and admits it through
+independently prepared Grants. The selected operation returns 41. Missing sources,
+ungranted resources, changed environments, corrupted entry digests and publication
+stops are rejected. Publication preserves the allocated binding array by moving it.
+
+The entry digest covers the environment's values and local Origin IDs. Transport
+of the Origin arena and source context remains the host's responsibility; that
+digest alone does not bind an arbitrary replacement arena to the original source.
+This fixture uses an explicitly shared host context. Distributed provenance
+transport and the full suite Profile remain separate integration work.
+
+```sh
+cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml --test environment
+```
+
 The native `process` test transfers the envelope in an Invoke frame through the
 existing provider's stdin/stdout transport. A separate process validates the
 operation, host-selected source grants and envelope, then evaluates the admitted
