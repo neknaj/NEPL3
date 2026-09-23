@@ -5,6 +5,8 @@ mod admission;
 mod outcomes;
 #[path = "scheduler/profile.rs"]
 mod profile;
+#[path = "scheduler/retention.rs"]
+mod retention;
 use nepl3_core::operation::{Continuation, OperationReply, Resume};
 use nepl3_suite::{
     dispatch::{resume, suspending},

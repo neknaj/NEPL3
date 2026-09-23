@@ -102,6 +102,7 @@ pub fn execute<S: DiagnosticSourceResolver>(
         registry,
         execution,
         validation,
+        || {},
         |reply, validation| {
             super::suspending::validate_reply(
                 &reply,
@@ -126,6 +127,7 @@ pub(crate) fn execute_with<S: DiagnosticSourceResolver, T>(
     registry: &SchemaRegistry,
     execution: &mut Budget,
     validation: &mut Budget,
+    starting: impl FnOnce(),
     admit: impl FnOnce(OperationReply, &mut Budget) -> Result<T, ResumeError>,
 ) -> Result<T, ResumeError> {
     execution.poll()?;
@@ -180,7 +182,10 @@ pub(crate) fn execute_with<S: DiagnosticSourceResolver, T>(
     let reply = run_with_limits(
         saved.parent.limits,
         execution,
-        |budget| (registration.resume)(saved.parent, resume, registry, budget),
+        |budget| {
+            starting();
+            (registration.resume)(saved.parent, resume, registry, budget)
+        },
         |reply| match reply {
             OperationReply::Result(OperationResult::Stopped { reason, .. }) => Some(*reason),
             _ => None,
