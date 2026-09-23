@@ -396,7 +396,7 @@ pub fn render<'a>(input: &CheckedExpression<'a>, b: &mut Budget) -> Result<Rende
                         }
                         emit(&[F("\\left("), N(function.0), F("\\right)\\left(")])?;
                     }
-                    K::Label { .. } | K::DocGuest { .. } => {
+                    K::Label { .. } | K::SentenceGuest { .. } => {
                         return Err(Error::Unsupported {
                             node: id,
                             reason: Unsupported::ForeignAnnotation,

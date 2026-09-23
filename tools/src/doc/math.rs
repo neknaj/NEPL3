@@ -1,6 +1,6 @@
 //! Math display selected by the Doc host. This prepares one real embedded
 //! expression; it does not grant a PreparedArticle or emit a document shell.
-use super::annotations::{DocAnnotationRenderer, RenderedAnnotation};
+use super::annotations::{RenderedAnnotation, SentenceAnnotationRenderer};
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::SchemaRegistry,
@@ -34,10 +34,9 @@ impl<E> From<StopReason> for Error<E> {
 pub struct AnnotationRecord {
     /// Math embed index, not a Doc node or global Origin ID.
     pub embed: u64,
-    pub document: DocumentSyntax,
-    pub document_digest: nepl3_core::source::Digest,
-    pub options: nepl3_doc_html::RenderOptions,
-    pub origins: Vec<nepl3_doc_html::ElementOrigin>,
+    pub sentence: nepl3_sentence_core::syntax::SentenceSyntax,
+    pub sentence_digest: nepl3_core::source::Digest,
+    pub origins: Vec<nepl3_suite::adapters::sentence::html::ElementOrigin>,
 }
 pub struct RenderedMath {
     pub syntax: MathSyntax,
@@ -49,8 +48,8 @@ pub struct RenderedHtmlMath {
     pub markup: nepl3_markup::html::HtmlRequest,
     pub node_roots: Vec<u64>,
     pub annotation_roots: Vec<nepl3_math_mathml::AnnotationRoot>,
-    /// Element indices now refer to `markup`, while Doc node indices continue
-    /// to refer to each record's own retained DocumentSyntax.
+    /// Element indices refer to `markup`; Sentence node indices refer to each
+    /// record's retained SentenceSyntax.
     pub annotations: Vec<AnnotationRecord>,
 }
 #[derive(Debug)]
@@ -106,7 +105,7 @@ impl RenderedMath {
                 .ok()
                 .and_then(|i| syntax.value.nodes.get(i))
                 .ok_or(ProjectionError::Mapping(root.node))?;
-            if !matches!(node.kind, nepl3_math_core::model::MathKind::DocGuest { syntax } if syntax.0 == annotation.embed)
+            if !matches!(node.kind, nepl3_math_core::model::MathKind::SentenceGuest { syntax } if syntax.0 == annotation.embed)
             {
                 return Err(ProjectionError::Mapping(root.node));
             }
@@ -114,7 +113,7 @@ impl RenderedMath {
                 b.charge(Resource::Work, 1)?;
                 if usize::try_from(origin.node)
                     .ok()
-                    .is_none_or(|i| i >= annotation.document.value.nodes.len())
+                    .is_none_or(|i| i >= annotation.sentence.value.nodes.len())
                 {
                     return Err(ProjectionError::Mapping(origin.node));
                 }
@@ -140,8 +139,7 @@ impl RenderedMath {
 pub struct MathDisplayHost<'a, C> {
     pub registry: &'a SchemaRegistry,
     pub math_surface: &'a SchemaRef,
-    pub doc_surface: Option<&'a SchemaRef>,
-    pub doc_options: &'a nepl3_doc_html::RenderOptions,
+    pub sentence_surface: Option<&'a SchemaRef>,
     pub codec: &'a mut C,
 }
 impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
@@ -226,11 +224,10 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
         .map_err(Error::Lower)?;
         let checked = check::expression(&syntax.value, b).map_err(Error::Check)?;
         let mut annotations = Vec::new();
-        let rendered = if let Some(surface) = self.doc_surface {
-            let mut host = DocAnnotationRenderer {
+        let rendered = if let Some(surface) = self.sentence_surface {
+            let mut host = SentenceAnnotationRenderer {
                 registry: self.registry,
                 surface,
-                options: self.doc_options,
                 codec: self.codec,
             };
             nepl3_math_mathml::render_with_annotations(
@@ -248,13 +245,12 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
                     let embed = embed.ok_or(super::annotations::Error::Selection)?;
                     let result = host.render(closure, b)?;
                     // Move the rendered tree into MathML while keeping its provenance.
-                    let RenderedAnnotation { document, fragment } = result;
-                    let nepl3_doc_html::RenderedFragment {
-                        document_digest,
-                        options,
+                    let RenderedAnnotation {
+                        sentence,
+                        sentence_digest,
                         markup,
                         origins,
-                    } = fragment;
+                    } = result;
                     // Metadata stays separate from the consumed markup; no duplicate
                     // tree is allocated merely to retain the annotation's origin map.
                     b.charge(
@@ -263,9 +259,8 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
                     )?;
                     annotations.push(AnnotationRecord {
                         embed,
-                        document,
-                        document_digest,
-                        options,
+                        sentence,
+                        sentence_digest,
                         origins,
                     });
                     Ok::<_, super::annotations::Error<C::Error>>(markup)

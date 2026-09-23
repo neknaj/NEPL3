@@ -323,7 +323,7 @@
         ],
         [
           "annotation",
-          "Math/DocGuest"
+          "Math/SentenceGuest"
         ]
       ]
     },
@@ -384,7 +384,7 @@
         "Row": "Math:Row"
       }
     },
-    "Math:DocGuest": {
+    "Math:SentenceGuest": {
       "record": [
         [
           "syntax",
@@ -392,9 +392,9 @@
         ]
       ]
     },
-    "Math/DocGuest": {
+    "Math/SentenceGuest": {
       "union": {
-        "DocGuest": "Math:DocGuest"
+        "SentenceGuest": "Math:SentenceGuest"
       }
     },
     "Circuit:Design": {

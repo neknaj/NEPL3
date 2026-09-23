@@ -1,4 +1,4 @@
-//! Prefix source generation, independent of evaluation and Doc semantics.
+//! Prefix source generation, independent of evaluation and Sentence semantics.
 mod output;
 pub mod request;
 use crate::{
@@ -13,7 +13,7 @@ use nepl3_core::{
 };
 use output::Output;
 
-/// The selected host prints the exact borrowed Doc Sentence closure. The host
+/// The selected host prints the exact borrowed Sentence closure. The host
 /// must reparse/check its returned source against that closure before treating
 /// the combined artifact as a roundtrip proof. Retained source is not a fallback.
 pub trait GuestPrinter {
@@ -64,7 +64,7 @@ fn push<E>(stack: &mut Vec<Task>, task: Task, b: &mut Budget) -> Result<(), Prin
 /// Emit every occurrence in field order using O(depth) explicit traversal
 /// storage. Shared nodes are expanded, not memoized. Work is proportional to
 /// occurrences plus text/number/guest conversion costs; budget bounds expansion.
-/// This preserves notation and never invokes Math or Doc evaluation.
+/// This preserves notation and never invokes Math or Sentence evaluation.
 pub fn prefix<G: GuestPrinter>(
     input: &ValidatedMathShape<'_>,
     guests: &mut G,
@@ -138,12 +138,12 @@ pub fn prefix<G: GuestPrinter>(
                 out.quoted(text, b)?;
                 continue;
             }
-            DocGuest { syntax } => {
+            SentenceGuest { syntax } => {
                 let guest = usize::try_from(syntax.0)
                     .ok()
                     .and_then(|i| value.embeds.get(i))
                     .ok_or(PrintError::InvalidState)?;
-                out.atom("Doc", b)?;
+                out.atom("Sentence", b)?;
                 let absolute_depth = base
                     .checked_add(depth)
                     .ok_or_else(|| b.stop(StopReason::DepthLimit))?;

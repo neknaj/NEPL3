@@ -77,6 +77,15 @@ impl<'a> RenderedSentence<'a> {
     pub fn into_markup(self) -> HtmlRequest {
         self.markup
     }
+
+    /// Transfer the generated tree and all element correspondences together.
+    /// The borrowed input identifies the origin arena for every `node` index.
+    /// A composing host retains that input and remaps every `element` when it
+    /// inserts this fragment into a larger output tree. These raw parts confer
+    /// no portable validation proof after mutation or transport.
+    pub fn into_parts(self) -> (&'a SentenceSyntax, HtmlRequest, Vec<ElementOrigin>) {
+        (self.input, self.markup, self.origins)
+    }
 }
 
 fn push<T>(values: &mut Vec<T>, value: T, b: &mut Budget) -> Result<(), Error> {

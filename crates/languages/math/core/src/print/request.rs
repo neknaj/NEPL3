@@ -149,7 +149,7 @@ fn run<C: FoundationValueCodec>(
     }
     for (index, closure) in closures.iter().enumerate() {
         let embed = EmbedRef(index as u64);
-        let Some(selected) = &request.doc_schema else {
+        let Some(selected) = &request.sentence_schema else {
             return invalid(MathPrintFailure::MissingBinding { embed });
         };
         b.charge(

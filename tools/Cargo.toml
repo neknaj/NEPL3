@@ -16,7 +16,7 @@ nepl3-math-core.workspace = true
 nepl3-sentence-core.workspace = true
 nepl3-reader.workspace = true
 nepl3-engine.workspace = true
-nepl3-suite = { workspace = true, features = ["doc-sentence"] }
+nepl3-suite = { workspace = true, features = ["doc-sentence", "sentence-html"] }
 nepl3-wire.workspace = true
 serde.workspace = true
 serde_json.workspace = true

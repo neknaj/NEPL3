@@ -189,7 +189,7 @@ impl<'a> Adapter<'a, '_> {
             },
             ("Form:Label", 2) => MathKind::Label {
                 value: ExprRef(self.node(id, n, 0, Category::Expr)?),
-                annotation: DocGuestRef(self.node(id, n, 1, Category::DocGuest)?),
+                annotation: SentenceGuestRef(self.node(id, n, 1, Category::SentenceGuest)?),
             },
             ("Form:Row", 1) => MathKind::Row {
                 values: self
@@ -198,7 +198,7 @@ impl<'a> Adapter<'a, '_> {
                     .map(ExprRef)
                     .collect(),
             },
-            ("Form:DocGuest", 1) => {
+            ("Form:SentenceGuest", 1) => {
                 let Some(FieldValue::Foreign(foreign)) = n.fields.first() else {
                     return Err(LowerError::Operand { node: id, field: 0 });
                 };
@@ -211,7 +211,7 @@ impl<'a> Adapter<'a, '_> {
                 )?;
                 let syntax = EmbedRef(self.embeds.len() as u64);
                 push(&mut self.embeds, closure, self.b)?;
-                MathKind::DocGuest { syntax }
+                MathKind::SentenceGuest { syntax }
             }
             _ => return Err(LowerError::Unsupported { node: id }),
         };

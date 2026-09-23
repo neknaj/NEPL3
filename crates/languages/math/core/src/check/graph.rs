@@ -157,7 +157,7 @@ impl MathValue {
                     return Err(ShapeError::InvalidRootDegree(id));
                 }
             }
-            MathKind::DocGuest { syntax } => {
+            MathKind::SentenceGuest { syntax } => {
                 let index = usize::try_from(syntax.0).map_err(|_| ShapeError::Embed(syntax.0))?;
                 let guest = self.embeds.get(index).ok_or(ShapeError::Embed(syntax.0))?;
                 b.charge(Resource::Work, guest.syntax.category.len() as u64)?;

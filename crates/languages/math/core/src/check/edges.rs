@@ -4,20 +4,20 @@ pub(crate) fn root(root: MathRoot) -> (u64, Category) {
     match root {
         MathRoot::Expr(v) => (v.0, Category::Expr),
         MathRoot::Row(v) => (v.0, Category::Row),
-        MathRoot::DocGuest(v) => (v.0, Category::DocGuest),
+        MathRoot::SentenceGuest(v) => (v.0, Category::SentenceGuest),
     }
 }
 pub(crate) fn accepts(kind: &MathKind, category: Category) -> bool {
     match category {
         Category::Row => matches!(kind, MathKind::Row { .. }),
-        Category::DocGuest => matches!(kind, MathKind::DocGuest { .. }),
-        Category::Expr => !matches!(kind, MathKind::Row { .. } | MathKind::DocGuest { .. }),
+        Category::SentenceGuest => matches!(kind, MathKind::SentenceGuest { .. }),
+        Category::Expr => !matches!(kind, MathKind::Row { .. } | MathKind::SentenceGuest { .. }),
     }
 }
 pub(crate) fn edge(kind: &MathKind, index: usize) -> Option<(u64, Category)> {
     use MathKind::*;
     let expr = match kind {
-        Number { .. } | Symbol { .. } | Text { .. } | DocGuest { .. } => return None,
+        Number { .. } | Symbol { .. } | Text { .. } | SentenceGuest { .. } => return None,
         Add { left, right }
         | Sub { left, right }
         | Mul { left, right }
@@ -79,7 +79,7 @@ pub(crate) fn edge(kind: &MathKind, index: usize) -> Option<(u64, Category)> {
         Label { value, annotation } => {
             return match index {
                 0 => Some((value.0, Category::Expr)),
-                1 => Some((annotation.0, Category::DocGuest)),
+                1 => Some((annotation.0, Category::SentenceGuest)),
                 _ => None,
             };
         }

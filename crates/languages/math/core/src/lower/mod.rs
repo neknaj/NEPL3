@@ -96,7 +96,7 @@ fn root(category: Category, node: u64) -> MathRoot {
     match category {
         Category::Expr => MathRoot::Expr(ExprRef(node)),
         Category::Row => MathRoot::Row(RowRef(node)),
-        Category::DocGuest => MathRoot::DocGuest(DocGuestRef(node)),
+        Category::SentenceGuest => MathRoot::SentenceGuest(SentenceGuestRef(node)),
     }
 }
 /// Lower the explicitly selected Math surface schema without evaluating notation.

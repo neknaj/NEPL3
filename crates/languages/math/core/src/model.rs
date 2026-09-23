@@ -15,7 +15,7 @@ macro_rules! references {
         pub struct $name(pub u64);
     )+};
 }
-references!(ExprRef, RowRef, DocGuestRef, EmbedRef);
+references!(ExprRef, RowRef, SentenceGuestRef, EmbedRef);
 
 /// One exact, case-sensitive free-symbol assignment.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -88,7 +88,7 @@ pub struct MathFreeSymbols {
 pub enum MathRoot {
     Expr(ExprRef),
     Row(RowRef),
-    DocGuest(DocGuestRef),
+    SentenceGuest(SentenceGuestRef),
 }
 
 /// A mathematical symbol's selection, distinct from the enclosing expression.
@@ -219,12 +219,12 @@ pub enum MathKind {
     },
     Label {
         value: ExprRef,
-        annotation: DocGuestRef,
+        annotation: SentenceGuestRef,
     },
     Row {
         values: Vec<ExprRef>,
     },
-    DocGuest {
+    SentenceGuest {
         syntax: EmbedRef,
     },
 }
@@ -240,7 +240,7 @@ pub struct MathNode {
 pub struct MathValue {
     pub root: MathRoot,
     pub nodes: Vec<MathNode>,
-    /// Doc Sentence syntax with its owner environment and source closure. A
+    /// Independent Sentence syntax with its owner environment and source closure. A
     /// display annotation is not a dependency on Doc meaning or evaluation.
     pub embeds: Vec<ForeignClosure>,
 }
@@ -300,7 +300,7 @@ pub enum MathEvaluationResult {
 pub enum MathCategory {
     Expr,
     Row,
-    DocGuest,
+    SentenceGuest,
 }
 
 /// Generated source without an invented saved source identity.
@@ -325,7 +325,7 @@ pub struct MathPrintIdentity {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MathPrintRequest {
     pub syntax: MathSyntax,
-    pub doc_schema: Option<nepl3_core::value::SchemaRef>,
+    pub sentence_schema: Option<nepl3_core::value::SchemaRef>,
     pub guests: Vec<MathPrintedGuest>,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]

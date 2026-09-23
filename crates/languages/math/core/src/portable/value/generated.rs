@@ -23,13 +23,13 @@ let f=fields(v,s,"RowRef",1)?;
 Ok(Self(Value::read(&f[0],s,c,b)?))
 }
 }
-impl Value for DocGuestRef {
+impl Value for SentenceGuestRef {
 fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
-record(s,"DocGuestRef",[self.0.put(s,c,b)?],b)
+record(s,"SentenceGuestRef",[self.0.put(s,c,b)?],b)
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
-b.charge(Resource::Work,43)?;
-let f=fields(v,s,"DocGuestRef",1)?;
+b.charge(Resource::Work,48)?;
+let f=fields(v,s,"SentenceGuestRef",1)?;
 Ok(Self(Value::read(&f[0],s,c,b)?))
 }
 }
@@ -48,7 +48,7 @@ fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Resul
 match self {
 Self::Expr(value) => variant(s,"MathRoot","Expr",[value.put(s,c,b)?],b),
 Self::Row(value) => variant(s,"MathRoot","Row",[value.put(s,c,b)?],b),
-Self::DocGuest(value) => variant(s,"MathRoot","DocGuest",[value.put(s,c,b)?],b),
+Self::SentenceGuest(value) => variant(s,"MathRoot","SentenceGuest",[value.put(s,c,b)?],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -57,7 +57,7 @@ let (tag,f)=case(v,s,"MathRoot")?;
 match (tag,f.len()) {
 ("Expr",1)=>Ok(Self::Expr(Value::read(&f[0],s,c,b)?)),
 ("Row",1)=>Ok(Self::Row(Value::read(&f[0],s,c,b)?)),
-("DocGuest",1)=>Ok(Self::DocGuest(Value::read(&f[0],s,c,b)?)),
+("SentenceGuest",1)=>Ok(Self::SentenceGuest(Value::read(&f[0],s,c,b)?)),
 _=>Err(PortableError::Shape),}
 }
 }
@@ -123,7 +123,7 @@ Self::Call {function,arguments} => variant(s,"MathKind","Call",[function.put(s,c
 Self::Label {value,annotation} => variant(s,"MathKind","Label",[value.put(s,c,b)?,annotation.put(s,c,b)?],b),
 Self::Number {value,spelling} => variant(s,"MathKind","Number",[value.put(s,c,b)?,spelling.put(s,c,b)?],b),
 Self::Row {values} => variant(s,"MathKind","Row",[values.put(s,c,b)?],b),
-Self::DocGuest {syntax} => variant(s,"MathKind","DocGuest",[syntax.put(s,c,b)?],b),
+Self::SentenceGuest {syntax} => variant(s,"MathKind","SentenceGuest",[syntax.put(s,c,b)?],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -159,7 +159,7 @@ match (tag,f.len()) {
 ("Label",2)=>Ok(Self::Label {value:Value::read(&f[0],s,c,b)?,annotation:Value::read(&f[1],s,c,b)?}),
 ("Number",2)=>Ok(Self::Number {value:Value::read(&f[0],s,c,b)?,spelling:Value::read(&f[1],s,c,b)?}),
 ("Row",1)=>Ok(Self::Row {values:Value::read(&f[0],s,c,b)?}),
-("DocGuest",1)=>Ok(Self::DocGuest {syntax:Value::read(&f[0],s,c,b)?}),
+("SentenceGuest",1)=>Ok(Self::SentenceGuest {syntax:Value::read(&f[0],s,c,b)?}),
 _=>Err(PortableError::Shape),}
 }
 }
@@ -384,7 +384,7 @@ fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Resu
 match self {
 Self::Expr => variant(s,"MathCategory","Expr",[],b),
 Self::Row => variant(s,"MathCategory","Row",[],b),
-Self::DocGuest => variant(s,"MathCategory","DocGuest",[],b),
+Self::SentenceGuest => variant(s,"MathCategory","SentenceGuest",[],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -393,7 +393,7 @@ let (tag,f)=case(v,s,"MathCategory")?;
 match (tag,f.len()) {
 ("Expr",0)=>Ok(Self::Expr),
 ("Row",0)=>Ok(Self::Row),
-("DocGuest",0)=>Ok(Self::DocGuest),
+("SentenceGuest",0)=>Ok(Self::SentenceGuest),
 _=>Err(PortableError::Shape),}
 }
 }

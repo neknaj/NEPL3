@@ -1,62 +1,59 @@
-//! Explicit host selection for Doc Sentence annotations. Source/Origin closure
-//! validation precedes lowering; this adapter never evaluates an embedded Math.
+//! Explicit host selection of independent Sentence annotations for Math output.
+//! Source closure validation precedes lowering and no guest operation executes.
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
-    diagnostic::Diagnostic,
     schema::SchemaRegistry,
+    source::Digest,
     syntax::{ForeignClosure, SyntaxError},
     value::SchemaRef,
-    value_codec::FoundationValueCodec,
+    value_codec::{FoundationCodecError, FoundationValueCodec},
 };
-use nepl3_doc_core::{labels, lower, prepare};
-use nepl3_doc_html::{LocalPreparationError, RenderOptions, RenderedFragment};
+use nepl3_sentence_core::{lower, portable, syntax::SentenceSyntax};
+use nepl3_suite::adapters::sentence::html;
 
 #[derive(Debug)]
 pub enum Error<E> {
     Stopped(StopReason),
     Selection,
     Syntax(SyntaxError),
-    Lower(lower::DocumentLowerError<E>),
-    Boundary(nepl3_doc_core::portable::PortableError<E>),
-    Structure(nepl3_doc_core::check::StructureError),
-    Label(Box<Diagnostic>),
-    Diagnostic(labels::LabelDiagnosticError<E>),
-    Root,
-    NeedsResolution(prepare::DocPreparationPlan),
-    Language,
-    MissingVariant(u64),
-    ListStart { node: u64, start: u64 },
-    Render(nepl3_doc_html::RenderError),
+    Lower(lower::presentation::Error<E>),
+    Portable(portable::Error<E>),
+    Foundation(E),
+    Render(html::Error),
 }
 impl<E> From<StopReason> for Error<E> {
-    fn from(s: StopReason) -> Self {
-        Self::Stopped(s)
+    fn from(reason: StopReason) -> Self {
+        Self::Stopped(reason)
     }
 }
+
 pub struct RenderedAnnotation {
-    pub document: nepl3_doc_core::model::DocumentSyntax,
-    pub fragment: RenderedFragment,
+    pub sentence: SentenceSyntax,
+    pub sentence_digest: Digest,
+    pub markup: nepl3_markup::html::HtmlRequest,
+    pub origins: Vec<html::ElementOrigin>,
 }
-/// No default guest selection: the complete schema identity and Sentence entry
-/// must match. The returned origin mapping remains relative to the lowered Doc
-/// input; callers retain the original closure for source-aware reporting.
-pub struct DocAnnotationRenderer<'a, C> {
+
+/// The full selected surface identity and Sentence entry must match. Element
+/// indices refer to the returned markup and node indices to its owned Sentence.
+/// The caller retains the original closure and remaps elements on composition.
+pub struct SentenceAnnotationRenderer<'a, C> {
     pub registry: &'a SchemaRegistry,
     pub surface: &'a SchemaRef,
-    pub options: &'a RenderOptions,
     pub codec: &'a mut C,
 }
-impl<C: FoundationValueCodec> DocAnnotationRenderer<'_, C> {
+impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
     pub fn render(
         &mut self,
         guest: &ForeignClosure,
         b: &mut Budget,
     ) -> Result<RenderedAnnotation, Error<C::Error>> {
-        let result = b.with_depth(|b| self.document(guest, b));
+        let result = b.with_depth(|b| self.sentence(guest, b));
         b.poll()?;
         result
     }
-    fn document(
+
+    fn sentence(
         &mut self,
         guest: &ForeignClosure,
         b: &mut Budget,
@@ -74,59 +71,32 @@ impl<C: FoundationValueCodec> DocAnnotationRenderer<'_, C> {
         guest
             .validate(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
-        let syntax = guest
+        let input = guest
             .syntax
             .bundle
             .validate_with_sources(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
-        let doc = lower::document(
-            &syntax,
-            self.surface,
-            nepl3_doc_core::check::Category::Sentence,
-            self.registry,
-            b,
-            self.codec,
-        )
-        .map_err(Error::Lower)?;
-        let prepared = nepl3_doc_html::prepare_local_sentence(
-            &doc,
-            self.options,
-            self.registry,
-            self.codec,
-            b,
-        )
-        .map_err(|e| match e {
-            LocalPreparationError::Stopped(s) => Error::Stopped(s),
-            LocalPreparationError::NeedsResolution(plan) => Error::NeedsResolution(plan),
-            LocalPreparationError::Language => Error::Language,
-            LocalPreparationError::MissingVariant { node } => Error::MissingVariant(node),
-            LocalPreparationError::ListStart { node, start } => Error::ListStart { node, start },
-            LocalPreparationError::Input(e) => match e {
-                prepare::PreparationError::Stopped(s) => Error::Stopped(s),
-                prepare::PreparationError::Boundary(e) => Error::Boundary(e),
-                prepare::PreparationError::Label(e) => match e {
-                    labels::LabelError::Stopped(s) => Error::Stopped(s),
-                    labels::LabelError::Structure(e) => Error::Structure(e),
-                    labels::LabelError::ExpectedArticle | labels::LabelError::ExpectedSentence => {
-                        Error::Root
-                    }
-                    e => match e.diagnostic(&doc, self.registry, self.codec, b) {
-                        Ok(diagnostic) => match b.charge(
-                            Resource::AllocationUnits,
-                            core::mem::size_of::<Diagnostic>() as u64,
-                        ) {
-                            Ok(()) => Error::Label(Box::new(diagnostic)),
-                            Err(s) => Error::Stopped(s),
-                        },
-                        Err(e) => Error::Diagnostic(e),
-                    },
-                },
-            },
-        })?;
-        let fragment = nepl3_doc_html::render_sentence(&prepared, b).map_err(Error::Render)?;
+        let sentence =
+            lower::presentation::sentence(&input, self.surface, self.registry, self.codec, b)
+                .map_err(Error::Lower)?;
+        let raw = portable::syntax::to_value(&sentence, self.registry, self.codec, b)
+            .map_err(Error::Portable)?;
+        let sentence_digest = self
+            .codec
+            .canonical_value_digest(b"NEPL3.Math.Annotation.Sentence.v1\0", &raw, b)
+            .map_err(|error| match error.stop_reason() {
+                Some(reason) => Error::Stopped(reason),
+                None => Error::Foundation(error),
+            })?;
+        let (_, markup, origins) =
+            html::render(&sentence, self.registry, b, self.codec.source_admission())
+                .map_err(Error::Render)?
+                .into_parts();
         Ok(RenderedAnnotation {
-            document: doc,
-            fragment,
+            sentence,
+            sentence_digest,
+            markup,
+            origins,
         })
     }
 }

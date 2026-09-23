@@ -20,7 +20,7 @@ pub fn request_to_value<C: FoundationValueCodec>(
         "MathPrintRequest",
         [
             syntax,
-            request.doc_schema.put(s, c, b)?,
+            request.sentence_schema.put(s, c, b)?,
             request.guests.put(s, c, b)?,
         ],
         b,
@@ -40,7 +40,7 @@ pub fn request_from_value<C: FoundationValueCodec>(
     let f = fields(raw, s, "MathPrintRequest", 3)?;
     Ok(MathPrintRequest {
         syntax: super::from_value(&f[0], r, c, b)?,
-        doc_schema: Value::read(&f[1], s, c, b)?,
+        sentence_schema: Value::read(&f[1], s, c, b)?,
         guests: Value::read(&f[2], s, c, b)?,
     })
 }

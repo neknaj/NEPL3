@@ -113,7 +113,7 @@ pub fn evaluate<'a>(
                         push(&mut tasks, Task::Visit(*upper, depth.saturating_add(1)), b)?;
                         push(&mut tasks, Task::Visit(*lower, depth.saturating_add(1)), b)?;
                     }
-                    MathKind::DocGuest { .. } => return Err(Error::InvalidState),
+                    MathKind::SentenceGuest { .. } => return Err(Error::InvalidState),
                     _ => {
                         let mut count = 0;
                         while edges::edge(kind, count).is_some() {

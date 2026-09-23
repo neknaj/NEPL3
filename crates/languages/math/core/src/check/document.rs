@@ -252,7 +252,7 @@ impl MathSyntax {
                 index += 1;
             }
             let embed = match self.value.nodes[*node].kind {
-                MathKind::DocGuest { syntax } => Some(syntax.0),
+                MathKind::SentenceGuest { syntax } => Some(syntax.0),
                 _ => None,
             };
             if let Some(e) = embed {
