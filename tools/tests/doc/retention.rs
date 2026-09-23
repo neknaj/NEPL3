@@ -24,6 +24,10 @@ pub(super) fn assert_doc_retention(
                 assert_eq!(before.owner_environment, after.owner_environment);
                 assert_eq!(before.owner_origins, after.owner_origins);
                 assert_eq!(before.owner_source_maps, after.owner_source_maps);
+                assert_eq!(before.owner_sources.len(), after.owner_sources.len());
+                for source in &before.owner_sources {
+                    assert!(after.owner_sources.contains(source));
+                }
             }
             (DocContent::Value { value: before }, DocContent::Value { value: after }) => {
                 assert_eq!(before, after);

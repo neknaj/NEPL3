@@ -30,7 +30,6 @@ mod projection;
 mod resources;
 #[path = "doc/retention.rs"]
 mod retention;
-use retention::assert_doc_retention;
 use nepl3_core::value::NdfValue;
 use nepl3_core::{budget::*, source::*};
 use nepl3_engine::profile::*;
@@ -38,6 +37,7 @@ use nepl3_tools::doc::source::{
     Compiled, budget, compiled, err, parse_source_as, with_input, with_input_route,
 };
 use nepl3_wire::foundation::FoundationCodec;
+use retention::assert_doc_retention;
 #[test]
 fn native_doc_host_preserves_owned_parse_tree_and_uses_less_allocation() -> Result<(), String> {
     let compiled = compiled()?;
