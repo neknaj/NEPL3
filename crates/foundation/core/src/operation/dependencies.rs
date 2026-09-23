@@ -181,9 +181,10 @@ impl<'a> PendingDependencies<'a> {
             e => DependencyError::Lifetime(e),
         };
         lifetimes
-            .check_reply(id, &self.calls[position].operation, context, b)
+            .finish_reply(id, &self.calls[position].operation, context, b)
             .map_err(map)?;
-        lifetimes.finish(id, b).map_err(map)?;
+        // Binding validation is the last fallible operation. Commit the result
+        // into its reserved slot after the same lifetime index was finished.
         self.results[position] = Some(result);
         self.remaining -= 1;
         Ok(())
