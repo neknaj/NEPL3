@@ -448,6 +448,172 @@ fn generated_sentence_views_keep_explicit_mapping_and_closed_sources() -> Result
 }
 
 #[test]
+fn generated_node_locations_require_owner_mapping_and_survive_wire() -> Result<(), String> {
+    use nepl3_core::{
+        origin::{Mapping, MappingKind},
+        value::{NdfValue, TypedValue},
+    };
+    use nepl3_doc_core::model::{DocContent, DocEmbed, EmbedKind};
+    use nepl3_sentence_core::{model::Root, portable, syntax};
+    use nepl3_suite::adapters::document::sentence;
+    let compiled = compiled()?;
+    nepl3_tools::doc::source::with_input(
+        &compiled,
+        r#"sentence "漢𝄞""#,
+        "Sentence",
+        |tree, profile, b, a| {
+            let empty = SourceStore::default();
+            let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
+            let doc = lower::document(
+                tree.syntax(),
+                &compiled.doc.package.schema,
+                Category::Sentence,
+                profile.registry(),
+                b,
+                &mut codec,
+            )
+            .map_err(err)?;
+            let [embed] = doc.value.embeds.as_slice() else {
+                return Err("one Sentence".into());
+            };
+            let original = sentence::lower(
+                embed,
+                embed.schema(),
+                &[],
+                profile.registry(),
+                &mut codec,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            let Root::Sentence(root) = original.value.root else {
+                return Err("Sentence root".into());
+            };
+            let index = root.0 as usize;
+            let head = original.locations[index].head.clone().ok_or("head")?;
+            let cover = original.locations[index].cover.clone().ok_or("cover")?;
+            let owner = original
+                .sources
+                .iter()
+                .find(|s| s.identity() == cover.snapshot_ref())
+                .ok_or("owner snapshot")?;
+            let generated = SourceSnapshot::new(
+                SourceId("generated-location".into()),
+                0,
+                "memory:generated-location".into(),
+                owner.text().as_bytes().to_vec(),
+                &mut budget(),
+            )
+            .map_err(err)?;
+            let generated_head = generated.span(head.start(), head.end()).map_err(err)?;
+            let generated_cover = generated.span(cover.start(), cover.end()).map_err(err)?;
+            // Exercise the two ownership checks separately: cover -> head,
+            // then cover -> view head. The semantic value and views stay fixed.
+            for move_cover in [false, true] {
+                let mut input = original.clone();
+                input.sources.push(generated.clone());
+                input.locations[index].head = Some(generated_head.clone());
+                if move_cover {
+                    input.locations[index].cover = Some(generated_cover.clone());
+                }
+                let expected = if move_cover {
+                    syntax::Error::ViewOwner(root.0)
+                } else {
+                    syntax::Error::HeadCover(root.0)
+                };
+                let missing = input.validate(
+                    profile.registry(),
+                    &mut budget(),
+                    &mut SourceAdmission::default(),
+                );
+                assert_eq!(missing.err(), Some(expected));
+                input.source_maps.push(Mapping {
+                    source: if move_cover {
+                        generated_cover.clone()
+                    } else {
+                        cover.clone()
+                    },
+                    target: if move_cover {
+                        cover.clone()
+                    } else {
+                        generated_cover.clone()
+                    },
+                    kind: MappingKind::Exact,
+                });
+                input
+                    .validate(
+                        profile.registry(),
+                        &mut budget(),
+                        &mut SourceAdmission::default(),
+                    )
+                    .map_err(err)?;
+                let mut wrong = input.clone();
+                let map = wrong.source_maps.last_mut().ok_or("mapping")?;
+                // A valid but unrelated owner range must not authorize this node.
+                map.source = if move_cover {
+                    generated.span(0, 1)
+                } else {
+                    owner.span(0, 1)
+                }
+                .map_err(err)?;
+                map.kind = MappingKind::Transformed;
+                let rejected = wrong.validate(
+                    profile.registry(),
+                    &mut budget(),
+                    &mut SourceAdmission::default(),
+                );
+                let expected = if move_cover {
+                    syntax::Error::ViewOwner(root.0)
+                } else {
+                    syntax::Error::HeadCover(root.0)
+                };
+                assert_eq!(rejected.err(), Some(expected));
+                let encoded = portable::syntax::to_value(
+                    &input,
+                    profile.registry(),
+                    &mut codec,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                let bytes = nepl3_wire::encode(&encoded, &mut budget()).map_err(err)?;
+                let NdfValue::Record(ref record) =
+                    nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?
+                else {
+                    return Err("SentenceSyntax record".into());
+                };
+                let placement = DocEmbed {
+                    kind: EmbedKind::Sentence,
+                    content: DocContent::Value {
+                        value: TypedValue::Record(record.clone()),
+                    },
+                };
+                let mut admission = SourceAdmission::default();
+                let mut receiver = FoundationCodec::new(profile.registry(), &empty, &mut admission)
+                    .map_err(err)?;
+                let actual = sentence::lower(
+                    &placement,
+                    embed.schema(),
+                    &[],
+                    profile.registry(),
+                    &mut receiver,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                assert_eq!(actual.value, input.value);
+                assert_eq!(actual.locations, input.locations);
+                assert_eq!(actual.origins, input.origins);
+                assert_eq!(actual.views, input.views);
+                assert_eq!(actual.source_maps, input.source_maps);
+                assert_eq!(actual.sources.len(), input.sources.len());
+                for source in &input.sources {
+                    assert!(actual.sources.contains(source));
+                }
+            }
+            Ok(())
+        },
+    )
+}
+
+#[test]
 fn mixed_lower_stops_keep_original_tree_and_caller_depth() -> Result<(), String> {
     use nepl3_core::budget::{Budget, StopReason};
     let compiled = compiled()?;
