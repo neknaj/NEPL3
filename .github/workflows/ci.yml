@@ -23,6 +23,29 @@ defaults:
     shell: bash
 
 jobs:
+  python-static:
+    name: Python static analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - name: Install pinned runtime and static-analysis dependencies
+        run: python -m pip install -r tools/typing/requirements.txt -r tools/extensions/requirements.txt -r tools/audit/doc_html/requirements.txt
+      - name: Check all Python tools and tests
+        run: basedpyright
+      - name: Typed boundary and adapter tests
+        run: >-
+          python -m unittest
+          tools.serialization.test_json tools.serialization.test_toml
+          tools.catalog.test_forms tools.generate.test_adapters
+          tools.extensions.test_cargo tools.extensions.test_execution
+          tools.audit.allocation.test_run
+          tools.audit.math.test_visual tools.audit.math.test_annotations
+
   native:
     name: native (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -457,12 +480,13 @@ jobs:
   quality:
     name: quality
     if: ${{ always() }}
-    needs: [native, repository-contract, site-publication, wasi, baremetal-build, baremetal-rp2040, doc-browser]
+    needs: [python-static, native, repository-contract, site-publication, wasi, baremetal-build, baremetal-rp2040, doc-browser]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Require native and WASI checks to pass
         env:
+          PYTHON_RESULT: ${{ needs.python-static.result }}
           REPOSITORY_RESULT: ${{ needs.repository-contract.result }}
           SITE_RESULT: ${{ needs.site-publication.result }}
           NATIVE_RESULT: ${{ needs.native.result }}
@@ -471,6 +495,7 @@ jobs:
           RP2040_RESULT: ${{ needs.baremetal-rp2040.result }}
           DOC_BROWSER_RESULT: ${{ needs.doc-browser.result }}
         run: |
+          test "$PYTHON_RESULT" = success
           test "$REPOSITORY_RESULT" = success
           test "$SITE_RESULT" = success
           test "$NATIVE_RESULT" = success
