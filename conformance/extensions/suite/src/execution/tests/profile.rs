@@ -21,6 +21,12 @@ fn profile_authority_rejects_missing_identity_allowlist_and_limits() -> Result<(
     Ok(())
 }
 
+#[test]
+fn profile_execution_preserves_stopped_guest_diagnostics() -> Result<(), String> {
+    let large = "1234567890123456789012345678901234567890123456789012345678901234567890";
+    check(&format!("add framed frame mul {large} {large} 2"), 0, 5)
+}
+
 fn check(input: &str, expected: i64, case: u8) -> Result<(), String> {
     let mut languages = composition::languages("Expr", "Frame")?;
     let expr = languages.packages[0].1.schema.clone();
@@ -88,6 +94,11 @@ fn check(input: &str, expected: i64, case: u8) -> Result<(), String> {
                     .map_err(error)?;
             }
             let mut execution = budget();
+            if case == 5 {
+                let mut limits = execution.limits();
+                limits.work = 20_000;
+                execution = Budget::new(limits);
+            }
             if case == 4 {
                 let mut limits = execution.limits();
                 limits.work += 1;
@@ -105,6 +116,54 @@ fn check(input: &str, expected: i64, case: u8) -> Result<(), String> {
                 |id, _| awaits.push(id),
                 |id| cancellations.push(id),
             );
+            if case == 5 {
+                let Err(Error::Profile(nepl3_suite::profile::Error::Execution(failure))) = result
+                else {
+                    return Err("expected Profile execution to retain stopped guest".into());
+                };
+                assert_eq!(execution.poll(), Err(StopReason::WorkLimit));
+                assert_eq!(awaits, [7, 5, 4, 3]);
+                let accepted = failure.accepted_results().collect::<Vec<_>>();
+                assert_eq!(accepted.len(), 1);
+                let (call, outcome) = accepted[0];
+                assert_eq!(call.request_id, 3);
+                let OperationResult::Stopped {
+                    reason,
+                    partial,
+                    report,
+                } = outcome
+                else {
+                    return Err("expected accepted Stopped".into());
+                };
+                assert_eq!(*reason, StopReason::WorkLimit);
+                assert!(partial.is_none());
+                assert_eq!(report.usage, execution.usage());
+                assert_eq!(report.diagnostics.len(), 1);
+                let diagnostic = &report.diagnostics[0];
+                assert_eq!(diagnostic.code, "evaluation-stopped");
+                assert_eq!(diagnostic.schema, call.operation.schema);
+                assert_eq!(diagnostic.arguments, call.input);
+                let span = diagnostic.primary.as_ref().ok_or("guest span")?;
+                assert_eq!((span.start(), span.end()), (17, 20));
+                report
+                    .validate_with_sources(&sources, registry, &mut budget())
+                    .map_err(error)?;
+                assert!(
+                    report
+                        .validate_with_sources(&SourceStore::default(), registry, &mut budget())
+                        .is_err()
+                );
+                assert_eq!(failure.active_request_id(), 4);
+                assert!(!cancellations.contains(&3));
+                assert_eq!(
+                    cancellations
+                        .iter()
+                        .collect::<std::collections::BTreeSet<_>>()
+                        .len(),
+                    cancellations.len()
+                );
+                return Ok(());
+            }
             if case == 3 || case == 4 {
                 assert!(matches!(
                     (case, result),
