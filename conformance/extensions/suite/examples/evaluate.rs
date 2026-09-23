@@ -102,6 +102,18 @@ fn main() -> Result<(), String> {
                         for (child, outcome) in scheduler.accepted_results() {
                             eprintln!("Accepted request {}: {outcome:?}", child.request_id);
                         }
+                        for pending in scheduler.uncommitted_results() {
+                            eprintln!(
+                                "Uncommitted terminal request {}, operation {:?}, context {:?}: {:?}",
+                                pending.request_id, pending.operation, pending.context, pending.result
+                            );
+                        }
+                        for pending in scheduler.uncommitted_await_reports() {
+                            eprintln!(
+                                "Uncommitted Await request {}, operation {:?}, context {:?}: {:?}",
+                                pending.request_id, pending.operation, pending.context, pending.report
+                            );
+                        }
                     }
                     error(failure)
                 })?;

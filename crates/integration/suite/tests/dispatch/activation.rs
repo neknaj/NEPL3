@@ -162,12 +162,16 @@ fn preparation_preserves_activation_policy_lifetime_and_budget_gates() -> Result
 
     let mut table = running(&parent, context);
     assert!(matches!(
-        prepare()?.activate(&[], &[context], &mut table, &mut budget()),
+        prepare()?
+            .activate(&[], &[context], &mut table, &mut budget())
+            .map_err(|e| e.cause),
         Err(ActivationError::Grants(_))
     ));
     unchanged(&table, &parent);
     assert!(matches!(
-        prepare()?.activate(&policy, &[], &mut table, &mut budget()),
+        prepare()?
+            .activate(&policy, &[], &mut table, &mut budget())
+            .map_err(|e| e.cause),
         Err(ActivationError::ContextCount)
     ));
     unchanged(&table, &parent);
@@ -176,7 +180,9 @@ fn preparation_preserves_activation_policy_lifetime_and_budget_gates() -> Result
     let mut limits = budget().limits();
     limits.allocation_units = 0;
     assert!(matches!(
-        prepared.activate(&policy, &[context], &mut table, &mut Budget::new(limits)),
+        prepared
+            .activate(&policy, &[context], &mut table, &mut Budget::new(limits))
+            .map_err(|e| e.cause),
         Err(ActivationError::Stopped(StopReason::AllocationLimit))
     ));
     unchanged(&table, &parent);
@@ -188,7 +194,9 @@ fn preparation_preserves_activation_policy_lifetime_and_budget_gates() -> Result
         .cancel(parent.request_id, &mut budget())
         .map_err(|e| format!("{e:?}"))?;
     assert!(matches!(
-        prepared.activate(&policy, &[context], &mut table, &mut budget()),
+        prepared
+            .activate(&policy, &[context], &mut table, &mut budget())
+            .map_err(|e| e.cause),
         Err(ActivationError::Lifetime(_))
     ));
     assert_eq!(
@@ -279,7 +287,7 @@ fn owned_activation_retains_calls_and_publishes_only_after_all_budgeted_checks()
             let mut limited = Budget::new(limits);
             assert!(
                 matches!(activate_owned(&parent, context, reply(&parent, context),
-                &policy, &[context], &registry, &sources, &mut table, &mut limited),
+                &policy, &[context], &registry, &sources, &mut table, &mut limited).map_err(|e| e.cause),
                 Err(ActivationError::Stopped(s)) if s == reason)
             );
             unchanged(&table, &parent);
@@ -297,7 +305,8 @@ fn owned_activation_retains_calls_and_publishes_only_after_all_budgeted_checks()
             &sources,
             &mut table,
             &mut budget()
-        ),
+        )
+        .map_err(|e| e.cause),
         Err(ActivationError::Grants(_))
     ));
     unchanged(&table, &parent);
@@ -341,6 +350,68 @@ fn owned_activation_preserves_provider_report_without_absorbing_claimed_usage() 
     if let OperationReply::Await { report, .. } = &mut response {
         *report = expected.clone();
     }
+    // A fully checked reply remains recoverable through all activation gates.
+    // Each failure leaves the parent Running and the child unpublished.
+    for gate in 0..4 {
+        let prepared = prepare_owned(
+            &parent,
+            context,
+            response.clone(),
+            &registry,
+            &sources,
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        let mut table = running(&parent, context);
+        let mut limits = budget().limits();
+        if gate == 2 {
+            limits.work = 0;
+        }
+        if gate == 3 {
+            limits.allocation_units = 0;
+        }
+        let contexts = [context];
+        let result = prepared.activate(
+            if gate == 0 { &[] } else { &policy },
+            if gate == 1 { &[] } else { &contexts },
+            &mut table,
+            &mut Budget::new(limits),
+        );
+        let Err(failure) = result else {
+            return Err("activation gate succeeded".into());
+        };
+        assert_eq!(
+            failure
+                .prepared()
+                .ok_or("missing checked preparation")?
+                .report(),
+            &expected
+        );
+        let recovered = failure.into_prepared().ok_or("missing owned preparation")?;
+        assert_eq!(recovered.calls().len(), 1);
+        assert_eq!(recovered.report(), &expected);
+        unchanged(&table, &parent);
+    }
+    let mut invalid = response.clone();
+    if let OperationReply::Await { report, .. } = &mut invalid {
+        report.usage.diagnostics = 0;
+    }
+    let mut table = running(&parent, context);
+    let Err(failure) = activate_owned(
+        &parent,
+        context,
+        invalid,
+        &policy,
+        &[context],
+        &registry,
+        &sources,
+        &mut table,
+        &mut budget(),
+    ) else {
+        return Err("invalid report accepted".into());
+    };
+    assert!(failure.prepared().is_none());
+    unchanged(&table, &parent);
     let mut table = running(&parent, context);
     let mut measured = budget();
     let active = activate_owned(

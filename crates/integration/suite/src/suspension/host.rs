@@ -39,36 +39,80 @@ pub struct PreparedAwait<'a, S> {
     report: Report,
 }
 
-impl<S> PreparedAwait<'_, S> {
+/// Failed activation retains the checked preparation. Failures before full
+/// preparation contain no checked value and expose no provider Report.
+pub struct ActivationFailure<'a, S> {
+    pub cause: ActivationError,
+    prepared: Option<PreparedAwait<'a, S>>,
+}
+impl<'a, S> ActivationFailure<'a, S> {
+    pub fn prepared(&self) -> Option<&PreparedAwait<'a, S>> {
+        self.prepared.as_ref()
+    }
+    pub fn into_prepared(self) -> Option<PreparedAwait<'a, S>> {
+        self.prepared
+    }
+}
+impl<S> core::fmt::Debug for ActivationFailure<'_, S> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("ActivationFailure")
+            .field("cause", &self.cause)
+            .field("retains_preparation", &self.prepared.is_some())
+            .finish()
+    }
+}
+
+impl<'a, S> PreparedAwait<'a, S> {
     pub fn calls(&self) -> &[Invoke] {
         self.pending.calls()
     }
 
+    pub fn report(&self) -> &Report {
+        &self.report
+    }
+
+    /// Move the checked Report to a host frame before fallible context work.
+    /// This performs no allocation and leaves an empty report for activation.
+    /// It grants no permission to execute any dependency.
+    pub fn take_report(&mut self) -> Report {
+        core::mem::take(&mut self.report)
+    }
+
     /// Authorize against the current policy and publish the complete generation
-    /// atomically. Failure consumes the preparation without changing lifetimes.
+    /// atomically. Failure returns the preparation without changing lifetimes.
+    #[allow(clippy::result_large_err)] // Retain owned data without allocation after a resource stop.
     pub fn activate(
         self,
         policy: &[OperationGrant<'_>],
         contexts: &[Digest],
         lifetimes: &mut RequestLifetimes,
         budget: &mut Budget,
-    ) -> Result<OwnedActiveAwait, ActivationError> {
-        budget.poll()?;
-        if contexts.len() != self.pending.calls().len() {
-            return Err(ActivationError::ContextCount);
+    ) -> Result<OwnedActiveAwait, ActivationFailure<'a, S>> {
+        let outcome = (|| {
+            budget.poll()?;
+            if contexts.len() != self.pending.calls().len() {
+                return Err(ActivationError::ContextCount);
+            }
+            dependencies::authorize(self.pending.calls(), policy, budget).map_err(|e| match e {
+                DependencyGrantError::Stopped(s) => ActivationError::Stopped(s),
+                e => ActivationError::Grants(e),
+            })?;
+            publish(
+                self.parent,
+                self.pending.continuation(),
+                self.pending.calls(),
+                contexts,
+                lifetimes,
+                budget,
+            )?;
+            Ok::<(), ActivationError>(())
+        })();
+        if let Err(cause) = outcome {
+            return Err(ActivationFailure {
+                cause,
+                prepared: Some(self),
+            });
         }
-        dependencies::authorize(self.pending.calls(), policy, budget).map_err(|e| match e {
-            DependencyGrantError::Stopped(s) => ActivationError::Stopped(s),
-            e => ActivationError::Grants(e),
-        })?;
-        publish(
-            self.parent,
-            self.pending.continuation(),
-            self.pending.calls(),
-            contexts,
-            lifetimes,
-            budget,
-        )?;
         Ok(OwnedActiveAwait {
             pending: self.pending,
             report: self.report,
@@ -146,23 +190,28 @@ pub fn activate<'a>(
 }
 
 /// Admit and retain an owned Await for a host frame. All checks and allocations
-/// precede lifetime publication; a rejected reply is consumed with no table
-/// change. This result retains no authorization proof: dispatch must use the
+/// precede lifetime publication. Activation failure retains a fully prepared
+/// reply; preparation failure exposes no checked reply. Both leave the table
+/// unchanged. This result retains no authorization proof: dispatch must use the
 /// current host policy to authorize each borrowed call before invoking it.
 /// Execution budgets and cancellation remain the scheduler's responsibility.
-#[allow(clippy::too_many_arguments)]
-pub fn activate_owned(
-    parent: &Invoke,
+#[allow(clippy::too_many_arguments, clippy::result_large_err)] // Failure recovery must not allocate.
+pub fn activate_owned<'a, S: DiagnosticSourceResolver>(
+    parent: &'a Invoke,
     context: Digest,
     reply: OperationReply,
     policy: &[OperationGrant<'_>],
     contexts: &[Digest],
-    registry: &SchemaRegistry,
-    sources: &impl DiagnosticSourceResolver,
+    registry: &'a SchemaRegistry,
+    sources: &'a S,
     lifetimes: &mut RequestLifetimes,
     budget: &mut Budget,
-) -> Result<OwnedActiveAwait, ActivationError> {
-    prepare_owned(parent, context, reply, registry, sources, budget)?
+) -> Result<OwnedActiveAwait, ActivationFailure<'a, S>> {
+    prepare_owned(parent, context, reply, registry, sources, budget)
+        .map_err(|cause| ActivationFailure {
+            cause,
+            prepared: None,
+        })?
         .activate(policy, contexts, lifetimes, budget)
 }
 

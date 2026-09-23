@@ -1,6 +1,8 @@
 use super::*;
 #[path = "scheduler/admission.rs"]
 mod admission;
+#[path = "scheduler/await_report.rs"]
+mod await_report;
 #[path = "scheduler/outcomes.rs"]
 mod outcomes;
 #[path = "scheduler/profile.rs"]
