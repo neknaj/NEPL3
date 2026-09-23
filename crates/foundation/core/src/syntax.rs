@@ -11,6 +11,8 @@ use crate::{
 use alloc::{boxed::Box, string::String, vec::Vec};
 
 pub mod canonical;
+mod environment;
+pub use environment::ValidatedEnvironment;
 mod copy;
 mod foreign;
 pub use foreign::resources as validate_resources;
