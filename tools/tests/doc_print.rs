@@ -5,7 +5,7 @@ use nepl3_doc_core::{
     check::{Category, ShapeError},
     lower,
     model::*,
-    print::{self, PrintEntry, PrintFailure, PrintMismatch, PrintMode, PrintOutcome},
+    print::{self, PrintEntry, PrintFailure, PrintMismatch, PrintMode, PrintOutcome, PrintRequest},
 };
 use nepl3_tools::doc::source::{budget, compiled, err, parse_source_as, with_input};
 use nepl3_wire::foundation::FoundationCodec;
@@ -1373,6 +1373,107 @@ fn paragraph_edit_uses_model_span_and_preserves_surrounding_source() -> Result<(
         assert_eq!(text(base)?, "base");
         assert_eq!(notes.len(), 1);
         assert_eq!(text(notes[0])?, "note");
+        Ok(())
+    })
+}
+
+#[test]
+fn printer_expands_shared_paths_with_bounded_output_and_deep_cleanup() -> Result<(), String> {
+    let compiled = compiled()?;
+    with_input(&compiled, "body nil", "Body", |_, profile, _, _| {
+        let node = |kind| DocNode {
+            locations: vec![],
+            kind,
+            origin: None,
+            span: None,
+        };
+        let empty = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
+        for (depth, shared) in [(512, false), (20, true)] {
+            let mut nodes = vec![node(DocKind::RawCode {
+                language_hint: None,
+                text: "x".into(),
+            })];
+            for id in 0..depth {
+                nodes.push(node(if shared {
+                    DocKind::Paragraph {
+                        items: vec![FlowRef(id), FlowRef(id)],
+                    }
+                } else {
+                    DocKind::Paragraph {
+                        items: vec![FlowRef(id)],
+                    }
+                }));
+            }
+            let document = DocumentSyntax {
+                value: DocValue {
+                    root: DocRoot::Block(BlockRef(depth)),
+                    nodes,
+                    embeds: vec![],
+                },
+                sources: vec![],
+                origins: vec![],
+                views: vec![],
+                source_maps: vec![],
+            };
+            for mode in [PrintMode::Prefix, PrintMode::Compact] {
+                let request = PrintRequest {
+                    document: document.clone(),
+                    mode,
+                    bindings: vec![],
+                    guests: vec![],
+                };
+                let mut preparation = budget();
+                preparation = Budget::new(Limits {
+                    depth: 2000,
+                    ..preparation.limits()
+                });
+                print::identity(&document, profile.registry(), &mut codec, &mut preparation)
+                    .map_err(err)?;
+                let preparation_output = preparation.usage().output_bytes;
+                let mut limits = budget().limits();
+                limits.depth = 2000;
+                limits.output_bytes = if shared {
+                    preparation_output + 1024
+                } else {
+                    1_000_000
+                };
+                let mut b = Budget::new(limits);
+                let reply =
+                    print::print(&request, profile.registry(), &mut codec, &mut b).map_err(err)?;
+                if shared {
+                    assert_eq!(
+                        reply.outcome,
+                        PrintOutcome::Stopped {
+                            reason: StopReason::OutputLimit
+                        }
+                    );
+                    assert_eq!(b.poll(), Err(StopReason::OutputLimit));
+                    assert!(b.usage().output_bytes > preparation_output);
+                    assert!(b.usage().output_bytes <= preparation_output + 1024);
+                } else {
+                    let PrintOutcome::Complete { artifact } = reply.outcome else {
+                        return Err(format!("deep prefix unexpectedly stopped: {reply:?}"));
+                    };
+                    assert_eq!(artifact.text.matches("paragraph ").count(), depth as usize);
+                    assert_eq!(artifact.text.matches("rawcode none \"x\"").count(), 1);
+                }
+                assert_eq!(request.document, document);
+                let mut limits = budget().limits();
+                limits.depth = 8;
+                let mut b = Budget::new(limits);
+                assert_eq!(
+                    print::print(&request, profile.registry(), &mut codec, &mut b)
+                        .map_err(err)?
+                        .outcome,
+                    PrintOutcome::Stopped {
+                        reason: StopReason::DepthLimit
+                    }
+                );
+            }
+        }
         Ok(())
     })
 }
