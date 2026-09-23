@@ -2,6 +2,81 @@
 use nepl3_tools::doc::{export, source::compiled};
 
 #[test]
+fn observing_export_preserves_artifacts_and_stage_order() -> Result<(), String> {
+    let compiled = compiled()?;
+    let source = "article ja \"T\" body cons paragraph cons \"[文/ぶん]。\" nil nil";
+    let expected = export::generate(&compiled, source)?;
+    let mut measurements = Vec::new();
+    let actual = export::generate_observed(&compiled, source, &mut |m| measurements.push(m))?;
+    assert_eq!(actual.html, expected.html);
+    assert_eq!(actual.manifest, expected.manifest);
+    assert_eq!(
+        measurements.iter().map(|m| m.stage).collect::<Vec<_>>(),
+        [
+            export::Stage::ParseAndValidate,
+            export::Stage::Lower,
+            export::Stage::Prepare,
+            export::Stage::RenderAndSerialize,
+        ]
+    );
+    assert!(measurements[3].usage.work >= measurements[2].usage.work);
+    Ok(())
+}
+
+/// Explicit host measurement: no wall-clock threshold and no production Budget
+/// increase. Source construction is parser test input, outside measured stages.
+#[test]
+#[ignore = "explicit pipeline scaling measurement"]
+fn measure_annotated_document_scaling() -> Result<(), String> {
+    let compiled = compiled()?;
+    for (paragraphs, sentences, annotated, text_repeats) in [
+        (8, 4, true, 1),
+        (32, 4, true, 1),
+        (128, 4, true, 1),
+        (32, 1, true, 1),
+        (32, 4, false, 1),
+        (32, 4, true, 8),
+    ] {
+        let mut source = String::from("article ja \"T\" body ");
+        let text = if annotated {
+            "[文/ぶん]。"
+        } else {
+            "文。"
+        }
+        .repeat(text_repeats);
+        for _ in 0..paragraphs {
+            source.push_str("cons paragraph ");
+            for _ in 0..sentences {
+                source.push_str("cons \"");
+                source.push_str(&text);
+                source.push_str("\" ");
+            }
+            source.push_str("nil ");
+        }
+        source.push_str("nil");
+        println!(
+            "input bytes={} paragraphs={paragraphs} sentences={sentences} annotated={annotated} text_repeats={text_repeats}",
+            source.len()
+        );
+        let output = export::generate_observed(&compiled, &source, &mut |m| {
+            println!(
+                "stage={:?} elapsed_ns={} usage={:?}",
+                m.stage,
+                m.elapsed.as_nanos(),
+                m.usage
+            );
+        })?;
+        let count = paragraphs * sentences * text_repeats;
+        assert_eq!(output.html.matches('。').count(), count);
+        assert_eq!(
+            output.html.matches("ぶん").count(),
+            if annotated { count } else { 0 }
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn large_annotated_document_preserves_every_sentence() -> Result<(), String> {
     let mut source = String::from("article ja \"T\" body ");
     for _ in 0..128 {

@@ -5,7 +5,25 @@ use nepl3_core::source::{Digest, SourceAdmission, SourceStore};
 use nepl3_doc_core::{check::Category, lower};
 use nepl3_doc_html::{ParallelMode, RenderOptions, prepare_local, render};
 use nepl3_wire::foundation::FoundationCodec;
+use std::time::{Duration, Instant};
 use std::{fs, io::Read, path::Path};
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Stage {
+    ParseAndValidate,
+    Lower,
+    Prepare,
+    RenderAndSerialize,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct StageMeasurement {
+    pub stage: Stage,
+    pub elapsed: Duration,
+    /// Cumulative logical usage in this operation's Budget. Prepare and render
+    /// share one Budget; compare their snapshots rather than summing them.
+    pub usage: nepl3_core::budget::Usage,
+}
 
 pub const CSS: &str = nepl3_doc_html::STYLESHEET;
 /// Host input cap, also checked for callers supplying an in-memory source.
@@ -17,12 +35,30 @@ pub struct LocalDocument {
 }
 
 pub fn generate(compiled: &Compiled, input: &str) -> Result<LocalDocument, String> {
+    generate_observed(compiled, input, &mut |_| {})
+}
+
+/// Observe successful stage boundaries in the production export pipeline.
+/// Timing stays in the host callback and never enters generated artifacts.
+/// An error returns normally; no measurement claims completion of that stage.
+pub fn generate_observed(
+    compiled: &Compiled,
+    input: &str,
+    observe: &mut impl FnMut(StageMeasurement),
+) -> Result<LocalDocument, String> {
     if input.len() as u64 > MAX_SOURCE_BYTES {
         return Err("SourceLimit".into());
     }
+    let parse_start = Instant::now();
     with_input_route(true, compiled, input, "Article", |tree, profile, b, _a| {
         let checked = tree.syntax();
         let parse_usage = b.usage();
+        observe(StageMeasurement {
+            stage: Stage::ParseAndValidate,
+            elapsed: parse_start.elapsed(),
+            usage: parse_usage,
+        });
+        let lower_start = Instant::now();
         let empty = SourceStore::default();
         let mut admission = SourceAdmission::default();
         let mut codec =
@@ -37,7 +73,13 @@ pub fn generate(compiled: &Compiled, input: &str) -> Result<LocalDocument, Strin
             &mut codec,
         )
         .map_err(err)?;
+        observe(StageMeasurement {
+            stage: Stage::Lower,
+            elapsed: lower_start.elapsed(),
+            usage: lower_budget.usage(),
+        });
         let mut output_budget = budget();
+        let prepare_start = Instant::now();
         let options = RenderOptions {
             parallel: ParallelMode::Rows,
         };
@@ -49,8 +91,19 @@ pub fn generate(compiled: &Compiled, input: &str) -> Result<LocalDocument, Strin
             &mut output_budget,
         )
         .map_err(err)?;
+        observe(StageMeasurement {
+            stage: Stage::Prepare,
+            elapsed: prepare_start.elapsed(),
+            usage: output_budget.usage(),
+        });
+        let render_start = Instant::now();
         let rendered = render(&prepared, &mut output_budget).map_err(err)?;
         let html = shell(&rendered, &mut output_budget)?;
+        observe(StageMeasurement {
+            stage: Stage::RenderAndSerialize,
+            elapsed: render_start.elapsed(),
+            usage: output_budget.usage(),
+        });
         let digest = |bytes: &[u8]| {
             Digest::of(bytes)
                 .0
