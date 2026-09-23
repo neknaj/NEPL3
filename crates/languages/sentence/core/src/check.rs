@@ -60,6 +60,21 @@ impl<'a> CheckedShape<'a> {
         b: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<(), Error> {
+        let embeds = self.foreign_depths(b)?;
+        let base = b.current_depth();
+        for (closure, depth) in self.value.embeds.iter().zip(embeds) {
+            b.with_depth_at_least::<_, Error>(base.saturating_add(depth), |b| {
+                closure.validate(registry, b, admission)?;
+                Ok(())
+            })?;
+        }
+        Ok(())
+    }
+
+    /// Deepest owner occurrence for each embed, relative to this Sentence root.
+    /// Hosts use these depths when invoking a selected guest operation. Shared
+    /// nodes retain their longest path; returned indices match `value.embeds`.
+    pub fn foreign_depths(&self, b: &mut Budget) -> Result<Vec<u64>, Error> {
         b.poll()?;
         let count = self.value.nodes.len();
         let allocation = count
@@ -88,14 +103,7 @@ impl<'a> CheckedShape<'a> {
                 embeds[syntax.0 as usize] = embeds[syntax.0 as usize].max(depths[node]);
             }
         }
-        let base = b.current_depth();
-        for (closure, depth) in self.value.embeds.iter().zip(embeds) {
-            b.with_depth_at_least::<_, Error>(base.saturating_add(depth), |b| {
-                closure.validate(registry, b, admission)?;
-                Ok(())
-            })?;
-        }
-        Ok(())
+        Ok(embeds)
     }
 }
 

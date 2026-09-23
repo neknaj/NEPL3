@@ -112,6 +112,29 @@ fn fixture() -> Result<(SchemaRegistry, SentenceValue), String> {
 }
 
 #[test]
+fn foreign_depths_retain_the_deepest_shared_occurrence() -> Result<(), String> {
+    let (_, mut value) = fixture()?;
+    value.nodes.push(Kind::Concat {
+        inlines: vec![InlineRef(0)],
+    });
+    value.nodes[1] = Kind::Sentence {
+        inlines: vec![InlineRef(0), InlineRef(2)],
+    };
+    // The same embed occurs directly at depth 2 and through Concat at depth 3.
+    let mut budget = b();
+    let shape = value.validate_shape(&mut budget).map_err(err)?;
+    budget
+        .with_depth_at_least::<_, nepl3_sentence_core::check::Error>(7, |budget| {
+            assert_eq!(shape.foreign_depths(budget)?, vec![3]);
+            assert_eq!(budget.current_depth(), 7);
+            Ok(())
+        })
+        .map_err(err)?;
+    assert_eq!(budget.current_depth(), 0);
+    Ok(())
+}
+
+#[test]
 fn selected_source_is_owner_bound_and_shared_occurrences_are_printed() -> Result<(), String> {
     let (registry, value) = fixture()?;
     let prepared = print::prepare(&value, &registry, &mut b(), &mut SourceAdmission::default())

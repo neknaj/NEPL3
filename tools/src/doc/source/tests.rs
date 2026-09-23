@@ -83,6 +83,15 @@ fn math_annotation_uses_registered_sentence_on_both_reader_routes() -> Result<()
                         .any(|source| source.text() == input)
                 );
                 assert!(!annotation.origins.is_empty());
+                let shape = rendered.syntax.value.validate_shape(b).map_err(err)?;
+                let mut printer = crate::doc::printing::SentenceGuestPrinter {
+                    registry: profile.registry(), surface: &sentence.schema,
+                    math_surface: None, codec: &mut codec,
+                };
+                let printed = nepl3_math_core::print::prefix(&shape, &mut printer, b)
+                    .map_err(err)?;
+                assert_eq!(printed.text,
+                    "label symbol \"x\" Sentence sentence cons ruby text \"字\" text \"じ\" nil");
                 let html = rendered.into_html(b).map_err(err)?;
                 assert_eq!(html.annotations.len(), 1);
                 assert!(!html.annotations[0].origins.is_empty());
