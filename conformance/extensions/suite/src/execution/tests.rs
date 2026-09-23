@@ -62,6 +62,175 @@ fn with_program(
 }
 
 #[test]
+fn replies_report_cumulative_execution_usage_across_await_and_resume() -> Result<(), String> {
+    with_program(
+        "add framed frame neg 7 2",
+        |program, sources, runtime, registry| {
+            let mut execution = budget();
+            execution.charge(Resource::Work, 123).map_err(error)?;
+            let mut reports = Vec::new();
+            let outcome = runtime
+                .run(
+                    program,
+                    sources,
+                    registry,
+                    &mut execution,
+                    &mut budget(),
+                    |id, report| reports.push((id, report.usage)),
+                    |_| {},
+                )
+                .map_err(error)?;
+            let OperationResult::Complete { report, .. } = outcome else {
+                return Err("Complete required".into());
+            };
+            assert_eq!(report.usage, execution.usage());
+            assert_eq!(
+                reports.iter().map(|(id, _)| *id).collect::<Vec<_>>(),
+                [6, 4, 3, 2]
+            );
+            let mut previous = 123;
+            for (_, usage) in &reports {
+                assert!(usage.work > previous);
+                assert!(usage.allocation_units > 0);
+                previous = usage.work;
+            }
+            assert!(report.usage.work > previous);
+
+            let session = runtime
+                .prepare(program, sources, registry, budget().limits(), &mut budget())
+                .map_err(error)?;
+            session
+                .with_registrations(
+                    &mut budget(),
+                    |registrations, validation| -> Result<(), String> {
+                        let mut subset = session.root().clone();
+                        subset.sources.clear();
+                        let registration = &registrations[0];
+                        registration
+                            .grants
+                            .admit(&subset, validation)
+                            .map_err(error)?;
+                        let context = (registration.context)(
+                            &subset,
+                            registration.invoke.implementation,
+                            validation,
+                        )
+                        .map_err(error)?;
+                        let mut execution = budget();
+                        execution.charge(Resource::Work, 77).map_err(error)?;
+                        let outcome = suspending::invoke(
+                            &registration.invoke,
+                            registration.invoke.implementation,
+                            &subset,
+                            context,
+                            registry,
+                            sources,
+                            &mut execution,
+                            validation,
+                        )
+                        .map_err(error)?;
+                        let OperationReply::Result(OperationResult::Invalid { report, .. }) =
+                            outcome
+                        else {
+                            return Err("Invalid required".into());
+                        };
+                        assert_eq!(report.usage, execution.usage());
+                        assert!(report.usage.work > 77);
+                        Ok(())
+                    },
+                )
+                .map_err(error)?
+        },
+    )
+}
+
+#[test]
+fn session_registrations_bind_environment_and_full_source_closure() -> Result<(), String> {
+    with_program("neg 7", |program, sources, runtime, registry| {
+        let session = runtime
+            .prepare(program, sources, registry, budget().limits(), &mut budget())
+            .map_err(error)?;
+        session
+            .with_registrations(
+                &mut budget(),
+                |registrations, validation| -> Result<(), String> {
+                    let registration = &registrations[0];
+                    let root = session.root();
+                    let context = (registration.context)(
+                        root,
+                        registration.invoke.implementation,
+                        validation,
+                    )
+                    .map_err(error)?;
+                    let mut changed = root.clone();
+                    let TypedValue::Record(environment) = &mut changed.environment else {
+                        return Err("environment record".into());
+                    };
+                    let [NdfValue::Bytes(digest)] = environment.fields.as_mut_slice() else {
+                        return Err("plan digest".into());
+                    };
+                    digest[0] ^= 1;
+                    assert!(matches!(
+                        registration.grants.admit(&changed, validation),
+                        Err(GrantError::Environment)
+                    ));
+
+                    let mut subset = root.clone();
+                    subset.sources.clear();
+                    // Generic authority permits a subset; the plan-bound operation must
+                    // reject it before producing a full-context continuation.
+                    registration
+                        .grants
+                        .admit(&subset, validation)
+                        .map_err(error)?;
+                    let result = suspending::invoke(
+                        &registration.invoke,
+                        registration.invoke.implementation,
+                        &subset,
+                        context,
+                        registry,
+                        sources,
+                        &mut budget(),
+                        validation,
+                    )
+                    .map_err(error)?;
+                    assert!(matches!(
+                        result,
+                        OperationReply::Result(OperationResult::Invalid { .. })
+                    ));
+
+                    registration.grants.admit(root, validation).map_err(error)?;
+                    let result = suspending::invoke(
+                        &registration.invoke,
+                        registration.invoke.implementation,
+                        root,
+                        context,
+                        registry,
+                        sources,
+                        &mut budget(),
+                        validation,
+                    )
+                    .map_err(error)?;
+                    let OperationReply::Await {
+                        calls,
+                        continuation,
+                        ..
+                    } = result
+                    else {
+                        return Err("expected root Await".into());
+                    };
+                    assert_eq!(calls.len(), 1);
+                    assert_eq!(calls[0].request_id, 1);
+                    assert_eq!(continuation.snapshot_digest, context);
+                    assert_eq!(continuation.parent_request, root.request_id);
+                    Ok(())
+                },
+            )
+            .map_err(error)?
+    })
+}
+
+#[test]
 fn received_plan_uses_typed_execution_and_admitted_source_mapping() -> Result<(), String> {
     with_program(
         "add framed frame neg 7 2",

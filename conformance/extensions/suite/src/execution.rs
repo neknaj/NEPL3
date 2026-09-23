@@ -7,7 +7,7 @@ use crate::{
     syntax::Language,
 };
 use nepl3_core::{
-    budget::{Budget, Resource, StopReason},
+    budget::{Budget, Limits, Resource, StopReason},
     diagnostic::{Diagnostic, OperationResult, Report, Severity},
     operation::{Continuation, Invoke, OperationReply, Resume},
     schema::{SchemaError, SchemaRegistry},
@@ -41,6 +41,18 @@ impl From<StopReason> for Error {
 pub struct Runtime {
     operations: [OperationRef; 2],
     implementations: [Digest; 2],
+}
+
+/// Immutable plan admission shared by native scheduling and provider dispatch.
+/// The source closure, registry and executable registrations remain borrowed.
+/// The host owns request lifetimes, execution budgets and transport separately.
+pub struct Session<'a> {
+    runtime: &'a Runtime,
+    program: &'a Program<'a>,
+    sources: &'a SourceStore,
+    registry: &'a SchemaRegistry,
+    root: Invoke,
+    contexts: [Digest; 2],
 }
 impl Runtime {
     pub fn register(
@@ -82,6 +94,20 @@ impl Runtime {
         report: impl FnMut(u64, Report),
         cancel: impl FnMut(u64),
     ) -> Result<OperationResult<TypedValue>, Error> {
+        self.prepare(program, sources, registry, execution.limits(), validation)?
+            .run(execution, validation, report, cancel)
+    }
+
+    /// Validate and bind one plan before registering its language operations.
+    /// Limits select the root ceiling; the host retains the cumulative Budget.
+    pub fn prepare<'a>(
+        &'a self,
+        program: &'a Program<'a>,
+        sources: &'a SourceStore,
+        registry: &'a SchemaRegistry,
+        limits: Limits,
+        validation: &mut Budget,
+    ) -> Result<Session<'a>, Error> {
         for node in program.nodes() {
             validation.charge(Resource::Work, 1)?;
             if let Some(span) = node.head {
@@ -125,7 +151,7 @@ impl Runtime {
             environment: environment.clone_with_budget(validation)?,
             sources: copy_sources(sources.snapshots(), validation)?,
             resources: vec![],
-            limits: execution.limits(),
+            limits,
         };
         let grants = Grants::new(&environment, sources, &[], validation).map_err(Error::Grants)?;
         grants.admit(&root, validation).map_err(Error::Grants)?;
@@ -145,6 +171,35 @@ impl Runtime {
             )
             .map_err(Error::Context)?,
         ];
+        Ok(Session {
+            runtime: self,
+            program,
+            sources,
+            registry,
+            root,
+            contexts,
+        })
+    }
+}
+
+impl Session<'_> {
+    pub fn root(&self) -> &Invoke {
+        &self.root
+    }
+
+    /// Borrow language registrations for checked dispatch or scheduling. The
+    /// callback must use each registration's grants and the ordinary dispatch
+    /// validation. Raw callbacks are not an external-input admission boundary.
+    /// Registrations cannot outlive this immutable session.
+    pub fn with_registrations<T>(
+        &self,
+        validation: &mut Budget,
+        use_registrations: impl FnOnce(&[scheduler::Registration<'_>], &mut Budget) -> T,
+    ) -> Result<T, Error> {
+        let program = self.program;
+        let contexts = self.contexts;
+        let grants = Grants::new(&self.root.environment, self.sources, &[], validation)
+            .map_err(Error::Grants)?;
         // Each callback copies this exact admitted environment and complete
         // source closure. The immutable digest is shared for this run only.
         let mini_context = |_: &Invoke, _: Digest, b: &mut Budget| {
@@ -157,44 +212,92 @@ impl Runtime {
         };
         let context_callbacks: [&scheduler::Context<'_>; 2] = [&mini_context, &frame_context];
         let mini_invoke = |call: &Invoke, context: Digest, _: &SchemaRegistry, b: &mut Budget| {
+            if !session_sources(call, &self.root, b)? {
+                return Ok(invalid(b));
+            }
             invoke(program, call, context, false, b)
         };
         let frame_invoke = |call: &Invoke, context: Digest, _: &SchemaRegistry, b: &mut Budget| {
+            if !session_sources(call, &self.root, b)? {
+                return Ok(invalid(b));
+            }
             invoke(program, call, context, true, b)
         };
         let mini_resume = |call: &Invoke, reply: &Resume, _: &SchemaRegistry, b: &mut Budget| {
+            if !session_sources(call, &self.root, b)? {
+                return Ok(invalid(b));
+            }
             resume_value(program, call, reply, false, b)
         };
         let frame_resume = |call: &Invoke, reply: &Resume, _: &SchemaRegistry, b: &mut Budget| {
+            if !session_sources(call, &self.root, b)? {
+                return Ok(invalid(b));
+            }
             resume_value(program, call, reply, true, b)
         };
         let invoke_callbacks: [&suspending::Callback<'_>; 2] = [&mini_invoke, &frame_invoke];
         let resume_callbacks: [&resume::Callback<'_>; 2] = [&mini_resume, &frame_resume];
         let registrations = [0, 1].map(|i| scheduler::Registration {
             invoke: suspending::Registration {
-                operation: &self.operations[i],
-                implementation: self.implementations[i],
+                operation: &self.runtime.operations[i],
+                implementation: self.runtime.implementations[i],
                 invoke: invoke_callbacks[i],
             },
             resume: resume::Registration {
-                operation: &self.operations[i],
-                implementation: self.implementations[i],
+                operation: &self.runtime.operations[i],
+                implementation: self.runtime.implementations[i],
                 resume: resume_callbacks[i],
             },
             grants: &grants,
             context: context_callbacks[i],
         });
-        scheduler::run(
-            &registrations,
-            &root,
-            registry,
-            execution,
-            validation,
-            report,
-            cancel,
-        )
+        Ok(use_registrations(&registrations, validation))
+    }
+
+    pub fn run(
+        &self,
+        execution: &mut Budget,
+        validation: &mut Budget,
+        report: impl FnMut(u64, Report),
+        cancel: impl FnMut(u64),
+    ) -> Result<OperationResult<TypedValue>, Error> {
+        self.with_registrations(validation, |registrations, validation| {
+            scheduler::run(
+                registrations,
+                &self.root,
+                self.registry,
+                execution,
+                validation,
+                report,
+                cancel,
+            )
+        })?
         .map_err(Error::Execution)
     }
+}
+
+// A session binds the full ordered source closure. Ordinary grant admission
+// permits subsets; reject those before creating a continuation using the cached
+// full-closure context. Dispatch/grants already validate snapshot contents.
+fn session_sources(call: &Invoke, root: &Invoke, b: &mut Budget) -> Result<bool, StopReason> {
+    b.charge(Resource::Work, 1)?;
+    if call.sources.len() != root.sources.len() || !call.resources.is_empty() {
+        return Ok(false);
+    }
+    for (actual, expected) in call.sources.iter().zip(&root.sources) {
+        b.charge(
+            Resource::Work,
+            (actual.identity().source.0.len()
+                + expected.identity().source.0.len()
+                + actual.uri().len()
+                + expected.uri().len()) as u64
+                + 72,
+        )?;
+        if actual.identity() != expected.identity() || actual.uri() != expected.uri() {
+            return Ok(false);
+        }
+    }
+    Ok(true)
 }
 
 fn plan_digest(value: &TypedValue, budget: &mut Budget) -> Result<Digest, Error> {
