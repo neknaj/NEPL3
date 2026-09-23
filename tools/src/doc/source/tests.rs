@@ -329,12 +329,15 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
                                     let document::Error::NamespaceDuplicate {
                                         definition,
                                         previous,
+                                        diagnostic,
                                     } = *error
                                     else {
                                         return Err("shared anchor owners".into());
                                     };
                                     assert_ne!(definition.member, previous.member);
                                     assert_eq!(definition.node, previous.node);
+                                    assert_eq!(diagnostic.code, "DuplicateLabel");
+                                    assert_eq!(diagnostic.primary, diagnostic.related[0].span);
                                     assert!(std::sync::Arc::ptr_eq(
                                         &definition.document,
                                         &previous.document
@@ -418,11 +421,15 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
                             let document::Error::NamespaceDuplicate {
                                 definition,
                                 previous,
+                                diagnostic,
                             } = *error
                             else {
                                 return Err("both definition owners required".into());
                             };
                             assert_ne!(definition.member, previous.member);
+                            assert_eq!(diagnostic.code, "DuplicateLabel");
+                            assert_eq!(diagnostic.related.len(), 1);
+                            assert_ne!(diagnostic.primary, diagnostic.related[0].span);
                             for owner in [definition, previous] {
                                 let span = owner.document.value.nodes[owner.node as usize]
                                     .locations[0]

@@ -44,6 +44,7 @@ pub enum Error<E> {
     NamespaceDuplicate {
         definition: NamespaceOwner,
         previous: NamespaceOwner,
+        diagnostic: Box<Diagnostic>,
     },
     NeedsResolution(DocPreparationPlan),
     LanguageOptions,

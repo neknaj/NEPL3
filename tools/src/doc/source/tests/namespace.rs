@@ -8,6 +8,183 @@ use nepl3_markup::html::{
 };
 
 #[test]
+fn namespace_diagnostic_keeps_separate_source_owners() -> Result<(), String> {
+    let compiled = compiled()?;
+    for (native, shared_source) in [(false, false), (true, false), (false, true), (true, true)] {
+        let mut documents = Vec::new();
+        let combined =
+            "sentence cons anchor target text \"最初\" cons anchor target text \"後続\" nil";
+        let sources = if shared_source {
+            [combined, combined]
+        } else {
+            ["anchor target text \"最初\"", "anchor target text \"後続\""]
+        };
+        for (name, source) in ["first-definition", "second-definition"]
+            .into_iter()
+            .zip(sources)
+        {
+            if shared_source && !documents.is_empty() {
+                break;
+            }
+            with_named_input(
+                native,
+                &compiled,
+                source,
+                if shared_source {
+                    "shared-definitions"
+                } else {
+                    name
+                },
+                if shared_source { "Sentence" } else { "Inline" },
+                |tree, profile, b, a| {
+                    let input = tree
+                        .tree()
+                        .bundle
+                        .validate_with_sources(profile.registry(), b, a)
+                        .map_err(err)?;
+                    let store = SourceStore::default();
+                    let mut admission = SourceAdmission::default();
+                    let mut codec =
+                        FoundationCodec::new(profile.registry(), &store, &mut admission)
+                            .map_err(err)?;
+                    let document = lower::document(
+                        &input,
+                        &compiled.doc.package.schema,
+                        if shared_source {
+                            Category::Sentence
+                        } else {
+                            Category::Inline
+                        },
+                        profile.registry(),
+                        b,
+                        &mut codec,
+                    )
+                    .map_err(err)?;
+                    if shared_source {
+                        let nodes: Vec<_> = document
+                            .value
+                            .nodes
+                            .iter()
+                            .enumerate()
+                            .filter_map(|(index, node)| {
+                                matches!(node.kind, DocKind::Anchor { .. }).then_some(index)
+                            })
+                            .collect();
+                        assert_eq!(nodes.len(), 2);
+                        for node in nodes {
+                            documents.push(
+                                document
+                                    .fragment(
+                                        nepl3_doc_core::model::DocRoot::Inline(
+                                            nepl3_doc_core::model::InlineRef(node as u64),
+                                        ),
+                                        profile.registry(),
+                                        b,
+                                        codec.source_admission(),
+                                    )
+                                    .map_err(err)?,
+                            );
+                        }
+                    } else {
+                        documents.push(document);
+                    }
+                    Ok(())
+                },
+            )?;
+        }
+        with_input_route(
+            native,
+            &compiled,
+            "text \"context\"",
+            "Inline",
+            |_, profile, b, a| {
+                let registry = profile.registry();
+                let first = namespace::inspect(&documents[0], registry, b, a).map_err(err)?;
+                let second = namespace::inspect(&documents[1], registry, b, a).map_err(err)?;
+                let members = [&first, &second];
+                let failure = match namespace::resolve(&members, b) {
+                    Err(error @ namespace::Error::Duplicate { .. }) => error,
+                    _ => return Err("duplicate label required".into()),
+                };
+                let store = SourceStore::default();
+                let run = |members: &[&namespace::Member<'_>], b: &mut Budget| {
+                    let mut admission = SourceAdmission::default();
+                    let mut codec =
+                        FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+                    Ok::<_, String>(failure.diagnostic(members, registry, &mut codec, b))
+                };
+                let mut measured = budget();
+                let diagnostic = run(&members, &mut measured)?.map_err(err)?;
+                assert_eq!(diagnostic.code, "DuplicateLabel");
+                let primary = diagnostic.primary.as_ref().ok_or("primary")?;
+                let [related] = diagnostic.related.as_slice() else {
+                    return Err("previous definition".into());
+                };
+                let previous = related.span.as_ref().ok_or("previous span")?;
+                assert_eq!(related.code, "PreviousDefinition");
+                let starts = if shared_source {
+                    [
+                        combined.find("target").ok_or("first target")? as u64,
+                        combined.rfind("target").ok_or("second target")? as u64,
+                    ]
+                } else {
+                    [7, 7]
+                };
+                for (span, source, start) in [
+                    (primary, sources[1], starts[1]),
+                    (previous, sources[0], starts[0]),
+                ] {
+                    assert_eq!((span.start(), span.end()), (start, start + 6));
+                    assert_eq!(span.snapshot_ref().digest, Digest::of(source.as_bytes()));
+                }
+                assert_eq!(
+                    primary.snapshot_ref().source == previous.snapshot_ref().source,
+                    shared_source
+                );
+                // Both sources still exist in this union. Reversing their member
+                // ownership must fail, rather than accepting the union alone.
+                assert!(matches!(
+                    run(&[&second, &first], b)?,
+                    Err(nepl3_doc_core::labels::LabelDiagnosticError::NotSemantic)
+                ));
+                assert!(matches!(
+                    run(&[], b)?,
+                    Err(nepl3_doc_core::labels::LabelDiagnosticError::NotSemantic)
+                ));
+                let used = measured.usage();
+                for (reason, amount) in [
+                    (StopReason::WorkLimit, used.work),
+                    (StopReason::AllocationLimit, used.allocation_units),
+                    (StopReason::DiagnosticLimit, used.diagnostics),
+                ] {
+                    for limit in [amount - 1, amount] {
+                        let mut limits = measured.limits();
+                        match reason {
+                            StopReason::WorkLimit => limits.work = limit,
+                            StopReason::AllocationLimit => limits.allocation_units = limit,
+                            StopReason::DiagnosticLimit => limits.diagnostics = limit,
+                            _ => unreachable!("fixed limits"),
+                        }
+                        let mut limited = Budget::new(limits);
+                        let result = run(&members, &mut limited)?;
+                        if limit == amount {
+                            assert_eq!(result.map_err(err)?, diagnostic);
+                        } else {
+                            assert!(
+                                matches!(result, Err(nepl3_doc_core::labels::LabelDiagnosticError::Stopped(actual)) if actual == reason)
+                            );
+                            assert_eq!(limited.poll(), Err(reason));
+                        }
+                    }
+                }
+                Ok(())
+            },
+        )?;
+    }
+    Ok(())
+}
+
+#[test]
 fn foreign_namespace_parts_preserve_refs_and_guest_boundaries() -> Result<(), String> {
     let compiled = compiled()?;
     // The reference and its definition are separate display occurrences. Math

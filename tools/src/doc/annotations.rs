@@ -249,6 +249,7 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
                 let error = document::namespace::resolution_error(
                     error,
                     &selected,
+                    &member_refs,
                     self.registry,
                     self.codec,
                     b,

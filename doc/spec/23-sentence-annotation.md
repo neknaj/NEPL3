@@ -331,7 +331,9 @@ Rubyの読み・Annoの注釈と共有nodeの反復を含め、出現順に文�
 同じembedのDoc意味モデルは不変の共有値として保持し、描画結果と由来は表示出現ごとに記録する。
 型付きSentenceを直接渡す`render_syntax`も、文書namespaceの準備前にSentenceの構造・source境界を検査し、同じ累積Budgetと深さ上限を適用する。
 各Doc断片内のInlineMathも既存のMath出力へ接続し、Sentence全体の合成後にHTML参照を検査する。
-未解決参照は元sourceの診断を返し、member間の重複定義は両方の文書・nodeを保持したエラーを返す。
+未解決参照は元sourceの診断を返し、member間の重複定義は両方の文書・nodeと位置付き診断を保持したエラーを返す。
+namespaceの`Error::diagnostic`は重複定義の主位置と既存定義の関連位置を各memberのsourceへ照合し、既存の`DuplicateLabel`診断を生成する。
+各siteのnode・名前・位置をmemberの定義または参照と照合し、両sourceを使用して診断全体を検査する。同じsnapshotを共有する断片も、この所属検査の対象とする。
 このnamespaceは一つのSentence表示に属する。外側のArticle全体とのnamespace共有、およびDocの旧Sentence所有の撤去はconsumer所有移行の残件である。
 
 ## 注釈と移行完了条件

@@ -60,6 +60,48 @@ impl<'a> Member<'a> {
     pub fn document(&self) -> &'a DocumentSyntax {
         self.document
     }
+    pub(super) fn has_definition(
+        &self,
+        site: LabelSite<'_>,
+        b: &mut Budget,
+    ) -> Result<bool, StopReason> {
+        contains_site(&self.definitions, site, b)
+    }
+    pub(super) fn has_reference(
+        &self,
+        site: LabelSite<'_>,
+        b: &mut Budget,
+    ) -> Result<bool, StopReason> {
+        contains_site(&self.references, site, b)
+    }
+}
+fn contains_site(
+    sites: &[LabelSite<'_>],
+    site: LabelSite<'_>,
+    b: &mut Budget,
+) -> Result<bool, StopReason> {
+    b.poll()?;
+    for candidate in sites {
+        let mut work = (candidate.name.len() as u64)
+            .saturating_add(site.name.len() as u64)
+            .saturating_add(256);
+        for span in [
+            candidate.selection,
+            candidate.range,
+            site.selection,
+            site.range,
+        ]
+        .into_iter()
+        .flatten()
+        {
+            work = work.saturating_add(span.snapshot_ref().source.0.len() as u64);
+        }
+        b.charge(Resource::Work, work)?;
+        if *candidate == site {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }
 pub fn inspect<'a>(
     document: &'a DocumentSyntax,

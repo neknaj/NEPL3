@@ -132,6 +132,7 @@ pub fn member_refs<'a>(
 pub fn resolution_error<C: FoundationValueCodec>(
     error: labels::Error<'_>,
     selected: &[Selected],
+    members: &[&labels::Member<'_>],
     registry: &SchemaRegistry,
     codec: &mut C,
     b: &mut Budget,
@@ -156,6 +157,21 @@ pub fn resolution_error<C: FoundationValueCodec>(
             definition,
             previous,
         } => {
+            let diagnostic = match (labels::Error::Duplicate {
+                definition,
+                previous,
+            })
+            .diagnostic(members, registry, codec, b)
+            {
+                Ok(diagnostic) => diagnostic,
+                Err(error) => return Error::LabelDiagnostic(error),
+            };
+            if let Err(reason) = b.charge(
+                Resource::AllocationUnits,
+                core::mem::size_of::<Diagnostic>() as u64,
+            ) {
+                return Error::Stopped(reason);
+            }
             let owner = |site: labels::NamespaceSite<'_>| {
                 selected
                     .get(site.member.0 as usize)
@@ -169,6 +185,7 @@ pub fn resolution_error<C: FoundationValueCodec>(
                 (Some(definition), Some(previous)) => Error::NamespaceDuplicate {
                     definition,
                     previous,
+                    diagnostic: Box::new(diagnostic),
                 },
                 _ => Error::Selection,
             }
