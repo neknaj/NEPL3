@@ -154,17 +154,31 @@ fn run(input: &str, final_input: bool, stop: Option<StopReason>) -> Result<ReadR
     };
     let mut wrong_operation = signature.operation.clone();
     wrong_operation.name = "sentenceReferenced".into();
-    assert!(matches!(
-        reader::read(
-            &wrong_operation,
-            request,
-            &r,
-            &sources,
-            &mut budget,
-            &mut admission
-        ),
-        Err(nepl3_reader::runtime::ReaderError::ProviderContract)
-    ));
+    let mut legacy = r
+        .descriptor(&signature.operation.schema)
+        .ok_or("reader descriptor")?
+        .clone();
+    let mut old_operation = legacy.operations[0].clone();
+    old_operation.name = "sentenceReferenced".into();
+    legacy.operations.insert(0, old_operation);
+    let mut stale = signature.operation.clone();
+    stale.schema = legacy.reference(&mut budget).map_err(err)?;
+    assert_ne!(stale.schema, signature.operation.schema);
+    // Neither an obsolete operation name nor a descriptor augmented with that
+    // operation may authorize the current reader operation.
+    for wrong_operation in [wrong_operation, stale] {
+        assert!(matches!(
+            reader::read(
+                &wrong_operation,
+                request,
+                &r,
+                &sources,
+                &mut budget,
+                &mut admission
+            ),
+            Err(nepl3_reader::runtime::ReaderError::ProviderContract)
+        ));
+    }
     assert!(matches!(
         reader::read(
             &signature.operation,
@@ -313,6 +327,18 @@ fn sentence_provider_is_admitted_by_reader_session_and_roundtrips_literal_payloa
 }
 #[test]
 fn sentence_provider_failures_keep_typed_diagnostic_positions_and_stops() -> Result<(), String> {
+    let ReadReply::Failed {
+        diagnostic, report, ..
+    } = run("\"前[文/ぶん", true, None)?
+    else {
+        return Err("expected unclosed annotation".into());
+    };
+    assert_eq!(diagnostic.code, "UnclosedAnnotation");
+    assert_eq!(report.diagnostics, vec![diagnostic.clone()]);
+    let primary = diagnostic.primary.as_ref().ok_or("primary")?;
+    assert_eq!((primary.start(), primary.end()), (15, 15));
+    let opening = diagnostic.related[0].span.as_ref().ok_or("opening")?;
+    assert_eq!((opening.start(), opening.end()), (4, 5));
     let ReadReply::Failed {
         diagnostic, report, ..
     } = run("\"[漢/]\"", true, None)?

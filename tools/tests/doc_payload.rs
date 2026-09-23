@@ -858,8 +858,8 @@ fn doc_guest_retains_syntax_until_selected_sentence_meaning_check() -> Result<()
 #[test]
 fn literal_and_prefix_share_one_lower_with_source_and_local_view_retention() -> Result<(), String> {
     let compiled = compiled()?;
-    let mixed = r#"article en sentence "Title" body cons paragraph cons sentence "Before [base/reading]" cons sentence sentence cons text "after" nil nil nil"#;
-    let prefix = r#"article en sentence sentence cons text "Title" nil body cons paragraph cons sentence sentence cons text "Before " cons ruby text "base" text "reading" nil cons sentence sentence cons text "after" nil nil nil"#;
+    let mixed = r#"article en sentence "Title" body cons paragraph cons sentence "これは{[文書/ぶんしょ]/document}を記述する。" cons sentence sentence cons text "after" nil nil nil"#;
+    let prefix = r#"article en sentence sentence cons text "Title" nil body cons paragraph cons sentence sentence cons text "これは" cons anno ruby text "文書" text "ぶんしょ" cons text "document" nil cons text "を記述する。" nil cons sentence sentence cons text "after" nil nil nil"#;
     let mut values = Vec::new();
     for source in [mixed, prefix] {
         values.push(nepl3_tools::doc::source::with_input(
