@@ -14,7 +14,7 @@ use nepl3_markup::html::*;
 pub struct PreparedNamespace<'a> {
     members: Vec<prepare::PreparedRendering<'a>>,
 }
-/// Namespace with explicit InlineMath operations selected by a host.
+/// Namespace with explicit Sentence and InlineMath operations selected by a host.
 pub struct PreparedForeignNamespace<'a>(PreparedNamespace<'a>);
 /// Structurally checked member and per-occurrence guest placements. Namespace
 /// identities remain pending until the composing renderer validates its output.
@@ -122,7 +122,7 @@ pub fn prepare<'a, C: FoundationValueCodec>(
 ) -> Result<PreparedNamespace<'a>, LocalPreparationError<'a, C::Error>> {
     prepare_members(namespace, options, registry, codec, budget, false)
 }
-/// Prepare a namespace whose outstanding requirements are only InlineMath.
+/// Prepare a namespace whose outstanding requirements are Sentence or InlineMath.
 /// Other guest kinds, links and assets require their own explicit resolution.
 /// Preparation validates all member sources together and invokes no guests.
 pub fn prepare_with_foreign<'a, C: FoundationValueCodec>(
@@ -157,7 +157,9 @@ fn prepare_members<'a, C: FoundationValueCodec>(
                 || !matches!(
                     requirement,
                     nepl3_doc_core::prepare::DocRequirement::Foreign {
-                        kind: nepl3_doc_core::model::EmbedKind::InlineMath,
+                        kind: nepl3_doc_core::model::EmbedKind::InlineMath
+                            | nepl3_doc_core::model::EmbedKind::Sentence
+                            | nepl3_doc_core::model::EmbedKind::SentenceInline,
                         ..
                     }
                 )

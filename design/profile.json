@@ -4,13 +4,15 @@
     "Grammar": "Grammar/Root",
     "Doc": "Doc/Article",
     "Math": "Math/Expr",
-    "Circuit": "Circuit/Design"
+    "Circuit": "Circuit/Design",
+    "Sentence": "Sentence/Sentence"
   },
   "language_sources": {
     "Grammar": "languages/grammar/syntax.neplg",
     "Doc": "languages/doc/syntax.neplg",
     "Math": "languages/math/syntax.neplg",
-    "Circuit": "languages/circuit/syntax.neplg"
+    "Circuit": "languages/circuit/syntax.neplg",
+    "Sentence": "languages/sentence/syntax.neplg"
   },
   "default_root_extensions": {
     ".neplg": "Grammar/Root",
@@ -22,10 +24,10 @@
     "nepl3.reader/name-v1",
     "nepl3.reader/trivia-v1",
     "nepl3.reader/number-v1",
-    "doc.reader/sentence-v2",
     "grammar.facts/v1",
     "doc.facts/v1",
-    "circuit.facts/v1"
+    "circuit.facts/v1",
+    "sentence.reader/literal-v1"
   ],
   "external_environment_policy": "explicit-projection-only",
   "design_revision": "nepl3-design-2026-09-06-r4",
@@ -45,6 +47,10 @@
     "Circuit": {
       "surface_package": "nepl3.syntax.circuit",
       "meaning_package": "nepl3.circuit"
+    },
+    "Sentence": {
+      "surface_package": "nepl3.syntax.sentence",
+      "meaning_package": "nepl3.sentence"
     }
   },
   "resolution_policy": "require-generated-descriptors-and-verified-digests; no-placeholder-schema-identities"

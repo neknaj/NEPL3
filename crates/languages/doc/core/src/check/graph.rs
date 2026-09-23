@@ -26,7 +26,6 @@ impl DocValue {
                 .saturating_add(self.embeds.len() as u64),
         )?;
         let mut color = vec![0u8; self.nodes.len()];
-        let mut visible = vec![false; self.nodes.len()];
         let mut heights = vec![1u64; self.nodes.len()];
         let mut used = vec![false; self.embeds.len()];
         let mut order = Vec::with_capacity(self.nodes.len());
@@ -72,12 +71,9 @@ impl DocValue {
                     base.saturating_add(heights[node]),
                     |_| Ok(()),
                 )?;
-                let node_visible =
-                    budget.with_depth_at_least(base.saturating_add(stack.len() as u64), |b| {
-                        self.local(node, &visible, &mut used, b)?;
-                        self.visible(node, &visible, b)
-                    })?;
-                visible[node] = node_visible;
+                budget.with_depth_at_least(base.saturating_add(stack.len() as u64), |b| {
+                    self.local(node, &mut used, b)
+                })?;
                 color[node] = 2;
                 order.push(node);
                 stack.pop();
@@ -108,13 +104,7 @@ impl DocValue {
         }
         Ok(index)
     }
-    fn local(
-        &self,
-        node: usize,
-        visible: &[bool],
-        used: &mut [bool],
-        budget: &mut Budget,
-    ) -> Result<(), ShapeError> {
+    fn local(&self, node: usize, used: &mut [bool], budget: &mut Budget) -> Result<(), ShapeError> {
         use DocKind::*;
         let id = node as u64;
         let item = &self.nodes[node];
@@ -138,27 +128,6 @@ impl DocValue {
             }
         }
         match &self.nodes[node].kind {
-            Ruby { base, reading } => {
-                for r in [base, reading] {
-                    if !visibility(visible, r.0)? {
-                        return Err(ShapeError::EmptyAnnotationPart(r.0));
-                    }
-                }
-            }
-            Anno { base, notes } => {
-                if notes.is_empty() {
-                    return Err(ShapeError::AnnotationNotes(id));
-                }
-                if !visibility(visible, base.0)? {
-                    return Err(ShapeError::EmptyAnnotationPart(base.0));
-                }
-                for r in notes {
-                    budget.charge(Resource::Work, 1)?;
-                    if !visibility(visible, r.0)? {
-                        return Err(ShapeError::EmptyAnnotationPart(r.0));
-                    }
-                }
-            }
             Parallel { variants } => {
                 if variants.len() < 2 {
                     return Err(ShapeError::ParallelArity(id));
@@ -199,12 +168,10 @@ impl DocValue {
                     }
                 }
             }
-            InlineMath { syntax } => self.embed(syntax.0, EmbedKind::InlineMath, used)?,
-            DisplayMath { syntax } => self.embed(syntax.0, EmbedKind::DisplayMath, used)?,
-            CircuitFigure { syntax, .. } => self.embed(syntax.0, EmbedKind::CircuitFigure, used)?,
-            Code { syntax } => self.embed(syntax.0, EmbedKind::Code, used)?,
-            Guest { syntax, .. } => self.embed(syntax.0, EmbedKind::Guest, used)?,
             _ => {}
+        }
+        if let Some((reference, kind)) = item.kind.embedded() {
+            self.embed(reference.0, kind, used)?;
         }
         Ok(())
     }
@@ -222,35 +189,4 @@ impl DocValue {
         *used.get_mut(i).ok_or(ShapeError::Embed(index))? = true;
         Ok(())
     }
-    fn visible(
-        &self,
-        node: usize,
-        visible: &[bool],
-        budget: &mut Budget,
-    ) -> Result<bool, ShapeError> {
-        use DocKind::*;
-        match &self.nodes[node].kind {
-            Text { text } | InlineCode { text } => Ok(!text.is_empty()),
-            Break | InlineMath { .. } | InlineImage { .. } => Ok(true),
-            Concat { inlines } | Sentence { inlines } => {
-                for r in inlines {
-                    budget.charge(Resource::Work, 1)?;
-                    if visibility(visible, r.0)? {
-                        return Ok(true);
-                    }
-                }
-                Ok(false)
-            }
-            Ruby { base, .. } | Anno { base, .. } => visibility(visible, base.0),
-            Anchor { label, .. } | Reference { label, .. } | Link { label, .. } => {
-                visibility(visible, label.0)
-            }
-            Emphasis { inline } | Strong { inline } => visibility(visible, inline.0),
-            _ => Ok(false),
-        }
-    }
-}
-fn visibility(values: &[bool], node: u64) -> Result<bool, ShapeError> {
-    let i = usize::try_from(node).map_err(|_| ShapeError::Reference(node))?;
-    values.get(i).copied().ok_or(ShapeError::Reference(node))
 }

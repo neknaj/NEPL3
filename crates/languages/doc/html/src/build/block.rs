@@ -6,6 +6,7 @@ impl Builder<'_, '_> {
             node,
             parent,
             level,
+            ..
         } = j;
         match k {
             Body { blocks } => {

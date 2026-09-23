@@ -36,7 +36,10 @@ pub fn original_guest_source<'a>(
         .ok()
         .and_then(|i| document.value.embeds.get(i))
         .ok_or(crate::check::ShapeError::Embed(embed.0))?;
-    let bundle = &guest.closure.syntax.bundle;
+    let Some(closure) = guest.syntax() else {
+        return Ok(None);
+    };
+    let bundle = &closure.syntax.bundle;
     let root = bundle.node(bundle.root)?;
     let Some(cover) = &root.cover else {
         return Ok(None);
@@ -68,9 +71,7 @@ pub fn identity<C: FoundationValueCodec>(
     let mut guests = Vec::new();
     for (index, embed) in document.value.embeds.iter().enumerate() {
         b.charge(Resource::Work, 1)?;
-        let value = c
-            .encode_foreign_closure(&embed.closure, b)
-            .map_err(boundary)?;
+        let value = portable::embed_value(embed, r, c, b)?;
         let guest_digest = c
             .canonical_value_digest(GUEST_DOMAIN, &value, b)
             .map_err(boundary)?;

@@ -11,11 +11,40 @@ use nepl3_core::{
     origin::{Mapping, MappingKind, OriginId},
     source::{Digest, Span},
     syntax::ForeignClosure,
-    value::{NdfValue, Record, SchemaRef, Variant},
+    value::{NdfValue, Record, SchemaRef, TypedValue, Variant},
     value_codec::FoundationValueCodec,
     view::ViewBundle,
 };
 mod generated;
+impl Value for TypedValue {
+    fn put<C: FoundationValueCodec>(
+        &self,
+        _: &SchemaRef,
+        _: &mut C,
+        b: &mut Budget,
+    ) -> Result<NdfValue, PortableError<C::Error>> {
+        Ok(match self.clone_with_budget(b)? {
+            Self::Record(v) => NdfValue::Record(v),
+            Self::Variant(v) => NdfValue::Variant(v),
+        })
+    }
+    fn read<C: FoundationValueCodec>(
+        v: &NdfValue,
+        _: &SchemaRef,
+        _: &mut C,
+        b: &mut Budget,
+    ) -> Result<Self, PortableError<C::Error>> {
+        if !matches!(v, NdfValue::Record(_) | NdfValue::Variant(_)) {
+            return Err(PortableError::Shape);
+        }
+        v.charge_clone(b)?;
+        match v {
+            NdfValue::Record(v) => Ok(Self::Record(v.clone())),
+            NdfValue::Variant(v) => Ok(Self::Variant(v.clone())),
+            _ => Err(PortableError::Shape),
+        }
+    }
+}
 impl Value for FileBytes {
     fn put<C: FoundationValueCodec>(
         &self,

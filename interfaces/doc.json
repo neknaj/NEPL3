@@ -379,12 +379,6 @@
               "option": "Text"
             }
           ]
-        ],
-        "External": [
-          [
-            "uri",
-            "Text"
-          ]
         ]
       },
       "constraints": []
@@ -416,7 +410,9 @@
         "DisplayMath": [],
         "CircuitFigure": [],
         "Code": [],
-        "Guest": []
+        "Guest": [],
+        "Sentence": [],
+        "SentenceInline": []
       },
       "constraints": []
     },
@@ -504,14 +500,12 @@
         ],
         "Sentence": [
           [
-            "inlines",
+            "syntax",
             {
-              "list": {
-                "named": {
-                  "package": "nepl3.doc",
-                  "revision": 1,
-                  "name": "InlineRef"
-                }
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "EmbedRef"
               }
             }
           ]
@@ -546,72 +540,6 @@
             }
           ]
         ],
-        "Text": [
-          [
-            "text",
-            "Text"
-          ]
-        ],
-        "Concat": [
-          [
-            "inlines",
-            {
-              "list": {
-                "named": {
-                  "package": "nepl3.doc",
-                  "revision": 1,
-                  "name": "InlineRef"
-                }
-              }
-            }
-          ]
-        ],
-        "Ruby": [
-          [
-            "base",
-            {
-              "named": {
-                "package": "nepl3.doc",
-                "revision": 1,
-                "name": "InlineRef"
-              }
-            }
-          ],
-          [
-            "reading",
-            {
-              "named": {
-                "package": "nepl3.doc",
-                "revision": 1,
-                "name": "InlineRef"
-              }
-            }
-          ]
-        ],
-        "Anno": [
-          [
-            "base",
-            {
-              "named": {
-                "package": "nepl3.doc",
-                "revision": 1,
-                "name": "InlineRef"
-              }
-            }
-          ],
-          [
-            "notes",
-            {
-              "list": {
-                "named": {
-                  "package": "nepl3.doc",
-                  "revision": 1,
-                  "name": "InlineRef"
-                }
-              }
-            }
-          ]
-        ],
         "InlineMath": [
           [
             "syntax",
@@ -635,7 +563,7 @@
               "named": {
                 "package": "nepl3.doc",
                 "revision": 1,
-                "name": "InlineRef"
+                "name": "EmbedRef"
               }
             }
           ]
@@ -651,36 +579,11 @@
               "named": {
                 "package": "nepl3.doc",
                 "revision": 1,
-                "name": "InlineRef"
+                "name": "EmbedRef"
               }
             }
           ]
         ],
-        "Emphasis": [
-          [
-            "inline",
-            {
-              "named": {
-                "package": "nepl3.doc",
-                "revision": 1,
-                "name": "InlineRef"
-              }
-            }
-          ]
-        ],
-        "Strong": [
-          [
-            "inline",
-            {
-              "named": {
-                "package": "nepl3.doc",
-                "revision": 1,
-                "name": "InlineRef"
-              }
-            }
-          ]
-        ],
-        "Break": [],
         "DisplayMath": [
           [
             "syntax",
@@ -838,15 +741,9 @@
               "named": {
                 "package": "nepl3.doc",
                 "revision": 1,
-                "name": "InlineRef"
+                "name": "EmbedRef"
               }
             }
-          ]
-        ],
-        "InlineCode": [
-          [
-            "text",
-            "Text"
           ]
         ],
         "RawCode": [
@@ -1100,12 +997,12 @@
           }
         ],
         [
-          "closure",
+          "content",
           {
             "named": {
-              "package": "nepl3.foundation",
+              "package": "nepl3.doc",
               "revision": 1,
-              "name": "ForeignClosure"
+              "name": "DocContent"
             }
           }
         ]
@@ -1524,6 +1421,16 @@
           "Bytes"
         ],
         [
+          "policy",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "AnnotationPolicy"
+            }
+          }
+        ],
+        [
           "text",
           "Text"
         ]
@@ -1582,7 +1489,8 @@
         "Document": [],
         "Guest": [],
         "Embed": [],
-        "Duplicate": []
+        "Duplicate": [],
+        "Policy": []
       },
       "constraints": []
     },
@@ -1699,7 +1607,8 @@
         "Math": [],
         "Circuit": [],
         "Grammar": [],
-        "Doc": []
+        "Doc": [],
+        "Sentence": []
       },
       "constraints": []
     },
@@ -2307,45 +2216,6 @@
       ],
       "constraints": []
     },
-    "SentencePayload": {
-      "record": [
-        [
-          "value",
-          {
-            "named": {
-              "package": "nepl3.doc",
-              "revision": 1,
-              "name": "DocValue"
-            }
-          }
-        ],
-        [
-          "origins",
-          {
-            "list": {
-              "named": {
-                "package": "nepl3.foundation",
-                "revision": 1,
-                "name": "Origin"
-              }
-            }
-          }
-        ],
-        [
-          "view",
-          {
-            "named": {
-              "package": "nepl3.doc",
-              "revision": 1,
-              "name": "DocView"
-            }
-          }
-        ]
-      ],
-      "constraints": [
-        "doc.sentence_owner_source"
-      ]
-    },
     "PageFile": {
       "record": [
         [
@@ -2381,6 +2251,31 @@
         ]
       },
       "constraints": []
+    },
+    "DocContent": {
+      "variant": {
+        "Syntax": [
+          [
+            "closure",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "ForeignClosure"
+              }
+            }
+          ]
+        ],
+        "Value": [
+          [
+            "value",
+            "TypedValue"
+          ]
+        ]
+      },
+      "constraints": [
+        "doc.selected_content"
+      ]
     }
   },
   "operations": {

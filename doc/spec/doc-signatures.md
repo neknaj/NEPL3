@@ -32,9 +32,7 @@
 
 | 綴り | kind | 子（順序固定） | arity |
 |---|---|---|---:|
-| `sentence` | `Doc.Sentence` | inlines: List<Doc/Inline> | 1 |
-
-葉の認識規則：`sentence`。
+| `sentence` | `Doc.Sentence` | syntax: Sentence/Sentence | 1 |
 
 ## Doc/Flow
 
@@ -45,14 +43,12 @@
 | `display` | `Doc.DisplayMath` | syntax: Doc/MathGuest | 1 |
 | `circuit` | `Doc.CircuitFigure` | caption: Doc/Sentence, syntax: Doc/CircuitGuest | 2 |
 | `code` | `Doc.Code` | syntax: Doc/Guest | 1 |
-| `sentence` | `Doc.Sentence` | inlines: List<Doc/Inline> | 1 |
+| `sentence` | `Doc.Sentence` | syntax: Sentence/Sentence | 1 |
 | `parallel` | `Doc.Parallel` | variants: List<Doc/Variant> | 1 |
 | `table` | `Doc.Table` | columns: List<Doc/Alignment>, header: Doc/OptionalRow, rows: List<Doc/Row> | 3 |
 | `list` | `Doc.List` | style: Doc/ListStyle, items: List<Doc/ListItem> | 2 |
 | `rawcode` | `Doc.RawCode` | languageHint: Doc/OptionalText, text: @Text | 2 |
 | `image` | `Doc.Image` | asset: Doc/Asset, alt: Doc/Sentence, caption: Doc/OptionalSentence | 3 |
-
-葉の認識規則：`sentence`。
 
 ## Doc/Variant
 
@@ -64,18 +60,10 @@
 
 | 綴り | kind | 子（順序固定） | arity |
 |---|---|---|---:|
-| `text` | `Doc.Text` | text: @Text | 1 |
-| `concat` | `Doc.Concat` | inlines: List<Doc/Inline> | 1 |
-| `ruby` | `Doc.Ruby` | base: Doc/Inline, reading: Doc/Inline | 2 |
-| `anno` | `Doc.Anno` | base: Doc/Inline, notes: List<Doc/Inline> | 2 |
 | `math` | `Doc.InlineMath` | syntax: Doc/MathGuest | 1 |
-| `anchor` | `Doc.Anchor` | id: @Name, label: Doc/Inline | 2 |
-| `ref` | `Doc.Reference` | target: @Name, label: Doc/Inline | 2 |
-| `em` | `Doc.Emphasis` | inline: Doc/Inline | 1 |
-| `strong` | `Doc.Strong` | inline: Doc/Inline | 1 |
-| `break` | `Doc.Break` | なし | 0 |
-| `link` | `Doc.Link` | target: Doc/LinkTarget, label: Doc/Inline | 2 |
-| `code` | `Doc.InlineCode` | text: @Text | 1 |
+| `anchor` | `Doc.Anchor` | id: @Name, label: Sentence/Inline | 2 |
+| `ref` | `Doc.Reference` | target: @Name, label: Sentence/Inline | 2 |
+| `link` | `Doc.Link` | target: Doc/LinkTarget, label: Sentence/Inline | 2 |
 | `image` | `Doc.InlineImage` | asset: Doc/Asset, alt: Doc/Sentence | 2 |
 
 ## Doc/MathGuest
@@ -150,7 +138,6 @@
 |---|---|---|---:|
 | `page` | `Doc.PageTarget` | page: @Text, fragment: Doc/OptionalText | 2 |
 | `relative` | `Doc.RelativeTarget` | path: @Text, fragment: Doc/OptionalText | 2 |
-| `external` | `Doc.ExternalTarget` | uri: @Text | 1 |
 
 ## Doc/Asset
 

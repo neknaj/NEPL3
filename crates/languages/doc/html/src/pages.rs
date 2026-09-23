@@ -7,11 +7,7 @@ use nepl3_core::{
     schema::SchemaRegistry,
     value_codec::FoundationValueCodec,
 };
-use nepl3_doc_core::{
-    model::LinkTarget,
-    pages::{self, PageDestination, PageLinkPlan, PageSet},
-    prepare,
-};
+use nepl3_doc_core::pages::{self, PageDestination, PageLinkPlan, PageSet};
 use nepl3_markup::html::{HtmlAttribute, HtmlHref, HtmlNode};
 
 mod anchors;
@@ -34,7 +30,6 @@ pub enum PagesRenderError<'a, E> {
     Preparation(LocalPreparationError<'a, E>),
     Render(RenderError),
     MissingOutputAnchor { page: u64, node: u64, target: u64 },
-    InvalidExternalUri { page: u64, node: u64 },
 }
 impl<E> From<StopReason> for PagesRenderError<'_, E> {
     fn from(s: StopReason) -> Self {
@@ -53,30 +48,11 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
         e => PagesRenderError::Input(e),
     })?;
     let plan = checked.plan();
-    let mut unresolved = false;
-    for pending in &plan.remaining {
-        b.charge(Resource::Work, 1)?;
-        if let prepare::DocRequirement::Link {
-            node,
-            target: LinkTarget::External { uri },
-        } = &pending.requirement
-        {
-            if !nepl3_markup::html::external_uri(uri, b)? {
-                return Err(PagesRenderError::InvalidExternalUri {
-                    page: pending.page,
-                    node: *node,
-                });
-            }
-        } else {
-            unresolved = true;
-        }
-    }
-    if unresolved {
+    if !plan.remaining.is_empty() {
         return Err(PagesRenderError::NeedsResolution(checked.into_plan()));
     }
     let mut fragments = Vec::new();
     let mut page_links = plan.links.as_slice();
-    let mut page_pending = plan.remaining.as_slice();
     for (page, input) in request.set.pages.iter().enumerate() {
         b.charge(Resource::Work, 1)?;
         let document_digest = checked
@@ -116,21 +92,6 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
             push(&mut links, (link.node, href), b)?;
             page_links = rest;
         }
-        while let Some((pending, rest)) = page_pending.split_first() {
-            b.charge(Resource::Work, 1)?;
-            if pending.page != page as u64 {
-                break;
-            }
-            if let prepare::DocRequirement::Link {
-                node,
-                target: LinkTarget::External { uri },
-            } = &pending.requirement
-            {
-                let href = HtmlHref::External { uri: copy(uri, b)? };
-                push(&mut links, (*node, href), b)?;
-            }
-            page_pending = rest;
-        }
         let fragment =
             crate::build::render_prepared(&prepared, &links, b).map_err(|e| match e {
                 RenderError::Stopped(s) => PagesRenderError::Stopped(s),
@@ -138,7 +99,7 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
             })?;
         push(&mut fragments, fragment, b)?;
     }
-    if !page_links.is_empty() || !page_pending.is_empty() {
+    if !page_links.is_empty() {
         return Err(PagesRenderError::Render(RenderError::InternalShape));
     }
     // Borrow emitted IDs on the first incoming fragment link. Pages without

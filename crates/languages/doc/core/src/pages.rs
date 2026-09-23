@@ -282,7 +282,7 @@ fn relative(source: &str, target: &str, b: &mut Budget) -> Result<Option<String>
     Ok(Some(out))
 }
 /// Resolve against the complete explicit set, never an ambient host filesystem.
-/// External links, assets and guests remain named requirements; no renderer or
+/// Assets and guests remain named requirements; no renderer or
 /// evaluator is executed. All source identities share one admission ledger.
 pub fn resolve<'a, C: FoundationValueCodec>(
     set: &'a PageSet,
@@ -341,13 +341,14 @@ pub fn resolve<'a, C: FoundationValueCodec>(
         let document_digest = digests
             .next()
             .ok_or(PageError::Boundary(portable::PortableError::Shape))?;
-        let requirements = prepare::requirements(&labels, c, b).map_err(|error| match error {
-            PreparationError::Stopped(s) => PageError::Stopped(s),
-            error => PageError::Input {
-                page: page as u64,
-                error,
-            },
-        })?;
+        let requirements =
+            prepare::requirements(&labels, registry, c, b).map_err(|error| match error {
+                PreparationError::Stopped(s) => PageError::Stopped(s),
+                error => PageError::Input {
+                    page: page as u64,
+                    error,
+                },
+            })?;
         let plan = prepare::DocPreparationPlan {
             document_digest,
             requirements,
@@ -382,10 +383,6 @@ pub fn resolve<'a, C: FoundationValueCodec>(
                     fragment,
                     true,
                 ),
-                LinkTarget::External { .. } => {
-                    push(&mut remaining, PageRequirement { page, requirement }, b)?;
-                    continue;
-                }
             };
             let mut found = None;
             for (index, candidate) in set.pages.iter().enumerate() {

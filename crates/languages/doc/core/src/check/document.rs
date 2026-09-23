@@ -1,5 +1,5 @@
 use super::{ShapeError, ValidatedDocShape, edges};
-use crate::model::{DocKind, DocumentSyntax};
+use crate::model::{DocContent, DocumentSyntax, EmbedKind};
 use alloc::vec;
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
@@ -69,8 +69,10 @@ impl From<SyntaxError> for StructureError {
         }
     }
 }
-/// Source, view, origin and guest syntax safety; this is not label resolution,
-/// guest semantic checking, or permission to render an unprepared Article.
+/// Validates Doc shape, local Source/Origin/View, syntax closures and the schema
+/// shape of typed guest payloads. The selected language adapter separately
+/// validates each typed payload's semantic root and local provenance closure.
+/// Label resolution and rendering preparation are subsequent operations.
 pub struct ValidatedDocumentSyntax<'a> {
     document: &'a DocumentSyntax,
     shape: ValidatedDocShape<'a>,
@@ -227,22 +229,26 @@ impl DocumentSyntax {
                     depths[child as usize].max(depths[*node].saturating_add(1));
                 index += 1;
             }
-            let embed = match self.value.nodes[*node].kind {
-                DocKind::Guest { syntax, .. }
-                | DocKind::InlineMath { syntax }
-                | DocKind::DisplayMath { syntax }
-                | DocKind::CircuitFigure { syntax, .. }
-                | DocKind::Code { syntax } => Some(syntax.0),
-                _ => None,
-            };
-            if let Some(e) = embed {
-                embeds[e as usize] = embeds[e as usize].max(depths[*node]);
+            if let Some((reference, _)) = self.value.nodes[*node].kind.embedded() {
+                embeds[reference.0 as usize] = embeds[reference.0 as usize].max(depths[*node]);
             }
         }
         let base = b.current_depth();
         for (embed, depth) in self.value.embeds.iter().zip(embeds) {
             b.with_depth_at_least::<_, StructureError>(base.saturating_add(depth), |b| {
-                embed.closure.validate(registry, b, admission)?;
+                match &embed.content {
+                    DocContent::Syntax { closure } => {
+                        closure.validate(registry, b, admission)?;
+                    }
+                    DocContent::Value { value } => {
+                        if !matches!(embed.kind, EmbedKind::Sentence | EmbedKind::SentenceInline) {
+                            return Err(ShapeError::EmbedKind.into());
+                        }
+                        registry
+                            .validate_typed(value, b)
+                            .map_err(SyntaxError::Schema)?;
+                    }
+                }
                 Ok(())
             })?;
         }

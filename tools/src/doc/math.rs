@@ -184,7 +184,7 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
                 .embeds
                 .get(embed.0 as usize)
                 .ok_or(Error::Node(node))?;
-            self.render(&guest.closure, display, b)
+            self.render(guest.syntax().ok_or(Error::Selection)?, display, b)
         })();
         b.poll()?;
         result

@@ -23,7 +23,6 @@ fn matches(
                     LinkTarget::Relative { path, fragment } => path
                         .len()
                         .saturating_add(fragment.as_ref().map_or(0, |f| f.len())),
-                    LinkTarget::External { uri } => uri.len(),
                 };
                 (length(a) as u64).saturating_add(length(r) as u64)
             }

@@ -29,7 +29,7 @@ pub enum Error<E> {
     Selection,
     Math(Box<super::super::math::Error<E>>),
     Projection(super::super::math::ProjectionError),
-    Guests(nepl3_suite::adapters::sentence::document_guests::Error<E>),
+    Guests(nepl3_suite::adapters::sentence::document_guests::Error),
     Stopped(nepl3_core::budget::StopReason),
     Boundary(PortableError<E>),
     Structure(check::StructureError),
@@ -86,7 +86,11 @@ pub(super) fn render_member<C: FoundationValueCodec>(
                 codec: host.codec,
             };
             let result = host
-                .render(&guest.closure, nepl3_markup::mathml::Display::Inline, b)
+                .render(
+                    guest.syntax().ok_or(Error::Selection)?,
+                    nepl3_markup::mathml::Display::Inline,
+                    b,
+                )
                 .map_err(|error| {
                     match b.charge(
                         Resource::AllocationUnits,

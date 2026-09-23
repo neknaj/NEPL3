@@ -14,8 +14,6 @@ impl Adapter<'_, '_> {
             nodes,
             embeds,
             b,
-            presentations,
-            next_origin,
         } = self;
         b.with_depth_at_least(depth, |b| {
             let mut adapter = Adapter {
@@ -25,15 +23,11 @@ impl Adapter<'_, '_> {
                 nodes: core::mem::take(nodes),
                 embeds: core::mem::take(embeds),
                 b,
-                presentations: core::mem::take(presentations),
-                next_origin: *next_origin,
             };
             let result = adapter.convert(id, node, admission);
             *mapping = adapter.mapping;
             *nodes = adapter.nodes;
             *embeds = adapter.embeds;
-            *presentations = adapter.presentations;
-            *next_origin = adapter.next_origin;
             result
         })
     }
@@ -75,7 +69,7 @@ impl Adapter<'_, '_> {
                     &mut self.embeds,
                     DocEmbed {
                         kind: EmbedKind::Guest,
-                        closure,
+                        content: DocContent::Syntax { closure },
                     },
                     self.b,
                 )?;
@@ -106,11 +100,7 @@ impl Adapter<'_, '_> {
                 body: BodyRef(self.node(id, n, 2, C::Body)?),
             },
             ("Form:Sentence", 1) => DocKind::Sentence {
-                inlines: self
-                    .list(id, n, 0, C::Inline)?
-                    .into_iter()
-                    .map(InlineRef)
-                    .collect(),
+                syntax: self.foreign(id, n, 0, EmbedKind::Sentence, admission)?,
             },
             ("Form:Parallel", 1) => DocKind::Parallel {
                 variants: self
@@ -122,28 +112,6 @@ impl Adapter<'_, '_> {
             ("Form:Variant", 2) => DocKind::Variant {
                 language: self.text(id, n, 0, "Builtin:Lang")?,
                 sentence: SentenceRef(self.node(id, n, 1, C::Sentence)?),
-            },
-            ("Form:Text", 1) => DocKind::Text {
-                text: self.text(id, n, 0, "Builtin:Text")?,
-            },
-            ("Form:Concat", 1) => DocKind::Concat {
-                inlines: self
-                    .list(id, n, 0, C::Inline)?
-                    .into_iter()
-                    .map(InlineRef)
-                    .collect(),
-            },
-            ("Form:Ruby", 2) => DocKind::Ruby {
-                base: InlineRef(self.node(id, n, 0, C::Inline)?),
-                reading: InlineRef(self.node(id, n, 1, C::Inline)?),
-            },
-            ("Form:Anno", 2) => DocKind::Anno {
-                base: InlineRef(self.node(id, n, 0, C::Inline)?),
-                notes: self
-                    .list(id, n, 1, C::Inline)?
-                    .into_iter()
-                    .map(InlineRef)
-                    .collect(),
             },
             ("Form:InlineMath", 1) => DocKind::InlineMath {
                 syntax: self.embed(id, n, 0, EmbedKind::InlineMath, admission)?,
@@ -160,19 +128,12 @@ impl Adapter<'_, '_> {
             },
             ("Form:Anchor", 2) => DocKind::Anchor {
                 id: self.text(id, n, 0, "Builtin:Name")?,
-                label: InlineRef(self.node(id, n, 1, C::Inline)?),
+                label: self.foreign(id, n, 1, EmbedKind::SentenceInline, admission)?,
             },
             ("Form:Reference", 2) => DocKind::Reference {
                 target: self.text(id, n, 0, "Builtin:Name")?,
-                label: InlineRef(self.node(id, n, 1, C::Inline)?),
+                label: self.foreign(id, n, 1, EmbedKind::SentenceInline, admission)?,
             },
-            ("Form:Emphasis", 1) => DocKind::Emphasis {
-                inline: InlineRef(self.node(id, n, 0, C::Inline)?),
-            },
-            ("Form:Strong", 1) => DocKind::Strong {
-                inline: InlineRef(self.node(id, n, 0, C::Inline)?),
-            },
-            ("Form:Break", 0) => DocKind::Break,
             ("Form:Row", 1) => DocKind::Row {
                 cells: self
                     .list(id, n, 0, C::Sentence)?
@@ -233,12 +194,9 @@ impl Adapter<'_, '_> {
                 };
                 DocKind::Link {
                     target,
-                    label: InlineRef(self.node(id, n, 1, C::Inline)?),
+                    label: self.foreign(id, n, 1, EmbedKind::SentenceInline, admission)?,
                 }
             }
-            ("Form:InlineCode", 1) => DocKind::InlineCode {
-                text: self.text(id, n, 0, "Builtin:Text")?,
-            },
             ("Form:RawCode", 2) => DocKind::RawCode {
                 language_hint: self.optional_text(id, n, 0)?,
                 text: self.text(id, n, 1, "Builtin:Text")?,
@@ -317,11 +275,6 @@ impl Adapter<'_, '_> {
                 target: LinkTarget::Relative {
                     path: self.text(id, n, 0, "Builtin:Text")?,
                     fragment: self.optional_text(id, n, 1)?,
-                },
-            },
-            ("Form:ExternalTarget", 1) => DocKind::Target {
-                target: LinkTarget::External {
-                    uri: self.text(id, n, 0, "Builtin:Text")?,
                 },
             },
             ("Form:AssetRef", 2) => DocKind::Asset {

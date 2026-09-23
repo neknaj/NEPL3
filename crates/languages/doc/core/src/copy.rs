@@ -36,7 +36,25 @@ impl DocumentSyntax {
                 Resource::AllocationUnits,
                 core::mem::size_of::<DocEmbed>() as u64,
             )?;
-            embed.closure.charge_clone(b)?;
+            match &embed.content {
+                DocContent::Syntax { closure } => closure.charge_clone(b)?,
+                DocContent::Value { value } => {
+                    let (schema, name, tag, fields) = match value {
+                        nepl3_core::value::TypedValue::Record(v) => {
+                            (&v.schema, &v.kind, "", &v.fields)
+                        }
+                        nepl3_core::value::TypedValue::Variant(v) => {
+                            (&v.schema, &v.type_name, v.variant.as_str(), &v.fields)
+                        }
+                    };
+                    let bytes = (schema.package.len() + name.len() + tag.len()) as u64;
+                    b.charge(Resource::Work, bytes)?;
+                    b.charge(Resource::AllocationUnits, bytes)?;
+                    for field in fields {
+                        field.charge_clone(b)?;
+                    }
+                }
+            }
         }
         for source in &self.sources {
             b.charge(
@@ -81,10 +99,7 @@ pub(crate) fn kind_bytes(kind: &DocKind) -> u64 {
         Body { blocks } => blocks.len() as u64 * 8,
         Paragraph { items } => items.len() as u64 * 8,
         Section { id, .. } | Anchor { id, .. } => id.len() as u64,
-        Sentence { inlines } | Concat { inlines } => inlines.len() as u64 * 8,
         Parallel { variants } => variants.len() as u64 * 8,
-        Text { text } | InlineCode { text } => text.len() as u64,
-        Anno { notes, .. } => notes.len() as u64 * 8,
         Reference { target, .. } => target.len() as u64,
         Table { columns, rows, .. } => (columns.len() as u64)
             .saturating_mul(core::mem::size_of::<crate::model::Alignment>() as u64)
@@ -98,7 +113,6 @@ pub(crate) fn kind_bytes(kind: &DocKind) -> u64 {
             LinkTarget::Relative { path, fragment } => {
                 path.len() as u64 + fragment.as_ref().map_or(0, |s| s.len() as u64)
             }
-            LinkTarget::External { uri } => uri.len() as u64,
         },
         RawCode {
             language_hint,
@@ -111,12 +125,9 @@ pub(crate) fn kind_bytes(kind: &DocKind) -> u64 {
         | Check { .. }
         | OptionalRow { .. }
         | OptionalSentence { .. } => 0,
-        Ruby { .. }
+        Sentence { .. }
         | Guest { .. }
         | InlineMath { .. }
-        | Emphasis { .. }
-        | Strong { .. }
-        | Break
         | DisplayMath { .. }
         | CircuitFigure { .. }
         | Code { .. }

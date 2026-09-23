@@ -113,7 +113,9 @@ fn code_guest_stays_syntax_through_doc_structure_and_cbor() -> Result<(), String
             }],
             embeds: vec![DocEmbed {
                 kind: EmbedKind::Code,
-                closure: closure(&r)?,
+                content: DocContent::Syntax {
+                    closure: closure(&r)?,
+                },
             }],
         },
         sources: vec![],
@@ -134,7 +136,13 @@ fn code_guest_stays_syntax_through_doc_structure_and_cbor() -> Result<(), String
     let actual = portable::from_value(&value, &r, &mut codec, &mut b()).map_err(err)?;
     assert_eq!(actual, doc);
     assert_eq!(
-        actual.value.embeds[0].closure.syntax.bundle.nodes[0].kind,
+        actual.value.embeds[0]
+            .syntax()
+            .ok_or("syntax fixture")?
+            .syntax
+            .bundle
+            .nodes[0]
+            .kind,
         "View:TextRun"
     );
     Ok(())
@@ -144,7 +152,7 @@ fn shared_embed_validation_composes_its_deepest_doc_owner() -> Result<(), String
     let r = registry()?;
     let mut nodes = vec![DocNode {
         locations: Vec::new(),
-        kind: DocKind::InlineMath {
+        kind: DocKind::Sentence {
             syntax: EmbedRef(0),
         },
         origin: None,
@@ -153,8 +161,8 @@ fn shared_embed_validation_composes_its_deepest_doc_owner() -> Result<(), String
     for i in 1..20 {
         nodes.push(DocNode {
             locations: Vec::new(),
-            kind: DocKind::Strong {
-                inline: InlineRef(i - 1),
+            kind: DocKind::Paragraph {
+                items: vec![FlowRef(i - 1)],
             },
             origin: None,
             span: None,
@@ -162,19 +170,21 @@ fn shared_embed_validation_composes_its_deepest_doc_owner() -> Result<(), String
     }
     nodes.push(DocNode {
         locations: Vec::new(),
-        kind: DocKind::Sentence {
-            inlines: vec![InlineRef(0), InlineRef(19)],
+        kind: DocKind::Paragraph {
+            items: vec![FlowRef(0), FlowRef(19)],
         },
         origin: None,
         span: None,
     });
     let doc = DocumentSyntax {
         value: DocValue {
-            root: DocRoot::Sentence(SentenceRef(20)),
+            root: DocRoot::Block(BlockRef(20)),
             nodes,
             embeds: vec![DocEmbed {
-                kind: EmbedKind::InlineMath,
-                closure: closure(&r)?,
+                kind: EmbedKind::Sentence,
+                content: DocContent::Syntax {
+                    closure: closure(&r)?,
+                },
             }],
         },
         sources: vec![],
@@ -196,5 +206,110 @@ fn shared_embed_validation_composes_its_deepest_doc_owner() -> Result<(), String
         ),
         Err(StructureError::Stopped(StopReason::DepthLimit))
     ));
+    Ok(())
+}
+
+#[test]
+fn sentence_slots_preserve_shared_closures_and_reject_role_substitution() -> Result<(), String> {
+    use nepl3_doc_core::check::ShapeError;
+    let registry = registry()?;
+    let node = |kind| DocNode {
+        locations: vec![],
+        kind,
+        origin: None,
+        span: None,
+    };
+    let mut guest = closure(&registry)?;
+    guest.syntax.category = "Sentence".into();
+    // Doc validates the common closure and slot role. The suite must separately
+    // prove that this selected language's root has Sentence semantics.
+    let document = DocumentSyntax {
+        value: DocValue {
+            root: DocRoot::Block(BlockRef(2)),
+            nodes: vec![
+                node(DocKind::Sentence {
+                    syntax: EmbedRef(0),
+                }),
+                node(DocKind::Sentence {
+                    syntax: EmbedRef(0),
+                }),
+                node(DocKind::Paragraph {
+                    items: vec![FlowRef(0), FlowRef(1)],
+                }),
+            ],
+            embeds: vec![DocEmbed {
+                kind: EmbedKind::Sentence,
+                content: DocContent::Syntax { closure: guest },
+            }],
+        },
+        sources: vec![],
+        origins: vec![],
+        views: vec![],
+        source_maps: vec![],
+    };
+    document
+        .validate_structure(&registry, &mut b(), &mut SourceAdmission::default())
+        .map_err(err)?;
+    let extracted = document
+        .fragment(
+            DocRoot::Sentence(SentenceRef(1)),
+            &registry,
+            &mut b(),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(err)?;
+    assert_eq!(extracted.value.nodes.len(), 1);
+    assert_eq!(extracted.value.embeds, document.value.embeds);
+    assert_eq!(
+        extracted.value.nodes[0].kind,
+        DocKind::Sentence {
+            syntax: EmbedRef(0)
+        }
+    );
+
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&registry, &sources, &mut admission).map_err(err)?;
+    let encoded = portable::to_value(&document, &registry, &mut codec, &mut b()).map_err(err)?;
+    let bytes = nepl3_wire::encode(&encoded, &mut b()).map_err(err)?;
+    let decoded = nepl3_wire::decode(&bytes, &mut b()).map_err(err)?;
+    let actual = portable::from_value(&decoded, &registry, &mut codec, &mut b()).map_err(err)?;
+    assert_eq!(actual, document);
+    for role in [
+        EmbedKind::SentenceInline,
+        EmbedKind::InlineMath,
+        EmbedKind::Guest,
+    ] {
+        let mut wrong = document.clone();
+        wrong.value.embeds[0].kind = role;
+        assert!(matches!(
+            wrong.value.validate_shape(&mut b()),
+            Err(ShapeError::Embed(0))
+        ));
+    }
+    let mut missing = document.clone();
+    missing.value.embeds.clear();
+    assert!(matches!(
+        missing.value.validate_shape(&mut b()),
+        Err(ShapeError::Embed(0))
+    ));
+    let mut label = extracted;
+    label.value.root = DocRoot::Inline(InlineRef(0));
+    label.value.nodes[0].kind = DocKind::Anchor {
+        id: "entry".into(),
+        label: EmbedRef(0),
+    };
+    assert!(matches!(
+        label.value.validate_shape(&mut b()),
+        Err(ShapeError::Embed(0))
+    ));
+    label.value.embeds[0].kind = EmbedKind::SentenceInline;
+    let DocContent::Syntax { closure } = &mut label.value.embeds[0].content else {
+        return Err("syntax fixture".into());
+    };
+    closure.syntax.category = "Inline".into();
+    label
+        .validate_structure(&registry, &mut b(), &mut SourceAdmission::default())
+        .map_err(err)?;
     Ok(())
 }

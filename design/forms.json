@@ -1747,15 +1747,12 @@
           "kind": "Sentence",
           "fields": [
             {
-              "name": "inlines",
-              "read": {
-                "list": "Doc/Inline"
-              }
+              "name": "syntax",
+              "read": "Sentence/Sentence"
             }
           ]
         }
-      },
-      "leaf": "sentence"
+      }
     },
     "Doc/Flow": {
       "forms": {
@@ -1822,10 +1819,8 @@
           "kind": "Sentence",
           "fields": [
             {
-              "name": "inlines",
-              "read": {
-                "list": "Doc/Inline"
-              }
+              "name": "syntax",
+              "read": "Sentence/Sentence"
             }
           ]
         },
@@ -1906,8 +1901,7 @@
             }
           ]
         }
-      },
-      "leaf": "sentence"
+      }
     },
     "Doc/Variant": {
       "forms": {
@@ -1929,54 +1923,6 @@
     },
     "Doc/Inline": {
       "forms": {
-        "text": {
-          "kind": "Text",
-          "fields": [
-            {
-              "name": "text",
-              "read": "@Text"
-            }
-          ]
-        },
-        "concat": {
-          "kind": "Concat",
-          "fields": [
-            {
-              "name": "inlines",
-              "read": {
-                "list": "Doc/Inline"
-              }
-            }
-          ]
-        },
-        "ruby": {
-          "kind": "Ruby",
-          "fields": [
-            {
-              "name": "base",
-              "read": "Doc/Inline"
-            },
-            {
-              "name": "reading",
-              "read": "Doc/Inline"
-            }
-          ]
-        },
-        "anno": {
-          "kind": "Anno",
-          "fields": [
-            {
-              "name": "base",
-              "read": "Doc/Inline"
-            },
-            {
-              "name": "notes",
-              "read": {
-                "list": "Doc/Inline"
-              }
-            }
-          ]
-        },
         "math": {
           "kind": "InlineMath",
           "fields": [
@@ -1995,7 +1941,7 @@
             },
             {
               "name": "label",
-              "read": "Doc/Inline"
+              "read": "Sentence/Inline"
             }
           ]
         },
@@ -2008,31 +1954,9 @@
             },
             {
               "name": "label",
-              "read": "Doc/Inline"
+              "read": "Sentence/Inline"
             }
           ]
-        },
-        "em": {
-          "kind": "Emphasis",
-          "fields": [
-            {
-              "name": "inline",
-              "read": "Doc/Inline"
-            }
-          ]
-        },
-        "strong": {
-          "kind": "Strong",
-          "fields": [
-            {
-              "name": "inline",
-              "read": "Doc/Inline"
-            }
-          ]
-        },
-        "break": {
-          "kind": "Break",
-          "fields": []
         },
         "link": {
           "kind": "Link",
@@ -2043,16 +1967,7 @@
             },
             {
               "name": "label",
-              "read": "Doc/Inline"
-            }
-          ]
-        },
-        "code": {
-          "kind": "InlineCode",
-          "fields": [
-            {
-              "name": "text",
-              "read": "@Text"
+              "read": "Sentence/Inline"
             }
           ]
         },
@@ -2270,15 +2185,6 @@
             {
               "name": "fragment",
               "read": "Doc/OptionalText"
-            }
-          ]
-        },
-        "external": {
-          "kind": "ExternalTarget",
-          "fields": [
-            {
-              "name": "uri",
-              "read": "@Text"
             }
           ]
         }

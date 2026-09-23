@@ -55,10 +55,16 @@ pub(super) fn hex_id(s: &str, b: &mut Budget) -> Result<String, StopReason> {
     Ok(out)
 }
 #[derive(Clone, Copy)]
+enum Content {
+    Node,
+    Foreign(EmbedRef),
+}
+#[derive(Clone, Copy)]
 struct Job {
     node: u64,
     parent: u64,
     level: u64,
+    content: Content,
 }
 struct Builder<'a, 'b> {
     prepared: &'a crate::prepare::PreparedRendering<'a>,
@@ -78,7 +84,12 @@ impl Builder<'_, '_> {
             .current_depth()
             .saturating_add(self.depths[job.parent as usize]);
         self.b.with_depth_at_least::<_, RenderError>(depth, |b| {
-            validate(&markup.fragment, HtmlSlot::Phrasing, &markup.policy, b)?;
+            let role = self.prepared.document.value.embeds[embed.0 as usize].kind;
+            if matches!(role, EmbedKind::Sentence | EmbedKind::SentenceInline) {
+                check_part(&markup.fragment, HtmlSlot::Phrasing, &markup.policy, b)?;
+            } else {
+                validate(&markup.fragment, HtmlSlot::Phrasing, &markup.policy, b)?;
+            }
             Ok(())
         })?;
         // Preserve the backend's output envelope across the guest boundary.
@@ -242,6 +253,26 @@ impl Builder<'_, '_> {
                 node,
                 parent,
                 level,
+                content: Content::Node,
+            },
+            self.b,
+        )?;
+        Ok(())
+    }
+    fn foreign_job(
+        &mut self,
+        owner: u64,
+        embed: EmbedRef,
+        parent: u64,
+        level: u64,
+    ) -> Result<(), RenderError> {
+        push(
+            &mut self.jobs,
+            Job {
+                node: owner,
+                parent,
+                level,
+                content: Content::Foreign(embed),
             },
             self.b,
         )?;
@@ -411,7 +442,14 @@ fn render_prepared_with_foreign<E>(
     while let Some(job) = w.jobs.pop() {
         w.b.charge(Resource::Work, 1)?;
         let kind = &prepared.document.value.nodes[job.node as usize].kind;
-        if let DocKind::InlineMath { syntax } = kind {
+        let foreign = match job.content {
+            Content::Foreign(embed) => Some(embed),
+            Content::Node => match kind {
+                DocKind::InlineMath { syntax } => Some(*syntax),
+                _ => None,
+            },
+        };
+        if let Some(syntax) = foreign {
             let embed = prepared
                 .document
                 .value
@@ -423,10 +461,10 @@ fn render_prepared_with_foreign<E>(
                     .saturating_add(w.depths[job.parent as usize]);
             let result = w
                 .b
-                .with_depth_at_least(depth, |b| Ok::<_, RenderError>(adapter(embed, *syntax, b)))?;
+                .with_depth_at_least(depth, |b| Ok::<_, RenderError>(adapter(embed, syntax, b)))?;
             w.b.poll()?;
             let markup = result.map_err(ForeignRenderError::Foreign)?;
-            w.guest(job, *syntax, markup)?;
+            w.guest(job, syntax, markup)?;
             continue;
         }
         if !w.block(job, kind)? {

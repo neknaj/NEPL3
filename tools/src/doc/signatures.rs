@@ -5,6 +5,10 @@ use nepl3_core::{
     source::{SourceAdmission, SourceStore},
 };
 use nepl3_doc_core::{model::*, print};
+use nepl3_sentence_core::{
+    model::{InlineRef as SentenceInlineRef, Kind, Root, SentenceRef as ContentRef, SentenceValue},
+    syntax::{NodeLocation, SentenceSyntax},
+};
 use nepl3_wire::foundation::FoundationCodec;
 use serde::{
     Deserialize, Deserializer,
@@ -80,11 +84,25 @@ impl ReadType {
     }
 }
 
-#[derive(Default)]
 struct Builder {
     nodes: Vec<DocNode>,
+    inlines: Vec<Kind>,
+    embeds: Vec<DocEmbed>,
+    registry: SchemaRegistry,
+    budget: nepl3_core::budget::Budget,
 }
 impl Builder {
+    fn new() -> Result<Self> {
+        let mut budget = super::source::budget();
+        let registry = registry(&mut budget)?;
+        Ok(Self {
+            nodes: vec![],
+            inlines: vec![],
+            embeds: vec![],
+            registry,
+            budget,
+        })
+    }
     fn node(&mut self, kind: DocKind) -> u64 {
         let id = self.nodes.len() as u64;
         self.nodes.push(DocNode {
@@ -95,25 +113,85 @@ impl Builder {
         });
         id
     }
-    fn text(&mut self, text: &str) -> InlineRef {
-        InlineRef(self.node(DocKind::Text { text: text.into() }))
+    fn inline(&mut self, kind: Kind) -> SentenceInlineRef {
+        let id = self.inlines.len() as u64;
+        self.inlines.push(kind);
+        SentenceInlineRef(id)
     }
-    fn code(&mut self, text: &str) -> InlineRef {
-        InlineRef(self.node(DocKind::InlineCode { text: text.into() }))
+    fn text(&mut self, text: &str) -> SentenceInlineRef {
+        self.inline(Kind::Text { text: text.into() })
     }
-    fn ruby(&mut self, base: &str, reading: &str) -> InlineRef {
+    fn code(&mut self, text: &str) -> SentenceInlineRef {
+        self.inline(Kind::Code { text: text.into() })
+    }
+    fn ruby(&mut self, base: &str, reading: &str) -> SentenceInlineRef {
         let base = self.text(base);
         let reading = self.text(reading);
-        InlineRef(self.node(DocKind::Ruby { base, reading }))
+        self.inline(Kind::Ruby { base, reading })
     }
-    fn sentence(&mut self, inlines: Vec<InlineRef>) -> SentenceRef {
-        SentenceRef(self.node(DocKind::Sentence { inlines }))
+    fn sentence(&mut self, inlines: Vec<SentenceInlineRef>) -> Result<SentenceRef> {
+        use nepl3_core::{
+            origin::{Origin, OriginId},
+            value::{NdfValue, TypedValue},
+        };
+        let root = ContentRef(self.inlines.len() as u64);
+        self.inlines.push(Kind::Sentence { inlines });
+        let nodes = std::mem::take(&mut self.inlines);
+        let syntax = SentenceSyntax {
+            locations: vec![
+                NodeLocation {
+                    origin: OriginId(0),
+                    head: None,
+                    cover: None
+                };
+                nodes.len()
+            ],
+            value: SentenceValue {
+                root: Root::Sentence(root),
+                nodes,
+                embeds: vec![],
+            },
+            sources: vec![],
+            origins: vec![Origin::Synthetic {
+                reason: "generated form catalog".into(),
+                anchor: None,
+            }],
+            views: vec![],
+            source_maps: vec![],
+        };
+        let sources = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&self.registry, &sources, &mut admission)
+            .map_err(super::source::err)?;
+        let encoded = nepl3_sentence_core::portable::syntax::to_value(
+            &syntax,
+            &self.registry,
+            &mut codec,
+            &mut self.budget,
+        )
+        .map_err(super::source::err)?;
+        encoded
+            .charge_clone(&mut self.budget)
+            .map_err(super::source::err)?;
+        let NdfValue::Record(record) = &encoded else {
+            return Err("SentenceSyntax record".into());
+        };
+        let reference = EmbedRef(self.embeds.len() as u64);
+        self.embeds.push(DocEmbed {
+            kind: EmbedKind::Sentence,
+            content: DocContent::Value {
+                value: TypedValue::Record(record.clone()),
+            },
+        });
+        Ok(SentenceRef(
+            self.node(DocKind::Sentence { syntax: reference }),
+        ))
     }
-    fn code_sentence(&mut self, text: &str) -> SentenceRef {
+    fn code_sentence(&mut self, text: &str) -> Result<SentenceRef> {
         let inline = self.code(text);
         self.sentence(vec![inline])
     }
-    fn text_sentence(&mut self, text: &str) -> SentenceRef {
+    fn text_sentence(&mut self, text: &str) -> Result<SentenceRef> {
         let inline = self.text(text);
         self.sentence(vec![inline])
     }
@@ -131,14 +209,14 @@ fn document(catalog: &Catalog, language: &str) -> Result<DocumentSyntax> {
     if !LANGUAGES.contains(&language) {
         return Err("unknown signature language".into());
     }
-    let mut b = Builder::default();
+    let mut b = Builder::new()?;
     let title = vec![
         b.text(&format!("{language}：")),
         b.ruby("構文", "こうぶん"),
         b.text("signatureの"),
         b.ruby("全表", "ぜんぴょう"),
     ];
-    let title = b.sentence(title);
+    let title = b.sentence(title)?;
     let intro = vec![
         b.text("この"),
         b.ruby("表", "ひょう"),
@@ -148,7 +226,7 @@ fn document(catalog: &Catalog, language: &str) -> Result<DocumentSyntax> {
         b.ruby("生成", "せいせい"),
         b.text("した。"),
     ];
-    let intro = b.sentence(intro);
+    let intro = b.sentence(intro)?;
     let notation = vec![
         b.code("List<T>"),
         b.text("は"),
@@ -163,24 +241,24 @@ fn document(catalog: &Catalog, language: &str) -> Result<DocumentSyntax> {
         b.ruby("識別", "しきべつ"),
         b.text("である。"),
     ];
-    let notation = b.sentence(notation);
+    let notation = b.sentence(notation)?;
     let mut blocks = vec![b.paragraph(vec![intro, notation])];
     for (category, definition) in &catalog.categories.0 {
         if !category.starts_with(&format!("{language}/")) {
             continue;
         }
-        let title = b.code_sentence(category);
+        let title = b.code_sentence(category)?;
         let spelling = vec![b.ruby("綴", "つづ"), b.text("り")];
-        let spelling = b.sentence(spelling);
-        let kind = b.text_sentence("kind");
+        let spelling = b.sentence(spelling)?;
+        let kind = b.text_sentence("kind")?;
         let children = vec![
             b.ruby("子", "こ"),
             b.text("（"),
             b.ruby("順序固定", "じゅんじょこてい"),
             b.text("）"),
         ];
-        let children = b.sentence(children);
-        let arity = b.text_sentence("arity");
+        let children = b.sentence(children)?;
+        let arity = b.text_sentence("arity")?;
         let header = RowRef(b.node(DocKind::Row {
             cells: vec![spelling, kind, children, arity],
         }));
@@ -193,14 +271,14 @@ fn document(catalog: &Catalog, language: &str) -> Result<DocumentSyntax> {
                 .collect::<Result<Vec<_>>>()?
                 .join(", ");
             let cells = vec![
-                b.code_sentence(spelling),
-                b.code_sentence(&format!("{language}.{}", form.kind)),
+                b.code_sentence(spelling)?,
+                b.code_sentence(&format!("{language}.{}", form.kind))?,
                 if fields.is_empty() {
-                    b.text_sentence("なし")
+                    b.text_sentence("なし")?
                 } else {
-                    b.code_sentence(&fields)
+                    b.code_sentence(&fields)?
                 },
-                b.text_sentence(&form.fields.len().to_string()),
+                b.text_sentence(&form.fields.len().to_string())?,
             ];
             rows.push(RowRef(b.node(DocKind::Row { cells })));
         }
@@ -224,7 +302,7 @@ fn document(catalog: &Catalog, language: &str) -> Result<DocumentSyntax> {
                 b.code(leaf),
                 b.text("。"),
             ];
-            let sentence = b.sentence(inlines);
+            let sentence = b.sentence(inlines)?;
             content.push(b.paragraph(vec![sentence]));
         }
         let body = b.body(content);
@@ -251,7 +329,7 @@ fn document(catalog: &Catalog, language: &str) -> Result<DocumentSyntax> {
         value: DocValue {
             root,
             nodes: b.nodes,
-            embeds: vec![],
+            embeds: b.embeds,
         },
         sources: vec![],
         origins: vec![],
@@ -260,33 +338,63 @@ fn document(catalog: &Catalog, language: &str) -> Result<DocumentSyntax> {
     })
 }
 
-fn source(document: DocumentSyntax) -> Result<String> {
-    let mut budget = super::source::budget();
+fn registry(budget: &mut nepl3_core::budget::Budget) -> Result<SchemaRegistry> {
     let mut registry = SchemaRegistry::default();
     for descriptor in [
-        nepl3_core::schema::foundation::descriptor(&mut budget),
-        nepl3_doc_core::schema::descriptor(&mut budget),
+        nepl3_core::schema::foundation::descriptor(budget),
+        nepl3_doc_core::schema::descriptor(budget),
+        nepl3_sentence_core::schema::descriptor(budget),
     ] {
         let descriptor = descriptor.map_err(|e| format!("{e:?}"))?;
-        let reference = descriptor
-            .reference(&mut budget)
-            .map_err(|e| format!("{e:?}"))?;
+        let reference = descriptor.reference(budget).map_err(|e| format!("{e:?}"))?;
         registry
-            .register(reference, descriptor, &mut budget)
+            .register(reference, descriptor, budget)
             .map_err(|e| format!("{e:?}"))?;
     }
-    registry
-        .finalize(&mut budget)
-        .map_err(|e| format!("{e:?}"))?;
+    registry.finalize(budget).map_err(|e| format!("{e:?}"))?;
+    Ok(registry)
+}
+fn source(document: DocumentSyntax) -> Result<String> {
+    let mut budget = super::source::budget();
+    let registry = registry(&mut budget)?;
     let sources = SourceStore::default();
     let mut admission = SourceAdmission::default();
     let mut codec =
         FoundationCodec::new(&registry, &sources, &mut admission).map_err(|e| format!("{e:?}"))?;
+    let identity = print::identity(&document, &registry, &mut codec, &mut budget)
+        .map_err(super::source::err)?;
+    let sentence_schema = registry
+        .selected("nepl3.sentence", 1)
+        .ok_or("Sentence schema")?;
+    let mut guests = Vec::new();
+    for target in identity.guests {
+        let content = nepl3_suite::adapters::document::sentence::lower(
+            &document.value.embeds[target.embed.0 as usize],
+            sentence_schema,
+            &[],
+            &registry,
+            &mut codec,
+            &mut budget,
+        )
+        .map_err(super::source::err)?;
+        let text = nepl3_sentence_core::print::prefix(&content.value, &mut budget)
+            .map_err(super::source::err)?;
+        guests.push(print::PrintedGuest {
+            document_digest: identity.document_digest,
+            embed: target.embed,
+            guest_digest: target.guest_digest,
+            text,
+        });
+    }
     let request = print::PrintRequest {
         document,
         mode: print::PrintMode::Prefix,
-        bindings: vec![],
-        guests: vec![],
+        bindings: vec![print::GuestBinding {
+            schema: sentence_schema.clone(),
+            category: "Sentence".into(),
+            language: GuestLanguage::Sentence,
+        }],
+        guests,
     };
     let reply =
         print::print(&request, &registry, &mut codec, &mut budget).map_err(|e| format!("{e:?}"))?;

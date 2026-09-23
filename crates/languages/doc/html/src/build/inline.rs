@@ -6,23 +6,12 @@ impl Builder<'_, '_> {
             node,
             parent,
             level,
+            ..
         } = j;
         match k {
-            Text { text } => self.text(parent, node, text)?,
-            Sentence { inlines } | Concat { inlines } => {
+            Sentence { syntax } => {
                 let e = self.element(Some(parent), node, HtmlTag::Span)?;
-                for child in inlines.iter().rev() {
-                    self.job(child.0, e, level)?;
-                }
-            }
-            Emphasis { inline } | Strong { inline } => {
-                let tag = if matches!(k, Emphasis { .. }) {
-                    HtmlTag::Em
-                } else {
-                    HtmlTag::Strong
-                };
-                let e = self.element(Some(parent), node, tag)?;
-                self.job(inline.0, e, level)?;
+                self.foreign_job(node, *syntax, e, level)?;
             }
             Anchor { id, label } | Reference { target: id, label } => {
                 let anchor = matches!(k, Anchor { .. });
@@ -42,10 +31,7 @@ impl Builder<'_, '_> {
                         }
                     },
                 )?;
-                self.job(label.0, e, level)?;
-            }
-            Break => {
-                self.element(Some(parent), node, HtmlTag::Br)?;
+                self.foreign_job(node, *label, e, level)?;
             }
             Link { label, .. } => {
                 let mut href = None;
@@ -73,40 +59,7 @@ impl Builder<'_, '_> {
                 let value = href.ok_or(RenderError::InternalShape)?;
                 let e = self.element(Some(parent), node, HtmlTag::A)?;
                 self.attr(e, HtmlAttribute::Href { value })?;
-                self.job(label.0, e, level)?;
-            }
-            InlineCode { text } => {
-                let e = self.element(Some(parent), node, HtmlTag::Code)?;
-                self.text(e, node, text)?;
-            }
-            Ruby { base, reading } => {
-                let e = self.element(Some(parent), node, HtmlTag::Span)?;
-                self.class(e, "nepl-ruby")?;
-                let b = self.element(Some(e), node, HtmlTag::Span)?;
-                self.class(b, "nepl-base")?;
-                let r = self.element(Some(e), node, HtmlTag::Span)?;
-                self.class(r, "nepl-reading")?;
-                self.job(reading.0, r, level)?;
-                self.job(base.0, b, level)?;
-            }
-            Anno { base, notes } => {
-                let e = self.element(Some(parent), node, HtmlTag::Span)?;
-                self.class(e, "nepl-anno")?;
-                let b = self.element(Some(e), node, HtmlTag::Span)?;
-                self.class(b, "nepl-base")?;
-                let n = self.element(Some(e), node, HtmlTag::Span)?;
-                self.class(n, "nepl-notes")?;
-                let start = self.jobs.len();
-                for note in notes {
-                    self.b.charge(Resource::Work, 1)?;
-                    let target = self.element(Some(n), node, HtmlTag::Span)?;
-                    self.class(target, "nepl-note")?;
-                    self.job(note.0, target, level)?;
-                }
-                self.b
-                    .charge(Resource::Work, (self.jobs.len() - start) as u64)?;
-                self.jobs[start..].reverse();
-                self.job(base.0, b, level)?;
+                self.foreign_job(node, *label, e, level)?;
             }
             Parallel { variants } => {
                 let e = self.element(Some(parent), node, HtmlTag::Span)?;

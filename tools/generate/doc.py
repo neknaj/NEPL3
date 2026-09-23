@@ -38,7 +38,7 @@ def tuple_case(name: str, _case: str) -> bool:
 
 def generate() -> str:
     options = adapters.Options(
-        frozenset(("DocumentSyntax", "SentencePayload", "PlainTextRequest", "PrintRequest", "PageDocument", "PageSet")),
+        frozenset(("DocumentSyntax", "PlainTextRequest", "PrintRequest", "PageDocument", "PageSet")),
         MappingProxyType({"languageHint": "language_hint", "sourceMaps": "source_maps",
                           "documentDigest": "document_digest", "guestDigest": "guest_digest"}),
         tuple_case,

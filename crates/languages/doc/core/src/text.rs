@@ -99,12 +99,10 @@ pub fn prepare<'a, C: FoundationValueCodec>(
     let mut embeds = Vec::new();
     for (index, embed) in document.value.embeds.iter().enumerate() {
         b.charge(Resource::Work, 1)?;
-        if embed.kind != EmbedKind::InlineMath {
+        if embed.kind != EmbedKind::Sentence {
             continue;
         }
-        let value = codec
-            .encode_foreign_closure(&embed.closure, b)
-            .map_err(boundary)?;
+        let value = portable::embed_value(embed, registry, codec, b)?;
         let guest_digest = codec
             .canonical_value_digest(GUEST_DOMAIN, &value, b)
             .map_err(boundary)?;

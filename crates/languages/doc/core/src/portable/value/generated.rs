@@ -170,7 +170,6 @@ fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Resul
 match self {
 Self::Page {page,fragment} => variant(s,"LinkTarget","Page",[page.put(s,c,b)?,fragment.put(s,c,b)?],b),
 Self::Relative {path,fragment} => variant(s,"LinkTarget","Relative",[path.put(s,c,b)?,fragment.put(s,c,b)?],b),
-Self::External {uri} => variant(s,"LinkTarget","External",[uri.put(s,c,b)?],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -179,7 +178,6 @@ let (tag,f)=case(v,s,"LinkTarget")?;
 match (tag,f.len()) {
 ("Page",2)=>Ok(Self::Page {page:Value::read(&f[0],s,c,b)?,fragment:Value::read(&f[1],s,c,b)?}),
 ("Relative",2)=>Ok(Self::Relative {path:Value::read(&f[0],s,c,b)?,fragment:Value::read(&f[1],s,c,b)?}),
-("External",1)=>Ok(Self::External {uri:Value::read(&f[0],s,c,b)?}),
 _=>Err(PortableError::Shape),}
 }
 }
@@ -227,6 +225,8 @@ Self::DisplayMath => variant(s,"EmbedKind","DisplayMath",[],b),
 Self::CircuitFigure => variant(s,"EmbedKind","CircuitFigure",[],b),
 Self::Code => variant(s,"EmbedKind","Code",[],b),
 Self::Guest => variant(s,"EmbedKind","Guest",[],b),
+Self::Sentence => variant(s,"EmbedKind","Sentence",[],b),
+Self::SentenceInline => variant(s,"EmbedKind","SentenceInline",[],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -238,6 +238,8 @@ match (tag,f.len()) {
 ("CircuitFigure",0)=>Ok(Self::CircuitFigure),
 ("Code",0)=>Ok(Self::Code),
 ("Guest",0)=>Ok(Self::Guest),
+("Sentence",0)=>Ok(Self::Sentence),
+("SentenceInline",0)=>Ok(Self::SentenceInline),
 _=>Err(PortableError::Shape),}
 }
 }
@@ -248,19 +250,12 @@ Self::Article {language,title,body} => variant(s,"DocKind","Article",[language.p
 Self::Body {blocks} => variant(s,"DocKind","Body",[blocks.put(s,c,b)?],b),
 Self::Paragraph {items} => variant(s,"DocKind","Paragraph",[items.put(s,c,b)?],b),
 Self::Section {id,title,body} => variant(s,"DocKind","Section",[id.put(s,c,b)?,title.put(s,c,b)?,body.put(s,c,b)?],b),
-Self::Sentence {inlines} => variant(s,"DocKind","Sentence",[inlines.put(s,c,b)?],b),
+Self::Sentence {syntax} => variant(s,"DocKind","Sentence",[syntax.put(s,c,b)?],b),
 Self::Parallel {variants} => variant(s,"DocKind","Parallel",[variants.put(s,c,b)?],b),
 Self::Variant {language,sentence} => variant(s,"DocKind","Variant",[language.put(s,c,b)?,sentence.put(s,c,b)?],b),
-Self::Text {text} => variant(s,"DocKind","Text",[text.put(s,c,b)?],b),
-Self::Concat {inlines} => variant(s,"DocKind","Concat",[inlines.put(s,c,b)?],b),
-Self::Ruby {base,reading} => variant(s,"DocKind","Ruby",[base.put(s,c,b)?,reading.put(s,c,b)?],b),
-Self::Anno {base,notes} => variant(s,"DocKind","Anno",[base.put(s,c,b)?,notes.put(s,c,b)?],b),
 Self::InlineMath {syntax} => variant(s,"DocKind","InlineMath",[syntax.put(s,c,b)?],b),
 Self::Anchor {id,label} => variant(s,"DocKind","Anchor",[id.put(s,c,b)?,label.put(s,c,b)?],b),
 Self::Reference {target,label} => variant(s,"DocKind","Reference",[target.put(s,c,b)?,label.put(s,c,b)?],b),
-Self::Emphasis {inline} => variant(s,"DocKind","Emphasis",[inline.put(s,c,b)?],b),
-Self::Strong {inline} => variant(s,"DocKind","Strong",[inline.put(s,c,b)?],b),
-Self::Break => variant(s,"DocKind","Break",[],b),
 Self::DisplayMath {syntax} => variant(s,"DocKind","DisplayMath",[syntax.put(s,c,b)?],b),
 Self::CircuitFigure {caption,syntax} => variant(s,"DocKind","CircuitFigure",[caption.put(s,c,b)?,syntax.put(s,c,b)?],b),
 Self::Code {syntax} => variant(s,"DocKind","Code",[syntax.put(s,c,b)?],b),
@@ -269,7 +264,6 @@ Self::Row {cells} => variant(s,"DocKind","Row",[cells.put(s,c,b)?],b),
 Self::List {kind,items} => variant(s,"DocKind","List",[kind.put(s,c,b)?,items.put(s,c,b)?],b),
 Self::ListItem {checked,body} => variant(s,"DocKind","ListItem",[checked.put(s,c,b)?,body.put(s,c,b)?],b),
 Self::Link {target,label} => variant(s,"DocKind","Link",[target.put(s,c,b)?,label.put(s,c,b)?],b),
-Self::InlineCode {text} => variant(s,"DocKind","InlineCode",[text.put(s,c,b)?],b),
 Self::RawCode {language_hint,text} => variant(s,"DocKind","RawCode",[language_hint.put(s,c,b)?,text.put(s,c,b)?],b),
 Self::Image {asset,alt,caption} => variant(s,"DocKind","Image",[asset.put(s,c,b)?,alt.put(s,c,b)?,caption.put(s,c,b)?],b),
 Self::InlineImage {asset,alt} => variant(s,"DocKind","InlineImage",[asset.put(s,c,b)?,alt.put(s,c,b)?],b),
@@ -292,19 +286,12 @@ match (tag,f.len()) {
 ("Body",1)=>Ok(Self::Body {blocks:Value::read(&f[0],s,c,b)?}),
 ("Paragraph",1)=>Ok(Self::Paragraph {items:Value::read(&f[0],s,c,b)?}),
 ("Section",3)=>Ok(Self::Section {id:Value::read(&f[0],s,c,b)?,title:Value::read(&f[1],s,c,b)?,body:Value::read(&f[2],s,c,b)?}),
-("Sentence",1)=>Ok(Self::Sentence {inlines:Value::read(&f[0],s,c,b)?}),
+("Sentence",1)=>Ok(Self::Sentence {syntax:Value::read(&f[0],s,c,b)?}),
 ("Parallel",1)=>Ok(Self::Parallel {variants:Value::read(&f[0],s,c,b)?}),
 ("Variant",2)=>Ok(Self::Variant {language:Value::read(&f[0],s,c,b)?,sentence:Value::read(&f[1],s,c,b)?}),
-("Text",1)=>Ok(Self::Text {text:Value::read(&f[0],s,c,b)?}),
-("Concat",1)=>Ok(Self::Concat {inlines:Value::read(&f[0],s,c,b)?}),
-("Ruby",2)=>Ok(Self::Ruby {base:Value::read(&f[0],s,c,b)?,reading:Value::read(&f[1],s,c,b)?}),
-("Anno",2)=>Ok(Self::Anno {base:Value::read(&f[0],s,c,b)?,notes:Value::read(&f[1],s,c,b)?}),
 ("InlineMath",1)=>Ok(Self::InlineMath {syntax:Value::read(&f[0],s,c,b)?}),
 ("Anchor",2)=>Ok(Self::Anchor {id:Value::read(&f[0],s,c,b)?,label:Value::read(&f[1],s,c,b)?}),
 ("Reference",2)=>Ok(Self::Reference {target:Value::read(&f[0],s,c,b)?,label:Value::read(&f[1],s,c,b)?}),
-("Emphasis",1)=>Ok(Self::Emphasis {inline:Value::read(&f[0],s,c,b)?}),
-("Strong",1)=>Ok(Self::Strong {inline:Value::read(&f[0],s,c,b)?}),
-("Break",0)=>Ok(Self::Break),
 ("DisplayMath",1)=>Ok(Self::DisplayMath {syntax:Value::read(&f[0],s,c,b)?}),
 ("CircuitFigure",2)=>Ok(Self::CircuitFigure {caption:Value::read(&f[0],s,c,b)?,syntax:Value::read(&f[1],s,c,b)?}),
 ("Code",1)=>Ok(Self::Code {syntax:Value::read(&f[0],s,c,b)?}),
@@ -313,7 +300,6 @@ match (tag,f.len()) {
 ("List",2)=>Ok(Self::List {kind:Value::read(&f[0],s,c,b)?,items:Value::read(&f[1],s,c,b)?}),
 ("ListItem",2)=>Ok(Self::ListItem {checked:Value::read(&f[0],s,c,b)?,body:Value::read(&f[1],s,c,b)?}),
 ("Link",2)=>Ok(Self::Link {target:Value::read(&f[0],s,c,b)?,label:Value::read(&f[1],s,c,b)?}),
-("InlineCode",1)=>Ok(Self::InlineCode {text:Value::read(&f[0],s,c,b)?}),
 ("RawCode",2)=>Ok(Self::RawCode {language_hint:Value::read(&f[0],s,c,b)?,text:Value::read(&f[1],s,c,b)?}),
 ("Image",3)=>Ok(Self::Image {asset:Value::read(&f[0],s,c,b)?,alt:Value::read(&f[1],s,c,b)?,caption:Value::read(&f[2],s,c,b)?}),
 ("InlineImage",2)=>Ok(Self::InlineImage {asset:Value::read(&f[0],s,c,b)?,alt:Value::read(&f[1],s,c,b)?}),
@@ -341,12 +327,12 @@ Ok(Self {kind:Value::read(&f[0],s,c,b)?,origin:Value::read(&f[1],s,c,b)?,span:Va
 }
 impl Value for DocEmbed {
 fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
-record(s,"DocEmbed",[self.kind.put(s,c,b)?,self.closure.put(s,c,b)?],b)
+record(s,"DocEmbed",[self.kind.put(s,c,b)?,self.content.put(s,c,b)?],b)
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
 b.charge(Resource::Work,40)?;
 let f=fields(v,s,"DocEmbed",2)?;
-Ok(Self {kind:Value::read(&f[0],s,c,b)?,closure:Value::read(&f[1],s,c,b)?})
+Ok(Self {kind:Value::read(&f[0],s,c,b)?,content:Value::read(&f[1],s,c,b)?})
 }
 }
 impl Value for DocValue {
@@ -547,12 +533,12 @@ Ok(Self {document_digest:Value::read(&f[0],s,c,b)?,embeds:Value::read(&f[1],s,c,
 }
 impl Value for ResolvedInlineText {
 fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
-record(s,"ResolvedInlineText",[self.document_digest.put(s,c,b)?,self.embed.put(s,c,b)?,self.guest_digest.put(s,c,b)?,self.text.put(s,c,b)?],b)
+record(s,"ResolvedInlineText",[self.document_digest.put(s,c,b)?,self.embed.put(s,c,b)?,self.guest_digest.put(s,c,b)?,self.policy.put(s,c,b)?,self.text.put(s,c,b)?],b)
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
 b.charge(Resource::Work,50)?;
-let f=fields(v,s,"ResolvedInlineText",4)?;
-Ok(Self {document_digest:Value::read(&f[0],s,c,b)?,embed:Value::read(&f[1],s,c,b)?,guest_digest:Value::read(&f[2],s,c,b)?,text:Value::read(&f[3],s,c,b)?})
+let f=fields(v,s,"ResolvedInlineText",5)?;
+Ok(Self {document_digest:Value::read(&f[0],s,c,b)?,embed:Value::read(&f[1],s,c,b)?,guest_digest:Value::read(&f[2],s,c,b)?,policy:Value::read(&f[3],s,c,b)?,text:Value::read(&f[4],s,c,b)?})
 }
 }
 impl Value for ResolutionMismatch {
@@ -562,6 +548,7 @@ Self::Document => variant(s,"ResolutionMismatch","Document",[],b),
 Self::Guest => variant(s,"ResolutionMismatch","Guest",[],b),
 Self::Embed => variant(s,"ResolutionMismatch","Embed",[],b),
 Self::Duplicate => variant(s,"ResolutionMismatch","Duplicate",[],b),
+Self::Policy => variant(s,"ResolutionMismatch","Policy",[],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -572,6 +559,7 @@ match (tag,f.len()) {
 ("Guest",0)=>Ok(Self::Guest),
 ("Embed",0)=>Ok(Self::Embed),
 ("Duplicate",0)=>Ok(Self::Duplicate),
+("Policy",0)=>Ok(Self::Policy),
 _=>Err(PortableError::Shape),}
 }
 }
@@ -638,6 +626,7 @@ Self::Math => variant(s,"GuestLanguage","Math",[],b),
 Self::Circuit => variant(s,"GuestLanguage","Circuit",[],b),
 Self::Grammar => variant(s,"GuestLanguage","Grammar",[],b),
 Self::Doc => variant(s,"GuestLanguage","Doc",[],b),
+Self::Sentence => variant(s,"GuestLanguage","Sentence",[],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -648,6 +637,7 @@ match (tag,f.len()) {
 ("Circuit",0)=>Ok(Self::Circuit),
 ("Grammar",0)=>Ok(Self::Grammar),
 ("Doc",0)=>Ok(Self::Doc),
+("Sentence",0)=>Ok(Self::Sentence),
 _=>Err(PortableError::Shape),}
 }
 }
@@ -938,6 +928,22 @@ let (tag,f)=case(v,s,"PageDestination")?;
 match (tag,f.len()) {
 ("Page",1)=>Ok(Self::Page {index:Value::read(&f[0],s,c,b)?}),
 ("File",1)=>Ok(Self::File {index:Value::read(&f[0],s,c,b)?}),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for DocContent {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Syntax {closure} => variant(s,"DocContent","Syntax",[closure.put(s,c,b)?],b),
+Self::Value {value} => variant(s,"DocContent","Value",[value.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,42)?;
+let (tag,f)=case(v,s,"DocContent")?;
+match (tag,f.len()) {
+("Syntax",1)=>Ok(Self::Syntax {closure:Value::read(&f[0],s,c,b)?}),
+("Value",1)=>Ok(Self::Value {value:Value::read(&f[0],s,c,b)?}),
 _=>Err(PortableError::Shape),}
 }
 }

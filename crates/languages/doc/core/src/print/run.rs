@@ -6,7 +6,6 @@ use prepare::Guest;
 enum List<'a> {
     Blocks(&'a [BlockRef]),
     Flows(&'a [FlowRef]),
-    Inlines(&'a [InlineRef]),
     Variants(&'a [VariantRef]),
     Rows(&'a [RowRef]),
     Items(&'a [ListItemRef]),
@@ -17,7 +16,6 @@ impl List<'_> {
         match self {
             Self::Blocks(v) => v.get(index).map(|v| v.0),
             Self::Flows(v) => v.get(index).map(|v| v.0),
-            Self::Inlines(v) => v.get(index).map(|v| v.0),
             Self::Variants(v) => v.get(index).map(|v| v.0),
             Self::Rows(v) => v.get(index).map(|v| v.0),
             Self::Items(v) => v.get(index).map(|v| v.0),
@@ -41,8 +39,7 @@ enum Action<'a> {
     OptionalText(&'a Option<alloc::string::String>),
     OptionalNode(Option<u64>, u64),
     Guest(EmbedRef, Option<GuestLanguage>),
-    Literal(u64, u64),
-    Raw(&'static str),
+    SentenceContent(EmbedRef),
 }
 fn push<'a>(
     queue: &mut Vec<Action<'a>>,
@@ -81,32 +78,6 @@ fn entry(root: DocRoot) -> PrintEntry {
         DocRoot::CircuitGuest(_) => PrintEntry::CircuitGuest,
     }
 }
-fn literal_nodes(value: &DocValue, b: &mut Budget) -> Result<Vec<bool>, Failure> {
-    let shape = value.validate_shape(b)?;
-    b.charge(Resource::AllocationUnits, value.nodes.len() as u64)?;
-    let mut eligible = alloc::vec![false;value.nodes.len()];
-    for &id in shape.postorder() {
-        b.charge(Resource::Work, 1)?;
-        let node = &value.nodes[id];
-        let candidate = matches!(
-            node.kind,
-            DocKind::Text { .. }
-                | DocKind::Concat { .. }
-                | DocKind::Ruby { .. }
-                | DocKind::Anno { .. }
-                | DocKind::Sentence { .. }
-        );
-        let mut valid = candidate;
-        let mut i = 0;
-        while let Some((child, _)) = crate::check::edges::edge(&node.kind, i) {
-            b.charge(Resource::Work, 1)?;
-            valid &= eligible[child as usize];
-            i += 1;
-        }
-        eligible[id] = valid;
-    }
-    Ok(eligible)
-}
 fn decimal(mut n: u64, out: &mut Output, b: &mut Budget) -> Result<(), Failure> {
     let mut bytes = [0u8; 20];
     let mut offset = 20;
@@ -136,11 +107,6 @@ pub(super) fn print(
     b: &mut Budget,
 ) -> Result<SourceArtifact, Failure> {
     let value = &request.document.value;
-    let eligible = if request.mode == PrintMode::Compact {
-        literal_nodes(value, b)?
-    } else {
-        Vec::new()
-    };
     let root = crate::check::edges::root(value.root).0;
     let mut queue = Vec::new();
     let mut out = Output::default();
@@ -150,7 +116,6 @@ pub(super) fn print(
         b.charge(Resource::Work, 1)?;
         match action {
             Action::Quoted(s) => out.quoted(s, b)?,
-            Action::Raw(s) => out.append(s, b)?,
             Action::Number(n) => decimal(n, &mut out, b)?,
             Action::Name(name, node, field) => {
                 if !nepl3_core::lexical::name(name, b)? {
@@ -229,10 +194,6 @@ pub(super) fn print(
                     push(&mut queue, Action::OptionalText(fragment), b)?;
                     push(&mut queue, Action::Quoted(path), b)?;
                 }
-                LinkTarget::External { uri } => {
-                    out.atom("external", b)?;
-                    push(&mut queue, Action::Quoted(uri), b)?;
-                }
             },
             Action::Asset(asset) => {
                 out.atom("asset", b)?;
@@ -266,6 +227,7 @@ pub(super) fn print(
                 }
                 out.atom(
                     match guest.language {
+                        GuestLanguage::Sentence => "Sentence",
                         GuestLanguage::Math => "Math",
                         GuestLanguage::Circuit => "Circuit",
                         GuestLanguage::Grammar => "Grammar",
@@ -275,51 +237,17 @@ pub(super) fn print(
                 )?;
                 out.atom(guest.text, b)?;
             }
-            Action::Literal(id, depth) => {
-                b.with_depth_at_least(caller.saturating_add(depth), |b| -> Result<(), Failure> {
-                    let next = depth.saturating_add(1);
-                    match &value.nodes[id as usize].kind {
-                        DocKind::Text { text } => out.escaped(text, true, b)?,
-                        DocKind::Sentence { inlines } | DocKind::Concat { inlines } => {
-                            for child in inlines.iter().rev() {
-                                push(&mut queue, Action::Literal(child.0, next), b)?;
-                            }
-                        }
-                        DocKind::Ruby { base, reading } => {
-                            out.append("[", b)?;
-                            push(&mut queue, Action::Raw("]"), b)?;
-                            push(&mut queue, Action::Literal(reading.0, next), b)?;
-                            push(&mut queue, Action::Raw("/"), b)?;
-                            push(&mut queue, Action::Literal(base.0, next), b)?;
-                        }
-                        DocKind::Anno { base, notes } => {
-                            out.append("{", b)?;
-                            push(&mut queue, Action::Raw("}"), b)?;
-                            for note in notes.iter().rev() {
-                                push(&mut queue, Action::Literal(note.0, next), b)?;
-                                push(&mut queue, Action::Raw("/"), b)?;
-                            }
-                            push(&mut queue, Action::Literal(base.0, next), b)?;
-                        }
-                        _ => return Err(PrintFailure::UnprintableLiteral { node: id }.into()),
-                    }
-                    Ok(())
-                })?
+            Action::SentenceContent(id) => {
+                let guest = usize::try_from(id.0)
+                    .ok()
+                    .and_then(|i| guests.get(i))
+                    .ok_or(PrintFailure::UnresolvedGuest { embed: id })?;
+                out.atom(guest.text, b)?;
             }
             Action::Node(id, depth) => {
                 b.with_depth_at_least(caller.saturating_add(depth), |b| -> Result<(), Failure> {
                     let next = depth.saturating_add(1);
                     let node = &value.nodes[id as usize];
-                    if request.mode == PrintMode::Compact
-                        && eligible[id as usize]
-                        && matches!(node.kind, DocKind::Sentence { .. })
-                    {
-                        out.start(b)?;
-                        out.append("\"", b)?;
-                        push(&mut queue, Action::Raw("\""), b)?;
-                        push(&mut queue, Action::Literal(id, depth), b)?;
-                        return Ok(());
-                    }
                     macro_rules! node {
                         ($v:expr) => {
                             push(&mut queue, Action::Node($v.0, next), b)?
@@ -367,9 +295,9 @@ pub(super) fn print(
                             node!(title);
                             push(&mut queue, Action::Name(name, id, DocField::SectionId), b)?;
                         }
-                        Sentence { inlines } => {
+                        Sentence { syntax } => {
                             out.atom("sentence", b)?;
-                            list!(Inlines, inlines);
+                            push(&mut queue, Action::SentenceContent(*syntax), b)?;
                         }
                         Parallel { variants } => {
                             out.atom("parallel", b)?;
@@ -379,24 +307,6 @@ pub(super) fn print(
                             out.atom("variant", b)?;
                             node!(sentence);
                             push(&mut queue, Action::Language(language, id), b)?;
-                        }
-                        Text { text } => {
-                            out.atom("text", b)?;
-                            push(&mut queue, Action::Quoted(text), b)?;
-                        }
-                        Concat { inlines } => {
-                            out.atom("concat", b)?;
-                            list!(Inlines, inlines);
-                        }
-                        Ruby { base, reading } => {
-                            out.atom("ruby", b)?;
-                            node!(reading);
-                            node!(base);
-                        }
-                        Anno { base, notes } => {
-                            out.atom("anno", b)?;
-                            list!(Inlines, notes);
-                            node!(base);
                         }
                         InlineMath { syntax } => {
                             out.atom("math", b)?;
@@ -408,27 +318,18 @@ pub(super) fn print(
                         }
                         Anchor { id: name, label } => {
                             out.atom("anchor", b)?;
-                            node!(label);
+                            push(&mut queue, Action::SentenceContent(*label), b)?;
                             push(&mut queue, Action::Name(name, id, DocField::AnchorId), b)?;
                         }
                         Reference { target, label } => {
                             out.atom("ref", b)?;
-                            node!(label);
+                            push(&mut queue, Action::SentenceContent(*label), b)?;
                             push(
                                 &mut queue,
                                 Action::Name(target, id, DocField::ReferenceTarget),
                                 b,
                             )?;
                         }
-                        Emphasis { inline } => {
-                            out.atom("em", b)?;
-                            node!(inline);
-                        }
-                        Strong { inline } => {
-                            out.atom("strong", b)?;
-                            node!(inline);
-                        }
-                        Break => out.atom("break", b)?,
                         DisplayMath { syntax } => {
                             out.atom("display", b)?;
                             push(
@@ -480,12 +381,8 @@ pub(super) fn print(
                         }
                         Link { target, label } => {
                             out.atom("link", b)?;
-                            node!(label);
+                            push(&mut queue, Action::SentenceContent(*label), b)?;
                             push(&mut queue, Action::Target(target), b)?;
-                        }
-                        InlineCode { text } => {
-                            out.atom("code", b)?;
-                            push(&mut queue, Action::Quoted(text), b)?;
                         }
                         RawCode {
                             language_hint,

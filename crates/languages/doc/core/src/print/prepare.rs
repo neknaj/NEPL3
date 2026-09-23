@@ -5,6 +5,7 @@ pub(super) struct Guest<'a> {
 }
 pub(super) fn category(language: GuestLanguage) -> &'static str {
     match language {
+        GuestLanguage::Sentence => "Sentence",
         GuestLanguage::Math => "Expr",
         GuestLanguage::Circuit => "Design",
         GuestLanguage::Grammar => "Root",
@@ -18,7 +19,9 @@ pub(super) fn check<'a>(
 ) -> Result<Vec<Guest<'a>>, Failure> {
     for (index, binding) in request.bindings.iter().enumerate() {
         b.charge(Resource::Work, (binding.category.len() + 8) as u64)?;
-        if binding.category != category(binding.language) {
+        if binding.category != category(binding.language)
+            && !(binding.language == GuestLanguage::Sentence && binding.category == "Inline")
+        {
             return Err(PrintFailure::InvalidBinding {
                 binding: index as u64,
             }
@@ -29,7 +32,12 @@ pub(super) fn check<'a>(
                 Resource::Work,
                 (binding.schema.package.len() + prior.schema.package.len() + 33) as u64,
             )?;
-            if binding.schema == prior.schema || binding.language == prior.language {
+            let distinct_sentence_slots = binding.language == GuestLanguage::Sentence
+                && prior.language == GuestLanguage::Sentence
+                && binding.category != prior.category;
+            if !distinct_sentence_slots
+                && (binding.schema == prior.schema || binding.language == prior.language)
+            {
                 return Err(PrintFailure::ConflictingBinding {
                     binding: index as u64,
                 }
@@ -68,10 +76,9 @@ pub(super) fn check<'a>(
         for binding in &request.bindings {
             b.charge(
                 Resource::Work,
-                (binding.schema.package.len() + embed.closure.syntax.schema.package.len() + 33)
-                    as u64,
+                (binding.schema.package.len() + embed.schema().package.len() + 33) as u64,
             )?;
-            if binding.schema == embed.closure.syntax.schema {
+            if &binding.schema == embed.schema() && binding.category == embed.category() {
                 found = Some(binding);
                 break;
             }
@@ -79,16 +86,22 @@ pub(super) fn check<'a>(
         let binding = found.ok_or(PrintFailure::MissingBinding { embed: id })?;
         b.charge(
             Resource::Work,
-            (binding.category.len() + embed.closure.syntax.category.len()) as u64,
+            (binding.category.len() + embed.category().len()) as u64,
         )?;
         let compatible = match embed.kind {
+            EmbedKind::Sentence => {
+                binding.language == GuestLanguage::Sentence && binding.category == "Sentence"
+            }
+            EmbedKind::SentenceInline => {
+                binding.language == GuestLanguage::Sentence && binding.category == "Inline"
+            }
             EmbedKind::InlineMath | EmbedKind::DisplayMath => {
                 binding.language == GuestLanguage::Math
             }
             EmbedKind::CircuitFigure => binding.language == GuestLanguage::Circuit,
             EmbedKind::Code | EmbedKind::Guest => true,
         };
-        if !compatible || binding.category != embed.closure.syntax.category {
+        if !compatible || binding.category != embed.category() {
             return Err(PrintFailure::GuestCategory { embed: id }.into());
         }
         let mut text = None;

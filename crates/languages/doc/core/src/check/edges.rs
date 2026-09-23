@@ -70,19 +70,7 @@ pub(crate) fn accepts(kind: &DocKind, category: Category) -> bool {
         Category::Sentence => matches!(kind, Sentence { .. }),
         Category::Inline => matches!(
             kind,
-            Text { .. }
-                | Concat { .. }
-                | Ruby { .. }
-                | Anno { .. }
-                | InlineMath { .. }
-                | Anchor { .. }
-                | Reference { .. }
-                | Emphasis { .. }
-                | Strong { .. }
-                | Break
-                | Link { .. }
-                | InlineCode { .. }
-                | InlineImage { .. }
+            InlineMath { .. } | Anchor { .. } | Reference { .. } | Link { .. } | InlineImage { .. }
         ),
         Category::Variant => matches!(kind, Variant { .. }),
         Category::Row => matches!(kind, Row { .. }),
@@ -121,29 +109,8 @@ pub(crate) fn edge(kind: &DocKind, index: usize) -> Option<(u64, Category)> {
         },
         Body { blocks } => blocks.get(index).map(|v| (v.0, Category::Block)),
         Paragraph { items } => items.get(index).map(|v| (v.0, Category::Flow)),
-        Sentence { inlines } | Concat { inlines } => {
-            inlines.get(index).map(|v| (v.0, Category::Inline))
-        }
         Parallel { variants } => variants.get(index).map(|v| (v.0, Category::Variant)),
         Variant { sentence, .. } => (index == 0).then_some((sentence.0, Category::Sentence)),
-        Ruby { base, reading } => match index {
-            0 => Some((base.0, Category::Inline)),
-            1 => Some((reading.0, Category::Inline)),
-            _ => None,
-        },
-        Anno { base, notes } => {
-            if index == 0 {
-                Some((base.0, Category::Inline))
-            } else {
-                notes.get(index - 1).map(|v| (v.0, Category::Inline))
-            }
-        }
-        Anchor { label, .. } | Reference { label, .. } | Link { label, .. } => {
-            (index == 0).then_some((label.0, Category::Inline))
-        }
-        Emphasis { inline } | Strong { inline } => {
-            (index == 0).then_some((inline.0, Category::Inline))
-        }
         CircuitFigure { caption, .. } => (index == 0).then_some((caption.0, Category::Sentence)),
         Table { header, rows, .. } => match header {
             Some(v) if index == 0 => Some((v.0, Category::Row)),
@@ -159,12 +126,13 @@ pub(crate) fn edge(kind: &DocKind, index: usize) -> Option<(u64, Category)> {
             _ => None,
         },
         InlineImage { alt, .. } => (index == 0).then_some((alt.0, Category::Sentence)),
-        Text { .. }
+        Sentence { .. }
+        | Anchor { .. }
+        | Reference { .. }
+        | Link { .. }
         | InlineMath { .. }
-        | Break
         | DisplayMath { .. }
         | Code { .. }
-        | InlineCode { .. }
         | RawCode { .. } => None,
     }
 }
@@ -209,11 +177,7 @@ pub(crate) fn rewrite(
             title.0 = map(title.0)?;
             body.0 = map(body.0)?;
         }
-        DocKind::Sentence { inlines } => {
-            for item in inlines {
-                item.0 = map(item.0)?;
-            }
-        }
+        DocKind::Sentence { .. } => {}
         DocKind::Parallel { variants } => {
             for item in variants {
                 item.0 = map(item.0)?;
@@ -222,36 +186,8 @@ pub(crate) fn rewrite(
         DocKind::Variant { sentence, .. } => {
             sentence.0 = map(sentence.0)?;
         }
-        DocKind::Text { .. } => {}
-        DocKind::Concat { inlines } => {
-            for item in inlines {
-                item.0 = map(item.0)?;
-            }
-        }
-        DocKind::Ruby { base, reading } => {
-            base.0 = map(base.0)?;
-            reading.0 = map(reading.0)?;
-        }
-        DocKind::Anno { base, notes } => {
-            base.0 = map(base.0)?;
-            for item in notes {
-                item.0 = map(item.0)?;
-            }
-        }
         DocKind::InlineMath { .. } => {}
-        DocKind::Anchor { label, .. } => {
-            label.0 = map(label.0)?;
-        }
-        DocKind::Reference { label, .. } => {
-            label.0 = map(label.0)?;
-        }
-        DocKind::Emphasis { inline } => {
-            inline.0 = map(inline.0)?;
-        }
-        DocKind::Strong { inline } => {
-            inline.0 = map(inline.0)?;
-        }
-        DocKind::Break => {}
+        DocKind::Anchor { .. } | DocKind::Reference { .. } => {}
         DocKind::DisplayMath { .. } => {}
         DocKind::CircuitFigure { caption, .. } => {
             caption.0 = map(caption.0)?;
@@ -278,10 +214,7 @@ pub(crate) fn rewrite(
         DocKind::ListItem { body, .. } => {
             body.0 = map(body.0)?;
         }
-        DocKind::Link { label, .. } => {
-            label.0 = map(label.0)?;
-        }
-        DocKind::InlineCode { .. } => {}
+        DocKind::Link { .. } => {}
         DocKind::RawCode { .. } => {}
         DocKind::Image { alt, caption, .. } => {
             alt.0 = map(alt.0)?;

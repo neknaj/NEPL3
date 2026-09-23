@@ -194,6 +194,7 @@ impl Adapter<'_, '_> {
             .get(child.0 as usize)
             .ok_or(SyntaxError::Reference)?;
         let accepted = match kind {
+            EmbedKind::Sentence | EmbedKind::SentenceInline => false,
             EmbedKind::InlineMath | EmbedKind::DisplayMath => node.kind == "Form:MathGuest",
             EmbedKind::CircuitFigure => node.kind == "Form:CircuitGuest",
             EmbedKind::Code | EmbedKind::Guest => matches!(
@@ -213,7 +214,40 @@ impl Adapter<'_, '_> {
         let closure =
             ForeignClosure::capture(foreign, self.checked, self.registry, self.b, admission)?;
         let index = EmbedRef(self.embeds.len() as u64);
-        push(&mut self.embeds, DocEmbed { kind, closure }, self.b)?;
+        push(
+            &mut self.embeds,
+            DocEmbed {
+                kind,
+                content: DocContent::Syntax { closure },
+            },
+            self.b,
+        )?;
+        Ok(index)
+    }
+    /// Capture a direct guest operand. The caller names its Doc slot role;
+    /// the consumer validates the selected guest's semantic contract later.
+    pub(super) fn foreign(
+        &mut self,
+        id: NodeRef,
+        node: &SyntaxNode,
+        field: usize,
+        kind: EmbedKind,
+        admission: &mut SourceAdmission,
+    ) -> Result<EmbedRef, LowerError> {
+        let Some(FieldValue::Foreign(foreign)) = node.fields.get(field) else {
+            return Err(LowerError::Operand { node: id, field });
+        };
+        let closure =
+            ForeignClosure::capture(foreign, self.checked, self.registry, self.b, admission)?;
+        let index = EmbedRef(self.embeds.len() as u64);
+        push(
+            &mut self.embeds,
+            DocEmbed {
+                kind,
+                content: DocContent::Syntax { closure },
+            },
+            self.b,
+        )?;
         Ok(index)
     }
 }

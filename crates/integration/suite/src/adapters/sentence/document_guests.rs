@@ -12,14 +12,14 @@ use nepl3_doc_core::{check::Category, lower, model::DocumentSyntax};
 use nepl3_sentence_core::{model::EmbedRef, syntax::SentenceSyntax};
 
 #[derive(Debug)]
-pub enum Error<E> {
+pub enum Error {
     Stopped(StopReason),
     Sentence(nepl3_sentence_core::syntax::Error),
     Shape(nepl3_sentence_core::check::Error),
     Closure(SyntaxError),
-    Lower(lower::DocumentLowerError<E>),
+    Lower(lower::LowerError),
 }
-impl<E> From<StopReason> for Error<E> {
+impl From<StopReason> for Error {
     fn from(reason: StopReason) -> Self {
         Self::Stopped(reason)
     }
@@ -80,7 +80,7 @@ pub fn collect<C: FoundationValueCodec>(
     registry: &SchemaRegistry,
     codec: &mut C,
     b: &mut Budget,
-) -> Result<Selection, Error<C::Error>> {
+) -> Result<Selection, Error> {
     let result = collect_inner(sentence, surface, registry, codec, b);
     b.poll()?;
     result
@@ -91,7 +91,7 @@ fn collect_inner<C: FoundationValueCodec>(
     registry: &SchemaRegistry,
     codec: &mut C,
     b: &mut Budget,
-) -> Result<Selection, Error<C::Error>> {
+) -> Result<Selection, Error> {
     let checked = sentence
         .validate(registry, b, codec.source_admission())
         .map_err(|error| match error {

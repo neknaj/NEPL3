@@ -38,6 +38,7 @@ pub enum ShapeError {
     Cycle(u64),
     Unreachable(u64),
     Embed(u64),
+    EmbedKind,
     UnusedEmbed(u64),
     EmptyAnnotationPart(u64),
     AnnotationNotes(u64),

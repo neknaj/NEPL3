@@ -3,7 +3,6 @@
 pub mod pages;
 pub mod prepare;
 pub mod print;
-pub mod sentence;
 pub mod text;
 mod value;
 use crate::{check::StructureError, model::DocumentSyntax};
@@ -15,6 +14,16 @@ use nepl3_core::{
     value_codec::{FoundationCodecError, FoundationValueCodec},
 };
 use value::{Value, fields, record};
+/// Encode the explicit input variant for identity binding. Semantic consumption
+/// of a typed Sentence payload remains the selected language's responsibility.
+pub fn embed_value<C: FoundationValueCodec>(
+    input: &crate::model::DocEmbed,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    input.put(schema(registry)?, codec, budget)
+}
 pub(crate) fn label_arguments<C: FoundationValueCodec>(
     name: &str,
     paths: Option<&crate::model::LabelOccurrencePaths>,

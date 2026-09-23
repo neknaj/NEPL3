@@ -30,7 +30,6 @@ pub fn compile(
         nepl3_grammar_core::schema::descriptor(budget),
         nepl3_doc_core::schema::descriptor(budget),
         nepl3_sentence_core::schema::descriptor(budget),
-        super::reader::descriptor(budget),
     ] {
         let descriptor = descriptor.map_err(|e| format!("{e:?}"))?;
         let reference = descriptor.reference(budget).map_err(|e| format!("{e:?}"))?;
@@ -59,17 +58,6 @@ pub fn compile(
             signature,
         });
     }
-    let signature = super::reader::signature(&registry, budget).map_err(|e| format!("{e:?}"))?;
-    extensions.push(extension(
-        &registry,
-        "doc.reader/sentence-v2",
-        "reader/v1",
-        signature.operation.clone(),
-    )?);
-    imports.push(ReaderImport {
-        provider: "doc.reader/sentence-v2".into(),
-        signature,
-    });
     let engine = registry
         .selected("nepl3.engine", 1)
         .ok_or("engine schema")?

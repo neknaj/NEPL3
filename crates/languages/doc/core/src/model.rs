@@ -5,6 +5,7 @@ use nepl3_core::{
     origin::{Mapping, Origin, OriginId},
     source::{Digest, SourceSnapshot, Span},
     syntax::ForeignClosure,
+    value::{SchemaRef, TypedValue},
     view::ViewBundle,
 };
 macro_rules! references {
@@ -93,6 +94,7 @@ pub enum DocRoot {
 /// Explicit standard Doc surface wrapper, never inferred from a schema alias.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum GuestLanguage {
+    Sentence,
     Math,
     Circuit,
     Grammar,
@@ -114,9 +116,6 @@ pub enum LinkTarget {
         path: String,
         fragment: Option<String>,
     },
-    External {
-        uri: String,
-    },
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Alignment {
@@ -132,6 +131,10 @@ pub enum ListKind {
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum EmbedKind {
+    /// An independently owned Sentence used in a Doc content slot.
+    Sentence,
+    /// Independently owned Inline content used as a Doc label.
+    SentenceInline,
     InlineMath,
     DisplayMath,
     CircuitFigure,
@@ -192,7 +195,7 @@ pub enum DocKind {
         body: BodyRef,
     },
     Sentence {
-        inlines: Vec<InlineRef>,
+        syntax: EmbedRef,
     },
     Parallel {
         variants: Vec<VariantRef>,
@@ -201,38 +204,17 @@ pub enum DocKind {
         language: String,
         sentence: SentenceRef,
     },
-    Text {
-        text: String,
-    },
-    Concat {
-        inlines: Vec<InlineRef>,
-    },
-    Ruby {
-        base: InlineRef,
-        reading: InlineRef,
-    },
-    Anno {
-        base: InlineRef,
-        notes: Vec<InlineRef>,
-    },
     InlineMath {
         syntax: EmbedRef,
     },
     Anchor {
         id: String,
-        label: InlineRef,
+        label: EmbedRef,
     },
     Reference {
         target: String,
-        label: InlineRef,
+        label: EmbedRef,
     },
-    Emphasis {
-        inline: InlineRef,
-    },
-    Strong {
-        inline: InlineRef,
-    },
-    Break,
     DisplayMath {
         syntax: EmbedRef,
     },
@@ -263,10 +245,7 @@ pub enum DocKind {
     },
     Link {
         target: LinkTarget,
-        label: InlineRef,
-    },
-    InlineCode {
-        text: String,
+        label: EmbedRef,
     },
     RawCode {
         language_hint: Option<String>,
@@ -282,6 +261,37 @@ pub enum DocKind {
         alt: SentenceRef,
     },
 }
+impl DocKind {
+    /// The role belongs to the Doc slot; the closure owns guest semantics.
+    pub(crate) fn embedded(&self) -> Option<(EmbedRef, EmbedKind)> {
+        match self {
+            Self::Sentence { syntax } => Some((*syntax, EmbedKind::Sentence)),
+            Self::Anchor { label, .. }
+            | Self::Reference { label, .. }
+            | Self::Link { label, .. } => Some((*label, EmbedKind::SentenceInline)),
+            Self::InlineMath { syntax } => Some((*syntax, EmbedKind::InlineMath)),
+            Self::DisplayMath { syntax } => Some((*syntax, EmbedKind::DisplayMath)),
+            Self::CircuitFigure { syntax, .. } => Some((*syntax, EmbedKind::CircuitFigure)),
+            Self::Code { syntax } => Some((*syntax, EmbedKind::Code)),
+            Self::Guest { syntax, .. } => Some((*syntax, EmbedKind::Guest)),
+            _ => None,
+        }
+    }
+    pub(crate) fn embedded_mut(&mut self) -> Option<&mut EmbedRef> {
+        match self {
+            Self::Sentence { syntax }
+            | Self::InlineMath { syntax }
+            | Self::DisplayMath { syntax }
+            | Self::CircuitFigure { syntax, .. }
+            | Self::Code { syntax }
+            | Self::Guest { syntax, .. } => Some(syntax),
+            Self::Anchor { label, .. }
+            | Self::Reference { label, .. }
+            | Self::Link { label, .. } => Some(label),
+            _ => None,
+        }
+    }
+}
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DocNode {
     /// Empty or explicitly absent positions represent source-less constructors.
@@ -295,7 +305,43 @@ pub struct DocNode {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DocEmbed {
     pub kind: EmbedKind,
-    pub closure: ForeignClosure,
+    pub content: DocContent,
+}
+/// Language-owned input at the Doc schema boundary. A value is an explicit
+/// portable SentenceSyntax; the selected consumer validates its semantic type.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum DocContent {
+    Syntax { closure: ForeignClosure },
+    Value { value: TypedValue },
+}
+impl DocEmbed {
+    pub fn schema(&self) -> &SchemaRef {
+        match &self.content {
+            DocContent::Syntax { closure } => &closure.syntax.schema,
+            DocContent::Value {
+                value: TypedValue::Record(v),
+            } => &v.schema,
+            DocContent::Value {
+                value: TypedValue::Variant(v),
+            } => &v.schema,
+        }
+    }
+    pub fn category(&self) -> &str {
+        match &self.content {
+            DocContent::Syntax { closure } => &closure.syntax.category,
+            DocContent::Value { .. } => match self.kind {
+                EmbedKind::Sentence => "Sentence",
+                EmbedKind::SentenceInline => "Inline",
+                _ => "",
+            },
+        }
+    }
+    pub fn syntax(&self) -> Option<&ForeignClosure> {
+        match &self.content {
+            DocContent::Syntax { closure } => Some(closure),
+            DocContent::Value { .. } => None,
+        }
+    }
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DocValue {
@@ -309,8 +355,8 @@ pub struct DocView {
     pub head: Span,
     pub view: ViewBundle,
 }
-/// Source presentation is separate from semantic normalization. Views and
-/// origins retain individual spelling/escape ranges when Text nodes coalesce.
+/// Source presentation is separate from the local Doc arena. Sentence spelling,
+/// locations and views belong to each independently owned foreign closure.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DocumentSyntax {
     pub value: DocValue,

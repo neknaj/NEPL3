@@ -22,6 +22,7 @@ pub struct ResolvedInlineText {
     pub document_digest: Digest,
     pub embed: EmbedRef,
     pub guest_digest: Digest,
+    pub policy: AnnotationPolicy,
     pub text: String,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -33,6 +34,7 @@ pub struct PlainTextRequest {
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ResolutionMismatch {
+    Policy,
     Document,
     Guest,
     Embed,

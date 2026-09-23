@@ -1,7 +1,7 @@
 //! Checked semantic fragment extraction with unchanged provenance identities.
 use crate::{
     check::{ShapeError, StructureError, edges},
-    model::{DocKind, DocRoot, DocumentSyntax},
+    model::{DocRoot, DocumentSyntax},
 };
 use alloc::{vec, vec::Vec};
 use nepl3_core::{
@@ -114,14 +114,7 @@ impl DocumentSyntax {
                 budget.charge(Resource::Work, 1)?;
                 Ok(mapping[id as usize])
             })?;
-            let embed = match &mut node.kind {
-                DocKind::Guest { syntax, .. }
-                | DocKind::InlineMath { syntax }
-                | DocKind::DisplayMath { syntax }
-                | DocKind::CircuitFigure { syntax, .. }
-                | DocKind::Code { syntax } => Some(syntax),
-                _ => None,
-            };
+            let embed = node.kind.embedded_mut();
             if let Some(embed) = embed {
                 let old = embed.0 as usize;
                 if embed_mapping[old] == u64::MAX {

@@ -1,13 +1,10 @@
 language Doc 1 Article
 cons extension BuiltinWord "nepl3.reader/name-v1" "reader/v1"
 cons extension BuiltinTrivia "nepl3.reader/trivia-v1" "reader/v1"
-cons extension DocSentence "doc.reader/sentence-v2" "reader/v1"
 cons reader word call "nepl3.reader/name-v1"
 cons reader trivia call "nepl3.reader/trivia-v1"
-cons reader sentence call "doc.reader/sentence-v2"
 cons mode Code
 cons skip trivia
-cons take SentenceLiteral sentence
 cons take Word word
 nil
 cons extension Facts "doc.facts/v1" "facts/v1"
@@ -115,12 +112,11 @@ cons visit caption
 nil
 cons style head "marker" nil
 cons form Sentence Sentence "sentence"
-cons field inlines listof local Inline
+cons field syntax foreign Sentence Sentence
 nil
-group cons visit inlines
+group cons visit syntax
 nil
 cons style head "marker" nil
-cons leaf SentenceLiteral Sentence SentenceLiteral none cons style self "content" nil
 cons form Paragraph Flow "paragraph"
 cons field items listof local Flow
 nil
@@ -157,9 +153,9 @@ group cons visit syntax
 nil
 cons style head "marker" nil
 cons form Sentence Flow "sentence"
-cons field inlines listof local Inline
+cons field syntax foreign Sentence Sentence
 nil
-group cons visit inlines
+group cons visit syntax
 nil
 cons style head "marker" nil
 cons form Parallel Flow "parallel"
@@ -203,39 +199,11 @@ cons visit alt
 cons visit caption
 nil
 cons style head "marker" nil
-cons leaf SentenceLiteral Flow SentenceLiteral none cons style self "content" nil
 cons form Variant Variant "variant"
 cons field language builtin Lang
 cons field sentence local Sentence
 nil
 group cons visit sentence
-nil
-cons style head "marker" nil
-cons form Text Inline "text"
-cons field text builtin Text
-nil
-none
-cons style head "marker" nil
-cons form Concat Inline "concat"
-cons field inlines listof local Inline
-nil
-group cons visit inlines
-nil
-cons style head "marker" nil
-cons form Ruby Inline "ruby"
-cons field base local Inline
-cons field reading local Inline
-nil
-group cons visit base
-cons visit reading
-nil
-cons style head "marker" nil
-cons form Anno Inline "anno"
-cons field base local Inline
-cons field notes listof local Inline
-nil
-group cons visit base
-cons visit notes
 nil
 cons style head "marker" nil
 cons form InlineMath Inline "math"
@@ -246,46 +214,25 @@ nil
 cons style head "marker" nil
 cons form Anchor Inline "anchor"
 cons field id builtin Name
-cons field label local Inline
+cons field label foreign Sentence Inline
 nil
 group cons visit label
 nil
 cons style head "marker" nil
 cons form Reference Inline "ref"
 cons field target builtin Name
-cons field label local Inline
+cons field label foreign Sentence Inline
 nil
 group cons visit label
 nil
 cons style head "marker" nil
-cons form Emphasis Inline "em"
-cons field inline local Inline
-nil
-group cons visit inline
-nil
-cons style head "marker" nil
-cons form Strong Inline "strong"
-cons field inline local Inline
-nil
-group cons visit inline
-nil
-cons style head "marker" nil
-cons form Break Inline "break"
-nil
-none
-cons style head "marker" nil
 cons form Link Inline "link"
 cons field target local LinkTarget
-cons field label local Inline
+cons field label foreign Sentence Inline
 nil
 group cons visit target
 cons visit label
 nil
-cons style head "marker" nil
-cons form InlineCode Inline "code"
-cons field text builtin Text
-nil
-none
 cons style head "marker" nil
 cons form InlineImage Inline "image"
 cons field asset local Asset
@@ -410,11 +357,6 @@ cons field fragment local OptionalText
 nil
 group cons visit fragment
 nil
-cons style head "marker" nil
-cons form ExternalTarget LinkTarget "external"
-cons field uri builtin Text
-nil
-none
 cons style head "marker" nil
 cons form AssetRef Asset "asset"
 cons field id builtin Text

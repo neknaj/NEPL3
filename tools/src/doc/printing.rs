@@ -19,7 +19,7 @@ pub enum Error<E> {
     MathLower(nepl3_math_core::lower::LowerError),
     MathShape(nepl3_math_core::check::ShapeError),
     MathPrint(Box<nepl3_math_core::print::PrintError<Error<E>>>),
-    DocLower(nepl3_doc_core::lower::DocumentLowerError<E>),
+    DocLower(nepl3_doc_core::lower::LowerError),
     DocShape(nepl3_doc_core::check::ShapeError),
     DocPortable(nepl3_doc_core::portable::PortableError<E>),
     DocPrint(nepl3_doc_core::print::PrintFailure),
@@ -269,7 +269,7 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
             .zip(depths)
         {
             let text = b.with_depth_at_least(base.saturating_add(depth), |b| {
-                self.math(&embed.closure, b)
+                self.math(embed.syntax().ok_or(Error::Selection)?, b)
             })?;
             guests.push(print::PrintedGuest {
                 document_digest: identity.document_digest,
