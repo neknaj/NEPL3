@@ -16,6 +16,37 @@ use nepl3_grammar_core::{
     model::Document,
 };
 use nepl3_reader::builtin::{BuiltinReader, provider};
+/// Compile the standard Sentence source with the production Grammar reader.
+/// `implementation` identifies the explicitly selected bootstrap host readers.
+pub fn standard(
+    implementation: nepl3_core::source::Digest,
+    budget: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<CompiledLanguage, String> {
+    use nepl3_core::source::{SourceId, SourceSnapshot};
+    let err = |error| format!("{error:?}");
+    let seed = crate::bootstrap::load(
+        include_bytes!("../../../conformance/fixtures/doc/grammar.json"),
+        budget,
+        admission,
+    )
+    .map_err(err)?;
+    let grammar =
+        crate::bootstrap::catalog::compile(&seed, "nepl3.syntax.grammar", budget, admission)?;
+    let source = SourceSnapshot::new(
+        SourceId("sentence-grammar".into()),
+        1,
+        "repository:languages/Sentence/syntax.neplg".into(),
+        include_bytes!("../../../languages/Sentence/syntax.neplg").to_vec(),
+        budget,
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let document =
+        crate::bootstrap::runtime::parse(&source, &grammar, implementation, budget, admission)
+            .map_err(|e| format!("{e:?}"))?;
+    compile(&document, "nepl3.syntax.sentence", budget, admission)
+}
+
 pub fn compile(
     document: &Document,
     package: &str,
