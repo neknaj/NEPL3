@@ -11,9 +11,15 @@ import argparse
 import hashlib
 import json
 import re
+import sys
 from pathlib import Path
+from types import MappingProxyType
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+from tools.catalog.forms import Categories, ListRead, Read, load
+from tools.bootstrap.model import Constructor, LiteralNode, Node, NodeList, SeedInput, Source, Span
+
 TOKEN = re.compile(r'"(?:\\[^\r\n]|[^"\\\r\n])*"|#[^\r\n]*|[^\s"#]+')
 NAME = re.compile(r"[A-Za-z_][A-Za-z_0-9]*")
 NAT = re.compile(r"0|[1-9][0-9]*")
@@ -25,10 +31,10 @@ class SeedError(ValueError):
     pass
 
 
-def decode_text(raw):
+def decode_text(raw: str) -> str:
     if len(raw) < 2 or raw[0] != '"' or raw[-1] != '"':
         raise SeedError("Text requires complete quotes")
-    out = []
+    out: list[str] = []
     i = 1
     while i < len(raw) - 1:
         char = raw[i]
@@ -60,16 +66,15 @@ def decode_text(raw):
 
 
 class SeedParser:
-    def __init__(self, raw, categories):
+    def __init__(self, raw: bytes, categories: Categories) -> None:
         if len(raw) > MAX_BYTES:
             raise SeedError("Seed input exceeds 1 MiB")
-        self.raw = raw
-        self.source = raw.decode("utf-8", errors="strict")
-        self.categories = categories
+        self.source: str = raw.decode("utf-8", errors="strict")
+        self.categories: Categories = categories
         offsets = [0]
         for char in self.source:
             offsets.append(offsets[-1] + len(char.encode("utf-8")))
-        self.tokens = []
+        self.tokens: list[tuple[str, int, int]] = []
         cursor = 0
         for match in TOKEN.finditer(self.source):
             if self.source[cursor:match.start()].strip():
@@ -79,23 +84,24 @@ class SeedParser:
             cursor = match.end()
         if self.source[cursor:].strip():
             raise SeedError(f"Unrecognized lexical tail at byte {offsets[cursor]}")
-        self.pos = 0
+        self.pos: int = 0
 
-    def parse(self, category, depth=0):
+    def parse(self, category: Read, depth: int = 0) -> Node:
         if depth > MAX_DEPTH:
             raise SeedError("Seed constructor depth exceeds 256")
         if self.pos >= len(self.tokens):
             raise SeedError(f"Incomplete seed while reading {category}")
         raw, start, end = self.tokens[self.pos]
         self.pos += 1
-        if isinstance(category, dict):
+        if isinstance(category, ListRead):
             if raw == "nil":
-                return {"list": [], "span": [start, end], "heads": [[start, end]]}
+                return NodeList((), Span(start, end), (Span(start, end),))
             if raw != "cons":
                 raise SeedError("List requires explicit cons/nil")
-            item = self.parse(category["list"], depth + 1)
+            item = self.parse(category.element, depth + 1)
             tail = self.parse(category, depth + 1)
-            return {"list": [item] + tail["list"], "span": [start, tail["span"][1]], "heads": [[start, end]] + tail["heads"]}
+            assert isinstance(tail, NodeList)
+            return NodeList((item,) + tail.items, Span(start, tail.span.end), (Span(start, end),) + tail.heads)
         if category.startswith("@"):
             kind = category[1:]
             if kind == "Text":
@@ -106,42 +112,49 @@ class SeedParser:
                 value = raw  # Exact arbitrary precision decimal, not host float/u64.
             else:
                 raise SeedError(f"Outside the seed literal subset: {category}")
-            return {"literal": kind, "value": value, "raw": raw, "span": [start, end]}
-        form = self.categories.get(category, {}).get("forms", {}).get(raw)
+            assert kind in ("Text", "Name", "Nat")
+            return LiteralNode(kind, value, raw, Span(start, end))
+        definition = self.categories.get(category)
+        form = definition.forms.get(raw) if definition is not None else None
         if form is None:
             raise SeedError(f"Unknown seed constructor {raw} in {category}")
-        fields = {field["name"]: self.parse(field["read"], depth + 1) for field in form["fields"]}
+        fields = MappingProxyType({field.name: self.parse(field.read, depth + 1) for field in form.fields})
         cover_end = self.tokens[self.pos - 1][2]
-        return {"kind": form["kind"], "category": category, "head": [start, end], "span": [start, cover_end], "fields": fields}
+        return Constructor(form.kind, category, Span(start, end), Span(start, cover_end), fields)
 
-    def complete(self):
+    def complete(self) -> Constructor:
         result = self.parse("Grammar/Root")
         if self.pos != len(self.tokens):
             raise SeedError("Trailing seed input")
+        assert isinstance(result, Constructor)
         return result
 
 
-def source_input(raw, source_id, uri, categories=None):
+def source_input(raw: bytes, source_id: str, uri: str, categories: Categories | None = None) -> SeedInput:
     if categories is None:
-        categories = json.loads((ROOT / "design/forms.json").read_text(encoding="utf-8"))["categories"]
+        categories = load(ROOT)
     parser = SeedParser(raw, categories)
-    return {"schema": "nepl3.grammar-seed-input/1", "source": {
-        "sourceId": source_id, "revision": 0, "uri": uri,
-        "digest": hashlib.sha256(raw).hexdigest(), "text": parser.source,
-    }, "root": parser.complete()}
+    return SeedInput(Source(source_id, uri, hashlib.sha256(raw).hexdigest(), parser.source), parser.complete())
 
 
-def main():
+class Arguments(argparse.Namespace):
+    path: Path = Path()
+    source_id: str = ""
+    uri: str = ""
+    output: Path | None = None
+
+
+def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("path", type=Path)
-    parser.add_argument("--source-id", required=True)
-    parser.add_argument("--uri", required=True)
-    parser.add_argument("--output", type=Path)
-    args = parser.parse_args()
+    _ = parser.add_argument("path", type=Path)
+    _ = parser.add_argument("--source-id", required=True)
+    _ = parser.add_argument("--uri", required=True)
+    _ = parser.add_argument("--output", type=Path)
+    args = parser.parse_args(namespace=Arguments())
     result = source_input(args.path.read_bytes(), args.source_id, args.uri)
-    encoded = json.dumps(result, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+    encoded = json.dumps(result.representation(), ensure_ascii=False, sort_keys=True, indent=2) + "\n"
     if args.output:
-        args.output.write_text(encoded, encoding="utf-8", newline="\n")
+        _ = args.output.write_text(encoded, encoding="utf-8", newline="\n")
     else:
         print(encoded, end="")
 
