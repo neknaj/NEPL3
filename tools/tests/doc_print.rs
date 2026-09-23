@@ -14,6 +14,8 @@ mod host;
 use host::host_request;
 #[path = "doc/retention.rs"]
 mod retention;
+#[path = "doc/print/typed.rs"]
+mod typed;
 use retention::assert_doc_retention;
 
 #[test]
