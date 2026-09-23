@@ -1,5 +1,6 @@
 //! Host-selected Doc occurrences in one independent Sentence display.
 use super::*;
+use nepl3_core::value::SchemaRef;
 use nepl3_doc_core::labels::namespace as labels;
 use nepl3_sentence_core::{model::EmbedRef, syntax::SentenceSyntax};
 
@@ -29,59 +30,27 @@ pub fn collect<C: FoundationValueCodec>(
     let Some(surface) = surface else {
         return Ok(Vec::new());
     };
-    let shape = sentence
-        .value
-        .validate_shape(b)
-        .map_err(|error| match error {
-            nepl3_sentence_core::check::Error::Stopped(reason) => Error::Stopped(reason),
-            error => Error::SentenceShape(error),
-        })?;
-    let occurrences = shape.foreign_occurrences(b).map_err(|error| match error {
-        nepl3_sentence_core::check::Error::Stopped(reason) => Error::Stopped(reason),
-        error => Error::SentenceShape(error),
-    })?;
-    let depths = shape.foreign_depths(b).map_err(|error| match error {
-        nepl3_sentence_core::check::Error::Stopped(reason) => Error::Stopped(reason),
-        error => Error::SentenceShape(error),
-    })?;
-    let count = sentence.value.embeds.len();
-    b.charge(
-        Resource::AllocationUnits,
-        (count as u64).saturating_mul(core::mem::size_of::<Option<Arc<DocumentSyntax>>>() as u64),
-    )?;
-    b.charge(Resource::Work, count as u64)?;
-    let mut documents = vec![None; count];
-    let mut selected = Vec::new();
-    let base = b.current_depth();
-    for occurrence in occurrences {
-        let index = occurrence.embed.0 as usize;
-        let closure = &sentence.value.embeds[index];
-        b.charge(
-            Resource::Work,
-            (surface.package.len()
-                + closure.syntax.schema.package.len()
-                + closure.syntax.category.len()) as u64
-                + 70,
-        )?;
-        if &closure.syntax.schema != surface || closure.syntax.category != "Inline" {
-            continue;
+    let selection = nepl3_suite::adapters::sentence::document_guests::collect(
+        sentence, surface, registry, codec, b,
+    )
+    .map_err(|error| match error {
+        nepl3_suite::adapters::sentence::document_guests::Error::Stopped(reason) => {
+            Error::Stopped(reason)
         }
-        let document = match &documents[index] {
-            Some(document) => Arc::clone(document),
-            None => {
-                let document = b.with_depth_at_least(base.saturating_add(depths[index]), |b| {
-                    lower_inline(closure, surface, registry, codec, b)
-                })?;
-                b.charge(
-                    Resource::AllocationUnits,
-                    (core::mem::size_of::<DocumentSyntax>() + 2 * core::mem::size_of::<usize>())
-                        as u64,
-                )?;
-                let document = Arc::new(document);
-                documents[index] = Some(Arc::clone(&document));
-                document
-            }
-        };
+        error => Error::Guests(error),
+    })?;
+    let (unique, occurrences) = selection.into_parts();
+    let mut documents = Vec::new();
+    for document in unique {
+        b.charge(
+            Resource::AllocationUnits,
+            (core::mem::size_of::<DocumentSyntax>() + 2 * core::mem::size_of::<usize>()) as u64,
+        )?;
+        push(&mut documents, Arc::new(document), b)?;
+    }
+    let mut selected = Vec::new();
+    for occurrence in occurrences {
+        let document = Arc::clone(&documents[occurrence.document.index()]);
         push(
             &mut selected,
             Selected {

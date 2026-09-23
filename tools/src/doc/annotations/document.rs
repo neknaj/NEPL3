@@ -3,14 +3,11 @@ use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     diagnostic::Diagnostic,
     schema::SchemaRegistry,
-    syntax::{ForeignClosure, SyntaxError},
-    value::SchemaRef,
     value_codec::FoundationValueCodec,
 };
 use nepl3_doc_core::{
     check,
     labels::{LabelDiagnosticError, LabelError},
-    lower,
     model::{DocumentSyntax, EmbedKind},
     portable::PortableError,
     prepare::{DocPreparationPlan, PreparationError},
@@ -32,9 +29,7 @@ pub enum Error<E> {
     Selection,
     Math(Box<super::super::math::Error<E>>),
     Projection(super::super::math::ProjectionError),
-    Syntax(SyntaxError),
-    SentenceShape(nepl3_sentence_core::check::Error),
-    Lower(lower::DocumentLowerError<E>),
+    Guests(nepl3_suite::adapters::sentence::document_guests::Error<E>),
     Stopped(nepl3_core::budget::StopReason),
     Boundary(PortableError<E>),
     Structure(check::StructureError),
@@ -61,25 +56,6 @@ impl<E> From<StopReason> for Error<E> {
     fn from(reason: StopReason) -> Self {
         Self::Stopped(reason)
     }
-}
-
-pub(super) fn lower_inline<C: FoundationValueCodec>(
-    closure: &ForeignClosure,
-    surface: &SchemaRef,
-    registry: &SchemaRegistry,
-    codec: &mut C,
-    b: &mut Budget,
-) -> Result<DocumentSyntax, Error<C::Error>> {
-    closure
-        .validate(registry, b, codec.source_admission())
-        .map_err(Error::Syntax)?;
-    let input = closure
-        .syntax
-        .bundle
-        .validate_with_sources(registry, b, codec.source_admission())
-        .map_err(Error::Syntax)?;
-    lower::document(&input, surface, check::Category::Inline, registry, b, codec)
-        .map_err(Error::Lower)
 }
 
 pub(super) fn render_member<C: FoundationValueCodec>(

@@ -321,6 +321,82 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
                                 };
                                 let repeated = inlines[usize::from(duplicate_definition)];
                                 inlines.insert(1, repeated);
+                                let selected =
+                                    nepl3_suite::adapters::sentence::document_guests::collect(
+                                        &shared,
+                                        &compiled.doc.package.schema,
+                                        registry,
+                                        host.codec,
+                                        b,
+                                    )
+                                    .map_err(err)?;
+                                // Two unique closures, three display occurrences. Repeated
+                                // content shares one document without duplicating its arena.
+                                assert_eq!(selected.documents().len(), 2);
+                                let occurrences = selected.occurrences();
+                                assert_eq!(occurrences.len(), 3);
+                                let repeated_index = if duplicate_definition { 2 } else { 0 };
+                                assert_eq!(
+                                    occurrences[1].document,
+                                    occurrences[repeated_index].document
+                                );
+                                assert_eq!(occurrences[1].embed, occurrences[repeated_index].embed);
+                                assert_eq!(
+                                    selected.documents()[occurrences[0].document.index()],
+                                    *reference.document
+                                );
+                                assert_eq!(
+                                    selected.documents()[occurrences[2].document.index()],
+                                    *definition.document
+                                );
+                                if !duplicate_definition {
+                                    use nepl3_suite::adapters::sentence::document_guests;
+                                    let store = SourceStore::default();
+                                    let run = |limit: &mut Budget| {
+                                        let mut admission = SourceAdmission::default();
+                                        let mut codec =
+                                            FoundationCodec::new(registry, &store, &mut admission)
+                                                .map_err(err)?;
+                                        Ok::<_, String>(document_guests::collect(
+                                            &shared,
+                                            &compiled.doc.package.schema,
+                                            registry,
+                                            &mut codec,
+                                            limit,
+                                        ))
+                                    };
+                                    let mut measured = budget();
+                                    run(&mut measured)?.map_err(err)?;
+                                    let usage = measured.usage();
+                                    for (used, reason) in [
+                                        (usage.work, StopReason::WorkLimit),
+                                        (usage.allocation_units, StopReason::AllocationLimit),
+                                        (usage.depth, StopReason::DepthLimit),
+                                    ] {
+                                        assert!(used > 0);
+                                        for exact in [false, true] {
+                                            let mut limits = budget().limits();
+                                            let value = used - u64::from(!exact);
+                                            match reason {
+                                                StopReason::WorkLimit => limits.work = value,
+                                                StopReason::AllocationLimit => {
+                                                    limits.allocation_units = value
+                                                }
+                                                StopReason::DepthLimit => limits.depth = value,
+                                                _ => return Err("selection test resource".into()),
+                                            }
+                                            let mut limit = Budget::new(limits);
+                                            let result = run(&mut limit)?;
+                                            if exact {
+                                                result.map_err(err)?;
+                                            } else {
+                                                assert!(
+                                                    matches!(result, Err(document_guests::Error::Stopped(actual)) if actual == reason)
+                                                );
+                                            }
+                                        }
+                                    }
+                                }
                                 let result = host.render_syntax(shared, b);
                                 if duplicate_definition {
                                     let Err(Error::Document(error)) = result else {

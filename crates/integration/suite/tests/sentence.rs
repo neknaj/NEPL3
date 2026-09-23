@@ -347,6 +347,7 @@ fn doc_bridge_preserves_generated_shared_inline_and_rejects_unselected_foreign()
     for d in [
         nepl3_core::schema::foundation::descriptor(&mut b()),
         nepl3_sentence_core::schema::descriptor(&mut b()),
+        nepl3_doc_core::schema::descriptor(&mut b()),
     ] {
         let d = d.map_err(err)?;
         r.register(d.reference(&mut b()).map_err(err)?, d, &mut b())
@@ -471,5 +472,35 @@ fn doc_bridge_preserves_generated_shared_inline_and_rejects_unselected_foreign()
         sentence::document(&input, &r, &mut b(), &mut SourceAdmission::default()).err(),
         Some(sentence::Error::ForeignAdapterRequired(EmbedRef(0)))
     );
+    // The independent consumer keeps foreign meaning in its owner. A Doc
+    // selection does not turn an unrelated category into a Doc inline.
+    let surface = r.selected("nepl3.doc", 1).ok_or("Doc schema")?;
+    let store = nepl3_core::source::SourceStore::default();
+    let run = |input: &SentenceSyntax, budget: &mut Budget| {
+        let mut admission = SourceAdmission::default();
+        let mut codec = nepl3_wire::foundation::FoundationCodec::new(&r, &store, &mut admission)
+            .map_err(err)?;
+        Ok::<_, String>(sentence::document_guests::collect(
+            input, surface, &r, &mut codec, budget,
+        ))
+    };
+    let selected = run(&input, &mut b())?.map_err(err)?;
+    assert!(selected.documents().is_empty());
+    assert!(selected.occurrences().is_empty());
+    let mut cancelled = b();
+    cancelled.cancel();
+    assert!(matches!(
+        run(&input, &mut cancelled)?,
+        Err(sentence::document_guests::Error::Stopped(
+            StopReason::Cancelled
+        ))
+    ));
+    input.locations.clear();
+    assert!(matches!(
+        run(&input, &mut b())?,
+        Err(sentence::document_guests::Error::Sentence(
+            nepl3_sentence_core::syntax::Error::LocationCount
+        ))
+    ));
     Ok(())
 }
