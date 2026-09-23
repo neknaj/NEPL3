@@ -356,10 +356,210 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
         html::render(&input, &r, &mut b(), &mut SourceAdmission::default()),
         Err(Error::ForeignAdapterRequired(EmbedRef(0)))
     ));
+    let mut shared = syntax(
+        vec![
+            Kind::ForeignInline {
+                syntax: EmbedRef(0),
+            },
+            Kind::Sentence {
+                inlines: vec![InlineRef(0), InlineRef(0)],
+            },
+        ],
+        Root::Sentence(SentenceRef(1)),
+    );
+    shared.value.embeds = input.value.embeds.clone();
+    let original = shared.clone();
+    let mut calls = 0;
+    let mut adapter = |closure: &ForeignClosure, embed, budget: &mut Budget| {
+        assert!(core::ptr::eq(closure, &shared.value.embeds[0]));
+        assert_eq!(embed, EmbedRef(0));
+        calls += 1;
+        budget.charge(
+            nepl3_core::budget::Resource::AllocationUnits,
+            core::mem::size_of::<HtmlNode>() as u64 + 1,
+        )?;
+        Ok::<_, Error>(HtmlRequest {
+            fragment: HtmlFragment {
+                root: 0,
+                nodes: vec![HtmlNode::Text { text: "7".into() }],
+            },
+            slot: HtmlSlot::Phrasing,
+            policy: HtmlPolicy { classes: vec![] },
+        })
+    };
+    let mut full = b();
+    let rendered = html::render_with_foreign(
+        &shared,
+        &r,
+        &mut adapter,
+        &mut full,
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    let (_, markup, origins, placements) = rendered.into_parts();
+    assert_eq!(calls, 2);
+    assert_eq!(placements.len(), 2);
+    assert_ne!(placements[0].first_element, placements[1].first_element);
+    for placement in placements {
+        assert_eq!(placement.embed, EmbedRef(0));
+        assert_eq!(placement.elements, 1);
+        assert_eq!(
+            markup.fragment.nodes[placement.first_element as usize],
+            HtmlNode::Text { text: "7".into() }
+        );
+        assert!(
+            origins
+                .iter()
+                .any(|o| o.node == 0 && o.element == placement.first_element)
+        );
+    }
+    assert_eq!(shared, original);
+    for (resource, amount, reason) in [
+        (0, full.usage().work, StopReason::WorkLimit),
+        (
+            1,
+            full.usage().allocation_units,
+            StopReason::AllocationLimit,
+        ),
+        (2, full.usage().nodes, StopReason::NodeLimit),
+        (3, full.usage().depth, StopReason::DepthLimit),
+    ] {
+        for ceiling in [amount - 1, amount] {
+            let mut limits = b().limits();
+            match resource {
+                0 => limits.work = ceiling,
+                1 => limits.allocation_units = ceiling,
+                2 => limits.nodes = ceiling,
+                _ => limits.depth = ceiling,
+            }
+            let mut bounded = Budget::new(limits);
+            let result = html::render_with_foreign(
+                &shared,
+                &r,
+                &mut |_, _, b| {
+                    b.charge(
+                        nepl3_core::budget::Resource::AllocationUnits,
+                        core::mem::size_of::<HtmlNode>() as u64 + 1,
+                    )?;
+                    Ok::<_, Error>(HtmlRequest {
+                        fragment: HtmlFragment {
+                            root: 0,
+                            nodes: vec![HtmlNode::Text { text: "7".into() }],
+                        },
+                        slot: HtmlSlot::Phrasing,
+                        policy: HtmlPolicy { classes: vec![] },
+                    })
+                },
+                &mut bounded,
+                &mut SourceAdmission::default(),
+            );
+            if ceiling == amount {
+                result.map_err(err)?;
+            } else {
+                assert!(matches!(result,
+                    Err(html::RenderFailure::Sentence(Error::Stopped(actual))
+                        | html::RenderFailure::Foreign(Error::Stopped(actual))) if actual == reason));
+                assert_eq!(bounded.poll(), Err(reason));
+            }
+            assert_eq!(bounded.current_depth(), 0);
+        }
+    }
+    // Adapter output must satisfy the surrounding phrasing contract.
+    let mut limits = b().limits();
+    limits.depth = full.usage().depth + 3;
+    let mut nested = Budget::new(limits);
+    nested
+        .with_depth_at_least(3, |b| {
+            html::render_with_foreign(
+                &shared,
+                &r,
+                &mut |_, _, _| {
+                    Ok::<_, Error>(HtmlRequest {
+                        fragment: HtmlFragment {
+                            root: 0,
+                            nodes: vec![HtmlNode::Text { text: "7".into() }],
+                        },
+                        slot: HtmlSlot::Phrasing,
+                        policy: HtmlPolicy { classes: vec![] },
+                    })
+                },
+                b,
+                &mut SourceAdmission::default(),
+            )
+        })
+        .map_err(err)?;
+    assert_eq!(nested.current_depth(), 0);
+    assert_eq!(nested.usage().depth, full.usage().depth + 3);
+    let mut cancelled = b();
+    let mut calls = 0;
+    assert!(matches!(
+        html::render_with_foreign(
+            &shared,
+            &r,
+            &mut |_, _, b| {
+                calls += 1;
+                b.cancel();
+                Ok::<_, Error>(HtmlRequest {
+                    fragment: HtmlFragment {
+                        root: 0,
+                        nodes: vec![HtmlNode::Text { text: "7".into() }],
+                    },
+                    slot: HtmlSlot::Phrasing,
+                    policy: HtmlPolicy { classes: vec![] },
+                })
+            },
+            &mut cancelled,
+            &mut SourceAdmission::default()
+        ),
+        Err(html::RenderFailure::Sentence(Error::Stopped(
+            StopReason::Cancelled
+        )))
+    ));
+    assert_eq!(calls, 1);
+    assert_eq!(cancelled.poll(), Err(StopReason::Cancelled));
+    let mut invalid = |_: &ForeignClosure, _, _: &mut Budget| {
+        Ok::<_, Error>(HtmlRequest {
+            fragment: HtmlFragment {
+                root: 0,
+                nodes: vec![HtmlNode::Element {
+                    tag: HtmlTag::Div,
+                    attributes: vec![],
+                    children: vec![],
+                }],
+            },
+            slot: HtmlSlot::Block,
+            policy: HtmlPolicy { classes: vec![] },
+        })
+    };
+    assert!(matches!(
+        html::render_with_foreign(
+            &shared,
+            &r,
+            &mut invalid,
+            &mut b(),
+            &mut SourceAdmission::default()
+        ),
+        Err(html::RenderFailure::Sentence(Error::Markup(_)))
+    ));
     input.value.embeds[0].syntax.bundle.origins.clear();
     assert!(matches!(
         html::render(&input, &r, &mut b(), &mut SourceAdmission::default()),
         Err(Error::Input(_))
     ));
+    let mut calls = 0;
+    assert!(matches!(
+        html::render_with_foreign(
+            &input,
+            &r,
+            &mut |_, _, _| {
+                calls += 1;
+                Err::<HtmlRequest, Error>(Error::InternalShape)
+            },
+            &mut b(),
+            &mut SourceAdmission::default()
+        ),
+        Err(html::RenderFailure::Sentence(Error::Input(_)))
+    ));
+    assert_eq!(calls, 0);
     Ok(())
 }

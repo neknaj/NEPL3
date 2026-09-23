@@ -37,6 +37,7 @@ pub struct AnnotationRecord {
     pub sentence: nepl3_sentence_core::syntax::SentenceSyntax,
     pub sentence_digest: nepl3_core::source::Digest,
     pub origins: Vec<nepl3_suite::adapters::sentence::html::ElementOrigin>,
+    pub foreign: Vec<super::annotations::ForeignMathRecord>,
 }
 pub struct RenderedMath {
     pub syntax: MathSyntax,
@@ -121,6 +122,16 @@ impl RenderedMath {
                     .html_node(root.markup, origin.element)
                     .ok_or(ProjectionError::Mapping(origin.element))?;
             }
+            for foreign in &mut annotation.foreign {
+                foreign.remap(
+                    &mut |element| {
+                        projection
+                            .html_node(root.markup, element)
+                            .ok_or(ProjectionError::Mapping(element))
+                    },
+                    b,
+                )?;
+            }
             root.markup = projection
                 .math_node(root.markup)
                 .ok_or(ProjectionError::Mapping(root.markup))?;
@@ -177,7 +188,7 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
         b.poll()?;
         result
     }
-    /// Retains the actual lowered Math input and each lowered Doc annotation for
+    /// Retains the actual lowered Math input and each independent Sentence annotation for
     /// interpreting the backend's node-root/origin mappings after this call.
     pub fn render(
         &mut self,
@@ -228,6 +239,7 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
             let mut host = SentenceAnnotationRenderer {
                 registry: self.registry,
                 surface,
+                math_surface: Some(self.math_surface),
                 codec: self.codec,
             };
             nepl3_math_mathml::render_with_annotations(
@@ -250,6 +262,7 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
                         sentence_digest,
                         markup,
                         origins,
+                        foreign,
                     } = result;
                     // Metadata stays separate from the consumed markup; no duplicate
                     // tree is allocated merely to retain the annotation's origin map.
@@ -262,6 +275,7 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
                         sentence,
                         sentence_digest,
                         origins,
+                        foreign,
                     });
                     Ok::<_, super::annotations::Error<C::Error>>(markup)
                 },

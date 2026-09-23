@@ -243,9 +243,14 @@ hostは対応するstylesheetの出自と配置を管理する。外部URIと出
 Work・Nodes・AllocationUnits・Depthを生成と検証に計上し、失敗・停止時は部分fragmentを返さない。
 serializeのOutputBytesはmarkup側で計上する。
 
-現行の入口は標準Inlineを対象とし、ForeignInlineには`ForeignAdapterRequired`を返す。
-guestの意味処理・出力は明示的なrole adapterで接続する。Mathの文章注釈の所有移行では、
-この出力境界、foreign処理、既存のsyntax identityとsource対応を一貫して接続する。
+標準入口はForeignInlineへ`ForeignAdapterRequired`を返す。`render_with_foreign`では、
+入力closureの検証後に、hostが選択したcallbackを各出現について実行する。
+callbackのowned markupは呼出元のDepthを保持してphrasingとして検査し、arenaを移動して結合する。
+`ForeignPlacement`はembedと出力arena内の連続範囲を対応付ける。guest内部の意味nodeとの対応は、
+その言語の出力metadataを保持するhostが、この配置情報に従って更新する。
+callback後にBudgetの停止を確認し、停止後に返された成功値と後続callbackを公開・実行しない。
+Mathの文章注釈では、内側Mathのnode対応と注釈対応をSentenceの配置へ移し、
+外側MathMLからHTMLへの変換でも同じ対応を更新する。
 
 ## Doc本文readerへの接続
 
@@ -284,7 +289,8 @@ Doc hostは、この経路でSentenceのInlineへ`math Expr`を追加し、Math�
 標準Sentence単独のpackageは従来の宣言集合を保持する。選択後のsurfaceは追加宣言に対応するschema identityを持つ。
 Math注釈のprinterはSentenceを構造としてlowerし、foreign MathをMath printerへ渡す。
 共有guestの呼出しには最深の出現位置を使用し、呼出元のDepthと累積Budgetを保持する。
-HTMLのforeign adapter、旧consumer試験と生成物の更新は、Math所有移行の残件として検証する。
+HTMLのforeign adapterはMathの出力操作を選択し、内側Sentenceの本文・読みの対応を最終HTMLへ保持する。
+再解析後の構造比較、旧consumer試験と生成物の更新は、Math所有移行の残件として検証する。
 
 ## 注釈と移行完了条件
 

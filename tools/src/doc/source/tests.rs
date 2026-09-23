@@ -63,6 +63,36 @@ fn math_sentence_math_printing_preserves_recursive_source() -> Result<(), String
                     output.text,
                     "label symbol \"x\" Sentence sentence cons math label 7 Sentence sentence cons ruby text \"字\" text \"じ\" nil nil"
                 );
+                let mut host = crate::doc::math::MathDisplayHost {
+                    registry: profile.registry(),
+                    math_surface: &compiled.others[0].schema,
+                    sentence_surface: Some(&sentence.schema),
+                    codec: &mut codec,
+                };
+                let html = host
+                    .render(&closure.closure, nepl3_markup::mathml::Display::Block, b)
+                    .map_err(err)?
+                    .into_html(b)
+                    .map_err(err)?;
+                assert_eq!(html.annotations.len(), 1);
+                let outer = &html.annotations[0];
+                assert_eq!(outer.foreign.len(), 1);
+                let inner = &outer.foreign[0];
+                assert_eq!(inner.annotations.len(), 1);
+                for text in ["字", "じ"] {
+                    assert!(inner.annotations[0].origins.iter().any(|origin| {
+                        matches!(&inner.annotations[0].sentence.value.nodes[origin.node as usize],
+                            Kind::Text { text: value } if value == text)
+                        && matches!(html.markup.fragment.nodes.get(origin.element as usize),
+                            Some(nepl3_markup::html::HtmlNode::Text { text: value }) if value == text)
+                    }), "nested annotation mapping for {text}");
+                }
+                assert!(
+                    inner
+                        .node_roots
+                        .iter()
+                        .all(|id| (*id as usize) < html.markup.fragment.nodes.len())
+                );
                 Ok(())
             },
         )?;
