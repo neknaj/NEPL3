@@ -38,7 +38,7 @@ fn framed_reply_claims_do_not_replace_independent_execution_measurement() -> Res
     let registration = nepl3_suite::dispatch::suspending::Registration {
         operation: &request.operation,
         implementation,
-        invoke: increment,
+        invoke: &increment,
     };
     let mut reply = nepl3_suite::dispatch::suspending::invoke(
         &registration,
@@ -222,7 +222,7 @@ fn local_stop_retains_checked_partial_and_report_and_prevents_next_callback() ->
     let registration = nepl3_suite::dispatch::suspending::Registration {
         operation: &request.operation,
         implementation,
-        invoke: stopped_with_partial,
+        invoke: &stopped_with_partial,
     };
     let Err(failure) = issued.run_local(|local| {
         Ok(nepl3_suite::dispatch::suspending::invoke(
