@@ -1,5 +1,5 @@
-//! Complete HTML composition of an explicitly resolved Doc namespace.
-//! Intermediate member markup remains private until whole-output validation.
+//! HTML composition of an explicitly resolved Doc namespace.
+//! Pending parts carry structural checks; complete output requires final validation.
 use crate::{LocalPreparationError, RenderError, RenderOptions, build, prepare};
 use alloc::{vec, vec::Vec};
 use nepl3_core::{
@@ -13,6 +13,56 @@ use nepl3_markup::html::*;
 
 pub struct PreparedNamespace<'a> {
     members: Vec<prepare::PreparedRendering<'a>>,
+}
+/// Namespace with explicit InlineMath operations selected by a host.
+pub struct PreparedForeignNamespace<'a>(PreparedNamespace<'a>);
+/// Structurally checked member and per-occurrence guest placements. Namespace
+/// identities remain pending until the composing renderer validates its output.
+pub struct PendingForeignPart {
+    pub part: PendingPart,
+    pub foreign: Vec<crate::ForeignPlacement>,
+}
+#[derive(Debug)]
+pub enum ForeignPartError<E> {
+    Member(MemberId),
+    Render(crate::ForeignRenderError<E>),
+}
+/// Render one selected occurrence, invoking only its explicit guest operations.
+/// Guest HTML must be locally valid Phrasing content. Doc references to other
+/// namespace members remain pending in the returned part.
+pub fn render_part_with_foreign<E>(
+    prepared: &PreparedForeignNamespace<'_>,
+    member: MemberId,
+    adapter: &mut impl FnMut(
+        &nepl3_doc_core::model::DocEmbed,
+        nepl3_doc_core::model::EmbedRef,
+        &mut Budget,
+    ) -> Result<HtmlRequest, E>,
+    budget: &mut Budget,
+) -> Result<PendingForeignPart, ForeignPartError<E>> {
+    budget
+        .poll()
+        .map_err(|reason| ForeignPartError::Render(reason.into()))?;
+    let input = usize::try_from(member.0)
+        .ok()
+        .and_then(|index| prepared.0.members.get(index))
+        .ok_or(ForeignPartError::Member(member))?;
+    let rendered = build::namespace_member_with_foreign(input, adapter, budget)
+        .map_err(ForeignPartError::Render)?;
+    check_part(
+        &rendered.fragment.markup.fragment,
+        rendered.fragment.markup.slot,
+        &rendered.fragment.markup.policy,
+        budget,
+    )
+    .map_err(|error| ForeignPartError::Render(error.into()))?;
+    Ok(PendingForeignPart {
+        part: PendingPart {
+            member,
+            fragment: rendered.fragment,
+        },
+        foreign: rendered.foreign,
+    })
 }
 /// Structurally checked markup with namespace references still pending.
 /// A composing renderer must validate the final complete HTML. This value is
@@ -70,6 +120,28 @@ pub fn prepare<'a, C: FoundationValueCodec>(
     codec: &mut C,
     budget: &mut Budget,
 ) -> Result<PreparedNamespace<'a>, LocalPreparationError<'a, C::Error>> {
+    prepare_members(namespace, options, registry, codec, budget, false)
+}
+/// Prepare a namespace whose outstanding requirements are only InlineMath.
+/// Other guest kinds, links and assets require their own explicit resolution.
+/// Preparation validates all member sources together and invokes no guests.
+pub fn prepare_with_foreign<'a, C: FoundationValueCodec>(
+    namespace: &CheckedNamespace<'_, 'a>,
+    options: &'a RenderOptions,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<PreparedForeignNamespace<'a>, LocalPreparationError<'a, C::Error>> {
+    prepare_members(namespace, options, registry, codec, budget, true).map(PreparedForeignNamespace)
+}
+fn prepare_members<'a, C: FoundationValueCodec>(
+    namespace: &CheckedNamespace<'_, 'a>,
+    options: &'a RenderOptions,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+    foreign: bool,
+) -> Result<PreparedNamespace<'a>, LocalPreparationError<'a, C::Error>> {
     let plans = nepl3_doc_core::prepare::inspect_namespace(namespace, registry, codec, budget)
         .map_err(|error| match error {
             nepl3_doc_core::prepare::PreparationError::Stopped(reason) => {
@@ -79,8 +151,19 @@ pub fn prepare<'a, C: FoundationValueCodec>(
         })?;
     let mut members = Vec::new();
     for (document, plan) in namespace.documents().zip(plans) {
-        if !plan.requirements.is_empty() {
-            return Err(LocalPreparationError::NeedsResolution(plan));
+        for requirement in &plan.requirements {
+            budget.charge(Resource::Work, 1)?;
+            if !foreign
+                || !matches!(
+                    requirement,
+                    nepl3_doc_core::prepare::DocRequirement::Foreign {
+                        kind: nepl3_doc_core::model::EmbedKind::InlineMath,
+                        ..
+                    }
+                )
+            {
+                return Err(LocalPreparationError::NeedsResolution(plan));
+            }
         }
         let member = prepare::prepare_rendering(document, options, plan.document_digest, budget)?;
         build::push(&mut members, member, budget)?;

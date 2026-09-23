@@ -403,6 +403,10 @@ fn namespace_checks_final_selected_markup_and_rejects_unresolved_dependencies() 
         namespace::prepare(&checked, &req.options, &registry, &mut codec, &mut b()),
         Err(LocalPreparationError::NeedsResolution(_))
     ));
+    assert!(matches!(
+        namespace::prepare_with_foreign(&checked, &req.options, &registry, &mut codec, &mut b()),
+        Err(LocalPreparationError::NeedsResolution(_))
+    ));
     Ok(())
 }
 

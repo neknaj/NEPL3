@@ -323,7 +323,10 @@ hostがSentence内の位置へ挿入する場合は、`namespace::render_part`�
 この値はmember・文書digest・Doc node対応を保持し、文書内参照を未確定のまま合成先へ渡す。単体のserialize用proofは付与しない。
 共通HTMLの`check_part`は構造・属性・挿入slotを検査し、Sentence rendererは全guestの合成後にID重複と参照解決を確定する。
 参照先のguestが未配置の場合はSentenceの表示全体を拒否し、部分HTMLを完成結果として返さない。
-Sentence内の表示位置を指定したnamespace合成、foreign操作との統合、およびDocの旧Sentence所有の撤去は、consumer所有移行の残件である。
+InlineMathを含むnamespaceは`namespace::prepare_with_foreign`で準備する。対応するguest操作はInlineMathに限定し、他のforeign要素とlink・assetは未解決の依存要求として返す。
+`namespace::render_part_with_foreign`は指定memberのguest操作を実行し、Doc参照を保持した`PendingPart`とguestの表示位置を返す。
+guest出力は局所的に有効なPhrasingを要求し、Doc参照の最終解決は合成先が担当する。停止時はpending出力も返さない。
+Sentence annotation hostによるDoc断片の事前収集と表示位置への接続、およびDocの旧Sentence所有の撤去は、consumer所有移行の残件である。
 
 ## 注釈と移行完了条件
 

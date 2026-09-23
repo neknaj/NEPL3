@@ -348,6 +348,13 @@ pub(super) fn namespace_member(
         ForeignRenderError::Render(error) | ForeignRenderError::Foreign(error) => error,
     })
 }
+pub(super) fn namespace_member_with_foreign<E>(
+    prepared: &crate::prepare::PreparedRendering<'_>,
+    adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
+    budget: &mut Budget,
+) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
+    render_prepared_with_foreign(prepared, &[], adapter, budget, false)
+}
 
 fn render_prepared_with_foreign<E>(
     prepared: &crate::prepare::PreparedRendering<'_>,

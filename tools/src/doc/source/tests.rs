@@ -4,6 +4,8 @@ use nepl3_doc_core::{check::Category, lower, model::DocKind};
 use nepl3_sentence_core::model::Kind;
 use nepl3_wire::foundation::FoundationCodec;
 
+mod namespace;
+
 #[test]
 fn composed_doc_namespace_keeps_fragment_source_identity() -> Result<(), String> {
     use nepl3_doc_core::labels::namespace::{self, MemberId};
