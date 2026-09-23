@@ -4,7 +4,9 @@ Archive revision: `d87ca8c4ba18e74bc71efb0e2958af87ac971e1b`. Preservation ref: 
 
 These closed review archives are retained in Git rather than copied into the current source tree.
 They are historical observations, not current acceptance, publication or LKG assertions.
-No current production/test input or task/review reference uses these directories.
+Current execution inputs are maintained in their test directories. The Doc payload
+fixture in `tools/site/fixtures/` records its original archive revision and path
+in `provenance.json`; it can be tested without this historical checkout.
 Restore the **entire baseline** in a separate checkout to inspect cross-archive manifests;
 do not mix a partial restoration with current source, or execute archived review scripts as current tests.
 
@@ -21,6 +23,7 @@ history rewrite/ref removal has been explicitly approved. Do not delete it first
 
 | Archive | Original Git tree |
 | --- | --- |
+| `doc-pages-payload` | [Original records](https://github.com/neknaj/NEPL3/tree/d87ca8c4ba18e74bc71efb0e2958af87ac971e1b/conformance/results/doc-pages-payload) |
 | `actions-update` | [Original records](https://github.com/neknaj/NEPL3/tree/d87ca8c4ba18e74bc71efb0e2958af87ac971e1b/conformance/results/actions-update) |
 | `binding-analysis` | [Original records](https://github.com/neknaj/NEPL3/tree/d87ca8c4ba18e74bc71efb0e2958af87ac971e1b/conformance/results/binding-analysis) |
 | `borrow-mapping-union` | [Original records](https://github.com/neknaj/NEPL3/tree/d87ca8c4ba18e74bc71efb0e2958af87ac971e1b/conformance/results/borrow-mapping-union) |
