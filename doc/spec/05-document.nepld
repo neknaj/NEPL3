@@ -61,25 +61,32 @@ body
       nil
     cons section elements "1.2 [文書入力/ぶんしょにゅうりょく]に[必要/ひつよう]な[要素/ようそ]" body
       cons paragraph
-        cons "DG01のTableは[列/れつ]ごとのDefault/Left/Center/Right、[任意/にんい]header、[順序付/じゅんじょつ]きRowを[持/も]つ。"
+        cons "Tableは、[行/ぎょう]と[列/れつ]で[情報/じょうほう]を[配置/はいち]する[表/ひょう]の[構造/こうぞう]である。"
+        cons "DG01では、[列/れつ]ごとの[配置/はいち]Default/Left/Center/Right、[省略可能/しょうりゃくかのう]なheader、[順序付/じゅんじょつ]きのRowを[保持/ほじ]する。"
         cons "[全/ぜん]Rowのcell[数/すう]は[列数/れつすう]と[一致/いっち]する。"
         cons "cellはSentenceであり[空/くう]Sentenceも[明示値/めいじち]として[許/ゆる]す。"
-        cons "ゼロ[列/れつ]のTableは[構造上/こうぞうじょう]の[空表/くうひょう]として[表現可能/ひょうげんかのう]で、[内容/ないよう]のある[列/れつ]を[補/おぎな]わない。" nil
+        cons "ゼロ[列/れつ]のTableは、[列/れつ]とcellを[持/も]たない[空表/くうひょう]として[保持/ほじ]する。" nil
       cons paragraph
-        cons "DG02のListはUnorderedまたはOrdered(start:Nat)を[明示/めいじ]し、ListItemは[任意/にんい]のchecked[状態/じょうたい]とBodyを[持/も]つ。"
-        cons "Bodyを[介/かい]した[入/い]れ[子/こ]を[保持/ほじ]する。"
-        cons "Orderedのstartは[公開/こうかい]arenaのU64で[表/あらわ]せる[範囲/はんい]をlower[時/じ]に[検査/けんさ]し、[範囲外/はんいがい]を[丸/まる]めない。" nil
+        cons "Listは、[項目/こうもく]の[順序/じゅんじょ]と[本文/ほんぶん]を[保持/ほじ]するリストの[構造/こうぞう]である。"
+        cons "DG02では、UnorderedまたはOrdered(start:Nat)を[指定/してい]する。"
+        cons "ListItemは、[省略可能/しょうりゃくかのう]なchecked[状態/じょうたい]と、[本文/ほんぶん]を[表/あらわ]すBodyを[保持/ほじ]する。"
+        cons "[入/い]れ[子/こ]のリストは、[項目/こうもく]のBody[内/ない]に[配置/はいち]する。"
+        cons "Orderedのstartは、[公開/こうかい]arenaのU64で[表現可能/ひょうげんかのう]な[範囲/はんい]をlower[時/じ]に[検査/けんさ]し、[範囲外/はんいがい]の[値/あたい]を[拒否/きょひ]する。" nil
       cons paragraph
-        cons "DG03のLinkはPage(page,fragment)、Relative(path,fragment)、External(uri)を[区別/くべつ]し、[表示/ひょうじ]labelを[保持/ほじ]する。"
-        cons "DG06のSection/Anchor/Referenceのarticle[内/ない]IDとは[区別/くべつ]し、ページ[名/めい]、[外部/がいぶ]URI、[相対/そうたい]pathを[同/おな]じ[名前空間/なまえくうかん]で[自動解決/じどうかいけつ]しない。"
-        cons "[公開/こうかい]URIへの[写像/しゃぞう]とリンク[解決/かいけつ]はcheck/prepare[側/がわ]の[明示入力/めいじにゅうりょく]であり、[構造値/こうぞうち]だけからファイル[読出/よみだ]し[権限/けんげん]や[安全/あんぜん]なHTML[属性/ぞくせい]を[得/え]ない。" nil
+        cons "Linkは、[参照先/さんしょうさき]と[表示/ひょうじ]labelを[保持/ほじ]するリンクの[構造/こうぞう]である。"
+        cons "DG03の[参照先/さんしょうさき]は、ページを[指定/してい]するPage(page,fragment)、[相対/そうたい]pathを[指定/してい]するRelative(path,fragment)、[外部/がいぶ]URIを[指定/してい]するExternal(uri)で[表/あらわ]す。"
+        cons "DG06のSection/Anchor/Referenceはarticle[内/ない]IDを[使用/しよう]する。"
+        cons "article[内/ない]ID、ページ[名/めい]、[外部/がいぶ]URI、[相対/そうたい]pathは、それぞれの[名前空間/なまえくうかん]と[解決規則/かいけつきそく]に[従/したが]う。"
+        cons "check/prepareは、[公開/こうかい]URIへの[写像/しゃぞう]とリンク[解決/かいけつ]に[必要/ひつよう]な[情報/じょうほう]を[明示入力/めいじにゅうりょく]として[受/う]け[取/と]る。"
+        cons "ファイル[読出/よみだ]しの[権限/けんげん]はhostが[管理/かんり]し、HTML[属性/ぞくせい]の[安全性/あんぜんせい]は[対応/たいおう]する[検査/けんさ]で[確認/かくにん]する。" nil
       cons paragraph
         cons "DG04のInlineCodeとRawCodeは、[表示対象/ひょうじたいしょう]のコードをTextとして[保持/ほじ]する。"
         cons "これらのTextに[対/たい]する[意味解析/いみかいせき]は[実行/じっこう]しない。"
         cons "RawCodeのlanguageHintは、[任意/にんい]に[指定/してい]できる[表示用/ひょうじよう]の[言語情報/げんごじょうほう]である。"
         cons "parserや[評価器/ひょうかき]の[実行/じっこう]は、hostの[明示的/めいじてき]な[操作選択/そうさせんたく]に[従/したが]う。" nil
       cons paragraph
-        cons "DG05のImage/InlineImageはAssetRef(id,[任意/にんい]digest)とaltを[持/も]ち、block[画像/がぞう]は[任意/にんい]captionを[持/も]つ。"
+        cons "Imageはblock[画像/がぞう]、InlineImageは[文内/ぶんない]に[配置/はいち]する[画像/がぞう]を[表/あらわ]す。"
+        cons "DG05では、[両者/りょうしゃ]がAssetRef(id,[省略可能/しょうりゃくかのう]なdigest)とaltを[保持/ほじ]し、Imageは[省略可能/しょうりゃくかのう]なcaptionも[保持/ほじ]する。"
         cons "[表層/ひょうそう]のdigestはOptionalTextの64[桁/けた]hexを32byteのDigestへlowerし、[無効/むこう]な[桁数/けたすう]・[文字/もじ]を[拒否/きょひ]する。"
         cons "assetの[読出/よみだ]し、digest[照合/しょうごう]、[表示準備/ひょうじじゅんび]は[別/べつ]の[解決操作/かいけつそうさ]で[行/おこな]う。"
         cons "RawHtmlは[追加/ついか]しない。" nil
