@@ -116,6 +116,18 @@ body
       cons "DocLabel、MathSymbol、CircuitSignalを[一/ひと]つの[名前辞書/なまえじしょ]へ[入/い]れない。"
       cons sentence cons text "bridgeは" cons ruby text "必要" text "ひつよう" cons text "に" cons ruby text "応" text "おう" cons text "じて " cons code "EnvironmentProjection" cons text " として、どのnamespace/entityをどの" cons ruby text "型" text "かた" cons text "の" cons ruby text "外部値" text "がいぶち" cons text "として" cons ruby text "渡" text "わた" cons text "すかを" cons ruby text "明示" text "めいじ" cons text "する。" nil nil
     cons paragraph
+      cons "nativeのenvironment projectionは、[検証済/けんしょうず]みEnvironmentから[指定/してい]されたbindingとresourceを[選択/せんたく]する。"
+      cons "bindingの[指定/してい]には、[入力/にゅうりょく]のnamespaceと[名前/なまえ]、[出力/しゅつりょく]のnamespaceと[名前/なまえ]、[期待/きたい]するschema[型/がた]を[含/ふく]める。"
+      cons "[選択/せんたく]した[値/あたい]は[期待/きたい]する[型/かた]で[検査/けんさ]し、その[内容/ないよう]を[保持/ほじ]して[出力/しゅつりょく]へ[配置/はいち]する。"
+      cons "[選択/せんたく]が[空/から]なら、bindingとresourceを[持/も]たない[環境/かんきょう]を[生成/せいせい]する。"
+      cons "[入力/にゅうりょく]に[存在/そんざい]しない[要素/ようそ]、[型/かた]の[不一致/ふいっち]、[不正/ふせい]なnamespace、[出力名/しゅつりょくめい]とresource IDの[重複/ちょうふく]は[拒否/きょひ]する。" nil
+    cons paragraph
+      cons "[検証済/けんしょうず]み[環境/かんきょう]は、[検証対象/けんしょうたいしょう]の[値/あたい]、Origin[表/ひょう]、SourceStore、finalize[済/ず]みregistryへの[不変借用/ふへんしゃくよう]を[保持/ほじ]する。"
+      cons "projectionの[出力/しゅつりょく]は[選択値/せんたくち]を[所有/しょゆう]し、Origin IDと[元/もと]のOrigin[表/ひょう]・source[環境/かんきょう]を[保持/ほじ]する。"
+      cons "[各操作/かくそうさ]へ[許可/きょか]するsourceはhostが[明示/めいじ]し、[既存/きそん]のGrantsで[検査/けんさ]する。"
+      cons "[探索/たんさく]・[複製/ふくせい]・[検査/けんさ]はBudgetへ[計上/けいじょう]し、[停止時/ていしじ]には[部分的/ぶぶんてき]な[環境/かんきょう]を[返/かえ]さず、[入力/にゅうりょく]を[保持/ほじ]する。"
+      cons "[交換時/こうかんじ]のenvironment identityは、[既存/きそん]のportable codecで[計算/けいさん]する。" nil
+    cons paragraph
       cons "[配布/はいふ]bridgeはMathのfree symbol[値/あたい]をRenderContextから[明示的/めいじてき]に[受/う]け[取/と]り、DocLabelとCircuitSignalは[自動/じどう]exportしない。"
       cons "Doc annotation[内/ない]のlabelはそのsentenceの[局所/きょくしょ]scopeで[検査/けんさ]する。"
       cons "[呼出/よびだ]し[側/がわ]のlabel[参照/さんしょう]が[必要/ひつよう]ならprofileのprojectionで[明示/めいじ]する。" nil
