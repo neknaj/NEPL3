@@ -1,10 +1,11 @@
-use nepl3_core::budget::{Budget, StopReason};
+use nepl3_core::budget::{Budget, Limits, StopReason};
 use nepl3_core::source::{SourceAdmission, SourceStore};
+use nepl3_core::value::NdfValue;
 use nepl3_doc_core::{
     check::{Category, ShapeError},
     lower,
     model::*,
-    print::{self, PrintEntry, PrintMode, PrintOutcome},
+    print::{self, PrintEntry, PrintFailure, PrintMismatch, PrintMode, PrintOutcome},
 };
 use nepl3_tools::doc::source::{budget, compiled, err, with_input};
 use nepl3_wire::foundation::FoundationCodec;
@@ -685,6 +686,460 @@ fn printer_rejects_unprintable_source_less_names_and_languages_without_changing_
                         }
                     );
                 }
+            }
+            Ok(())
+        },
+    )
+}
+
+#[test]
+fn printer_requires_explicit_current_guest_print_and_binding_at_first_receiver()
+-> Result<(), String> {
+    let compiled = compiled()?;
+    for source in [
+        "body cons display Math add 1 2 cons display Math add 3 4 nil",
+        r#"body cons paragraph cons sentence "first" cons sentence "second" nil nil"#,
+    ] {
+        with_input(&compiled, source, "Body", |tree, profile, b, a| {
+            let checked = tree
+                .tree()
+                .bundle
+                .validate_with_sources(profile.registry(), b, a)
+                .map_err(err)?;
+            let empty = SourceStore::default();
+            let mut admission = SourceAdmission::default();
+            let mut codec =
+                FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
+            let doc = lower::document(
+                &checked,
+                &compiled.doc.package.schema,
+                Category::Body,
+                profile.registry(),
+                &mut budget(),
+                &mut codec,
+            )
+            .map_err(err)?;
+            let request = host_request(&doc, profile, PrintMode::Prefix)?;
+            assert_eq!(request.guests.len(), 2);
+            let binding_index = request
+                .bindings
+                .iter()
+                .position(|binding| {
+                    &binding.schema == doc.value.embeds[0].schema()
+                        && binding.category == doc.value.embeds[0].category()
+                })
+                .ok_or("selected binding")?;
+            let mut cases = Vec::new();
+            let mut changed = request.clone();
+            changed.bindings.clear();
+            cases.push((changed, PrintFailure::MissingBinding { embed: EmbedRef(0) }));
+            let mut changed = request.clone();
+            changed
+                .bindings
+                .push(changed.bindings[binding_index].clone());
+            cases.push((changed, PrintFailure::ConflictingBinding { binding: 6 }));
+            let mut changed = request.clone();
+            let mut conflicting = changed.bindings[binding_index].clone();
+            conflicting.schema.digest = nepl3_core::source::Digest([0; 32]);
+            changed.bindings.push(conflicting);
+            // One surface alias cannot select two different schemas in one Profile.
+            cases.push((changed, PrintFailure::ConflictingBinding { binding: 6 }));
+            let mut changed = request.clone();
+            changed.bindings[binding_index].category = "Design".into();
+            cases.push((
+                changed,
+                PrintFailure::InvalidBinding {
+                    binding: binding_index as u64,
+                },
+            ));
+            let mut changed = request.clone();
+            changed.bindings[binding_index].language = GuestLanguage::Circuit;
+            changed.bindings[binding_index].category = "Design".into();
+            if let Some(inline) = changed.bindings.iter().position(|binding| {
+                binding.language == GuestLanguage::Sentence
+                    && binding.category == "Inline"
+                    && binding.schema == changed.bindings[binding_index].schema
+            }) {
+                changed.bindings.remove(inline);
+            }
+            changed.bindings.remove(1);
+            // Binding selection includes category: the selected guest has
+            // no binding after its only schema entry is changed to Design.
+            cases.push((changed, PrintFailure::MissingBinding { embed: EmbedRef(0) }));
+            let mut changed = request.clone();
+            changed.guests.clear();
+            // A real retained source cover does not authorize automatic guest printing.
+            cases.push((
+                changed,
+                PrintFailure::UnresolvedGuest { embed: EmbedRef(0) },
+            ));
+            for (reason, mode) in [
+                (PrintMismatch::Document, 0),
+                (PrintMismatch::Guest, 1),
+                (PrintMismatch::Embed, 2),
+                (PrintMismatch::Embed, 3),
+            ] {
+                let mut changed = request.clone();
+                match mode {
+                    0 => changed.guests[0].document_digest = nepl3_core::source::Digest([0; 32]),
+                    1 => changed.guests[0].guest_digest = changed.guests[1].guest_digest,
+                    2 => changed.guests[0].embed = EmbedRef(u64::MAX),
+                    _ => changed.guests[0].embed = EmbedRef(1_u64 << 32),
+                }
+                cases.push((changed, PrintFailure::InvalidGuest { entry: 0, reason }));
+            }
+            let mut changed = request.clone();
+            changed.guests.push(changed.guests[0].clone());
+            cases.push((
+                changed,
+                PrintFailure::InvalidGuest {
+                    entry: 2,
+                    reason: PrintMismatch::Duplicate,
+                },
+            ));
+            for (request, error) in cases {
+                let wire = nepl3_doc_core::portable::print::request_to_value(
+                    &request,
+                    profile.registry(),
+                    &mut codec,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                let bytes = nepl3_wire::encode(&wire, &mut budget()).map_err(err)?;
+                let mut a = SourceAdmission::default();
+                let mut receiver =
+                    FoundationCodec::new(profile.registry(), &empty, &mut a).map_err(err)?;
+                let actual = nepl3_doc_core::portable::print::request_from_value(
+                    &nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?,
+                    profile.registry(),
+                    &mut receiver,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                let reply = print::print(&actual, profile.registry(), &mut receiver, &mut budget())
+                    .map_err(err)?;
+                assert_eq!(reply.outcome, PrintOutcome::Invalid { error });
+                assert_eq!(request, actual);
+            }
+            let mut synthetic = request.clone();
+            let identity = print::identity(&doc, profile.registry(), &mut codec, &mut budget())
+                .map_err(err)?;
+            let identity_value = nepl3_doc_core::portable::print::identity_to_value(
+                &identity,
+                profile.registry(),
+                &mut codec,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            for length in [31, 33] {
+                let mut malformed = identity_value.clone();
+                let NdfValue::Record(record) = &mut malformed else {
+                    return Err("identity record".into());
+                };
+                record.fields[0] = NdfValue::Bytes(vec![0; length]);
+                assert!(
+                    nepl3_doc_core::portable::print::identity_from_value(
+                        &malformed,
+                        profile.registry(),
+                        &mut codec,
+                        &mut budget()
+                    )
+                    .is_err()
+                );
+            }
+            let mut reply = print::print(&request, profile.registry(), &mut codec, &mut budget())
+                .map_err(err)?;
+            let complete_value = nepl3_doc_core::portable::print::reply_to_value(
+                &reply,
+                &doc,
+                profile.registry(),
+                &mut codec,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            reply.report.trace_overflow =
+                Some(nepl3_core::diagnostic::TraceOverflow { dropped: 1 });
+            assert!(matches!(
+                nepl3_doc_core::portable::print::reply_to_value(
+                    &reply,
+                    &doc,
+                    profile.registry(),
+                    &mut codec,
+                    &mut budget()
+                ),
+                Err(nepl3_doc_core::portable::PortableError::Shape)
+            ));
+            for reason in [StopReason::Cancelled, StopReason::WorkLimit] {
+                reply.outcome = PrintOutcome::Stopped { reason };
+                let value = nepl3_doc_core::portable::print::reply_to_value(
+                    &reply,
+                    &doc,
+                    profile.registry(),
+                    &mut codec,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                assert_eq!(
+                    nepl3_doc_core::portable::print::reply_from_value(
+                        &value,
+                        &doc,
+                        profile.registry(),
+                        &mut codec,
+                        &mut budget()
+                    )
+                    .map_err(err)?,
+                    reply
+                );
+                let mut malformed = complete_value.clone();
+                let (NdfValue::Record(record), NdfValue::Record(stopped)) =
+                    (&mut malformed, &value)
+                else {
+                    return Err("reply record".into());
+                };
+                record.fields[1] = stopped.fields[1].clone();
+                assert!(matches!(
+                    nepl3_doc_core::portable::print::reply_from_value(
+                        &malformed,
+                        &doc,
+                        profile.registry(),
+                        &mut codec,
+                        &mut budget()
+                    ),
+                    Err(nepl3_doc_core::portable::PortableError::Shape)
+                ));
+            }
+            let DocContent::Syntax { closure } = &mut synthetic.document.value.embeds[0].content
+            else {
+                return Err("source-backed guest".into());
+            };
+            let bundle = &mut closure.syntax.bundle;
+            let root = bundle.root.0 as usize;
+            bundle.nodes[root].cover = None;
+            bundle.nodes[root].head = None;
+            assert!(
+                print::original_guest_source(
+                    &synthetic.document,
+                    EmbedRef(0),
+                    profile.registry(),
+                    &mut budget(),
+                    &mut SourceAdmission::default()
+                )
+                .map_err(err)?
+                .is_none()
+            );
+            // A host can print a synthetic root explicitly, but the removed
+            // cover invalidates the previously issued document identity.
+            assert_eq!(
+                print::print(&synthetic, profile.registry(), &mut codec, &mut budget())
+                    .map_err(err)?
+                    .outcome,
+                PrintOutcome::Invalid {
+                    error: PrintFailure::InvalidGuest {
+                        entry: 0,
+                        reason: PrintMismatch::Document
+                    }
+                }
+            );
+            let current = print::identity(
+                &synthetic.document,
+                profile.registry(),
+                &mut codec,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            for (guest, target) in synthetic.guests.iter_mut().zip(&current.guests) {
+                guest.document_digest = current.document_digest;
+                guest.guest_digest = target.guest_digest;
+            }
+            assert!(matches!(
+                print::print(&synthetic, profile.registry(), &mut codec, &mut budget())
+                    .map_err(err)?
+                    .outcome,
+                PrintOutcome::Complete { .. }
+            ));
+            Ok(())
+        })?;
+    }
+    Ok(())
+}
+
+#[test]
+fn fragment_preserves_shared_foreign_syntax_and_rejects_invalid_inputs() -> Result<(), String> {
+    use nepl3_doc_core::check::StructureError;
+    let compiled = compiled()?;
+    with_input(
+        &compiled,
+        "body cons display Math add 1 2 cons display Math add 3 4 cons display Math add 5 6 nil",
+        "Body",
+        |tree, profile, b, a| {
+            let checked = tree
+                .tree()
+                .bundle
+                .validate_with_sources(profile.registry(), b, a)
+                .map_err(err)?;
+            let empty = SourceStore::default();
+            let mut admission = SourceAdmission::default();
+            let mut codec =
+                FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
+            let mut doc = lower::document(
+                &checked,
+                &compiled.doc.package.schema,
+                Category::Body,
+                profile.registry(),
+                &mut budget(),
+                &mut codec,
+            )
+            .map_err(err)?;
+            let DocRoot::Body(body) = doc.value.root else {
+                return Err("Body root".into());
+            };
+            let DocKind::Body { ref blocks } = doc.value.nodes[body.0 as usize].kind else {
+                return Err("Body node".into());
+            };
+            let selected = blocks[1];
+            let DocKind::DisplayMath { syntax } = doc.value.nodes[selected.0 as usize].kind else {
+                return Err("math".into());
+            };
+            let retained = doc.value.embeds[syntax.0 as usize].clone();
+            let selected_node = doc.value.nodes[selected.0 as usize].clone();
+            let shared_embed = FlowRef(doc.value.nodes.len() as u64);
+            doc.value.nodes.push(selected_node.clone());
+            let paragraph = BlockRef(doc.value.nodes.len() as u64);
+            doc.value.nodes.push(DocNode {
+                kind: DocKind::Paragraph {
+                    items: vec![FlowRef(selected.0), shared_embed, FlowRef(selected.0)],
+                },
+                locations: vec![],
+                origin: None,
+                span: None,
+            });
+            let DocKind::Body { ref mut blocks } = doc.value.nodes[body.0 as usize].kind else {
+                return Err("Body node".into());
+            };
+            blocks[1] = paragraph;
+            let before = doc.clone();
+            let root = DocRoot::Block(paragraph);
+            let mut complete = budget();
+            let result = doc
+                .fragment(
+                    root,
+                    profile.registry(),
+                    &mut complete,
+                    &mut SourceAdmission::default(),
+                )
+                .map_err(err)?;
+            assert_eq!(doc, before);
+            assert_eq!(result.value.root, DocRoot::Block(BlockRef(2)));
+            assert_eq!(result.value.nodes.len(), 3);
+            let mut expected_node = selected_node;
+            expected_node.kind = DocKind::DisplayMath {
+                syntax: EmbedRef(0),
+            };
+            assert_eq!(result.value.nodes[0], expected_node);
+            assert_eq!(result.value.nodes[1], expected_node);
+            assert_eq!(
+                result.value.nodes[2].kind,
+                DocKind::Paragraph {
+                    items: vec![FlowRef(0), FlowRef(1), FlowRef(0)]
+                }
+            );
+            assert_eq!(result.value.embeds, vec![retained]);
+            assert_eq!(result.sources, doc.sources);
+            assert_eq!(result.origins, doc.origins);
+            assert_eq!(result.views, doc.views);
+            assert_eq!(result.source_maps, doc.source_maps);
+            for (invalid, expected) in [
+                (
+                    DocRoot::Block(BlockRef(u64::MAX)),
+                    ShapeError::Reference(u64::MAX),
+                ),
+                (
+                    DocRoot::Article(ArticleRef(paragraph.0)),
+                    ShapeError::Category {
+                        node: paragraph.0,
+                        expected: Category::Article,
+                    },
+                ),
+            ] {
+                assert_eq!(
+                    doc.fragment(
+                        invalid,
+                        profile.registry(),
+                        &mut budget(),
+                        &mut SourceAdmission::default()
+                    ),
+                    Err(StructureError::Shape(expected))
+                );
+            }
+            let mut malformed = doc.clone();
+            malformed.value.nodes.push(DocNode {
+                kind: DocKind::RawCode {
+                    language_hint: None,
+                    text: "unreachable".into(),
+                },
+                locations: vec![],
+                origin: None,
+                span: None,
+            });
+            assert_eq!(
+                malformed.fragment(
+                    root,
+                    profile.registry(),
+                    &mut budget(),
+                    &mut SourceAdmission::default()
+                ),
+                Err(StructureError::Shape(ShapeError::Unreachable(
+                    doc.value.nodes.len() as u64
+                )))
+            );
+            for (limits, reason) in [
+                (
+                    Limits {
+                        work: complete.usage().work - 1,
+                        ..budget().limits()
+                    },
+                    StopReason::WorkLimit,
+                ),
+                (
+                    Limits {
+                        allocation_units: complete.usage().allocation_units - 1,
+                        ..budget().limits()
+                    },
+                    StopReason::AllocationLimit,
+                ),
+                (
+                    Limits {
+                        work: 0,
+                        ..budget().limits()
+                    },
+                    StopReason::WorkLimit,
+                ),
+                (
+                    Limits {
+                        allocation_units: 0,
+                        ..budget().limits()
+                    },
+                    StopReason::AllocationLimit,
+                ),
+                (
+                    Limits {
+                        depth: 1,
+                        ..budget().limits()
+                    },
+                    StopReason::DepthLimit,
+                ),
+            ] {
+                let mut limited = Budget::new(limits);
+                assert_eq!(
+                    doc.fragment(
+                        root,
+                        profile.registry(),
+                        &mut limited,
+                        &mut SourceAdmission::default()
+                    ),
+                    Err(StructureError::Stopped(reason))
+                );
+                assert_eq!(doc, before);
             }
             Ok(())
         },

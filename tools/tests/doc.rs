@@ -30,7 +30,6 @@ mod resources;
 mod retention;
 use nepl3_core::value::NdfValue;
 use nepl3_core::{budget::*, source::*};
-use nepl3_engine::profile::*;
 use nepl3_tools::doc::source::{
     Compiled, budget, compiled, err, parse_source_as, with_input, with_input_route,
 };
