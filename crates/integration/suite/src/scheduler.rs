@@ -71,6 +71,7 @@ impl From<StopReason> for Error {
 
 /// Owns the failure cause and the active Await generations. Their accepted
 /// terminal results retain each child's operation, output schema and sources.
+/// Resume preparation retains accepted results until its callback begins.
 /// Generations already transferred to a Resume callback are consumed.
 pub struct Failure {
     pub cause: Error,
@@ -96,8 +97,28 @@ impl Failure {
     ) -> impl Iterator<Item = (&Invoke, &OperationResult<TypedValue>)> {
         self.frames
             .iter()
-            .filter_map(|frame| frame.active.as_ref())
-            .flat_map(|active| active.pending.accepted_results())
+            .filter_map(|frame| frame.active.as_ref().map(|active| (frame, active)))
+            .flat_map(|(frame, active)| {
+                active.pending.accepted_results().chain(
+                    frame
+                        .resume
+                        .iter()
+                        .filter(|delivery| delivery.phase == ResumePhase::Preparing)
+                        .flat_map(|delivery| {
+                            active
+                                .pending
+                                .calls()
+                                .iter()
+                                .zip(&delivery.request.dependency_results)
+                        })
+                        .filter_map(|(call, reply)| match reply {
+                            nepl3_core::operation::OperationReply::Result(result) => {
+                                Some((call, result))
+                            }
+                            _ => None,
+                        }),
+                )
+            })
     }
 }
 
@@ -118,9 +139,24 @@ struct Frame {
     scope: ExecutionScope,
     sources: SourceStore,
     active: Option<OwnedActiveAwait>,
+    resume: Option<ResumeDelivery>,
     contexts: Vec<Digest>,
     completed_sources: Vec<SourceStore>,
     next: usize,
+}
+
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum ResumePhase {
+    Preparing,
+    CallbackStarted,
+}
+
+/// Owns an extracted generation through every fallible preparation step.
+/// Starting the callback consumes its delivery rights, independently of whether
+/// the callback or subsequent reply validation succeeds.
+struct ResumeDelivery {
+    request: nepl3_core::operation::Resume,
+    phase: ResumePhase,
 }
 
 fn reserve<T>(values: &mut Vec<T>, count: usize, b: &mut Budget) -> Result<(), Error> {
@@ -203,6 +239,7 @@ fn frame(
         scope,
         sources,
         active: None,
+        resume: None,
         contexts: Vec::new(),
         completed_sources: Vec::new(),
         next: 0,
@@ -345,6 +382,11 @@ fn run_inner(
                 .pending
                 .take_resume(validation)
                 .map_err(Error::Dependency)?;
+            current.resume = Some(ResumeDelivery {
+                request: resume_request,
+                phase: ResumePhase::Preparing,
+            });
+            let delivery = current.resume.as_mut().ok_or(Error::State)?;
             let mut sources = Vec::new();
             reserve(&mut sources, current.completed_sources.len(), validation)?;
             sources.extend(current.completed_sources.iter());
@@ -362,11 +404,12 @@ fn run_inner(
                         &registration.resume,
                         registration.resume.implementation,
                         &saved,
-                        &resume_request,
+                        &delivery.request,
                         lifetimes,
                         registry,
                         execution,
                         validation,
+                        || delivery.phase = ResumePhase::CallbackStarted,
                         |reply, validation| {
                             suspending::prepare_reply(
                                 reply,
@@ -407,6 +450,7 @@ fn run_inner(
                 })
                 .map_err(Error::Invoke)?
         };
+        current.resume = None;
         match response {
             suspending::PreparedReply::Await(prepared) => {
                 let calls = prepared.calls();
