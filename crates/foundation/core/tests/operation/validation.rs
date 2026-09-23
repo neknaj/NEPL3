@@ -593,6 +593,139 @@ fn terminal_results_validate_selected_output_and_preserve_outcomes() -> Result<(
 }
 
 #[test]
+fn active_dependency_commits_at_the_reply_validation_work_boundary() -> Result<(), String> {
+    use nepl3_core::{
+        diagnostic::{Diagnostic, Severity},
+        operation::{
+            Invoke,
+            dependencies::{DependencyError, PendingDependencies},
+            lifetime::{RequestLifetimes, RequestPhase},
+        },
+    };
+    let (registry, operation, value) = fixture()?;
+    let context = Digest::of(b"child context");
+    let continuation = Continuation {
+        provider: operation.clone(),
+        parent_request: 7,
+        snapshot_digest: context,
+        state: value.clone(),
+    };
+    let calls = [Invoke {
+        request_id: 30,
+        operation: operation.clone(),
+        input: value.clone(),
+        environment: value.clone(),
+        sources: vec![],
+        resources: vec![],
+        limits: budget().limits(),
+    }];
+    let setup = || {
+        let pending = PendingDependencies::new(&continuation, &calls, &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+        let mut lifetimes = RequestLifetimes::default();
+        for id in [7, 30] {
+            lifetimes
+                .begin(id, operation.clone(), context, &mut budget())
+                .map_err(|e| format!("{e:?}"))?;
+        }
+        Ok::<_, String>((pending, lifetimes))
+    };
+    let mut report = Report::default();
+    report.usage.diagnostics = 1;
+    report.diagnostics.push(Diagnostic {
+        schema: operation.schema.clone(),
+        code: "retained-child".into(),
+        severity: Severity::Information,
+        stage: "invoke".into(),
+        arguments: value.clone(),
+        primary: None,
+        related: vec![],
+        fixes: vec![],
+    });
+    let sources = SourceStore::default();
+    for result in [
+        OperationResult::Complete {
+            value: value.clone(),
+            report: report.clone(),
+        },
+        OperationResult::Invalid {
+            partial: Some(value.clone()),
+            report: report.clone(),
+        },
+        OperationResult::Stopped {
+            reason: StopReason::Cancelled,
+            partial: Some(value.clone()),
+            report,
+        },
+    ] {
+        // Independent boundary: correlation/output validation plus ONE saved
+        // reply lookup. No second lookup is needed to commit its known index.
+        let (mut pending, lifetimes) = setup()?;
+        let mut measured = budget();
+        pending
+            .accept(30, result.clone(), &registry, &sources, &mut measured)
+            .map_err(|e| format!("{e:?}"))?;
+        lifetimes
+            .check_reply(30, &operation, context, &mut measured)
+            .map_err(|e| format!("{e:?}"))?;
+        let boundary = measured.usage().work;
+        for work in [boundary - 1, boundary] {
+            let (mut pending, mut lifetimes) = setup()?;
+            let mut limited = Budget::new(Limits {
+                work,
+                ..budget().limits()
+            });
+            let accepted = pending.accept_active(
+                30,
+                context,
+                result.clone(),
+                &registry,
+                &sources,
+                &mut lifetimes,
+                &mut limited,
+            );
+            let mut cancelled = vec![];
+            if work == boundary {
+                assert_eq!(accepted, Ok(()));
+                assert_eq!(limited.usage().work, boundary);
+                assert_eq!(pending.remaining(), 0);
+                assert_eq!(
+                    pending.accepted_results().collect::<Vec<_>>(),
+                    vec![(&calls[0], &result)]
+                );
+                assert_eq!(
+                    lifetimes.phase(30, &mut budget()),
+                    Ok(RequestPhase::Finished)
+                );
+                lifetimes.close(|id| cancelled.push(id));
+                assert_eq!(cancelled, [7]);
+                assert_eq!(
+                    pending.accepted_results().next(),
+                    Some((&calls[0], &result))
+                );
+            } else {
+                assert_eq!(
+                    accepted,
+                    Err(DependencyError::Stopped(StopReason::WorkLimit))
+                );
+                assert_eq!(pending.remaining(), 1);
+                assert_eq!(pending.accepted_results().count(), 0);
+                assert_eq!(
+                    lifetimes.phase(30, &mut budget()),
+                    Ok(RequestPhase::Running)
+                );
+                lifetimes.close(|id| cancelled.push(id));
+                assert_eq!(cancelled, [7, 30]);
+            }
+            let before = cancelled.clone();
+            lifetimes.close(|id| cancelled.push(id));
+            assert_eq!(cancelled, before);
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn output_validation_preserves_stops_and_checks_report_status() -> Result<(), String> {
     let (registry, operation, value) = fixture()?;
     let sources = SourceStore::default();
