@@ -446,3 +446,103 @@ fn generated_sentence_views_keep_explicit_mapping_and_closed_sources() -> Result
         },
     )
 }
+
+#[test]
+fn mixed_lower_stops_keep_original_tree_and_caller_depth() -> Result<(), String> {
+    use nepl3_core::budget::{Budget, StopReason};
+    let compiled = compiled()?;
+    nepl3_tools::doc::source::with_input(
+        &compiled,
+        r#"paragraph cons sentence "[base/reading]" cons sentence sentence cons text "after" nil nil"#,
+        "Block",
+        |tree, profile, b, a| {
+            let original = &tree.tree().bundle;
+            let saved = original.clone_with_budget(b).map_err(err)?;
+            let checked = original
+                .validate_with_sources(profile.registry(), b, a)
+                .map_err(err)?;
+            let empty = SourceStore::default();
+            let mut stops = 0;
+            let mut successes = 0;
+            for resource in 0..5 {
+                for cap in [0, 1, 8, 64, 512, 4096, 32768, 262144, 2097152] {
+                    let mut limits = budget().limits();
+                    let expected = match resource {
+                        0 => {
+                            limits.work = cap;
+                            StopReason::WorkLimit
+                        }
+                        1 => {
+                            limits.allocation_units = cap;
+                            StopReason::AllocationLimit
+                        }
+                        2 => {
+                            limits.source_bytes = cap;
+                            StopReason::SourceLimit
+                        }
+                        3 => {
+                            limits.nodes = cap;
+                            StopReason::NodeLimit
+                        }
+                        _ => {
+                            limits.depth = cap;
+                            StopReason::DepthLimit
+                        }
+                    };
+                    let mut operation = Budget::new(limits);
+                    let mut admission = SourceAdmission::default();
+                    let mut codec =
+                        FoundationCodec::new(profile.registry(), &empty, &mut admission)
+                            .map_err(err)?;
+                    let result = operation.with_depth_at_least(7, |b| {
+                        lower::document(
+                            &checked,
+                            &compiled.doc.package.schema,
+                            Category::Block,
+                            profile.registry(),
+                            b,
+                            &mut codec,
+                        )
+                    });
+                    match result {
+                        Ok(doc) => {
+                            successes += 1;
+                            doc.validate_structure(
+                                profile.registry(),
+                                &mut budget(),
+                                &mut SourceAdmission::default(),
+                            )
+                            .map_err(err)?;
+                        }
+                        Err(lower::LowerError::Stopped(reason)) => {
+                            stops += 1;
+                            assert_eq!(reason, expected);
+                            assert_eq!(operation.poll(), Err(expected));
+                        }
+                        Err(other) => {
+                            return Err(format!("resource {resource} cap {cap}: {other:?}"));
+                        }
+                    }
+                    assert_eq!(operation.current_depth(), 0);
+                    assert_eq!(original, &saved);
+                }
+            }
+            assert!(stops > 0 && successes > 0);
+            let mut cancelled = budget();
+            cancelled.cancel();
+            let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
+            assert!(matches!(
+                lower::document(
+                    &checked,
+                    &compiled.doc.package.schema,
+                    Category::Block,
+                    profile.registry(),
+                    &mut cancelled,
+                    &mut codec
+                ),
+                Err(lower::LowerError::Stopped(StopReason::Cancelled))
+            ));
+            Ok(())
+        },
+    )
+}
