@@ -4,6 +4,15 @@ use std::cell::Cell;
 
 #[test]
 fn checked_await_report_survives_prepublication_stops() -> Result<(), String> {
+    retention(false)
+}
+
+#[test]
+fn resumed_await_report_survives_prepublication_stops() -> Result<(), String> {
+    retention(true)
+}
+
+fn retention(after_resume: bool) -> Result<(), String> {
     let (registry, root) = fixture()?;
     let sources = SourceStore::default();
     let grants = Grants::new(&root.environment, &sources, &[], &mut budget())
@@ -12,6 +21,7 @@ fn checked_await_report_survives_prepublication_stops() -> Result<(), String> {
     let invoked = Cell::new(0);
     let contexts = Cell::new(0);
     let delivered = Cell::new(0);
+    let resumed = Cell::new(0);
     let invalid = Cell::new(false);
     let mut expected = Report::default();
     expected.usage.diagnostics = 1;
@@ -25,17 +35,24 @@ fn checked_await_report_survives_prepublication_stops() -> Result<(), String> {
         related: vec![],
         fixes: vec![],
     });
+    let checked_reply = |call: &Invoke, context, b: &mut Budget| {
+        let mut reply = suspend_with(call, context, 99, &[10], b)?;
+        if let OperationReply::Await { report, .. } = &mut reply {
+            *report = expected.clone();
+            if invalid.get() {
+                report.usage.diagnostics = 0;
+            }
+        }
+        Ok(reply)
+    };
     let invoke = |call: &Invoke, context, _: &SchemaRegistry, b: &mut Budget| {
         invoked.set(invoked.get() + 1);
         if call.request_id == root.request_id {
-            let mut reply = suspend_with(call, context, 99, &[10], b)?;
-            if let OperationReply::Await { report, .. } = &mut reply {
-                *report = expected.clone();
-                if invalid.get() {
-                    report.usage.diagnostics = 0;
-                }
+            if after_resume {
+                suspend_with(call, context, 77, &[], b)
+            } else {
+                checked_reply(call, context, b)
             }
-            Ok(reply)
         } else {
             Ok(OperationReply::Result(OperationResult::Complete {
                 value: call.input.clone_with_budget(b)?,
@@ -43,6 +60,16 @@ fn checked_await_report_survives_prepublication_stops() -> Result<(), String> {
             }))
         }
     };
+    let resume_callback =
+        |call: &Invoke, request: &Resume, registry: &SchemaRegistry, b: &mut Budget| {
+            resumed.set(resumed.get() + 1);
+            if after_resume && number(&request.continuation.state) == Some(77) {
+                assert!(request.dependency_results.is_empty());
+                checked_reply(call, request.continuation.snapshot_digest, b)
+            } else {
+                resume(call, request, registry, b)
+            }
+        };
     let context = |call: &Invoke, implementation, b: &mut Budget| {
         if call.request_id != root.request_id {
             contexts.set(contexts.get() + 1);
@@ -58,7 +85,7 @@ fn checked_await_report_survives_prepublication_stops() -> Result<(), String> {
         resume: resume::Registration {
             operation: &root.operation,
             implementation: identity,
-            resume: &resume,
+            resume: &resume_callback,
         },
         grants: &grants,
         context: &context,
@@ -67,6 +94,7 @@ fn checked_await_report_survives_prepublication_stops() -> Result<(), String> {
         invoked.set(0);
         contexts.set(0);
         delivered.set(0);
+        resumed.set(0);
         scheduler::run(
             &registrations,
             &root,
@@ -75,7 +103,11 @@ fn checked_await_report_survives_prepublication_stops() -> Result<(), String> {
             validation,
             |id, report| {
                 assert_eq!(id, root.request_id);
-                assert_eq!(report, expected);
+                if after_resume && delivered.get() == 0 {
+                    assert_eq!(report, Report::default());
+                } else {
+                    assert_eq!(report, expected);
+                }
                 delivered.set(delivered.get() + 1);
             },
             |id| cancelled.push(id),
@@ -84,7 +116,9 @@ fn checked_await_report_survives_prepublication_stops() -> Result<(), String> {
     let mut measured = budget();
     run(&mut measured, &mut vec![]).map_err(|e| format!("{e:?}"))?;
     assert_eq!(invoked.get(), 2);
-    assert_eq!(delivered.get(), 1);
+    let previous_reports = usize::from(after_resume);
+    assert_eq!(delivered.get(), previous_reports + 1);
+    assert_eq!(resumed.get(), previous_reports + 1);
     let mut retained_stops = [0, 0];
     for (axis, maximum) in [measured.usage().work, measured.usage().allocation_units]
         .into_iter()
@@ -103,27 +137,37 @@ fn checked_await_report_survives_prepublication_stops() -> Result<(), String> {
             };
             let retained = failure.uncommitted_await_reports().collect::<Vec<_>>();
             if !retained.is_empty() {
-                retained_stops[axis] += 1;
+                let initial_empty = after_resume && resumed.get() == 0;
+                if !initial_empty {
+                    retained_stops[axis] += 1;
+                }
                 assert_eq!(retained.len(), 1);
                 let saved = &retained[0];
                 assert_eq!(saved.request_id, root.request_id);
                 assert_eq!(saved.operation, &root.operation);
                 assert_eq!(saved.context, identity);
-                assert_eq!(saved.report, &expected);
+                if initial_empty {
+                    assert_eq!(saved.report, &Report::default());
+                } else {
+                    assert_eq!(saved.report, &expected);
+                }
                 assert_eq!(saved.sources.snapshots().len(), 0);
                 assert_eq!(invoked.get(), 1);
-                assert_eq!(delivered.get(), 0);
+                let prior = if initial_empty { 0 } else { previous_reports };
+                assert_eq!(delivered.get(), prior);
+                assert_eq!(resumed.get(), prior);
+                assert_eq!(failure.accepted_results().count(), 0);
                 assert_eq!(cancelled, [root.request_id]);
             }
             // Child context construction follows full reply preparation. Any
             // subsequent failure before publication must retain that report.
-            if contexts.get() > 0 && delivered.get() == 0 {
+            if contexts.get() > 0 && delivered.get() == previous_reports {
                 assert_eq!(retained.len(), 1, "axis {axis}, limit {limit}");
             }
-            if delivered.get() > 0 {
+            if delivered.get() > previous_reports {
                 assert!(retained.is_empty());
             }
-            assert!(delivered.get() <= 1);
+            assert!(delivered.get() <= previous_reports + 1);
             let mut unique = cancelled.clone();
             unique.sort_unstable();
             unique.dedup();
@@ -138,6 +182,7 @@ fn checked_await_report_survives_prepublication_stops() -> Result<(), String> {
     assert_eq!(failure.uncommitted_await_reports().count(), 0);
     assert_eq!(contexts.get(), 0);
     assert_eq!(invoked.get(), 1);
-    assert_eq!(delivered.get(), 0);
+    assert_eq!(delivered.get(), previous_reports);
+    assert_eq!(resumed.get(), previous_reports);
     Ok(())
 }
