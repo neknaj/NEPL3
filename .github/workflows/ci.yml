@@ -331,7 +331,7 @@ jobs:
           cargo test --locked -p nepl3-tools --test grammar reader::compiled_reader_streaming_boundaries_and_rollback_keep_raw_positions --target wasm32-wasip2 -- --exact --test-threads=1
           cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked -p nepl3-tools --test grammar region:: --target wasm32-wasip2 -- --test-threads=1
-          cargo test --locked -p nepl3-tools --test doc --test doc_context --test doc_payload --test doc_math --target wasm32-wasip2 -- --test-threads=1
+          cargo test --locked -p nepl3-tools --test doc --test doc_context --test doc_payload --test doc_math --test doc_text --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked -p nepl3-tools --test doc_capacity --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked -p nepl3-tools --test sentence --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked -p nepl3-tools --test math --target wasm32-wasip2 -- --test-threads=1
