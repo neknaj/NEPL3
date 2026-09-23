@@ -1,0 +1,11 @@
+{
+    "schema":  "nepl3.stage-history/1",
+    "task_id":  "T05",
+    "records":  [
+                    {
+                        "revision":  "fd8057199f2f32fb36455210df36e78015b77fab",
+                        "path":  "conformance/results/grammar-bootstrap/validation.json",
+                        "sha256":  "ce7c8dab2baa4b8fa682e76e14796b0a8849bdbab483c9fa94796959e154cb54"
+                    }
+                ]
+}

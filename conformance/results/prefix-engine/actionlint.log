@@ -1,4 +1,0 @@
-Command(s):
-C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe .github/workflows/ci.yml
-Target: host-repository (actionlint 1.7.12)
-Exit code: 0

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://neknaj.github.io/NEPL3/interfaces/stage-history.schema.json",
+  "title": "Task-owned historical execution references",
+  "$comment": "Only an in-progress task may own this record. It cannot establish task completion or formal acceptance. Maximum file size is 64 KiB. Git bytes are retrieved explicitly for historical review, not during normal repository checks.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "task_id", "records"],
+  "properties": {
+    "schema": {"const": "nepl3.stage-history/1"},
+    "task_id": {"type": "string", "pattern": "^T[0-9]{2}$"},
+    "records": {
+      "type": "array", "minItems": 1, "maxItems": 16, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["revision", "path", "sha256"],
+        "properties": {
+          "revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    }
+  }
+}

@@ -93,6 +93,10 @@ fn task_evidence(evidence: &TaskEvidence, id: &str) -> Result<()> {
     Ok(())
 }
 
+pub(crate) fn validate_record(bytes: &[u8], id: &str) -> Result<()> {
+    task_evidence(&serde_json::from_slice(bytes)?, id)
+}
+
 fn completion(
     task: &Task,
     task_states: &BTreeMap<&str, &str>,

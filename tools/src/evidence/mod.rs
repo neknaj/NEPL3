@@ -61,6 +61,22 @@ enum Outcome {
     Failed,
 }
 
+pub(crate) fn validate_record(bytes: &[u8], id: &str, state: &str) -> Result<()> {
+    let record: Evidence = serde_json::from_slice(bytes)?;
+    let outcome = match state {
+        "passed" => Outcome::Passed,
+        "failed" => Outcome::Failed,
+        _ => return Err("unexecuted acceptance cannot own a result record".into()),
+    };
+    if record.schema != "nepl3.acceptance-evidence/1"
+        || record.acceptance_id != id
+        || record.result != outcome
+    {
+        return Err("acceptance record identity or outcome mismatch".into());
+    }
+    Ok(())
+}
+
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
 enum Run {
@@ -294,7 +310,7 @@ pub(crate) fn acceptance(
                 )
                 .into());
             }
-            let log = fs::read(result_path(root, log_path)?)?;
+            let log = fs::read(log_file(root, log_path)?)?;
             if log.is_empty()
                 || !identity::is_digest(log_digest)
                 || identity::hex(&Sha256::digest(&log)) != log_digest
@@ -339,6 +355,24 @@ fn result_path(root: &Path, path: &str) -> Result<std::path::PathBuf> {
     Ok(full)
 }
 
+fn log_file(root: &Path, path: &str) -> Result<std::path::PathBuf> {
+    if !path.starts_with("dist/evidence/") {
+        return Err("execution logs must be restored under dist/evidence/".into());
+    }
+    let full = local_path(root, path)?;
+    if !full.is_file()
+        || fs::symlink_metadata(root.join(path))?
+            .file_type()
+            .is_symlink()
+    {
+        return Err("execution log must be a regular file".into());
+    }
+    if fs::metadata(&full)?.len() > 1024 * 1024 {
+        return Err("execution log exceeds 1 MiB validation limit".into());
+    }
+    Ok(full)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -350,7 +384,7 @@ mod tests {
     fn fixture() -> Result<(Fixture, Value)> {
         let files = Fixture::new()?;
         files.git()?;
-        files.write(".gitignore", ".tmp/\ntarget/\n")?;
+        files.write(".gitignore", ".tmp/\ntarget/\ndist/\n")?;
         files.json("design/tasks.json", &json!({"design":"test-r1","tasks":[{"id":"T01","title":"fixture","depends_on":[],"acceptance":["A01"],"deliverable":"fixture","spec":"doc/spec/11-conformance.md"}]}))?;
         files.write(
             "doc/spec/11-conformance.md",
@@ -361,13 +395,13 @@ mod tests {
         files.json("implementation-status.json", &json!({"design":"test-r1","phase":"test","tasks":[{"id":"T01","status":"not-implemented","evidence":[]}],"acceptance":[{"id":"A01","status":"passed","evidence":[REPORT]}],"implemented_crates":[],"note":"synthetic tooling test, never runtime evidence"}))?;
         files.write("apps/example/source.rs", "// synthetic source fixture\n")?;
         let log = "Synthetic checker fixture only; no language acceptance execution.\n";
-        files.write("conformance/results/native.log", log)?;
-        files.write("conformance/results/browser.log", log)?;
+        files.write("dist/evidence/native.log", log)?;
+        files.write("dist/evidence/browser.log", log)?;
         let snapshot = identity(files.root())?;
         let environment = json!({"runner":{"name":"synthetic fixture","version":"1"},"tools":[{"name":"synthetic tool","version":"1"}]});
         let report = json!({"schema":"nepl3.acceptance-evidence/1","acceptance_id":"A01","design_revision":"test-r1","identity":snapshot.identity,"result":"passed","runs":[
-            {"kind":"command","environment":environment,"command":"fixture native runner","target":"native","result":"passed","exit_code":0,"checks":["synthetic check"],"log":"conformance/results/native.log","log_sha256":identity::hex(&Sha256::digest(log))},
-            {"kind":"command","environment":environment,"command":"fixture browser runner","target":"browser","result":"passed","exit_code":0,"checks":["synthetic check"],"log":"conformance/results/browser.log","log_sha256":identity::hex(&Sha256::digest(log))}
+            {"kind":"command","environment":environment,"command":"fixture native runner","target":"native","result":"passed","exit_code":0,"checks":["synthetic check"],"log":"dist/evidence/native.log","log_sha256":identity::hex(&Sha256::digest(log))},
+            {"kind":"command","environment":environment,"command":"fixture browser runner","target":"browser","result":"passed","exit_code":0,"checks":["synthetic check"],"log":"dist/evidence/browser.log","log_sha256":identity::hex(&Sha256::digest(log))}
         ]});
         files.json(REPORT, &report)?;
         Ok((files, report))
@@ -530,7 +564,7 @@ mod tests {
     fn evidence_status_and_generated_tasks_do_not_create_hash_self_reference() -> Result<()> {
         let (files, _) = fixture()?;
         let before = identity(files.root())?;
-        files.write("conformance/results/extra.log", "new log")?;
+        files.write("dist/evidence/extra.log", "new log")?;
         files.write("tasks/T01.md", "generated task")?;
         files.write(
             "implementation-status.json",
@@ -546,7 +580,7 @@ mod tests {
     fn modifying_excluded_log_still_invalidates_its_bound_report() -> Result<()> {
         let (files, _) = fixture()?;
         let before = identity(files.root())?;
-        files.write("conformance/results/native.log", "changed execution output")?;
+        files.write("dist/evidence/native.log", "changed execution output")?;
         assert_eq!(before.identity, identity(files.root())?.identity);
         assert!(task::load(files.root()).is_err());
         Ok(())

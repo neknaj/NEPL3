@@ -1,3 +1,0 @@
-partial test output before timeout
-
-Command '['cargo', '+1.97.0', 'test', '--locked']' timed out after 600 seconds

@@ -335,8 +335,7 @@
         "tools/audit/allocation/probe.rs",
         "doc/development.md",
         ".github/workflows/ci.yml",
-        "conformance/results/reader-builtins/allocation-baseline.log",
-        "conformance/results/reader-builtins/allocation-working.log"
+        "conformance/history.md"
       ],
       "resolution": "Point now borrows SnapshotId, removing precharge identity clones from cycle/mapped-containment traversal. The same tracked native allocator probe observes 100000 bytes and exits 1 against first-slice commit 3bccd48, but observes 0 and exits 0 against the correction; both runs pass a 4096-byte positive control. The dev-only audited allocator wrapper leaves workspace/core unsafe_code=forbid unchanged, and native CI invokes the driver. The two core map tests and six wire syntax tests independently passed; the logical-budget test alone also passed the old implementation and is not represented as a detector of this heap-allocation regression. New builtin locator-work defects are tracked separately in R021, and full operation conformance remains unestablished."
     },
@@ -802,7 +801,7 @@
         "crates/output/markup/src/html/check.rs",
         "crates/output/markup/src/html/serialize.rs",
         "crates/output/markup/tests/regression.rs",
-        "conformance/results/markup-html/independent.json"
+        "conformance/history.md"
       ],
       "partial_progress": "Independent native/WASI probes of the frozen first Markup subset show Work=6 serialization of 100000 shared Text children allocates 6400277 units before WorkLimit; Work=0 validation allocates the input-sized state vector. Root reproduced the serializer case, added enqueue and state initialization Work checks, charged the class length and output-piece loops, and added regression tests. Independent fixed-build verification is pending.",
       "resolution": "The unchanged independent native/WASI probe now allocates a constant 277/205 units at Work=6 for widths 1, 1000 and 100000, and zero arena allocation at Work=0. State initialization and enqueue Work are charged before allocation; class length and final piece loops are also charged. The full managed 14-test subset and independent 6 tests passed on both targets. No whole render-operation or physical allocator bound is inferred."
@@ -820,7 +819,7 @@
         "crates/output/markup/src/html/check.rs",
         "crates/output/markup/src/html/ruby.rs",
         "crates/output/markup/tests/regression.rs",
-        "conformance/results/markup-html/independent.json"
+        "conformance/history.md"
       ],
       "partial_progress": "Independent native/WASI probes accept an em element inside rp, unpaired rp, empty ruby and base-only ruby. HTML requires text-only rp and annotated base sequences with explicit constraints on nested ruby bases. Root added an iterative group state machine, descendant constraints and positive controls for multiple annotations and a single nested base. Independent fixed-build verification is pending.",
       "resolution": "The independent original native/WASI Ruby failures and actual schema-valid CBOR rp(Em) mutation are now rejected. An iterative annotated-base group state machine, text-only rp and nested Ruby descendant rules preserve the normal, multiple-annotation and single nested-base positive cases. The fixed subset produced 660 accepted structural cases with matching DOM structure/text in actual Chromium and Firefox. Arbitrary browser depth and visual/font/accessibility support remain separate requirements."
@@ -837,7 +836,7 @@
         "crates/output/markup/src/html/uri.rs",
         "crates/output/markup/tests/regression.rs",
         "doc/spec/19-html-fragment.md",
-        "conformance/results/markup-html/independent.json"
+        "conformance/history.md"
       ],
       "partial_progress": "Independent native and fresh CBOR probes accept +80 and +0 ports; Chromium rejects both. Root added an ASCII-digit guard before u16 conversion and positive/negative port boundary cases. Independent fixed-build verification is pending.",
       "resolution": "An ASCII decimal digit check now precedes u16 conversion. Independent unchanged native and fresh CBOR probes reject +80/+0 while retaining 80/65535 and the normal CBOR control. Focused regression and independent URI tests passed on native/WASI (7 each). This closes the signed-port defect in the constrained profile, without claiming complete WHATWG URL support."

@@ -1,0 +1,11 @@
+{
+    "schema":  "nepl3.stage-history/1",
+    "task_id":  "T04",
+    "records":  [
+                    {
+                        "revision":  "fd8057199f2f32fb36455210df36e78015b77fab",
+                        "path":  "conformance/results/prefix-engine/validation.json",
+                        "sha256":  "acd8f67a74212a394bd2a78b7bcfb4f46ad2be924b715fa42d6a4797ece2d707"
+                    }
+                ]
+}

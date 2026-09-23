@@ -1,4 +1,5 @@
 pub(crate) mod json;
+mod results;
 
 use crate::{Result, command};
 use std::{
@@ -97,53 +98,6 @@ fn text_file(path: &str) -> bool {
         .is_some_and(|s| s.starts_with('.') || matches!(s, "LICENSE" | "CODEOWNERS" | "NOTICE"))
 }
 
-// Historical evidence remains reconstructible from Git. New executable copies
-// belong in managed tests/tools, not another snapshot under results.
-const LEGACY_EVIDENCE_SOURCES: &str = include_str!("legacy-evidence-sources.txt");
-
-fn legacy_sources(text: &str) -> Result<BTreeSet<String>> {
-    let mut result = BTreeSet::new();
-    let mut previous = "";
-    for name in text.lines() {
-        if name <= previous
-            || !evidence_source(name)
-            || name.contains('\\')
-            || Path::new(name)
-                .components()
-                .any(|c| !matches!(c, Component::Normal(_)))
-        {
-            return Err("invalid or unsorted legacy evidence source exception".into());
-        }
-        result.insert(name.to_owned());
-        previous = name;
-    }
-    Ok(result)
-}
-
-fn evidence_source(path: &str) -> bool {
-    let Some(relative) = path.strip_prefix("conformance/results/") else {
-        return false;
-    };
-    let name = relative.strip_suffix(".fixture").unwrap_or(relative);
-    relative
-        .split('/')
-        .any(|part| matches!(part, "source" | "sources" | "snapshot" | "context"))
-        || matches!(
-            Path::new(name).extension().and_then(|s| s.to_str()),
-            Some("py" | "rs" | "js" | "mjs" | "ts" | "ps1" | "sh")
-        )
-        || matches!(
-            Path::new(name).file_name().and_then(|s| s.to_str()),
-            Some(
-                "AGENTS.md"
-                    | "CODEX.md"
-                    | "Cargo.toml"
-                    | "Cargo.lock"
-                    | "implementation-status.json"
-            )
-        )
-}
-
 pub(crate) fn check(root: &Path) -> Result<usize> {
     let files = paths(&command(
         root,
@@ -156,11 +110,8 @@ pub(crate) fn check(root: &Path) -> Result<usize> {
             "-z",
         ],
     )?)?;
-    let historical = legacy_sources(LEGACY_EVIDENCE_SOURCES)?;
+    results::check(root, &files)?;
     for name in &files {
-        if evidence_source(name) && !historical.contains(name) {
-            return Err(format!("new evidence source copy: {name}; put reusable logic in tools/tests and reference its Git revision").into());
-        }
         if forbidden(name) {
             return Err(format!("forbidden repository file: {name}").into());
         }
@@ -221,41 +172,6 @@ mod tests {
         })();
         fs::remove_dir_all(&root)?;
         result
-    }
-
-    #[test]
-    fn legacy_exceptions_require_exact_safe_sorted_source_paths() -> Result<()> {
-        let names = legacy_sources("conformance/results/old/run.py\n")?;
-        assert!(names.contains("conformance/results/old/run.py"));
-        assert!(!names.contains("conformance/results/old/new.py"));
-        for input in [
-            "conformance/results/old/run.py\nconformance/results/old/run.py\n",
-            "conformance/results/old/../run.py\n",
-            "conformance/results/old/manifest.json\n",
-        ] {
-            assert!(legacy_sources(input).is_err());
-        }
-        legacy_sources(LEGACY_EVIDENCE_SOURCES)?;
-        Ok(())
-    }
-
-    #[test]
-    fn evidence_data_and_managed_tests_are_separate() {
-        for name in [
-            "conformance/results/new/seal.py.fixture",
-            "conformance/results/new/source/design/tasks.json",
-            "conformance/results/new/AGENTS.md",
-        ] {
-            assert!(evidence_source(name));
-        }
-        for name in [
-            "conformance/results/new/manifest.json",
-            "conformance/results/new/stdout.log",
-            "tools/evidence/test_runner.py",
-            "conformance/fixtures/source/test.rs",
-        ] {
-            assert!(!evidence_source(name));
-        }
     }
 
     #[test]

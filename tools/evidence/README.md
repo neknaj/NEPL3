@@ -20,10 +20,14 @@ Gitには小さなscope・source参照・必要なmanifestを残す。Actions ar
 永久保存と扱わず、長期保全が必要な証拠は期限前に承認済みの外部保存先へ退避する。
 再利用する回帰probeは通常のtestへ置く。例外的な外部入力や再構成できない資料には
 保存理由を記す。独立レビューは対象commit・scope・指摘・未検証範囲を文章で残す。
-通常のrepository checkはevidence archive refを取得しない。残存する歴史sourceの
-例外は `tools/src/repository/legacy-evidence-sources.txt` の正確なpathだけに限定する。
-この一覧は内容の検証証拠ではなく、既存コピーと新規コピーを区別する移行用の例外である。
-新しいreview sourceを追加するために拡張しない。旧記録の除去時に例外も縮小する。
+`conformance/results/` は状態索引が直接参照する64 KiB以下の型付きJSONを所有する。
+許可する型は段階履歴参照、完了タスクのTaskEvidence、正式AcceptanceEvidenceである。
+未知の型・余剰field・未参照ファイル・source snapshot・実行scriptをrepository checkで拒否する。
+段階履歴参照 `nepl3.stage-history/1` はtask IDと元記録のrevision・path・SHA-256を保持する。
+この参照を使用できる状態はin-progressであり、completeや正式受入へ転用できない。
+正式受入の原logは `dist/evidence/` へ取得し、validatorが元byte列とdigestを検査する。
+CI artifact等の取得先・保存期限は公開記録に示す。取得不能時は検証を失敗とする。
+通常のrepository checkはarchive refを取得しない。履歴は固定Git revisionから取得する。
 Doc inventoryの明示的な履歴監査は別のbaselineを使用する。通常のrepository
 checkからは分離しており、歴史資料の検査を依頼したときだけ旧revisionを取得する。
 保存済みの過去記録は [履歴索引](../../conformance/history.md) を参照する。
