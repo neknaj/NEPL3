@@ -1,5 +1,5 @@
 use super::*;
-use nepl3_provider::reply::{ReplyContext, ReplyRoutes, RouteError};
+use nepl3_provider::reply::{ActiveReplyFailure, ReplyContext, ReplyRoutes, RouteError};
 
 #[test]
 fn terminal_reply_commits_with_exact_binding_budget_and_preserves_results() -> Result<(), String> {
@@ -91,19 +91,25 @@ fn terminal_reply_commits_with_exact_binding_budget_and_preserves_results() -> R
             ..budget().limits()
         });
         let mut rejected = connection(&frame, &registry)?;
-        assert!(
-            rejected
-                .receive_active_reply(
-                    &routes,
-                    &mut lifetimes,
-                    &registry,
-                    &sources,
-                    &mut SourceAdmission::default(),
-                    &mut budget(),
-                    &mut insufficient,
-                )
-                .is_err()
-        );
+        let Err(failure) = rejected.receive_active_reply(
+            &routes,
+            &mut lifetimes,
+            &registry,
+            &sources,
+            &mut SourceAdmission::default(),
+            &mut budget(),
+            &mut insufficient,
+        ) else {
+            return Err("insufficient binding Work must stop".into());
+        };
+        assert!(matches!(
+            failure.cause,
+            RouteError::Stopped(StopReason::WorkLimit)
+        ));
+        let retained = failure.uncommitted.ok_or("checked reply lost")?;
+        assert_eq!(retained.route_index, 0);
+        assert!(std::ptr::eq(retained.saved, &entries[0]));
+        assert_eq!(retained.reply, expected);
         assert!(rejected.is_closed());
         assert_eq!(insufficient.poll(), Err(StopReason::WorkLimit));
         assert_eq!(
@@ -112,6 +118,41 @@ fn terminal_reply_commits_with_exact_binding_budget_and_preserves_results() -> R
                 .map_err(error)?,
             RequestPhase::Running
         );
+        let mut managed_lifetimes = RequestLifetimes::default();
+        managed_lifetimes
+            .begin(
+                request.request_id,
+                request.operation.clone(),
+                context,
+                &mut budget(),
+            )
+            .map_err(error)?;
+        managed_lifetimes
+            .begin(100, request.operation.clone(), context, &mut budget())
+            .map_err(error)?;
+        let mut cancelled = vec![];
+        let Err(failure) = connection(&frame, &registry)?.receive_managed_reply(
+            &routes,
+            &mut managed_lifetimes,
+            &registry,
+            &sources,
+            &mut SourceAdmission::default(),
+            &mut budget(),
+            &mut Budget::new(Limits {
+                work: measured.usage().work - 1,
+                ..budget().limits()
+            }),
+            |id| cancelled.push(id),
+        ) else {
+            return Err("managed binding must stop".into());
+        };
+        assert_eq!(
+            failure.uncommitted.ok_or("managed reply lost")?.reply,
+            expected
+        );
+        assert_eq!(cancelled, [request.request_id, 100]);
+        managed_lifetimes.close(|id| cancelled.push(id));
+        assert_eq!(cancelled, [request.request_id, 100]);
         let mut validation = Budget::new(Limits {
             work: measured.usage().work,
             ..budget().limits()
@@ -195,20 +236,19 @@ fn managed_reply_failure_cancels_remaining_requests_once_after_budget_stop() -> 
             transport.cancel();
         }
         let mut cancelled = vec![];
-        assert!(
-            connection
-                .receive_managed_reply(
-                    &routes,
-                    &mut lifetimes,
-                    &registry,
-                    &sources,
-                    &mut SourceAdmission::default(),
-                    &mut transport,
-                    &mut validation,
-                    |id| cancelled.push(id)
-                )
-                .is_err()
-        );
+        let Err(failure) = connection.receive_managed_reply(
+            &routes,
+            &mut lifetimes,
+            &registry,
+            &sources,
+            &mut SourceAdmission::default(),
+            &mut transport,
+            &mut validation,
+            |id| cancelled.push(id),
+        ) else {
+            return Err("invalid or stopped reply must fail".into());
+        };
+        assert!(failure.uncommitted.is_none());
         assert!(connection.is_closed());
         assert_eq!(cancelled, [request.request_id, 100]);
         for id in [request.request_id, 100] {
@@ -414,11 +454,20 @@ fn active_routing_finishes_once_and_rejects_inactive_or_changed_bindings() -> Re
                     &mut budget(),
                     &mut budget()
                 ),
-                Err(RouteError::Lifetime(_))
+                Err(ActiveReplyFailure {
+                    cause: RouteError::Lifetime(_),
+                    ..
+                })
             ));
             assert!(duplicate.is_closed());
         } else {
-            assert!(matches!(outcome, Err(RouteError::Lifetime(_))));
+            assert!(matches!(
+                outcome,
+                Err(ActiveReplyFailure {
+                    cause: RouteError::Lifetime(_),
+                    ..
+                })
+            ));
             assert!(transport.is_closed());
         }
     }
@@ -490,7 +539,7 @@ fn diagnostics_use_selected_route_grants_instead_of_codec_sources() -> Result<()
             &mut budget(),
         )
         .map_err(error)?;
-        let mut transport = Connection::new(Cursor::new(bytes), Vec::new());
+        let mut transport = Connection::new(Cursor::new(bytes.clone()), Vec::new());
         let outcome = transport.receive_routed_reply(
             &routes,
             &registry,
@@ -508,6 +557,64 @@ fn diagnostics_use_selected_route_grants_instead_of_codec_sources() -> Result<()
                 Err(RouteError::Reply(ReplyError::Validation(_)))
             ));
             assert!(transport.is_closed());
+        }
+        for managed in [false, true] {
+            let mut transport = Connection::new(Cursor::new(bytes.clone()), Vec::new());
+            let mut lifetimes = nepl3_core::operation::lifetime::RequestLifetimes::default();
+            let selected = if allowed { &entries[0] } else { &entries[1] };
+            lifetimes
+                .begin(
+                    request.request_id,
+                    request.operation.clone(),
+                    selected.context,
+                    &mut budget(),
+                )
+                .map_err(error)?;
+            let mut cancelled = vec![];
+            let outcome = if managed {
+                transport.receive_managed_reply(
+                    &routes,
+                    &mut lifetimes,
+                    &registry,
+                    &sources,
+                    &mut SourceAdmission::default(),
+                    &mut budget(),
+                    &mut budget(),
+                    |id| cancelled.push(id),
+                )
+            } else {
+                transport.receive_active_reply(
+                    &routes,
+                    &mut lifetimes,
+                    &registry,
+                    &sources,
+                    &mut SourceAdmission::default(),
+                    &mut budget(),
+                    &mut budget(),
+                )
+            };
+            if allowed {
+                assert_eq!(outcome.map_err(error)?.0, 0);
+                assert!(cancelled.is_empty());
+            } else {
+                let Err(failure) = outcome else {
+                    return Err("unauthorized diagnostic admitted".into());
+                };
+                assert!(matches!(
+                    failure.cause,
+                    RouteError::Reply(ReplyError::Validation(_))
+                ));
+                assert!(failure.uncommitted.is_none());
+                assert!(transport.is_closed());
+                assert_eq!(
+                    cancelled,
+                    if managed {
+                        vec![request.request_id]
+                    } else {
+                        vec![]
+                    }
+                );
+            }
         }
     }
     Ok(())
