@@ -102,6 +102,91 @@ fn document() -> DocumentSyntax {
     }
 }
 #[test]
+fn namespace_plans_preserve_order_and_reserve_before_processing() -> Result<(), String> {
+    use nepl3_doc_core::labels::namespace;
+    let r = registry()?;
+    let store = SourceStore::default();
+    for count in [0, 1, 16, 64] {
+        let documents: Vec<_> = (0..count)
+            .map(|index| {
+                let mut d = document();
+                d.value.nodes[2].kind = DocKind::Text {
+                    text: format!("title {index}"),
+                };
+                d
+            })
+            .collect();
+        let mut admission = SourceAdmission::default();
+        let members = documents
+            .iter()
+            .map(|d| namespace::inspect(d, &r, &mut b(), &mut admission).map_err(err))
+            .collect::<Result<Vec<_>, _>>()?;
+        let refs: Vec<_> = members.iter().collect();
+        let namespace = namespace::resolve(&refs, &mut b()).map_err(err)?;
+        let mut c = FoundationCodec::new(&r, &store, &mut admission).map_err(err)?;
+        let mut measured = b();
+        let plans =
+            prepare::inspect_namespace(&namespace, &r, &mut c, &mut measured).map_err(err)?;
+        let expected = documents
+            .iter()
+            .map(|d| prepare::inspect(d, &r, &mut c, &mut b()).map_err(err))
+            .collect::<Result<Vec<_>, _>>()?;
+        assert_eq!(plans, expected);
+        // One shared namespace, distinct documents: digest order must follow
+        // member order, including an empty namespace. No sorting of plans.
+        assert!(
+            plans
+                .windows(2)
+                .all(|pair| pair[0].document_digest != pair[1].document_digest)
+        );
+        if count == 0 {
+            continue;
+        }
+        for reason in [StopReason::WorkLimit, StopReason::AllocationLimit] {
+            let mut limits = b().limits();
+            match reason {
+                StopReason::WorkLimit => limits.work = measured.usage().work,
+                StopReason::AllocationLimit => {
+                    limits.allocation_units = measured.usage().allocation_units
+                }
+                _ => return Err("fixed resource cases".into()),
+            }
+            assert_eq!(
+                prepare::inspect_namespace(&namespace, &r, &mut c, &mut Budget::new(limits))
+                    .map_err(err)?,
+                plans
+            );
+            match reason {
+                StopReason::WorkLimit => limits.work -= 1,
+                StopReason::AllocationLimit => limits.allocation_units -= 1,
+                _ => return Err("fixed resource cases".into()),
+            }
+            let mut stopped = Budget::new(limits);
+            assert!(
+                matches!(prepare::inspect_namespace(&namespace, &r, &mut c, &mut stopped),
+                Err(PreparationError::Stopped(actual)) if actual == reason)
+            );
+            assert_eq!(stopped.poll(), Err(reason));
+        }
+        let bytes = (count * core::mem::size_of::<prepare::DocPreparationPlan>()) as u64;
+        let mut limits = b().limits();
+        limits.allocation_units = bytes - 1;
+        let mut stopped = Budget::new(limits);
+        assert!(matches!(
+            prepare::inspect_namespace(&namespace, &r, &mut c, &mut stopped),
+            Err(PreparationError::Stopped(StopReason::AllocationLimit))
+        ));
+        assert_eq!(
+            stopped.usage().work,
+            0,
+            "reject reservation before processing members"
+        );
+        assert_eq!(stopped.poll(), Err(StopReason::AllocationLimit));
+    }
+    Ok(())
+}
+
+#[test]
 fn preparation_discovers_distinct_placements_without_loading_assets() -> Result<(), String> {
     let r = registry()?;
     let d = document();
