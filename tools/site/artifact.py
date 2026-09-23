@@ -11,45 +11,65 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from deployment.artifact import MAX_ARCHIVE, selected
-from payload import checked, real_directory
+from payload import Receipt, checked, real_directory
 
 
-def bounded(path, maximum):
+def bounded(path: Path, maximum: int) -> bytes:
     with path.open('rb') as stream:
         data = stream.read(maximum + 1)
     checked(len(data) <= maximum, 'input size limit')
     return data
 
 
-def export(metadata, archive, output, **identities):
+def export(metadata: Path, archive: Path, output: Path, *, owner: str, repository: str,
+           artifact_id: int, run_id: int, repository_id: int, source_commit: str,
+           expected_tar: str, expected_manifest: str) -> Receipt:
     # Validate all bytes before creating output. The x mode also refuses an
     # existing symlink, and the parent must have no linked ancestors.
     real_directory(output.parent)
-    result = selected(bounded(metadata, 65536), bounded(archive, MAX_ARCHIVE), **identities)
+    result = selected(bounded(metadata, 65536), bounded(archive, MAX_ARCHIVE), owner=owner,
+                      repository=repository, artifact_id=artifact_id, run_id=run_id,
+                      repository_id=repository_id, source_commit=source_commit,
+                      expected_tar=expected_tar, expected_manifest=expected_manifest)
     with output.open('xb') as stream:
-        stream.write(result.data)
-    return dict(version=1, kind='pages-tar', tar_sha256=result.tar_sha256,
-                manifest_sha256=result.manifest_sha256, tar_bytes=len(result.data),
-                files=result.files, publication_verified=False)
+        _ = stream.write(result.data)
+    return Receipt(result.manifest_sha256, result.tar_sha256, len(result.data), result.files)
 
 
-def main():
+class Arguments(argparse.Namespace):
+    metadata: Path = Path()
+    archive: Path = Path()
+    output: Path = Path()
+    owner: str = ''
+    repository: str = ''
+    source_commit: str = ''
+    expected_tar: str = ''
+    expected_manifest: str = ''
+    artifact_id: int = 0
+    run_id: int = 0
+    repository_id: int = 0
+
+
+def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('metadata', type=Path)
-    parser.add_argument('archive', type=Path)
-    parser.add_argument('output', type=Path)
+    _ = parser.add_argument('metadata', type=Path)
+    _ = parser.add_argument('archive', type=Path)
+    _ = parser.add_argument('output', type=Path)
     for option in ('owner', 'repository', 'source-commit', 'expected-tar', 'expected-manifest'):
-        parser.add_argument('--' + option, required=True)
+        _ = parser.add_argument('--' + option, required=True)
     for option in ('artifact-id', 'run-id', 'repository-id'):
-        parser.add_argument('--' + option, required=True, type=int)
-    args = vars(parser.parse_args())
+        _ = parser.add_argument('--' + option, required=True, type=int)
+    args = parser.parse_args(namespace=Arguments())
     try:
-        report = export(**args)
+        report = export(args.metadata, args.archive, args.output, owner=args.owner,
+                        repository=args.repository, source_commit=args.source_commit,
+                        expected_tar=args.expected_tar, expected_manifest=args.expected_manifest,
+                        artifact_id=args.artifact_id, run_id=args.run_id, repository_id=args.repository_id)
     except Exception as error:
         # No token, remote download URL, or untrusted exception text in logs.
         print(json.dumps(dict(result='failed', reason=type(error).__name__, publication_verified=False)))
         return 1
-    print(json.dumps(report, sort_keys=True))
+    print(json.dumps(report.representation(), sort_keys=True))
     return 0
 
 
