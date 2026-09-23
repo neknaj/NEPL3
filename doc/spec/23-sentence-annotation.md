@@ -203,6 +203,13 @@ AdapterRequiredを返す。印字は元の綴り・Source/Origin・共有index�
 本番packageで標準prefixのparse/lower/print一致とText payload復元を検査する。
 foreign adapterを含む全意味往復とDoc consumer移行の完了とは区別する。
 
+`print::prepare`はSentenceの構造とforeign closureを検証し、不変借用する。
+hostは選択したguest printerから、foreign Inline form全体のsourceを取得し、
+`PreparedPrint::resolve`で入力とembedへ対応付ける。`render`はそのsourceを出現順に組み込む。
+別入力の結果、同じembedの重複指定、未解決のembedを拒否する。
+sourceの文法と意味対応はhost側adapterの検証対象である。
+出力時にもWork・Allocation・OutputBytes・Depthを計上し、停止時は部分文字列を返さない。
+
 ## Sentenceのplain-text生成
 
 Sentence coreのnative API `text::prepare`は`SentenceValue`の構造とforeign closureを検証し、
