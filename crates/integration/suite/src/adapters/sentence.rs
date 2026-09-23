@@ -3,5 +3,7 @@
 mod document;
 #[cfg(feature = "doc-sentence")]
 pub use document::{Error, document};
+#[cfg(feature = "doc-sentence")]
+pub mod document_guests;
 #[cfg(feature = "sentence-html")]
 pub mod html;

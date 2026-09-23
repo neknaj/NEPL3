@@ -6,7 +6,7 @@ mod ruby;
 pub(crate) mod serialize;
 mod uri;
 use alloc::{string::String, vec::Vec};
-pub use check::{HtmlError, ValidatedHtml, validate};
+pub use check::{CheckedHtmlPart, HtmlError, ValidatedHtml, check_part, validate};
 pub use serialize::{serialize, serialize_xhtml};
 
 /// Check the existing constrained output URI profile without loading its target.

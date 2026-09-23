@@ -272,6 +272,22 @@ pub struct Compiled {
     pub others: Vec<nepl3_engine::package::LanguagePackage>,
 }
 pub fn compiled() -> Result<Compiled, String> {
+    compiled_with_sentence_forms(&[nepl3_grammar_core::compile::package::ForeignForm {
+        kind: "InlineMath",
+        category: "Inline",
+        spelling: "math",
+        field: "syntax",
+        alias: "Math",
+        guest_category: "Expr",
+        origin_reason: "Doc host selects Math expressions in Sentence Inline",
+    }])
+}
+/// Compile the parsing profile with the host's explicit Sentence extensions.
+/// Rendering and document namespace resolution require corresponding adapters;
+/// registering a surface form alone does not supply those operations.
+pub fn compiled_with_sentence_forms(
+    forms: &[nepl3_grammar_core::compile::package::ForeignForm<'_>],
+) -> Result<Compiled, String> {
     let document = crate::bootstrap::load(
         include_bytes!("../../../conformance/fixtures/doc/syntax.json"),
         &mut budget(),
@@ -320,15 +336,7 @@ pub fn compiled() -> Result<Compiled, String> {
     }
     let sentence = crate::sentence::catalog::standard_with_foreign_forms(
         host_identity(),
-        &[nepl3_grammar_core::compile::package::ForeignForm {
-            kind: "InlineMath",
-            category: "Inline",
-            spelling: "math",
-            field: "syntax",
-            alias: "Math",
-            guest_category: "Expr",
-            origin_reason: "Doc host selects Math expressions in Sentence Inline",
-        }],
+        forms,
         &mut budget(),
         &mut SourceAdmission::default(),
     )?;

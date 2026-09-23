@@ -26,6 +26,11 @@ impl<E> From<StopReason> for LocalPreparationError<'_, E> {
 pub struct PreparedLocalArticle<'a>(pub(crate) PreparedRendering<'a>);
 /// A standalone Sentence with local labels and no unresolved external inputs.
 pub struct PreparedLocalSentence<'a>(pub(crate) PreparedRendering<'a>);
+/// An Inline fragment with its own labels and all local requirements satisfied.
+pub struct PreparedLocalInline<'a>(pub(crate) PreparedRendering<'a>);
+/// An Inline fragment whose only remaining requirements are explicit guests.
+/// The immutable document owns every closure passed to the rendering callback.
+pub struct PreparedInlineWithForeign<'a>(pub(crate) PreparedRendering<'a>);
 pub(crate) struct PreparedRendering<'a> {
     pub(crate) document: &'a DocumentSyntax,
     pub(crate) options: &'a RenderOptions,
@@ -69,6 +74,46 @@ pub fn prepare_local_sentence<'a, C: FoundationValueCodec>(
     }
     prepare_rendering(document, options, plan.document_digest, budget).map(PreparedLocalSentence)
 }
+/// Prepare an Inline fragment in its own namespace. External dependencies are
+/// returned as a resolution plan; the host supplies document-level composition.
+pub fn prepare_local_inline<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    options: &'a RenderOptions,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<PreparedLocalInline<'a>, LocalPreparationError<'a, C::Error>> {
+    let plan = prepare::inspect_inline(document, registry, codec, budget).map_err(|e| match e {
+        PreparationError::Stopped(s) => LocalPreparationError::Stopped(s),
+        e => LocalPreparationError::Input(e),
+    })?;
+    if !plan.requirements.is_empty() {
+        return Err(LocalPreparationError::NeedsResolution(plan));
+    }
+    prepare_rendering(document, options, plan.document_digest, budget).map(PreparedLocalInline)
+}
+
+pub fn prepare_inline_with_foreign<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    options: &'a RenderOptions,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<PreparedInlineWithForeign<'a>, LocalPreparationError<'a, C::Error>> {
+    let plan = prepare::inspect_inline(document, registry, codec, budget).map_err(|e| match e {
+        PreparationError::Stopped(s) => LocalPreparationError::Stopped(s),
+        e => LocalPreparationError::Input(e),
+    })?;
+    for requirement in &plan.requirements {
+        budget.charge(Resource::Work, 1)?;
+        if !matches!(requirement, prepare::DocRequirement::Foreign { .. }) {
+            return Err(LocalPreparationError::NeedsResolution(plan));
+        }
+    }
+    prepare_rendering(document, options, plan.document_digest, budget)
+        .map(PreparedInlineWithForeign)
+}
+
 pub(crate) fn prepare_rendering<'a, E>(
     document: &'a DocumentSyntax,
     options: &'a RenderOptions,

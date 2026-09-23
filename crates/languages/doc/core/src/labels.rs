@@ -12,6 +12,7 @@ use nepl3_core::{
 };
 mod diagnostic;
 mod index;
+pub mod namespace;
 mod occurrences;
 #[cfg(test)]
 mod tests;
@@ -37,6 +38,7 @@ pub enum LabelError<'a> {
     Structure(StructureError),
     ExpectedArticle,
     ExpectedSentence,
+    ExpectedInline,
     DuplicateOccurrence {
         definition: LabelSite<'a>,
         paths: LabelOccurrencePaths,
@@ -70,6 +72,20 @@ pub struct CheckedLabels<'a> {
 /// Labels local to one standalone Sentence. This cannot be used as an
 /// Article-label proof, and does not import labels from a containing document.
 pub struct CheckedSentenceLabels<'a>(CheckedLabels<'a>);
+/// Labels owned by one Inline fragment. Surrounding document labels require
+/// explicit composition; this proof cannot serve as an Article-label proof.
+pub struct CheckedInlineLabels<'a>(CheckedLabels<'a>);
+impl<'a> CheckedInlineLabels<'a> {
+    pub fn document(&self) -> &'a DocumentSyntax {
+        self.0.document()
+    }
+    pub fn definitions(&self) -> &[LabelSite<'a>] {
+        self.0.definitions()
+    }
+    pub fn references(&self) -> &[ResolvedLabel<'a>] {
+        self.0.references()
+    }
+}
 impl<'a> CheckedSentenceLabels<'a> {
     pub fn document(&self) -> &'a DocumentSyntax {
         self.0.document()
@@ -148,12 +164,46 @@ pub fn check_sentence<'a>(
     };
     collect(document, structure.shape().postorder(), root.0, b).map(CheckedSentenceLabels)
 }
+/// Validate an Inline fragment's own namespace, including forward references
+/// and duplicate display occurrences. Foreign closures retain their namespaces.
+pub fn check_inline<'a>(
+    document: &'a DocumentSyntax,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<CheckedInlineLabels<'a>, LabelError<'a>> {
+    let structure = document.validate_structure(registry, b, admission)?;
+    let DocRoot::Inline(root) = document.value.root else {
+        return Err(LabelError::ExpectedInline);
+    };
+    collect(document, structure.shape().postorder(), root.0, b).map(CheckedInlineLabels)
+}
 fn collect<'a>(
     document: &'a DocumentSyntax,
     order: &[usize],
     root: u64,
     b: &mut Budget,
 ) -> Result<CheckedLabels<'a>, LabelError<'a>> {
+    let (definitions, unresolved) = collect_sites(document, order, root, b)?;
+    let names = index::build(&definitions, b)?;
+    let mut references = Vec::new();
+    for reference in unresolved {
+        let target = index::find(&names, &definitions, reference.name, b)?;
+        let target = target.ok_or(LabelError::Unresolved { reference })?;
+        push(&mut references, ResolvedLabel { reference, target }, b)?;
+    }
+    Ok(CheckedLabels {
+        document,
+        definitions,
+        references,
+    })
+}
+fn collect_sites<'a>(
+    document: &'a DocumentSyntax,
+    order: &[usize],
+    root: u64,
+    b: &mut Budget,
+) -> Result<(Vec<LabelSite<'a>>, Vec<LabelSite<'a>>), LabelError<'a>> {
     occurrences::check(document, order, root, b)?;
     let mut definitions: Vec<LabelSite<'a>> = Vec::new();
     let mut unresolved = Vec::new();
@@ -192,16 +242,5 @@ fn collect<'a>(
         b.charge(Resource::Work, next as u64)?;
         pending[start..].reverse();
     }
-    let names = index::build(&definitions, b)?;
-    let mut references = Vec::new();
-    for reference in unresolved {
-        let target = index::find(&names, &definitions, reference.name, b)?;
-        let target = target.ok_or(LabelError::Unresolved { reference })?;
-        push(&mut references, ResolvedLabel { reference, target }, b)?;
-    }
-    Ok(CheckedLabels {
-        document,
-        definitions,
-        references,
-    })
+    Ok((definitions, unresolved))
 }

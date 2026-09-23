@@ -37,7 +37,7 @@ pub struct AnnotationRecord {
     pub sentence: nepl3_sentence_core::syntax::SentenceSyntax,
     pub sentence_digest: nepl3_core::source::Digest,
     pub origins: Vec<nepl3_suite::adapters::sentence::html::ElementOrigin>,
-    pub foreign: Vec<super::annotations::ForeignMathRecord>,
+    pub foreign: Vec<super::annotations::ForeignRecord>,
 }
 pub struct RenderedMath {
     pub syntax: MathSyntax,
@@ -151,6 +151,7 @@ pub struct MathDisplayHost<'a, C> {
     pub registry: &'a SchemaRegistry,
     pub math_surface: &'a SchemaRef,
     pub sentence_surface: Option<&'a SchemaRef>,
+    pub doc_surface: Option<&'a SchemaRef>,
     pub codec: &'a mut C,
 }
 impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
@@ -240,6 +241,7 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
                 registry: self.registry,
                 surface,
                 math_surface: Some(self.math_surface),
+                doc_surface: self.doc_surface,
                 codec: self.codec,
             };
             nepl3_math_mathml::render_with_annotations(

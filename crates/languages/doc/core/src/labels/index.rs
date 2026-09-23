@@ -1,20 +1,37 @@
 //! Name-sorted declaration indices; declaration IDs retain constructor order.
 use super::*;
 use core::cmp::Ordering;
+pub(super) trait Named {
+    fn name(&self) -> &str;
+}
+impl Named for LabelSite<'_> {
+    fn name(&self) -> &str {
+        self.name
+    }
+}
+pub(super) enum IndexError {
+    Stopped(StopReason),
+    Duplicate { previous: usize, current: usize },
+}
+impl From<StopReason> for IndexError {
+    fn from(reason: StopReason) -> Self {
+        Self::Stopped(reason)
+    }
+}
 
 fn compare(a: &str, c: &str, b: &mut Budget) -> Result<Ordering, StopReason> {
     b.charge(Resource::Work, a.len().min(c.len()) as u64 + 1)?;
     Ok(a.cmp(c))
 }
-fn less(a: usize, c: usize, sites: &[LabelSite<'_>], b: &mut Budget) -> Result<bool, StopReason> {
-    Ok(compare(sites[a].name, sites[c].name, b)?
+fn less(a: usize, c: usize, sites: &[impl Named], b: &mut Budget) -> Result<bool, StopReason> {
+    Ok(compare(sites[a].name(), sites[c].name(), b)?
         .then(a.cmp(&c))
         .is_lt())
 }
 fn sift(
     order: &mut [usize],
     mut root: usize,
-    sites: &[LabelSite<'_>],
+    sites: &[impl Named],
     b: &mut Budget,
 ) -> Result<(), StopReason> {
     while root < order.len() / 2 {
@@ -34,6 +51,15 @@ pub(super) fn build<'a>(
     sites: &[LabelSite<'a>],
     b: &mut Budget,
 ) -> Result<Vec<usize>, LabelError<'a>> {
+    build_for(sites, b).map_err(|error| match error {
+        IndexError::Stopped(reason) => LabelError::Stopped(reason),
+        IndexError::Duplicate { previous, current } => LabelError::Duplicate {
+            definition: sites[current],
+            previous: sites[previous],
+        },
+    })
+}
+pub(super) fn build_for(sites: &[impl Named], b: &mut Budget) -> Result<Vec<usize>, IndexError> {
     let mut order = Vec::new();
     for i in 0..sites.len() {
         b.charge(Resource::Work, 1)?;
@@ -50,30 +76,27 @@ pub(super) fn build<'a>(
     }
     let mut duplicate: Option<(usize, usize)> = None;
     for pair in order.windows(2) {
-        if compare(sites[pair[0]].name, sites[pair[1]].name, b)? == Ordering::Equal
+        if compare(sites[pair[0]].name(), sites[pair[1]].name(), b)? == Ordering::Equal
             && duplicate.is_none_or(|(_, current)| pair[1] < current)
         {
             duplicate = Some((pair[0], pair[1]));
         }
     }
     if let Some((previous, current)) = duplicate {
-        return Err(LabelError::Duplicate {
-            definition: sites[current],
-            previous: sites[previous],
-        });
+        return Err(IndexError::Duplicate { previous, current });
     }
     Ok(order)
 }
 pub(super) fn find(
     order: &[usize],
-    sites: &[LabelSite<'_>],
+    sites: &[impl Named],
     name: &str,
     b: &mut Budget,
 ) -> Result<Option<DocLabelId>, StopReason> {
     let (mut lo, mut hi) = (0, order.len());
     while lo < hi {
         let mid = lo + (hi - lo) / 2;
-        match compare(sites[order[mid]].name, name, b)? {
+        match compare(sites[order[mid]].name(), name, b)? {
             Ordering::Less => lo = mid + 1,
             Ordering::Greater => hi = mid,
             Ordering::Equal => return Ok(Some(DocLabelId(order[mid] as u64))),

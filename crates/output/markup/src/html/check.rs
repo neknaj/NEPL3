@@ -24,6 +24,34 @@ impl From<StopReason> for HtmlError {
 pub struct ValidatedHtml<'a> {
     pub(super) fragment: &'a HtmlFragment,
 }
+/// A locally checked part whose document-wide identities remain unresolved.
+/// This type cannot be passed to the serializers accepting `ValidatedHtml`.
+/// ```compile_fail
+/// fn serialize_part(part: &nepl3_markup::html::CheckedHtmlPart<'_>, b: &mut nepl3_core::budget::Budget) {
+///     let _ = nepl3_markup::html::serialize_xhtml(part, b);
+/// }
+/// ```
+pub struct CheckedHtmlPart<'a> {
+    fragment: &'a HtmlFragment,
+}
+impl CheckedHtmlPart<'_> {
+    pub fn fragment(&self) -> &HtmlFragment {
+        self.fragment
+    }
+}
+/// Check content, references within the arena, attributes, policy and expanded
+/// insertion context. ID uniqueness and fragment targets are checked only by
+/// `validate` on the complete composition before serialization or publication.
+pub fn check_part<'a>(
+    fragment: &'a HtmlFragment,
+    slot: HtmlSlot,
+    policy: &HtmlPolicy,
+    budget: &mut Budget,
+) -> Result<CheckedHtmlPart<'a>, HtmlError> {
+    let mut identity = Identity::default();
+    validate_into(fragment, slot, policy, &mut identity, budget)?;
+    Ok(CheckedHtmlPart { fragment })
+}
 impl ValidatedHtml<'_> {
     pub fn fragment(&self) -> &HtmlFragment {
         self.fragment

@@ -8,23 +8,6 @@
     }
   },
   "operations": {
-    "sentence": {
-      "input": {
-        "named": {
-          "package": "nepl3.reader",
-          "revision": 1,
-          "name": "ReadRequest"
-        }
-      },
-      "output": {
-        "named": {
-          "package": "nepl3.reader",
-          "revision": 1,
-          "name": "ReadReply"
-        }
-      },
-      "pure": true
-    },
     "sentenceReferenced": {
       "input": {
         "named": {

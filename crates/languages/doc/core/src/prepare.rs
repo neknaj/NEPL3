@@ -145,6 +145,25 @@ pub fn inspect_sentence<'a, C: FoundationValueCodec>(
     })
 }
 
+/// Discover an Inline fragment's dependencies after validating its own labels.
+/// The returned plan retains unresolved links, assets and foreign closures.
+pub fn inspect_inline<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    registry: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<DocPreparationPlan, PreparationError<'a, C::Error>> {
+    let checked = labels::check_inline(document, registry, b, c.source_admission())?;
+    let value = portable::to_value(document, registry, c, b)?;
+    let document_digest = c
+        .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
+        .map_err(boundary)?;
+    Ok(DocPreparationPlan {
+        document_digest,
+        requirements: discover(checked.document(), c, b)?,
+    })
+}
+
 /// Internal discovery from an Article-local proof. The caller separately owns
 /// the canonical boundary value and its digest; external plans are never proofs.
 pub(crate) fn requirements<'a, C: FoundationValueCodec>(
@@ -153,6 +172,37 @@ pub(crate) fn requirements<'a, C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<Vec<DocRequirement>, PreparationError<'a, C::Error>> {
     discover(checked.document(), c, b)
+}
+/// Discover all members of one resolved namespace in its exact occurrence order.
+/// Each document is rechecked against this codec/registry and shared source
+/// admission before its digest and requirements can become rendering inputs.
+pub fn inspect_namespace<'a, C: FoundationValueCodec>(
+    namespace: &labels::namespace::CheckedNamespace<'_, 'a>,
+    registry: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<Vec<DocPreparationPlan>, PreparationError<'a, C::Error>> {
+    b.poll()?;
+    let mut plans = Vec::new();
+    for document in namespace.documents() {
+        let value = portable::to_value(document, registry, c, b)?;
+        let document_digest = c
+            .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
+            .map_err(boundary)?;
+        let requirements = discover(document, c, b)?;
+        b.charge(
+            Resource::AllocationUnits,
+            core::mem::size_of::<DocPreparationPlan>() as u64,
+        )?;
+        plans
+            .try_reserve_exact(1)
+            .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+        plans.push(DocPreparationPlan {
+            document_digest,
+            requirements,
+        });
+    }
+    Ok(plans)
 }
 fn discover<'a, C: FoundationValueCodec>(
     document: &'a DocumentSyntax,
