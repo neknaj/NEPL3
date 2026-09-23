@@ -291,11 +291,15 @@ fn foreign_namespace_parts_preserve_refs_and_guest_boundaries() -> Result<(), St
                             codec: &mut codec,
                         };
                         Ok::<_, String>(
-                            host.render(&guest.closure, nepl3_markup::mathml::Display::Inline, b)
-                                .map_err(err)?
-                                .into_html(b)
-                                .map_err(err)?
-                                .markup,
+                            host.render(
+                                guest.syntax().ok_or("Math syntax")?,
+                                nepl3_markup::mathml::Display::Inline,
+                                b,
+                            )
+                            .map_err(err)?
+                            .into_html(b)
+                            .map_err(err)?
+                            .markup,
                         )
                     },
                     &mut measured,

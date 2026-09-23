@@ -25,18 +25,72 @@ fn sections(doc: &DocumentSyntax) -> Result<Vec<(&str, BodyRef, SentenceRef)>> {
         .collect()
 }
 
-fn single_text(doc: &DocumentSyntax, sentence: SentenceRef) -> Result<&str> {
-    let DocKind::Sentence { ref inlines } = doc.value.nodes[sentence.0 as usize].kind else {
+fn contents(doc: &DocumentSyntax, registry: &SchemaRegistry) -> Result<Vec<SentenceSyntax>> {
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+    let mut b = budget();
+    doc.value
+        .embeds
+        .iter()
+        .map(|embed| {
+            let package = match embed.content {
+                DocContent::Syntax { .. } => "nepl3.syntax.sentence",
+                DocContent::Value { .. } => "nepl3.sentence",
+            };
+            let surface = registry.selected(package, 1).ok_or("Sentence schema")?;
+            nepl3_suite::adapters::document::sentence::lower(
+                embed,
+                surface,
+                &[],
+                registry,
+                &mut codec,
+                &mut b,
+            )
+            .map_err(|error| err(error).into())
+        })
+        .collect()
+}
+
+fn sentence_value<'a>(
+    doc: &DocumentSyntax,
+    contents: &'a [SentenceSyntax],
+    sentence: SentenceRef,
+) -> Result<&'a SentenceValue> {
+    let DocKind::Sentence { syntax } = doc.value.nodes[sentence.0 as usize].kind else {
         return Err("sentence".into());
     };
+    Ok(&contents[syntax.0 as usize].value)
+}
+fn inlines(value: &SentenceValue) -> Result<&[SentenceInlineRef]> {
+    let Root::Sentence(root) = value.root else {
+        return Err("Sentence root".into());
+    };
+    let Kind::Sentence { inlines } = &value.nodes[root.0 as usize] else {
+        return Err("Sentence node".into());
+    };
+    Ok(inlines)
+}
+fn single_text<'a>(
+    doc: &DocumentSyntax,
+    contents: &'a [SentenceSyntax],
+    sentence: SentenceRef,
+) -> Result<&'a str> {
+    let value = sentence_value(doc, contents, sentence)?;
+    let inlines = inlines(value)?;
     assert_eq!(inlines.len(), 1);
-    match &doc.value.nodes[inlines[0].0 as usize].kind {
-        DocKind::Text { text } | DocKind::InlineCode { text } => Ok(text),
+    match &value.nodes[inlines[0].0 as usize] {
+        Kind::Text { text } | Kind::Code { text } => Ok(text),
         _ => Err("text or code".into()),
     }
 }
 
-fn check_leaf(doc: &DocumentSyntax, body: BodyRef, expected: Option<&str>) -> Result<()> {
+fn check_leaf(
+    doc: &DocumentSyntax,
+    contents: &[SentenceSyntax],
+    body: BodyRef,
+    expected: Option<&str>,
+) -> Result<()> {
     let DocKind::Body { ref blocks } = doc.value.nodes[body.0 as usize].kind else {
         return Err("body".into());
     };
@@ -46,31 +100,29 @@ fn check_leaf(doc: &DocumentSyntax, body: BodyRef, expected: Option<&str>) -> Re
             return Err("paragraph".into());
         };
         assert_eq!(items.len(), 1);
-        let DocKind::Sentence { ref inlines } = doc.value.nodes[items[0].0 as usize].kind else {
-            return Err("sentence".into());
-        };
+        let value = sentence_value(doc, contents, SentenceRef(items[0].0))?;
+        let inlines = inlines(value)?;
         assert_eq!(inlines.len(), 6);
         assert_eq!(
-            doc.value.nodes[inlines[4].0 as usize].kind,
-            DocKind::InlineCode {
+            value.nodes[inlines[4].0 as usize],
+            Kind::Code {
                 text: expected.into()
             }
         );
         for (slot, base_text, reading_text) in [(0, "葉", "は"), (2, "認識規則", "にんしききそく")]
         {
-            let DocKind::Ruby { base, reading } = doc.value.nodes[inlines[slot].0 as usize].kind
-            else {
+            let Kind::Ruby { base, reading } = value.nodes[inlines[slot].0 as usize] else {
                 return Err("ruby".into());
             };
             assert_eq!(
-                doc.value.nodes[base.0 as usize].kind,
-                DocKind::Text {
+                value.nodes[base.0 as usize],
+                Kind::Text {
                     text: base_text.into()
                 }
             );
             assert_eq!(
-                doc.value.nodes[reading.0 as usize].kind,
-                DocKind::Text {
+                value.nodes[reading.0 as usize],
+                Kind::Text {
                     text: reading_text.into()
                 }
             );
@@ -96,22 +148,17 @@ fn table(doc: &DocumentSyntax, body: BodyRef) -> Result<(&[Alignment], &[RowRef]
     Ok((columns, rows))
 }
 
-fn cells(doc: &DocumentSyntax, row: RowRef) -> Result<Vec<&str>> {
+fn cells<'a>(
+    doc: &DocumentSyntax,
+    contents: &'a [SentenceSyntax],
+    row: RowRef,
+) -> Result<Vec<&'a str>> {
     let DocKind::Row { ref cells } = doc.value.nodes[row.0 as usize].kind else {
         return Err("row".into());
     };
     cells
         .iter()
-        .map(|cell| {
-            let DocKind::Sentence { ref inlines } = doc.value.nodes[cell.0 as usize].kind else {
-                return Err("sentence".into());
-            };
-            assert_eq!(inlines.len(), 1);
-            match &doc.value.nodes[inlines[0].0 as usize].kind {
-                DocKind::Text { text } | DocKind::InlineCode { text } => Ok(text.as_str()),
-                _ => Err("text or code".into()),
-            }
-        })
+        .map(|cell| single_text(doc, contents, *cell))
         .collect()
 }
 
@@ -142,11 +189,12 @@ fn typed_tables_preserve_fields_and_survive_the_real_reader() -> Result<()> {
         .map_err(err)
     })?;
     for doc in [&original, &parsed] {
+        let contents = contents(doc, &compiled.doc.registry)?;
         let sections = sections(doc)?;
         assert_eq!(sections.len(), 1);
         assert_eq!(sections[0].0, "category_446f632f4578616d706c65");
-        assert_eq!(single_text(doc, sections[0].2)?, "Doc/Example");
-        check_leaf(doc, sections[0].1, Some("sentence"))?;
+        assert_eq!(single_text(doc, &contents, sections[0].2)?, "Doc/Example");
+        check_leaf(doc, &contents, sections[0].1, Some("sentence"))?;
         let (columns, rows) = table(doc, sections[0].1)?;
         assert_eq!(
             columns,
@@ -159,7 +207,7 @@ fn typed_tables_preserve_fields_and_survive_the_real_reader() -> Result<()> {
         );
         assert_eq!(rows.len(), 2);
         assert_eq!(
-            cells(doc, rows[0])?,
+            cells(doc, &contents, rows[0])?,
             [
                 "q\"\\\n[]𠮷",
                 "Doc.Quoted",
@@ -167,7 +215,10 @@ fn typed_tables_preserve_fields_and_survive_the_real_reader() -> Result<()> {
                 "2"
             ]
         );
-        assert_eq!(cells(doc, rows[1])?, ["empty", "Doc.Empty", "なし", "0"]);
+        assert_eq!(
+            cells(doc, &contents, rows[1])?,
+            ["empty", "Doc.Empty", "なし", "0"]
+        );
     }
     Ok(())
 }
@@ -178,8 +229,10 @@ fn catalog_order_and_all_form_rows_are_preserved() -> Result<()> {
         .parent()
         .ok_or("workspace")?;
     let catalog: Catalog = crate::json(root, "design/forms.json")?;
+    let registry = registry(&mut budget())?;
     for language in LANGUAGES {
         let doc = document(&catalog, language)?;
+        let contents = contents(&doc, &registry)?;
         doc.value.validate_shape(&mut budget()).map_err(err)?;
         let selected: Vec<_> = catalog
             .categories
@@ -190,12 +243,12 @@ fn catalog_order_and_all_form_rows_are_preserved() -> Result<()> {
         let sections = sections(&doc)?;
         assert_eq!(sections.len(), selected.len());
         for ((_, body, title), (name, category)) in sections.iter().zip(selected) {
-            assert_eq!(single_text(&doc, *title)?, name);
-            check_leaf(&doc, *body, category.leaf.as_deref())?;
+            assert_eq!(single_text(&doc, &contents, *title)?, name);
+            check_leaf(&doc, &contents, *body, category.leaf.as_deref())?;
             let (_, rows) = table(&doc, *body)?;
             let names = rows
                 .iter()
-                .map(|row| Ok(cells(&doc, *row)?[0]))
+                .map(|row| Ok(cells(&doc, &contents, *row)?[0]))
                 .collect::<Result<Vec<_>>>()?;
             assert_eq!(
                 names,

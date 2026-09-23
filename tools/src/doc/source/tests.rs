@@ -6,6 +6,22 @@ use nepl3_wire::foundation::FoundationCodec;
 
 mod namespace;
 
+fn math_closure(
+    document: &nepl3_doc_core::model::DocumentSyntax,
+) -> Result<&nepl3_core::syntax::ForeignClosure, String> {
+    use nepl3_doc_core::model::EmbedKind;
+    let mut matches = document
+        .value
+        .embeds
+        .iter()
+        .filter(|embed| matches!(embed.kind, EmbedKind::InlineMath | EmbedKind::DisplayMath));
+    let guest = matches.next().ok_or("Math embed")?;
+    if matches.next().is_some() {
+        return Err("expected one Math embed".into());
+    }
+    guest.syntax().ok_or_else(|| "Math syntax".into())
+}
+
 #[test]
 fn composed_doc_namespace_keeps_fragment_source_identity() -> Result<(), String> {
     use nepl3_doc_core::labels::namespace::{self, MemberId};
@@ -255,8 +271,7 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
                         &mut codec,
                     )
                     .map_err(err)?;
-                    let input = doc.value.embeds[0]
-                        .closure
+                    let input = math_closure(&doc)?
                         .syntax
                         .bundle
                         .validate_with_sources(registry, b, codec.source_admission())
@@ -585,7 +600,7 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
                     &mut codec,
                 )
                 .map_err(err)?;
-                let closure = &document.value.embeds.first().ok_or("Math closure")?.closure;
+                let closure = math_closure(&document)?;
                 let input = closure
                     .syntax
                     .bundle
@@ -984,7 +999,7 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                     &mut codec,
                 )
                 .map_err(err)?;
-                let math = &document.value.embeds.first().ok_or("Math closure")?.closure;
+                let math = math_closure(&document)?;
                 let input = math
                     .syntax
                     .bundle
@@ -1143,7 +1158,7 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                 let mut measured = budget();
                 let composed = host
                     .render(
-                        &document.value.embeds[0].closure,
+                        math_closure(&document)?,
                         nepl3_markup::mathml::Display::Block,
                         &mut measured,
                     )
@@ -1191,7 +1206,7 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                     let mut limited = Budget::new(limits);
                     let result = host
                         .render(
-                            &document.value.embeds[0].closure,
+                            math_closure(&document)?,
                             nepl3_markup::mathml::Display::Block,
                             &mut limited,
                         )
@@ -1238,9 +1253,8 @@ fn math_sentence_math_printing_preserves_recursive_source() -> Result<(), String
                     &mut codec,
                 )
                 .map_err(err)?;
-                let closure = document.value.embeds.first().ok_or("Math closure")?;
+                let closure = math_closure(&document)?;
                 let input = closure
-                    .closure
                     .syntax
                     .bundle
                     .validate_with_sources(profile.registry(), b, codec.source_admission())
@@ -1276,7 +1290,7 @@ fn math_sentence_math_printing_preserves_recursive_source() -> Result<(), String
                     codec: &mut codec,
                 };
                 let html = host
-                    .render(&closure.closure, nepl3_markup::mathml::Display::Block, b)
+                    .render(closure, nepl3_markup::mathml::Display::Block, b)
                     .map_err(err)?
                     .into_html(b)
                     .map_err(err)?;
