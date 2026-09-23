@@ -66,7 +66,9 @@ class Table:
         self._value: Editable = value
 
     def value(self, key: str) -> object:
-        return self._value[key]
+        # TOML Kit annotates table lookup as Any; callers narrow the external value.
+        value: object = self._value[key]  # pyright: ignore[reportAny]
+        return value
 
     def contains(self, key: str) -> bool:
         return key in self._value
