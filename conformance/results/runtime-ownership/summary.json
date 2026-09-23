@@ -1,0 +1,48 @@
+{
+  "format": "nepl3.development-slice/1",
+  "scope": "T11/T12: native scheduler and process-provider result ownership, correlation and cancellation",
+  "source_revision": "011d4162126a059da39553c9cdee53b62967c2f0",
+  "result": "passed-within-recorded-scope",
+  "manifest": "conformance/results/runtime-ownership/manifest.json",
+  "raw_evidence": {
+    "path": "dist/runtime-stage-evidence",
+    "preserved_local_copy": "C:/projects/NEPL3-runtime-evidence-artifacts/011d416",
+    "availability": "Local execution artifacts; raw logs are not distributed in Git. The manifest records their hashes and exact argv."
+  },
+  "environment": {
+    "native_target": "x86_64-pc-windows-msvc",
+    "rustc": "1.97.0 (2d8144b78 2026-07-07)",
+    "wasi_target": "wasm32-wasip2",
+    "runner": "wasmtime 44.0.1 (f302ebd6b 2026-04-30)"
+  },
+  "checks": [
+    { "command_id": "native-core-operation", "passed": 19, "failed": 0, "ignored": 0 },
+    { "command_id": "native-suite-dispatch", "passed": 39, "failed": 0, "ignored": 0 },
+    { "command_id": "native-provider", "passed": 46, "failed": 0, "ignored": 1, "ignored_reason": "The child_waits_for_input_eof libtest fixture is launched by the parent process-ownership test; it is not run as a standalone test." },
+    { "command_id": "wasi-provider-transport", "passed": 30, "failed": 0, "ignored": 0 }
+  ],
+  "capabilities": {
+    "T11": [
+      "Native Invoke/Await/Resume scheduling, recursive operation dispatch and explicit grants.",
+      "Accepted child partials and Reports survive validation/allocation stops before the Resume callback begins.",
+      "Initially checked terminal replies remain inspectable when result acceptance or root lifetime completion stops."
+    ],
+    "T12": [
+      "Process framing, schema exchange, native/process fixture comparisons, cancellation and blocked-read deadlines.",
+      "Active/managed reply routing preserves checked replies and their original request/source-grant context if lifetime correlation fails.",
+      "Unauthorized diagnostic sources are rejected before a reply becomes inspectable as checked."
+    ]
+  },
+  "review": {
+    "kind": "independent subagent review",
+    "scope": "Provider ownership and source-authority changes at source_revision; transport 30 tests independently passed. The submitting PR records the review summary.",
+    "not_reexecuted": ["The independent provider reviewer did not rerun WASI or OS process tests."]
+  },
+  "excluded_acceptance_portions": [
+    "This slice does not decide P02, E06, G05, W02, W03 or any other formal acceptance group.",
+    "Full suite Profile, standard-language bridges, Math output-policy integration and general provider routing remain incomplete.",
+    "Source-level import, dynamic package loading, distributed provenance and cross-process cumulative resource enforcement remain outside this slice.",
+    "Native process comparisons use small fixture operations; Doc/Circuit independent distribution is not established by them.",
+    "Deep terminal-result validation reuse and Sentence/Doc ownership migration remain open."
+  ]
+}

@@ -74,12 +74,16 @@
     {
       "id": "T11",
       "status": "in-progress",
-      "evidence": []
+      "evidence": [
+        "conformance/results/runtime-ownership/summary.json"
+      ]
     },
     {
       "id": "T12",
       "status": "in-progress",
-      "evidence": []
+      "evidence": [
+        "conformance/results/runtime-ownership/summary.json"
+      ]
     },
     {
       "id": "T13",
