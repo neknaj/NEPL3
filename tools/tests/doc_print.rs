@@ -1,5 +1,5 @@
 use nepl3_core::budget::{Budget, Limits, StopReason};
-use nepl3_core::source::{SourceAdmission, SourceStore};
+use nepl3_core::source::{Digest, SourceAdmission, SourceStore, TextEdit};
 use nepl3_core::value::NdfValue;
 use nepl3_doc_core::{
     check::{Category, ShapeError},
@@ -7,7 +7,7 @@ use nepl3_doc_core::{
     model::*,
     print::{self, PrintEntry, PrintFailure, PrintMismatch, PrintMode, PrintOutcome},
 };
-use nepl3_tools::doc::source::{budget, compiled, err, with_input};
+use nepl3_tools::doc::source::{budget, compiled, err, parse_source_as, with_input};
 use nepl3_wire::foundation::FoundationCodec;
 #[path = "doc/print/host.rs"]
 mod host;
@@ -1144,4 +1144,235 @@ fn fragment_preserves_shared_foreign_syntax_and_rejects_invalid_inputs() -> Resu
             Ok(())
         },
     )
+}
+
+#[test]
+fn paragraph_edit_uses_model_span_and_preserves_surrounding_source() -> Result<(), String> {
+    let compiled = compiled()?;
+    let input = "article en sentence \"T\" body\r\n  cons paragraph cons sentence \"same\" nil\r\n  cons paragraph cons sentence \"[字/じ]{base/note}\" nil\r\n  cons paragraph cons sentence \"same\" nil nil";
+    with_input(&compiled, input, "Article", |tree, profile, b, a| {
+        let checked = tree
+            .tree()
+            .bundle
+            .validate_with_sources(profile.registry(), b, a)
+            .map_err(err)?;
+        let empty = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
+        let original = lower::document(
+            &checked,
+            &compiled.doc.package.schema,
+            Category::Article,
+            profile.registry(),
+            &mut budget(),
+            &mut codec,
+        )
+        .map_err(err)?;
+        let DocRoot::Article(root) = original.value.root else {
+            return Err("article root".into());
+        };
+        let DocKind::Article { body, .. } = original.value.nodes[root.0 as usize].kind else {
+            return Err("article node".into());
+        };
+        let DocKind::Body { ref blocks } = original.value.nodes[body.0 as usize].kind else {
+            return Err("article body".into());
+        };
+        assert_eq!(blocks.len(), 3);
+        let target = blocks[1];
+        assert!(matches!(
+            original.value.nodes[target.0 as usize].kind,
+            DocKind::Paragraph { .. }
+        ));
+        let span = original.value.nodes[target.0 as usize]
+            .span
+            .clone()
+            .ok_or("paragraph source span")?;
+        let source = original
+            .sources
+            .iter()
+            .find(|s| s.identity() == span.snapshot_ref())
+            .ok_or("paragraph source")?;
+        let mut fragment = original
+            .fragment(
+                DocRoot::Block(target),
+                profile.registry(),
+                &mut budget(),
+                &mut SourceAdmission::default(),
+            )
+            .map_err(err)?;
+        let DocRoot::Block(target) = fragment.value.root else {
+            return Err("fragment root".into());
+        };
+        let next = fragment.value.nodes.len() as u64;
+        for kind in [
+            DocKind::Body {
+                blocks: vec![target],
+            },
+            DocKind::ListItem {
+                checked: None,
+                body: BodyRef(next),
+            },
+            DocKind::List {
+                kind: ListKind::Unordered,
+                items: vec![ListItemRef(next + 1)],
+            },
+        ] {
+            fragment.value.nodes.push(DocNode {
+                kind,
+                locations: vec![],
+                origin: None,
+                span: None,
+            });
+        }
+        fragment.value.root = DocRoot::Block(BlockRef(next + 2));
+        let request = host_request(&fragment, profile, PrintMode::Prefix)?;
+        let reply =
+            print::print(&request, profile.registry(), &mut codec, &mut budget()).map_err(err)?;
+        let PrintOutcome::Complete { artifact } = reply.outcome else {
+            return Err(format!("fragment print: {reply:?}"));
+        };
+        let edit = TextEdit {
+            expected_digest: Digest::of(source.slice(&span).map_err(err)?.as_bytes()),
+            span: span.clone(),
+            replacement: artifact.text,
+        };
+        let mut store = SourceStore::default();
+        store
+            .insert_with_budget(source.clone(), &mut budget())
+            .map_err(err)?;
+        let revisions = store
+            .apply(
+                core::slice::from_ref(&edit),
+                &mut budget(),
+                &mut SourceAdmission::default(),
+            )
+            .map_err(err)?;
+        assert_eq!(revisions.len(), 1);
+        let revised = store
+            .get_ref(&revisions[0])
+            .ok_or("edited snapshot")?
+            .clone();
+        assert_ne!(revised.identity(), source.identity());
+        assert_eq!(
+            &revised.text().as_bytes()[..span.start() as usize],
+            &source.text().as_bytes()[..span.start() as usize]
+        );
+        assert_eq!(
+            &revised.text().as_bytes()[span.start() as usize + edit.replacement.len()..],
+            &source.text().as_bytes()[span.end() as usize..]
+        );
+        assert!(
+            revised.slice(&span).is_err(),
+            "old spans must not address a new revision"
+        );
+        assert!(
+            store
+                .apply(
+                    core::slice::from_ref(&edit),
+                    &mut budget(),
+                    &mut SourceAdmission::default()
+                )
+                .is_err(),
+            "a stale edit must be rejected"
+        );
+        let parsed = parse_source_as(
+            &revised,
+            profile,
+            "Doc",
+            "Article",
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        )?;
+        let parsed = parsed
+            .bundle
+            .validate_with_sources(
+                profile.registry(),
+                &mut budget(),
+                &mut SourceAdmission::default(),
+            )
+            .map_err(err)?;
+        let actual = lower::document(
+            &parsed,
+            &compiled.doc.package.schema,
+            Category::Article,
+            profile.registry(),
+            &mut budget(),
+            &mut codec,
+        )
+        .map_err(err)?;
+        let DocRoot::Article(root) = actual.value.root else {
+            return Err("edited article root".into());
+        };
+        let DocKind::Article { body, .. } = actual.value.nodes[root.0 as usize].kind else {
+            return Err("edited article".into());
+        };
+        let DocKind::Body { ref blocks } = actual.value.nodes[body.0 as usize].kind else {
+            return Err("edited body".into());
+        };
+        assert_eq!(blocks.len(), 3);
+        assert!(matches!(
+            actual.value.nodes[blocks[0].0 as usize].kind,
+            DocKind::Paragraph { .. }
+        ));
+        assert!(matches!(
+            actual.value.nodes[blocks[2].0 as usize].kind,
+            DocKind::Paragraph { .. }
+        ));
+        let DocKind::List { ref items, .. } = actual.value.nodes[blocks[1].0 as usize].kind else {
+            return Err("edited list".into());
+        };
+        assert_eq!(items.len(), 1);
+        let DocKind::ListItem { body, .. } = actual.value.nodes[items[0].0 as usize].kind else {
+            return Err("edited item".into());
+        };
+        let DocKind::Body { ref blocks } = actual.value.nodes[body.0 as usize].kind else {
+            return Err("item body".into());
+        };
+        assert_eq!(blocks.len(), 1);
+        let DocKind::Paragraph { ref items } = actual.value.nodes[blocks[0].0 as usize].kind else {
+            return Err("preserved paragraph".into());
+        };
+        assert_eq!(items.len(), 1);
+        let DocKind::Sentence { syntax } = actual.value.nodes[items[0].0 as usize].kind else {
+            return Err("preserved sentence".into());
+        };
+        let embed = &actual.value.embeds[syntax.0 as usize];
+        let sentence = nepl3_suite::adapters::document::sentence::lower(
+            embed,
+            embed.schema(),
+            &[],
+            profile.registry(),
+            &mut codec,
+            &mut budget(),
+        )
+        .map_err(err)?;
+        use nepl3_sentence_core::model::{Kind, Root};
+        let Root::Sentence(root) = sentence.value.root else {
+            return Err("Sentence root".into());
+        };
+        let Kind::Sentence { ref inlines } = sentence.value.nodes[root.0 as usize] else {
+            return Err("Sentence node".into());
+        };
+        assert_eq!(inlines.len(), 2);
+        let Kind::Ruby { base, reading } = sentence.value.nodes[inlines[0].0 as usize] else {
+            return Err("preserved Ruby".into());
+        };
+        let text = |id: nepl3_sentence_core::model::InlineRef| -> Result<&str, String> {
+            match &sentence.value.nodes[id.0 as usize] {
+                Kind::Text { text } => Ok(text),
+                _ => Err("preserved Text".into()),
+            }
+        };
+        assert_eq!(text(base)?, "字");
+        assert_eq!(text(reading)?, "じ");
+        let Kind::InlineAnno { base, ref notes } = sentence.value.nodes[inlines[1].0 as usize]
+        else {
+            return Err("preserved Anno".into());
+        };
+        assert_eq!(text(base)?, "base");
+        assert_eq!(notes.len(), 1);
+        assert_eq!(text(notes[0])?, "note");
+        Ok(())
+    })
 }
