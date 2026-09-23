@@ -4,21 +4,22 @@ The caller owns the production publisher lock and verified remote protection.
 No force option, automatic retry, deployment or permission change is provided.
 """
 from dataclasses import dataclass
+from pathlib import Path
 
 from payload import checked
 from .model import hex_id
 from .store import REF, git, load, repository
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Confirmation:
     head: str
     already_present: bool
     publication_verified: bool = False
 
 
-def origin(repo, expected_url):
-    checked(isinstance(expected_url, str) and 0 < len(expected_url) <= 2048 and
+def origin(repo: Path, expected_url: str) -> None:
+    checked(0 < len(expected_url) <= 2048 and
             not any(c in expected_url for c in '\r\n\0'), 'invalid expected origin')
     for args in [('remote', 'get-url', '--all', 'origin'),
                  ('remote', 'get-url', '--push', '--all', 'origin')]:
@@ -26,7 +27,7 @@ def origin(repo, expected_url):
         checked(urls == [expected_url], 'journal origin differs from pinned fetch/push URL')
 
 
-def head(repo, expected_url):
+def head(repo: Path, expected_url: str) -> str | None:
     repository(repo)
     origin(repo, expected_url)
     rows = git(repo, 'ls-remote', '--refs', 'origin', REF).decode('ascii').splitlines()
@@ -39,7 +40,7 @@ def head(repo, expected_url):
     return fields[0]
 
 
-def publish(repo, expected_url, expected_remote_head, new_head):
+def publish(repo: Path, expected_url: str, expected_remote_head: str | None, new_head: str) -> Confirmation:
     hex_id(new_head, 40)
     if expected_remote_head is not None:
         hex_id(expected_remote_head, 40)
@@ -56,6 +57,6 @@ def publish(repo, expected_url, expected_remote_head, new_head):
     checked(before == expected_remote_head, 'remote journal changed; reconcile before writing')
     # A competing descendant of expected_remote_head makes this a non-fast-
     # forward push. Never force or substitute the mutable local branch name.
-    git(repo, 'push', '--porcelain', '--no-follow-tags', 'origin', new_head + ':' + REF)
+    _ = git(repo, 'push', '--porcelain', '--no-follow-tags', 'origin', new_head + ':' + REF)
     checked(head(repo, expected_url) == new_head, 'remote journal acknowledgement differs; state unknown')
     return Confirmation(new_head, False)
