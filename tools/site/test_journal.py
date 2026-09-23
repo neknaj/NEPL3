@@ -9,16 +9,16 @@ from unittest.mock import patch
 
 from journal import Event, append, load
 from journal import store
-from journal.model import encode
+from journal.model import Kind, Snapshot, encode
 from payload import digest
 
 
-def event(transaction='transaction-1', kind='DeployIntent'):
+def event(transaction: str = 'transaction-1', kind: Kind = 'DeployIntent') -> Event:
     return Event(kind, transaction, 1234, 1, 'a' * 40, 'b' * 64)
 
 
-def initialize(path, bare=True):
-    subprocess.run(['git', 'init', '--quiet', *(['--bare'] if bare else []), str(path)], check=True)
+def initialize(path: Path, bare: bool = True) -> None:
+    _ = subprocess.run(['git', 'init', '--quiet', *(['--bare'] if bare else []), str(path)], check=True)
 
 
 class JournalTests(unittest.TestCase):
@@ -28,11 +28,11 @@ class JournalTests(unittest.TestCase):
             first = append(repo, None, event(), b'{}')
             tree = store.git(repo, 'rev-parse', first + '^{tree}').decode().strip()
             second = store.git(repo, 'commit-tree', tree, '-p', first, data=b'No event added\n').decode().strip()
-            store.git(repo, 'update-ref', store.REF, second, first)
-            with self.assertRaisesRegex(ValueError, 'history count'): load(repo)
-            (repo / 'shallow').write_text(second + '\n', encoding='ascii')
-            with self.assertRaisesRegex(ValueError, 'shallow journal'): load(repo)
-            with self.assertRaisesRegex(ValueError, 'shallow journal'): append(repo, second, event(), b'{}')
+            _ = store.git(repo, 'update-ref', store.REF, second, first)
+            with self.assertRaisesRegex(ValueError, 'history count'): _ = load(repo)
+            _ = (repo / 'shallow').write_text(second + '\n', encoding='ascii')
+            with self.assertRaisesRegex(ValueError, 'shallow journal'): _ = load(repo)
+            with self.assertRaisesRegex(ValueError, 'shallow journal'): _ = append(repo, second, event(), b'{}')
 
     def test_fast_forward_rewriting_old_event_is_rejected_on_reload(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -48,9 +48,9 @@ class JournalTests(unittest.TestCase):
             tree = store.git(repo, 'mktree', '-z', data=b''.join(
                 f'100644 blob {oid}\t{name}\0'.encode() for name, oid in sorted(entries.items()))).decode().strip()
             altered = store.git(repo, 'commit-tree', tree, '-p', first, data=b'Invalid append\n').decode().strip()
-            store.git(repo, 'update-ref', store.REF, altered, first)
-            with self.assertRaisesRegex(ValueError, 'not append-only'): load(repo)
-            with self.assertRaises(ValueError): append(repo, altered, event(), b'{}')
+            _ = store.git(repo, 'update-ref', store.REF, altered, first)
+            with self.assertRaisesRegex(ValueError, 'not append-only'): _ = load(repo)
+            with self.assertRaises(ValueError): _ = append(repo, altered, event(), b'{}')
             self.assertEqual(store.git(repo, 'rev-parse', store.REF).decode().strip(), altered)
 
     def test_real_git_reload_retains_exact_evidence_and_parent(self) -> None:
@@ -67,17 +67,17 @@ class JournalTests(unittest.TestCase):
             # A new reader sees the saved intent even if no receipt was ever written.
             self.assertIn(b'DeployIntent', store.git(repo, 'show', first + ':00000001.event.json'))
             with self.assertRaisesRegex(ValueError, 'stale journal'):
-                append(repo, first, event('stale'), b'{}')
+                _ = append(repo, first, event('stale'), b'{}')
             self.assertEqual(load(repo).head, second)
 
-    def test_racing_writers_have_one_winner_without_lost_events(self):
+    def test_racing_writers_have_one_winner_without_lost_events(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repo = Path(directory).resolve() / 'journal.git'; initialize(repo)
             first = append(repo, None, event(), b'{}')
             read = store.read; barrier = threading.Barrier(2)
-            def racing_read(path):
-                result = read(path); barrier.wait(timeout=10); return result
-            def writer(name):
+            def racing_read(path: Path) -> tuple[Snapshot, dict[str, str]]:
+                result = read(path); _ = barrier.wait(timeout=10); return result
+            def writer(name: str) -> str | None:
                 try: return append(repo, first, event(name), b'{}')
                 except ValueError: return None
             with patch.object(store, 'read', side_effect=racing_read), ThreadPoolExecutor(max_workers=2) as pool:
@@ -94,21 +94,21 @@ class JournalTests(unittest.TestCase):
             first = append(repo, None, event(), b'{}')
             for invalid in [replace(event(), run_id=True), replace(event(), attempt=0),
                             replace(event(), kind='SuccessStub'), replace(event(), source_commit='HEAD')]:
-                with self.subTest(event=invalid), self.assertRaises(ValueError): append(repo, first, invalid, b'{}')
+                with self.subTest(event=invalid), self.assertRaises(ValueError): _ = append(repo, first, invalid, b'{}')
             for proof in [b'[]', b'{"a":1,"a":2}', b'{"a":NaN}', b'x' * 65537]:
-                with self.subTest(proof=proof[:20]), self.assertRaises(ValueError): append(repo, first, event(), proof)
+                with self.subTest(proof=proof[:20]), self.assertRaises(ValueError): _ = append(repo, first, event(), proof)
             self.assertEqual(load(repo).head, first)
             with patch.object(store, 'MAX_EVENTS', 1), self.assertRaisesRegex(ValueError, 'event limit'):
-                append(repo, first, event(), b'{}')
+                _ = append(repo, first, event(), b'{}')
             self.assertEqual(load(repo).head, first)
 
     def test_nonbare_source_repo_is_not_modified(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repo = Path(directory).resolve() / 'source'; initialize(repo, bare=False)
-            (repo / 'keep').write_bytes(b'user work')
-            with self.assertRaisesRegex(ValueError, 'bare mirror'): append(repo, None, event(), b'{}')
+            _ = (repo / 'keep').write_bytes(b'user work')
+            with self.assertRaisesRegex(ValueError, 'bare mirror'): _ = append(repo, None, event(), b'{}')
             self.assertEqual((repo / 'keep').read_bytes(), b'user work')
             self.assertFalse((repo / '.git/refs/heads/pages-state').exists())
 
 
-if __name__ == '__main__': unittest.main()
+if __name__ == '__main__': _ = unittest.main()
