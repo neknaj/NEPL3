@@ -1,25 +1,27 @@
 import base64
+from collections.abc import Sequence
 from dataclasses import replace
 import unittest
 
 from deployment.journal import require_creation_receipts
 from journal import Event
-from journal.model import Snapshot, encode
+from journal.model import Kind, Snapshot, encode
 from test_receipt_journal import RAW
 
 
 class CreationGateTests(unittest.TestCase):
-    def snapshot(self, events, raw=RAW):
+    def snapshot(self, events: Sequence[Event], raw: bytes = RAW) -> Snapshot:
         evidence = encode(dict(version=1, owner='neknaj', repository='NEPL3',
                                response=base64.b64encode(raw).decode('ascii')))
         return Snapshot('a'*40, tuple(events), tuple(evidence for _ in events))
 
-    def gate(self, state):
+    def gate(self, state: Snapshot) -> None:
         require_creation_receipts(state, owner='neknaj', repository='NEPL3')
 
     def test_pairs_validate_original_response_for_both_intent_kinds(self) -> None:
         self.gate(Snapshot(None, (), ()))
-        for kind, receipt in [('DeployIntent', 'DeployReceipt'), ('RecoveryIntent', 'RecoveryReceipt')]:
+        pairs: tuple[tuple[Kind, Kind], ...] = (('DeployIntent', 'DeployReceipt'), ('RecoveryIntent', 'RecoveryReceipt'))
+        for kind, receipt in pairs:
             event = Event(kind, 'tx', 1, 1, 'a'*40, 'b'*64)
             self.gate(self.snapshot([event, replace(event, kind=receipt)]))
             with self.assertRaises(ValueError):
