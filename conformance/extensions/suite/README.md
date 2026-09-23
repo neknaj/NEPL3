@@ -1,6 +1,6 @@
 # Native composition runtime consumer
 
-This independent workspace will connect the existing MiniExpr and Frame package
+This independent workspace connects the existing MiniExpr and Frame package
 definitions to suite operations. The Foundation-only Hello workspace retains
 its four Foundation dependencies; this host additionally depends on suite.
 
@@ -83,6 +83,19 @@ provider dispatch. The host retains request lifetimes and cumulative execution
 budgets. Grants require the bound plan identity; callbacks require the complete
 ordered source closure before returning a continuation with its cached context.
 Native Invoke and Resume callbacks borrow this immutable plan.
+
+The `evaluate` example uses one resolved Profile for parsing and native evaluation.
+The host registers the operation schema alongside the language schemas, declares
+the two evaluator requirements and allowlist entries, and resolves them against
+its independently supplied provider catalog. `with_registered_profile` shares the
+existing Foundation-only parsing path and passes its resolved authority to the
+consumer. `Session::run_in_profile` checks the native bindings and resource ceilings
+through `NativeOperations`. Every root and dependency context includes the Profile
+digest together with the admitted host context; Resume retains this identity.
+Missing providers, changed implementation identities, absent allowlist entries
+and excessive execution limits are rejected before evaluator callbacks execute.
+This native connection leaves transport capabilities, environment projection and
+the complete suite Profile contract as subsequent integration work.
 Every returned Complete, Invalid, Stopped and Await records the cumulative Usage
 of its execution Budget, including charges made before entering the callback.
 Native scheduling shares one Budget across the plan. In the process fixture,
