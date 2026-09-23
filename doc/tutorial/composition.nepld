@@ -1,0 +1,64 @@
+article ja "[独立/どくりつ]した[二言語/にげんご]を[組/く]み[合/あ]わせる"
+body
+  cons section purpose "この[章/しょう]の[到達点/とうたつてん]"
+    body
+      cons paragraph
+        cons "compositionは、[複数/ふくすう]のLanguagePackageが[定義/ていぎ]する[構文/こうぶん]を[接続/せつぞく]する[構成/こうせい]である。"
+        cons "この[章/しょう]では、MiniExprからFrameへ[入/はい]り、Frameの[内部/ないぶ]でMiniExprへ[再入/さいにゅう]する[入力/にゅうりょく]を[解析/かいせき]する。"
+        cons "[使用/しよう]するpackageとaliasはhostがParseProfileへ[静的/せいてき]に[登録/とうろく]する。"
+        cons "[前章/ぜんしょう]の[演習/えんしゅう]によるsumへの[変更/へんこう]は[保存/ほぞん]し、この[章/しょう]では[標準/ひょうじゅん]のadd[定義/ていぎ]を[使用/しよう]する。"
+        cons "source[上/じょう]のimportとSentence・annotationとの[統合/とうごう]は[後続/こうぞく]の[実装対象/じっそうたいしょう]である。"
+        cons "suite consumerは、[同/おな]じ[言語構成/げんごこうせい]をnativeのInvoke・Await・Resumeへ[接続/せつぞく]して[算術評価/さんじゅつひょうか]を[実行/じっこう]する。"
+        cons sentence cons link external "https://github.com/neknaj/NEPL3/blob/main/conformance/extensions/suite/README.md" concat cons text "suite consumerの" cons ruby text "実行手順" text "じっこうてじゅん" nil nil
+        nil
+      nil
+  cons section observe "[言語境界/げんごきょうかい]と[再入/さいにゅう]を[観察/かんさつ]する"
+    body
+      cons rawcode some "sh" "cargo run --locked --manifest-path conformance/extensions/hello/Cargo.toml --example composition -- \"add framed frame neg 7 2\"\n"
+      cons paragraph
+        cons "[出力/しゅつりょく]はComplete; cursor=24となり、bundleは[三/みっ]つのcontextを[保持/ほじ]する。"
+        cons "[外側/そとがわ]のaddは[二/ふた]つのExprを[読/よ]む。"
+        cons "[最初/さいしょ]のExprにあるframedはFrameへ[移行/いこう]し、frameは[内部/ないぶ]のExprとしてneg 7を[読/よ]む。"
+        cons "[最後/さいご]の2は[外側/そとがわ]のaddの[二番目/にばんめ]の[子/こ]となる。"
+        nil
+      cons rawcode some "text" "MiniExpr: add\n├── MiniExpr: framed\n│   └── Frame: frame\n│       └── MiniExpr: neg 7\n└── MiniExpr: 2\n"
+      cons paragraph
+        cons "[図/ず]は[各部分/かくぶぶん]を[担当/たんとう]する[言語/げんご]を[示/しめ]す。"
+        cons "7のtokenは[元/もと]のsourceのbyte[範囲/はんい]21..22を[保持/ほじ]する。"
+        cons "source printの[結果/けっか]は[入力/にゅうりょく]と[一致/いっち]する。"
+        nil
+      nil
+  cons section definition "packageとcontextの[対応/たいおう]"
+    body
+      cons paragraph
+        cons "conformance/extensions/hello/src/composition.rsは、[拡張/かくちょう]したMiniExprとFrameを[登録/とうろく]する。"
+        cons "[拡張版/かくちょうばん]のschemaはorg.example.miniexpr.framedであり、[単独版/たんどくばん]のorg.example.miniexprは[独立/どくりつ]して[維持/いじ]される。"
+        cons "ReadSpec::Foreignは[外部/がいぶ]packageのcategoryを[指定/してい]し、hostはExprとFrameというaliasを[解決/かいけつ]する。"
+        cons "ExprはCode、FrameはFrameCodeというreader modeを[使用/しよう]する。"
+        cons "contextのpathは[言語境界/げんごきょうかい]を[記録/きろく]し、[内部/ないぶ]の[構文/こうぶん]を[担当/たんとう]するpackageと[読取条件/よみとりじょうけん]を[識別/しきべつ]する。"
+        nil
+      nil
+  cons section diagnostics "[内部/ないぶ]の[誤入力/ごにゅうりょく]を[確認/かくにん]する"
+    body
+      cons rawcode some "sh" "cargo run --locked --manifest-path conformance/extensions/hello/Cargo.toml --example composition -- \"framed unknown\"\ncargo run --locked --manifest-path conformance/extensions/hello/Cargo.toml --example composition -- \"framed frame\"\n"
+      cons paragraph
+        cons "[一番目/いちばんめ]の[入力/にゅうりょく]はFrameの[未知/みち]のhead、[二番目/にばんめ]は[内部/ないぶ]のExprの[不足/ふそく]を[確認/かくにん]する。"
+        cons "[両方/りょうほう]ともRecoveredと[診断/しんだん]を[返/かえ]し、[成功/せいこう]したsource printは[出力/しゅつりょく]されない。"
+        cons "[診断/しんだん]のsource[範囲/はんい]を[入力/にゅうりょく]へ[対応/たいおう]させ、[問題/もんだい]が[発生/はっせい]した[言語/げんご]を[確認/かくにん]する。"
+        cons "exampleの[終了/しゅうりょう]コード0は[観察処理/かんさつしょり]の[完了/かんりょう]を[表/あらわ]し、[解析状態/かいせきじょうたい]は[表示/ひょうじ]されたoutcomeで[判断/はんだん]する。"
+        nil
+      nil
+  cons section exercise "[演習/えんしゅう]と[交換試験/こうかんしけん]"
+    body
+      cons paragraph
+        cons "[正常入力/せいじょうにゅうりょく]のneg 7をneg add 1 2へ[変更/へんこう]し、[内側/うちがわ]のMiniExprの[構文/こうぶん]とsource[範囲/はんい]を[確認/かくにん]する。"
+        cons "[各/かく]nodeについて、[所属言語/しょぞくげんご]と[外側/そとがわ]の[親/おや]を[説明/せつめい]する。"
+        nil
+      cons rawcode some "sh" "cargo test --locked --manifest-path conformance/extensions/hello/Cargo.toml\n"
+      cons paragraph
+        cons "[既存/きそん]の[試験/しけん]は、packageとProfileをNDFで[交換/こうかん]し、[受信側/じゅしんがわ]のcatalogとschemaに[照合/しょうごう]して[解析/かいせき]する。"
+        cons "native[登録経路/とうろくけいろ]との[比較/ひかく]には、[再入/さいにゅう]、Unicodeを[含/ふく]む[未知/みち]のhead、[子/こ]の[不足/ふそく]、[診断/しんだん]とsource[位置/いち]を[含/ふく]む。"
+        cons "この[章/しょう]の[完了条件/かんりょうじょうけん]は、[言語境界/げんごきょうかい]、[再入/さいにゅう]、[内部/ないぶ]の[診断/しんだん]を[元/もと]の[入力/にゅうりょく]へ[対応/たいおう]させられることである。"
+        nil
+      nil
+  nil

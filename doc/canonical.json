@@ -2,12 +2,28 @@
   "version": 1,
   "pages": [
     {
+      "id": "tutorial-miniexpr",
+      "source": "doc/tutorial/miniexpr.nepld",
+      "projection": "doc/tutorial/miniexpr.md",
+      "aliases": "doc/tutorial/miniexpr.aliases.json",
+      "route": "tutorial/miniexpr.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "tutorial-composition",
+      "source": "doc/tutorial/composition.nepld",
+      "projection": "doc/tutorial/composition.md",
+      "aliases": "doc/tutorial/composition.aliases.json",
+      "route": "tutorial/composition.html",
+      "renderer": "nepl3-tools.markdown-annotated/4"
+    },
+    {
       "id": "tutorial-hello",
       "source": "doc/tutorial/hello.nepld",
       "projection": "doc/tutorial/hello.md",
       "aliases": "doc/tutorial/hello.aliases.json",
       "route": "tutorial/index.html",
-      "renderer": "nepl3-tools.markdown-annotated/4"
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     },
     {
       "id": "contract",

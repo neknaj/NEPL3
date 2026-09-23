@@ -70,6 +70,7 @@ body
         cons "src/parse.rsはParseProfileとsource・environmentを[準備/じゅんび]し、ParseSessionを[実行/じっこう]する。"
         cons "examples/inspect.rsは[結果/けっか]を[表示/ひょうじ]し、src/tests.rsは[位置/いち]・[回復/かいふく]・[停止/ていし]とNDF[交換/こうかん]を[検査/けんさ]する。"
         cons "この[章/しょう]の[完了条件/かんりょうじょうけん]は、[入力/にゅうりょく]の[変更/へんこう]とtoken・[位置/いち]の[変化/へんか]を[対応/たいおう]させ、Complete・Recovered・NeedMoreを[説明/せつめい]できることである。"
+        cons sentence cons link page "tutorial-miniexpr" none concat cons ruby text "再帰的" text "さいきてき" cons text "な" cons ruby text "小言語" text "しょうげんご" cons text "を" cons ruby text "定義" text "ていぎ" cons text "する" nil nil
         nil
       nil
   nil

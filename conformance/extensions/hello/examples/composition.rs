@@ -34,6 +34,29 @@ fn run() -> Result<(), String> {
                     );
                 }
             }
+            // Inspect every owned foreign bundle, including reentry into Expr.
+            // An explicit stack keeps display traversal independent of native
+            // recursion depth. Tokens retain their original source identity.
+            let mut pending = vec![(&tree.bundle, 0_usize)];
+            while let Some((bundle, depth)) = pending.pop() {
+                for token in &bundle.tokens {
+                    println!(
+                        "token: depth={depth}; source={:?}@{}; {}..{}; payload={:?}",
+                        token.head.snapshot_ref().source.0,
+                        token.head.snapshot_ref().revision,
+                        token.head.start(),
+                        token.head.end(),
+                        token.payload,
+                    );
+                }
+                for node in bundle.nodes.iter().rev() {
+                    for field in node.fields.iter().rev() {
+                        if let nepl3_core::syntax::FieldValue::Foreign(foreign) = field {
+                            pending.push((&foreign.bundle, depth + 1));
+                        }
+                    }
+                }
+            }
         }
         other => println!("outcome: {other:?}"),
     }
