@@ -130,12 +130,14 @@ pub fn read(
                     return Err(ReaderError::ProviderContract);
                 };
                 let view = presentation.view.clone_with_budget(b)?;
-                let doc = super::sentence::document(&literal.syntax, registry, b, a).map_err(
-                    |e| match e {
-                        super::sentence::Error::Stopped(s) => ReaderError::Stopped(s),
-                        _ => ReaderError::ProviderContract,
-                    },
-                )?;
+                let doc =
+                    nepl3_suite::adapters::sentence::document(&literal.syntax, registry, b, a)
+                        .map_err(|e| match e {
+                            nepl3_suite::adapters::sentence::Error::Stopped(s) => {
+                                ReaderError::Stopped(s)
+                            }
+                            _ => ReaderError::ProviderContract,
+                        })?;
                 let mut codec =
                     FoundationCodec::new(registry, sources, a).map_err(|_| ReaderError::Context)?;
                 let value =

@@ -1,6 +1,7 @@
-//! Explicit development-host bridge from independent Sentence to the current
+//! Pure integration bridge from independent Sentence to the current
 //! Doc consumer. Neither domain core depends on the other. The original
 //! SentenceSyntax remains available with its dense head/cover and View owners.
+use alloc::{string::String, vec::Vec};
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::SchemaRegistry,

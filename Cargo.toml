@@ -11,6 +11,7 @@ repository = "https://github.com/neknaj/NEPL3"
 publish = false
 
 [workspace.dependencies]
+nepl3-suite = { path = "crates/integration/suite" }
 nepl3-sentence-core = { path = "crates/languages/sentence/core" }
 nepl3-core = { path = "crates/foundation/core" }
 nepl3-wire = { path = "crates/foundation/wire" }

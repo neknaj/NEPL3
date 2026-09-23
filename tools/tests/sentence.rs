@@ -13,8 +13,6 @@ use nepl3_reader::{
 };
 use nepl3_tools::sentence::reader;
 use nepl3_wire::foundation::FoundationCodec;
-#[path = "sentence/doc.rs"]
-mod doc;
 #[path = "sentence/package.rs"]
 mod package;
 fn b() -> Budget {

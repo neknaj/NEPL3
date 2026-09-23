@@ -10,6 +10,19 @@ publish.workspace = true
 [dependencies]
 nepl3-core.workspace = true
 nepl3-engine.workspace = true
+nepl3-doc-core = { workspace = true, optional = true }
+nepl3-sentence-core = { workspace = true, optional = true }
+
+[features]
+default = []
+doc-sentence = ["dep:nepl3-doc-core", "dep:nepl3-sentence-core"]
+
+[dev-dependencies]
+nepl3-wire.workspace = true
+
+[[test]]
+name = "sentence"
+required-features = ["doc-sentence"]
 
 [lints]
 workspace = true

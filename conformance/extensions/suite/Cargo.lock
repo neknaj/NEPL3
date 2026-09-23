@@ -57,8 +57,10 @@ version = "0.1.0"
 dependencies = [
  "external-hello-language",
  "nepl3-core",
+ "nepl3-doc-core",
  "nepl3-engine",
  "nepl3-provider",
+ "nepl3-sentence-core",
  "nepl3-suite",
  "nepl3-wire",
 ]
@@ -100,6 +102,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "nepl3-doc-core"
+version = "0.1.0"
+dependencies = [
+ "nepl3-core",
+]
+
+[[package]]
 name = "nepl3-engine"
 version = "0.1.0"
 dependencies = [
@@ -124,11 +133,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "nepl3-sentence-core"
+version = "0.1.0"
+dependencies = [
+ "nepl3-core",
+]
+
+[[package]]
 name = "nepl3-suite"
 version = "0.1.0"
 dependencies = [
  "nepl3-core",
+ "nepl3-doc-core",
  "nepl3-engine",
+ "nepl3-sentence-core",
 ]
 
 [[package]]
