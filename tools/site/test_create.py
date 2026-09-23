@@ -4,7 +4,7 @@ import subprocess
 import unittest
 from unittest.mock import patch
 
-from deployment.create import _create, create, CreationUnknown
+from deployment.create import direct_create, create, CreationUnknown
 from test_transport import server
 from test_receipt_journal import RAW
 
@@ -15,7 +15,7 @@ class CreateTests(unittest.TestCase):
 
     def test_actual_http_post_has_exact_artifact_environment_and_build(self) -> None:
         with server(body=RAW) as seen:
-            raw = _create(*self.args(), timeout=10)
+            raw = direct_create(*self.args(), timeout=10)
         self.assertEqual(raw, RAW)
         self.assertEqual(len(seen), 1)
         path, headers, body = seen[0]

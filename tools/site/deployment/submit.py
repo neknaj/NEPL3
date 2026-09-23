@@ -58,7 +58,7 @@ def _submit(mirror, expected_head, intent, *, expected_url, owner, repository,
     checked(isinstance(intent, Event), "typed intent required")
     intent.validate()
     checked(intent.kind in ("DeployIntent", "RecoveryIntent"), "creation intent required")
-    validate(owner, repository, artifact_id, intent.source_commit, token, oidc_token,
+    _ = validate(owner, repository, artifact_id, intent.source_commit, token, oidc_token,
              min(10, remaining_seconds))
     snapshot = load(mirror)
     checked(snapshot.head == expected_head, "stale submission journal head")
