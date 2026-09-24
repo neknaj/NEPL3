@@ -3,6 +3,7 @@
 #![no_std]
 extern crate alloc;
 
+pub mod borrowed;
 mod boundary;
 mod decode;
 mod encode;

@@ -126,8 +126,16 @@ fn children<'a>(
 }
 
 fn emit(item: &NdfValue, out: &mut impl Sink, budget: &mut Budget) -> Result<(), WireError> {
+    emit_at(item, out, budget, 1)
+}
+fn emit_at(
+    item: &NdfValue,
+    out: &mut impl Sink,
+    budget: &mut Budget,
+    depth: u64,
+) -> Result<(), WireError> {
     let mut pending = Vec::new();
-    push(&mut pending, item, 1, budget)?;
+    push(&mut pending, item, depth, budget)?;
     while let Some((item, depth)) = pending.pop() {
         let Some(item) = item else {
             out.leave(budget)?;
@@ -202,10 +210,7 @@ fn emit(item: &NdfValue, out: &mut impl Sink, budget: &mut Budget) -> Result<(),
                 )?;
             }
             NdfValue::Record(v) => {
-                head(out, 4, 4, budget)?;
-                head(out, 0, 10, budget)?;
-                schema(out, &v.schema, budget)?;
-                raw(out, 3, v.kind.as_bytes(), budget)?;
+                record_head(out, &v.schema, &v.kind, budget)?;
                 children(out, &mut pending, &v.fields, depth, budget)?;
             }
             NdfValue::Variant(v) => {
@@ -219,6 +224,59 @@ fn emit(item: &NdfValue, out: &mut impl Sink, budget: &mut Budget) -> Result<(),
         }
     }
     Ok(())
+}
+
+fn record_head(
+    out: &mut impl Sink,
+    reference: &SchemaRef,
+    kind: &str,
+    budget: &mut Budget,
+) -> Result<(), WireError> {
+    head(out, 4, 4, budget)?;
+    head(out, 0, 10, budget)?;
+    schema(out, reference, budget)?;
+    raw(out, 3, kind.as_bytes(), budget)
+}
+fn emit_record_fields(
+    reference: &SchemaRef,
+    kind: &str,
+    fields: &[&NdfValue],
+    out: &mut impl Sink,
+    budget: &mut Budget,
+) -> Result<(), WireError> {
+    budget.charge(Resource::Work, 1)?;
+    budget.charge(Resource::Nodes, 1)?;
+    budget.observe_depth(1)?;
+    record_head(out, reference, kind, budget)?;
+    head(out, 4, fields.len() as u64, budget)?;
+    for field in fields {
+        emit_at(field, out, budget, 2)?;
+    }
+    Ok(())
+}
+pub(super) fn record_fields(
+    reference: &SchemaRef,
+    kind: &str,
+    fields: &[&NdfValue],
+    budget: &mut Budget,
+) -> Result<Vec<u8>, WireError> {
+    let mut out = Vec::new();
+    emit_record_fields(reference, kind, fields, &mut out, budget)?;
+    Ok(out)
+}
+pub(super) fn record_fields_digest(
+    domain: &[u8],
+    reference: &SchemaRef,
+    kind: &str,
+    fields: &[&NdfValue],
+    budget: &mut Budget,
+) -> Result<Digest, WireError> {
+    budget.charge(Resource::OutputBytes, 32)?;
+    budget.charge(Resource::Work, domain.len() as u64)?;
+    let mut hash = Sha256::new();
+    hash.update(domain);
+    emit_record_fields(reference, kind, fields, &mut hash, budget)?;
+    Ok(Digest(hash.finalize().into()))
 }
 
 pub(super) fn encode(item: &NdfValue, budget: &mut Budget) -> Result<Vec<u8>, WireError> {

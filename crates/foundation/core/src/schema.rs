@@ -478,6 +478,66 @@ pub struct SchemaRegistry {
     finalized: bool,
 }
 impl SchemaRegistry {
+    /// Validate a record assembled from immutable borrowed fields. This checks
+    /// the complete registered schema identity, record kind, field count and
+    /// every field. It establishes structure only; operation-specific type and
+    /// semantic obligations remain with the caller. No field is cloned.
+    pub fn validate_record_fields(
+        &self,
+        schema: &SchemaRef,
+        kind: &str,
+        values: &[&NdfValue],
+        budget: &mut Budget,
+    ) -> Result<(), SchemaError> {
+        budget.poll()?;
+        if !self.finalized {
+            return Err(SchemaError::Unfinalized);
+        }
+        // Lookup work includes the compared names. Charge before inspecting
+        // each candidate so an arbitrarily large registry stays bounded.
+        let mut descriptor = None;
+        for (reference, candidate) in &self.schemas {
+            budget.charge(
+                Resource::Work,
+                (reference.package.len() as u64)
+                    .saturating_add(schema.package.len() as u64)
+                    .saturating_add(41),
+            )?;
+            if reference == schema {
+                descriptor = Some(candidate);
+                break;
+            }
+        }
+        let descriptor = descriptor.ok_or(SchemaError::UnknownSchema)?;
+        let mut definition = None;
+        for candidate in &descriptor.types {
+            budget.charge(
+                Resource::Work,
+                (candidate.name.len() as u64)
+                    .saturating_add(kind.len() as u64)
+                    .saturating_add(1),
+            )?;
+            if candidate.name == kind {
+                definition = Some(candidate);
+                break;
+            }
+        }
+        let TypeShape::Record { fields } = &definition.ok_or(SchemaError::UnknownType)?.shape
+        else {
+            return Err(SchemaError::WrongType);
+        };
+        if fields.len() != values.len() {
+            return Err(SchemaError::FieldCount);
+        }
+        budget.charge(Resource::Work, 1)?;
+        budget.charge(Resource::Nodes, 1)?;
+        budget.with_depth(|budget| {
+            for (field, value) in fields.iter().zip(values) {
+                self.validate(&field.ty, value, budget)?;
+            }
+            Ok(())
+        })
+    }
     pub fn selected(&self, package: &str, revision: u64) -> Option<&SchemaRef> {
         self.schemas
             .iter()

@@ -67,6 +67,129 @@ fn closed() -> Result<(SchemaRef, SchemaRegistry, ForeignClosure), String> {
     Ok((schema, registry, value))
 }
 #[test]
+fn shared_owner_encoding_preserves_bytes_digests_and_revalidates_closures() -> TestResult {
+    let (schema, registry, mut value) = closed()?;
+    let mut origins = value.provenance.origins().to_vec();
+    for index in 0..32 {
+        origins.push(Origin::Synthetic {
+            reason: format!("owner {index}: {}", "origin".repeat(128)),
+            anchor: None,
+        });
+    }
+    value.provenance = OwnerProvenance::from_parts(
+        origins,
+        value.provenance.sources().to_vec(),
+        value.provenance.source_maps().to_vec(),
+    );
+    let mut baseline = budget();
+    let mut a = SourceAdmission::default();
+    let mut expected = Vec::new();
+    for _ in 0..8 {
+        expected = encode_foreign_closure(&value, &schema, &registry, &mut a, &mut baseline)
+            .map_err(|e| format!("{e:?}"))?;
+    }
+    let mut measured = budget();
+    let mut a = SourceAdmission::default();
+    let encoder =
+        ForeignClosureEncoder::new(&value.provenance, &schema, &registry, &mut a, &mut measured)
+            .map_err(|e| format!("{e:?}"))?;
+    for _ in 0..8 {
+        assert_eq!(
+            encoder
+                .encode(&value, &mut a, &mut measured)
+                .map_err(|e| format!("{e:?}"))?,
+            expected
+        );
+    }
+    assert!(
+        measured.usage().allocation_units < baseline.usage().allocation_units,
+        "shared={:?} owned={:?}",
+        measured.usage(),
+        baseline.usage()
+    );
+    assert_eq!(
+        encoder
+            .digest(
+                b"closure",
+                &value,
+                &mut SourceAdmission::default(),
+                &mut budget()
+            )
+            .map_err(|e| format!("{e:?}"))?,
+        nepl3_core::source::Digest::domain(b"closure", &expected)
+    );
+    let received = decode_foreign_closure(
+        &expected,
+        &schema,
+        &registry,
+        &mut SourceAdmission::default(),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(received, value);
+    // Decoded provenance is a separate owner: it needs its own encoder even
+    // when the logical contents happen to equal the sender's tables.
+    assert!(
+        encoder
+            .encode(&received, &mut SourceAdmission::default(), &mut budget())
+            .is_err()
+    );
+    let source = value.provenance.sources().first().ok_or("owner source")?;
+    let identity = source.identity();
+    let conflicting = SourceSnapshot::new(
+        identity.source.clone(),
+        identity.revision,
+        source.uri().into(),
+        b"different source".to_vec(),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let mut conflicting_admission = SourceAdmission::default();
+    conflicting_admission
+        .admit_existing(&conflicting, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert!(
+        encoder
+            .encode(&value, &mut conflicting_admission, &mut budget())
+            .is_err()
+    );
+    for hash in [false, true] {
+        for reason in [
+            StopReason::WorkLimit,
+            StopReason::AllocationLimit,
+            StopReason::DepthLimit,
+        ] {
+            let mut limits = budget().limits();
+            match reason {
+                StopReason::WorkLimit => limits.work = 0,
+                StopReason::AllocationLimit => limits.allocation_units = 0,
+                _ => limits.depth = 0,
+            }
+            let mut b = Budget::new(limits);
+            let result = if hash {
+                encoder
+                    .digest(b"c", &value, &mut SourceAdmission::default(), &mut b)
+                    .map(|_| ())
+            } else {
+                encoder
+                    .encode(&value, &mut SourceAdmission::default(), &mut b)
+                    .map(|_| ())
+            };
+            use nepl3_core::value_codec::FoundationCodecError;
+            assert_eq!(result.err().ok_or("stop")?.stop_reason(), Some(reason));
+        }
+    }
+    // Modifying a non-owner field is possible while owner tables are borrowed;
+    // every encode still checks its environment identity before publishing bytes.
+    value.owner_environment.digest.0[0] ^= 1;
+    assert!(
+        encoder
+            .encode(&value, &mut SourceAdmission::default(), &mut budget())
+            .is_err()
+    );
+    Ok(())
+}
+#[test]
 fn standalone_foreign_keeps_selected_owner_environment_and_origin_arena() -> TestResult {
     let (schema, registry, value) = closed()?;
     let mut b = budget();
