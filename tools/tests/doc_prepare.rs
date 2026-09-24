@@ -8,6 +8,8 @@ mod article;
 mod article_math;
 #[path = "doc/article_namespace.rs"]
 mod article_namespace;
+#[path = "doc/labels.rs"]
+mod labels;
 #[path = "doc/retention.rs"]
 mod retention;
 #[path = "doc/sentence_slots.rs"]

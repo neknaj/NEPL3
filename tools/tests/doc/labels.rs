@@ -1,11 +1,84 @@
-use super::*;
-use nepl3_core::{schema::SchemaRegistry, value_codec::FoundationValueCodec};
+use super::retention::assert_doc_retention;
+use nepl3_core::{
+    budget::{Budget, StopReason},
+    schema::SchemaRegistry,
+    source::{SourceAdmission, SourceStore},
+    value::NdfValue,
+    value_codec::FoundationValueCodec,
+};
 use nepl3_doc_core::{
     check::Category,
-    labels::{self, LabelError},
+    labels::{self, LabelError, namespace},
     lower,
     model::*,
 };
+use nepl3_tools::doc::source::{Compiled, budget, compiled, err, with_input};
+use nepl3_wire::foundation::FoundationCodec;
+
+// Explicit one-level fixture composition: Article/Doc Sentence followed by its
+// selected Doc Inline occurrences. Production recursive discovery is separate.
+fn members(
+    compiled: &Compiled,
+    document: &DocumentSyntax,
+    r: &SchemaRegistry,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+) -> Result<Vec<DocumentSyntax>, String> {
+    let empty = SourceStore::default();
+    let mut codec = FoundationCodec::new(r, &empty, a).map_err(err)?;
+    let surface = r
+        .selected("nepl3.syntax.sentence", 1)
+        .ok_or("Sentence surface")?;
+    let forms = [nepl3_sentence_core::lower::ForeignInlineForm {
+        kind: "Form:DocumentInline",
+        guest_schema: &compiled.doc.package.schema,
+        guest_category: "Inline",
+    }];
+    let slots = nepl3_suite::adapters::document::sentences::collect(
+        document, surface, &forms, r, &mut codec, b,
+    )
+    .map_err(err)?;
+    let mut documents = vec![document.clone()];
+    for occurrence in slots.occurrences() {
+        let sentence = slots.sentence(occurrence.embed).ok_or("Sentence slot")?;
+        let selected = nepl3_suite::adapters::sentence::document_guests::collect(
+            sentence,
+            &compiled.doc.package.schema,
+            r,
+            &mut codec,
+            b,
+        )
+        .map_err(err)?;
+        for occurrence in selected.occurrences() {
+            documents.push(selected.documents()[occurrence.document.index()].clone());
+        }
+    }
+    Ok(documents)
+}
+
+// Copy only the observed sites for comparison after the temporary member list
+// expires. These test observations grant no namespace or rendering proof.
+type ObservedLabels<'a> = (
+    Vec<namespace::NamespaceSite<'a>>,
+    Vec<namespace::NamespaceReference<'a>>,
+);
+fn resolve<'a>(
+    documents: &'a [DocumentSyntax],
+    r: &SchemaRegistry,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+) -> Result<ObservedLabels<'a>, namespace::Error<'a>> {
+    let scopes = documents
+        .iter()
+        .map(|doc| namespace::inspect(doc, r, b, a))
+        .collect::<Result<Vec<_>, _>>()?;
+    let refs = scopes.iter().collect::<Vec<_>>();
+    let checked = namespace::resolve(&refs, b)?;
+    Ok((
+        checked.definitions().to_vec(),
+        checked.references().to_vec(),
+    ))
+}
 
 fn with_document<T>(
     compiled: &Compiled,
@@ -43,11 +116,11 @@ fn sentence_labels_keep_preorder_ids_and_first_duplicate_diagnostic() -> Result<
     let compiled = compiled()?;
     for (source, duplicate) in [
         (
-            r#"sentence cons ref a text "A" cons ref z text "Z" cons anchor z text "first" cons anchor a text "second" nil"#,
+            r#"sentence sentence cons doc ref a text "A" cons doc ref z text "Z" cons doc anchor z text "first" cons doc anchor a text "second" nil"#,
             false,
         ),
         (
-            r#"sentence cons anchor z text "first" cons anchor z text "duplicate" cons anchor a text "later" cons anchor a text "later duplicate" nil"#,
+            r#"sentence sentence cons doc anchor z text "first" cons doc anchor z text "duplicate" cons doc anchor a text "later" cons doc anchor a text "later duplicate" nil"#,
             true,
         ),
     ] {
@@ -68,42 +141,40 @@ fn sentence_labels_keep_preorder_ids_and_first_duplicate_diagnostic() -> Result<
                 &mut codec,
             )
             .map_err(err)?;
-            let result =
-                labels::check_sentence(&doc, profile.registry(), b, codec.source_admission());
+            let documents = members(
+                &compiled,
+                &doc,
+                profile.registry(),
+                b,
+                codec.source_admission(),
+            )?;
+            let result = resolve(&documents, profile.registry(), b, codec.source_admission());
             if duplicate {
                 // The first repeated declaration is z, although a sorts first.
                 match result {
-                    Err(LabelError::Duplicate {
+                    Err(namespace::Error::Duplicate {
                         definition,
                         previous,
                     }) => {
-                        assert_eq!(definition.name, "z");
-                        assert_eq!(previous.name, "z");
+                        assert_eq!(definition.site.name, "z");
+                        assert_eq!(previous.site.name, "z");
                         assert!(
-                            previous.selection.ok_or("previous span")?.start()
-                                < definition.selection.ok_or("duplicate span")?.start()
+                            previous.site.selection.ok_or("previous span")?.start()
+                                < definition.site.selection.ok_or("duplicate span")?.start()
                         );
                     }
                     _ => return Err("expected first duplicate in sentence order".into()),
                 }
             } else {
-                let labels = result.map_err(err)?;
+                let (definitions, references) = result.map_err(err)?;
                 // Forward references resolve to declaration-preorder IDs,
                 // never to positions in the sorted name index.
                 assert_eq!(
-                    labels
-                        .definitions()
-                        .iter()
-                        .map(|s| s.name)
-                        .collect::<Vec<_>>(),
+                    definitions.iter().map(|s| s.site.name).collect::<Vec<_>>(),
                     vec!["z", "a"]
                 );
                 assert_eq!(
-                    labels
-                        .references()
-                        .iter()
-                        .map(|s| s.target.0)
-                        .collect::<Vec<_>>(),
+                    references.iter().map(|s| s.target.0).collect::<Vec<_>>(),
                     vec![1, 0]
                 );
             }
@@ -116,25 +187,18 @@ fn sentence_labels_keep_preorder_ids_and_first_duplicate_diagnostic() -> Result<
 #[test]
 fn nested_labels_keep_declaration_order_and_pending_siblings() -> Result<(), String> {
     let compiled = compiled()?;
-    let source = r#"article en "Title" body cons section z "First" body cons section a "Nested" body nil nil cons section m "Last" body cons paragraph cons sentence cons ref a text "nested" cons ref z text "first" cons ref m text "last" nil nil nil nil"#;
+    let source = r#"article en sentence "Title" body cons section z sentence "First" body cons section a sentence "Nested" body nil nil cons section m sentence "Last" body cons paragraph cons sentence sentence cons doc ref a text "nested" cons doc ref z text "first" cons doc ref m text "last" nil nil nil nil"#;
     with_document(&compiled, source, |doc, r, b, a| {
-        let proof = labels::check(doc, r, b, a).map_err(err)?;
+        let documents = members(&compiled, doc, r, b, a)?;
+        let (definitions, references) = resolve(&documents, r, b, a).map_err(err)?;
         // Constructor preorder, neither name sorting nor arena index order:
         // nested a is visited before the already queued sibling m.
         assert_eq!(
-            proof
-                .definitions()
-                .iter()
-                .map(|s| s.name)
-                .collect::<Vec<_>>(),
+            definitions.iter().map(|s| s.site.name).collect::<Vec<_>>(),
             vec!["z", "a", "m"]
         );
         assert_eq!(
-            proof
-                .references()
-                .iter()
-                .map(|s| s.target.0)
-                .collect::<Vec<_>>(),
+            references.iter().map(|s| s.target.0).collect::<Vec<_>>(),
             vec![1, 0, 2]
         );
         Ok(())
@@ -144,12 +208,13 @@ fn nested_labels_keep_declaration_order_and_pending_siblings() -> Result<(), Str
 #[test]
 fn article_labels_resolve_forward_names_and_keep_operand_selection() -> Result<(), String> {
     let compiled = compiled()?;
-    let source = r#"article en "Title" body cons paragraph cons sentence cons ref later text "shown" nil nil cons section later "Heading" body nil nil"#;
+    let source = r#"article en sentence "Title" body cons paragraph cons sentence sentence cons doc ref later text "shown" nil nil cons section later sentence "Heading" body nil nil"#;
     with_document(&compiled, source, |doc, r, b, a| {
-        let checked = labels::check(doc, r, b, a).map_err(err)?;
-        assert_eq!(checked.definitions().len(), 1);
-        let definition = checked.definitions()[0];
-        let reference = checked.references()[0];
+        let documents = members(&compiled, doc, r, b, a)?;
+        let (definitions, references) = resolve(&documents, r, b, a).map_err(err)?;
+        assert_eq!(definitions.len(), 1);
+        let definition = definitions[0].site;
+        let reference = references[0];
         assert_eq!(definition.name, "later");
         assert_eq!(reference.target, labels::DocLabelId(0));
         let selected = definition.selection.ok_or("definition selection")?;
@@ -158,6 +223,7 @@ fn article_labels_resolve_forward_names_and_keep_operand_selection() -> Result<(
         assert!(
             reference
                 .reference
+                .site
                 .selection
                 .ok_or("reference selection")?
                 .start()
@@ -186,9 +252,9 @@ fn article_labels_resolve_forward_names_and_keep_operand_selection() -> Result<(
         )
         .map_err(err)?;
         assert_doc_retention(doc, &received)?;
-        let after = labels::check(&received, r, b, codec.source_admission()).map_err(err)?;
-        assert_eq!(checked.definitions(), after.definitions());
-        assert_eq!(checked.references(), after.references());
+        let received_members = members(&compiled, &received, r, b, codec.source_admission())?;
+        let after = resolve(&received_members, r, b, codec.source_admission()).map_err(err)?;
+        assert_eq!((definitions, references), after);
         Ok(())
     })
 }
@@ -197,23 +263,26 @@ fn article_labels_resolve_forward_names_and_keep_operand_selection() -> Result<(
 fn label_duplicates_use_name_operands_and_source_less_positions_stay_absent() -> Result<(), String>
 {
     let compiled = compiled()?;
-    let source = r#"article en "same" body cons section same "same" body nil cons paragraph cons sentence cons anchor same text "same" nil nil nil"#;
+    let source = r#"article en sentence "same" body cons section same sentence "same" body nil cons paragraph cons sentence sentence cons doc anchor same text "same" nil nil nil"#;
     with_document(&compiled, source, |doc, r, b, a| {
-        let Err(LabelError::Duplicate {
+        let documents = members(&compiled, doc, r, b, a)?;
+        let Err(namespace::Error::Duplicate {
             definition,
             previous,
-        }) = labels::check(doc, r, b, a)
+        }) = resolve(&documents, r, b, a)
         else {
             return Err("expected duplicate".into());
         };
+        let previous = previous.site;
+        let definition = definition.site;
         assert_eq!(
             (
                 previous.selection.ok_or("previous")?.start(),
                 previous.selection.ok_or("previous")?.end()
             ),
             (
-                r#"article en "same" body cons section "#.len() as u64,
-                r#"article en "same" body cons section same"#.len() as u64
+                r#"article en sentence "same" body cons section "#.len() as u64,
+                r#"article en sentence "same" body cons section same"#.len() as u64
             )
         );
         assert_eq!(
@@ -221,11 +290,14 @@ fn label_duplicates_use_name_operands_and_source_less_positions_stay_absent() ->
                 definition.selection.ok_or("definition")?.start(),
                 definition.selection.ok_or("definition")?.end()
             ),
-            (r#"article en "same" body cons section same "same" body nil cons paragraph cons sentence cons anchor "#.len() as u64,
-             r#"article en "same" body cons section same "same" body nil cons paragraph cons sentence cons anchor same"#.len() as u64)
+            (r#"article en sentence "same" body cons section same sentence "same" body nil cons paragraph cons sentence sentence cons doc anchor "#.len() as u64,
+             r#"article en sentence "same" body cons section same sentence "same" body nil cons paragraph cons sentence sentence cons doc anchor same"#.len() as u64)
         );
-        let mut raw = doc.clone_with_budget(b).map_err(err)?;
-        for node in &mut raw.value.nodes {
+        let mut raw = documents.clone();
+        for node in raw
+            .iter_mut()
+            .flat_map(|document| &mut document.value.nodes)
+        {
             node.span = None;
             node.origin = None;
             for location in &mut node.locations {
@@ -233,17 +305,17 @@ fn label_duplicates_use_name_operands_and_source_less_positions_stay_absent() ->
                 location.origin = None;
             }
         }
-        let Err(LabelError::Duplicate {
+        let Err(namespace::Error::Duplicate {
             definition,
             previous,
-        }) = labels::check(&raw, r, b, a)
+        }) = resolve(&raw, r, b, a)
         else {
             return Err("expected unlocated duplicate".into());
         };
         assert!(
-            definition.selection.is_none()
-                && previous.selection.is_none()
-                && definition.range.is_none()
+            definition.site.selection.is_none()
+                && previous.site.selection.is_none()
+                && definition.site.range.is_none()
         );
         Ok(())
     })
@@ -254,23 +326,31 @@ fn article_labels_do_not_import_or_validate_guest_labels() -> Result<(), String>
     let compiled = compiled()?;
     for (source, missing) in [
         (
-            r#"article en "Host" body cons paragraph cons code Doc article en "Guest" body cons section hidden "Heading" body nil nil cons sentence cons ref hidden text "shown" nil nil nil"#,
+            r#"article en sentence "Host" body cons paragraph cons code Doc article en sentence "Guest" body cons section hidden sentence "Heading" body nil nil cons sentence sentence cons doc ref hidden text "shown" nil nil nil"#,
             true,
         ),
         (
-            r#"article en "Host" body cons paragraph cons code Doc article en "Guest" body cons section repeated "One" body nil cons section repeated "Two" body nil nil nil nil"#,
+            r#"article en sentence "Host" body cons paragraph cons code Doc article en sentence "Guest" body cons section repeated sentence "One" body nil cons section repeated sentence "Two" body nil nil nil nil"#,
             false,
         ),
     ] {
         with_document(&compiled, source, |doc, r, b, a| {
-            assert_eq!(doc.value.embeds.len(), 1);
-            let result = labels::check(doc, r, b, a);
+            assert_eq!(
+                doc.value
+                    .embeds
+                    .iter()
+                    .filter(|e| e.kind == EmbedKind::Code)
+                    .count(),
+                1
+            );
+            let documents = members(&compiled, doc, r, b, a)?;
+            let result = resolve(&documents, r, b, a);
             if missing {
                 assert!(
-                    matches!(result,Err(LabelError::Unresolved{reference}) if reference.name=="hidden")
+                    matches!(result,Err(namespace::Error::Unresolved{reference}) if reference.site.name=="hidden")
                 );
             } else {
-                assert!(result.map_err(err)?.definitions().is_empty());
+                assert!(result.map_err(err)?.0.is_empty());
             }
             Ok(())
         })?;
@@ -290,7 +370,7 @@ fn field_location_first_receiver_rejects_kind_duplicates_and_position_claims() -
     let compiled = compiled()?;
     with_document(
         &compiled,
-        r#"article en "Title" body cons section named "Heading" body nil nil"#,
+        r#"article en sentence "Title" body cons section named sentence "Heading" body nil nil"#,
         |doc, r, b, a| {
             let named = doc
                 .value
@@ -302,7 +382,7 @@ fn field_location_first_receiver_rejects_kind_duplicates_and_position_claims() -
                 .value
                 .nodes
                 .iter()
-                .position(|n| matches!(&n.kind,DocKind::Text{text} if text=="Title"))
+                .position(|n| matches!(&n.kind, DocKind::Sentence { .. }))
                 .ok_or("title")?;
             let empty = SourceStore::default();
             let mut codec = FoundationCodec::new(r, &empty, a).map_err(err)?;
@@ -363,10 +443,11 @@ fn field_location_first_receiver_rejects_kind_duplicates_and_position_claims() -
 #[test]
 fn unicode_crlf_labels_and_budget_stops_keep_their_input_positions() -> Result<(), String> {
     let compiled = compiled()?;
-    let source = "# 日本語🙂\r\narticle en \"前\" body cons paragraph cons sentence cons ref 節 text \"表示\" nil nil cons section 節 \"題\" body nil nil";
+    let source = "# 日本語🙂\r\narticle en sentence \"前\" body cons paragraph cons sentence sentence cons doc ref 節 text \"表示\" nil nil cons section 節 sentence \"題\" body nil nil";
     with_document(&compiled, source, |doc, r, b, a| {
-        let baseline = labels::check(doc, r, b, a).map_err(err)?;
-        let selection = baseline.definitions()[0].selection.ok_or("selection")?;
+        let documents = members(&compiled, doc, r, b, a)?;
+        let baseline = resolve(&documents, r, b, a).map_err(err)?;
+        let selection = baseline.0[0].site.selection.ok_or("selection")?;
         assert_eq!(selection.end() - selection.start(), 3);
         assert_eq!(
             doc.sources
@@ -377,7 +458,7 @@ fn unicode_crlf_labels_and_budget_stops_keep_their_input_positions() -> Result<(
                 .map_err(err)?,
             "節"
         );
-        let saved = doc.clone_with_budget(b).map_err(err)?;
+        let saved = documents.clone();
         let mut stops = 0;
         let mut successes = 0;
         for resource in 0..5 {
@@ -407,15 +488,14 @@ fn unicode_crlf_labels_and_budget_stops_keep_their_input_positions() -> Result<(
                 };
                 let mut operation = Budget::new(limits);
                 let result = operation.with_depth_at_least(7, |b| {
-                    labels::check(doc, r, b, &mut SourceAdmission::default())
+                    resolve(&documents, r, b, &mut SourceAdmission::default())
                 });
                 match result {
                     Ok(result) => {
                         successes += 1;
-                        assert_eq!(result.definitions(), baseline.definitions());
-                        assert_eq!(result.references(), baseline.references());
+                        assert_eq!(result, baseline);
                     }
-                    Err(LabelError::Stopped(reason)) => {
+                    Err(namespace::Error::Stopped(reason)) => {
                         stops += 1;
                         assert_eq!(reason, expected);
                         assert_eq!(operation.poll(), Err(expected));
@@ -423,15 +503,20 @@ fn unicode_crlf_labels_and_budget_stops_keep_their_input_positions() -> Result<(
                     Err(other) => return Err(format!("resource {resource} cap {cap}: {other:?}")),
                 }
                 assert_eq!(operation.current_depth(), 0);
-                assert_eq!(doc, &saved);
+                assert_eq!(documents, saved);
             }
         }
         assert!(stops > 0 && successes > 0);
         let mut cancelled = budget();
         cancelled.cancel();
         assert!(matches!(
-            labels::check(doc, r, &mut cancelled, &mut SourceAdmission::default()),
-            Err(LabelError::Stopped(StopReason::Cancelled))
+            resolve(
+                &documents,
+                r,
+                &mut cancelled,
+                &mut SourceAdmission::default()
+            ),
+            Err(namespace::Error::Stopped(StopReason::Cancelled))
         ));
         Ok(())
     })
@@ -442,23 +527,19 @@ fn shared_label_display_occurrences_have_two_structural_paths() -> Result<(), St
     let compiled = compiled()?;
     with_document(
         &compiled,
-        r#"article en "Title" body cons paragraph cons sentence cons anchor named text "shown" nil nil nil"#,
+        r#"article en sentence "Title" body cons paragraph cons section named sentence "shown" body nil nil nil"#,
         |doc, r, b, a| {
-            for parent in ["sentence", "paragraph"] {
+            // Local structural paths are owned by Doc. Inline declarations
+            // inside independent Sentence use namespace member occurrences.
+            for parent in ["paragraph", "body"] {
                 let mut shared = doc.clone_with_budget(b).map_err(err)?;
-                let anchor = shared
+                let section = shared
                     .value
                     .nodes
                     .iter()
-                    .position(|n| matches!(n.kind, DocKind::Anchor { .. }))
-                    .ok_or("anchor")? as u64;
-                if parent == "sentence" {
-                    let owner=shared.value.nodes.iter_mut().find(|n|matches!(&n.kind,DocKind::Sentence{inlines} if inlines.iter().any(|r|r.0==anchor))).ok_or("sentence")?;
-                    let DocKind::Sentence { inlines } = &mut owner.kind else {
-                        return Err("sentence".into());
-                    };
-                    inlines.push(InlineRef(anchor));
-                } else {
+                    .position(|n| matches!(n.kind, DocKind::Section { .. }))
+                    .ok_or("section")? as u64;
+                if parent == "paragraph" {
                     let owner = shared
                         .value
                         .nodes
@@ -469,35 +550,51 @@ fn shared_label_display_occurrences_have_two_structural_paths() -> Result<(), St
                         return Err("paragraph".into());
                     };
                     items.push(items[0]);
+                } else {
+                    let owner = shared
+                        .value
+                        .nodes
+                        .iter_mut()
+                        .find(|n| matches!(&n.kind, DocKind::Body { blocks } if !blocks.is_empty()))
+                        .ok_or("body")?;
+                    let DocKind::Body { blocks } = &mut owner.kind else {
+                        return Err("body".into());
+                    };
+                    blocks.push(blocks[0]);
                 }
                 let Err(LabelError::DuplicateOccurrence { definition, paths }) =
                     labels::check(&shared, r, b, a)
                 else {
                     return Err(format!("shared {parent}"));
                 };
-                assert_eq!(definition.node, anchor);
+                assert_eq!(definition.node, section);
                 assert_ne!(paths.first, paths.second);
-                assert_eq!(paths.first.last().ok_or("first path")?.target, anchor);
-                assert_eq!(paths.second.last().ok_or("second path")?.target, anchor);
+                assert_eq!(paths.first.last().ok_or("first path")?.target, section);
+                assert_eq!(paths.second.last().ok_or("second path")?.target, section);
                 assert_eq!(
                     definition.selection,
-                    doc.value.nodes[anchor as usize].locations[0].span.as_ref()
+                    doc.value.nodes[section as usize].locations[0].span.as_ref()
                 );
             }
-            // Sharing a non-label Text remains legal. It does not require changing
+            // Sharing a non-label Sentence remains legal. It does not require changing
             // any HTML id or silently cloning a semantic declaration.
             let mut shared = doc.clone_with_budget(b).map_err(err)?;
             let title = shared
                 .value
                 .nodes
                 .iter()
-                .position(|n| matches!(&n.kind,DocKind::Text{text} if text=="Title"))
+                .position(|n| matches!(&n.kind, DocKind::Sentence { .. }))
                 .ok_or("title")? as u64;
-            let owner=shared.value.nodes.iter_mut().find(|n|matches!(&n.kind,DocKind::Sentence{inlines} if inlines.iter().any(|r|r.0==title))).ok_or("title sentence")?;
-            let DocKind::Sentence { inlines } = &mut owner.kind else {
-                return Err("sentence".into());
+            let owner = shared
+                .value
+                .nodes
+                .iter_mut()
+                .find(|n| matches!(n.kind, DocKind::Paragraph { .. }))
+                .ok_or("paragraph")?;
+            let DocKind::Paragraph { items } = &mut owner.kind else {
+                return Err("paragraph".into());
             };
-            inlines.push(InlineRef(title));
+            items.push(FlowRef(title));
             assert_eq!(
                 labels::check(&shared, r, b, a)
                     .map_err(err)?
@@ -511,24 +608,97 @@ fn shared_label_display_occurrences_have_two_structural_paths() -> Result<(), St
 }
 
 #[test]
+fn shared_sentence_guests_keep_distinct_namespace_occurrences() -> Result<(), String> {
+    let compiled = compiled()?;
+    with_document(
+        &compiled,
+        r#"article en sentence "Title" body cons paragraph cons sentence sentence cons doc anchor named text "shown" nil nil nil"#,
+        |doc, r, b, a| {
+            for parent in ["paragraph", "body"] {
+                let mut shared = doc.clone_with_budget(b).map_err(err)?;
+                match parent {
+                    "paragraph" => {
+                        let items = shared
+                            .value
+                            .nodes
+                            .iter_mut()
+                            .find_map(|node| {
+                                if let DocKind::Paragraph { items } = &mut node.kind {
+                                    Some(items)
+                                } else {
+                                    None
+                                }
+                            })
+                            .ok_or("paragraph")?;
+                        items.push(items[0]);
+                    }
+                    _ => {
+                        let blocks = shared
+                            .value
+                            .nodes
+                            .iter_mut()
+                            .find_map(|node| {
+                                if let DocKind::Body { blocks } = &mut node.kind {
+                                    Some(blocks)
+                                } else {
+                                    None
+                                }
+                            })
+                            .ok_or("body")?;
+                        blocks.push(blocks[0]);
+                    }
+                }
+                let documents = members(&compiled, &shared, r, b, a)?;
+                assert_eq!(documents.len(), 3);
+                let Err(namespace::Error::Duplicate {
+                    definition,
+                    previous,
+                }) = resolve(&documents, r, b, a)
+                else {
+                    return Err(format!("shared guest in {parent}"));
+                };
+                // Equal semantic sites still denote two display occurrences.
+                assert_eq!(previous.member, namespace::MemberId(1));
+                assert_eq!(definition.member, namespace::MemberId(2));
+                assert_eq!(definition.site, previous.site);
+                assert_eq!(definition.site.name, "named");
+                let span = definition.site.selection.ok_or("name selection")?;
+                let source = documents[1]
+                    .sources
+                    .iter()
+                    .find(|source| source.identity() == span.snapshot_ref())
+                    .ok_or("name source")?;
+                assert_eq!(source.slice(span).map_err(err)?, "named");
+            }
+            Ok(())
+        },
+    )
+}
+
+#[test]
 fn label_diagnostics_keep_typed_names_paths_and_original_failure_on_stop() -> Result<(), String> {
     let compiled = compiled()?;
     with_document(
         &compiled,
-        r#"article en "Title" body cons paragraph cons sentence cons anchor named text "shown" nil nil nil"#,
+        r#"article en sentence "Title" body cons paragraph cons section named sentence "shown" body nil nil nil"#,
         |doc, r, b, a| {
             let mut shared = doc.clone_with_budget(b).map_err(err)?;
-            let anchor = shared
+            let section = shared
                 .value
                 .nodes
                 .iter()
-                .position(|n| matches!(n.kind, DocKind::Anchor { .. }))
-                .ok_or("anchor")? as u64;
-            let owner=shared.value.nodes.iter_mut().find(|n|matches!(&n.kind,DocKind::Sentence{inlines} if inlines.iter().any(|r|r.0==anchor))).ok_or("sentence")?;
-            let DocKind::Sentence { inlines } = &mut owner.kind else {
-                return Err("sentence".into());
+                .position(|n| matches!(n.kind, DocKind::Section { .. }))
+                .ok_or("section")? as u64;
+            let owner = shared
+                .value
+                .nodes
+                .iter_mut()
+                .find(|n| matches!(n.kind, DocKind::Paragraph { .. }))
+                .ok_or("paragraph")?;
+            let DocKind::Paragraph { items } = &mut owner.kind else {
+                return Err("paragraph".into());
             };
-            inlines.push(InlineRef(anchor));
+            items.push(FlowRef(section));
             let failure = labels::check(&shared, r, b, a)
                 .err()
                 .ok_or("duplicate occurrence")?;
