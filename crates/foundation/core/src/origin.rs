@@ -56,7 +56,7 @@ impl OriginGraph {
         sources: &SourceStore,
         budget: &mut Budget,
     ) -> Result<Self, OriginError> {
-        let heights = Self::checked_heights(&origins, sources, budget)?;
+        let (heights, _) = Self::checked_heights(&origins, sources, budget)?;
         Ok(Self { origins, heights })
     }
     pub fn validate_origins(
@@ -66,11 +66,19 @@ impl OriginGraph {
     ) -> Result<(), OriginError> {
         Self::checked_heights(origins, sources, budget).map(|_| ())
     }
+    pub(crate) fn validation_depth(
+        origins: &[Origin],
+        sources: &SourceStore,
+        budget: &mut Budget,
+    ) -> Result<u64, OriginError> {
+        Self::checked_heights(origins, sources, budget).map(|(_, depth)| depth)
+    }
     fn checked_heights(
         origins: &[Origin],
         sources: &SourceStore,
         budget: &mut Budget,
-    ) -> Result<Vec<u64>, OriginError> {
+    ) -> Result<(Vec<u64>, u64), OriginError> {
+        let mut maximum_depth = 0;
         budget.charge(Resource::AllocationUnits, origins.len() as u64)?;
         let mut state = alloc::vec![0u8; origins.len()];
         budget.charge(
@@ -97,6 +105,7 @@ impl OriginGraph {
                         );
                     }
                     heights[index] = height;
+                    maximum_depth = maximum_depth.max(height);
                     state[index] = 2;
                     continue;
                 }
@@ -138,7 +147,7 @@ impl OriginGraph {
                 }
             }
         }
-        Ok(heights)
+        Ok((heights, maximum_depth))
     }
     /// Append-only native construction accepts only existing parents, so cannot introduce cycles.
     /// Parent height lookup is O(P) for P immediate parent edges, with no ancestor
@@ -270,6 +279,21 @@ impl SourceMap {
         sources: &SourceStore,
         budget: &mut Budget,
     ) -> Result<ValidatedSourceMap<'a>, OriginError> {
+        Self::checked_mapping_parts(mappings, additional, sources, budget).map(|(proof, _)| proof)
+    }
+    pub(crate) fn validation_depth(
+        mappings: &[Mapping],
+        sources: &SourceStore,
+        budget: &mut Budget,
+    ) -> Result<u64, OriginError> {
+        Self::checked_mapping_parts(mappings, &[], sources, budget).map(|(_, depth)| depth)
+    }
+    fn checked_mapping_parts<'a>(
+        mappings: &'a [Mapping],
+        additional: &'a [Mapping],
+        sources: &SourceStore,
+        budget: &mut Budget,
+    ) -> Result<(ValidatedSourceMap<'a>, u64), OriginError> {
         budget.charge(Resource::Work, 1)?;
         let mapped = ValidatedSourceMap {
             mappings,
@@ -293,8 +317,8 @@ impl SourceMap {
                 }
             }
         }
-        check_map_cycles(mapped.iter(), budget)?;
-        Ok(mapped)
+        let depth = check_map_cycles(mapped.iter(), budget)?;
+        Ok((mapped, depth))
     }
 }
 impl<'a> ValidatedSourceMap<'a> {
@@ -570,9 +594,10 @@ fn push_point<'a>(
 fn check_map_cycles<'a>(
     input: impl Iterator<Item = &'a Mapping> + Clone,
     budget: &mut Budget,
-) -> Result<(), OriginError> {
-    if snapshot_dag(input.clone(), budget)? {
-        return Ok(());
+) -> Result<u64, OriginError> {
+    let (acyclic, mut maximum_depth) = snapshot_dag(input.clone(), budget)?;
+    if acyclic {
+        return Ok(maximum_depth);
     }
     // Exact edges preserve byte displacement. Transformed fragments relate every source
     // byte to every target byte. Empty fragments use a distinct insertion-anchor vertex.
@@ -591,6 +616,7 @@ fn check_map_cycles<'a>(
             while let Some((current, exiting, depth)) = stack.pop() {
                 budget.charge(Resource::Work, 1)?;
                 budget.observe_depth(depth)?;
+                maximum_depth = maximum_depth.max(depth);
                 if exiting {
                     state.insert(current, 2);
                     continue;
@@ -645,7 +671,7 @@ fn check_map_cycles<'a>(
             }
         }
     }
-    Ok(())
+    Ok(maximum_depth)
 }
 
 /// A pointwise cycle implies a snapshot cycle. Proving the coarse graph acyclic
@@ -654,7 +680,7 @@ fn check_map_cycles<'a>(
 fn snapshot_dag<'a>(
     input: impl Iterator<Item = &'a Mapping>,
     budget: &mut Budget,
-) -> Result<bool, OriginError> {
+) -> Result<(bool, u64), OriginError> {
     let mut nodes: Vec<&'a SnapshotId> = Vec::new();
     let mut ordered: Vec<usize> = Vec::new();
     // Linked adjacency lists retain duplicate edges without scanning unrelated
@@ -803,9 +829,11 @@ fn snapshot_dag<'a>(
         }
     }
     let mut visited = 0usize;
+    let mut maximum_depth = 0;
     while let Some(current) = ready.pop() {
         budget.charge(Resource::Nodes, 1)?;
         budget.observe_depth(depth[current])?;
+        maximum_depth = maximum_depth.max(depth[current]);
         visited += 1;
         let mut next = outgoing[current];
         while let Some(edge) = next {
@@ -827,5 +855,5 @@ fn snapshot_dag<'a>(
             }
         }
     }
-    Ok(visited == nodes.len())
+    Ok((visited == nodes.len(), maximum_depth))
 }

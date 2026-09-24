@@ -1,10 +1,10 @@
 use super::*;
 
 /// One immutable owner's portable tables, reused while encoding its closures.
-/// This stores data, not a validation proof. Every operation revalidates the
-/// closure, source admission and complete registered wire record.
+/// Retains checked owner graphs and their portable data. Every operation admits
+/// sources and validates guest syntax, environment and the registered wire record.
 pub struct ForeignClosureEncoder<'a> {
-    owner: &'a OwnerProvenance,
+    owner: nepl3_core::syntax::ValidatedOwnerProvenance<'a>,
     schema: &'a SchemaRef,
     registry: &'a SchemaRegistry,
     owner_fields: [NdfValue; 3],
@@ -25,7 +25,7 @@ impl<'a> ForeignClosureEncoder<'a> {
             return Err(nepl3_core::schema::SchemaError::WrongType.into());
         }
         Ok(Self {
-            owner,
+            owner: owner.validate(registry, b, admission)?,
             schema,
             registry,
             owner_fields: [
@@ -42,17 +42,7 @@ impl<'a> ForeignClosureEncoder<'a> {
         b: &mut Budget,
     ) -> Result<[NdfValue; 2], WireError> {
         b.charge(Resource::Work, 1)?;
-        // OwnerProvenance exposes immutable slices. Shared storage has exactly
-        // the same three slices; addresses are never serialized or hashed.
-        // Independent empty tables can have equal pointers and are equivalent
-        // here. This is data reuse, not owner authority or allocation identity.
-        if !core::ptr::eq(self.owner.origins(), value.provenance.origins())
-            || !core::ptr::eq(self.owner.sources(), value.provenance.sources())
-            || !core::ptr::eq(self.owner.source_maps(), value.provenance.source_maps())
-        {
-            return Err(WireError::InvalidType);
-        }
-        value.validate(self.registry, b, admission)?;
+        self.owner.validate_closure(value, b, admission)?;
         closure_parts(value, self.schema, self.registry, admission, b)
     }
     pub fn encode(

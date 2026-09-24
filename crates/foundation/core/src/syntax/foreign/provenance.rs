@@ -20,7 +20,81 @@ pub struct OwnerProvenance {
     storage: Storage,
 }
 
+/// Checked immutable owner tables and registry. Each use admits their sources
+/// into the caller's explicit admission context before reusing graph checks.
+/// Their required relative depth is applied to the current caller's Budget;
+/// earlier validation never grants additional depth or source authority.
+pub struct ValidatedOwnerProvenance<'a> {
+    owner: &'a OwnerProvenance,
+    registry: &'a SchemaRegistry,
+    depth: u64,
+}
+
+impl ValidatedOwnerProvenance<'_> {
+    /// Validate each guest and its selected environment. Only the unchanged
+    /// owner tables reuse validation; guest graphs and environment values are
+    /// checked on every call. Native environment hash recomputation remains a
+    /// portable codec responsibility.
+    pub fn validate_closure<'s>(
+        &self,
+        closure: &'s ForeignClosure,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<ValidatedForeignClosure<'s>, SyntaxError> {
+        b.charge(Resource::Work, 1)?;
+        if !self.owner.same_tables(&closure.provenance) {
+            return Err(SyntaxError::Reference);
+        }
+        b.observe_depth(self.depth)?;
+        for source in self.owner.sources() {
+            b.charge(Resource::Work, 1)?;
+            admission.admit_existing(source, b)?;
+        }
+        closure.validate_contents(self.registry, b, admission)
+    }
+}
+
 impl OwnerProvenance {
+    /// Check complete owner tables once. The returned proof borrows all inputs;
+    /// it cannot outlive or mutate their table order, source identity or spans.
+    pub fn validate<'a>(
+        &'a self,
+        registry: &'a SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<ValidatedOwnerProvenance<'a>, SyntaxError> {
+        b.poll()?;
+        if !registry.is_finalized() {
+            return Err(crate::schema::SchemaError::Unfinalized.into());
+        }
+        let mut store = SourceStore::default();
+        for source in self.sources() {
+            admission.admit_existing(source, b)?;
+            if store
+                .get_revision_with_budget(&source.identity().source, source.identity().revision, b)?
+                .is_some()
+            {
+                return Err(SyntaxError::DuplicateSource);
+            }
+            store.insert_with_budget(source.clone_with_budget(b)?, b)?;
+        }
+        let origins_depth = OriginGraph::validation_depth(self.origins(), &store, b)?;
+        let maps_depth = SourceMap::validation_depth(self.source_maps(), &store, b)?;
+        Ok(ValidatedOwnerProvenance {
+            owner: self,
+            registry,
+            depth: origins_depth.max(maps_depth),
+        })
+    }
+
+    fn same_tables(&self, other: &Self) -> bool {
+        // Exact borrowed slices identify immutable data, never portable owner
+        // authority. Independent empty tables are equivalent here. Deep copies
+        // on targets without pointer atomics require their own validation.
+        core::ptr::eq(self.origins(), other.origins())
+            && core::ptr::eq(self.sources(), other.sources())
+            && core::ptr::eq(self.source_maps(), other.source_maps())
+    }
     /// Construct unvalidated immutable tables under the caller's allocation
     /// policy. Budgeted processing uses `new`.
     pub fn from_parts(

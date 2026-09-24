@@ -20,6 +20,190 @@ fn owner(schema: &SchemaRef) -> Result<SyntaxBundle, SyntaxError> {
 }
 
 #[test]
+fn checked_owner_reuses_graphs_and_rechecks_guest_environment_and_admission()
+-> Result<(), SyntaxError> {
+    let (registry, schema) = registry()?;
+    let mut input = owner(&schema)?;
+    for _ in 0..128 {
+        input.origins.push(Origin::Synthetic {
+            reason: "owner table retained in arena order".into(),
+            anchor: None,
+        });
+    }
+    let checked = input.validate(&registry, &mut budget())?;
+    let mut closure = ForeignCapture::new(&checked).capture_at(
+        NodeRef(0),
+        0,
+        &registry,
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    let mut full = budget();
+    let mut admission = SourceAdmission::default();
+    for _ in 0..8 {
+        closure.validate(&registry, &mut full, &mut admission)?;
+    }
+    let mut shared = budget();
+    let mut admission = SourceAdmission::default();
+    let proof = closure
+        .provenance
+        .validate(&registry, &mut shared, &mut admission)?;
+    for _ in 0..8 {
+        let validated = proof.validate_closure(&closure, &mut shared, &mut admission)?;
+        assert!(core::ptr::eq(validated.value(), &closure));
+    }
+    assert!(shared.usage().work < full.usage().work);
+    assert!(shared.usage().allocation_units < full.usage().allocation_units);
+    // A fresh admission pays for the owner source even when graphs are reused.
+    let mut fresh = budget();
+    proof.validate_closure(&closure, &mut fresh, &mut SourceAdmission::default())?;
+    assert_eq!(fresh.usage().source_bytes, 3);
+    let mut conflicting = SourceAdmission::default();
+    conflicting.create(
+        SourceId("owner".into()),
+        3,
+        "memory:owner".into(),
+        b"bad".to_vec(),
+        &mut budget(),
+    )?;
+    assert_eq!(
+        proof
+            .validate_closure(&closure, &mut budget(), &mut conflicting)
+            .err(),
+        Some(SyntaxError::Source(SourceError::IdentityConflict))
+    );
+    // Neither matching data nor a numeric OriginRef grants a different owner
+    // access to this graph proof. Its nonempty tables must be checked separately.
+    let mut independent = closure.clone();
+    independent.provenance = OwnerProvenance::from_parts(
+        closure.provenance.origins().to_vec(),
+        closure.provenance.sources().to_vec(),
+        closure.provenance.source_maps().to_vec(),
+    );
+    assert_eq!(
+        proof
+            .validate_closure(&independent, &mut budget(), &mut admission)
+            .err(),
+        Some(SyntaxError::Reference)
+    );
+    let saved = closure.owner_environment.digest;
+    closure.owner_environment.digest.0[0] ^= 1;
+    assert_eq!(
+        proof
+            .validate_closure(&closure, &mut budget(), &mut admission)
+            .err(),
+        Some(SyntaxError::Environment)
+    );
+    closure.owner_environment.digest = saved;
+    closure.syntax.root = NodeRef(99);
+    assert_eq!(
+        proof
+            .validate_closure(&closure, &mut budget(), &mut admission)
+            .err(),
+        Some(SyntaxError::ForeignRoot)
+    );
+    closure.syntax.root = NodeRef(0);
+    closure.syntax.bundle.nodes[0].origin = OriginId(99);
+    assert!(
+        proof
+            .validate_closure(&closure, &mut budget(), &mut admission)
+            .is_err()
+    );
+    Ok(())
+}
+
+#[test]
+fn owner_proof_checks_unused_entries_registry_and_budget_boundaries() -> Result<(), SyntaxError> {
+    let (registry, schema) = registry()?;
+    let input = owner(&schema)?;
+    let checked = input.validate(&registry, &mut budget())?;
+    let closure = ForeignCapture::new(&checked).capture_at(
+        NodeRef(0),
+        0,
+        &registry,
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    let mut origins = closure.provenance.origins().to_vec();
+    origins.push(Origin::Composite(vec![OriginId(999)]));
+    let invalid =
+        OwnerProvenance::from_parts(origins, closure.provenance.sources().to_vec(), vec![]);
+    assert!(
+        invalid
+            .validate(&registry, &mut budget(), &mut SourceAdmission::default())
+            .is_err()
+    );
+    assert_eq!(
+        closure
+            .provenance
+            .validate(
+                &SchemaRegistry::default(),
+                &mut budget(),
+                &mut SourceAdmission::default()
+            )
+            .err(),
+        Some(SyntaxError::Schema(SchemaError::Unfinalized))
+    );
+    let mut other = SchemaRegistry::default();
+    other.finalize(&mut budget())?;
+    let mut admission = SourceAdmission::default();
+    let proof = closure
+        .provenance
+        .validate(&other, &mut budget(), &mut admission)?;
+    assert!(
+        proof
+            .validate_closure(&closure, &mut budget(), &mut admission)
+            .is_err()
+    );
+    for prepare in [true, false] {
+        let mut admission = SourceAdmission::default();
+        let mut measured = budget();
+        let proof = closure
+            .provenance
+            .validate(&registry, &mut measured, &mut admission)?;
+        if !prepare {
+            measured = budget();
+            proof.validate_closure(&closure, &mut measured, &mut admission)?;
+        }
+        for (resource, usage, reason) in [
+            (Resource::Work, measured.usage().work, StopReason::WorkLimit),
+            (
+                Resource::AllocationUnits,
+                measured.usage().allocation_units,
+                StopReason::AllocationLimit,
+            ),
+        ] {
+            assert!(usage > 0);
+            for shortage in [0, 1] {
+                let mut limits = budget().limits();
+                match resource {
+                    Resource::Work => limits.work = usage - shortage,
+                    _ => limits.allocation_units = usage - shortage,
+                }
+                let mut limited = Budget::new(limits);
+                let result = if prepare {
+                    closure
+                        .provenance
+                        .validate(&registry, &mut limited, &mut SourceAdmission::default())
+                        .map(|_| ())
+                } else {
+                    proof
+                        .validate_closure(&closure, &mut limited, &mut admission)
+                        .map(|_| ())
+                };
+                if shortage == 0 {
+                    result?;
+                } else {
+                    assert_eq!(result.err().and_then(|e| e.stop_reason()), Some(reason));
+                    assert_eq!(limited.poll(), Err(reason));
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn captures_share_storage_but_revalidate_each_admission_and_registry() -> Result<(), SyntaxError> {
     fn send_sync<T: Send + Sync>() {}
     send_sync::<OwnerProvenance>();
@@ -82,6 +266,109 @@ fn captures_share_storage_but_revalidate_each_admission_and_registry() -> Result
     drop(input);
     first.validate(&registry, &mut budget(), &mut SourceAdmission::default())?;
     assert_eq!(first.provenance.origins().len(), 2);
+    Ok(())
+}
+
+#[test]
+fn owner_proof_reapplies_origin_and_map_depth_in_each_caller() -> Result<(), SyntaxError> {
+    let (registry, schema) = registry()?;
+    let input = owner(&schema)?;
+    let checked = input.validate(&registry, &mut budget())?;
+    let closure = ForeignCapture::new(&checked).capture_at(
+        NodeRef(0),
+        0,
+        &registry,
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    // Three different depth computations: Origin DAG, snapshot DAG, and a
+    // pointwise acyclic chain within one snapshot (coarse snapshot self-cycle).
+    for path in 0..3 {
+        let mut value = closure.clone();
+        let mut origins = vec![Origin::Synthetic {
+            reason: "root".into(),
+            anchor: None,
+        }];
+        let mut sources = Vec::new();
+        let mut maps = Vec::new();
+        if path == 0 {
+            for index in 0..8 {
+                origins.push(Origin::Composite(vec![OriginId(index)]));
+            }
+        } else if path == 1 {
+            for index in 0..9 {
+                sources.push(SourceSnapshot::new(
+                    SourceId(format!("map-{index}")),
+                    0,
+                    format!("memory:map-{index}"),
+                    b"x".to_vec(),
+                    &mut budget(),
+                )?);
+            }
+            for pair in sources.windows(2) {
+                maps.push(Mapping {
+                    source: pair[0].span(0, 1)?,
+                    target: pair[1].span(0, 1)?,
+                    kind: MappingKind::Exact,
+                });
+            }
+        } else {
+            let source = SourceSnapshot::new(
+                SourceId("map".into()),
+                0,
+                "memory:map".into(),
+                b"xxxxxxxxx".to_vec(),
+                &mut budget(),
+            )?;
+            for index in 0..8 {
+                maps.push(Mapping {
+                    source: source.span(index, index + 1)?,
+                    target: source.span(index + 1, index + 2)?,
+                    kind: MappingKind::Exact,
+                });
+            }
+            sources.push(source);
+        }
+        value.provenance = OwnerProvenance::from_parts(origins, sources, maps);
+        let mut preparation = budget();
+        // Earlier high-water usage must not inflate the proof's relative depth.
+        preparation.observe_depth(99)?;
+        let proof = preparation.with_depth_at_least(2, |b| {
+            value
+                .provenance
+                .validate(&registry, b, &mut SourceAdmission::default())
+        })?;
+        for caller in [0, 3] {
+            for shortage in [0, 1] {
+                for reuse in [false, true] {
+                    let mut b = Budget::new(Limits {
+                        depth: caller + 9 - shortage,
+                        ..budget().limits()
+                    });
+                    let mut admission = SourceAdmission::default();
+                    let result = b.with_depth_at_least(caller, |b| {
+                        if reuse {
+                            proof.validate_closure(&value, b, &mut admission)
+                        } else {
+                            value.validate(&registry, b, &mut admission)
+                        }
+                    });
+                    if shortage == 0 {
+                        result?;
+                        assert_eq!(b.usage().depth, caller + 9, "path={path} reuse={reuse}");
+                    } else {
+                        assert_eq!(
+                            result.err().and_then(|e| e.stop_reason()),
+                            Some(StopReason::DepthLimit),
+                            "path={path} reuse={reuse}"
+                        );
+                        assert_eq!(b.poll(), Err(StopReason::DepthLimit));
+                    }
+                    assert_eq!(b.current_depth(), 0);
+                }
+            }
+        }
+    }
     Ok(())
 }
 

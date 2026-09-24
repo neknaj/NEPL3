@@ -1,6 +1,6 @@
 use super::*;
 mod provenance;
-pub use provenance::{ForeignCapture, OwnerProvenance};
+pub use provenance::{ForeignCapture, OwnerProvenance, ValidatedOwnerProvenance};
 
 /// Standalone guest syntax with the explicitly selected owner environment.
 /// Owner origins retain their original arena order and IDs; guest origins stay
@@ -37,6 +37,16 @@ impl ForeignClosure {
         b: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<ValidatedForeignClosure<'a>, SyntaxError> {
+        self.provenance.validate(registry, b, admission)?;
+        self.validate_contents(registry, b, admission)
+    }
+
+    fn validate_contents<'a>(
+        &'a self,
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<ValidatedForeignClosure<'a>, SyntaxError> {
         b.poll()?;
         let syntax = self
             .syntax
@@ -55,19 +65,6 @@ impl ForeignClosure {
         {
             return Err(SyntaxError::Environment);
         }
-        let mut store = SourceStore::default();
-        for source in self.provenance.sources() {
-            admission.admit_existing(source, b)?;
-            if store
-                .get_revision_with_budget(&source.identity().source, source.identity().revision, b)?
-                .is_some()
-            {
-                return Err(SyntaxError::DuplicateSource);
-            }
-            store.insert_with_budget(source.clone_with_budget(b)?, b)?;
-        }
-        OriginGraph::validate_origins(self.provenance.origins(), &store, b)?;
-        SourceMap::validate_mappings(self.provenance.source_maps(), &store, b)?;
         environment(
             &self.owner_environment.value,
             self.provenance.origins().len(),
