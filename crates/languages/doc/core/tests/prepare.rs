@@ -4,12 +4,23 @@ use nepl3_core::{
     source::{Digest, SourceAdmission, SourceStore},
     value::NdfValue,
 };
+use nepl3_core::{
+    origin::{Origin, OriginId},
+    source::{SourceId, SourceSnapshot},
+    syntax::{
+        Environment, EnvironmentEntry, EnvironmentRef, ForeignClosure, ForeignSyntax, NodeRef,
+        SyntaxBundle, SyntaxNode,
+    },
+    value_codec::FoundationValueCodec,
+};
 use nepl3_doc_core::{
     model::*,
     portable,
     prepare::{self, DocRequirement, PreparationError},
 };
 use nepl3_wire::foundation::FoundationCodec;
+#[path = "support/closure.rs"]
+mod support;
 fn b() -> Budget {
     Budget::new(Limits {
         source_bytes: 1_000_000,
@@ -37,7 +48,7 @@ fn registry() -> Result<SchemaRegistry, String> {
     r.finalize(&mut b()).map_err(err)?;
     Ok(r)
 }
-fn document() -> DocumentSyntax {
+fn document(r: &SchemaRegistry) -> Result<DocumentSyntax, String> {
     let asset = AssetRef {
         id: "図".into(),
         digest: Some(Digest::of(b"image input")),
@@ -46,42 +57,28 @@ fn document() -> DocumentSyntax {
         DocKind::Article {
             language: "ja".into(),
             title: SentenceRef(1),
-            body: BodyRef(3),
+            body: BodyRef(2),
         },
         DocKind::Sentence {
-            inlines: vec![InlineRef(2)],
+            syntax: EmbedRef(0),
         },
-        DocKind::Text { text: "例".into() },
         DocKind::Body {
-            blocks: vec![BlockRef(4), BlockRef(9)],
+            blocks: vec![BlockRef(3), BlockRef(4)],
         },
-        DocKind::Paragraph {
-            items: vec![FlowRef(5)],
-        },
-        DocKind::Sentence {
-            inlines: vec![InlineRef(6), InlineRef(7)],
-        },
-        DocKind::Link {
-            target: LinkTarget::Page {
-                page: "guide".into(),
-                fragment: Some("introduction".into()),
-            },
-            label: InlineRef(2),
-        },
-        DocKind::InlineImage {
+        DocKind::Image {
             asset: asset.clone(),
-            alt: SentenceRef(8),
-        },
-        DocKind::Sentence {
-            inlines: vec![InlineRef(2)],
+            alt: SentenceRef(1),
+            caption: None,
         },
         DocKind::Image {
             asset,
-            alt: SentenceRef(8),
+            alt: SentenceRef(1),
             caption: None,
         },
     ];
-    DocumentSyntax {
+    let mut guest = support::closure(r)?;
+    guest.syntax.category = "Sentence".into();
+    Ok(DocumentSyntax {
         value: DocValue {
             root: DocRoot::Article(ArticleRef(0)),
             nodes: kinds
@@ -93,13 +90,18 @@ fn document() -> DocumentSyntax {
                     span: None,
                 })
                 .collect(),
-            embeds: vec![],
+            embeds: vec![DocEmbed {
+                kind: EmbedKind::Sentence,
+                content: DocContent::Syntax {
+                    closure: Box::new(guest),
+                },
+            }],
         },
         sources: vec![],
         origins: vec![],
         views: vec![],
         source_maps: vec![],
-    }
+    })
 }
 #[test]
 fn namespace_plans_preserve_order_and_reserve_before_processing() -> Result<(), String> {
@@ -109,13 +111,13 @@ fn namespace_plans_preserve_order_and_reserve_before_processing() -> Result<(), 
     for count in [0, 1, 16, 64] {
         let documents: Vec<_> = (0..count)
             .map(|index| {
-                let mut d = document();
-                d.value.nodes[2].kind = DocKind::Text {
-                    text: format!("title {index}"),
-                };
-                d
+                let mut d = document(&r)?;
+                if let DocKind::Article { language, .. } = &mut d.value.nodes[0].kind {
+                    *language = format!("x-{index}");
+                }
+                Ok(d)
             })
-            .collect();
+            .collect::<Result<Vec<_>, String>>()?;
         let mut admission = SourceAdmission::default();
         let members = documents
             .iter()
@@ -189,31 +191,24 @@ fn namespace_plans_preserve_order_and_reserve_before_processing() -> Result<(), 
 #[test]
 fn preparation_discovers_distinct_placements_without_loading_assets() -> Result<(), String> {
     let r = registry()?;
-    let d = document();
+    let d = document(&r)?;
     let copy = d.clone();
     let store = SourceStore::default();
     let mut a = SourceAdmission::default();
     let mut c = FoundationCodec::new(&r, &store, &mut a).map_err(err)?;
     let actual = prepare::inspect(&d, &r, &mut c, &mut b()).map_err(err)?;
     assert_eq!(
-        actual.requirements,
+        actual.requirements[..2],
         vec![
-            DocRequirement::Link {
-                node: 6,
-                target: LinkTarget::Page {
-                    page: "guide".into(),
-                    fragment: Some("introduction".into())
-                }
-            },
             DocRequirement::Asset {
-                node: 7,
+                node: 3,
                 asset: AssetRef {
                     id: "図".into(),
                     digest: Some(Digest::of(b"image input"))
                 }
             },
             DocRequirement::Asset {
-                node: 9,
+                node: 4,
                 asset: AssetRef {
                     id: "図".into(),
                     digest: Some(Digest::of(b"image input"))
@@ -221,6 +216,15 @@ fn preparation_discovers_distinct_placements_without_loading_assets() -> Result<
             }
         ]
     );
+    assert_eq!(actual.requirements.len(), 3);
+    assert!(matches!(
+        actual.requirements[2],
+        DocRequirement::Foreign {
+            embed: EmbedRef(0),
+            kind: EmbedKind::Sentence,
+            ..
+        }
+    ));
     // An independent direct domain-prefix + canonical CBOR concatenation:
     // this expects the full owned document, not just IDs or external names.
     let wire = nepl3_wire::encode(
@@ -238,7 +242,7 @@ fn preparation_discovers_distinct_placements_without_loading_assets() -> Result<
 fn portable_plan_recomputes_requirements_and_rejects_stale_or_incomplete_data() -> Result<(), String>
 {
     let r = registry()?;
-    let d = document();
+    let d = document(&r)?;
     let store = SourceStore::default();
     let mut a = SourceAdmission::default();
     let mut c = FoundationCodec::new(&r, &store, &mut a).map_err(err)?;
@@ -266,8 +270,8 @@ fn portable_plan_recomputes_requirements_and_rejects_stale_or_incomplete_data() 
         plan
     );
     let mut stale = received.clone();
-    if let DocKind::Text { text } = &mut stale.value.nodes[2].kind {
-        *text = "更新".into();
+    if let DocKind::Article { language, .. } = &mut stale.value.nodes[0].kind {
+        *language = "en".into();
     }
     assert!(portable::prepare::plan_from_value(&input, &stale, &r, &mut c, &mut b()).is_err());
     let mut incomplete = input;
@@ -281,18 +285,71 @@ fn portable_plan_recomputes_requirements_and_rejects_stale_or_incomplete_data() 
     Ok(())
 }
 #[test]
-fn inspection_requires_article_labels_and_preserves_sticky_stops() -> Result<(), String> {
+fn inline_inspection_preserves_link_requirements_labels_and_sticky_stops() -> Result<(), String> {
     let r = registry()?;
-    let mut d = document();
+    let mut d = document(&r)?;
     let store = SourceStore::default();
     let mut a = SourceAdmission::default();
     let mut c = FoundationCodec::new(&r, &store, &mut a).map_err(err)?;
-    d.value.nodes[6].kind = DocKind::Reference {
+    d.value.root = DocRoot::Inline(InlineRef(0));
+    d.value.nodes.truncate(1);
+    d.value.embeds[0].kind = EmbedKind::SentenceInline;
+    let DocContent::Syntax { closure } = &mut d.value.embeds[0].content else {
+        return Err("closure".into());
+    };
+    closure.syntax.category = "Inline".into();
+    let target = LinkTarget::Page {
+        page: "guide".into(),
+        fragment: Some("introduction".into()),
+    };
+    d.value.nodes[0].kind = DocKind::Link {
+        target: target.clone(),
+        label: EmbedRef(0),
+    };
+    let plan = prepare::inspect_inline(&d, &r, &mut c, &mut b()).map_err(err)?;
+    assert_eq!(
+        plan.requirements[0],
+        DocRequirement::Link { node: 0, target }
+    );
+    assert_eq!(plan.requirements.len(), 2);
+    // InlineImage and block Image own the same asset contract independently.
+    let asset = AssetRef {
+        id: "inline-image".into(),
+        digest: Some(Digest::of(b"inline image")),
+    };
+    d.value.nodes[0].kind = DocKind::InlineImage {
+        asset: asset.clone(),
+        alt: SentenceRef(1),
+    };
+    d.value.nodes.push(DocNode {
+        kind: DocKind::Sentence {
+            syntax: EmbedRef(0),
+        },
+        locations: vec![],
+        origin: None,
+        span: None,
+    });
+    d.value.embeds[0].kind = EmbedKind::Sentence;
+    if let DocContent::Syntax { closure } = &mut d.value.embeds[0].content {
+        closure.syntax.category = "Sentence".into();
+    }
+    let image = prepare::inspect_inline(&d, &r, &mut c, &mut b()).map_err(err)?;
+    assert_eq!(
+        image.requirements[0],
+        DocRequirement::Asset { node: 0, asset }
+    );
+    assert_eq!(image.requirements.len(), 2);
+    d.value.nodes.truncate(1);
+    d.value.embeds[0].kind = EmbedKind::SentenceInline;
+    if let DocContent::Syntax { closure } = &mut d.value.embeds[0].content {
+        closure.syntax.category = "Inline".into();
+    }
+    d.value.nodes[0].kind = DocKind::Reference {
         target: "missing".into(),
-        label: InlineRef(2),
+        label: EmbedRef(0),
     };
     assert!(matches!(
-        prepare::inspect(&d, &r, &mut c, &mut b()),
+        prepare::inspect_inline(&d, &r, &mut c, &mut b()),
         Err(PreparationError::Label(_))
     ));
     for reason in [
@@ -313,11 +370,11 @@ fn inspection_requires_article_labels_and_preserves_sticky_stops() -> Result<(),
             b.cancel();
         }
         assert_eq!(
-            prepare::inspect(&d, &r, &mut c, &mut b),
+            prepare::inspect_inline(&d, &r, &mut c, &mut b),
             Err(PreparationError::Stopped(reason))
         );
         assert_eq!(
-            prepare::inspect(&d, &r, &mut c, &mut b),
+            prepare::inspect_inline(&d, &r, &mut c, &mut b),
             Err(PreparationError::Stopped(reason))
         );
     }
