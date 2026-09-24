@@ -182,6 +182,43 @@ pub struct RenderedNamespace {
     /// Generated namespace wrapper has no fabricated Doc owner.
     pub origins: Vec<Origin>,
 }
+/// One guest occurrence in the complete namespace's HTML arena.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct NamespaceForeignPlacement {
+    pub member: MemberId,
+    pub embed: nepl3_doc_core::model::EmbedRef,
+    pub first_element: u64,
+    pub elements: u64,
+}
+pub struct RenderedForeignNamespace {
+    pub namespace: RenderedNamespace,
+    pub foreign: Vec<NamespaceForeignPlacement>,
+}
+#[derive(Debug)]
+pub enum ForeignNamespaceError<E> {
+    Namespace(Error),
+    Foreign(E),
+}
+impl<E> From<Error> for ForeignNamespaceError<E> {
+    fn from(error: Error) -> Self {
+        Self::Namespace(error)
+    }
+}
+impl<E> From<RenderError> for ForeignNamespaceError<E> {
+    fn from(error: RenderError) -> Self {
+        Self::Namespace(error.into())
+    }
+}
+impl<E> From<StopReason> for ForeignNamespaceError<E> {
+    fn from(reason: StopReason) -> Self {
+        Self::Namespace(reason.into())
+    }
+}
+impl<E> From<HtmlError> for ForeignNamespaceError<E> {
+    fn from(error: HtmlError) -> Self {
+        Self::Namespace(error.into())
+    }
+}
 #[derive(Debug, Eq, PartialEq)]
 pub enum Error {
     Render(RenderError),
@@ -209,6 +246,79 @@ pub fn render(
     prepared: &PreparedNamespace<'_>,
     budget: &mut Budget,
 ) -> Result<RenderedNamespace, Error> {
+    match render_members(
+        prepared,
+        &mut |_, member, _, b| {
+            build::namespace_member(member, b)
+                .map_err(ForeignNamespaceError::<core::convert::Infallible>::from)
+        },
+        budget,
+    ) {
+        Ok(output) => Ok(output),
+        Err(ForeignNamespaceError::Namespace(error)) => Err(error),
+        Err(ForeignNamespaceError::Foreign(never)) => match never {},
+    }
+}
+/// Render all selected occurrences, then validate their combined namespace.
+/// The callback receives the exact member owner of each immutable guest. Local
+/// Doc references can cross members; guest markup obeys the same slot checks
+/// as `render_part_with_foreign`. No guest is retried on failure. Doc origins
+/// and guest placements use element indices in the final combined arena.
+pub fn render_with_foreign<E>(
+    prepared: &PreparedForeignNamespace<'_>,
+    adapter: &mut impl FnMut(
+        MemberId,
+        &nepl3_doc_core::model::DocEmbed,
+        nepl3_doc_core::model::EmbedRef,
+        &mut Budget,
+    ) -> Result<HtmlRequest, E>,
+    budget: &mut Budget,
+) -> Result<RenderedForeignNamespace, ForeignNamespaceError<E>> {
+    let mut foreign = Vec::new();
+    let namespace = render_members(
+        &prepared.0,
+        &mut |member, input, offset, b| {
+            let output = build::namespace_member_with_foreign(
+                input,
+                &mut |guest, embed, b| adapter(member, guest, embed, b),
+                b,
+            )
+            .map_err(|error| match error {
+                crate::ForeignRenderError::Render(error) => ForeignNamespaceError::from(error),
+                crate::ForeignRenderError::Foreign(error) => ForeignNamespaceError::Foreign(error),
+            })?;
+            for placement in output.foreign {
+                b.charge(Resource::Work, 1)?;
+                let first_element = offset
+                    .checked_add(placement.first_element)
+                    .ok_or(RenderError::InternalShape)?;
+                build::push(
+                    &mut foreign,
+                    NamespaceForeignPlacement {
+                        member,
+                        embed: placement.embed,
+                        first_element,
+                        elements: placement.elements,
+                    },
+                    b,
+                )?;
+            }
+            Ok(output.fragment)
+        },
+        budget,
+    )?;
+    Ok(RenderedForeignNamespace { namespace, foreign })
+}
+fn render_members<E>(
+    prepared: &PreparedNamespace<'_>,
+    render: &mut impl FnMut(
+        MemberId,
+        &prepare::PreparedRendering<'_>,
+        u64,
+        &mut Budget,
+    ) -> Result<crate::RenderedFragment, ForeignNamespaceError<E>>,
+    budget: &mut Budget,
+) -> Result<RenderedNamespace, ForeignNamespaceError<E>> {
     budget.poll()?;
     let mut nodes = Vec::new();
     budget.charge(Resource::Nodes, 1)?;
@@ -227,8 +337,8 @@ pub fn render(
     for (number, member) in prepared.members.iter().enumerate() {
         budget.charge(Resource::Work, 1)?;
         // Include the enclosing namespace node in the caller's Depth budget.
-        let output = budget.with_depth(|b| build::namespace_member(member, b))?;
         let offset = nodes.len() as u64;
+        let output = budget.with_depth(|b| render(MemberId(number as u64), member, offset, b))?;
         let root = offset
             .checked_add(output.markup.fragment.root)
             .ok_or(RenderError::InternalShape)?;
@@ -293,7 +403,7 @@ pub fn render(
     while let Some((index, depth)) = pending.pop() {
         budget.charge(Resource::Work, 1)?;
         if depth > 256 {
-            return Err(Error::OutputDepth { element: index });
+            return Err(Error::OutputDepth { element: index }.into());
         }
         match &markup.fragment.nodes[index as usize] {
             HtmlNode::Element { children, .. } | HtmlNode::MathElement { children, .. } => {

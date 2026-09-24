@@ -84,7 +84,7 @@ fn composed_doc_namespace_keeps_fragment_source_identity() -> Result<(), String>
         with_input_route(
             native,
             &compiled,
-            "text \"context\"",
+            "anchor context text \"context\"",
             "Inline",
             |_, profile, b, _| {
                 let inputs = documents
@@ -135,7 +135,7 @@ fn composed_doc_namespace_keeps_fragment_source_identity() -> Result<(), String>
                 let options = nepl3_doc_html::RenderOptions {
                     parallel: nepl3_doc_html::ParallelMode::Rows,
                 };
-                let prepared = nepl3_doc_html::namespace::prepare(
+                let prepared = nepl3_doc_html::namespace::prepare_with_foreign(
                     &checked,
                     &options,
                     profile.registry(),
@@ -161,9 +161,23 @@ fn composed_doc_namespace_keeps_fragment_source_identity() -> Result<(), String>
                     return Ok(());
                 }
                 let prepared = prepared.map_err(err)?;
-                let part = nepl3_doc_html::namespace::render_part(&prepared, MemberId(0), b)
-                    .map_err(err)?;
-                let (member, _, pending, origins) = part.into_parts();
+                let mut label = |guest: &nepl3_doc_core::model::DocEmbed, _, b: &mut Budget| {
+                    self::namespace::sentence_label(
+                        guest,
+                        &compiled,
+                        profile.registry(),
+                        &mut codec,
+                        b,
+                    )
+                };
+                let part = nepl3_doc_html::namespace::render_part_with_foreign(
+                    &prepared,
+                    MemberId(0),
+                    &mut label,
+                    b,
+                )
+                .map_err(err)?;
+                let (member, _, pending, origins) = part.part.into_parts();
                 assert_eq!(member, MemberId(0));
                 assert!(!origins.is_empty());
                 assert!(matches!(
@@ -176,12 +190,51 @@ fn composed_doc_namespace_keeps_fragment_source_identity() -> Result<(), String>
                     Err(nepl3_markup::html::HtmlError::MissingFragment(_))
                 ));
                 assert!(matches!(
-                    nepl3_doc_html::namespace::render_part(&prepared, MemberId(2), b),
-                    Err(nepl3_doc_html::namespace::PartError::Member(MemberId(2)))
+                    nepl3_doc_html::namespace::render_part_with_foreign(
+                        &prepared,
+                        MemberId(2),
+                        &mut label,
+                        b
+                    ),
+                    Err(nepl3_doc_html::namespace::ForeignPartError::Member(
+                        MemberId(2)
+                    ))
                 ));
+                let mut labels = |member: MemberId,
+                                  guest: &nepl3_doc_core::model::DocEmbed,
+                                  embed: nepl3_doc_core::model::EmbedRef,
+                                  b: &mut Budget| {
+                    assert_eq!(
+                        guest,
+                        &documents[member.0 as usize].value.embeds[embed.0 as usize]
+                    );
+                    self::namespace::sentence_label(
+                        guest,
+                        &compiled,
+                        profile.registry(),
+                        &mut codec,
+                        b,
+                    )
+                };
                 let mut measured = budget();
-                let rendered =
-                    nepl3_doc_html::namespace::render(&prepared, &mut measured).map_err(err)?;
+                let rendered = nepl3_doc_html::namespace::render_with_foreign(
+                    &prepared,
+                    &mut labels,
+                    &mut measured,
+                )
+                .map_err(err)?;
+                assert_eq!(rendered.foreign.len(), 2);
+                for (placement, text) in rendered.foreign.iter().zip(["参照", "定義"]) {
+                    assert_eq!(
+                        placement.member,
+                        MemberId(if text == "参照" { 0 } else { 1 })
+                    );
+                    assert_eq!(placement.embed, nepl3_doc_core::model::EmbedRef(0));
+                    let start = placement.first_element as usize;
+                    let end = start + placement.elements as usize;
+                    assert!(rendered.namespace.markup.fragment.nodes[start..end].iter().any(|node| matches!(node, nepl3_markup::html::HtmlNode::Text { text: actual } if actual == text)));
+                }
+                let rendered = rendered.namespace;
                 assert_eq!(rendered.documents.len(), 2);
                 use nepl3_markup::html::{HtmlAttribute, HtmlHref, HtmlNode};
                 for (member, is_reference) in [(MemberId(0), true), (MemberId(1), false)] {
@@ -202,20 +255,103 @@ fn composed_doc_namespace_keeps_fragment_source_identity() -> Result<(), String>
                     nepl3_core::budget::StopReason::WorkLimit,
                     nepl3_core::budget::StopReason::AllocationLimit,
                     nepl3_core::budget::StopReason::DepthLimit,
+                    nepl3_core::budget::StopReason::NodeLimit,
                 ] {
                     let mut limits = measured.limits();
+                    match reason {
+                        nepl3_core::budget::StopReason::WorkLimit => limits.work = used.work,
+                        nepl3_core::budget::StopReason::AllocationLimit => {
+                            limits.allocation_units = used.allocation_units
+                        }
+                        nepl3_core::budget::StopReason::DepthLimit => limits.depth = used.depth,
+                        nepl3_core::budget::StopReason::NodeLimit => limits.nodes = used.nodes,
+                        _ => unreachable!("fixed resource cases"),
+                    }
+                    let exact = nepl3_doc_html::namespace::render_with_foreign(
+                        &prepared,
+                        &mut labels,
+                        &mut Budget::new(limits),
+                    )
+                    .map_err(err)?;
+                    assert_eq!(exact.namespace.markup, rendered.markup);
                     match reason {
                         nepl3_core::budget::StopReason::WorkLimit => limits.work = used.work - 1,
                         nepl3_core::budget::StopReason::AllocationLimit => {
                             limits.allocation_units = used.allocation_units - 1
                         }
                         nepl3_core::budget::StopReason::DepthLimit => limits.depth = used.depth - 1,
+                        nepl3_core::budget::StopReason::NodeLimit => limits.nodes = used.nodes - 1,
                         _ => unreachable!("fixed resource cases"),
                     }
                     let mut limited = Budget::new(limits);
-                    assert!(nepl3_doc_html::namespace::render(&prepared, &mut limited).is_err());
+                    assert!(
+                        nepl3_doc_html::namespace::render_with_foreign(
+                            &prepared,
+                            &mut labels,
+                            &mut limited
+                        )
+                        .is_err()
+                    );
                     assert_eq!(limited.poll(), Err(reason));
                 }
+                use nepl3_doc_html::namespace::{Error as NamespaceError, ForeignNamespaceError};
+                let mut calls = 0;
+                let mut reject = |_, _: &nepl3_doc_core::model::DocEmbed, _, _: &mut Budget| {
+                    calls += 1;
+                    Err::<nepl3_markup::html::HtmlRequest, _>("guest rejected")
+                };
+                let mut cancelled = budget();
+                cancelled.cancel();
+                assert!(matches!(
+                    nepl3_doc_html::namespace::render_with_foreign(
+                        &prepared,
+                        &mut reject,
+                        &mut cancelled
+                    ),
+                    Err(ForeignNamespaceError::Namespace(NamespaceError::Render(
+                        nepl3_doc_html::RenderError::Stopped(
+                            nepl3_core::budget::StopReason::Cancelled
+                        )
+                    )))
+                ));
+                assert!(matches!(
+                    nepl3_doc_html::namespace::render_with_foreign(&prepared, &mut reject, b),
+                    Err(ForeignNamespaceError::Foreign("guest rejected"))
+                ));
+                assert_eq!(
+                    calls, 1,
+                    "cancelled execution invokes no callback; failure is not retried"
+                );
+                // Sentence fragments allow pending IDs. Only the assembled
+                // namespace can detect this collision with the Doc anchor.
+                let duplicate = nepl3_doc_html::namespace::render_with_foreign(
+                    &prepared,
+                    &mut |_, _, _, _| {
+                        Ok::<_, ()>(nepl3_markup::html::HtmlRequest {
+                            fragment: nepl3_markup::html::HtmlFragment {
+                                root: 0,
+                                nodes: vec![HtmlNode::Element {
+                                    tag: nepl3_markup::html::HtmlTag::Span,
+                                    attributes: vec![HtmlAttribute::Id {
+                                        value: "n-746172676574".into(),
+                                    }],
+                                    children: vec![],
+                                }],
+                            },
+                            slot: nepl3_markup::html::HtmlSlot::Phrasing,
+                            policy: nepl3_markup::html::HtmlPolicy { classes: vec![] },
+                        })
+                    },
+                    b,
+                );
+                assert!(matches!(
+                    duplicate,
+                    Err(ForeignNamespaceError::Namespace(NamespaceError::Render(
+                        nepl3_doc_html::RenderError::Markup(
+                            nepl3_markup::html::HtmlError::DuplicateId(_)
+                        )
+                    )))
+                ));
                 Ok(())
             },
         )?;
@@ -722,14 +858,20 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
                     assert_eq!(limited.poll(), Err(reason));
                 }
                 printer.math_surface = None;
-                assert!(matches!(
-                    printer.print(guest, &mut budget()),
-                    Err(crate::doc::printing::Error::Lower(
-                        nepl3_sentence_core::lower::presentation::Error::Prefix(
-                            nepl3_sentence_core::lower::Error::Unsupported(_)
-                        )
-                    ))
-                ));
+                let unselected = printer.print(guest, &mut budget());
+                assert!(
+                    matches!(
+                        unselected,
+                        Err(crate::doc::printing::Error::DocSentence(
+                            nepl3_suite::adapters::document::sentence::Error::Lower(
+                                nepl3_sentence_core::lower::presentation::Error::Prefix(
+                                    nepl3_sentence_core::lower::Error::Unsupported(_)
+                                )
+                            )
+                        ))
+                    ),
+                    "{unselected:?}"
+                );
                 let mut host = crate::doc::math::MathDisplayHost {
                     registry,
                     math_surface: &compiled.others[0].schema,
@@ -1342,7 +1484,7 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
 fn math_sentence_math_printing_preserves_recursive_source() -> Result<(), String> {
     let compiled = compiled()?;
     let sentence = compiled.others.last().ok_or("Sentence package")?;
-    let input = r#"article en "Math" body cons display Math label x Sentence sentence cons math label 7 Sentence "[字/じ]" nil nil"#;
+    let input = r#"article en sentence "Math" body cons display Math label x Sentence sentence cons math label 7 Sentence "[字/じ]" nil nil"#;
     let mut outputs = Vec::new();
     for native in [false, true] {
         with_input_route(
@@ -1465,8 +1607,8 @@ fn math_annotation_uses_registered_sentence_on_both_reader_routes() -> Result<()
     // Both routes must preserve that value and its original Unicode source.
     for (native, input) in [false, true].into_iter().flat_map(|native| {
         [
-            r#"article en "Math" body cons display Math label x Sentence "[字/じ]" nil"#,
-            r#"article en "Math" body cons display Math label x Sentence sentence cons ruby text "字" text "じ" nil nil"#,
+            r#"article en sentence "Math" body cons display Math label x Sentence "[字/じ]" nil"#,
+            r#"article en sentence "Math" body cons display Math label x Sentence sentence cons ruby text "字" text "じ" nil nil"#,
         ].into_iter().map(move |input| (native, input))
     }) {
         with_input_route(

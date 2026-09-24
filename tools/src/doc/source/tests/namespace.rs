@@ -7,13 +7,65 @@ use nepl3_markup::html::{
     HtmlError, HtmlFragment, HtmlNode, HtmlPolicy, HtmlRequest, HtmlSlot, HtmlTag,
 };
 
+pub(super) fn sentence_label<C: FoundationValueCodec>(
+    guest: &nepl3_doc_core::model::DocEmbed,
+    compiled: &Compiled,
+    registry: &nepl3_core::schema::SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<HtmlRequest, String>
+where
+    C::Error: core::fmt::Debug,
+{
+    use nepl3_doc_core::model::EmbedKind;
+    assert!(matches!(
+        guest.kind,
+        EmbedKind::Sentence | EmbedKind::SentenceInline
+    ));
+    let sentence = nepl3_suite::adapters::document::sentence::lower(
+        guest,
+        &compiled.others[3].schema,
+        &[nepl3_sentence_core::lower::ForeignInlineForm {
+            kind: "Form:InlineMath",
+            guest_schema: &compiled.others[0].schema,
+            guest_category: "Expr",
+        }],
+        registry,
+        codec,
+        b,
+    )
+    .map_err(err)?;
+    let mut host = crate::doc::annotations::SentenceAnnotationRenderer {
+        registry,
+        surface: &compiled.others[3].schema,
+        math_surface: Some(&compiled.others[0].schema),
+        doc_surface: Some(&compiled.doc.package.schema),
+        codec,
+    };
+    match guest.kind {
+        EmbedKind::Sentence => host.render_syntax(sentence, b),
+        EmbedKind::SentenceInline => host.render_inline_syntax(sentence, b),
+        _ => unreachable!("checked Sentence role"),
+    }
+    .map(|rendered| rendered.markup)
+    .map_err(err)
+}
+
 #[test]
 fn namespace_diagnostic_keeps_separate_source_owners() -> Result<(), String> {
-    let compiled = compiled()?;
+    let compiled =
+        compiled_with_sentence_forms(&[nepl3_grammar_core::compile::package::ForeignForm {
+            kind: "DocumentInline",
+            category: "Inline",
+            spelling: "doc",
+            field: "syntax",
+            alias: "Doc",
+            guest_category: "Inline",
+            origin_reason: "namespace diagnostic test",
+        }])?;
     for (native, shared_source) in [(false, false), (true, false), (false, true), (true, true)] {
         let mut documents = Vec::new();
-        let combined =
-            "sentence cons anchor target text \"最初\" cons anchor target text \"後続\" nil";
+        let combined = "sentence sentence cons doc anchor target text \"最初\" cons doc anchor target text \"後続\" nil";
         let sources = if shared_source {
             [combined, combined]
         } else {
@@ -61,30 +113,42 @@ fn namespace_diagnostic_keeps_separate_source_owners() -> Result<(), String> {
                     )
                     .map_err(err)?;
                     if shared_source {
-                        let nodes: Vec<_> = document
-                            .value
-                            .nodes
-                            .iter()
-                            .enumerate()
-                            .filter_map(|(index, node)| {
-                                matches!(node.kind, DocKind::Anchor { .. }).then_some(index)
-                            })
-                            .collect();
-                        assert_eq!(nodes.len(), 2);
-                        for node in nodes {
-                            documents.push(
-                                document
-                                    .fragment(
-                                        nepl3_doc_core::model::DocRoot::Inline(
-                                            nepl3_doc_core::model::InlineRef(node as u64),
-                                        ),
-                                        profile.registry(),
-                                        b,
-                                        codec.source_admission(),
-                                    )
-                                    .map_err(err)?,
-                            );
-                        }
+                        let nepl3_doc_core::model::DocRoot::Sentence(root) = document.value.root
+                        else {
+                            return Err("Sentence root".into());
+                        };
+                        let DocKind::Sentence { syntax } =
+                            document.value.nodes[root.0 as usize].kind
+                        else {
+                            return Err("Sentence slot".into());
+                        };
+                        let sentence = nepl3_suite::adapters::document::sentence::lower(
+                            &document.value.embeds[syntax.0 as usize],
+                            &compiled.others[3].schema,
+                            &[nepl3_sentence_core::lower::ForeignInlineForm {
+                                kind: "Form:DocumentInline",
+                                guest_schema: &compiled.doc.package.schema,
+                                guest_category: "Inline",
+                            }],
+                            profile.registry(),
+                            &mut codec,
+                            b,
+                        )
+                        .map_err(err)?;
+                        let selected = nepl3_suite::adapters::sentence::document_guests::collect(
+                            &sentence,
+                            &compiled.doc.package.schema,
+                            profile.registry(),
+                            &mut codec,
+                            b,
+                        )
+                        .map_err(err)?;
+                        let (guests, occurrences) = selected.into_parts();
+                        assert_eq!(guests.len(), 2);
+                        assert_eq!(occurrences.len(), 2);
+                        assert_eq!(occurrences[0].document.index(), 0);
+                        assert_eq!(occurrences[1].document.index(), 1);
+                        documents.extend(guests);
                     } else {
                         documents.push(document);
                     }
@@ -95,7 +159,7 @@ fn namespace_diagnostic_keeps_separate_source_owners() -> Result<(), String> {
         with_input_route(
             native,
             &compiled,
-            "text \"context\"",
+            "anchor context text \"context\"",
             "Inline",
             |_, profile, b, a| {
                 let registry = profile.registry();
@@ -192,21 +256,21 @@ fn foreign_namespace_parts_preserve_refs_and_guest_boundaries() -> Result<(), St
     for native in [false, true] {
         let mut documents = Vec::new();
         for (name, category, source) in [
-            ("reference-math", Category::Inline, "ref target math Math 7"),
+            ("reference-math", Category::Inline, "ref target math 7"),
             (
                 "definition",
                 Category::Inline,
                 "anchor target text \"定義\"",
             ),
             (
-                "external",
+                "relative",
                 Category::Inline,
-                "link external \"https://example.test/\" text \"link\"",
+                "link relative \"other.nepld\" none text \"link\"",
             ),
             (
                 "display",
                 Category::Article,
-                "article en \"Title\" body cons display Math 7 nil",
+                "article en sentence \"Title\" body cons display Math 7 nil",
             ),
         ] {
             with_named_input(
@@ -248,7 +312,7 @@ fn foreign_namespace_parts_preserve_refs_and_guest_boundaries() -> Result<(), St
         with_input_route(
             native,
             &compiled,
-            "text \"context\"",
+            "anchor context text \"context\"",
             "Inline",
             |_, profile, b, _| {
                 let registry = profile.registry();
@@ -282,25 +346,7 @@ fn foreign_namespace_parts_preserve_refs_and_guest_boundaries() -> Result<(), St
                     &mut |guest, embed, b| {
                         calls += 1;
                         assert_eq!(guest, &documents[0].value.embeds[embed.0 as usize]);
-                        assert_eq!(guest.kind, nepl3_doc_core::model::EmbedKind::InlineMath);
-                        let mut host = crate::doc::math::MathDisplayHost {
-                            registry,
-                            math_surface: &compiled.others[0].schema,
-                            sentence_surface: Some(&compiled.others[3].schema),
-                            doc_surface: Some(&compiled.doc.package.schema),
-                            codec: &mut codec,
-                        };
-                        Ok::<_, String>(
-                            host.render(
-                                guest.syntax().ok_or("Math syntax")?,
-                                nepl3_markup::mathml::Display::Inline,
-                                b,
-                            )
-                            .map_err(err)?
-                            .into_html(b)
-                            .map_err(err)?
-                            .markup,
-                        )
+                        sentence_label(guest, &compiled, registry, &mut codec, b)
                     },
                     &mut measured,
                 )
@@ -344,11 +390,20 @@ fn foreign_namespace_parts_preserve_refs_and_guest_boundaries() -> Result<(), St
                     html::render_part_with_foreign(&prepared, MemberId(2), &mut forbidden, b),
                     Err(ForeignPartError::Member(MemberId(2)))
                 ));
-                let definition =
-                    html::render_part_with_foreign(&prepared, MemberId(1), &mut forbidden, b)
-                        .map_err(err)?;
-                assert!(definition.foreign.is_empty());
                 assert_eq!(calls, 0);
+                let definition = html::render_part_with_foreign(
+                    &prepared,
+                    MemberId(1),
+                    &mut |guest, embed, b| {
+                        calls += 1;
+                        assert_eq!(guest, &documents[1].value.embeds[embed.0 as usize]);
+                        sentence_label(guest, &compiled, registry, &mut codec, b)
+                    },
+                    b,
+                )
+                .map_err(err)?;
+                assert_eq!(definition.foreign.len(), 1);
+                assert_eq!(calls, 1);
                 // A composing host places both parts before requesting the
                 // complete-output proof. Omitting the definition failed above.
                 let (_, _, definition, _) = definition.part.into_parts();
@@ -504,22 +559,72 @@ fn foreign_namespace_parts_preserve_refs_and_guest_boundaries() -> Result<(), St
                     html::prepare_with_foreign(&checked, &options, registry, &mut codec, b),
                     Err(LocalPreparationError::NeedsResolution(_))
                 ));
-                // DisplayMath requires a Block guest operation. The InlineMath
-                // adapter cannot render it; reject before creating a proof.
+                // Article titles remain Sentence-owned. DisplayMath uses its
+                // independently selected Block operation in the same member.
                 let display = [&inputs[3]];
                 let checked = namespace::resolve(&display, b).map_err(err)?;
-                let Err(LocalPreparationError::NeedsResolution(plan)) =
+                let display =
                     html::prepare_with_foreign(&checked, &options, registry, &mut codec, b)
-                else {
-                    return Err("unsupported guest must retain its requirement".into());
-                };
-                assert!(matches!(
-                    plan.requirements.as_slice(),
-                    [nepl3_doc_core::prepare::DocRequirement::Foreign {
-                        kind: nepl3_doc_core::model::EmbedKind::DisplayMath,
-                        ..
-                    }]
-                ));
+                        .map_err(err)?;
+                let mut roles = Vec::new();
+                let displayed = html::render_part_with_foreign(
+                    &display,
+                    MemberId(0),
+                    &mut |guest, _, b| {
+                        use nepl3_doc_core::model::EmbedKind;
+                        roles.push(guest.kind);
+                        match guest.kind {
+                            EmbedKind::Sentence => {
+                                sentence_label(guest, &compiled, registry, &mut codec, b)
+                            }
+                            EmbedKind::DisplayMath => crate::doc::math::MathDisplayHost {
+                                registry,
+                                math_surface: &compiled.others[0].schema,
+                                sentence_surface: Some(&compiled.others[3].schema),
+                                doc_surface: Some(&compiled.doc.package.schema),
+                                codec: &mut codec,
+                            }
+                            .render(
+                                guest.syntax().ok_or("Math syntax")?,
+                                nepl3_markup::mathml::Display::Block,
+                                b,
+                            )
+                            .map_err(err)?
+                            .into_html(b)
+                            .map(|result| result.markup)
+                            .map_err(err),
+                            _ => Err("unexpected Article guest".into()),
+                        }
+                    },
+                    b,
+                )
+                .map_err(err)?;
+                assert_eq!(
+                    roles,
+                    [
+                        nepl3_doc_core::model::EmbedKind::Sentence,
+                        nepl3_doc_core::model::EmbedKind::DisplayMath
+                    ]
+                );
+                assert_eq!(displayed.foreign.len(), 2);
+                let (_, _, markup, _) = displayed.part.into_parts();
+                assert_eq!(markup.slot, HtmlSlot::Block);
+                assert!(
+                    markup
+                        .fragment
+                        .nodes
+                        .iter()
+                        .any(|node| matches!(node, HtmlNode::Text { text } if text == "Title"))
+                );
+                assert!(
+                    markup
+                        .fragment
+                        .nodes
+                        .iter()
+                        .any(|node| matches!(node, HtmlNode::Text { text } if text == "7"))
+                );
+                nepl3_markup::html::validate(&markup.fragment, markup.slot, &markup.policy, b)
+                    .map_err(err)?;
                 Ok(())
             },
         )?;
