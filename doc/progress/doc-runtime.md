@@ -91,6 +91,15 @@ digest要求索引は反復挿入からbudget付き安定merge sortへ変更し�
 Windows debugの参考時間はdigest 3.233秒、projection 5.905秒だった。
 索引の一時領域によりprojectionの累積AllocationUnitsは125,597,353へ増加した。
 通常Work100Mの試験はnamespace準備中に停止する。値の走査・符号化・hash処理の改善を継続する。
+続く内訳調査では、符号化後の557,386 NDF node中、embedが535,461 nodeを占めた。
+単一nodeのguestに含まれるsource数の最大値は221、mapping数の最大値は332だった。
+parserが受理済みsource/mapのprefixを各guestへ保持する経路に対応する。
+先行生成sourceと多段mapを後続Viewが参照できるため、宣言閉包を保持した共有方式を検討する。
+batch digestの各nodeで行っていた二重検索は、1回の検索と一致要求の走査へ変更した。
+変更後のdigest成分は67,641,758 Work、projection全体は141,653,799 Workである。
+今回のWindows debug参考時間はそれぞれ3.250秒・5.931秒で、実時間の改善は未確定である。
+wire全70試験はnativeで成功し、batchの9試験はnative・WASI・独立nativeレビューで成功した。
+通常Work100Mへの適合は引き続き未達である。
 正式Markdown生成は旧Sentence構文の `doc/tutorial/miniexpr.nepld` で停止している。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。

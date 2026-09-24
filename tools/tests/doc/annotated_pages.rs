@@ -653,6 +653,22 @@ fn architecture_projection(
     // This is Markdown generation only: passive Markdown is never an HTML page.
     assert_eq!(artifact.pages.len(), 1);
     if measure_encoding {
+        let mut sources_in_single_node_guest = 0;
+        let mut maps_in_single_node_guest = 0;
+        for embed in &set.pages[0].document.value.embeds {
+            if let nepl3_doc_core::model::DocContent::Syntax { closure } = &embed.content {
+                let bundle = &closure.syntax.bundle;
+                if bundle.nodes.len() == 1 {
+                    sources_in_single_node_guest =
+                        sources_in_single_node_guest.max(bundle.sources.len());
+                    maps_in_single_node_guest =
+                        maps_in_single_node_guest.max(bundle.source_maps.len());
+                }
+            }
+        }
+        println!(
+            "architecture single_node_guest max_sources={sources_in_single_node_guest} max_maps={maps_in_single_node_guest}"
+        );
         // Isolated component run with fresh admission, not a subtraction from
         // the enclosing projection. Keep the same immutable input and limits.
         let mut b = Budget::new(render_budget.limits());
@@ -694,6 +710,18 @@ fn architecture_projection(
         let Some(NdfValue::List(embeds)) = value.fields.get(2) else {
             return Err("embeds".into());
         };
+        for (index, field) in record.fields.iter().enumerate() {
+            println!(
+                "architecture document_field={index} nodes={}",
+                value_nodes(field)
+            );
+        }
+        for (index, field) in value.fields.iter().enumerate() {
+            println!(
+                "architecture doc_value_field={index} nodes={}",
+                value_nodes(field)
+            );
+        }
         let mut inputs = vec![CanonicalDigestInput {
             domain: nepl3_doc_core::prepare::DOCUMENT_DOMAIN,
             value: document,
@@ -717,6 +745,30 @@ fn architecture_projection(
         assert_eq!(digests.len(), inputs.len());
     }
     Ok(())
+}
+
+fn value_nodes(value: &nepl3_core::value::NdfValue) -> usize {
+    use nepl3_core::value::NdfValue;
+    let mut pending = vec![value];
+    let mut count = 0;
+    while let Some(value) = pending.pop() {
+        count += 1;
+        match value {
+            NdfValue::List(values) => pending.extend(values),
+            NdfValue::Record(value) => pending.extend(&value.fields),
+            NdfValue::Variant(value) => pending.extend(&value.fields),
+            NdfValue::Some(value) => pending.push(value),
+            NdfValue::Unit
+            | NdfValue::Bool(_)
+            | NdfValue::U64(_)
+            | NdfValue::Integer(_)
+            | NdfValue::Rational(_)
+            | NdfValue::Text(_)
+            | NdfValue::Bytes(_)
+            | NdfValue::None => {}
+        }
+    }
+    count
 }
 
 #[test]

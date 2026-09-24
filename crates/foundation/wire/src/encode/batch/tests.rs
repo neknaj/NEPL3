@@ -91,6 +91,50 @@ fn index_growth_and_layout_independent_resource_boundaries() -> Result<(), WireE
 }
 
 #[test]
+fn unrequested_nodes_keep_layout_independent_lookup_cost() -> Result<(), WireError> {
+    let root = NdfValue::List((0..32).map(|_| NdfValue::Unit).collect());
+    let NdfValue::List(children) = &root else {
+        return Err(WireError::InvalidType);
+    };
+    let inputs = |start| {
+        let mut inputs = vec![CanonicalDigestInput {
+            domain: b"root",
+            value: &root,
+        }];
+        for index in [start, start + 1, start + 2, start] {
+            inputs.push(CanonicalDigestInput {
+                domain: b"child",
+                value: &children[index],
+            });
+        }
+        inputs
+    };
+    // Unrequested children lie on both sides of the selected address range.
+    // Equal children and one duplicate request preserve expected hash values.
+    let first = inputs(0);
+    let last = inputs(29);
+    let mut a = budget();
+    let mut b = budget();
+    assert_eq!(digests(&first, &mut a)?, digests(&last, &mut b)?);
+    assert_eq!(a.usage(), b.usage());
+    for below in [false, true] {
+        let mut limits = budget().limits();
+        limits.work = a.usage().work - u64::from(below);
+        let mut left = Budget::new(limits);
+        let mut right = Budget::new(limits);
+        let result = digests(&first, &mut left);
+        assert_eq!(result, digests(&last, &mut right));
+        assert_eq!(left.usage(), right.usage());
+        if below {
+            assert_eq!(result, Err(WireError::Stopped(StopReason::WorkLimit)));
+        } else {
+            result?;
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn allocation_order_preserves_usage_and_work_boundary() -> Result<(), WireError> {
     // All values are equal but distinct. Reversing references changes pointer
     // insertion/lookup positions while preserving the logical input sequence.
