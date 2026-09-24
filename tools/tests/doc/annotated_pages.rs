@@ -564,7 +564,7 @@ fn annotated_page_set_keeps_stops_sticky_and_returns_no_partial_output() -> Resu
 
 #[test]
 fn architecture_draft_projects_with_explicit_current_markdown_dependency() -> Result<(), String> {
-    architecture_projection(budget())
+    architecture_projection(budget(), false)
 }
 
 /// Explicit measurement under the existing corpus policy. The ordinary test
@@ -578,10 +578,13 @@ fn measure_architecture_projection_under_corpus_limits() -> Result<(), String> {
     }
     let policy: Policy =
         serde_json::from_str(include_str!("../../../doc/canonical.json")).map_err(err)?;
-    architecture_projection(policy.output_limits.budget())
+    architecture_projection(policy.output_limits.budget(), true)
 }
 
-fn architecture_projection(mut render_budget: Budget) -> Result<(), String> {
+fn architecture_projection(
+    mut render_budget: Budget,
+    measure_encoding: bool,
+) -> Result<(), String> {
     let c = compiled()?;
     let set = PageSet {
         pages: vec![page(
@@ -649,6 +652,70 @@ fn architecture_projection(mut render_budget: Budget) -> Result<(), String> {
     assert!(visible.contains("doc-coreはmath-coreをimportしない。"));
     // This is Markdown generation only: passive Markdown is never an HTML page.
     assert_eq!(artifact.pages.len(), 1);
+    if measure_encoding {
+        // Isolated component run with fresh admission, not a subtraction from
+        // the enclosing projection. Keep the same immutable input and limits.
+        let mut b = Budget::new(render_budget.limits());
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+        let started = std::time::Instant::now();
+        let encoded = nepl3_doc_core::portable::pages::set_to_value(
+            &set,
+            &c.doc.registry,
+            &mut codec,
+            &mut b,
+        )
+        .map_err(err)?;
+        let elapsed = started.elapsed();
+        println!(
+            "architecture isolated_encoding elapsed_ns={} usage={:?}",
+            elapsed.as_nanos(),
+            b.usage()
+        );
+        use nepl3_core::value::NdfValue;
+        use nepl3_core::value_codec::{CanonicalDigestInput, FoundationValueCodec};
+        let NdfValue::Record(value) = &encoded else {
+            return Err("PageSet".into());
+        };
+        let Some(NdfValue::List(pages)) = value.fields.first() else {
+            return Err("pages".into());
+        };
+        let Some(NdfValue::Record(page)) = pages.first() else {
+            return Err("PageDocument".into());
+        };
+        let document = page.fields.get(1).ok_or("DocumentSyntax")?;
+        let NdfValue::Record(record) = document else {
+            return Err("DocumentSyntax record".into());
+        };
+        let Some(NdfValue::Record(value)) = record.fields.first() else {
+            return Err("DocValue".into());
+        };
+        let Some(NdfValue::List(embeds)) = value.fields.get(2) else {
+            return Err("embeds".into());
+        };
+        let mut inputs = vec![CanonicalDigestInput {
+            domain: nepl3_doc_core::prepare::DOCUMENT_DOMAIN,
+            value: document,
+        }];
+        inputs.extend(embeds.iter().map(|value| CanonicalDigestInput {
+            domain: nepl3_doc_core::prepare::GUEST_DOMAIN,
+            value,
+        }));
+        let mut digest_budget = Budget::new(render_budget.limits());
+        let started = std::time::Instant::now();
+        let digests = codec
+            .canonical_value_digests(&inputs, &mut digest_budget)
+            .map_err(err)?;
+        let elapsed = started.elapsed();
+        println!(
+            "architecture isolated_digests elapsed_ns={} requests={} usage={:?}",
+            elapsed.as_nanos(),
+            inputs.len(),
+            digest_budget.usage()
+        );
+        assert_eq!(digests.len(), inputs.len());
+    }
     Ok(())
 }
 

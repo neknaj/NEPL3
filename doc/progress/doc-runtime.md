@@ -82,6 +82,15 @@ Windows debugの参考時間は準備6.338秒、projection完了6.344秒で、�
 通常試験のWork100Mと失敗状態は維持する。この計測は通常予算への適合や全章の性能保証を示さない。
 Sentence adapterの6試験と実言語を含む9試験はnative・WASIで成功し、独立レビューも6試験を実行した。
 追加試験の成功を全workspaceの成功として扱わない。
+第01章のPageSet符号化とdocument・guestのdigest計算を、同じ不変入力・上限で独立測定した。
+符号化は27,403,009 Work、68件のdigest計算は70,987,681 Workだった。
+これらは別Budgetによる成分測定であり、projection内の区間差分とは区別する。
+digest要求索引は反復挿入からbudget付き安定merge sortへ変更し、構築の二乗時間項を除去した。
+128・256・512件でWork増加率、順序別のUsage一致、資源上限一致と1不足を検査する。
+変更後のdigest測定は70,986,006 Work、projectionは145,018,784 Workである。
+Windows debugの参考時間はdigest 3.233秒、projection 5.905秒だった。
+索引の一時領域によりprojectionの累積AllocationUnitsは125,597,353へ増加した。
+通常Work100Mの試験はnamespace準備中に停止する。値の走査・符号化・hash処理の改善を継続する。
 正式Markdown生成は旧Sentence構文の `doc/tutorial/miniexpr.nepld` で停止している。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。

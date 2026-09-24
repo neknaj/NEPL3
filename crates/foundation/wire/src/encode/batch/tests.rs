@@ -14,6 +14,83 @@ fn budget() -> Budget {
 }
 
 #[test]
+fn index_sort_preserves_partial_runs_and_duplicate_order() -> Result<(), WireError> {
+    for count in [0_usize, 1, 3, 7, 129, 255, 257] {
+        let mut index: Vec<_> = (0..count)
+            .map(|request| ((count - request) % 11, request))
+            .collect();
+        let mut expected = index.clone();
+        expected.sort_by_key(|entry| entry.0);
+        sort_index(&mut index, &mut budget())?;
+        assert_eq!(index, expected);
+    }
+    Ok(())
+}
+
+#[test]
+fn index_growth_and_layout_independent_resource_boundaries() -> Result<(), WireError> {
+    let mut previous = None;
+    for count in [128_usize, 256, 512] {
+        let mut reference_usage = None;
+        for layout in 0..4 {
+            let original: Vec<_> = (0..count)
+                .map(|request| {
+                    let address = match layout {
+                        0 => request,
+                        1 => count - request - 1,
+                        2 => (request % 2) * (count / 2) + request / 2,
+                        _ => request % 7,
+                    };
+                    (address, request)
+                })
+                .collect();
+            let mut expected = original.clone();
+            // Independent test-only stable sort preserves duplicate requests.
+            expected.sort_by_key(|entry| entry.0);
+            let mut index = original.clone();
+            let mut measured = budget();
+            sort_index(&mut index, &mut measured)?;
+            assert_eq!(index, expected);
+            let used = measured.usage();
+            if let Some(reference) = reference_usage {
+                assert_eq!(used, reference);
+            } else {
+                reference_usage = Some(used);
+                if let Some(previous_work) = previous {
+                    // Doubling n in n log n stays below 3x; insertion sorting
+                    // incurs approximately 4x for the same request counts.
+                    assert!(used.work < previous_work * 3);
+                }
+                previous = Some(used.work);
+            }
+            for reason in [StopReason::WorkLimit, StopReason::AllocationLimit] {
+                for below in [false, true] {
+                    let mut limits = budget().limits();
+                    match reason {
+                        StopReason::WorkLimit => limits.work = used.work - u64::from(below),
+                        StopReason::AllocationLimit => {
+                            limits.allocation_units = used.allocation_units - u64::from(below);
+                        }
+                        _ => unreachable!("enumerated resource"),
+                    }
+                    let mut bounded = Budget::new(limits);
+                    let mut index = original.clone();
+                    let result = sort_index(&mut index, &mut bounded);
+                    if below {
+                        assert_eq!(result, Err(WireError::Stopped(reason)));
+                        assert_eq!(bounded.poll(), Err(reason));
+                    } else {
+                        result?;
+                        assert_eq!(index, expected);
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn allocation_order_preserves_usage_and_work_boundary() -> Result<(), WireError> {
     // All values are equal but distinct. Reversing references changes pointer
     // insertion/lookup positions while preserving the logical input sequence.

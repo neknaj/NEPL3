@@ -60,6 +60,45 @@ fn bound(
     Ok(start)
 }
 
+fn sort_index(index: &mut Vec<(usize, usize)>, b: &mut Budget) -> Result<(), WireError> {
+    let count = index.len();
+    if count < 2 {
+        return Ok(());
+    }
+    let mut scratch = storage(count, b)?;
+    let mut width = 1_usize;
+    while width < count {
+        scratch.clear();
+        let mut start = 0_usize;
+        while start < count {
+            let middle = start.saturating_add(width).min(count);
+            let end = middle.saturating_add(width).min(count);
+            let (mut left, mut right) = (start, middle);
+            while left < middle || right < end {
+                // One comparison and one copied slot per output element.
+                // Precharge even when a run is exhausted so pointer layout
+                // cannot change logical Usage or the stopping boundary.
+                b.charge(Resource::Work, 2)?;
+                let position = if left < middle && (right == end || index[left].0 <= index[right].0)
+                {
+                    let position = left;
+                    left += 1;
+                    position
+                } else {
+                    let position = right;
+                    right += 1;
+                    position
+                };
+                scratch.push(index[position]);
+            }
+            start = end;
+        }
+        core::mem::swap(index, &mut scratch);
+        width = width.saturating_mul(2);
+    }
+    Ok(())
+}
+
 impl Sink for Batch<'_, '_> {
     fn enter(&mut self, value: &NdfValue, b: &mut Budget) -> Result<bool, WireError> {
         let address = core::ptr::from_ref(value).addr();
@@ -136,16 +175,13 @@ pub(crate) fn digests(
         b.charge(Resource::Work, 1)?;
         b.charge(Resource::OutputBytes, 32)?;
         let address = core::ptr::from_ref(input.value).addr();
-        let position = bound(&batch.index, address, false, b)?;
-        // An insertion can shift every existing slot. Precharge that bound,
-        // independently of this allocation's position in address order.
-        b.charge(Resource::Work, batch.index.len() as u64)?;
-        batch.index.insert(position, (address, request));
+        batch.index.push((address, request));
         batch.states.push(State {
             hash: None,
             digest: None,
         });
     }
+    sort_index(&mut batch.index, b)?;
     for (request, input) in inputs.iter().enumerate() {
         b.charge(Resource::Work, 1)?;
         if batch.states[request].digest.is_none() {
