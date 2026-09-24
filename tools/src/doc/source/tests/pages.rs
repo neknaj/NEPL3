@@ -5,12 +5,14 @@ use nepl3_doc_core::{
     portable,
 };
 
+mod article;
+
 #[test]
 fn article_sentence_doc_links_resolve_in_page_namespaces() -> Result<(), String> {
     let compiled = compiled()?;
     let sources = [
-        r#"article en sentence sentence cons doc link page "second" some "target" text "Go" nil body nil"#,
-        r#"article en sentence sentence cons doc anchor target text "Goal" nil body nil"#,
+        r#"article en sentence sentence cons doc link page "second" some "target" text "Go" nil body cons paragraph cons sentence "First body" nil nil"#,
+        r#"article en sentence sentence cons doc anchor target text "Goal" nil body cons paragraph cons sentence "Second body" nil nil"#,
     ];
     for native in [false, true] {
         let mut pages = Vec::new();
@@ -244,6 +246,7 @@ fn article_sentence_doc_links_resolve_in_page_namespaces() -> Result<(), String>
             let prepared =
                 nepl3_doc_html::pages::namespace::prepare(&resolved, &options, &mut budget())
                     .map_err(err)?;
+            article::verify(&prepared, &compiled, registry, &mut codec, &mut budget())?;
             let mut measured = budget();
             let pending = nepl3_doc_html::pages::namespace::render_member(
                 &prepared,
