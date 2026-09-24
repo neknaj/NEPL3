@@ -171,7 +171,7 @@ fn page_export_resolves_recursive_sentence_guests_before_serialization() -> Resu
 fn export_reuses_the_admitted_tree_proof_without_recharging_parse() -> Result<(), String> {
     use nepl3_tools::doc::source::{budget, with_input_route};
     let compiled = compiled()?;
-    let source = r#"article ja "[文書/ぶんしょ]" body cons paragraph cons "{[本文/ほんぶん]/body}。" cons sentence cons strong text "次の文。" nil nil nil"#;
+    let source = r#"article ja sentence "[文書/ぶんしょ]" body cons paragraph cons sentence "{[本文/ほんぶん]/body}。" cons sentence sentence cons strong text "次の文。" nil nil nil"#;
     let mut expected = None;
     for native in [false, true] {
         let usage = with_input_route(
@@ -225,7 +225,7 @@ fn export_reuses_the_admitted_tree_proof_without_recharging_parse() -> Result<()
 #[test]
 fn export_preserves_content_and_binds_script_free_files() -> Result<(), String> {
     let compiled = compiled()?;
-    let source = r#"article ja "[文書/ぶんしょ]" body cons paragraph cons "{[本文/ほんぶん]/body} & <tag>" nil nil"#;
+    let source = r#"article ja sentence "[文書/ぶんしょ]" body cons paragraph cons sentence "{[本文/ほんぶん]/body} & <tag>" nil nil"#;
     let first = export::generate(&compiled, source)?;
     let second = export::generate(&compiled, source)?;
     assert_eq!(first.html, second.html);
@@ -269,13 +269,15 @@ fn export_preserves_content_and_binds_script_free_files() -> Result<(), String> 
 #[test]
 fn export_reserves_depth_for_the_document_shell() -> Result<(), String> {
     let compiled = compiled()?;
-    for count in [250, 251, 252] {
+    // The independent Sentence output adds a phrasing wrapper within the Doc
+    // slot. Text reaches strong-count + 8; the shell limit remains 256.
+    for count in [248, 249, 250] {
         let source = format!(
-            "article ja sentence cons {}text \"x\" nil body nil",
+            "article ja sentence sentence cons {}text \"x\" nil body nil",
             "strong ".repeat(count)
         );
         let result = export::generate(&compiled, &source);
-        if count == 250 {
+        if count == 248 {
             result?;
         } else {
             assert!(result.is_err_and(|e| e.starts_with("OutputDepth")));

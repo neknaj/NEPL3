@@ -4,7 +4,8 @@ use nepl3_tools::doc::{export, source::compiled};
 #[test]
 fn observing_export_preserves_artifacts_and_stage_order() -> Result<(), String> {
     let compiled = compiled()?;
-    let source = "article ja \"T\" body cons paragraph cons \"[文/ぶん]。\" nil nil";
+    let source =
+        "article ja sentence \"T\" body cons paragraph cons sentence \"[文/ぶん]。\" nil nil";
     let expected = export::generate(&compiled, source)?;
     let mut measurements = Vec::new();
     let actual = export::generate_observed(&compiled, source, &mut |m| measurements.push(m))?;
@@ -26,17 +27,30 @@ fn observing_export_preserves_artifacts_and_stage_order() -> Result<(), String> 
 #[test]
 fn failed_export_reports_only_completed_stages() -> Result<(), String> {
     let compiled = compiled()?;
-    for (source, expected) in [
-        ("unknown", vec![]),
+    for (source, expected, reason) in [
+        ("unknown", vec![], None),
         (
-            "article en \"T\" body cons paragraph cons sentence cons link external \"https://example.test/\" text \"L\" nil nil nil",
+            "article en sentence \"T\" body cons paragraph cons sentence sentence cons doc link page \"missing\" none text \"L\" nil nil nil",
             vec![export::Stage::ParseAndValidate, export::Stage::Lower],
+            Some("MissingPage"),
+        ),
+        (
+            "article en sentence \"T\" body cons paragraph cons sentence sentence cons link \"javascript:alert(1)\" text \"L\" nil nil nil",
+            vec![
+                export::Stage::ParseAndValidate,
+                export::Stage::Lower,
+                export::Stage::Prepare,
+            ],
+            Some("Attribute"),
         ),
     ] {
         let mut stages = Vec::new();
-        assert!(
-            export::generate_observed(&compiled, source, &mut |m| stages.push(m.stage)).is_err()
-        );
+        let error = export::generate_observed(&compiled, source, &mut |m| stages.push(m.stage))
+            .err()
+            .ok_or("unexpected success")?;
+        if let Some(reason) = reason {
+            assert!(error.contains(reason), "{error}");
+        }
         assert_eq!(stages, expected);
     }
     Ok(())
@@ -56,7 +70,7 @@ fn measure_annotated_document_scaling() -> Result<(), String> {
         (32, 4, false, 1),
         (32, 4, true, 8),
     ] {
-        let mut source = String::from("article ja \"T\" body ");
+        let mut source = String::from("article ja sentence \"T\" body ");
         let text = if annotated {
             "[文/ぶん]。"
         } else {
@@ -66,7 +80,7 @@ fn measure_annotated_document_scaling() -> Result<(), String> {
         for _ in 0..paragraphs {
             source.push_str("cons paragraph ");
             for _ in 0..sentences {
-                source.push_str("cons \"");
+                source.push_str("cons sentence \"");
                 source.push_str(&text);
                 source.push_str("\" ");
             }
@@ -97,16 +111,21 @@ fn measure_annotated_document_scaling() -> Result<(), String> {
 
 #[test]
 fn large_annotated_document_preserves_every_sentence() -> Result<(), String> {
-    let mut source = String::from("article ja \"T\" body ");
+    let mut source = String::from("article ja sentence \"T\" body ");
     for _ in 0..128 {
         source.push_str("cons paragraph ");
         for _ in 0..4 {
-            source.push_str("cons \"[文/ぶん]。\" ");
+            source.push_str("cons sentence \"[文/ぶん]。\" ");
         }
         source.push_str("nil ");
     }
     source.push_str("nil");
-    let output = export::generate(&compiled()?, &source)?;
+    let output = export::generate_observed(&compiled()?, &source, &mut |measurement| {
+        println!(
+            "stage={:?} usage={:?}",
+            measurement.stage, measurement.usage
+        );
+    })?;
     assert_eq!(output.html.matches("class=\"nepl-ruby\"").count(), 512);
     assert_eq!(output.html.matches("ぶん").count(), 512);
     assert_eq!(output.html.matches('。').count(), 512);

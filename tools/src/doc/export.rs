@@ -3,7 +3,7 @@ pub mod pages;
 use super::source::{Compiled, budget, compiled, err, with_input_route};
 use nepl3_core::source::{Digest, SourceAdmission, SourceStore};
 use nepl3_doc_core::{check::Category, lower};
-use nepl3_doc_html::{ParallelMode, RenderOptions, prepare_local, render};
+use nepl3_doc_html::{ParallelMode, RenderOptions};
 use nepl3_wire::foundation::FoundationCodec;
 use std::time::{Duration, Instant};
 use std::{fs, io::Read, path::Path};
@@ -15,6 +15,8 @@ pub enum Stage {
     ParseAndValidate,
     /// Includes creation of the codec and its source admission.
     Lower,
+    /// Discover Sentence/Doc owners, resolve the complete namespace and prepare
+    /// display selection. Uses the same output Budget as rendering.
     Prepare,
     /// Ends after HTML shell serialization; excludes manifest/hash generation
     /// and destruction of intermediate values.
@@ -86,31 +88,25 @@ pub fn generate_observed(
             usage: lower_budget.usage(),
         });
         let mut output_budget = budget();
-        let prepare_start = Instant::now();
-        let options = RenderOptions {
-            parallel: ParallelMode::Rows,
+        let request = nepl3_doc_html::pages::PagesHtmlRequest {
+            set: nepl3_doc_core::pages::PageSet {
+                pages: vec![nepl3_doc_core::pages::PageDocument {
+                    registration: nepl3_doc_core::pages::PageRegistration {
+                        id: "document".into(),
+                        source: "document.nepld".into(),
+                        route: "document.html".into(),
+                    },
+                    document: doc,
+                }],
+                files: vec![],
+            },
+            options: RenderOptions {
+                parallel: ParallelMode::Rows,
+            },
         };
-        let prepared = prepare_local(
-            &doc,
-            &options,
-            profile.registry(),
-            &mut codec,
-            &mut output_budget,
-        )
-        .map_err(err)?;
-        observe(StageMeasurement {
-            stage: Stage::Prepare,
-            elapsed: prepare_start.elapsed(),
-            usage: output_budget.usage(),
-        });
-        let render_start = Instant::now();
-        let rendered = render(&prepared, &mut output_budget).map_err(err)?;
-        let html = shell(&rendered, &mut output_budget)?;
-        observe(StageMeasurement {
-            stage: Stage::RenderAndSerialize,
-            elapsed: render_start.elapsed(),
-            usage: output_budget.usage(),
-        });
+        let mut rendered =
+            pages::render::render_observed(&request, compiled, &mut output_budget, observe)?;
+        let html = rendered.pages.pop().ok_or("missing document output")?;
         let digest = |bytes: &[u8]| {
             Digest::of(bytes)
                 .0
@@ -127,11 +123,13 @@ pub fn generate_observed(
         };
         let manifest = serde_json::to_string_pretty(&serde_json::json!({
             "format":"nepl3.local-doc-export/1",
-            "scope":"local Doc only; external pages, assets and foreign rendering require resolution",
+            "scope":"One local Article with independent Sentence and recursive Doc Inline; registered as document/document.nepld/document.html. Other pages, assets and guest adapters require explicit host resolution.",
             "source_sha256":digest(input.as_bytes()),
             "profile_sha256":digest_hex(profile.digest()),
             "doc_schema_sha256":digest_hex(compiled.doc.package.schema.digest),
-            "renderer":"nepl3-doc-html local/1",
+            "renderer":"nepl3-tools.doc-pages-composed/1",
+            "identity_contract":"NEPL3.Doc.PageNamespaces.v1",
+            "identity":digest_hex(rendered.identity),
             "options":{"parallel":"Rows"},
             "files":[{"path":"document.html","mime":"text/html; charset=utf-8","sha256":digest(html.as_bytes())},
                      {"path":"assets/doc.css","mime":"text/css; charset=utf-8","license":"MIT","sha256":digest(CSS.as_bytes())}],
@@ -228,22 +226,6 @@ pub fn write(input: &Path, output: &Path) -> crate::Result<()> {
     // This is written last. Missing manifest means the output is incomplete.
     fs::write(output.join("manifest.json"), generated.manifest.as_bytes())?;
     Ok(())
-}
-
-fn shell(
-    rendered: &nepl3_doc_html::RenderedFragment,
-    output_budget: &mut nepl3_core::budget::Budget,
-) -> Result<String, String> {
-    let m = &rendered.markup;
-    let validation_start = output_budget.usage();
-    let checked = nepl3_markup::html::validate(&m.fragment, m.slot, &m.policy, output_budget)
-        .map_err(|e| {
-            format!(
-                "HTML validation: {e:?}; initial usage={validation_start:?}; arena nodes={}",
-                m.fragment.nodes.len()
-            )
-        })?;
-    checked_shell(&checked, output_budget)
 }
 
 fn checked_shell(

@@ -1,7 +1,7 @@
 //! Complete native page composition before any filesystem output is created.
 use super::{composition, discovery};
 use crate::doc::{
-    export::checked_shell,
+    export::{Stage, StageMeasurement, checked_shell},
     source::{Compiled, err},
 };
 use nepl3_core::{
@@ -12,8 +12,9 @@ use nepl3_doc_core::{labels::namespace as labels, pages::namespace as scopes};
 use nepl3_doc_html::pages::{PagesHtmlRequest, namespace as html};
 use nepl3_sentence_core::lower::ForeignInlineForm;
 use nepl3_wire::foundation::FoundationCodec;
+use std::time::Instant;
 
-pub(super) struct SerializedPages {
+pub(in crate::doc::export) struct SerializedPages {
     pub identity: Digest,
     pub pages: Vec<String>,
 }
@@ -63,7 +64,17 @@ pub(super) fn render(
     compiled: &Compiled,
     b: &mut Budget,
 ) -> Result<SerializedPages, String> {
+    render_observed(request, compiled, b, &mut |_| {})
+}
+
+pub(in crate::doc::export) fn render_observed(
+    request: &PagesHtmlRequest,
+    compiled: &Compiled,
+    b: &mut Budget,
+    observe: &mut impl FnMut(StageMeasurement),
+) -> Result<SerializedPages, String> {
     b.poll().map_err(err)?;
+    let prepare_start = Instant::now();
     let registry = &compiled.doc.registry;
     let sentence = registry
         .selected("nepl3.syntax.sentence", 1)
@@ -111,6 +122,12 @@ pub(super) fn render(
     }
     let resolved = scopes::resolve(&request.set, &refs, registry, &mut codec, b).map_err(err)?;
     let prepared = html::prepare(&resolved, &request.options, b).map_err(err)?;
+    observe(StageMeasurement {
+        stage: Stage::Prepare,
+        elapsed: prepare_start.elapsed(),
+        usage: b.usage(),
+    });
+    let render_start = Instant::now();
     let mut outputs = composition::array(count, b).map_err(err)?;
     for (page, plan) in plans.iter().enumerate() {
         outputs.push(
@@ -152,6 +169,11 @@ pub(super) fn render(
         pages.push(checked_shell(page, b)?);
     }
     b.poll().map_err(err)?;
+    observe(StageMeasurement {
+        stage: Stage::RenderAndSerialize,
+        elapsed: render_start.elapsed(),
+        usage: b.usage(),
+    });
     Ok(SerializedPages {
         identity: checked.namespace_identity(),
         pages,

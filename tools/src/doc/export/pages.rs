@@ -7,7 +7,7 @@ use serde::Deserialize;
 use std::{collections::BTreeMap, io::Write};
 pub mod composition;
 pub mod discovery;
-mod render;
+pub(super) mod render;
 pub mod resources;
 pub mod sentences;
 use nepl3_core::budget::Budget;
