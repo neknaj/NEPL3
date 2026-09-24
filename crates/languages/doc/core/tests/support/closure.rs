@@ -1,5 +1,5 @@
 use super::*;
-pub(super) fn closure(r: &SchemaRegistry) -> Result<ForeignClosure, String> {
+pub(crate) fn closure(r: &SchemaRegistry) -> Result<ForeignClosure, String> {
     let source = SourceSnapshot::new(
         SourceId("guest".into()),
         1,

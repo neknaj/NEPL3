@@ -3,6 +3,8 @@ use alloc::{format, string::String};
 use nepl3_core::budget::Limits;
 fn budget() -> Budget {
     Budget::new(Limits {
+        source_bytes: 100_000,
+        output_bytes: 100_000,
         work: 100_000_000,
         allocation_units: 100_000_000,
         nodes: 1_000_000,
@@ -31,8 +33,10 @@ fn registry() -> Result<SchemaRegistry, String> {
     registry.finalize(&mut budget()).map_err(err)?;
     Ok(registry)
 }
-fn document(kinds: Vec<DocKind>) -> DocumentSyntax {
-    DocumentSyntax {
+fn document(kinds: Vec<DocKind>, registry: &SchemaRegistry) -> Result<DocumentSyntax, String> {
+    let mut closure = crate::labels::tests::closure(registry)?;
+    closure.syntax.category = "Inline".into();
+    Ok(DocumentSyntax {
         value: DocValue {
             root: DocRoot::Inline(InlineRef(0)),
             nodes: kinds
@@ -44,43 +48,44 @@ fn document(kinds: Vec<DocKind>) -> DocumentSyntax {
                     span: None,
                 })
                 .collect(),
-            embeds: vec![],
+            embeds: vec![DocEmbed {
+                kind: EmbedKind::SentenceInline,
+                content: DocContent::Syntax {
+                    closure: alloc::boxed::Box::new(closure),
+                },
+            }],
         },
         sources: vec![],
         origins: vec![],
         views: vec![],
         source_maps: vec![],
-    }
+    })
 }
-fn reference(name: &str) -> DocumentSyntax {
-    document(vec![
-        DocKind::Reference {
+fn reference(name: &str, registry: &SchemaRegistry) -> Result<DocumentSyntax, String> {
+    document(
+        vec![DocKind::Reference {
             target: name.into(),
-            label: InlineRef(1),
-        },
-        DocKind::Text {
-            text: "参照".into(),
-        },
-    ])
+            label: EmbedRef(0),
+        }],
+        registry,
+    )
 }
-fn anchor(name: &str) -> DocumentSyntax {
-    document(vec![
-        DocKind::Anchor {
+fn anchor(name: &str, registry: &SchemaRegistry) -> Result<DocumentSyntax, String> {
+    document(
+        vec![DocKind::Anchor {
             id: name.into(),
-            label: InlineRef(1),
-        },
-        DocKind::Text {
-            text: "定義".into(),
-        },
-    ])
+            label: EmbedRef(0),
+        }],
+        registry,
+    )
 }
 #[test]
 fn ordered_members_resolve_forward_references_and_keep_owners() -> Result<(), String> {
     let registry = registry()?;
     let mut admission = SourceAdmission::default();
-    let from = reference("target");
-    let to = anchor("target");
-    let other = anchor("other");
+    let from = reference("target", &registry)?;
+    let to = anchor("target", &registry)?;
+    let other = anchor("other", &registry)?;
     let from = inspect(&from, &registry, &mut budget(), &mut admission).map_err(err)?;
     let to = inspect(&to, &registry, &mut budget(), &mut admission).map_err(err)?;
     let other = inspect(&other, &registry, &mut budget(), &mut admission).map_err(err)?;
@@ -129,37 +134,71 @@ fn ordered_members_resolve_forward_references_and_keep_owners() -> Result<(), St
 fn rejects_invalid_graph_repeated_declaration_and_empty_budget() -> Result<(), String> {
     let registry = registry()?;
     let mut admission = SourceAdmission::default();
-    let repeated = document(vec![
-        DocKind::Concat {
-            inlines: vec![InlineRef(1), InlineRef(1)],
-        },
-        DocKind::Anchor {
-            id: "target".into(),
-            label: InlineRef(2),
-        },
-        DocKind::Text {
-            text: "定義".into(),
-        },
-    ]);
+    let repeated = anchor("target", &registry)?;
+    let repeated = inspect(&repeated, &registry, &mut budget(), &mut admission).map_err(err)?;
     assert!(matches!(
-        inspect(&repeated, &registry, &mut budget(), &mut admission),
-        Err(Error::Input(LabelError::DuplicateOccurrence { .. }))
+        resolve(&[&repeated, &repeated], &mut budget()),
+        Err(Error::Duplicate { .. })
     ));
-    let broken = document(vec![DocKind::Reference {
-        target: "target".into(),
-        label: InlineRef(100),
-    }]);
+    let broken = document(
+        vec![DocKind::Reference {
+            target: "target".into(),
+            label: EmbedRef(100),
+        }],
+        &registry,
+    )?;
     assert!(matches!(
         inspect(&broken, &registry, &mut budget(), &mut admission),
         Err(Error::Input(LabelError::Structure(_)))
     ));
-    let empty = document(vec![DocKind::Concat { inlines: vec![] }]);
+    let mut empty = anchor("unused", &registry)?;
+    empty.value.root = DocRoot::Sentence(SentenceRef(0));
+    empty.value.nodes[0].kind = DocKind::Sentence {
+        syntax: EmbedRef(0),
+    };
+    empty.value.embeds[0].kind = EmbedKind::Sentence;
+    if let DocContent::Syntax { closure } = &mut empty.value.embeds[0].content {
+        closure.syntax.category = "Sentence".into();
+    }
     let member = inspect(&empty, &registry, &mut budget(), &mut admission).map_err(err)?;
+    let mut repeated = empty.clone();
+    repeated.value.root = DocRoot::Article(ArticleRef(0));
+    repeated.value.nodes = vec![
+        DocKind::Article {
+            language: "en".into(),
+            title: SentenceRef(1),
+            body: BodyRef(2),
+        },
+        DocKind::Sentence {
+            syntax: EmbedRef(0),
+        },
+        DocKind::Body {
+            blocks: vec![BlockRef(3), BlockRef(3)],
+        },
+        DocKind::Section {
+            id: "target".into(),
+            title: SentenceRef(1),
+            body: BodyRef(4),
+        },
+        DocKind::Body { blocks: vec![] },
+    ]
+    .into_iter()
+    .map(|kind| DocNode {
+        kind,
+        locations: vec![],
+        span: None,
+        origin: None,
+    })
+    .collect();
+    assert!(matches!(
+        inspect(&repeated, &registry, &mut budget(), &mut admission),
+        Err(Error::Input(LabelError::DuplicateOccurrence { .. }))
+    ));
     let checked = resolve(&[], &mut budget()).map_err(err)?;
     assert!(checked.definitions().is_empty() && checked.references().is_empty());
     let members = [&member];
     for reason in [StopReason::WorkLimit, StopReason::AllocationLimit] {
-        let to = anchor("entry");
+        let to = anchor("entry", &registry)?;
         let to = inspect(&to, &registry, &mut budget(), &mut admission).map_err(err)?;
         let mut limits = budget().limits();
         match reason {
@@ -191,9 +230,9 @@ fn resolution_scales_with_index_and_stops_at_success_boundaries() -> Result<(), 
             .rev()
             .flat_map(|index| {
                 let name = format!("target-{index:04}");
-                [reference(&name), anchor(&name)]
+                [reference(&name, &registry), anchor(&name, &registry)]
             })
-            .collect();
+            .collect::<Result<Vec<_>, _>>()?;
         let inputs: Vec<_> = documents
             .iter()
             .map(|document| {

@@ -1,8 +1,28 @@
 use super::*;
-use nepl3_core::budget::Limits;
+use alloc::{boxed::Box, string::String};
+use budget as b;
+use nepl3_core::{
+    budget::Limits,
+    origin::{Origin, OriginId},
+    source::{SourceId, SourceSnapshot, SourceStore},
+    syntax::{
+        Environment, EnvironmentEntry, EnvironmentRef, ForeignClosure, ForeignSyntax, NodeRef,
+        SyntaxBundle, SyntaxNode,
+    },
+    value_codec::FoundationValueCodec,
+};
+use nepl3_wire::foundation::FoundationCodec;
+fn err(e: impl core::fmt::Debug) -> String {
+    alloc::format!("{e:?}")
+}
+#[path = "../../tests/support/closure.rs"]
+mod support;
+pub(super) use support::closure;
 
 fn budget() -> Budget {
     Budget::new(Limits {
+        source_bytes: 100_000,
+        output_bytes: 100_000,
         work: 10_000_000,
         nodes: 100_000,
         allocation_units: 10_000_000,
@@ -40,24 +60,21 @@ fn native_structure_proof_reuses_validation_and_keeps_labels() -> Result<(), all
             title: SentenceRef(1),
             body: BodyRef(2),
         },
-        DocKind::Sentence { inlines: vec![] },
+        DocKind::Sentence {
+            syntax: EmbedRef(0),
+        },
         DocKind::Body {
             blocks: vec![BlockRef(3)],
         },
-        DocKind::Paragraph {
-            items: vec![FlowRef(4)],
-        },
-        DocKind::Sentence {
-            inlines: vec![InlineRef(5)],
-        },
-        DocKind::Anchor {
+        DocKind::Section {
             id: "entry".into(),
-            label: InlineRef(6),
+            title: SentenceRef(1),
+            body: BodyRef(4),
         },
-        DocKind::Text {
-            text: "entry".into(),
-        },
+        DocKind::Body { blocks: vec![] },
     ];
+    let mut guest = closure(&registry)?;
+    guest.syntax.category = "Sentence".into();
     let document = DocumentSyntax {
         value: DocValue {
             root: DocRoot::Article(ArticleRef(0)),
@@ -70,7 +87,12 @@ fn native_structure_proof_reuses_validation_and_keeps_labels() -> Result<(), all
                     span: None,
                 })
                 .collect(),
-            embeds: vec![],
+            embeds: vec![DocEmbed {
+                kind: EmbedKind::Sentence,
+                content: DocContent::Syntax {
+                    closure: Box::new(guest),
+                },
+            }],
         },
         sources: vec![],
         origins: vec![],
