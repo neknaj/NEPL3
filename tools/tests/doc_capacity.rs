@@ -1,5 +1,7 @@
 //! Desktop Doc host capacity against an authored sequence of short sentences.
 use nepl3_tools::doc::{export, source::compiled};
+#[path = "doc_capacity/portable.rs"]
+mod portable;
 
 #[test]
 fn observing_export_preserves_artifacts_and_stage_order() -> Result<(), String> {
