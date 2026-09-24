@@ -23,14 +23,18 @@ rootはSentenceまたはInlineの型付き参照とし、公開LanguagePackage�
 Break、ExternalLink、ForeignInlineのいずれかである。子は順序付きの型付きindexで表す。
 Sentence/ConcatはInline列、Rubyはbaseとreading、InlineAnnoはbaseと順序付きnotesを持つ。
 Code/Textは文字列、Emphasis/StrongはInline一つ、Breakは子なし、ExternalLinkはURIとlabelを持つ。
-ForeignInlineは明示的なForeignClosureを参照し、言語名の閉じたenumを持たない。
+ForeignInlineはEmbedRefを通じてInlineContentを参照する。InlineContentは
+`Syntax { closure: ForeignClosure }`と`Value { value: TypedValue }`を持つ。
+Syntaxは読取り済み構文とsource閉包、Valueは言語が所有する型付き意味値を保持する。
+共通検査は完全なschema identityと値の構造を確認し、選択したadapterがguestの意味・root・source閉包を検査する。
+意味値からsource位置を生成する際には、hostが生成sourceのidentityを付与する。
 
 文章内の外部URL構造はSentenceが所有する。page/section/anchorの名前解決、画像asset、
 数式等は明示foreign-inline adapterの契約で扱い、D固有の名前空間をSentence coreへ移さない。
 URIの存在確認・network accessやguestの意味解析・実行は文章の構造検査では行わない。
 安全な出力と外部参照の解決には後段の独立した検査を要求する。
 
-arenaは型の一致、参照範囲、非循環性、全nodeと全foreign closureの到達性を検査する。
+arenaは型の一致、参照範囲、非循環性、全nodeと全InlineContentの到達性を検査する。
 共有部分木を許すが、深さは最初の訪問経路だけでなく最長経路で制限する。
 空Sentence、空Text、空Concatを許し、Rubyのbase/readingとInlineAnnoのbase/各noteは非空とする。
 InlineAnnoのnotesは一つ以上とし、空Textをwrapperで包んでも非空にしない。
@@ -374,8 +378,14 @@ Sentence・SentenceInlineの意味値と構文closureを独立Sentenceの公開�
 他のguest役割には対応するhost操作が必要である。この入口は未対応の役割を拒否する。
 入力は不変借用とし、複製・検証・guest印字・最終出力に共通Budgetと深さ上限64を適用する。停止時は部分sourceを返さない。
 出力のsource identityは保存・再解析時にhostが付与する。元の意味値と保持済みclosureのsource情報を維持する。
-型付きlist・Ruby・Annoとsourceを保持した相対リンクの合成は、nativeの意味値と初回CBOR受信から検査する。
-すべてのforeign guestをsourceなしで構築する入口は、引き続き構築APIの補完対象である。
+型付きlist・Ruby・Anno・Doc相対リンクの合成は、sourceを持たない意味値と保持済み構文closureの両方を、nativeと初回CBOR受信から検査する。
+suiteの`sentence::document_guests::embed`はDoc Inlineを検証・encodeしてInlineContent::Valueへ格納する。
+対応するdecodeは明示的に選択されたDoc adapterで行い、Docの完全な意味schema identityとInline rootを要求する。
+Syntax入力は選択したsurface identityへ照合する。Value入力はDoc意味schemaへ照合し、表層文法を要求しない。
+印字時の表記とforeign headは、hostが選択したLanguagePackageの契約で決定する。
+Syntax/Valueの判別子をportable schemaとdigestに含め、旧schema identityを拒否する。
+共有guestの検査と意味処理は最も深い出現位置を基準とし、Sentence・Doc・再入先の共通Budgetを使用する。
+このDoc接続は名前解決・I/O・guest評価を実行しない。他言語の意味値には対応する選択adapterを要求する。
 
 ## 注釈と移行完了条件
 

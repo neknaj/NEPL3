@@ -325,13 +325,14 @@ pub fn render<'a>(
     }
 }
 /// Invoke an explicitly selected host adapter for each foreign occurrence.
-/// Input closure validation precedes callbacks. Returned markup is checked as
+/// Input closure/schema validation precedes callbacks. The selected adapter
+/// validates a typed guest's meaning and provenance. Returned markup is checked as
 /// phrasing content under the current depth and joined by moving its arena.
 pub fn render_with_foreign<'a, E: From<StopReason>>(
     input: &'a SentenceSyntax,
     registry: &SchemaRegistry,
     adapter: &mut impl FnMut(
-        &nepl3_core::syntax::ForeignClosure,
+        &nepl3_sentence_core::model::InlineContent,
         EmbedRef,
         &mut Budget,
     ) -> Result<HtmlRequest, E>,
@@ -355,7 +356,7 @@ pub fn render_part_with_foreign<'a, E: From<StopReason>>(
     input: &'a SentenceSyntax,
     registry: &SchemaRegistry,
     adapter: &mut impl FnMut(
-        &nepl3_core::syntax::ForeignClosure,
+        &nepl3_sentence_core::model::InlineContent,
         EmbedRef,
         &mut Budget,
     ) -> Result<HtmlRequest, E>,
@@ -376,7 +377,7 @@ fn build_with_foreign<'a, E: From<StopReason>>(
     input: &'a SentenceSyntax,
     registry: &SchemaRegistry,
     adapter: &mut impl FnMut(
-        &nepl3_core::syntax::ForeignClosure,
+        &nepl3_sentence_core::model::InlineContent,
         EmbedRef,
         &mut Budget,
     ) -> Result<HtmlRequest, E>,

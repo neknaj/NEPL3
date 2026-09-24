@@ -24,6 +24,7 @@ pub enum Error<E> {
     DocShape(nepl3_doc_core::check::ShapeError),
     DocPortable(nepl3_doc_core::portable::PortableError<E>),
     DocPrint(nepl3_doc_core::print::PrintFailure),
+    DocGuest(nepl3_suite::adapters::sentence::document_guests::Error<E>),
 }
 impl<E> From<StopReason> for Error<E> {
     fn from(reason: StopReason) -> Self {
@@ -142,9 +143,11 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
         )?;
         let mut sources = Vec::with_capacity(sentence.value.embeds.len());
         let base = b.current_depth();
-        for (closure, depth) in sentence.value.embeds.iter().zip(depths) {
+        for (content, depth) in sentence.value.embeds.iter().zip(depths) {
             let (prefix, source) = b.with_depth_at_least(base.saturating_add(depth), |b| {
-                if selected(closure, self.math_surface, "Expr", b)? {
+                if let Some(closure) = content.syntax()
+                    && selected(closure, self.math_surface, "Expr", b)?
+                {
                     let spelling = foreign_spelling(
                         self.registry,
                         self.sentence_package,
@@ -154,7 +157,15 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
                         b,
                     )?;
                     self.math(closure, b).map(|source| (spelling, source))
-                } else if selected(closure, self.doc_surface, "Inline", b)? {
+                } else if let Some(surface) = self.doc_surface
+                    && nepl3_suite::adapters::sentence::document_guests::selected(
+                        content,
+                        surface,
+                        self.registry,
+                        b,
+                    )
+                    .map_err(Error::DocGuest)?
+                {
                     let spelling = foreign_spelling(
                         self.registry,
                         self.sentence_package,
@@ -163,8 +174,16 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
                         "Inline",
                         b,
                     )?;
-                    self.document_inline(closure, b)
-                        .map(|source| (spelling, source))
+                    let document = nepl3_suite::adapters::sentence::document_guests::decode(
+                        content,
+                        surface,
+                        self.registry,
+                        self.codec,
+                        b,
+                    )
+                    .map_err(Error::DocGuest)?;
+                    self.document_value(document, nepl3_doc_core::print::PrintMode::Prefix, b)
+                        .map(|artifact| (spelling, artifact.text))
                 } else {
                     Err(Error::Selection)
                 }
@@ -230,28 +249,6 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
             }
             Error::MathPrint(Box::new(error))
         })
-    }
-
-    fn document_inline(
-        &mut self,
-        closure: &ForeignClosure,
-        b: &mut Budget,
-    ) -> Result<String, Error<C::Error>> {
-        use nepl3_doc_core::{check, lower, print};
-        let checked = closure
-            .validate(self.registry, b, self.codec.source_admission())
-            .map_err(Error::Syntax)?;
-        let document = lower::document(
-            checked.syntax(),
-            &closure.syntax.schema,
-            check::Category::Inline,
-            self.registry,
-            b,
-            self.codec,
-        )
-        .map_err(Error::DocLower)?;
-        self.document_value(document, print::PrintMode::Prefix, b)
-            .map(|artifact| artifact.text)
     }
 
     fn document_value(

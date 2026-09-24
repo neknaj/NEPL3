@@ -20,7 +20,7 @@ mod labels;
 mod pages;
 #[path = "doc/phases.rs"]
 mod phases;
-#[path = "doc/print.rs"]
+#[path = "doc/typed_print.rs"]
 mod print;
 #[path = "doc/projection.rs"]
 mod projection;

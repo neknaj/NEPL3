@@ -128,7 +128,16 @@ impl<'a> CheckedShape<'a> {
         let base = b.current_depth();
         for (closure, depth) in self.value.embeds.iter().zip(embeds) {
             b.with_depth_at_least::<_, Error>(base.saturating_add(depth), |b| {
-                closure.validate(registry, b, admission)?;
+                match closure {
+                    crate::model::InlineContent::Syntax { closure } => {
+                        closure.validate(registry, b, admission)?;
+                    }
+                    crate::model::InlineContent::Value { value } => {
+                        registry
+                            .validate_typed(value, b)
+                            .map_err(SyntaxError::Schema)?;
+                    }
+                }
                 Ok(())
             })?;
         }

@@ -24,6 +24,7 @@ pub enum Error<E> {
     Math(Box<super::math::Error<E>>),
     Projection(super::math::ProjectionError),
     Document(Box<document::Error<E>>),
+    Guests(nepl3_suite::adapters::sentence::document_guests::Error<E>),
 }
 impl<E> From<StopReason> for Error<E> {
     fn from(reason: StopReason) -> Self {
@@ -330,43 +331,43 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
             &sentence,
             self.registry,
             &mut |closure, embed, b| {
-                if let Some(surface) = self.doc_surface {
-                    b.charge(
-                        Resource::Work,
-                        (surface.package.len()
-                            + closure.syntax.schema.package.len()
-                            + closure.syntax.category.len()) as u64
-                            + 70,
-                    )?;
-                    if &closure.syntax.schema == surface && closure.syntax.category == "Inline" {
-                        let selected = selected.get(document_position).ok_or(Error::Selection)?;
-                        if selected.embed != embed {
-                            return Err(Error::Selection);
-                        }
-                        let (rendered, nested) = document::render_member(
-                            &prepared,
-                            nepl3_doc_core::labels::namespace::MemberId(document_position as u64),
-                            self,
-                            b,
-                        )
-                        .map_err(|error| document_error(error, b))?;
-                        let (_, document_digest, markup, origins) = rendered.into_parts();
-                        document_position += 1;
-                        b.charge(
-                            Resource::AllocationUnits,
-                            (core::mem::size_of::<ForeignRecord>() as u64).saturating_mul(2),
-                        )?;
-                        foreign.push(ForeignRecord::Document(ForeignDocumentRecord {
-                            embed,
-                            document: std::sync::Arc::clone(&selected.document),
-                            document_digest,
-                            origins,
-                            foreign: nested,
-                        }));
-                        return Ok(markup);
+                if let Some(surface) = self.doc_surface
+                    && nepl3_suite::adapters::sentence::document_guests::selected(
+                        closure,
+                        surface,
+                        self.registry,
+                        b,
+                    )
+                    .map_err(Error::Guests)?
+                {
+                    let selected = selected.get(document_position).ok_or(Error::Selection)?;
+                    if selected.embed != embed {
+                        return Err(Error::Selection);
                     }
+                    let (rendered, nested) = document::render_member(
+                        &prepared,
+                        nepl3_doc_core::labels::namespace::MemberId(document_position as u64),
+                        self,
+                        b,
+                    )
+                    .map_err(|error| document_error(error, b))?;
+                    let (_, document_digest, markup, origins) = rendered.into_parts();
+                    document_position += 1;
+                    b.charge(
+                        Resource::AllocationUnits,
+                        (core::mem::size_of::<ForeignRecord>() as u64).saturating_mul(2),
+                    )?;
+                    foreign.push(ForeignRecord::Document(ForeignDocumentRecord {
+                        embed,
+                        document: std::sync::Arc::clone(&selected.document),
+                        document_digest,
+                        origins,
+                        foreign: nested,
+                    }));
+                    return Ok(markup);
                 }
                 let math_surface = self.math_surface.ok_or(Error::Selection)?;
+                let closure = closure.syntax().ok_or(Error::Selection)?;
                 let mut host = super::math::MathDisplayHost {
                     registry: self.registry,
                     math_surface,

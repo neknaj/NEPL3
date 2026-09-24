@@ -231,14 +231,25 @@
           {
             "list": {
               "named": {
-                "package": "nepl3.foundation",
+                "package": "nepl3.sentence",
                 "revision": 1,
-                "name": "ForeignClosure"
+                "name": "InlineContent"
               }
             }
           }
         ]
       ],
+      "constraints": []
+    },
+    "InlineContent": {
+      "variant": {
+        "Syntax": [
+          ["closure", {"named": {"package": "nepl3.foundation", "revision": 1, "name": "ForeignClosure"}}]
+        ],
+        "Value": [
+          ["value", "TypedValue"]
+        ]
+      },
       "constraints": []
     },
     "SentenceNodeLocation": {

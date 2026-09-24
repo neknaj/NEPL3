@@ -1147,7 +1147,9 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                         .iter()
                         .any(|kind| matches!(kind, Kind::ForeignInline { .. }))
                 );
-                let guest = &sentence_value.value.embeds[0];
+                let guest = sentence_value.value.embeds[0]
+                    .syntax()
+                    .ok_or("syntax content")?;
                 assert_eq!(guest.syntax.schema, compiled.doc.package.schema);
                 assert_eq!(guest.syntax.category, "Inline");
                 let input = guest

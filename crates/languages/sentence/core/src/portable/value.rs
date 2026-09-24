@@ -3,7 +3,7 @@ use crate::model::*;
 use alloc::{string::String, vec::Vec};
 use nepl3_core::{
     budget::{Budget, Resource},
-    value::{NdfValue, Record, SchemaRef, Variant},
+    value::{NdfValue, Record, SchemaRef, TypedValue, Variant},
     value_codec::FoundationValueCodec,
 };
 
@@ -98,7 +98,20 @@ pub(super) fn encode<C: FoundationValueCodec>(
     }
     let mut embeds = reserve(v.embeds.len(), b)?;
     for closure in &v.embeds {
-        embeds.push(c.encode_foreign_closure(closure, b).map_err(boundary)?);
+        let (case, value) = match closure {
+            InlineContent::Syntax { closure } => (
+                "Syntax",
+                c.encode_foreign_closure(closure, b).map_err(boundary)?,
+            ),
+            InlineContent::Value { value } => (
+                "Value",
+                match value.clone_with_budget(b)? {
+                    TypedValue::Record(value) => NdfValue::Record(value),
+                    TypedValue::Variant(value) => NdfValue::Variant(value),
+                },
+            ),
+        };
+        embeds.push(variant(s, "InlineContent", case, [value], b)?);
     }
     record(
         s,
@@ -220,7 +233,27 @@ pub(super) fn decode<C: FoundationValueCodec>(
     }
     let mut embeds = reserve(raw_embeds.len(), b)?;
     for raw in raw_embeds {
-        embeds.push(c.decode_foreign_closure(raw, b).map_err(boundary)?);
+        embeds.push(match case(raw, s, "InlineContent")? {
+            ("Syntax", [closure]) => {
+                let closure = c.decode_foreign_closure(closure, b).map_err(boundary)?;
+                b.charge(
+                    Resource::AllocationUnits,
+                    core::mem::size_of_val(&closure) as u64,
+                )?;
+                InlineContent::from(closure)
+            }
+            ("Value", [value]) => {
+                value.charge_clone(b)?;
+                InlineContent::Value {
+                    value: match value {
+                        NdfValue::Record(value) => TypedValue::Record(value.clone()),
+                        NdfValue::Variant(value) => TypedValue::Variant(value.clone()),
+                        _ => return Err(Error::Shape),
+                    },
+                }
+            }
+            _ => return Err(Error::Shape),
+        });
     }
     Ok(SentenceValue {
         root,

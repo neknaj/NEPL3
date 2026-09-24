@@ -5,21 +5,32 @@ use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::SchemaRegistry,
     syntax::SyntaxError,
-    value::SchemaRef,
+    value::{NdfValue, SchemaRef, TypedValue},
     value_codec::FoundationValueCodec,
 };
-use nepl3_doc_core::{check::Category, lower, model::DocumentSyntax};
-use nepl3_sentence_core::{model::EmbedRef, syntax::SentenceSyntax};
+use nepl3_doc_core::{
+    check::Category,
+    lower,
+    model::{DocRoot, DocumentSyntax},
+    portable,
+};
+use nepl3_sentence_core::{
+    model::{EmbedRef, InlineContent},
+    syntax::SentenceSyntax,
+};
 
 #[derive(Debug)]
-pub enum Error {
+pub enum Error<E> {
     Stopped(StopReason),
     Sentence(nepl3_sentence_core::syntax::Error),
     Shape(nepl3_sentence_core::check::Error),
     Closure(SyntaxError),
     Lower(lower::LowerError),
+    Value(portable::PortableError<E>),
+    Selection,
+    Category,
 }
-impl From<StopReason> for Error {
+impl<E> From<StopReason> for Error<E> {
     fn from(reason: StopReason) -> Self {
         Self::Stopped(reason)
     }
@@ -80,7 +91,7 @@ pub fn collect<C: FoundationValueCodec>(
     registry: &SchemaRegistry,
     codec: &mut C,
     b: &mut Budget,
-) -> Result<Selection, Error> {
+) -> Result<Selection, Error<C::Error>> {
     let result = collect_inner(sentence, surface, registry, codec, b);
     b.poll()?;
     result
@@ -91,7 +102,7 @@ fn collect_inner<C: FoundationValueCodec>(
     registry: &SchemaRegistry,
     codec: &mut C,
     b: &mut Budget,
-) -> Result<Selection, Error> {
+) -> Result<Selection, Error<C::Error>> {
     let checked = sentence
         .validate(registry, b, codec.source_admission())
         .map_err(|error| match error {
@@ -125,33 +136,15 @@ fn collect_inner<C: FoundationValueCodec>(
     let base = b.current_depth();
     for occurrence in occurrences {
         let index = occurrence.embed.0 as usize;
-        let closure = &sentence.value.embeds[index];
-        b.charge(
-            Resource::Work,
-            (surface.package.len()
-                + closure.syntax.schema.package.len()
-                + closure.syntax.category.len()) as u64
-                + 70,
-        )?;
-        if &closure.syntax.schema != surface || closure.syntax.category != "Inline" {
+        let content = &sentence.value.embeds[index];
+        if !self::selected(content, surface, registry, b)? {
             continue;
         }
         let document = match mapping[index] {
             Some(id) => id,
             None => {
                 let document = b.with_depth_at_least(base.saturating_add(depths[index]), |b| {
-                    let checked = closure
-                        .validate(registry, b, codec.source_admission())
-                        .map_err(Error::Closure)?;
-                    lower::document(
-                        checked.syntax(),
-                        surface,
-                        Category::Inline,
-                        registry,
-                        b,
-                        codec,
-                    )
-                    .map_err(Error::Lower)
+                    decode(content, surface, registry, codec, b)
                 })?;
                 let id = DocumentId(selected.documents.len());
                 push(&mut selected.documents, document, b)?;
@@ -169,4 +162,114 @@ fn collect_inner<C: FoundationValueCodec>(
         )?;
     }
     Ok(selected)
+}
+
+/// Match syntax against the supplied surface, or a typed value against the
+/// registry's complete Doc meaning identity. Calling this adapter explicitly
+/// selects Doc semantics. `surface` binds only Syntax inputs; typed values have
+/// no surface grammar. The selected printer separately binds output spelling.
+pub fn selected<E>(
+    content: &InlineContent,
+    surface: &SchemaRef,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<bool, Error<E>> {
+    b.poll()?;
+    if !registry.is_finalized() {
+        return Err(Error::Selection);
+    }
+    let expected = match content {
+        InlineContent::Syntax { .. } => Some(surface),
+        InlineContent::Value { .. } => registry.selected("nepl3.doc", 1),
+    };
+    let Some(expected) = expected else {
+        return Ok(false);
+    };
+    b.charge(
+        Resource::Work,
+        (expected.package.len() + content.schema().package.len()) as u64 + 70,
+    )?;
+    if content.schema() != expected {
+        return Ok(false);
+    }
+    match content {
+        InlineContent::Syntax { closure } => {
+            b.charge(Resource::Work, closure.syntax.category.len() as u64)?;
+            Ok(closure.syntax.category == "Inline")
+        }
+        InlineContent::Value { .. } => Ok(true),
+    }
+}
+
+/// Decode one explicitly selected Doc Inline. Nested language values retain
+/// their own validation boundary and source closure.
+pub fn decode<C: FoundationValueCodec>(
+    content: &InlineContent,
+    surface: &SchemaRef,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<DocumentSyntax, Error<C::Error>> {
+    b.poll()?;
+    let result = (|| {
+        if !selected(content, surface, registry, b)? {
+            return Err(Error::Selection);
+        }
+        let document = match content {
+            InlineContent::Syntax { closure } => {
+                let checked = closure
+                    .validate(registry, b, codec.source_admission())
+                    .map_err(Error::Closure)?;
+                lower::document(
+                    checked.syntax(),
+                    surface,
+                    Category::Inline,
+                    registry,
+                    b,
+                    codec,
+                )
+                .map_err(Error::Lower)?
+            }
+            InlineContent::Value { value } => {
+                let value = match value.clone_with_budget(b)? {
+                    TypedValue::Record(value) => NdfValue::Record(value),
+                    TypedValue::Variant(value) => NdfValue::Variant(value),
+                };
+                portable::from_value(&value, registry, codec, b).map_err(Error::Value)?
+            }
+        };
+        if !matches!(document.value.root, DocRoot::Inline(_)) {
+            return Err(Error::Category);
+        }
+        Ok(document)
+    })();
+    b.poll()?;
+    result
+}
+
+/// Encode a typed Doc Inline as a Sentence foreign value. No source text or
+/// source positions are synthesized. The Doc portable boundary validates the
+/// document and retains the provenance of nested guests.
+pub fn embed<C: FoundationValueCodec>(
+    document: &DocumentSyntax,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<InlineContent, Error<C::Error>> {
+    b.poll()?;
+    let result = (|| {
+        if !matches!(document.value.root, DocRoot::Inline(_)) {
+            return Err(Error::Category);
+        }
+        let value = portable::to_value(document, registry, codec, b).map_err(Error::Value)?;
+        let NdfValue::Record(record) = &value else {
+            return Err(Error::Value(portable::PortableError::Shape));
+        };
+        value.charge_clone(b)?;
+        Ok(InlineContent::Value {
+            value: TypedValue::Record(record.clone()),
+        })
+    })();
+    b.poll()?;
+    result
 }

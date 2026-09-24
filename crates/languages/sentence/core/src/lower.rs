@@ -296,7 +296,11 @@ pub fn prefix_with_foreign(
             }
             let closure = ForeignClosure::capture(foreign, &checked, registry, b, admission)?;
             let embed = EmbedRef(embeds.len() as u64);
-            push(&mut embeds, closure, b)?;
+            b.charge(
+                Resource::AllocationUnits,
+                core::mem::size_of_val(&closure) as u64,
+            )?;
+            push(&mut embeds, InlineContent::from(closure), b)?;
             let index = a.nodes.len() as u64;
             b.charge(Resource::Nodes, 1)?;
             push(&mut a.nodes, Kind::ForeignInline { syntax: embed }, b)?;

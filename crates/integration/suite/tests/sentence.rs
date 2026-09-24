@@ -463,7 +463,7 @@ fn doc_bridge_preserves_generated_shared_inline_and_rejects_unselected_foreign()
         syntax: EmbedRef(0),
     }];
     input.value.root = Root::Inline(InlineRef(0));
-    input.value.embeds = vec![closure];
+    input.value.embeds = vec![closure.into()];
     input.locations = vec![location];
     input
         .validate(&r, &mut b(), &mut SourceAdmission::default())

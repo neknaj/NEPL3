@@ -106,7 +106,7 @@ fn fixture() -> Result<(SchemaRegistry, SentenceValue), String> {
                     inlines: vec![InlineRef(0), InlineRef(0)],
                 },
             ],
-            embeds: vec![closure],
+            embeds: vec![closure.into()],
         },
     ))
 }
@@ -178,7 +178,11 @@ fn selected_source_is_owner_bound_and_shared_occurrences_are_printed() -> Result
         Err(Error::WrongScope)
     );
     let mut invalid = value.clone();
-    invalid.embeds[0].syntax.environment.id = 1;
+    let nepl3_sentence_core::model::InlineContent::Syntax { closure } = &mut invalid.embeds[0]
+    else {
+        return Err("syntax content".into());
+    };
+    closure.syntax.environment.id = 1;
     assert!(
         print::prepare(
             &invalid,

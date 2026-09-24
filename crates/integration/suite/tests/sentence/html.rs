@@ -403,39 +403,42 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
         }],
         Root::Inline(InlineRef(0)),
     );
-    input.value.embeds.push(ForeignClosure {
-        syntax: ForeignSyntax {
-            schema: foundation.clone(),
-            category: "test-inline".into(),
-            root: NodeRef(0),
-            bundle: SyntaxBundle {
-                sources: vec![],
-                nodes: vec![SyntaxNode {
-                    schema: foundation,
-                    kind: "NodeRef".into(),
-                    fields: vec![],
-                    head: None,
-                    cover: None,
-                    origin: OriginId(0),
-                    token: None,
-                }],
-                origins: input.origins.clone(),
+    input.value.embeds.push(
+        ForeignClosure {
+            syntax: ForeignSyntax {
+                schema: foundation.clone(),
+                category: "test-inline".into(),
                 root: NodeRef(0),
-                environments: vec![],
-                tokens: vec![],
-                source_maps: vec![],
+                bundle: SyntaxBundle {
+                    sources: vec![],
+                    nodes: vec![SyntaxNode {
+                        schema: foundation,
+                        kind: "NodeRef".into(),
+                        fields: vec![],
+                        head: None,
+                        cover: None,
+                        origin: OriginId(0),
+                        token: None,
+                    }],
+                    origins: input.origins.clone(),
+                    root: NodeRef(0),
+                    environments: vec![],
+                    tokens: vec![],
+                    source_maps: vec![],
+                },
+                environment: EnvironmentRef { id: 0, digest },
             },
-            environment: EnvironmentRef { id: 0, digest },
-        },
-        owner_environment: EnvironmentEntry {
-            id: 0,
-            digest,
-            value: environment,
-        },
-        owner_origins: vec![],
-        owner_sources: vec![],
-        owner_source_maps: vec![],
-    });
+            owner_environment: EnvironmentEntry {
+                id: 0,
+                digest,
+                value: environment,
+            },
+            owner_origins: vec![],
+            owner_sources: vec![],
+            owner_source_maps: vec![],
+        }
+        .into(),
+    );
     assert!(matches!(
         html::render(&input, &r, &mut b(), &mut SourceAdmission::default()),
         Err(Error::ForeignAdapterRequired(EmbedRef(0)))
@@ -939,7 +942,11 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
         ),
         Err(html::RenderFailure::Sentence(Error::Markup(_)))
     ));
-    input.value.embeds[0].syntax.bundle.origins.clear();
+    let nepl3_sentence_core::model::InlineContent::Syntax { closure } = &mut input.value.embeds[0]
+    else {
+        return Err("syntax content".into());
+    };
+    closure.syntax.bundle.origins.clear();
     assert!(matches!(
         html::render(&input, &r, &mut b(), &mut SourceAdmission::default()),
         Err(Error::Input(_))

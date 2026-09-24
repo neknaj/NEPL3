@@ -35,6 +35,96 @@ fn registry() -> Result<SchemaRegistry, String> {
     r.finalize(&mut budget()).map_err(err)?;
     Ok(r)
 }
+
+#[test]
+fn typed_foreign_value_roundtrip_preserves_identity_and_requires_variant() -> Result<(), String> {
+    use nepl3_core::value::{Record, TypedValue};
+    let r = registry()?;
+    let foundation = r
+        .selected("nepl3.foundation", 1)
+        .ok_or("foundation")?
+        .clone();
+    let value = SentenceValue {
+        root: Root::Inline(InlineRef(0)),
+        nodes: vec![Kind::ForeignInline {
+            syntax: EmbedRef(0),
+        }],
+        embeds: vec![InlineContent::Value {
+            value: TypedValue::Record(Record {
+                schema: foundation,
+                kind: "NodeRef".into(),
+                fields: vec![NdfValue::U64(17)],
+            }),
+        }],
+    };
+    let raw = encode(&value, &r)?;
+    let bytes = nepl3_wire::encode(&raw, &mut budget()).map_err(err)?;
+    let received = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+    assert_eq!(decode(&received, &r, &mut budget()).map_err(err)?, value);
+    let NdfValue::Record(record) = &raw else {
+        return Err("sentence record".into());
+    };
+    let NdfValue::List(embeds) = &record.fields[2] else {
+        return Err("embeds".into());
+    };
+    let NdfValue::Variant(content) = &embeds[0] else {
+        return Err("content variant".into());
+    };
+    assert_eq!(content.type_name, "InlineContent");
+    assert_eq!(content.variant, "Value");
+    assert_eq!(
+        content.schema,
+        *r.selected("nepl3.sentence", 1).ok_or("sentence")?
+    );
+    let NdfValue::Record(guest) = &content.fields[0] else {
+        return Err("guest record".into());
+    };
+    assert_eq!(guest.kind, "NodeRef");
+    assert_eq!(guest.fields, [NdfValue::U64(17)]);
+    for replacement in [content.fields[0].clone(), NdfValue::Text("untyped".into())] {
+        let mut forged = record.clone();
+        forged.fields[2] = NdfValue::List(vec![replacement]);
+        assert!(decode(&NdfValue::Record(forged), &r, &mut budget()).is_err());
+    }
+    let mut forged = value.clone();
+    let InlineContent::Value {
+        value: TypedValue::Record(guest),
+    } = &mut forged.embeds[0]
+    else {
+        return Err("typed guest".into());
+    };
+    guest.schema.digest = nepl3_core::source::Digest::of(b"wrong guest schema");
+    assert!(encode(&forged, &r).is_err());
+
+    // Reconstruct the prior descriptor contract: embeds were an untagged
+    // ForeignClosure list. Its actual descriptor digest must remain rejected.
+    use nepl3_core::schema::{TypeRef, TypeShape};
+    let mut old = nepl3_sentence_core::schema::descriptor(&mut budget()).map_err(err)?;
+    old.types.retain(|ty| ty.name != "InlineContent");
+    let TypeShape::Record { fields } = &mut old
+        .types
+        .iter_mut()
+        .find(|ty| ty.name == "SentenceValue")
+        .ok_or("SentenceValue")?
+        .shape
+    else {
+        return Err("record shape".into());
+    };
+    fields
+        .iter_mut()
+        .find(|field| field.name == "embeds")
+        .ok_or("embeds field")?
+        .ty = TypeDescriptor::List(Box::new(TypeDescriptor::Named(TypeRef {
+        package: "nepl3.foundation".into(),
+        revision: 1,
+        name: "ForeignClosure".into(),
+    })));
+    let mut prior = record.clone();
+    prior.schema = old.reference(&mut budget()).map_err(err)?;
+    assert_ne!(prior.schema, record.schema);
+    assert!(decode(&NdfValue::Record(prior), &r, &mut budget()).is_err());
+    Ok(())
+}
 fn sentence() -> SentenceValue {
     SentenceValue {
         root: Root::Sentence(SentenceRef(0)),
@@ -362,7 +452,7 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
                 syntax: EmbedRef(0),
             },
         ],
-        embeds: vec![closure],
+        embeds: vec![closure.into()],
     };
     {
         use nepl3_sentence_core::text::{self, AnnotationPolicy::BaseOnly, Error};
@@ -422,11 +512,22 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
     assert_eq!(actual, value);
     assert_eq!(b.usage().source_bytes, 7);
     assert_ne!(
-        actual.embeds[0].owner_origins,
-        actual.embeds[0].syntax.bundle.origins
+        actual.embeds[0]
+            .syntax()
+            .ok_or("syntax content")?
+            .owner_origins,
+        actual.embeds[0]
+            .syntax()
+            .ok_or("syntax content")?
+            .syntax
+            .bundle
+            .origins
     );
     let mut bad_native = value.clone();
-    bad_native.embeds[0].owner_sources.clear();
+    let InlineContent::Syntax { closure } = &mut bad_native.embeds[0] else {
+        return Err("syntax content".into());
+    };
+    closure.owner_sources.clear();
     assert!(encode(&bad_native, &r).is_err());
     {
         use nepl3_sentence_core::text::{self, AnnotationPolicy::*, Error};
@@ -479,7 +580,10 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
             Err(Error::Unresolved(EmbedRef(0)))
         );
         // Even a reading excluded from output must have a valid source closure.
-        annotated.embeds[0].owner_sources.clear();
+        let InlineContent::Syntax { closure } = &mut annotated.embeds[0] else {
+            return Err("syntax content".into());
+        };
+        closure.owner_sources.clear();
         assert!(matches!(
             text::prepare(
                 &annotated,
@@ -499,7 +603,10 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
         let NdfValue::List(embeds) = &mut record.fields[2] else {
             return Err("embeds".into());
         };
-        let NdfValue::Record(closure) = &mut embeds[0] else {
+        let NdfValue::Variant(content) = &mut embeds[0] else {
+            return Err("inline content".into());
+        };
+        let NdfValue::Record(closure) = &mut content.fields[0] else {
             return Err("closure".into());
         };
         if remove_source {
@@ -542,7 +649,10 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
     nested.nodes.push(Kind::ForeignInline {
         syntax: EmbedRef(0),
     });
-    let guest = &mut nested.embeds[0].syntax.bundle;
+    let InlineContent::Syntax { closure } = &mut nested.embeds[0] else {
+        return Err("syntax content".into());
+    };
+    let guest = &mut closure.syntax.bundle;
     let template = guest.nodes[0].clone();
     for i in 0..29 {
         guest.nodes[i].fields = vec![FieldValue::Child(NodeRef(i as u64 + 1))];
@@ -558,6 +668,8 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
         .validate_shape(&mut Budget::new(limits))
         .map_err(err)?;
     nested.embeds[0]
+        .syntax()
+        .ok_or("syntax content")?
         .validate(
             &r,
             &mut Budget::new(limits),

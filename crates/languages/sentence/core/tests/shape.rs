@@ -292,7 +292,7 @@ fn foreign_indices_are_checked_without_claiming_closure_validity() -> Result<(),
         nodes: vec![Kind::ForeignInline {
             syntax: EmbedRef(0),
         }],
-        embeds: vec![closure.clone()],
+        embeds: vec![closure.clone().into()],
     };
     checked(&v, &mut budget())?;
     // A real arena embed reference reaches the printer's adapter boundary.
@@ -333,7 +333,7 @@ fn foreign_indices_are_checked_without_claiming_closure_validity() -> Result<(),
         })
     );
     v.root = Root::Sentence(SentenceRef(0));
-    v.embeds.push(closure);
+    v.embeds.push(closure.into());
     assert_eq!(checked(&v, &mut budget()), Err(Error::UnusedEmbed(1)));
     v.nodes[1] = Kind::ForeignInline {
         syntax: EmbedRef(2),
@@ -347,7 +347,7 @@ fn foreign_occurrences_keep_order_sharing_notes_and_budget_boundaries() -> Resul
     use nepl3_sentence_core::check::ForeignOccurrence;
     let v = SentenceValue {
         root: Root::Sentence(SentenceRef(4)),
-        embeds: vec![invalid_guest(), invalid_guest()],
+        embeds: vec![invalid_guest().into(), invalid_guest().into()],
         nodes: vec![
             Kind::ForeignInline {
                 syntax: EmbedRef(1),
@@ -429,7 +429,7 @@ fn foreign_occurrences_keep_order_sharing_notes_and_budget_boundaries() -> Resul
     // Exponential display expansion of a finite DAG is still bounded by Work.
     let mut dag = SentenceValue {
         root: Root::Inline(InlineRef(40)),
-        embeds: vec![invalid_guest()],
+        embeds: vec![invalid_guest().into()],
         nodes: vec![Kind::ForeignInline {
             syntax: EmbedRef(0),
         }],

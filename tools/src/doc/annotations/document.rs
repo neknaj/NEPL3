@@ -31,7 +31,7 @@ pub enum Error<E> {
     Sentence(Box<super::Error<E>>),
     Math(Box<super::super::math::Error<E>>),
     Projection(super::super::math::ProjectionError),
-    Guests(nepl3_suite::adapters::sentence::document_guests::Error),
+    Guests(nepl3_suite::adapters::sentence::document_guests::Error<E>),
     Stopped(nepl3_core::budget::StopReason),
     Boundary(PortableError<E>),
     Structure(check::StructureError),

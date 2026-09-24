@@ -1,7 +1,44 @@
 //! Sentence content has no document or host-annotation role. Source/Origin and
 //! syntax views are a separate boundary; raw arena values are not proofs.
-use alloc::{string::String, vec::Vec};
-use nepl3_core::syntax::ForeignClosure;
+use alloc::{boxed::Box, string::String, vec::Vec};
+use nepl3_core::{
+    syntax::ForeignClosure,
+    value::{SchemaRef, TypedValue},
+};
+
+/// Opaque language-owned input. A selected adapter validates guest meaning;
+/// common schema validation alone grants no rendering or execution proof.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum InlineContent {
+    Syntax { closure: Box<ForeignClosure> },
+    Value { value: TypedValue },
+}
+impl InlineContent {
+    pub fn schema(&self) -> &SchemaRef {
+        match self {
+            Self::Syntax { closure } => &closure.syntax.schema,
+            Self::Value {
+                value: TypedValue::Record(value),
+            } => &value.schema,
+            Self::Value {
+                value: TypedValue::Variant(value),
+            } => &value.schema,
+        }
+    }
+    pub fn syntax(&self) -> Option<&ForeignClosure> {
+        match self {
+            Self::Syntax { closure } => Some(closure),
+            Self::Value { .. } => None,
+        }
+    }
+}
+impl From<ForeignClosure> for InlineContent {
+    fn from(closure: ForeignClosure) -> Self {
+        Self::Syntax {
+            closure: Box::new(closure),
+        }
+    }
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct SentenceRef(pub u64);
@@ -61,7 +98,7 @@ pub enum Kind {
 pub struct SentenceValue {
     pub root: Root,
     pub nodes: Vec<Kind>,
-    pub embeds: Vec<ForeignClosure>,
+    pub embeds: Vec<InlineContent>,
 }
 
 impl Kind {
