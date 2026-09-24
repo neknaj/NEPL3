@@ -105,7 +105,11 @@ Hello・MiniExpr・compositionのtutorial正本は、独立Sentence境界を明�
 3章の実原稿を通常予算でMarkdownへ投影し、章間リンク・外部URL・Ruby・RawCode9件の全文を
 独立期待値で検査した。対象試験はnative・WASIで各1件成功した。
 原稿全文と試験差分の独立した静的レビューを完了した。今回の独立レビューは実行検証を含まない。
-正式Markdown集合の生成は次の旧Sentence構文の `doc/spec/00-contract.nepld` で停止している。
+第00章の正本も独立Sentence境界へ移行した。本文・Ruby・Anno・節ID・順序を保持し、
+通常予算による実原稿のMarkdown投影で、3リストの項目数4・6・14、INV01〜INV14の順序、
+InlineCode10件、Rubyをbaseに持つAnno4件を独立期待値と照合した。
+対象試験はnative・WASIで各1件成功し、独立レビューでもnativeの1件成功を確認した。
+正式Markdown集合の生成は次の旧Sentence構文の `doc/spec/13-reproducibility.nepld` で停止している。
 集合生成と生成Markdownの更新は未完了である。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。

@@ -649,6 +649,89 @@ fn tutorial_chapters_project_independent_sentences_and_links() -> Result<(), Str
     Ok(())
 }
 
+#[test]
+fn contract_chapter_projects_independent_sentences_and_invariants() -> Result<(), String> {
+    let c = compiled()?;
+    let set = PageSet {
+        pages: vec![page(
+            &c,
+            "contract",
+            "doc/spec/00-contract.nepld",
+            "doc/spec/00-contract.md",
+            include_str!("../../../doc/spec/00-contract.nepld"),
+        )?],
+        files: vec![],
+    };
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let artifact = render(&set, &c.doc.registry, &mut codec, &mut budget(), &[&[]]).map_err(err)?;
+    assert_eq!(artifact.pages.len(), 1);
+    let markdown = &artifact.pages[0].markdown;
+    assert!(links(markdown).is_empty());
+    assert!(code_blocks(markdown)?.is_empty());
+    assert!(markdown.contains("<ruby>目的<rt>もくてき</rt></ruby>"));
+    for annotation in [
+        r"<ruby>契約<rt>けいやく</rt></ruby>\{contract\}",
+        r"<ruby>拡張点<rt>かくちょうてん</rt></ruby>\{extension point\}",
+        r"<ruby>束縛<rt>そくばく</rt></ruby>\{binding\}",
+        r"<ruby>正本<rt>せいほん</rt></ruby>\{canonical source\}",
+    ] {
+        assert!(
+            markdown.contains(annotation),
+            "missing annotation: {annotation}"
+        );
+    }
+    // The contract's three lists enumerate four languages, six semantic
+    // boundaries and fourteen invariants. Inspect Markdown structure, retaining
+    // the independently specified code operands and invariant order.
+    let mut list_sizes = Vec::new();
+    let mut current_list = None;
+    let mut inline_codes = Vec::new();
+    let mut invariants = Vec::new();
+    for event in Parser::new(markdown) {
+        match event {
+            Event::Start(Tag::List(_)) => {
+                assert!(current_list.is_none());
+                current_list = Some(0);
+            }
+            Event::Start(Tag::Item) => *current_list.as_mut().ok_or("list item")? += 1,
+            Event::End(pulldown_cmark::TagEnd::List(_)) => {
+                list_sizes.push(current_list.take().ok_or("list end")?);
+            }
+            Event::Code(code) => inline_codes.push(code.into_string()),
+            Event::Text(text) if text.starts_with("INV") && !text.starts_with("INV01〜") => {
+                invariants.push(text.split_once('：').ok_or("invariant label")?.0.to_owned());
+            }
+            _ => {}
+        }
+    }
+    assert_eq!(list_sizes, [4, 6, 14]);
+    assert_eq!(
+        inline_codes,
+        [
+            "cons",
+            "nil",
+            "v1",
+            "Fn",
+            "value",
+            "splice",
+            "call",
+            "map",
+            "then",
+            "design/forms.json"
+        ]
+    );
+    assert_eq!(
+        invariants,
+        [
+            "INV01", "INV02", "INV03", "INV04", "INV05", "INV06", "INV07", "INV08", "INV09",
+            "INV10", "INV11", "INV12", "INV13", "INV14"
+        ]
+    );
+    Ok(())
+}
+
 fn code_blocks(markdown: &str) -> Result<Vec<String>, String> {
     let mut blocks = Vec::new();
     let mut code = None;
