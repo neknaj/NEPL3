@@ -47,6 +47,28 @@ fn article_requires_resolution_for_assets() -> Result<(), String> {
                 }
                 _ => return Err(format!("missing resolution requirement: {block}")),
             }
+            let member = nepl3_doc_core::labels::namespace::inspect(
+                &document,
+                profile.registry(),
+                &mut budget(),
+                &mut SourceAdmission::default(),
+            )
+            .map_err(err)?;
+            let members = [&member];
+            let namespace =
+                nepl3_doc_core::labels::namespace::resolve(&members, &mut budget()).map_err(err)?;
+            match nepl3_doc_html::namespace::prepare_with_foreign(
+                &namespace,
+                &options,
+                profile.registry(),
+                &mut codec,
+                &mut budget(),
+            ) {
+                Err(nepl3_doc_html::LocalPreparationError::NeedsResolution(plan)) => {
+                    assert_eq!(plan, expected)
+                }
+                _ => return Err("namespace lost asset requirement".into()),
+            }
             Ok(())
         })?;
     }
@@ -92,57 +114,87 @@ fn article_places_block_guest_results_with_caption_and_owner() -> Result<(), Str
             &mut budget(),
         )
         .map_err(err)?;
-        let mut calls = Vec::new();
-        let rendered = render_article_with_foreign(
-            &prepared,
-            &mut |slot, embed, b| {
-                calls.push((slot.kind, embed));
-                if slot.kind == EmbedKind::Sentence {
-                    let sentence = nepl3_suite::adapters::document::sentence::lower(
-                        slot,
-                        slot.schema(),
-                        &[],
-                        profile.registry(),
-                        &mut codec,
-                        b,
-                    )
-                    .map_err(err)?;
-                    return nepl3_suite::adapters::sentence::html::render(
-                        &sentence,
-                        profile.registry(),
-                        b,
-                        &mut SourceAdmission::default(),
-                    )
-                    .map(|v| v.into_markup())
-                    .map_err(err);
-                }
-                // Backend contract fixture: a selected producer supplies block markup.
-                // This asserts placement, not evaluation of Math or Circuit syntax.
-                let text = match slot.kind {
-                    EmbedKind::DisplayMath => "display result",
-                    EmbedKind::Code => "code result",
-                    EmbedKind::CircuitFigure => "circuit result",
-                    _ => return Err("unexpected role".into()),
-                };
-                Ok(HtmlRequest {
-                    fragment: HtmlFragment {
-                        root: 0,
-                        nodes: vec![
-                            HtmlNode::Element {
-                                tag: HtmlTag::Div,
-                                attributes: vec![],
-                                children: vec![1],
-                            },
-                            HtmlNode::Text { text: text.into() },
-                        ],
-                    },
-                    slot: HtmlSlot::Block,
-                    policy: HtmlPolicy { classes: vec![] },
-                })
-            },
+        let member = nepl3_doc_core::labels::namespace::inspect(
+            &document,
+            profile.registry(),
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(err)?;
+        let members = [&member];
+        let namespace =
+            nepl3_doc_core::labels::namespace::resolve(&members, &mut budget()).map_err(err)?;
+        let namespace = nepl3_doc_html::namespace::prepare_with_foreign(
+            &namespace,
+            &options,
+            profile.registry(),
+            &mut codec,
             &mut budget(),
         )
         .map_err(err)?;
+        let mut calls = Vec::new();
+        let mut adapter = |slot: &DocEmbed, embed: EmbedRef, b: &mut nepl3_core::budget::Budget| {
+            calls.push((slot.kind, embed));
+            if slot.kind == EmbedKind::Sentence {
+                let sentence = nepl3_suite::adapters::document::sentence::lower(
+                    slot,
+                    slot.schema(),
+                    &[],
+                    profile.registry(),
+                    &mut codec,
+                    b,
+                )
+                .map_err(err)?;
+                return nepl3_suite::adapters::sentence::html::render(
+                    &sentence,
+                    profile.registry(),
+                    b,
+                    &mut SourceAdmission::default(),
+                )
+                .map(|v| v.into_markup())
+                .map_err(err);
+            }
+            // Backend contract fixture: a selected producer supplies block markup.
+            // This asserts placement, not evaluation of Math or Circuit syntax.
+            let text = match slot.kind {
+                EmbedKind::DisplayMath => "display result",
+                EmbedKind::Code => "code result",
+                EmbedKind::CircuitFigure => "circuit result",
+                _ => return Err("unexpected role".into()),
+            };
+            Ok(HtmlRequest {
+                fragment: HtmlFragment {
+                    root: 0,
+                    nodes: vec![
+                        HtmlNode::Element {
+                            tag: HtmlTag::Div,
+                            attributes: vec![],
+                            children: vec![1],
+                        },
+                        HtmlNode::Text { text: text.into() },
+                    ],
+                },
+                slot: HtmlSlot::Block,
+                policy: HtmlPolicy { classes: vec![] },
+            })
+        };
+        let rendered =
+            render_article_with_foreign(&prepared, &mut adapter, &mut budget()).map_err(err)?;
+        let part = nepl3_doc_html::namespace::render_part_with_foreign(
+            &namespace,
+            nepl3_doc_core::labels::namespace::MemberId(0),
+            &mut adapter,
+            &mut budget(),
+        )
+        .map_err(err)?;
+        assert_eq!(part.foreign, rendered.foreign);
+        let (_, digest, markup, origins) = part.part.into_parts();
+        assert_eq!(digest, rendered.fragment.document_digest);
+        assert_eq!(markup, rendered.fragment.markup);
+        assert_eq!(origins, rendered.fragment.origins);
+        let count = rendered.foreign.len();
+        assert_eq!(&calls[..count], &calls[count..]);
+        calls.truncate(count);
         assert_eq!(
             calls.iter().map(|v| v.0).collect::<Vec<_>>(),
             [
@@ -205,9 +257,8 @@ fn article_places_block_guest_results_with_caption_and_owner() -> Result<(), Str
         assert!(positions.windows(2).all(|pair| pair[0] < pair[1]));
         assert!(html.contains("<figure>"));
         assert!(html.contains("<figcaption>"));
-        let invalid = render_article_with_foreign(
-            &prepared,
-            &mut |slot, _, _| {
+        let mut invalid_adapter =
+            |slot: &DocEmbed, _: EmbedRef, _: &mut nepl3_core::budget::Budget| {
                 Ok::<_, String>(HtmlRequest {
                     fragment: HtmlFragment {
                         root: 0,
@@ -224,13 +275,24 @@ fn article_places_block_guest_results_with_caption_and_owner() -> Result<(), Str
                     slot: HtmlSlot::Block,
                     policy: HtmlPolicy { classes: vec![] },
                 })
-            },
-            &mut budget(),
-        );
+            };
+        let invalid = render_article_with_foreign(&prepared, &mut invalid_adapter, &mut budget());
         assert!(matches!(
             invalid,
             Err(nepl3_doc_html::ForeignRenderError::Render(
                 nepl3_doc_html::RenderError::Markup(_)
+            ))
+        ));
+        let invalid = nepl3_doc_html::namespace::render_part_with_foreign(
+            &namespace,
+            nepl3_doc_core::labels::namespace::MemberId(0),
+            &mut invalid_adapter,
+            &mut budget(),
+        );
+        assert!(matches!(
+            invalid,
+            Err(nepl3_doc_html::namespace::ForeignPartError::Render(
+                nepl3_doc_html::ForeignRenderError::Render(nepl3_doc_html::RenderError::Markup(_))
             ))
         ));
         // Article, Figure and content Div add three ancestors to the guest.

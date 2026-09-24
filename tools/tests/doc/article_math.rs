@@ -45,7 +45,12 @@ fn article_composes_real_math_and_its_sentence_annotation() -> Result<(), String
             parallel: ParallelMode::Rows,
         };
         let mut original = None;
-        for document in [&doc, &received] {
+        for (document, in_namespace) in [
+            (&doc, false),
+            (&doc, true),
+            (&received, false),
+            (&received, true),
+        ] {
             let prepared = prepare_article_with_foreign(
                 document,
                 &options,
@@ -54,49 +59,83 @@ fn article_composes_real_math_and_its_sentence_annotation() -> Result<(), String
                 &mut budget(),
             )
             .map_err(err)?;
-            let mut math_input = None;
-            let result = render_article_with_foreign(
-                &prepared,
-                &mut |slot, _, b| {
-                    if slot.kind == EmbedKind::Sentence {
-                        let sentence = nepl3_suite::adapters::document::sentence::lower(
-                            slot,
-                            slot.schema(),
-                            &[],
-                            profile.registry(),
-                            &mut receiver,
-                            b,
-                        )
-                        .map_err(err)?;
-                        return nepl3_suite::adapters::sentence::html::render(
-                            &sentence,
-                            profile.registry(),
-                            b,
-                            &mut SourceAdmission::default(),
-                        )
-                        .map(|v| v.into_markup())
-                        .map_err(err);
-                    }
-                    let mut host = MathDisplayHost {
-                        registry: profile.registry(),
-                        math_surface: &compiled.others[0].schema,
-                        sentence_surface: Some(&compiled.others[3].schema),
-                        doc_surface: None,
-                        codec: &mut receiver,
-                    };
-                    let output = host
-                        .render_embed(slot, b)
-                        .map_err(err)?
-                        .into_html(b)
-                        .map_err(err)?;
-                    assert_eq!(output.annotations.len(), 1);
-                    assert!(!output.annotations[0].origins.is_empty());
-                    math_input = Some((output.syntax, output.annotations));
-                    Ok(output.markup)
-                },
+            let member = nepl3_doc_core::labels::namespace::inspect(
+                document,
+                profile.registry(),
+                &mut budget(),
+                &mut SourceAdmission::default(),
+            )
+            .map_err(err)?;
+            let members = [&member];
+            let namespace =
+                nepl3_doc_core::labels::namespace::resolve(&members, &mut budget()).map_err(err)?;
+            let namespace = nepl3_doc_html::namespace::prepare_with_foreign(
+                &namespace,
+                &options,
+                profile.registry(),
+                &mut receiver,
                 &mut budget(),
             )
             .map_err(err)?;
+            let mut math_input = None;
+            let mut adapter = |slot: &DocEmbed, _: EmbedRef, b: &mut nepl3_core::budget::Budget| {
+                if slot.kind == EmbedKind::Sentence {
+                    let sentence = nepl3_suite::adapters::document::sentence::lower(
+                        slot,
+                        slot.schema(),
+                        &[],
+                        profile.registry(),
+                        &mut receiver,
+                        b,
+                    )
+                    .map_err(err)?;
+                    return nepl3_suite::adapters::sentence::html::render(
+                        &sentence,
+                        profile.registry(),
+                        b,
+                        &mut SourceAdmission::default(),
+                    )
+                    .map(|v| v.into_markup())
+                    .map_err(err);
+                }
+                let mut host = MathDisplayHost {
+                    registry: profile.registry(),
+                    math_surface: &compiled.others[0].schema,
+                    sentence_surface: Some(&compiled.others[3].schema),
+                    doc_surface: None,
+                    codec: &mut receiver,
+                };
+                let output = host
+                    .render_embed(slot, b)
+                    .map_err(err)?
+                    .into_html(b)
+                    .map_err(err)?;
+                assert_eq!(output.annotations.len(), 1);
+                assert!(!output.annotations[0].origins.is_empty());
+                math_input = Some((output.syntax, output.annotations));
+                Ok(output.markup)
+            };
+            let result = if in_namespace {
+                let part = nepl3_doc_html::namespace::render_part_with_foreign(
+                    &namespace,
+                    nepl3_doc_core::labels::namespace::MemberId(0),
+                    &mut adapter,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                let (_, document_digest, markup, origins) = part.part.into_parts();
+                nepl3_doc_html::RenderedWithForeign {
+                    fragment: nepl3_doc_html::RenderedFragment {
+                        document_digest,
+                        options: options.clone(),
+                        markup,
+                        origins,
+                    },
+                    foreign: part.foreign,
+                }
+            } else {
+                render_article_with_foreign(&prepared, &mut adapter, &mut budget()).map_err(err)?
+            };
             let (syntax, annotations) = math_input.ok_or("missing Math operation")?;
             assert!(!syntax.sources.is_empty());
             assert_eq!(result.foreign.len(), 2);

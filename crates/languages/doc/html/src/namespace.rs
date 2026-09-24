@@ -14,7 +14,7 @@ use nepl3_markup::html::*;
 pub struct PreparedNamespace<'a> {
     members: Vec<prepare::PreparedRendering<'a>>,
 }
-/// Namespace with explicit Sentence and InlineMath operations selected by a host.
+/// Namespace with explicit Sentence, Math, Code and Circuit operations selected by a host.
 pub struct PreparedForeignNamespace<'a>(PreparedNamespace<'a>);
 /// Structurally checked member and per-occurrence guest placements. Namespace
 /// identities remain pending until the composing renderer validates its output.
@@ -28,8 +28,9 @@ pub enum ForeignPartError<E> {
     Render(crate::ForeignRenderError<E>),
 }
 /// Render one selected occurrence, invoking only its explicit guest operations.
-/// Guest HTML must be locally valid Phrasing content. Doc references to other
-/// namespace members remain pending in the returned part.
+/// Guest HTML must satisfy its Doc slot: Sentence/InlineMath require Phrasing;
+/// DisplayMath/Code/CircuitFigure require Block. Doc references to other namespace
+/// members remain pending in the returned part.
 pub fn render_part_with_foreign<E>(
     prepared: &PreparedForeignNamespace<'_>,
     member: MemberId,
@@ -122,8 +123,8 @@ pub fn prepare<'a, C: FoundationValueCodec>(
 ) -> Result<PreparedNamespace<'a>, LocalPreparationError<'a, C::Error>> {
     prepare_members(namespace, options, registry, codec, budget, false)
 }
-/// Prepare a namespace whose outstanding requirements are Sentence or InlineMath.
-/// Other guest kinds, links and assets require their own explicit resolution.
+/// Prepare a namespace whose outstanding requirements are supported guest slots.
+/// Generic guests, page links and assets require their own explicit resolution.
 /// Preparation validates all member sources together and invokes no guests.
 pub fn prepare_with_foreign<'a, C: FoundationValueCodec>(
     namespace: &CheckedNamespace<'_, 'a>,
@@ -156,12 +157,8 @@ fn prepare_members<'a, C: FoundationValueCodec>(
             if !foreign
                 || !matches!(
                     requirement,
-                    nepl3_doc_core::prepare::DocRequirement::Foreign {
-                        kind: nepl3_doc_core::model::EmbedKind::InlineMath
-                            | nepl3_doc_core::model::EmbedKind::Sentence
-                            | nepl3_doc_core::model::EmbedKind::SentenceInline,
-                        ..
-                    }
+                    nepl3_doc_core::prepare::DocRequirement::Foreign { kind, .. }
+                        if prepare::supports_foreign(*kind)
                 )
             {
                 return Err(LocalPreparationError::NeedsResolution(plan));

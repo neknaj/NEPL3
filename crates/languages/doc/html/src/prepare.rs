@@ -35,6 +35,17 @@ pub struct PreparedInlineWithForeign<'a>(pub(crate) PreparedRendering<'a>);
 /// Guest meaning validation remains the selected adapter's responsibility,
 /// including content hidden by language selection.
 pub struct PreparedArticleWithForeign<'a>(pub(crate) PreparedRendering<'a>);
+pub(crate) fn supports_foreign(kind: EmbedKind) -> bool {
+    matches!(
+        kind,
+        EmbedKind::Sentence
+            | EmbedKind::SentenceInline
+            | EmbedKind::InlineMath
+            | EmbedKind::DisplayMath
+            | EmbedKind::Code
+            | EmbedKind::CircuitFigure
+    )
+}
 pub(crate) struct PreparedRendering<'a> {
     pub(crate) document: &'a DocumentSyntax,
     pub(crate) options: &'a RenderOptions,
@@ -136,15 +147,7 @@ pub fn prepare_article_with_foreign<'a, C: FoundationValueCodec>(
         budget.charge(Resource::Work, 1)?;
         if !matches!(
             requirement,
-            prepare::DocRequirement::Foreign {
-                kind: EmbedKind::Sentence
-                    | EmbedKind::SentenceInline
-                    | EmbedKind::InlineMath
-                    | EmbedKind::DisplayMath
-                    | EmbedKind::Code
-                    | EmbedKind::CircuitFigure,
-                ..
-            }
+            prepare::DocRequirement::Foreign { kind, .. } if supports_foreign(*kind)
         ) {
             return Err(LocalPreparationError::NeedsResolution(plan));
         }
