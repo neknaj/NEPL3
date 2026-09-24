@@ -1,6 +1,7 @@
 //! A closed HTML fragment model. Validation is structural; resource availability
 //! and CSS provenance are host preparation obligations, not inferred from paths.
 pub(crate) mod check;
+mod copy;
 mod identity;
 mod ruby;
 pub(crate) mod serialize;

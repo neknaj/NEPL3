@@ -1,5 +1,7 @@
 use nepl3_core::budget::{Budget, Limits, StopReason};
 use nepl3_markup::html::*;
+#[path = "html/copy.rs"]
+mod copy;
 fn budget() -> Budget {
     Budget::new(Limits {
         work: 100_000_000,

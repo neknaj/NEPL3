@@ -6,6 +6,7 @@ use nepl3_doc_html::pages::{PagesHtmlRequest, render_pages};
 use serde::Deserialize;
 use std::{collections::BTreeMap, io::Write};
 pub mod resources;
+pub mod sentences;
 use nepl3_core::budget::Budget;
 
 #[derive(Deserialize)]

@@ -104,6 +104,17 @@ impl<'a> PendingSentence<'a> {
     pub fn input(&self) -> &'a SentenceSyntax {
         self.0.input
     }
+    /// Borrow prepared markup for repeated composition. Copying it does not
+    /// resolve pending references or confer a complete-output validation proof.
+    pub fn markup(&self) -> &HtmlRequest {
+        &self.0.markup
+    }
+    pub fn origins(&self) -> &[ElementOrigin] {
+        &self.0.origins
+    }
+    pub fn foreign(&self) -> &[ForeignPlacement] {
+        &self.0.foreign
+    }
     /// Raw parts carry no complete-output validation proof.
     pub fn into_parts(
         self,
