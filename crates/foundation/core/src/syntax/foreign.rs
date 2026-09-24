@@ -1,4 +1,6 @@
 use super::*;
+mod provenance;
+pub use provenance::{ForeignCapture, OwnerProvenance};
 
 /// Standalone guest syntax with the explicitly selected owner environment.
 /// Owner origins retain their original arena order and IDs; guest origins stay
@@ -8,9 +10,7 @@ use super::*;
 pub struct ForeignClosure {
     pub syntax: ForeignSyntax,
     pub owner_environment: EnvironmentEntry,
-    pub owner_origins: Vec<Origin>,
-    pub owner_sources: Vec<SourceSnapshot>,
-    pub owner_source_maps: Vec<Mapping>,
+    pub provenance: OwnerProvenance,
 }
 pub struct ValidatedForeignClosure<'a> {
     value: &'a ForeignClosure,
@@ -56,7 +56,7 @@ impl ForeignClosure {
             return Err(SyntaxError::Environment);
         }
         let mut store = SourceStore::default();
-        for source in &self.owner_sources {
+        for source in self.provenance.sources() {
             admission.admit_existing(source, b)?;
             if store
                 .get_revision_with_budget(&source.identity().source, source.identity().revision, b)?
@@ -66,11 +66,11 @@ impl ForeignClosure {
             }
             store.insert_with_budget(source.clone_with_budget(b)?, b)?;
         }
-        OriginGraph::validate_origins(&self.owner_origins, &store, b)?;
-        SourceMap::validate_mappings(&self.owner_source_maps, &store, b)?;
+        OriginGraph::validate_origins(self.provenance.origins(), &store, b)?;
+        SourceMap::validate_mappings(self.provenance.source_maps(), &store, b)?;
         environment(
             &self.owner_environment.value,
-            self.owner_origins.len(),
+            self.provenance.origins().len(),
             registry,
             b,
         )?;
@@ -94,7 +94,15 @@ impl ForeignClosure {
                 if let FieldValue::Foreign(value) = field
                     && core::ptr::eq(value.as_ref(), syntax)
                 {
-                    return Self::capture_selected(syntax, owner.bundle(), registry, b, admission);
+                    let provenance = OwnerProvenance::capture(owner.bundle(), b)?;
+                    return Self::capture_selected(
+                        syntax,
+                        owner.bundle(),
+                        provenance,
+                        registry,
+                        b,
+                        admission,
+                    );
                 }
             }
         }
@@ -116,11 +124,13 @@ impl ForeignClosure {
         let Some(FieldValue::Foreign(syntax)) = owner.node(node)?.fields.get(field) else {
             return Err(SyntaxError::Reference);
         };
-        Self::capture_selected(syntax, owner, registry, b, admission)
+        let provenance = OwnerProvenance::capture(owner, b)?;
+        Self::capture_selected(syntax, owner, provenance, registry, b, admission)
     }
     fn capture_selected(
         syntax: &ForeignSyntax,
         owner: &SyntaxBundle,
+        provenance: OwnerProvenance,
         registry: &SchemaRegistry,
         b: &mut Budget,
         admission: &mut SourceAdmission,
@@ -131,30 +141,6 @@ impl ForeignClosure {
             .iter()
             .find(|e| e.id == syntax.environment.id && e.digest == syntax.environment.digest)
             .ok_or(SyntaxError::Environment)?;
-        let mut origins = Vec::new();
-        for origin in &owner.origins {
-            b.charge(
-                Resource::AllocationUnits,
-                core::mem::size_of::<Origin>() as u64,
-            )?;
-            origins.push(origin.clone_with_budget(b)?);
-        }
-        let mut sources = Vec::new();
-        for source in &owner.sources {
-            b.charge(
-                Resource::AllocationUnits,
-                core::mem::size_of::<SourceSnapshot>() as u64,
-            )?;
-            sources.push(source.clone_with_budget(b)?);
-        }
-        let mut maps = Vec::new();
-        for map in &owner.source_maps {
-            b.charge(
-                Resource::AllocationUnits,
-                core::mem::size_of::<Mapping>() as u64,
-            )?;
-            maps.push(map.clone_with_budget(b)?);
-        }
         let bytes = (syntax.schema.package.len() + syntax.category.len()) as u64;
         b.charge(Resource::Work, bytes + 40)?;
         b.charge(
@@ -170,9 +156,7 @@ impl ForeignClosure {
                 environment: syntax.environment.clone(),
             },
             owner_environment: environment.clone_with_budget(b)?,
-            owner_origins: origins,
-            owner_sources: sources,
-            owner_source_maps: maps,
+            provenance,
         };
         result.validate(registry, b, admission)?;
         Ok(result)

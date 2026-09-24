@@ -52,8 +52,6 @@ pub(crate) fn closure(r: &SchemaRegistry) -> Result<ForeignClosure, String> {
             digest,
             value: environment,
         },
-        owner_origins: vec![],
-        owner_sources: vec![],
-        owner_source_maps: vec![],
+        provenance: nepl3_core::syntax::OwnerProvenance::from_parts(vec![], vec![], vec![]),
     })
 }

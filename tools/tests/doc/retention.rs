@@ -22,11 +22,17 @@ pub(super) fn assert_doc_retention(
                 assert_eq!(before.syntax.schema, after.syntax.schema);
                 assert_eq!(before.syntax.category, after.syntax.category);
                 assert_eq!(before.owner_environment, after.owner_environment);
-                assert_eq!(before.owner_origins, after.owner_origins);
-                assert_eq!(before.owner_source_maps, after.owner_source_maps);
-                assert_eq!(before.owner_sources.len(), after.owner_sources.len());
-                for source in &before.owner_sources {
-                    assert!(after.owner_sources.contains(source));
+                assert_eq!(before.provenance.origins(), after.provenance.origins());
+                assert_eq!(
+                    before.provenance.source_maps(),
+                    after.provenance.source_maps()
+                );
+                assert_eq!(
+                    before.provenance.sources().len(),
+                    after.provenance.sources().len()
+                );
+                for source in before.provenance.sources() {
+                    assert!(after.provenance.sources().contains(source));
                 }
             }
             (DocContent::Value { value: before }, DocContent::Value { value: after }) => {

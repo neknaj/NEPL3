@@ -144,7 +144,7 @@ fn plain_text_uses_explicit_labels_alt_and_author_whitespace() -> Result<(), Str
             sources.insert(source.clone()).map_err(err)?;
         }
         let closure = embed.syntax().ok_or("Sentence closure")?;
-        for source in &closure.owner_sources {
+        for source in closure.provenance.sources() {
             sources.insert(source.clone()).map_err(err)?;
         }
         let mut pending = vec![&closure.syntax.bundle];

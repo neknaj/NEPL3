@@ -388,9 +388,7 @@ fn doc_slot_preserves_shared_inline_and_requires_selection_for_foreign_output() 
             digest,
             value: env,
         },
-        owner_origins: vec![],
-        owner_sources: vec![],
-        owner_source_maps: vec![],
+        provenance: nepl3_core::syntax::OwnerProvenance::from_parts(vec![], vec![], vec![]),
     };
     input = generated(SentenceValue {
         root: Root::Inline(InlineRef(0)),

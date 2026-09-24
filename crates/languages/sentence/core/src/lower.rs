@@ -9,7 +9,7 @@ use nepl3_core::{
     schema::SchemaRegistry,
     source::SourceAdmission,
     syntax::{
-        FieldValue, ForeignClosure, NodeRef, SyntaxBundle, SyntaxError, SyntaxNode,
+        FieldValue, ForeignCapture, NodeRef, SyntaxBundle, SyntaxError, SyntaxNode,
         ValidatedSyntaxBundle,
     },
     value::{NdfValue, SchemaRef},
@@ -235,6 +235,7 @@ pub fn prefix_with_foreign(
     };
     let mut stack = Vec::new();
     let mut embeds = Vec::new();
+    let mut captures = ForeignCapture::new(&checked);
     push(&mut stack, (bundle.root, 0usize), b)?;
     while let Some((id, field)) = stack.last_mut() {
         b.charge(Resource::Work, 1)?;
@@ -294,7 +295,7 @@ pub fn prefix_with_foreign(
                     field: 0,
                 });
             }
-            let closure = ForeignClosure::capture_at(&checked, *id, 0, registry, b, admission)?;
+            let closure = captures.capture_at(*id, 0, registry, b, admission)?;
             let embed = EmbedRef(embeds.len() as u64);
             b.charge(
                 Resource::AllocationUnits,

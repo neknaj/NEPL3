@@ -435,9 +435,11 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
             digest,
             value: environment,
         },
-        owner_origins: vec![Origin::Direct(owner_span)],
-        owner_sources: vec![source.clone()],
-        owner_source_maps: vec![],
+        provenance: nepl3_core::syntax::OwnerProvenance::from_parts(
+            vec![Origin::Direct(owner_span)],
+            vec![source.clone()],
+            vec![],
+        ),
     };
     let value = SentenceValue {
         root: Root::Sentence(SentenceRef(0)),
@@ -515,7 +517,8 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
         actual.embeds[0]
             .syntax()
             .ok_or("syntax content")?
-            .owner_origins,
+            .provenance
+            .origins(),
         actual.embeds[0]
             .syntax()
             .ok_or("syntax content")?
@@ -527,7 +530,11 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
     let InlineContent::Syntax { closure } = &mut bad_native.embeds[0] else {
         return Err("syntax content".into());
     };
-    closure.owner_sources.clear();
+    closure.provenance = nepl3_core::syntax::OwnerProvenance::from_parts(
+        closure.provenance.origins().to_vec(),
+        vec![],
+        closure.provenance.source_maps().to_vec(),
+    );
     assert!(encode(&bad_native, &r).is_err());
     {
         use nepl3_sentence_core::text::{self, AnnotationPolicy::*, Error};
@@ -583,7 +590,11 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
         let InlineContent::Syntax { closure } = &mut annotated.embeds[0] else {
             return Err("syntax content".into());
         };
-        closure.owner_sources.clear();
+        closure.provenance = nepl3_core::syntax::OwnerProvenance::from_parts(
+            closure.provenance.origins().to_vec(),
+            vec![],
+            closure.provenance.source_maps().to_vec(),
+        );
         assert!(matches!(
             text::prepare(
                 &annotated,

@@ -278,9 +278,7 @@ fn invalid_guest() -> nepl3_core::syntax::ForeignClosure {
                 resources: vec![],
             },
         },
-        owner_origins: vec![],
-        owner_sources: vec![],
-        owner_source_maps: vec![],
+        provenance: nepl3_core::syntax::OwnerProvenance::from_parts(vec![], vec![], vec![]),
     }
 }
 

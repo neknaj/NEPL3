@@ -12,7 +12,10 @@ use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::SchemaRegistry,
     source::{SourceAdmission, Span},
-    syntax::{FieldValue, ForeignClosure, NodeRef, SyntaxError, SyntaxNode, ValidatedSyntaxBundle},
+    syntax::{
+        FieldValue, ForeignCapture, ForeignClosure, NodeRef, SyntaxError, SyntaxNode,
+        ValidatedSyntaxBundle,
+    },
     value::SchemaRef,
 };
 
@@ -77,6 +80,7 @@ struct Adapter<'a, 'b> {
     mapping: Vec<Option<Mapped>>,
     nodes: Vec<DocNode>,
     embeds: Vec<DocEmbed>,
+    captures: &'b mut ForeignCapture<'a>,
     b: &'b mut Budget,
 }
 pub(crate) fn span(value: &Span, b: &mut Budget) -> Result<Span, StopReason> {
@@ -167,12 +171,14 @@ fn run(
         (size as u64).saturating_mul((core::mem::size_of::<Option<Mapped>>() + 1) as u64),
     )?;
     let mut done = vec![false; size];
+    let mut captures = ForeignCapture::new(&checked);
     let mut a = Adapter {
         checked: &checked,
         registry,
         mapping: vec![None; size],
         nodes: Vec::new(),
         embeds: Vec::new(),
+        captures: &mut captures,
         b,
     };
     // Each frame retains the next field and child position, avoiding recursion

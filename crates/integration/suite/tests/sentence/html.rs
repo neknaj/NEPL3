@@ -433,9 +433,7 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
                 digest,
                 value: environment,
             },
-            owner_origins: vec![],
-            owner_sources: vec![],
-            owner_source_maps: vec![],
+            provenance: nepl3_core::syntax::OwnerProvenance::from_parts(vec![], vec![], vec![]),
         }
         .into(),
     );

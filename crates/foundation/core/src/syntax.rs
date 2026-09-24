@@ -16,7 +16,7 @@ pub use environment::{EnvironmentContext, ValidatedEnvironment};
 mod copy;
 mod foreign;
 pub use foreign::resources as validate_resources;
-pub use foreign::{ForeignClosure, ValidatedForeignClosure};
+pub use foreign::{ForeignCapture, ForeignClosure, OwnerProvenance, ValidatedForeignClosure};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct NodeRef(pub u64);

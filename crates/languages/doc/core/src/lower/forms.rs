@@ -13,6 +13,7 @@ impl Adapter<'_, '_> {
             mapping,
             nodes,
             embeds,
+            captures,
             b,
         } = self;
         b.with_depth_at_least(depth, |b| {
@@ -22,6 +23,7 @@ impl Adapter<'_, '_> {
                 mapping: core::mem::take(mapping),
                 nodes: core::mem::take(nodes),
                 embeds: core::mem::take(embeds),
+                captures,
                 b,
             };
             let result = adapter.convert(id, node, admission);
@@ -57,14 +59,9 @@ impl Adapter<'_, '_> {
                     "Form:DocGuest" => GuestLanguage::Doc,
                     _ => return Err(LowerError::Unsupported { node: id }),
                 };
-                let closure = ForeignClosure::capture_at(
-                    self.checked,
-                    id,
-                    0,
-                    self.registry,
-                    self.b,
-                    admission,
-                )?;
+                let closure = self
+                    .captures
+                    .capture_at(id, 0, self.registry, self.b, admission)?;
                 let syntax = EmbedRef(self.embeds.len() as u64);
                 self.b.charge(
                     Resource::AllocationUnits,

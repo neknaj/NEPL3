@@ -14,6 +14,7 @@ impl<'a> Adapter<'a, '_> {
             mapping,
             nodes,
             embeds,
+            captures,
             b,
         } = self;
         b.with_depth_at_least(depth, |b| {
@@ -23,6 +24,7 @@ impl<'a> Adapter<'a, '_> {
                 mapping: core::mem::take(mapping),
                 nodes: core::mem::take(nodes),
                 embeds: core::mem::take(embeds),
+                captures,
                 b,
             };
             let result = adapter.convert(id, node, admission);
@@ -202,14 +204,9 @@ impl<'a> Adapter<'a, '_> {
                 let Some(FieldValue::Foreign(_)) = n.fields.first() else {
                     return Err(LowerError::Operand { node: id, field: 0 });
                 };
-                let closure = ForeignClosure::capture_at(
-                    self.checked,
-                    id,
-                    0,
-                    self.registry,
-                    self.b,
-                    admission,
-                )?;
+                let closure = self
+                    .captures
+                    .capture_at(id, 0, self.registry, self.b, admission)?;
                 let syntax = EmbedRef(self.embeds.len() as u64);
                 push(&mut self.embeds, closure, self.b)?;
                 MathKind::SentenceGuest { syntax }

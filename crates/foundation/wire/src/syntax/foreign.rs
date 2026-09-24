@@ -26,9 +26,11 @@ pub(crate) fn foreign_value(
                 b,
             )?,
             entry_value(&value.owner_environment, schema, registry, b)?,
-            sequence(&value.owner_origins, b, |v, b| origin_value(v, schema, b))?,
-            sources_value(&value.owner_sources, schema, admission, b)?,
-            sequence(&value.owner_source_maps, b, |v, b| {
+            sequence(value.provenance.origins(), b, |v, b| {
+                origin_value(v, schema, b)
+            })?,
+            sources_value(value.provenance.sources(), schema, admission, b)?,
+            sequence(value.provenance.source_maps(), b, |v, b| {
                 mapping_value(v, schema, b)
             })?,
         ],
@@ -55,9 +57,12 @@ pub(crate) fn foreign_from(
             environment: environment_ref_from(&sf[4], schema)?,
         },
         owner_environment: entry_from(&f[1], schema, registry, b)?,
-        owner_origins: collect(list(&f[2])?, b, |v, b| origin_from(v, schema, &store, b))?,
-        owner_sources,
-        owner_source_maps: collect(list(&f[4])?, b, |v, b| mapping_from(v, schema, &store, b))?,
+        provenance: nepl3_core::syntax::OwnerProvenance::new(
+            collect(list(&f[2])?, b, |v, b| origin_from(v, schema, &store, b))?,
+            owner_sources,
+            collect(list(&f[4])?, b, |v, b| mapping_from(v, schema, &store, b))?,
+            b,
+        )?,
     };
     result.validate(registry, b, admission)?;
     Ok(result)

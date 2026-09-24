@@ -211,8 +211,9 @@ impl Adapter<'_, '_> {
                 field: 0,
             });
         };
-        let closure =
-            ForeignClosure::capture_at(self.checked, child, 0, self.registry, self.b, admission)?;
+        let closure = self
+            .captures
+            .capture_at(child, 0, self.registry, self.b, admission)?;
         let index = EmbedRef(self.embeds.len() as u64);
         self.b.charge(
             Resource::AllocationUnits,
@@ -243,8 +244,9 @@ impl Adapter<'_, '_> {
         let Some(FieldValue::Foreign(_)) = node.fields.get(field) else {
             return Err(LowerError::Operand { node: id, field });
         };
-        let closure =
-            ForeignClosure::capture_at(self.checked, id, field, self.registry, self.b, admission)?;
+        let closure = self
+            .captures
+            .capture_at(id, field, self.registry, self.b, admission)?;
         let index = EmbedRef(self.embeds.len() as u64);
         self.b.charge(
             Resource::AllocationUnits,
