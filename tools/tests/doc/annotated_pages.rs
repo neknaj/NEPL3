@@ -655,3 +655,239 @@ fn annotated_page_set_rejects_partial_render_and_ambiguous_registration() -> Res
     );
     Ok(())
 }
+
+#[test]
+fn independent_guests_keep_namespace_links_and_owner_errors() -> Result<(), String> {
+    let c = compiled()?;
+    let text = r#"article en sentence "A" body cons paragraph cons sentence sentence
+      cons doc anchor mark doc link page "b" some "use" text "First"
+      cons text " / " cons doc link page "b" some "use" text "Second" nil nil nil"#;
+    let target = r#"article en sentence "B" body cons section use sentence "Use" body nil nil"#;
+    let make = |text: &str| -> Result<PageSet, String> {
+        Ok(PageSet {
+            pages: vec![
+                page(&c, "a", "a.md", "a.md", text)?,
+                page(&c, "b", "b.md", "b.md", target)?,
+            ],
+            files: vec![],
+        })
+    };
+    let set = make(text)?;
+    let store = SourceStore::default();
+    let run = |b: &mut Budget| {
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission)
+            .map_err(|e| Error::Invalid(err(e)))?;
+        render(&set, &c.doc.registry, &mut codec, b, &[&[], &[]])
+    };
+    let mut measured = budget();
+    let output = run(&mut measured).map_err(err)?;
+    let usage = measured.usage();
+    for reason in [
+        StopReason::WorkLimit,
+        StopReason::AllocationLimit,
+        StopReason::NodeLimit,
+        StopReason::DepthLimit,
+    ] {
+        for deficit in [0, 1] {
+            let mut limits = budget().limits();
+            match reason {
+                StopReason::WorkLimit => limits.work = usage.work - deficit,
+                StopReason::AllocationLimit => {
+                    limits.allocation_units = usage.allocation_units - deficit
+                }
+                StopReason::NodeLimit => limits.nodes = usage.nodes - deficit,
+                StopReason::DepthLimit => limits.depth = usage.depth - deficit,
+                _ => unreachable!(),
+            }
+            let mut limited = Budget::new(limits);
+            let result = run(&mut limited);
+            if deficit == 0 {
+                assert_eq!(
+                    result.map_err(err)?.pages[0].markdown,
+                    output.pages[0].markdown
+                );
+            } else {
+                assert!(
+                    matches!(result, Err(Error::Stopped(actual)) if actual == reason),
+                    "{reason:?}: {result:?}"
+                );
+                let used = limited.usage();
+                assert!(
+                    matches!(run(&mut limited), Err(Error::Stopped(actual)) if actual == reason)
+                );
+                assert_eq!(limited.usage(), used);
+            }
+        }
+    }
+    assert_eq!(
+        links(&output.pages[0].markdown),
+        ["b.md#n-757365", "b.md#n-757365"]
+    );
+    assert!(
+        output.pages[0]
+            .markdown
+            .contains("<a name=\"n-6d61726b\"></a>")
+    );
+    let visible: String = Parser::new(&output.pages[0].markdown)
+        .filter_map(|event| match event {
+            Event::Text(value) => Some(value.into_string()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(visible, "AFirst / Second");
+    // Root 0 -> Anchor 1 -> Link 2; the second root-level Link is member 3.
+    assert_eq!(
+        output.dependencies[0]
+            .iter()
+            .map(|d| (d.member, d.node))
+            .collect::<Vec<_>>(),
+        [(2, 0), (3, 0)]
+    );
+    for (label, depth) in [("First", 2), ("Second", 1)] {
+        let invalid = text.replace(
+            &format!("text \"{label}\""),
+            &format!("text \"{label}\\t\""),
+        );
+        let invalid = make(&invalid)?;
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+        let error = render(
+            &invalid,
+            &c.doc.registry,
+            &mut codec,
+            &mut budget(),
+            &[&[], &[]],
+        )
+        .err()
+        .ok_or("control character in a selected guest label was accepted")?;
+        let Error::Guest { owner, cause } = error else {
+            return Err(format!("missing owner: {error:?}"));
+        };
+        assert!(matches!(*cause, Error::Sentence { node: 0, .. }));
+        assert_eq!(owner.page, 0);
+        assert_eq!(owner.slot.0, if depth == 2 { 0 } else { 1 });
+        assert_eq!(owner.embed.0, if depth == 2 { 0 } else { 1 });
+        let mut path = Some(owner.as_ref());
+        let mut actual = 0;
+        while let Some(owner) = path {
+            actual += 1;
+            path = owner.parent.as_deref();
+        }
+        assert_eq!(actual, depth);
+        if let Some(root) = &owner.parent {
+            assert_eq!((root.page, root.slot.0, root.embed.0), (0, 1, 0));
+            assert!(root.parent.is_none());
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn shared_sentence_guests_keep_occurrences_and_resolve_forward_references() -> Result<(), String> {
+    use nepl3_doc_core::model::DocKind;
+    let c = compiled()?;
+    let store = SourceStore::default();
+    let project = |set: &PageSet| {
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+        render(set, &c.doc.registry, &mut codec, &mut budget(), &[&[]]).map_err(err)
+    };
+    let mut set = PageSet {
+        pages: vec![page(
+            &c,
+            "a",
+            "a.md",
+            "a.md",
+            r#"article en sentence "A" body cons paragraph cons sentence sentence cons doc link page "a" none text "Again" nil nil nil"#,
+        )?],
+        files: vec![],
+    };
+    for node in &mut set.pages[0].document.value.nodes {
+        if let DocKind::Paragraph { items } = &mut node.kind {
+            items.push(items[0]);
+        }
+    }
+    let output = project(&set)?;
+    assert_eq!(links(&output.pages[0].markdown), ["a.md", "a.md"]);
+    assert_eq!(
+        output.dependencies[0]
+            .iter()
+            .map(|link| (link.member, link.node))
+            .collect::<Vec<_>>(),
+        [(1, 0), (2, 0)]
+    );
+    let source = r#"article en sentence "A" body
+        cons paragraph cons sentence sentence cons doc ref mark text "Forward" nil nil
+        cons paragraph cons sentence sentence cons doc anchor mark text "Target" nil nil nil"#;
+    let set = PageSet {
+        pages: vec![page(&c, "a", "a.md", "a.md", source)?],
+        files: vec![],
+    };
+    let output = project(&set)?;
+    assert_eq!(links(&output.pages[0].markdown), ["#n-6d61726b"]);
+    assert!(
+        output.pages[0]
+            .markdown
+            .contains("<a name=\"n-6d61726b\"></a>Target")
+    );
+    for (source, reason) in [
+        (source.replace("ref mark", "ref missing"), "Unresolved"),
+        (source.replace("ref mark", "anchor mark"), "Duplicate"),
+    ] {
+        let set = PageSet {
+            pages: vec![page(&c, "a", "a.md", "a.md", &source)?],
+            files: vec![],
+        };
+        let error = project(&set)
+            .err()
+            .ok_or("invalid namespace was accepted")?;
+        assert!(
+            error.starts_with(&format!("Invalid(\"{reason} {{")),
+            "{error}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn guest_error_identifies_the_page_with_the_same_local_path() -> Result<(), String> {
+    let c = compiled()?;
+    let good = r#"article en sentence "A" body cons paragraph cons sentence sentence cons doc link page "a" none text "Label" nil nil nil"#;
+    let bad = r#"article en sentence "A" body cons paragraph cons sentence sentence cons doc link page "a" none text "Label\t" nil nil nil"#;
+    let set = PageSet {
+        pages: vec![
+            page(&c, "a", "a.md", "a.md", good)?,
+            page(&c, "b", "b.md", "b.md", bad)?,
+        ],
+        files: vec![],
+    };
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let error = render(
+        &set,
+        &c.doc.registry,
+        &mut codec,
+        &mut budget(),
+        &[&[], &[]],
+    )
+    .err()
+    .ok_or("second page label was accepted")?;
+    let Error::Guest { owner, cause } = error else {
+        return Err(format!("missing owner: {error:?}"));
+    };
+    assert_eq!((owner.page, owner.slot.0, owner.embed.0), (1, 1, 0));
+    assert!(owner.parent.is_none());
+    assert!(matches!(
+        *cause,
+        Error::Sentence {
+            embed: nepl3_doc_core::model::EmbedRef(0),
+            node: 0,
+            ..
+        }
+    ));
+    Ok(())
+}

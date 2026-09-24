@@ -51,6 +51,15 @@ workspace全体の試験コードはcompileに成功した。試験実行は82�
 745件成功・14件失敗・7件ignoreでtoolsのlib試験に停止した。
 失敗14件はcanonical文書試験であり、旧Sentence構文のfixture・正本の移行を継続する。
 停止後のworkspace試験は未実行である。
+Markdownのpage出力もHTMLと共通のguest収集・namespace検査を利用する。
+Docリンク・anchor・参照を独立Sentence内から描画し、共有ownerの出現ごとにmemberを記録する。
+ページ依存digestはmemberを含むcontext/2、rendererはpages/5へ更新した。
+描画エラーはpageとrootからのDoc slot・Sentence embed経路を保持する。
+二段再入、共有出現、前方参照、別ページの同一局所ID、資源上限一致と1不足の
+追加3試験はnative・WASIで成功した。独立レビューも3試験を実行した。
+canonical関連試験は20件成功・2件失敗・2件ignoreであり、実文書の旧構文が残る。
+annotated_pagesの既存10試験も旧fixture構文で失敗し、移行を継続する。
+追加試験の成功を全workspaceの成功として扱わない。
 正式Markdown生成は旧Sentence構文の `doc/tutorial/miniexpr.nepld` で停止している。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。

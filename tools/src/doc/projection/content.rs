@@ -3,9 +3,12 @@
 use super::*;
 use nepl3_sentence_core::{lower::ForeignInlineForm, model::Root, syntax::SentenceSyntax};
 
-pub(super) struct Contents(Vec<Option<SentenceSyntax>>);
+pub(super) struct Contents<'a>(std::borrow::Cow<'a, [Option<SentenceSyntax>]>);
 
-impl Contents {
+impl<'a> Contents<'a> {
+    pub(super) fn borrowed(slots: &'a [Option<SentenceSyntax>]) -> Self {
+        Self(std::borrow::Cow::Borrowed(slots))
+    }
     pub(super) fn prepare<C: FoundationValueCodec>(
         document: &DocumentSyntax,
         registry: &SchemaRegistry,
@@ -62,7 +65,7 @@ impl Contents {
             };
             annotated::push(&mut contents, value, budget)?;
         }
-        Ok(Self(contents))
+        Ok(Self(std::borrow::Cow::Owned(contents)))
     }
 
     pub(super) fn get(&self, embed: EmbedRef) -> Result<&SentenceSyntax, Error> {

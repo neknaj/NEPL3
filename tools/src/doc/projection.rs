@@ -10,6 +10,10 @@ use nepl3_sentence_core::model::Kind as SentenceKind;
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum Error {
+    Guest {
+        owner: std::sync::Arc<GuestOwner>,
+        cause: Box<Error>,
+    },
     Stopped(StopReason),
     Invalid(String),
     NeedsResolution,
@@ -25,6 +29,15 @@ pub enum Error {
         issue: SentenceIssue,
     },
     OutputLimit,
+}
+/// Root-relative meaning-owner path. A step selects a Doc Sentence slot and
+/// then that Sentence's foreign embed; local arena IDs retain their owner.
+#[derive(Debug, Eq, PartialEq)]
+pub struct GuestOwner {
+    pub page: u64,
+    pub parent: Option<std::sync::Arc<GuestOwner>>,
+    pub slot: EmbedRef,
+    pub embed: nepl3_sentence_core::model::EmbedRef,
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum SentenceIssue {
@@ -57,12 +70,6 @@ impl Position {
             },
             (_, error) => error,
         }
-    }
-    fn unsupported(self) -> Error {
-        self.map(Error::Unsupported { node: self.node() })
-    }
-    fn text(self) -> Error {
-        self.map(Error::Text { node: self.node() })
     }
 }
 impl From<StopReason> for Error {
@@ -111,7 +118,7 @@ where
 
 struct Writer<'a, 'b> {
     doc: &'a DocumentSyntax,
-    contents: &'a Contents,
+    contents: &'a Contents<'a>,
     budget: &'b mut Budget,
     output: String,
 }

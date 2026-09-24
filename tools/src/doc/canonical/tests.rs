@@ -85,7 +85,7 @@ fn canonical_source_link_follows_title_and_uses_projection_directory() -> Result
     let fixture = Fixture::new()?;
     fixture.write(
         "doc/source.nepld",
-        r#"article ja "[題/だい]" body cons paragraph cons "本文" nil nil"#,
+        r#"article ja sentence "[題/だい]" body cons paragraph cons sentence "本文" nil nil"#,
     )?;
     fixture.write(
         "doc/aliases.json",
@@ -154,7 +154,7 @@ fn prepared_reference_keeps_source_and_output_identities_separate() -> Result<()
     let mut manifest = registry();
     manifest["files"] = json!([{"id":"guide","source":"doc/guide.md","route":"sources/guide.md"}]);
     fixture.json("doc/canonical.json", &manifest)?;
-    fixture.write("doc/sample.nepld", r#"article ja "Title" body cons paragraph cons sentence cons link relative "guide.md" none text "Guide" nil nil nil"#)?;
+    fixture.write("doc/sample.nepld", r#"article ja sentence "Title" body cons paragraph cons sentence sentence cons doc link relative "guide.md" none text "Guide" nil nil nil"#)?;
     fixture.write("doc/guide.md", "# Guide\n")?;
     let mut projections = [references::Projection {
         source: "doc/guide.md".into(),
@@ -178,11 +178,11 @@ fn prepared_reference_keeps_source_and_output_identities_separate() -> Result<()
     assert_ne!(resource["source_sha256"], resource["sha256"]);
     assert_eq!(resource["projection"]["output_sha256"], resource["sha256"]);
     assert_eq!(resource["input"], "doc/guide.md");
-    fixture.write("doc/sample.nepld", r#"article ja "Title" body cons paragraph cons sentence cons link relative "guide.md" some "guide" text "Guide" nil nil nil"#)?;
+    fixture.write("doc/sample.nepld", r#"article ja sentence "Title" body cons paragraph cons sentence sentence cons doc link relative "guide.md" some "guide" text "Guide" nil nil nil"#)?;
     assert!(
         generate_html_with_projections(fixture.root(), "doc/canonical.json", &projections).is_err()
     );
-    fixture.write("doc/sample.nepld", r#"article ja "Title" body cons paragraph cons sentence cons link relative "guide.md" none text "Guide" nil nil nil"#)?;
+    fixture.write("doc/sample.nepld", r#"article ja sentence "Title" body cons paragraph cons sentence sentence cons doc link relative "guide.md" none text "Guide" nil nil nil"#)?;
     // Normal standalone export still delivers the original bytes, not an HTML
     // projection with implicit site dependencies.
     assert_eq!(
@@ -213,7 +213,7 @@ fn explicit_markdown_reference_preserves_bytes_and_changes_context() -> Result<(
     manifest["files"] =
         json!([{"id":"guide", "source":"doc/guide.md", "route":"sources/guide.md"}]);
     fixture.json("doc/canonical.json", &manifest)?;
-    fixture.write("doc/sample.nepld", r#"article ja "Title" body cons paragraph cons sentence cons link relative "guide.md" none text "Guide" nil nil nil"#)?;
+    fixture.write("doc/sample.nepld", r#"article ja sentence "Title" body cons paragraph cons sentence sentence cons doc link relative "guide.md" none text "Guide" nil nil nil"#)?;
     fixture.write("doc/aliases.json", "[]")?;
     fixture.write("doc/guide.md", "# Guide\n\nRaw **Markdown**.\n")?;
     let first = projection::generate(
@@ -256,7 +256,7 @@ fn explicit_markdown_reference_preserves_bytes_and_changes_context() -> Result<(
         first_receipt["input_context"],
         second_receipt["input_context"]
     );
-    fixture.write("doc/sample.nepld", r#"article ja "Title" body cons paragraph cons sentence cons link relative "guide.md" some "unknown" text "Guide" nil nil nil"#)?;
+    fixture.write("doc/sample.nepld", r#"article ja sentence "Title" body cons paragraph cons sentence sentence cons doc link relative "guide.md" some "unknown" text "Guide" nil nil nil"#)?;
     assert!(
         projection::generate(
             fixture.root(),
@@ -266,7 +266,7 @@ fn explicit_markdown_reference_preserves_bytes_and_changes_context() -> Result<(
         .is_err()
     );
     manifest["files"] = json!([]);
-    fixture.write("doc/sample.nepld", r#"article ja "Title" body cons paragraph cons sentence cons link relative "guide.md" none text "Guide" nil nil nil"#)?;
+    fixture.write("doc/sample.nepld", r#"article ja sentence "Title" body cons paragraph cons sentence sentence cons doc link relative "guide.md" none text "Guide" nil nil nil"#)?;
     fixture.json("doc/canonical.json", &manifest)?;
     assert!(generate_html(fixture.root(), "doc/canonical.json").is_err());
     Ok(())
@@ -303,7 +303,7 @@ fn old_renderer_check_still_validates_declared_reference_inputs() -> Result<()> 
     manifest["files"] =
         json!([{"id":"guide", "source":"doc/guide.md", "route":"sources/guide.md"}]);
     f.json("doc/canonical.json", &manifest)?;
-    let source = r#"article ja "Title" body cons paragraph cons "Body" nil nil"#;
+    let source = r#"article ja sentence "Title" body cons paragraph cons sentence "Body" nil nil"#;
     f.write("doc/sample.nepld", source)?;
     f.write("doc/aliases.json", "[]")?;
     let compiled = super::super::source::compiled()?;
@@ -331,7 +331,7 @@ fn old_renderer_check_still_validates_declared_reference_inputs() -> Result<()> 
 #[test]
 fn source_and_projection_changes_are_rejected_without_writing() -> Result<()> {
     let fixture = Fixture::new()?;
-    let source = r#"article ja "[文/ぶん]" body cons paragraph cons "[本文/ほんぶん]。" nil nil"#;
+    let source = r#"article ja sentence "[文/ぶん]" body cons paragraph cons sentence "[本文/ほんぶん]。" nil nil"#;
     fixture.json("doc/canonical.json", &registry())?;
     fixture.write("doc/sample.nepld", source)?;
     fixture.write("doc/aliases.json", b"[]")?;
@@ -509,7 +509,7 @@ fn html_uses_canonical_doc_and_never_overwrites_existing_output() -> Result<()> 
     fixture.json("doc/canonical.json", &registry())?;
     fixture.write(
         "doc/sample.nepld",
-        r#"article ja "[文/ぶん]" body cons paragraph cons "本文。" nil nil"#,
+        r#"article ja sentence "[文/ぶん]" body cons paragraph cons sentence "本文。" nil nil"#,
     )?;
     let output = fixture.root().join("site");
     html(fixture.root(), "doc/canonical.json", &output)?;
@@ -536,7 +536,7 @@ fn html_output_allowance_is_explicit_independent_and_recorded() -> Result<()> {
     f.json("doc/canonical.json", &original)?;
     f.write(
         "doc/sample.nepld",
-        r#"article ja "文" body cons paragraph cons "本文。" nil nil"#,
+        r#"article ja sentence "文" body cons paragraph cons sentence "本文。" nil nil"#,
     )?;
     f.write("doc/aliases.json", "[]")?;
     let omitted = f.root().join("omitted");
@@ -645,14 +645,14 @@ fn mixed(fixture: &Fixture) -> Result<serde_json::Value> {
     )?;
     fixture.write(
         "doc/sample.nepld",
-        r#"article en "A" body cons paragraph cons sentence
-        cons link page "target" some "use" text "target"
-        cons text " / " cons link relative "sample.md" none text "self" nil nil nil"#,
+        r#"article en sentence "A" body cons paragraph cons sentence sentence
+        cons doc link page "target" some "use" text "target"
+        cons text " / " cons doc link relative "sample.md" none text "self" nil nil nil"#,
     )?;
     fixture.write(
         "doc/target.nepld",
-        r#"article en "B" body
-        cons section use "Use" body cons paragraph cons "Target." nil nil nil"#,
+        r#"article en sentence "B" body
+        cons section use sentence "Use" body cons paragraph cons sentence "Target." nil nil nil"#,
     )?;
     Ok(value)
 }
@@ -735,7 +735,7 @@ fn page_context_tracks_only_used_inputs_and_links() -> Result<()> {
     assert_eq!(before.files[1].1, own_change.files[1].1);
     f.write("doc/sample.nepld", &source)?;
     let target_source = fs::read(f.root().join("doc/target.nepld"))?;
-    f.write("doc/target.nepld", r#"article en "Revised title" body cons section use "Use" body cons paragraph cons "Revised target body." nil nil nil"#)?;
+    f.write("doc/target.nepld", r#"article en sentence "Revised title" body cons section use sentence "Use" body cons paragraph cons sentence "Revised target body." nil nil nil"#)?;
     let revised = projection::generate(
         f.root(),
         "doc/canonical.json",
@@ -860,8 +860,8 @@ fn grouped_failures_and_sticky_limits_never_publish_partial_outputs() -> Result<
     }
     f.write(
         "doc/target.nepld",
-        r#"article en "B" body cons paragraph cons parallel
-        cons variant en "a" cons variant ja "b" nil nil nil"#,
+        r#"article en sentence "B" body cons paragraph cons parallel
+        cons variant en sentence "a" cons variant ja sentence "b" nil nil nil"#,
     )?;
     let out = f.root().join("invalid");
     assert!(markdown(f.root(), "doc/canonical.json", &out).is_err());
@@ -1027,7 +1027,7 @@ fn batch_limits_are_selected_before_public_generation_and_recorded() -> Result<(
 #[test]
 fn registration_copy_work_is_admitted_before_its_allocation() -> Result<()> {
     let f = Fixture::new()?;
-    f.write("doc/sample.nepld", r#"article en "A" body nil"#)?;
+    f.write("doc/sample.nepld", r#"article en sentence "A" body nil"#)?;
     f.write("doc/aliases.json", b"[]")?;
     let mut observed = Vec::new();
     for width in [16, 2048] {

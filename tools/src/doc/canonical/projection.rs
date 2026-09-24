@@ -15,7 +15,7 @@ use nepl3_doc_core::{
 };
 use nepl3_wire::foundation::FoundationCodec;
 
-pub(super) const RENDERER: &str = "nepl3-tools.markdown-annotated-pages/4";
+pub(super) const RENDERER: &str = "nepl3-tools.markdown-annotated-pages/5";
 const CONTEXT: &[u8] = b"nepl3.canonical-input-context/1\0";
 const MAX_ALIASES: u64 = 1_048_576;
 const MAX_OUTPUT: u64 = 2_097_152;
@@ -71,7 +71,7 @@ fn page_context(
     budget: &mut Budget,
 ) -> Result<Digest> {
     let mut bytes = Vec::new();
-    field(&mut bytes, b"nepl3.canonical-page-context/1\0", budget)?;
+    field(&mut bytes, b"nepl3.canonical-page-context/2\0", budget)?;
     let p = &input.page;
     for value in [&p.renderer, &p.id, &p.source, &p.projection, &p.aliases] {
         field(&mut bytes, value.as_bytes(), budget)?;
@@ -86,6 +86,7 @@ fn page_context(
         budget,
     )?;
     for dependency in dependencies {
+        field(&mut bytes, &dependency.member.to_be_bytes(), budget)?;
         field(&mut bytes, &dependency.node.to_be_bytes(), budget)?;
         for value in [
             dependency.target_kind,
@@ -460,4 +461,42 @@ fn generate_batch(
     charge(budget, Resource::Work, manifest.len())?;
     charge(budget, Resource::OutputBytes, manifest.len())?;
     Ok(Generated { files, manifest })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn page_context_binds_the_link_owner() -> Result<()> {
+        let input = Input {
+            page: Page {
+                id: "a".into(),
+                source: "a.nepld".into(),
+                projection: "a.md".into(),
+                aliases: "a.json".into(),
+                route: "a.html".into(),
+                renderer: RENDERER.into(),
+            },
+            source: "fixed source".into(),
+            aliases: b"[]".to_vec(),
+        };
+        let mut link = annotated::pages::LinkDependency {
+            member: 1,
+            node: 0,
+            target_kind: "page",
+            target_id: "b".into(),
+            route: "b.md".into(),
+            fragment: None,
+        };
+        let first = page_context(
+            &input,
+            std::slice::from_ref(&link),
+            &mut crate::doc::source::budget(),
+        )?;
+        link.member = 2;
+        let second = page_context(&input, &[link], &mut crate::doc::source::budget())?;
+        // Identical local node and destination still belong to different members.
+        assert_ne!(first, second);
+        Ok(())
+    }
 }

@@ -1,11 +1,18 @@
 //! Explicit Markdown page-set projection. Routes name Markdown destinations,
 //! never inferred HTML routes. Passive files have bytes but no semantic labels.
 use super::*;
-use nepl3_doc_core::pages::{self as domain, PageDestination, PageSet};
+use crate::doc::export::pages::discovery;
+use nepl3_core::source::SourceAdmission;
+use nepl3_doc_core::{
+    labels::namespace as labels,
+    pages::{PageDestination, PageSet, namespace as domain},
+};
+use nepl3_sentence_core::lower::ForeignInlineForm;
 
 #[derive(Debug)]
 pub struct PagesArtifact {
-    /// The input PageSet identity, excluding aliases and renderer settings.
+    /// The checked page-namespace identity, including selected guest members
+    /// and passive file bytes, excluding aliases and renderer settings.
     /// This is not a digest of the final distribution artifact.
     pub identity: Digest,
     pub pages: Vec<Artifact>,
@@ -16,6 +23,7 @@ pub struct PagesArtifact {
 
 #[derive(Debug, serde::Serialize)]
 pub struct LinkDependency {
+    pub member: u64,
     pub node: u64,
     pub target_kind: &'static str,
     pub target_id: String,
@@ -46,84 +54,166 @@ where
     if aliases.len() != set.pages.len() {
         return Err(Error::Invalid("page alias count mismatch".into()));
     }
-    let checked = domain::resolve(set, registry, codec, budget).map_err(|e| match e {
-        domain::PageError::Stopped(s) => Error::Stopped(s),
-        e => Error::Invalid(format!("{e:?}")),
-    })?;
+    let sentence = registry
+        .selected("nepl3.syntax.sentence", 1)
+        .ok_or_else(|| Error::Invalid("missing Sentence surface".into()))?;
+    let doc = registry
+        .selected("standard.doc", 1)
+        .ok_or_else(|| Error::Invalid("missing Doc surface".into()))?;
+    let mut forms = Vec::new();
+    push(
+        &mut forms,
+        ForeignInlineForm {
+            kind: "Form:DocumentInline",
+            guest_schema: doc,
+            guest_category: "Inline",
+        },
+        budget,
+    )?;
+    if let Some(math) = registry.selected("standard.math", 1) {
+        push(
+            &mut forms,
+            ForeignInlineForm {
+                kind: "Form:InlineMath",
+                guest_schema: math,
+                guest_category: "Expr",
+            },
+            budget,
+        )?;
+    }
+    let mut discovered = Vec::new();
+    for page in &set.pages {
+        let value = discovery::collect(
+            &page.document,
+            sentence,
+            doc,
+            &forms,
+            registry,
+            codec,
+            budget,
+        );
+        budget.poll()?;
+        push(
+            &mut discovered,
+            value.map_err(|e| Error::Invalid(format!("{e:?}")))?,
+            budget,
+        )?;
+    }
+    let mut admission = SourceAdmission::default();
+    let mut plans = Vec::new();
+    for page in &discovered {
+        let value = discovery::namespace::inspect(page, registry, budget, &mut admission);
+        budget.poll()?;
+        push(
+            &mut plans,
+            value.map_err(|e| Error::Invalid(format!("{e:?}")))?,
+            budget,
+        )?;
+    }
+    let mut members = Vec::new();
+    for plan in &plans {
+        let refs = plan.member_refs(budget)?;
+        push(&mut members, refs, budget)?;
+    }
+    let mut namespaces = Vec::new();
+    for members in &members {
+        let value = labels::resolve(members, budget);
+        budget.poll()?;
+        push(
+            &mut namespaces,
+            value.map_err(|e| Error::Invalid(format!("{e:?}")))?,
+            budget,
+        )?;
+    }
+    let mut refs = Vec::new();
+    for namespace in &namespaces {
+        push(&mut refs, namespace, budget)?;
+    }
+    let value = domain::resolve(set, &refs, registry, codec, budget);
+    budget.poll()?;
+    let checked = value.map_err(|e| Error::Invalid(format!("{e:?}")))?;
     let mut output = Vec::new();
     let mut dependencies = Vec::new();
-    // CheckedPages is constructed by resolve in source-page order. Consume
-    // each requirement/link once instead of filtering the whole set per page.
-    let mut pending = checked.plan().remaining.as_slice();
-    let mut page_links = checked.plan().links.as_slice();
+    let mut pending = checked.members().iter().peekable();
     for (page, input) in set.pages.iter().enumerate() {
         budget.charge(Resource::Work, 1)?;
-        while let Some((requirement, rest)) = pending.split_first() {
-            budget.charge(Resource::Work, 1)?;
-            if requirement.page != page as u64 {
-                break;
-            }
-            check_pending(&requirement.requirement, budget)?;
-            pending = rest;
-        }
-        let document_digest = checked
-            .document_digest(page as u64)
-            .ok_or_else(|| Error::Invalid("missing checked document digest".into()))?;
-        let mut links = Vec::new();
+        let mut context = composition::Context::new(&discovered[page], page as u64, budget)?;
         let mut used = Vec::new();
-        while let Some((link, rest)) = page_links.split_first() {
+        let mut routed = Vec::new();
+        for _ in discovered[page].members() {
+            push(&mut routed, false, budget)?;
+        }
+        let mut document_digest = None;
+        while let Some(plan) = pending.peek() {
             budget.charge(Resource::Work, 1)?;
-            if link.page != page as u64 {
+            if plan.owner().page != page as u64 {
                 break;
             }
-            let (target_kind, registration) = match link.target {
-                PageDestination::Page { index } => {
-                    ("page", &set.pages[index as usize].registration)
+            let member = plan.owner().member.0;
+            let owner = plans[page].occurrences()[member as usize].document.index();
+            if member == 0 {
+                document_digest = Some(plan.document_digest());
+            }
+            for requirement in plan.remaining() {
+                check_pending(requirement, budget)?;
+            }
+            for link in plan.links() {
+                budget.charge(Resource::Work, 1)?;
+                let (target_kind, registration) = match link.target {
+                    PageDestination::Page { index } => {
+                        ("page", &set.pages[index as usize].registration)
+                    }
+                    PageDestination::File { index } => {
+                        ("file", &set.files[index as usize].registration)
+                    }
+                };
+                let target = &registration.route;
+                let dependency = LinkDependency {
+                    member,
+                    node: link.node,
+                    target_kind,
+                    target_id: owned(&registration.id, budget)?,
+                    route: owned(target, budget)?,
+                    fragment: link
+                        .fragment
+                        .as_deref()
+                        .map(|v| owned(v, budget))
+                        .transpose()?,
+                };
+                push(&mut used, dependency, budget)?;
+                if !routed[owner] {
+                    let href = relative(
+                        &input.registration.route,
+                        target,
+                        link.fragment.as_deref(),
+                        budget,
+                    )?;
+                    context.links[owner][link.node as usize] = Some(href);
                 }
-                PageDestination::File { index } => {
-                    ("file", &set.files[index as usize].registration)
-                }
-            };
-            let target = &registration.route;
-            let dependency = LinkDependency {
-                node: link.node,
-                target_kind,
-                target_id: owned(&registration.id, budget)?,
-                route: owned(target, budget)?,
-                fragment: link
-                    .fragment
-                    .as_deref()
-                    .map(|v| owned(v, budget))
-                    .transpose()?,
-            };
-            push(&mut used, dependency, budget)?;
-            let href = relative(
-                &input.registration.route,
-                target,
-                link.fragment.as_deref(),
-                budget,
-            )?;
-            push(&mut links, (link.node, href), budget)?;
-            page_links = rest;
+            }
+            routed[owner] = true;
+            let _ = pending.next();
         }
-        let contents = Contents::prepare(&input.document, registry, codec, budget)?;
+        let document_digest =
+            document_digest.ok_or_else(|| Error::Invalid("missing root member".into()))?;
+        let contents = Contents::borrowed(discovered[page].members()[0].sentences());
         let rendered = render_resolved(
             &input.document,
             &contents,
             budget,
             aliases[page],
-            &links,
+            Some(&context),
             document_digest,
         )?;
         push(&mut output, rendered, budget)?;
         push(&mut dependencies, used, budget)?;
     }
-    if !pending.is_empty() || !page_links.is_empty() {
+    if pending.next().is_some() {
         return Err(Error::Invalid("checked page plan order mismatch".into()));
     }
     // Semantic label existence is insufficient: the selected viewing profile
     // must actually emit the destination anchor (not an unreachable arena node).
-    for link in &checked.plan().links {
+    for link in checked.members().iter().flat_map(|m| m.links()) {
         budget.charge(Resource::Work, 1)?;
         if let (PageDestination::Page { index }, Some(fragment)) =
             (link.target, link.fragment.as_deref())
@@ -144,7 +234,7 @@ where
         push(&mut pages, artifact, budget)?;
     }
     Ok(PagesArtifact {
-        identity: checked.plan().identity,
+        identity: checked.identity(),
         pages,
         dependencies,
     })

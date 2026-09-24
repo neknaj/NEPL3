@@ -4,6 +4,8 @@ use super::*;
 use nepl3_core::source::Digest;
 use serde::Deserialize;
 mod blocks;
+mod composition;
+use composition::Located;
 pub mod host;
 pub mod pages;
 
@@ -113,7 +115,7 @@ where
         &contents,
         budget,
         aliases,
-        &[],
+        None,
         plan.document_digest,
     )?
     .0)
@@ -141,7 +143,7 @@ fn render_resolved(
     contents: &Contents,
     budget: &mut Budget,
     aliases: &[Alias],
-    links: &[(u64, String)],
+    composition: Option<&composition::Context<'_>>,
     document_digest: Digest,
 ) -> Result<(Artifact, Vec<String>), Error> {
     budget.poll()?;
@@ -185,7 +187,7 @@ fn render_resolved(
             output: String::new(),
         },
         aliases,
-        links,
+        composition,
         emitted: Vec::new(),
     };
     let DocKind::Article { title, body, .. } = writer.plain.kind(root.0) else {
@@ -231,23 +233,25 @@ fn render_resolved(
 struct Annotated<'a, 'b> {
     plain: Writer<'a, 'b>,
     aliases: &'a [Alias],
-    links: &'a [(u64, String)],
+    composition: Option<&'a composition::Context<'a>>,
     emitted: Vec<String>,
 }
 #[derive(Clone, Copy)]
 enum Piece<'a> {
-    Text(Position, &'a str),
-    Code(Position, &'a str),
-    Break(Position),
+    Text(Located<'a>, &'a str),
+    Code(Located<'a>, &'a str),
+    Break(Located<'a>),
     Tag(&'static str),
     /// Ruby base/reading boundaries separate adjacent code spans.
     RubyTag(&'static str),
-    LinkStart(Position),
-    LinkEnd(Position, &'a str),
+    LinkStart(Located<'a>),
+    LinkEnd(Located<'a>, &'a str),
+    ReferenceEnd(Located<'a>, &'a str),
+    Anchor(&'a str),
 }
 enum Task<'a> {
-    Node(u64, u64),
-    Sentence(EmbedRef, u64, u64),
+    Node(usize, u64, u64),
+    Sentence(usize, EmbedRef, u64, u64),
     Piece(Piece<'a>),
 }
 pub(super) fn push<T>(items: &mut Vec<T>, item: T, budget: &mut Budget) -> Result<(), Error> {
@@ -326,37 +330,80 @@ impl<'a> Annotated<'a, '_> {
         let mut pieces = Vec::new();
         let mut stack = Vec::new();
         for &sentence in sentences.iter().rev() {
-            push(&mut stack, Task::Node(sentence, 1), self.plain.budget)?;
+            push(&mut stack, Task::Node(0, sentence, 1), self.plain.budget)?;
         }
         while let Some(task) = stack.pop() {
             match task {
                 Task::Piece(piece) => push(&mut pieces, piece, self.plain.budget)?,
-                Task::Node(node, depth) => {
+                Task::Node(member, node, depth) => {
                     self.plain.budget.observe_depth(depth)?;
                     self.plain.budget.charge(Resource::Work, 1)?;
                     let next = depth
                         .checked_add(1)
                         .ok_or_else(|| self.plain.budget.stop(StopReason::DepthLimit))?;
-                    match self.plain.kind(node) {
+                    match self
+                        .document(member)?
+                        .value
+                        .nodes
+                        .get(node as usize)
+                        .map(|n| &n.kind)
+                        .ok_or(Error::NeedsResolution)?
+                    {
                         DocKind::Sentence { syntax } => {
-                            let (_, root) = self.plain.contents.sentence(*syntax)?;
+                            let sentence = self.sentence(member, *syntax)?;
+                            let nepl3_sentence_core::model::Root::Sentence(root) =
+                                sentence.value.root
+                            else {
+                                return Err(Error::NeedsResolution);
+                            };
                             push(
                                 &mut stack,
-                                Task::Sentence(*syntax, root, next),
+                                Task::Sentence(member, *syntax, root.0, next),
+                                self.plain.budget,
+                            )?;
+                        }
+                        DocKind::Anchor { id, label }
+                        | DocKind::Reference { target: id, label } => {
+                            let position = self.located(member, Position::Doc(node));
+                            let sentence = self.sentence(member, *label)?;
+                            let nepl3_sentence_core::model::Root::Inline(root) =
+                                sentence.value.root
+                            else {
+                                return Err(position.unsupported());
+                            };
+                            let anchor = matches!(
+                                &self.document(member)?.value.nodes[node as usize].kind,
+                                DocKind::Anchor { .. }
+                            );
+                            if !anchor {
+                                push(
+                                    &mut stack,
+                                    Task::Piece(Piece::ReferenceEnd(position, id)),
+                                    self.plain.budget,
+                                )?;
+                            }
+                            push(
+                                &mut stack,
+                                Task::Sentence(member, *label, root.0, next),
+                                self.plain.budget,
+                            )?;
+                            push(
+                                &mut stack,
+                                Task::Piece(if anchor {
+                                    Piece::Anchor(id)
+                                } else {
+                                    Piece::LinkStart(position)
+                                }),
                                 self.plain.budget,
                             )?;
                         }
                         DocKind::Link { label, .. } => {
-                            let mut href = None;
-                            for (actual, value) in self.links {
-                                self.plain.budget.charge(Resource::Work, 1)?;
-                                if *actual == node {
-                                    href = Some(value.as_str());
-                                    break;
-                                }
-                            }
+                            let href = match self.composition {
+                                Some(c) => c.link(member, node, self.plain.budget)?,
+                                None => None,
+                            };
                             let uri = href.ok_or(Error::NeedsResolution)?;
-                            let sentence = self.plain.contents.get(*label)?;
+                            let sentence = self.sentence(member, *label)?;
                             let nepl3_sentence_core::model::Root::Inline(root) =
                                 sentence.value.root
                             else {
@@ -364,38 +411,43 @@ impl<'a> Annotated<'a, '_> {
                             };
                             push(
                                 &mut stack,
-                                Task::Piece(Piece::LinkEnd(Position::Doc(node), uri)),
+                                Task::Piece(Piece::LinkEnd(
+                                    self.located(member, Position::Doc(node)),
+                                    uri,
+                                )),
                                 self.plain.budget,
                             )?;
                             push(
                                 &mut stack,
-                                Task::Sentence(*label, root.0, next),
+                                Task::Sentence(member, *label, root.0, next),
                                 self.plain.budget,
                             )?;
                             push(
                                 &mut stack,
-                                Task::Piece(Piece::LinkStart(Position::Doc(node))),
+                                Task::Piece(Piece::LinkStart(
+                                    self.located(member, Position::Doc(node)),
+                                )),
                                 self.plain.budget,
                             )?;
                         }
-                        _ => return Err(Error::Unsupported { node }),
+                        _ => return Err(self.located(member, Position::Doc(node)).unsupported()),
                     }
                 }
-                Task::Sentence(embed, node, depth) => {
+                Task::Sentence(member, embed, node, depth) => {
                     self.plain.budget.observe_depth(depth)?;
                     self.plain.budget.charge(Resource::Work, 1)?;
                     let next = depth
                         .checked_add(1)
                         .ok_or_else(|| self.plain.budget.stop(StopReason::DepthLimit))?;
-                    let sentence = self.plain.contents.get(embed)?;
+                    let sentence = self.sentence(member, embed)?;
                     let kind = &sentence.value.nodes[node as usize];
-                    let position = Position::Sentence { embed, node };
+                    let position = self.located(member, Position::Sentence { embed, node });
                     match kind {
                         SentenceKind::Sentence { inlines } | SentenceKind::Concat { inlines } => {
                             for child in inlines.iter().rev() {
                                 push(
                                     &mut stack,
-                                    Task::Sentence(embed, child.0, next),
+                                    Task::Sentence(member, embed, child.0, next),
                                     self.plain.budget,
                                 )?;
                             }
@@ -413,9 +465,9 @@ impl<'a> Annotated<'a, '_> {
                         SentenceKind::Ruby { base, reading } => {
                             for task in [
                                 Task::Piece(Piece::RubyTag("</rt></ruby>")),
-                                Task::Sentence(embed, reading.0, next),
+                                Task::Sentence(member, embed, reading.0, next),
                                 Task::Piece(Piece::RubyTag("<rt>")),
-                                Task::Sentence(embed, base.0, next),
+                                Task::Sentence(member, embed, base.0, next),
                                 Task::Piece(Piece::Tag("<ruby>")),
                             ] {
                                 push(&mut stack, task, self.plain.budget)?;
@@ -430,7 +482,7 @@ impl<'a> Annotated<'a, '_> {
                             for (index, note) in notes.iter().enumerate().rev() {
                                 push(
                                     &mut stack,
-                                    Task::Sentence(embed, note.0, next),
+                                    Task::Sentence(member, embed, note.0, next),
                                     self.plain.budget,
                                 )?;
                                 if index != 0 {
@@ -448,7 +500,7 @@ impl<'a> Annotated<'a, '_> {
                             )?;
                             push(
                                 &mut stack,
-                                Task::Sentence(embed, base.0, next),
+                                Task::Sentence(member, embed, base.0, next),
                                 self.plain.budget,
                             )?;
                         }
@@ -461,7 +513,7 @@ impl<'a> Annotated<'a, '_> {
                             )?;
                             push(
                                 &mut stack,
-                                Task::Sentence(embed, inline.0, next),
+                                Task::Sentence(member, embed, inline.0, next),
                                 self.plain.budget,
                             )?;
                             push(
@@ -481,7 +533,7 @@ impl<'a> Annotated<'a, '_> {
                             )?;
                             push(
                                 &mut stack,
-                                Task::Sentence(embed, label.0, next),
+                                Task::Sentence(member, embed, label.0, next),
                                 self.plain.budget,
                             )?;
                             push(
@@ -490,7 +542,18 @@ impl<'a> Annotated<'a, '_> {
                                 self.plain.budget,
                             )?;
                         }
-                        _ => return Err(position.unsupported()),
+                        SentenceKind::ForeignInline { syntax } => {
+                            let context = self.composition.ok_or_else(|| position.unsupported())?;
+                            let child = context.guest(member, embed, *syntax, self.plain.budget)?;
+                            let DocRoot::Inline(root) = context.document(child)?.value.root else {
+                                return Err(position.unsupported());
+                            };
+                            push(
+                                &mut stack,
+                                Task::Node(child, root.0, next),
+                                self.plain.budget,
+                            )?;
+                        }
                     }
                 }
             }
@@ -499,7 +562,11 @@ impl<'a> Annotated<'a, '_> {
         for piece in &pieces {
             if !matches!(
                 piece,
-                Piece::Tag(_) | Piece::LinkStart(_) | Piece::LinkEnd(_, _)
+                Piece::Tag(_)
+                    | Piece::LinkStart(_)
+                    | Piece::LinkEnd(_, _)
+                    | Piece::ReferenceEnd(_, _)
+                    | Piece::Anchor(_)
             ) {
                 push(&mut visible, piece, self.plain.budget)?;
             }
@@ -581,6 +648,30 @@ impl<'a> Annotated<'a, '_> {
                     }
                     link = Some(node);
                     self.plain.emit("[")?;
+                    previous_code = false;
+                }
+                Piece::Anchor(id) => {
+                    let name = pages::relative("x", "", Some(id), self.plain.budget)?;
+                    let name = name.strip_prefix('#').ok_or(Error::NeedsResolution)?;
+                    // The namespace has already rejected duplicate semantic IDs.
+                    self.plain
+                        .budget
+                        .charge(Resource::AllocationUnits, name.len() as u64)?;
+                    push(&mut self.emitted, name.into(), self.plain.budget)?;
+                    self.plain.emit("<a name=\"")?;
+                    self.plain.emit(name)?;
+                    self.plain.emit("\"></a>")?;
+                    previous_code = false;
+                }
+                Piece::ReferenceEnd(node, target) => {
+                    if link != Some(node) {
+                        return Err(node.unsupported());
+                    }
+                    link = None;
+                    let href = pages::relative("x", "", Some(target), self.plain.budget)?;
+                    self.plain.emit("](<")?;
+                    self.plain.emit(&href)?;
+                    self.plain.emit(">)")?;
                     previous_code = false;
                 }
                 Piece::LinkEnd(node, uri) => {
