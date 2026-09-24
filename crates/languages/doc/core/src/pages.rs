@@ -14,6 +14,8 @@ use nepl3_core::{
     value_codec::{CanonicalDigestInput, FoundationCodecError, FoundationValueCodec},
 };
 
+pub mod namespace;
+
 pub const SET_DOMAIN: &[u8] = b"NEPL3.Doc.Pages.v1\0";
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PageRegistration {
@@ -371,102 +373,26 @@ pub fn resolve<'a, C: FoundationValueCodec>(
                 push(&mut remaining, PageRequirement { page, requirement }, b)?;
                 continue;
             };
-            let (key, fragment, by_source) = match link_target {
-                LinkTarget::Page { page: id, fragment } => (copy(id, b)?, fragment, false),
-                LinkTarget::Relative { path, fragment } => (
-                    if path.is_empty() && fragment.as_ref().is_some_and(|s| !s.is_empty()) {
-                        copy(&set.pages[page_index].registration.source, b)?
-                    } else {
-                        relative(&set.pages[page_index].registration.source, path, b)?
-                            .ok_or(PageError::InvalidRelative { page, node })?
-                    },
-                    fragment,
-                    true,
-                ),
-            };
-            let mut found = None;
-            for (index, candidate) in set.pages.iter().enumerate() {
-                let value = if by_source {
-                    &candidate.registration.source
-                } else {
-                    &candidate.registration.id
-                };
-                b.charge(Resource::Work, (key.len() + value.len()) as u64 + 1)?;
-                if value == &key {
-                    found = Some(index);
-                    break;
-                }
-            }
-            let Some(target) = found else {
-                // Page names denote Doc pages only. Relative source paths can
-                // name an explicitly registered passive file as well.
-                let mut file = None;
-                if by_source {
-                    for (index, candidate) in set.files.iter().enumerate() {
+            let link = resolve_link(
+                set,
+                page_index,
+                node,
+                link_target,
+                b,
+                |target, fragment, b| {
+                    for definition in definitions[target].definitions() {
                         b.charge(
                             Resource::Work,
-                            (key.len() + candidate.registration.source.len()) as u64 + 1,
+                            (fragment.len() + definition.name.len()) as u64 + 1,
                         )?;
-                        if candidate.registration.source == key {
-                            file = Some(index);
-                            break;
+                        if definition.name == fragment {
+                            return Ok(true);
                         }
                     }
-                }
-                let index = file.ok_or(PageError::MissingPage { page, node })?;
-                if fragment.is_some() {
-                    return Err(PageError::FileFragment {
-                        page,
-                        node,
-                        file: index as u64,
-                    });
-                }
-                push(
-                    &mut links,
-                    PageLink {
-                        page,
-                        node,
-                        target: PageDestination::File {
-                            index: index as u64,
-                        },
-                        fragment: None,
-                    },
-                    b,
-                )?;
-                continue;
-            };
-            if let Some(fragment) = fragment {
-                let mut found = false;
-                for definition in definitions[target].definitions() {
-                    b.charge(
-                        Resource::Work,
-                        (fragment.len() + definition.name.len()) as u64 + 1,
-                    )?;
-                    if definition.name == fragment {
-                        found = true;
-                        break;
-                    }
-                }
-                if !found {
-                    return Err(PageError::MissingFragment {
-                        page,
-                        node,
-                        target: target as u64,
-                    });
-                }
-            }
-            push(
-                &mut links,
-                PageLink {
-                    page,
-                    node,
-                    target: PageDestination::Page {
-                        index: target as u64,
-                    },
-                    fragment: fragment.as_ref().map(|s| copy(s, b)).transpose()?,
+                    Ok(false)
                 },
-                b,
             )?;
+            push(&mut links, link, b)?;
         }
     }
     Ok(CheckedPages {
@@ -477,5 +403,91 @@ pub fn resolve<'a, C: FoundationValueCodec>(
             links,
             remaining,
         },
+    })
+}
+
+/// Shared registration/path rules; the caller supplies its checked label scope.
+fn resolve_link<E>(
+    set: &PageSet,
+    page_index: usize,
+    node: u64,
+    target: &LinkTarget,
+    b: &mut Budget,
+    contains: impl FnOnce(usize, &str, &mut Budget) -> Result<bool, StopReason>,
+) -> Result<PageLink, PageError<'static, E>> {
+    let page = page_index as u64;
+    let (key, fragment, by_source) = match target {
+        LinkTarget::Page { page: id, fragment } => (copy(id, b)?, fragment, false),
+        LinkTarget::Relative { path, fragment } => (
+            if path.is_empty() && fragment.as_ref().is_some_and(|s| !s.is_empty()) {
+                copy(&set.pages[page_index].registration.source, b)?
+            } else {
+                relative(&set.pages[page_index].registration.source, path, b)?
+                    .ok_or(PageError::InvalidRelative { page, node })?
+            },
+            fragment,
+            true,
+        ),
+    };
+    let mut found = None;
+    for (index, candidate) in set.pages.iter().enumerate() {
+        let value = if by_source {
+            &candidate.registration.source
+        } else {
+            &candidate.registration.id
+        };
+        b.charge(Resource::Work, (key.len() + value.len()) as u64 + 1)?;
+        if value == &key {
+            found = Some(index);
+            break;
+        }
+    }
+    let Some(index) = found else {
+        let mut file = None;
+        if by_source {
+            for (index, candidate) in set.files.iter().enumerate() {
+                b.charge(
+                    Resource::Work,
+                    (key.len() + candidate.registration.source.len()) as u64 + 1,
+                )?;
+                if candidate.registration.source == key {
+                    file = Some(index);
+                    break;
+                }
+            }
+        }
+        let index = file.ok_or(PageError::MissingPage { page, node })?;
+        if fragment.is_some() {
+            return Err(PageError::FileFragment {
+                page,
+                node,
+                file: index as u64,
+            });
+        }
+        return Ok(PageLink {
+            page,
+            node,
+            target: PageDestination::File {
+                index: index as u64,
+            },
+            fragment: None,
+        });
+    };
+    if let Some(fragment) = fragment
+        && !contains(index, fragment, b)?
+    {
+        return Err(PageError::MissingFragment {
+            page,
+            node,
+            target: index as u64,
+        });
+    }
+    Ok(PageLink {
+        page,
+        node,
+        target: PageDestination::Page {
+            index: index as u64,
+        },
+        fragment: fragment.as_ref().map(|s| copy(s, b)).transpose()?,
     })
 }

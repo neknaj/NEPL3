@@ -17,6 +17,12 @@ body
     cons "ページの[意味上/いみじょう]の[存在/そんざい]と、[特定/とくてい]の[出力/しゅつりょく]でanchorが[表示/ひょうじ]されることは、[別/べつ]の[条件/じょうけん]である。"
     nil
   cons paragraph
+    cons "native API pages::namespace::resolve は、[各/かく]ページのArticleと、hostが[選択/せんたく]したDoc[断片/だんぺん]の[出現列/しゅつげんれつ]を、ページごとのnamespaceとして[受/う]け[取/と]る。[先頭/せんとう]memberはPageDocumentが[所有/しょゆう]する[同一/どういつ]のDocumentSyntaxを[借用/しゃくよう]する。[各/かく]namespaceはlabels::namespace::resolveで[名前解決/なまえかいけつ]した[値/あたい]である。"
+    cons "[処理/しょり]は、[全/ぜん]memberの[構造/こうぞう]とsourceを[共通/きょうつう]のregistryとadmissionで[検査/けんさ]し、ページ[間/かん]のリンクを[解決/かいけつ]する。リンクとリンク[解決/かいけつ]の[失敗/しっぱい]はpage・member・nodeの[所属/しょぞく]を[保持/ほじ]する。[共有/きょうゆう]する[断片/だんぺん]も、[表示上/ひょうじじょう]の[出現/しゅつげん]ごとにmemberを[持/も]つ。Sentenceや[他言語/たげんご]の[内部/ないぶ]からDoc[断片/だんぺん]を[選択/せんたく]・lowerする[責務/せきむ]はintegrationに[属/ぞく]する。"
+    cons "このnative proofのidentityは、domain NEPL3.Doc.PageNamespaces.v1とNULに、NDF list \[PageSet, \[\[member digest bytes...\],...\]\]のcanonical CBORを[連結/れんけつ]したSHA-256である。[各/かく]member digestはDOCUMENT_DOMAINを[用/もち]いたDocumentSyntax digestであり、ページ[順/じゅん]・member[順/じゅん]・[反復/はんぷく]した[出現/しゅつげん]・source・provenanceをidentityへ[含/ふく]める。proofは[元/もと]のPageSetとnamespaceを[不変借用/ふへんしゃくよう]する。portable[受信/じゅしん]では、[明示/めいじ]されたnamespace[入力/にゅうりょく]から[同/おな]じ[検査/けんさ]と[解決/かいけつ]を[再実行/さいじっこう]する。"
+    cons "この[解決結果/かいけつけっか]は、[意味上/いみじょう]のリンク[先/さき]を[確定/かくてい]する。guest[準備/じゅんび]、[表示言語/ひょうじげんご]の[選択/せんたく]、HTML[全体/ぜんたい]の[検査/けんさ]、[出力先/しゅつりょくさき]anchorの[存在確認/そんざいかくにん]は、[後続/こうぞく]の[出力処理/しゅつりょくしょり]が[行/おこな]う。"
+    nil
+  cons paragraph
     cons sentence cons code "interfaces/doc.json" cons text " の" cons ruby text "順序付" text "じゅんじょつ" cons text "きrecordを" cons ruby text "交換契約" text "こうかんけいやく" cons text "とする。" nil
     cons sentence
       cons code "PageRegistration"
