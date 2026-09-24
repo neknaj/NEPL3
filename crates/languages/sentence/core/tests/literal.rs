@@ -90,6 +90,80 @@ fn referenced_literal_roundtrip_does_not_serialize_the_document_per_token() -> R
 }
 
 #[test]
+fn migrated_doc_payload_preserves_annotations_and_exact_owner_after_cbor() -> Result<(), String> {
+    use nepl3_sentence_core::portable::literal as payload;
+    use nepl3_wire::foundation::FoundationCodec;
+    let r = registry()?;
+    let v = parse(
+        &format!("\"前{{[文/ぶん]/note}}後\"{}", " ".repeat(65_536)),
+        &r,
+    )?;
+    let owner = &v.syntax.sources[0];
+    let mut ambient = SourceStore::default();
+    ambient.insert(owner.clone()).map_err(err)?;
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &ambient, &mut admission).map_err(err)?;
+    let raw = payload::to_value(&v.syntax, &r, &mut codec, &mut b()).map_err(err)?;
+    let bytes = nepl3_wire::encode(&raw, &mut b()).map_err(err)?;
+    let short = parse("\"前{[文/ぶん]/note}後\"", &r)?;
+    let mut short_admission = SourceAdmission::default();
+    let empty = SourceStore::default();
+    let mut short_codec = FoundationCodec::new(&r, &empty, &mut short_admission).map_err(err)?;
+    let short_raw =
+        payload::to_value(&short.syntax, &r, &mut short_codec, &mut b()).map_err(err)?;
+    let short_bytes = nepl3_wire::encode(&short_raw, &mut b()).map_err(err)?;
+    // Adding 64 KiB outside this literal changes snapshot identity only. The
+    // real reader's richer provenance has a different fixed cost from the old
+    // hand-authored Doc fixture; no owner source bytes may enter the payload.
+    assert_eq!(bytes.len(), short_bytes.len());
+    let received = nepl3_wire::decode(&bytes, &mut b()).map_err(err)?;
+    let actual = payload::from_value(&received, owner, &r, &mut codec, &mut b()).map_err(err)?;
+    assert_eq!(actual, v.syntax);
+    // Independent expected meaning, not only an encoder/decoder roundtrip.
+    assert_eq!(
+        actual.value.nodes,
+        vec![
+            Kind::Text { text: "前".into() },
+            Kind::Text { text: "文".into() },
+            Kind::Text {
+                text: "ぶん".into()
+            },
+            Kind::Ruby {
+                base: InlineRef(1),
+                reading: InlineRef(2)
+            },
+            Kind::Text {
+                text: "note".into()
+            },
+            Kind::InlineAnno {
+                base: InlineRef(3),
+                notes: vec![InlineRef(4)]
+            },
+            Kind::Text { text: "後".into() },
+            Kind::Sentence {
+                inlines: vec![InlineRef(0), InlineRef(5), InlineRef(6)]
+            },
+        ]
+    );
+    assert_eq!(actual.value.root, Root::Sentence(SentenceRef(7)));
+    for wrong in [
+        SourceSnapshot::new(
+            SourceId("sentence".into()),
+            2,
+            "memory:sentence".into(),
+            owner.text().as_bytes().to_vec(),
+            &mut b(),
+        )
+        .map_err(err)?,
+        source("different bytes")?,
+    ] {
+        // The correct ambient snapshot cannot replace the explicit owner.
+        assert!(payload::from_value(&received, &wrong, &r, &mut codec, &mut b()).is_err());
+    }
+    Ok(())
+}
+
+#[test]
 fn referenced_literal_rejects_wrong_owner_even_when_ambient_source_is_correct() -> Result<(), String>
 {
     use nepl3_sentence_core::portable::{self, literal as payload};

@@ -42,7 +42,7 @@ fn literal(r: &SchemaRegistry) -> Result<DocumentSyntax, String> {
         SourceId("doc".into()),
         3,
         "memory:doc".into(),
-        "\"前{[文/ぶん]/note}後\"".as_bytes().to_vec(),
+        "body cons rawcode none \"文書\" nil".as_bytes().to_vec(),
         &mut b(),
     )
     .map_err(err)?;
@@ -55,83 +55,37 @@ fn document_fixture(source: SourceSnapshot, r: &SchemaRegistry) -> Result<Docume
         value::KindRef,
         view::{ViewBundle, ViewElement, ViewField, ViewRef},
     };
-    // Hand-authored semantic arena for "前{[文/ぶん]/note}後". Byte ranges
-    // refer to the original UTF-8 source, independently of any Sentence parser.
+    // Hand-authored Doc arena. Sentence literal payload ownership is tested by
+    // sentence/core/tests/literal.rs; this fixture covers Doc's own provenance.
+    let full_end = source.text().len() as u64;
+    let code_start = "body cons ".len() as u64;
+    let code_end = code_start + "rawcode none \"文書\"".len() as u64;
     let entries = [
         (
-            DocKind::Text { text: "前".into() },
-            1,
-            4,
-            "View:TextRun",
-            vec![],
-        ),
-        (
-            DocKind::Text { text: "文".into() },
-            6,
-            9,
-            "View:TextRun",
-            vec![],
-        ),
-        (
-            DocKind::Text {
-                text: "ぶん".into(),
+            DocKind::RawCode {
+                language_hint: None,
+                text: "文書".into(),
             },
-            10,
-            16,
-            "View:TextRun",
+            code_start,
+            code_end,
             vec![],
         ),
         (
-            DocKind::Ruby {
-                base: InlineRef(1),
-                reading: InlineRef(2),
-            },
-            5,
-            17,
-            "View:Ruby",
-            vec![ViewRef(1), ViewRef(2)],
-        ),
-        (
-            DocKind::Text {
-                text: "note".into(),
-            },
-            18,
-            22,
-            "View:TextRun",
-            vec![],
-        ),
-        (
-            DocKind::Anno {
-                base: InlineRef(3),
-                notes: vec![InlineRef(4)],
-            },
-            4,
-            23,
-            "View:Anno",
-            vec![ViewRef(3), ViewRef(4)],
-        ),
-        (
-            DocKind::Text { text: "後".into() },
-            23,
-            26,
-            "View:TextRun",
-            vec![],
-        ),
-        (
-            DocKind::Sentence {
-                inlines: vec![InlineRef(0), InlineRef(5), InlineRef(6)],
+            DocKind::Body {
+                blocks: vec![BlockRef(0)],
             },
             0,
-            27,
-            "View:Sentence",
-            vec![ViewRef(0), ViewRef(5), ViewRef(6)],
+            full_end,
+            vec![ViewRef(0)],
         ),
     ];
-    let schema = r.selected("nepl3.doc", 1).ok_or("Doc schema")?;
+    let schema = r
+        .selected("nepl3.foundation", 1)
+        .ok_or("Foundation schema")?;
     let mut nodes = Vec::new();
     let mut origins = Vec::new();
     let mut elements = Vec::new();
-    for (kind, start, end, view_kind, children) in entries {
+    for (kind, start, end, children) in entries {
         let span = source.span(start, end).map_err(err)?;
         let origin = OriginId(origins.len() as u64);
         origins.push(Origin::Direct(span.clone()));
@@ -144,7 +98,7 @@ fn document_fixture(source: SourceSnapshot, r: &SchemaRegistry) -> Result<Docume
         elements.push(ViewElement {
             kind: KindRef {
                 schema: schema.clone(),
-                local_kind: r.kind_id(schema, view_kind).map_err(err)?,
+                local_kind: r.kind_id(schema, "Token").map_err(err)?,
             },
             span,
             fields: if children.is_empty() {
@@ -161,14 +115,14 @@ fn document_fixture(source: SourceSnapshot, r: &SchemaRegistry) -> Result<Docume
     }
     let document = DocumentSyntax {
         value: DocValue {
-            root: DocRoot::Sentence(SentenceRef(7)),
+            root: DocRoot::Body(BodyRef(1)),
             nodes,
             embeds: vec![],
         },
         views: vec![DocView {
-            head: source.span(0, 27).map_err(err)?,
+            head: source.span(0, full_end).map_err(err)?,
             view: ViewBundle {
-                roots: vec![ViewRef(7)],
+                roots: vec![ViewRef(1)],
                 elements,
             },
         }],
@@ -268,85 +222,6 @@ fn many_source_revisions_fit_a_bounded_index_lookup_allowance() -> Result<(), St
 }
 
 #[test]
-fn sentence_payload_uses_only_the_explicit_owner_after_cbor() -> Result<(), String> {
-    let r = registry()?;
-    let source = SourceSnapshot::new(
-        SourceId("large".into()),
-        4,
-        "memory:large".into(),
-        format!("\"前{{[文/ぶん]/note}}後\"{}", " ".repeat(65_536)).into_bytes(),
-        &mut b(),
-    )
-    .map_err(err)?;
-    let doc = document_fixture(source.clone(), &r)?;
-    let mut ambient = SourceStore::default();
-    ambient.insert(source.clone()).map_err(err)?;
-    let mut admission = SourceAdmission::default();
-    let mut codec = FoundationCodec::new(&r, &ambient, &mut admission).map_err(err)?;
-    let payload = portable::sentence::to_value(&doc, &r, &mut codec, &mut b()).map_err(err)?;
-    let bytes = nepl3_wire::encode(&payload, &mut b()).map_err(err)?;
-    // The owner has 64 KiB of unrelated source. The wire payload contains just
-    // this short sentence's semantic/view data and snapshot references.
-    assert!(bytes.len() < 16_384, "payload length {}", bytes.len());
-    let received = nepl3_wire::decode(&bytes, &mut b()).map_err(err)?;
-    let actual = portable::sentence::from_value(&received, &source, &r, &mut codec, &mut b())
-        .map_err(err)?;
-    assert_eq!(actual, doc);
-    let wrong = SourceSnapshot::new(
-        SourceId("large".into()),
-        5,
-        "memory:large".into(),
-        source.text().as_bytes().to_vec(),
-        &mut b(),
-    )
-    .map_err(err)?;
-    // Even though the correct source exists in ambient, only the explicit
-    // owner may satisfy references at this first receiving boundary.
-    assert!(portable::sentence::from_value(&received, &wrong, &r, &mut codec, &mut b()).is_err());
-    let altered = SourceSnapshot::new(
-        SourceId("large".into()),
-        4,
-        "memory:large".into(),
-        b"different bytes".to_vec(),
-        &mut b(),
-    )
-    .map_err(err)?;
-    assert!(portable::sentence::from_value(&received, &altered, &r, &mut codec, &mut b()).is_err());
-    for stop in [
-        StopReason::WorkLimit,
-        StopReason::AllocationLimit,
-        StopReason::Cancelled,
-    ] {
-        let mut limits = b().limits();
-        match stop {
-            StopReason::WorkLimit => limits.work = 0,
-            StopReason::AllocationLimit => limits.allocation_units = 0,
-            _ => (),
-        }
-        let mut limited = Budget::new(limits);
-        if stop == StopReason::Cancelled {
-            limited.cancel();
-        }
-        assert!(
-            matches!(portable::sentence::from_value(&received, &source, &r, &mut codec, &mut limited),
-            Err(PortableError::Stopped(s)) if s==stop)
-        );
-        assert_eq!(limited.poll(), Err(stop));
-    }
-    let mut limits = b().limits();
-    limits.source_bytes = 0;
-    let mut fresh_budget = Budget::new(limits);
-    let mut fresh_admission = SourceAdmission::default();
-    let mut fresh_codec = FoundationCodec::new(&r, &ambient, &mut fresh_admission).map_err(err)?;
-    assert!(matches!(
-        portable::sentence::from_value(&received, &source, &r, &mut fresh_codec, &mut fresh_budget),
-        Err(PortableError::Stopped(StopReason::SourceLimit))
-    ));
-    assert_eq!(fresh_budget.poll(), Err(StopReason::SourceLimit));
-    assert_eq!(doc.sources[0], source);
-    Ok(())
-}
-#[test]
 fn document_ndf_and_cbor_first_receiver_preserve_source_view_and_meaning() -> Result<(), String> {
     let r = registry()?;
     let doc = literal(&r)?;
@@ -401,7 +276,7 @@ fn schema_valid_wrong_category_and_resource_stops_are_typed() -> Result<(), Stri
     let NdfValue::Record(index) = &mut root.fields[0] else {
         return Err("index".into());
     };
-    index.fields[0] = NdfValue::U64(0); // Node zero is Text, never a Sentence.
+    index.fields[0] = NdfValue::U64(0); // Node zero is RawCode, whose category is Block.
     r.validate(
         &TypeDescriptor::Named(TypeRef {
             package: "nepl3.doc".into(),
