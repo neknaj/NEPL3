@@ -43,7 +43,14 @@ RenderedWithForeignは描画結果とguestの出現順・embed・HTML範囲を�
 事前取消の2試験はnative・WASIで成功した。独立レビューは初期2試験の実行と、
 補強後の試験・仕様の静的確認を行った。
 toolsのArticle・namespace・印字等の24試験と通常容量試験3件もnativeで成功した。
-workspace全体のcompileはDoc HTMLの旧 `tests/local.rs` にある28件の型エラーで停止した。
+Doc HTMLの旧6試験を明示guest adapterへ移行した。backend単体のfixtureと、
+toolsの実Sentence reader・rendererを使う統合試験の範囲を区別する。
+Doc HTMLの全8試験はnative・WASIで成功し、all-target Clippyも成功した。
+独立レビューは8試験を実行し、未解決リンクのpath・fragment保持を補強した最終差分を静的確認した。
+workspace全体の試験コードはcompileに成功した。試験実行は82単位まで進み、
+745件成功・14件失敗・7件ignoreでtoolsのlib試験に停止した。
+失敗14件はcanonical文書試験であり、旧Sentence構文のfixture・正本の移行を継続する。
+停止後のworkspace試験は未実行である。
 正式Markdown生成は旧Sentence構文の `doc/tutorial/miniexpr.nepld` で停止している。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。

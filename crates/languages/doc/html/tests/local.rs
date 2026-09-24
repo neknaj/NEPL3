@@ -1,101 +1,37 @@
-use nepl3_core::value_codec::FoundationValueCodec;
+//! Doc backend boundaries with explicitly selected independent guests.
+mod support;
 use nepl3_core::{
-    budget::{Budget, Limits, StopReason},
-    schema::SchemaRegistry,
+    budget::{Budget, StopReason},
     source::{SourceAdmission, SourceStore},
+    value::NdfValue,
 };
-use nepl3_doc_core::model::*;
+use nepl3_doc_core::{labels::namespace as labels, model::*, prepare::DocRequirement};
 use nepl3_doc_html::*;
+use nepl3_markup::html::*;
 use nepl3_wire::foundation::FoundationCodec;
-fn b() -> Budget {
-    Budget::new(Limits {
-        work: 1_000_000_000,
-        allocation_units: 1_000_000_000,
-        nodes: 1_000_000,
-        depth: 100_000,
-        output_bytes: 100_000_000,
-        source_bytes: 1_000_000,
-        ..Limits::default()
-    })
-}
-fn err(e: impl core::fmt::Debug) -> String {
-    format!("{e:?}")
-}
-fn registry() -> Result<SchemaRegistry, String> {
-    let mut r = SchemaRegistry::default();
-    for d in [
-        nepl3_core::schema::foundation::descriptor(&mut b()),
-        nepl3_doc_core::schema::descriptor(&mut b()),
-        nepl3_markup::schema::descriptor(&mut b()),
-        schema::descriptor(&mut b()),
-    ] {
-        let d = d.map_err(err)?;
-        r.register(d.reference(&mut b()).map_err(err)?, d, &mut b())
-            .map_err(err)?;
-    }
-    r.finalize(&mut b()).map_err(err)?;
-    Ok(r)
-}
-fn request() -> LocalHtmlRequest {
-    let kinds = vec![
-        DocKind::Article {
-            language: "ja".into(),
-            title: SentenceRef(1),
-            body: BodyRef(3),
-        },
-        DocKind::Sentence {
-            inlines: vec![InlineRef(2)],
-        },
-        DocKind::Text {
-            text: "あ🙂<&\r\n".into(),
-        },
-        DocKind::Body { blocks: vec![] },
-    ];
-    LocalHtmlRequest {
-        document: DocumentSyntax {
-            value: DocValue {
-                root: DocRoot::Article(ArticleRef(0)),
-                nodes: kinds
-                    .into_iter()
-                    .map(|kind| DocNode {
-                        kind,
-                        locations: vec![],
-                        origin: None,
-                        span: None,
-                    })
-                    .collect(),
-                embeds: vec![],
-            },
-            sources: vec![],
-            origins: vec![],
-            views: vec![],
-            source_maps: vec![],
-        },
-        options: RenderOptions {
-            parallel: ParallelMode::Rows,
-        },
-    }
-}
+use support::*;
+
 #[test]
 fn first_cbor_receiver_prepares_renders_and_rejects_stale_or_forged_results() -> Result<(), String>
 {
     let r = registry()?;
-    let req = request();
+    let req = request(&r, "あ🙂<&\r\n")?;
+    let native = render_request(&req, &r)?;
     let store = SourceStore::default();
-    let mut a = SourceAdmission::default();
-    let mut c = FoundationCodec::new(&r, &store, &mut a).map_err(err)?;
-    let p = prepare_local(&req.document, &req.options, &r, &mut c, &mut b()).map_err(err)?;
-    let native = render(&p, &mut b()).map_err(err)?;
-    let raw = portable::rendered_to_value(&native, &p, &r, &mut c, &mut b()).map_err(err)?;
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &store, &mut admission).map_err(err)?;
     let request_bytes = nepl3_wire::encode(
-        &portable::request_to_value(&req, &r, &mut c, &mut b()).map_err(err)?,
+        &portable::request_to_value(&req, &r, &mut codec, &mut b()).map_err(err)?,
         &mut b(),
     )
     .map_err(err)?;
-    let reply_bytes = nepl3_wire::encode(&raw, &mut b()).map_err(err)?;
-    let mut fresh_a = SourceAdmission::default();
-    let empty = SourceStore::default();
-    let mut fresh = FoundationCodec::new(&r, &empty, &mut fresh_a).map_err(err)?;
+    let reply_bytes = nepl3_wire::encode(
+        &portable::foreign::to_value(&native, &r, &mut codec, &mut b()).map_err(err)?,
+        &mut b(),
+    )
+    .map_err(err)?;
+    let mut fresh_admission = SourceAdmission::default();
+    let mut fresh = FoundationCodec::new(&r, &store, &mut fresh_admission).map_err(err)?;
     let received = portable::request_from_value(
         &nepl3_wire::decode(&request_bytes, &mut b()).map_err(err)?,
         &r,
@@ -103,27 +39,15 @@ fn first_cbor_receiver_prepares_renders_and_rejects_stale_or_forged_results() ->
         &mut b(),
     )
     .map_err(err)?;
-    let prepared = prepare_local(
-        &received.document,
-        &received.options,
-        &r,
-        &mut fresh,
-        &mut b(),
-    )
-    .map_err(err)?;
+    let expected = render_request(&received, &r)?;
     let value = nepl3_wire::decode(&reply_bytes, &mut b()).map_err(err)?;
     assert_eq!(
-        portable::rendered_from_value(&value, &prepared, &r, &mut fresh, &mut b()).map_err(err)?,
+        portable::foreign::from_value(&value, &expected, &r, &mut fresh, &mut b()).map_err(err)?,
         native
     );
-    let html = nepl3_markup::html::serialize(
-        &nepl3_markup::html::validate(
-            &native.markup.fragment,
-            native.markup.slot,
-            &native.markup.policy,
-            &mut b(),
-        )
-        .map_err(err)?,
+    let markup = &native.fragment.markup;
+    let html = serialize(
+        &validate(&markup.fragment, markup.slot, &markup.policy, &mut b()).map_err(err)?,
         &mut b(),
     )
     .map_err(err)?;
@@ -132,63 +56,65 @@ fn first_cbor_receiver_prepares_renders_and_rejects_stale_or_forged_results() ->
         "<article class=\"nepl-doc\" lang=\"ja\"><h1><span>あ🙂&lt;&amp;&#xD;\n</span></h1></article>"
     );
     assert_eq!(
-        native.origins,
-        vec![
-            ElementOrigin {
-                element: 0,
-                node: 0
-            },
-            ElementOrigin {
-                element: 1,
-                node: 0
-            },
-            ElementOrigin {
-                element: 2,
-                node: 1
-            },
-            ElementOrigin {
-                element: 3,
-                node: 2
-            }
-        ]
+        native
+            .fragment
+            .origins
+            .iter()
+            .map(|origin| (origin.element, origin.node))
+            .collect::<Vec<_>>(),
+        [(0, 0), (1, 0), (2, 1), (3, 1)]
     );
-    for field in [0, 3] {
-        let mut v = value.clone();
-        let nepl3_core::value::NdfValue::Record(record) = &mut v else {
-            return Err("fragment".into());
-        };
-        record.fields[field] = if field == 0 {
-            nepl3_core::value::NdfValue::Bytes(vec![0; 32])
-        } else {
-            nepl3_core::value::NdfValue::List(vec![])
-        };
-        assert!(portable::rendered_from_value(&v, &prepared, &r, &mut fresh, &mut b()).is_err());
+    assert_eq!(
+        native.foreign,
+        [ForeignPlacement {
+            embed: EmbedRef(0),
+            first_element: 3,
+            elements: 1
+        }]
+    );
+    for change in 0..4 {
+        let mut forged = native.clone();
+        match change {
+            0 => forged.fragment.document_digest = nepl3_core::source::Digest::of(b"wrong"),
+            1 => forged.fragment.origins.clear(),
+            2 => forged.foreign[0].first_element = 0,
+            _ => forged.foreign.clear(),
+        }
+        let forged = portable::foreign::to_value(&forged, &r, &mut fresh, &mut b()).map_err(err)?;
+        assert!(matches!(
+            portable::foreign::from_value(&forged, &expected, &r, &mut fresh, &mut b()),
+            Err(portable::PortableError::Mismatch)
+        ));
     }
-    let mut stale = received.clone();
-    if let DocKind::Text { text } = &mut stale.document.value.nodes[2].kind {
-        *text = "changed".into();
-    }
-    let p =
-        prepare_local(&stale.document, &stale.options, &r, &mut fresh, &mut b()).map_err(err)?;
-    assert!(portable::rendered_from_value(&value, &p, &r, &mut fresh, &mut b()).is_err());
-    // No Parallel node exists here: different options have identical HTML,
-    // but a reply from a different generation request must still be rejected.
-    let columns = RenderOptions {
-        parallel: ParallelMode::Columns,
-    };
-    let p = prepare_local(&received.document, &columns, &r, &mut fresh, &mut b()).map_err(err)?;
-    assert_eq!(render(&p, &mut b()).map_err(err)?.markup, native.markup);
-    assert!(portable::rendered_from_value(&value, &p, &r, &mut fresh, &mut b()).is_err());
+    let changed = render_request(&request(&r, "changed")?, &r)?;
+    assert!(matches!(
+        portable::foreign::from_value(&value, &changed, &r, &mut fresh, &mut b()),
+        Err(portable::PortableError::Mismatch)
+    ));
+    let mut columns = received.clone();
+    columns.options.parallel = ParallelMode::Columns;
+    let columns = render_request(&columns, &r)?;
+    assert_eq!(columns.fragment.markup, native.fragment.markup);
+    assert!(matches!(
+        portable::foreign::from_value(&value, &columns, &r, &mut fresh, &mut b()),
+        Err(portable::PortableError::Mismatch)
+    ));
+    assert!(matches!(
+        portable::foreign::from_value(&NdfValue::Unit, &expected, &r, &mut fresh, &mut b()),
+        Err(portable::PortableError::Schema(_))
+    ));
     Ok(())
 }
+
 #[test]
 fn output_budget_and_browser_depth_never_silently_flatten_the_document() -> Result<(), String> {
     let r = registry()?;
-    let mut req = request();
-    let store = SourceStore::default();
-    let mut a = SourceAdmission::default();
-    let mut c = FoundationCodec::new(&r, &store, &mut a).map_err(err)?;
-    let p = prepare_local(&req.document, &req.options, &r, &mut c, &mut b()).map_err(err)?;
+    let mut req = request(&r, "title")?;
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let p = prepare_article_with_foreign(&req.document, &req.options, &r, &mut codec, &mut b())
+        .map_err(err)?;
     for reason in [
         StopReason::WorkLimit,
         StopReason::NodeLimit,
@@ -208,203 +134,178 @@ fn output_budget_and_browser_depth_never_silently_flatten_the_document() -> Resu
         if reason == StopReason::Cancelled {
             limited.cancel();
         }
-        assert_eq!(render(&p, &mut limited), Err(RenderError::Stopped(reason)));
-        assert_eq!(limited.poll(), Err(reason));
-    }
-    let len = 800;
-    if let DocKind::Sentence { inlines } = &mut req.document.value.nodes[1].kind {
-        *inlines = vec![InlineRef(4)];
-    }
-    for i in 0..len {
-        req.document.value.nodes.push(DocNode {
-            kind: DocKind::Concat {
-                inlines: vec![InlineRef(if i + 1 == len { 2 } else { 5 + i })],
+        let mut calls = 0;
+        let result = render_article_with_foreign(
+            &p,
+            &mut |slot, embed, b| {
+                calls += 1;
+                adapter(slot, embed, b)
             },
-            locations: vec![],
-            origin: None,
-            span: None,
-        });
+            &mut limited,
+        );
+        assert!(
+            matches!(result, Err(ForeignRenderError::Render(RenderError::Stopped(actual))) if actual == reason)
+        );
+        assert_eq!(limited.poll(), Err(reason));
+        assert_eq!(calls, 0);
     }
-    let p = prepare_local(&req.document, &req.options, &r, &mut c, &mut b()).map_err(err)?;
+    // The actual Doc tree is deep; rejection must preserve every input node.
+    for i in 0..800 {
+        let body = 2 + i * 3;
+        req.document.value.nodes[body as usize].kind = DocKind::Body {
+            blocks: vec![BlockRef(body + 1)],
+        };
+        req.document.value.nodes.extend([
+            node(DocKind::List {
+                kind: ListKind::Unordered,
+                items: vec![ListItemRef(body + 2)],
+            }),
+            node(DocKind::ListItem {
+                checked: None,
+                body: BodyRef(body + 3),
+            }),
+            node(DocKind::Body { blocks: vec![] }),
+        ]);
+    }
+    let p = prepare_article_with_foreign(&req.document, &req.options, &r, &mut codec, &mut b())
+        .map_err(err)?;
     assert!(matches!(
-        render(&p, &mut b()),
-        Err(RenderError::OutputDepth { .. })
+        render_article_with_foreign(&p, &mut adapter, &mut b()),
+        Err(ForeignRenderError::Render(RenderError::OutputDepth { .. }))
     ));
-    assert_eq!(req.document.value.nodes.len(), 804);
+    assert_eq!(req.document.value.nodes.len(), 2403);
     Ok(())
-}
-
-fn inline_request() -> LocalHtmlRequest {
-    let mut req = request();
-    req.document.value.root = DocRoot::Inline(InlineRef(0));
-    req.document.value.nodes = vec![
-        DocKind::Concat {
-            inlines: vec![InlineRef(1), InlineRef(2)],
-        },
-        DocKind::Reference {
-            target: "target".into(),
-            label: InlineRef(3),
-        },
-        DocKind::Anchor {
-            id: "target".into(),
-            label: InlineRef(3),
-        },
-        DocKind::Ruby {
-            base: InlineRef(4),
-            reading: InlineRef(5),
-        },
-        DocKind::Text { text: "字".into() },
-        DocKind::Text { text: "じ".into() },
-    ]
-    .into_iter()
-    .map(|kind| DocNode {
-        kind,
-        locations: vec![],
-        origin: None,
-        span: None,
-    })
-    .collect();
-    req
 }
 
 #[test]
 fn namespace_checks_final_selected_markup_and_rejects_unresolved_dependencies() -> Result<(), String>
 {
-    use nepl3_doc_core::labels::namespace as labels;
-    let registry = registry()?;
-    let mut req = request();
-    req.document.value.nodes = vec![
-        DocKind::Article {
-            language: "en".into(),
-            title: SentenceRef(1),
-            body: BodyRef(2),
-        },
-        DocKind::Sentence { inlines: vec![] },
-        DocKind::Body {
-            blocks: vec![BlockRef(3)],
-        },
-        DocKind::Paragraph {
+    let r = registry()?;
+    let mut req = request(&r, "title")?;
+    req.document.value.nodes[2].kind = DocKind::Body {
+        blocks: vec![BlockRef(3)],
+    };
+    req.document.value.nodes.extend([
+        node(DocKind::Paragraph {
             items: vec![FlowRef(4)],
-        },
-        DocKind::Parallel {
-            variants: vec![VariantRef(5), VariantRef(8)],
-        },
-        DocKind::Variant {
+        }),
+        node(DocKind::Parallel {
+            variants: vec![VariantRef(5), VariantRef(7)],
+        }),
+        node(DocKind::Variant {
             language: "en".into(),
             sentence: SentenceRef(6),
-        },
-        DocKind::Sentence {
-            inlines: vec![InlineRef(7)],
-        },
-        DocKind::Reference {
-            target: "target".into(),
-            label: InlineRef(11),
-        },
-        DocKind::Variant {
+        }),
+        node(DocKind::Sentence {
+            syntax: EmbedRef(1),
+        }),
+        node(DocKind::Variant {
             language: "ja".into(),
-            sentence: SentenceRef(9),
-        },
-        DocKind::Sentence {
-            inlines: vec![InlineRef(10)],
-        },
-        DocKind::Anchor {
-            id: "target".into(),
-            label: InlineRef(11),
-        },
-        DocKind::Text {
-            text: "label".into(),
-        },
-    ]
-    .into_iter()
-    .map(|kind| DocNode {
-        kind,
-        locations: vec![],
-        origin: None,
-        span: None,
-    })
-    .collect();
-    let store = SourceStore::default();
+            sentence: SentenceRef(8),
+        }),
+        node(DocKind::Sentence {
+            syntax: EmbedRef(2),
+        }),
+    ]);
+    req.document.value.embeds.extend([
+        req.document.value.embeds[0].clone(),
+        req.document.value.embeds[0].clone(),
+    ]);
     let mut admission = SourceAdmission::default();
-    let member =
-        labels::inspect(&req.document, &registry, &mut b(), &mut admission).map_err(err)?;
+    let member = labels::inspect(&req.document, &r, &mut b(), &mut admission).map_err(err)?;
     let members = [&member];
     let checked = labels::resolve(&members, &mut b()).map_err(err)?;
-    let mut codec = FoundationCodec::new(&registry, &store, &mut admission).map_err(err)?;
+    let empty = SourceStore::default();
+    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let mut selected = |_, _: &DocEmbed, embed: EmbedRef, _: &mut Budget| {
+        let attribute = if embed.0 == 1 {
+            HtmlAttribute::Href {
+                value: HtmlHref::Fragment {
+                    id: "target".into(),
+                },
+            }
+        } else {
+            HtmlAttribute::Id {
+                value: "target".into(),
+            }
+        };
+        Ok::<_, String>(if embed.0 == 0 {
+            text("title")
+        } else {
+            HtmlRequest {
+                fragment: HtmlFragment {
+                    root: 0,
+                    nodes: vec![HtmlNode::Element {
+                        tag: if embed.0 == 1 {
+                            HtmlTag::A
+                        } else {
+                            HtmlTag::Span
+                        },
+                        attributes: vec![attribute],
+                        children: vec![],
+                    }],
+                },
+                slot: HtmlSlot::Phrasing,
+                policy: HtmlPolicy { classes: vec![] },
+            }
+        })
+    };
     for reason in [
         StopReason::WorkLimit,
         StopReason::AllocationLimit,
         StopReason::Cancelled,
     ] {
         let mut limits = b().limits();
-        match reason {
-            StopReason::WorkLimit => limits.work = 0,
-            StopReason::AllocationLimit => limits.allocation_units = 0,
-            _ => {}
+        if reason == StopReason::WorkLimit {
+            limits.work = 0;
+        }
+        if reason == StopReason::AllocationLimit {
+            limits.allocation_units = 0;
         }
         let mut limited = Budget::new(limits);
         if reason == StopReason::Cancelled {
             limited.cancel();
         }
         assert!(
-            matches!(namespace::prepare(&checked, &req.options, &registry, &mut codec, &mut limited), Err(LocalPreparationError::Stopped(actual)) if actual == reason)
+            matches!(namespace::prepare_with_foreign(&checked, &req.options, &r, &mut codec, &mut limited), Err(LocalPreparationError::Stopped(actual)) if actual == reason)
         );
         assert_eq!(limited.poll(), Err(reason));
     }
-    let all =
-        namespace::prepare(&checked, &req.options, &registry, &mut codec, &mut b()).map_err(err)?;
-    namespace::render(&all, &mut b()).map_err(err)?;
+    let all = namespace::prepare_with_foreign(&checked, &req.options, &r, &mut codec, &mut b())
+        .map_err(err)?;
+    namespace::render_with_foreign(&all, &mut selected, &mut b()).map_err(err)?;
     let single = RenderOptions {
         parallel: ParallelMode::Single {
             language: "en".into(),
             fallbacks: vec![],
         },
     };
-    let selected =
-        namespace::prepare(&checked, &single, &registry, &mut codec, &mut b()).map_err(err)?;
+    let selected_plan =
+        namespace::prepare_with_foreign(&checked, &single, &r, &mut codec, &mut b())
+            .map_err(err)?;
     assert!(matches!(
-        namespace::render(&selected, &mut b()),
-        Err(namespace::Error::Render(RenderError::Markup(
-            nepl3_markup::html::HtmlError::MissingFragment(_)
-        )))
+        namespace::render_with_foreign(&selected_plan, &mut selected, &mut b()),
+        Err(namespace::ForeignNamespaceError::Namespace(
+            namespace::Error::Render(RenderError::Markup(HtmlError::MissingFragment(_)))
+        ))
     ));
-    // A label proof grants no permission to resolve a network resource.
-    let mut external = inline_request();
-    external.document.value.nodes = vec![
-        DocNode {
-            kind: DocKind::Link {
-                target: LinkTarget::External {
-                    uri: "https://example.test/".into(),
-                },
-                label: InlineRef(1),
+    let link = document(
+        DocRoot::Inline(InlineRef(0)),
+        vec![DocKind::Link {
+            target: LinkTarget::Relative {
+                path: "other.nepld".into(),
+                fragment: None,
             },
-            locations: vec![],
-            origin: None,
-            span: None,
-        },
-        DocNode {
-            kind: DocKind::Text {
-                text: "link".into(),
-            },
-            locations: vec![],
-            origin: None,
-            span: None,
-        },
-    ];
-    let member = labels::inspect(
-        &external.document,
-        &registry,
-        &mut b(),
-        codec.source_admission(),
-    )
-    .map_err(err)?;
+            label: EmbedRef(0),
+        }],
+        vec![embed(&r, EmbedKind::SentenceInline, "label")?],
+    );
+    let member =
+        labels::inspect(&link, &r, &mut b(), &mut SourceAdmission::default()).map_err(err)?;
     let members = [&member];
     let checked = labels::resolve(&members, &mut b()).map_err(err)?;
     assert!(matches!(
-        namespace::prepare(&checked, &req.options, &registry, &mut codec, &mut b()),
-        Err(LocalPreparationError::NeedsResolution(_))
-    ));
-    assert!(matches!(
-        namespace::prepare_with_foreign(&checked, &req.options, &registry, &mut codec, &mut b()),
+        namespace::prepare_with_foreign(&checked, &req.options, &r, &mut codec, &mut b()),
         Err(LocalPreparationError::NeedsResolution(_))
     ));
     Ok(())
@@ -412,78 +313,101 @@ fn namespace_checks_final_selected_markup_and_rejects_unresolved_dependencies() 
 
 #[test]
 fn namespace_wrapper_is_included_in_the_output_depth_envelope() -> Result<(), String> {
-    use nepl3_doc_core::labels::namespace as labels;
-    let registry = registry()?;
-    let mut req = inline_request();
-    req.document.value.nodes = (0..254)
-        .map(|index| DocNode {
-            kind: DocKind::Concat {
-                inlines: vec![InlineRef(index + 1)],
-            },
-            locations: vec![],
-            origin: None,
-            span: None,
-        })
-        .collect();
-    req.document.value.nodes.push(DocNode {
-        kind: DocKind::Text {
-            text: "leaf".into(),
-        },
-        locations: vec![],
-        origin: None,
-        span: None,
-    });
-    let store = SourceStore::default();
+    let r = registry()?;
+    let doc = document(
+        DocRoot::Inline(InlineRef(0)),
+        vec![DocKind::InlineMath {
+            syntax: EmbedRef(0),
+        }],
+        vec![embed(&r, EmbedKind::InlineMath, "guest")?],
+    );
+    let options = options();
+    let empty = SourceStore::default();
     let mut admission = SourceAdmission::default();
-    let member =
-        labels::inspect(&req.document, &registry, &mut b(), &mut admission).map_err(err)?;
+    let member = labels::inspect(&doc, &r, &mut b(), &mut admission).map_err(err)?;
     let members = [&member];
     let checked = labels::resolve(&members, &mut b()).map_err(err)?;
-    let mut codec = FoundationCodec::new(&registry, &store, &mut admission).map_err(err)?;
-    // Local span + 254 Concat spans + Text reaches exactly 256.
-    let local = prepare_local_inline(&req.document, &req.options, &registry, &mut codec, &mut b())
+    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let local =
+        prepare_inline_with_foreign(&doc, &options, &r, &mut codec, &mut b()).map_err(err)?;
+    // Local wrapper + 255 guest nodes reaches the 256-element envelope exactly.
+    render_inline_with_foreign(&local, &mut |_, _, _| Ok::<_, String>(deep(255)), &mut b())
         .map_err(err)?;
-    render_inline(&local, &mut b()).map_err(err)?;
-    let combined =
-        namespace::prepare(&checked, &req.options, &registry, &mut codec, &mut b()).map_err(err)?;
+    let composed = namespace::prepare_with_foreign(&checked, &options, &r, &mut codec, &mut b())
+        .map_err(err)?;
     assert!(matches!(
-        namespace::render(&combined, &mut b()),
-        Err(namespace::Error::OutputDepth { .. })
+        namespace::render_with_foreign(
+            &composed,
+            &mut |_, _, _, _| Ok::<_, String>(deep(255)),
+            &mut b()
+        ),
+        Err(namespace::ForeignNamespaceError::Namespace(
+            namespace::Error::OutputDepth { .. }
+        ))
     ));
     Ok(())
 }
 
 #[test]
-fn inline_fragment_resolves_forward_labels_and_preserves_ruby_owners() -> Result<(), String> {
-    use nepl3_markup::html::{HtmlAttribute, HtmlHref, HtmlNode, HtmlSlot};
+fn namespace_resolves_forward_labels_and_preserves_guest_occurrence_owners() -> Result<(), String> {
     let r = registry()?;
-    let store = SourceStore::default();
-    let mut a = SourceAdmission::default();
-    let mut c = FoundationCodec::new(&r, &store, &mut a).map_err(err)?;
-    let req = inline_request();
-    let checked = nepl3_doc_core::labels::check_inline(
-        &req.document,
-        &r,
+    let label = embed(&r, EmbedKind::SentenceInline, "字")?;
+    let reference = document(
+        DocRoot::Inline(InlineRef(0)),
+        vec![DocKind::Reference {
+            target: "target".into(),
+            label: EmbedRef(0),
+        }],
+        vec![label.clone()],
+    );
+    let anchor = document(
+        DocRoot::Inline(InlineRef(0)),
+        vec![DocKind::Anchor {
+            id: "target".into(),
+            label: EmbedRef(0),
+        }],
+        vec![label],
+    );
+    let mut admission = SourceAdmission::default();
+    let left = labels::inspect(&reference, &r, &mut b(), &mut admission).map_err(err)?;
+    let right = labels::inspect(&anchor, &r, &mut b(), &mut admission).map_err(err)?;
+    let members = [&left, &right];
+    let checked = labels::resolve(&members, &mut b()).map_err(err)?;
+    let empty = SourceStore::default();
+    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let options = options();
+    let prepared = namespace::prepare_with_foreign(&checked, &options, &r, &mut codec, &mut b())
+        .map_err(err)?;
+    // The guest owns its internal text nodes. Doc owns the enclosing anchor/ref.
+    let rendered = namespace::render_with_foreign(
+        &prepared,
+        &mut |_, _, _, _| {
+            Ok::<_, String>(HtmlRequest {
+                fragment: HtmlFragment {
+                    root: 0,
+                    nodes: vec![
+                        HtmlNode::Element {
+                            tag: HtmlTag::Span,
+                            attributes: vec![],
+                            children: vec![1, 2],
+                        },
+                        HtmlNode::Text { text: "字".into() },
+                        HtmlNode::Text { text: "じ".into() },
+                    ],
+                },
+                slot: HtmlSlot::Phrasing,
+                policy: HtmlPolicy { classes: vec![] },
+            })
+        },
         &mut b(),
-        &mut SourceAdmission::default(),
     )
     .map_err(err)?;
-    assert_eq!(checked.definitions().len(), 1);
-    assert_eq!(checked.references().len(), 1);
-    assert_eq!(
-        checked.references()[0].target,
-        nepl3_doc_core::labels::DocLabelId(0)
-    );
-    assert_eq!(checked.definitions()[0].node, 2);
-    let p = prepare_local_inline(&req.document, &req.options, &r, &mut c, &mut b()).map_err(err)?;
-    let rendered = render_inline(&p, &mut b()).map_err(err)?;
-    assert_eq!(rendered.markup.slot, HtmlSlot::Phrasing);
     let mut ids = 0;
     let mut refs = 0;
-    for node in &rendered.markup.fragment.nodes {
+    for node in &rendered.namespace.markup.fragment.nodes {
         if let HtmlNode::Element { attributes, .. } = node {
-            for attr in attributes {
-                match attr {
+            for attribute in attributes {
+                match attribute {
                     HtmlAttribute::Id { value } if value == "n-746172676574" => ids += 1,
                     HtmlAttribute::Href {
                         value: HtmlHref::Fragment { id },
@@ -494,69 +418,119 @@ fn inline_fragment_resolves_forward_labels_and_preserves_ruby_owners() -> Result
         }
     }
     assert_eq!((ids, refs), (1, 1));
-    // Both display occurrences retain the same semantic Text owners.
-    for (owner, text) in [(4, "字"), (5, "じ")] {
-        assert_eq!(rendered.origins.iter().filter(|origin| origin.node == owner
-            && matches!(&rendered.markup.fragment.nodes[origin.element as usize], HtmlNode::Text { text: value } if value == text)).count(), 2);
+    assert_eq!(rendered.foreign.len(), 2);
+    for (index, placement) in rendered.foreign.iter().enumerate() {
+        assert_eq!(placement.member, labels::MemberId(index as u64));
+        assert_eq!(placement.embed, EmbedRef(0));
+        assert_eq!(placement.elements, 3);
+        for element in placement.first_element..placement.first_element + placement.elements {
+            assert_eq!(
+                rendered
+                    .namespace
+                    .origins
+                    .iter()
+                    .filter(|origin| origin.element == element)
+                    .map(|origin| (origin.member, origin.node))
+                    .collect::<Vec<_>>(),
+                [(placement.member, 0)]
+            );
+        }
     }
-    assert_eq!(req.document.value.nodes.len(), 6);
+    for text in ["字", "じ"] {
+        assert_eq!(
+            rendered
+                .namespace
+                .markup
+                .fragment
+                .nodes
+                .iter()
+                .filter(|node| matches!(node, HtmlNode::Text { text: value } if value == text))
+                .count(),
+            2
+        );
+    }
     Ok(())
 }
 
 #[test]
 fn inline_fragment_rejects_wrong_root_labels_dependencies_and_stops() -> Result<(), String> {
-    use nepl3_doc_core::{
-        labels::LabelError,
-        prepare::{DocRequirement, PreparationError},
-    };
+    use nepl3_doc_core::{labels::LabelError, prepare::PreparationError};
     let r = registry()?;
-    let store = SourceStore::default();
-    let mut a = SourceAdmission::default();
-    let mut c = FoundationCodec::new(&r, &store, &mut a).map_err(err)?;
-    let article = request();
+    let article = request(&r, "title")?;
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let options = options();
     assert!(matches!(
-        prepare_local_inline(&article.document, &article.options, &r, &mut c, &mut b()),
+        prepare_inline_with_foreign(&article.document, &options, &r, &mut codec, &mut b()),
         Err(LocalPreparationError::Input(PreparationError::Label(
             LabelError::ExpectedInline
         )))
     ));
-    let mut req = inline_request();
-    req.document.value.nodes[2].kind = DocKind::Anchor {
-        id: "other".into(),
-        label: InlineRef(3),
-    };
+    let label = embed(&r, EmbedKind::SentenceInline, "label")?;
+    let mut doc = document(
+        DocRoot::Inline(InlineRef(0)),
+        vec![DocKind::Reference {
+            target: "missing".into(),
+            label: EmbedRef(0),
+        }],
+        vec![label],
+    );
     assert!(matches!(
-        prepare_local_inline(&req.document, &req.options, &r, &mut c, &mut b()),
+        prepare_inline_with_foreign(&doc, &options, &r, &mut codec, &mut b()),
         Err(LocalPreparationError::Input(PreparationError::Label(
             LabelError::Unresolved { .. }
         )))
     ));
-    req.document.value.nodes[1].kind = DocKind::Anchor {
-        id: "other".into(),
-        label: InlineRef(3),
+    doc.value.nodes[0].kind = DocKind::Anchor {
+        id: "duplicate".into(),
+        label: EmbedRef(0),
     };
-    assert!(matches!(
-        prepare_local_inline(&req.document, &req.options, &r, &mut c, &mut b()),
-        Err(LocalPreparationError::Input(PreparationError::Label(
-            LabelError::Duplicate { .. }
-        )))
-    ));
-    req.document.value.nodes[1].kind = DocKind::Link {
-        target: LinkTarget::External {
-            uri: "https://example.test/".into(),
+    let first =
+        labels::inspect(&doc, &r, &mut b(), &mut SourceAdmission::default()).map_err(err)?;
+    let second =
+        labels::inspect(&doc, &r, &mut b(), &mut SourceAdmission::default()).map_err(err)?;
+    assert!(matches!(labels::resolve(&[&first, &second], &mut b()),
+        Err(labels::Error::Duplicate { definition, previous })
+        if definition.member == labels::MemberId(1)
+            && previous.member == labels::MemberId(0)
+            && definition.site.name == "duplicate"));
+    doc.value.nodes[0].kind = DocKind::Link {
+        target: LinkTarget::Relative {
+            path: "other.nepld".into(),
+            fragment: None,
         },
-        label: InlineRef(3),
+        label: EmbedRef(0),
     };
     let Err(LocalPreparationError::NeedsResolution(plan)) =
-        prepare_local_inline(&req.document, &req.options, &r, &mut c, &mut b())
+        prepare_inline_with_foreign(&doc, &options, &r, &mut codec, &mut b())
     else {
-        return Err("external link must remain an explicit requirement".into());
+        return Err("missing link resolution".into());
     };
-    assert!(
-        matches!(plan.requirements.as_slice(), [DocRequirement::Link { node: 1, target: LinkTarget::External { uri } }] if uri == "https://example.test/")
+    let links: Vec<_> = plan
+        .requirements
+        .iter()
+        .filter_map(|requirement| match requirement {
+            DocRequirement::Link { node, target } => Some((*node, target.clone())),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        links,
+        [(
+            0,
+            LinkTarget::Relative {
+                path: "other.nepld".into(),
+                fragment: None
+            }
+        )]
     );
-    let req = inline_request();
-    let p = prepare_local_inline(&req.document, &req.options, &r, &mut c, &mut b()).map_err(err)?;
+    doc.value.nodes[0].kind = DocKind::Anchor {
+        id: "target".into(),
+        label: EmbedRef(0),
+    };
+    let prepared =
+        prepare_inline_with_foreign(&doc, &options, &r, &mut codec, &mut b()).map_err(err)?;
     for reason in [
         StopReason::WorkLimit,
         StopReason::AllocationLimit,
@@ -567,18 +541,16 @@ fn inline_fragment_rejects_wrong_root_labels_dependencies_and_stops() -> Result<
             StopReason::WorkLimit => limits.work = 0,
             StopReason::AllocationLimit => limits.allocation_units = 0,
             StopReason::DepthLimit => limits.depth = 0,
-            _ => unreachable!("fixed test cases"),
+            _ => unreachable!("fixed cases"),
         }
         let mut limited = Budget::new(limits);
         assert!(
-            matches!(prepare_local_inline(&req.document, &req.options, &r, &mut c, &mut limited),
-            Err(LocalPreparationError::Stopped(actual)) if actual == reason)
+            matches!(prepare_inline_with_foreign(&doc, &options, &r, &mut codec, &mut limited), Err(LocalPreparationError::Stopped(actual)) if actual == reason)
         );
         assert_eq!(limited.poll(), Err(reason));
         let mut limited = Budget::new(limits);
-        assert_eq!(
-            render_inline(&p, &mut limited),
-            Err(RenderError::Stopped(reason))
+        assert!(
+            matches!(render_inline_with_foreign(&prepared, &mut adapter, &mut limited), Err(ForeignRenderError::Render(RenderError::Stopped(actual))) if actual == reason)
         );
         assert_eq!(limited.poll(), Err(reason));
     }
