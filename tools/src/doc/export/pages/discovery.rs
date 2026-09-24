@@ -12,6 +12,7 @@ use nepl3_doc_core::{
 };
 use nepl3_sentence_core::{lower::ForeignInlineForm, syntax::SentenceSyntax};
 use nepl3_suite::adapters::{document::sentences, sentence::document_guests};
+pub mod namespace;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct DocumentId(usize);

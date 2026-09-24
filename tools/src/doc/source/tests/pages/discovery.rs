@@ -4,6 +4,87 @@ use nepl3_core::budget::StopReason;
 use nepl3_doc_core::model::EmbedRef;
 
 #[test]
+fn namespace_discovery_resolves_forward_reference_across_distinct_slots() -> Result<(), String> {
+    let compiled = compiled()?;
+    let source = r#"article en sentence sentence cons doc ref second text "Go" nil body
+        cons paragraph cons sentence sentence cons doc anchor first text "First" cons doc anchor second text "Second" nil cons sentence "Tail" nil nil"#;
+    with_named_input(
+        true,
+        &compiled,
+        source,
+        "forward",
+        "Article",
+        |tree, profile, b, a| {
+            let registry = profile.registry();
+            let store = SourceStore::default();
+            let mut codec = FoundationCodec::new(registry, &store, a).map_err(err)?;
+            let input = tree
+                .tree()
+                .bundle
+                .validate_with_sources(registry, b, &mut SourceAdmission::default())
+                .map_err(err)?;
+            let document = lower::document(
+                &input,
+                &compiled.doc.package.schema,
+                Category::Article,
+                registry,
+                b,
+                &mut codec,
+            )
+            .map_err(err)?;
+            let forms = [nepl3_sentence_core::lower::ForeignInlineForm {
+                kind: "Form:DocumentInline",
+                guest_schema: &compiled.doc.package.schema,
+                guest_category: "Inline",
+            }];
+            let found = discovery::collect(
+                &document,
+                &compiled.others[3].schema,
+                &compiled.doc.package.schema,
+                &forms,
+                registry,
+                &mut codec,
+                b,
+            )
+            .map_err(err)?;
+            let plan =
+                discovery::namespace::inspect(&found, registry, b, &mut SourceAdmission::default())
+                    .map_err(err)?;
+            assert_eq!(
+                plan.occurrences()
+                    .iter()
+                    .map(|o| o.document.index())
+                    .collect::<Vec<_>>(),
+                [0, 1, 2, 3]
+            );
+            assert_eq!(plan.occurrences()[1].parent.ok_or("title")?.sentence, 0);
+            assert_eq!(
+                plan.occurrences()[2].parent.ok_or("first anchor")?.sentence,
+                1
+            );
+            assert_eq!(
+                plan.occurrences()[3]
+                    .parent
+                    .ok_or("second anchor")?
+                    .sentence,
+                1
+            );
+            let refs = plan.member_refs(b).map_err(err)?;
+            let checked = namespace::resolve(&refs, b).map_err(err)?;
+            assert_eq!(checked.definitions().len(), 2);
+            assert_eq!(checked.references().len(), 1);
+            let reference = &checked.references()[0];
+            assert_eq!(reference.reference.member.0, 1);
+            assert_eq!(
+                checked.definitions()[reference.target.0 as usize].member.0,
+                3
+            );
+            Ok(())
+        },
+    )
+}
+
+#[test]
 fn recursive_discovery_failure_retains_reentry_source_owner() -> Result<(), String> {
     let compiled = compiled()?;
     let source = r#"article en sentence "Title" body cons paragraph cons sentence sentence cons doc anchor outer math add 1 2 nil nil nil"#;
@@ -175,6 +256,66 @@ fn recursive_discovery_keeps_unique_owners_occurrences_and_total_depth() -> Resu
                 ));
             }
             assert!(members[2].guests().is_empty());
+            let mut namespace_budget = budget();
+            let plan = discovery::namespace::inspect(
+                &result,
+                registry,
+                &mut namespace_budget,
+                &mut SourceAdmission::default(),
+            )
+            .map_err(err)?;
+            assert!(core::ptr::eq(plan.input(), &result));
+            assert_eq!(
+                plan.occurrences()
+                    .iter()
+                    .map(|o| o.document.index())
+                    .collect::<Vec<_>>(),
+                [0, 1, 2, 1, 2]
+            );
+            assert!(plan.occurrences()[0].parent.is_none());
+            for (at, parent, sentence) in [(1, 0, 1), (2, 1, 0), (3, 0, 2), (4, 3, 0)] {
+                let actual = plan.occurrences()[at].parent.ok_or("namespace parent")?;
+                assert_eq!(actual.member.0, parent);
+                assert_eq!(actual.sentence, sentence);
+                assert_eq!(actual.guest, 0);
+            }
+            let refs = plan.member_refs(&mut budget()).map_err(err)?;
+            assert!(core::ptr::eq(refs[1], refs[3]));
+            assert!(core::ptr::eq(refs[2], refs[4]));
+            // Repeated display of the same anchor is a real namespace duplicate.
+            assert!(matches!(namespace::resolve(&refs, &mut budget()),
+            Err(namespace::Error::Duplicate { definition, previous }) if definition.member.0 == 3 && previous.member.0 == 1));
+            for (reason, amount) in [
+                (StopReason::WorkLimit, namespace_budget.usage().work),
+                (
+                    StopReason::AllocationLimit,
+                    namespace_budget.usage().allocation_units,
+                ),
+                (StopReason::DepthLimit, namespace_budget.usage().depth),
+            ] {
+                for shortage in [0, 1] {
+                    let mut limits = namespace_budget.limits();
+                    match reason {
+                        StopReason::WorkLimit => limits.work = amount - shortage,
+                        StopReason::AllocationLimit => limits.allocation_units = amount - shortage,
+                        StopReason::DepthLimit => limits.depth = amount - shortage,
+                        _ => return Err("namespace resource".into()),
+                    }
+                    let outcome = discovery::namespace::inspect(
+                        &result,
+                        registry,
+                        &mut Budget::new(limits),
+                        &mut SourceAdmission::default(),
+                    );
+                    if shortage == 0 {
+                        assert_eq!(outcome.map_err(err)?.occurrences(), plan.occurrences());
+                    } else {
+                        assert!(
+                            matches!(outcome, Err(discovery::namespace::Error::Stopped(actual)) if actual == reason)
+                        );
+                    }
+                }
+            }
             let mut nested = budget();
             let mut nested_admission = SourceAdmission::default();
             let mut nested_codec =
@@ -202,6 +343,16 @@ fn recursive_discovery_keeps_unique_owners_occurrences_and_total_depth() -> Resu
             );
             assert_eq!(nested.current_depth(), 0);
             assert_eq!(nested.usage().depth, measured.usage().depth + 7);
+            let mut rebased = budget();
+            let rebased_plan = discovery::namespace::inspect(
+                &nested_result,
+                registry,
+                &mut rebased,
+                &mut SourceAdmission::default(),
+            )
+            .map_err(err)?;
+            assert_eq!(rebased_plan.occurrences(), plan.occurrences());
+            assert_eq!(rebased.usage().depth, namespace_budget.usage().depth);
             let mut cancelled = budget();
             cancelled.cancel();
             assert!(matches!(

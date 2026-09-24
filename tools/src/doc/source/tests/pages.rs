@@ -184,19 +184,41 @@ fn article_sentence_doc_links_resolve_in_page_namespaces() -> Result<(), String>
         let mut identities = Vec::new();
         for (set, fragments) in [(&set, &fragments), (&received, &received_fragments)] {
             let mut admission = SourceAdmission::default();
-            let mut members = Vec::new();
+            let mut discovered = Vec::new();
             for (page, fragment) in set.pages.iter().zip(fragments) {
-                members.push([
-                    namespace::inspect(&page.document, registry, &mut budget(), &mut admission)
-                        .map_err(err)?,
-                    namespace::inspect(fragment, registry, &mut budget(), &mut admission)
-                        .map_err(err)?,
-                ]);
+                let found = crate::doc::export::pages::discovery::collect(
+                    &page.document,
+                    &compiled.others[3].schema,
+                    &compiled.doc.package.schema,
+                    &[nepl3_sentence_core::lower::ForeignInlineForm {
+                        kind: "Form:DocumentInline",
+                        guest_schema: &compiled.doc.package.schema,
+                        guest_category: "Inline",
+                    }],
+                    registry,
+                    &mut codec,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                assert_eq!(found.members()[1].document(), fragment);
+                discovered.push(found);
             }
-            let refs: Vec<_> = members
+            let members = discovered
                 .iter()
-                .map(|members| [&members[0], &members[1]])
-                .collect();
+                .map(|found| {
+                    crate::doc::export::pages::discovery::namespace::inspect(
+                        found,
+                        registry,
+                        &mut budget(),
+                        &mut admission,
+                    )
+                    .map_err(err)
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            let refs = members
+                .iter()
+                .map(|plan| plan.member_refs(&mut budget()).map_err(err))
+                .collect::<Result<Vec<_>, _>>()?;
             let checked = refs
                 .iter()
                 .map(|members| namespace::resolve(members, &mut budget()).map_err(err))
