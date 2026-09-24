@@ -104,6 +104,110 @@ fn document(r: &SchemaRegistry) -> Result<DocumentSyntax, String> {
     })
 }
 #[test]
+fn preparation_batches_distinct_guest_digests_in_owner_order() -> Result<(), String> {
+    let r = registry()?;
+    let mut d = document(&r)?;
+    let template = d.value.embeds[0].clone();
+    d.value.embeds.clear();
+    for index in 0..32 {
+        let mut embed = template.clone();
+        let DocContent::Syntax { closure } = &mut embed.content else {
+            return Err("syntax closure".into());
+        };
+        closure.provenance = nepl3_core::syntax::OwnerProvenance::from_parts(
+            vec![Origin::Synthetic {
+                reason: format!("guest {index}: {}", "provenance".repeat(256)),
+                anchor: None,
+            }],
+            vec![],
+            vec![],
+        );
+        d.value.embeds.push(embed);
+    }
+    let DocKind::Body { blocks } = &mut d.value.nodes[2].kind else {
+        return Err("body".into());
+    };
+    blocks.push(BlockRef(5));
+    d.value.nodes.push(DocNode {
+        kind: DocKind::Paragraph {
+            items: (6..37).map(FlowRef).collect(),
+        },
+        locations: vec![],
+        origin: None,
+        span: None,
+    });
+    for index in 1..32 {
+        d.value.nodes.push(DocNode {
+            kind: DocKind::Sentence {
+                syntax: EmbedRef(index),
+            },
+            locations: vec![],
+            origin: None,
+            span: None,
+        });
+    }
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &sources, &mut admission).map_err(err)?;
+    let mut measured = b();
+    let plan = prepare::inspect(&d, &r, &mut codec, &mut measured).map_err(err)?;
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &sources, &mut admission).map_err(err)?;
+    let mut separate = b();
+    nepl3_doc_core::labels::check(&d, &r, &mut separate, codec.source_admission()).map_err(err)?;
+    let value = portable::to_value(&d, &r, &mut codec, &mut separate).map_err(err)?;
+    let document_digest = codec
+        .canonical_value_digest(prepare::DOCUMENT_DOMAIN, &value, &mut separate)
+        .map_err(err)?;
+    assert_eq!(plan.document_digest, document_digest);
+    for (index, embed) in d.value.embeds.iter().enumerate() {
+        // Independently encode each embed. The expected bytes do not use the
+        // preparation batch's child lookup or its digest result ordering.
+        let guest = portable::embed_value(embed, &r, &mut codec, &mut b()).map_err(err)?;
+        let guest_digest = codec
+            .canonical_value_digest(prepare::GUEST_DOMAIN, &guest, &mut separate)
+            .map_err(err)?;
+        assert_eq!(
+            plan.requirements[index + 2],
+            DocRequirement::Foreign {
+                embed: EmbedRef(index as u64),
+                kind: embed.kind,
+                guest_digest,
+            }
+        );
+    }
+    // The separate baseline even omits requirement allocation and guest-value
+    // construction. A second full encoding traversal still costs more Work.
+    assert!(
+        measured.usage().work < separate.usage().work,
+        "batch={:?}, separate={:?}",
+        measured.usage(),
+        separate.usage()
+    );
+    for cap in [measured.usage().work - 1, measured.usage().work] {
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&r, &sources, &mut admission).map_err(err)?;
+        let mut limits = b().limits();
+        limits.work = cap;
+        let mut limited = Budget::new(limits);
+        let result = prepare::inspect(&d, &r, &mut codec, &mut limited);
+        if cap == measured.usage().work {
+            assert_eq!(result.map_err(err)?, plan);
+        } else {
+            assert_eq!(
+                result,
+                Err(PreparationError::Stopped(StopReason::WorkLimit))
+            );
+            assert_eq!(
+                prepare::inspect(&d, &r, &mut codec, &mut limited),
+                Err(PreparationError::Stopped(StopReason::WorkLimit))
+            );
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn namespace_plans_preserve_order_and_reserve_before_processing() -> Result<(), String> {
     use nepl3_doc_core::labels::namespace;
     let r = registry()?;
