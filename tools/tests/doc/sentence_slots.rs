@@ -3,6 +3,141 @@ use nepl3_core::budget::{Budget, StopReason};
 use nepl3_suite::adapters::document::{sentence, sentences};
 
 #[test]
+fn sentence_html_preflight_identifies_shared_guests_and_stops_callbacks() -> Result<(), String> {
+    use nepl3_markup::html::*;
+    use nepl3_sentence_core::{lower::ForeignInlineForm, model::EmbedRef as SentenceEmbed};
+    use nepl3_suite::adapters::sentence::html::{Error, RenderFailure};
+    let compiled = compiled()?;
+    let source = r#"article en sentence "Title" body
+        cons paragraph cons sentence sentence cons doc ref first text "A" nil nil
+        cons paragraph cons sentence sentence cons doc ref second text "B" nil nil
+        cons code Math add 1 2 nil"#;
+    with_input(&compiled, source, "Article", |tree, profile, b, a| {
+        let registry = profile.registry();
+        let store = SourceStore::default();
+        let mut codec = FoundationCodec::new(registry, &store, a).map_err(err)?;
+        let mut doc = lower::document(
+            tree.syntax(),
+            &compiled.doc.package.schema,
+            Category::Article,
+            registry,
+            b,
+            &mut codec,
+        )
+        .map_err(err)?;
+        let blocks = doc
+            .value
+            .nodes
+            .iter_mut()
+            .find_map(|node| match &mut node.kind {
+                DocKind::Body { blocks } => Some(blocks),
+                _ => None,
+            })
+            .ok_or("Body")?;
+        blocks.push(blocks[0]); // The first Sentence slot occurs twice in the document.
+        let original = doc.clone();
+        let surface = registry
+            .selected("nepl3.syntax.sentence", 1)
+            .ok_or("surface")?;
+        let forms = [ForeignInlineForm {
+            kind: "Form:DocumentInline",
+            guest_schema: &compiled.doc.package.schema,
+            guest_category: "Inline",
+        }];
+        let selected =
+            sentences::collect(&doc, surface, &forms, registry, &mut codec, &mut budget())
+                .map_err(err)?;
+        assert_eq!(
+            selected
+                .occurrences()
+                .iter()
+                .map(|o| o.embed)
+                .collect::<Vec<_>>(),
+            [EmbedRef(0), EmbedRef(1), EmbedRef(2), EmbedRef(1)]
+        );
+        let markup = || HtmlRequest {
+            fragment: HtmlFragment {
+                nodes: vec![HtmlNode::Text {
+                    text: "guest".into(),
+                }],
+                root: 0,
+            },
+            slot: HtmlSlot::Phrasing,
+            policy: HtmlPolicy { classes: vec![] },
+        };
+        let mut calls = Vec::new();
+        let prepared = sentences::html::prepare(
+            &selected,
+            registry,
+            &mut |slot, content, guest, _| {
+                let sentence = selected.sentence(slot).ok_or(Error::InternalShape)?;
+                assert!(core::ptr::eq(
+                    content,
+                    &sentence.value.embeds[guest.0 as usize]
+                ));
+                calls.push((slot, guest));
+                Ok::<_, Error>(markup())
+            },
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(err)?;
+        // Both independent Sentences use local guest index zero. Their Doc slots
+        // distinguish the owners; the shared first slot is prepared only once.
+        assert_eq!(
+            calls,
+            [
+                (EmbedRef(1), SentenceEmbed(0)),
+                (EmbedRef(2), SentenceEmbed(0))
+            ]
+        );
+        let parts = prepared.into_parts();
+        assert_eq!(parts.len(), 4);
+        assert!(parts[..3].iter().all(Option::is_some));
+        assert!(parts[3].is_none()); // Non-Sentence Code keeps its table position.
+        calls.clear();
+        let failed = sentences::html::prepare(
+            &selected,
+            registry,
+            &mut |slot, _, guest, _| {
+                calls.push((slot, guest));
+                Err::<HtmlRequest, _>(Error::ForeignAdapterRequired(guest))
+            },
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        );
+        assert!(matches!(
+            failed,
+            Err(sentences::html::Error::Sentence {
+                embed: EmbedRef(1),
+                error: RenderFailure::Foreign(Error::ForeignAdapterRequired(SentenceEmbed(0))),
+            })
+        ));
+        assert_eq!(calls, [(EmbedRef(1), SentenceEmbed(0))]);
+        calls.clear();
+        let mut cancelled = budget();
+        let stopped = sentences::html::prepare(
+            &selected,
+            registry,
+            &mut |slot, _, guest, b| {
+                calls.push((slot, guest));
+                b.cancel();
+                Ok::<_, Error>(markup())
+            },
+            &mut cancelled,
+            &mut SourceAdmission::default(),
+        );
+        assert!(matches!(
+            stopped,
+            Err(sentences::html::Error::Stopped(StopReason::Cancelled))
+        ));
+        assert_eq!(calls, [(EmbedRef(1), SentenceEmbed(0))]);
+        assert_eq!(doc, original);
+        Ok(())
+    })
+}
+
+#[test]
 fn sentence_collection_checks_all_variants_sharing_and_resource_boundaries() -> Result<(), String> {
     let compiled = compiled()?;
     let source = r#"article en sentence "Title" body

@@ -13,6 +13,8 @@ use nepl3_doc_core::{
 };
 use nepl3_sentence_core::{lower::ForeignInlineForm, syntax::SentenceSyntax};
 
+pub mod html;
+
 #[derive(Debug)]
 pub enum Error<E> {
     Stopped(StopReason),

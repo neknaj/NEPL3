@@ -1,5 +1,5 @@
 use super::*;
-use nepl3_doc_core::{check::Category, lower, model::*, pages::*};
+use nepl3_doc_core::{check::Category, lower, pages::*};
 use nepl3_doc_html::{ParallelMode, RenderOptions, pages::*};
 
 fn request(source: &str) -> Result<(Compiled, PagesHtmlRequest), String> {
@@ -130,9 +130,10 @@ fn external_links_use_shared_markup_rules_and_portable_revalidation() -> Result<
 }
 
 #[test]
-fn hidden_unsafe_links_are_rejected_and_other_requirements_remain() -> Result<(), String> {
+fn sentence_preflight_rejects_hidden_unsafe_links_and_preserves_asset_requirements()
+-> Result<(), String> {
     let (compiled, mut request) = request(
-        r#"article en "Links" body cons paragraph cons parallel cons variant en "Visible" cons variant ja sentence cons link external "https://example.org/" text "Hidden" nil nil nil nil"#,
+        r#"article en sentence "Links" body cons paragraph cons parallel cons variant en sentence "Visible" cons variant ja sentence sentence cons link "https://example.org/" text "Hidden" nil nil nil nil"#,
     )?;
     request.options.parallel = ParallelMode::Single {
         language: "en".into(),
@@ -142,13 +143,94 @@ fn hidden_unsafe_links_are_rejected_and_other_requirements_remain() -> Result<()
     let empty = SourceStore::default();
     let mut admission = SourceAdmission::default();
     let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
-    let node = request.set.pages[0]
-        .document
+    use nepl3_sentence_core::model::Kind;
+    use nepl3_suite::adapters::{
+        document::{sentence, sentences},
+        sentence::html,
+    };
+    let surface = registry
+        .selected("nepl3.syntax.sentence", 1)
+        .ok_or("Sentence surface")?;
+    let document = &request.set.pages[0].document;
+    let selected = sentences::collect(document, surface, &[], registry, &mut codec, &mut budget())
+        .map_err(err)?;
+    assert_eq!(selected.occurrences().len(), 3);
+    let hidden = selected.occurrences()[2].embed;
+    let original = selected.sentence(hidden).ok_or("hidden Sentence")?.clone();
+    let mut measured = budget();
+    let prepared = sentences::html::prepare(
+        &selected,
+        registry,
+        &mut |_, _, embed, _| {
+            Err::<nepl3_markup::html::HtmlRequest, _>(html::Error::ForeignAdapterRequired(embed))
+        },
+        &mut measured,
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    assert!(core::ptr::eq(prepared.input(), &selected));
+    assert_eq!(
+        prepared.get(hidden).ok_or("prepared hidden")?.input(),
+        &original
+    );
+    assert!(
+        prepared
+            .get(nepl3_doc_core::model::EmbedRef(u64::MAX))
+            .is_none()
+    );
+    assert_eq!(prepared.into_parts().iter().flatten().count(), 3);
+    for (reason, amount) in [
+        (StopReason::WorkLimit, measured.usage().work),
+        (
+            StopReason::AllocationLimit,
+            measured.usage().allocation_units,
+        ),
+        (StopReason::DepthLimit, measured.usage().depth),
+    ] {
+        assert!(amount > 0);
+        for limit in [amount - 1, amount] {
+            let mut limits = measured.limits();
+            match reason {
+                StopReason::WorkLimit => limits.work = limit,
+                StopReason::AllocationLimit => limits.allocation_units = limit,
+                StopReason::DepthLimit => limits.depth = limit,
+                _ => unreachable!("fixed limits"),
+            }
+            let mut limited = Budget::new(limits);
+            let result = sentences::html::prepare(
+                &selected,
+                registry,
+                &mut |_, _, embed, _| {
+                    Err::<nepl3_markup::html::HtmlRequest, _>(html::Error::ForeignAdapterRequired(
+                        embed,
+                    ))
+                },
+                &mut limited,
+                &mut SourceAdmission::default(),
+            );
+            if limit == amount {
+                assert!(result.is_ok());
+            } else {
+                assert!(
+                    matches!(result, Err(sentences::html::Error::Stopped(actual)) if actual == reason)
+                );
+            }
+        }
+    }
+    let node = original
         .value
         .nodes
         .iter()
-        .position(|n| matches!(n.kind, DocKind::Link { .. }))
-        .ok_or("link")?;
+        .position(|node| matches!(node, Kind::ExternalLink { .. }))
+        .ok_or("external link")?;
+    // Establish a valid positive control before mutating only the URI.
+    html::render(
+        &original,
+        registry,
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
     for uri in [
         "javascript:alert(1)",
         "data:text/html,x",
@@ -159,39 +241,45 @@ fn hidden_unsafe_links_are_rejected_and_other_requirements_remain() -> Result<()
         "HTTPS://example.org/",
         "https://example.org\\evil",
     ] {
-        if let DocKind::Link {
-            target: LinkTarget::External { uri: value },
-            ..
-        } = &mut request.set.pages[0].document.value.nodes[node].kind
-        {
+        let mut changed = original.clone();
+        if let Kind::ExternalLink { uri: value, .. } = &mut changed.value.nodes[node] {
             *value = uri.into();
         }
+        let mut document = document.clone();
+        document.value.embeds[hidden.0 as usize] =
+            sentence::embed(&changed, registry, &mut codec, &mut budget()).map_err(err)?;
+        let all = sentences::collect(&document, surface, &[], registry, &mut codec, &mut budget())
+            .map_err(err)?;
+        let result = sentences::html::prepare(
+            &all,
+            registry,
+            &mut |_, _, embed, _| {
+                Err::<nepl3_markup::html::HtmlRequest, _>(html::Error::ForeignAdapterRequired(
+                    embed,
+                ))
+            },
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        );
         assert!(
-            matches!(render_pages(&request, registry, &mut codec, &mut budget()), Err(PagesRenderError::InvalidExternalUri { page: 0, node: n }) if n == node as u64),
+            matches!(result, Err(sentences::html::Error::Sentence { embed, error: html::RenderFailure::Sentence(html::Error::Markup(nepl3_markup::html::HtmlError::Attribute { .. })) }) if embed == hidden),
             "{uri}"
         );
     }
-    if let DocKind::Link { target, .. } = &mut request.set.pages[0].document.value.nodes[node].kind
-    {
-        *target = LinkTarget::External {
-            uri: "https://example.org/".into(),
-        };
-    }
-    render_pages(&request, registry, &mut codec, &mut budget()).map_err(err)?;
     let mut stopped = budget();
     stopped.cancel();
     assert!(matches!(
-        render_pages(&request, registry, &mut codec, &mut stopped),
-        Err(PagesRenderError::Stopped(StopReason::Cancelled))
+        sentences::collect(document, surface, &[], registry, &mut codec, &mut stopped),
+        Err(sentences::Error::Stopped(StopReason::Cancelled))
     ));
     let (compiled, request) = self::request(
-        r#"article en "Image" body cons paragraph cons sentence cons link external "https://example.org/" text "Link" cons image asset "logo" none "Logo" nil nil nil"#,
+        r#"article en sentence "Image" body cons paragraph cons sentence sentence cons link "https://example.org/" text "Link" nil nil cons image asset "logo" none sentence "Logo" none nil"#,
     )?;
     let mut admission = SourceAdmission::default();
     let mut codec =
         FoundationCodec::new(&compiled.doc.registry, &empty, &mut admission).map_err(err)?;
     assert!(
-        matches!(render_pages(&request, &compiled.doc.registry, &mut codec, &mut budget()), Err(PagesRenderError::NeedsResolution(plan)) if plan.remaining.len() == 2)
+        matches!(render_pages(&request, &compiled.doc.registry, &mut codec, &mut budget()), Err(PagesRenderError::NeedsResolution(plan)) if plan.remaining.iter().any(|item| matches!(item.requirement, nepl3_doc_core::prepare::DocRequirement::Asset { .. })))
     );
     Ok(())
 }
