@@ -162,6 +162,7 @@ fn cached_article_keeps_shared_sentence_occurrences_distinct() -> Result<(), Str
 
 pub(super) fn verify<C: FoundationValueCodec>(
     prepared: &html::PreparedPages<'_, '_, '_, '_>,
+    plans: &[crate::doc::export::pages::discovery::namespace::Plan<'_, '_>],
     compiled: &Compiled,
     registry: &SchemaRegistry,
     codec: &mut C,
@@ -389,6 +390,7 @@ where
         requests.push(article.fragment.markup);
     }
     verify_cached(prepared, compiled, registry, codec, &requests)?;
+    verify_discovered(prepared, plans, registry, &requests)?;
     let checked = html::output::check(prepared, &requests, b).map_err(err)?;
     let rendered = checked
         .pages()
@@ -416,6 +418,120 @@ where
             ..
         })
     ));
+    Ok(())
+}
+
+fn verify_discovered(
+    prepared: &html::PreparedPages<'_, '_, '_, '_>,
+    plans: &[crate::doc::export::pages::discovery::namespace::Plan<'_, '_>],
+    registry: &SchemaRegistry,
+    expected: &[nepl3_markup::html::HtmlRequest],
+) -> Result<(), String> {
+    use crate::doc::export::pages::composition as host;
+    for (page, (plan, expected)) in plans.iter().zip(expected).enumerate() {
+        let run = |b: &mut Budget| {
+            host::render(
+                plan,
+                prepared,
+                page as u64,
+                registry,
+                &mut |_, _, _, _, _| Err::<_, Failure>(Failure("unexpected Sentence guest".into())),
+                &mut |_, _, _, _| Err::<_, Failure>(Failure("unexpected Doc guest".into())),
+                b,
+                &mut SourceAdmission::default(),
+            )
+        };
+        let mut measured = budget();
+        let output = run(&mut measured).map_err(err)?;
+        assert_eq!(
+            &output.members()[0].document().output().fragment.markup,
+            expected
+        );
+        assert!(core::ptr::eq(output.plan(), plan));
+        // The nested Doc label belongs to a distinct Sentence arena; each
+        // insertion retains its own placement and original syntax reference.
+        for (input, member) in plan.input().members().iter().zip(output.members()) {
+            for placement in &member.document().output().foreign {
+                let sentence = member.sentence(placement.embed).ok_or("Sentence output")?;
+                assert!(core::ptr::eq(
+                    sentence.input(),
+                    input.sentences()[placement.embed.0 as usize]
+                        .as_ref()
+                        .ok_or("input slot")?
+                ));
+                assert_eq!(
+                    placement.elements,
+                    sentence.markup().fragment.nodes.len() as u64
+                );
+                for origin in sentence.origins() {
+                    let mut expected =
+                        sentence.markup().fragment.nodes[origin.element as usize].clone();
+                    match &mut expected {
+                        HtmlNode::Text { .. } => {}
+                        HtmlNode::Element { children, .. }
+                        | HtmlNode::MathElement { children, .. } => {
+                            for child in children {
+                                *child += placement.first_element;
+                            }
+                        }
+                    }
+                    assert_eq!(
+                        member.document().output().fragment.markup.fragment.nodes
+                            [(placement.first_element + origin.element) as usize],
+                        expected
+                    );
+                }
+            }
+        }
+        for (reason, amount) in [
+            (StopReason::WorkLimit, measured.usage().work),
+            (
+                StopReason::AllocationLimit,
+                measured.usage().allocation_units,
+            ),
+            (StopReason::NodeLimit, measured.usage().nodes),
+            (StopReason::DepthLimit, measured.usage().depth),
+        ] {
+            for shortage in [0, 1] {
+                let mut limits = measured.limits();
+                match reason {
+                    StopReason::WorkLimit => limits.work = amount - shortage,
+                    StopReason::AllocationLimit => limits.allocation_units = amount - shortage,
+                    StopReason::NodeLimit => limits.nodes = amount - shortage,
+                    StopReason::DepthLimit => limits.depth = amount - shortage,
+                    _ => return Err("resource".into()),
+                }
+                let result = run(&mut Budget::new(limits));
+                if shortage == 0 {
+                    assert!(result.is_ok(), "{reason:?}");
+                } else {
+                    assert!(
+                        matches!(result, Err(host::Error::Stopped(actual)) if actual == reason),
+                        "{reason:?}"
+                    );
+                }
+            }
+        }
+        let mut cancelled = budget();
+        cancelled.cancel();
+        assert!(matches!(
+            run(&mut cancelled),
+            Err(host::Error::Stopped(StopReason::Cancelled))
+        ));
+        assert!(matches!(
+            host::render(
+                plan,
+                prepared,
+                99,
+                registry,
+                &mut |_, _, _, _, _| Err::<_, Failure>(Failure("unexpected callback".into())),
+                &mut |_, _, _, _| Err::<_, Failure>(Failure("unexpected callback".into())),
+                &mut budget(),
+                &mut SourceAdmission::default()
+            ),
+            Err(host::Error::Selection(_))
+        ));
+    }
     Ok(())
 }
 

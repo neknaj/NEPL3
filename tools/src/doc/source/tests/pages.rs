@@ -6,6 +6,7 @@ use nepl3_doc_core::{
 };
 
 mod article;
+mod composition;
 mod discovery;
 mod selection;
 
@@ -270,7 +271,14 @@ fn article_sentence_doc_links_resolve_in_page_namespaces() -> Result<(), String>
             let prepared =
                 nepl3_doc_html::pages::namespace::prepare(&resolved, &options, &mut budget())
                     .map_err(err)?;
-            article::verify(&prepared, &compiled, registry, &mut codec, &mut budget())?;
+            article::verify(
+                &prepared,
+                &members,
+                &compiled,
+                registry,
+                &mut codec,
+                &mut budget(),
+            )?;
             let mut measured = budget();
             let pending = nepl3_doc_html::pages::namespace::render_member(
                 &prepared,
