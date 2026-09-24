@@ -11,9 +11,9 @@ use alloc::{string::String, vec::Vec};
 use nepl3_core::{budget::StopReason, source::Digest};
 use nepl3_markup::html::{HtmlError, HtmlRequest};
 pub use prepare::{
-    LocalPreparationError, PreparedInlineWithForeign, PreparedLocalArticle, PreparedLocalInline,
-    PreparedLocalSentence, prepare_inline_with_foreign, prepare_local, prepare_local_inline,
-    prepare_local_sentence,
+    LocalPreparationError, PreparedArticleWithForeign, PreparedInlineWithForeign,
+    PreparedLocalArticle, PreparedLocalInline, PreparedLocalSentence, prepare_article_with_foreign,
+    prepare_inline_with_foreign, prepare_local, prepare_local_inline, prepare_local_sentence,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -54,7 +54,7 @@ pub struct ForeignPlacement {
     pub first_element: u64,
     pub elements: u64,
 }
-pub struct RenderedInlineWithForeign {
+pub struct RenderedWithForeign {
     pub fragment: RenderedFragment,
     /// One placement per display occurrence, including shared embeds.
     pub foreign: Vec<ForeignPlacement>,
@@ -99,7 +99,9 @@ impl From<HtmlError> for RenderError {
         }
     }
 }
-pub use build::{render, render_inline, render_inline_with_foreign, render_sentence};
+pub use build::{
+    render, render_article_with_foreign, render_inline, render_inline_with_foreign, render_sentence,
+};
 
 /// Fixed backend resource; a future document shell includes these exact bytes.
 pub const STYLESHEET: &str = include_str!("../assets/doc.css");

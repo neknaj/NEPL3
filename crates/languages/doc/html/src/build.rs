@@ -357,7 +357,18 @@ pub fn render_inline_with_foreign<E>(
     prepared: &PreparedInlineWithForeign<'_>,
     adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
     budget: &mut Budget,
-) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
+) -> Result<RenderedWithForeign, ForeignRenderError<E>> {
+    render_prepared_with_foreign(&prepared.0, &[], adapter, budget, true)
+}
+
+/// Compose selected guest occurrences into the Article and validate the final
+/// HTML namespace. The adapter receives immutable slots and the current depth.
+/// Foreign placements retain each occurrence's owning embed and element range.
+pub fn render_article_with_foreign<E>(
+    prepared: &PreparedArticleWithForeign<'_>,
+    adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
+    budget: &mut Budget,
+) -> Result<RenderedWithForeign, ForeignRenderError<E>> {
     render_prepared_with_foreign(&prepared.0, &[], adapter, budget, true)
 }
 
@@ -383,7 +394,7 @@ pub(super) fn namespace_member_with_foreign<E>(
     prepared: &crate::prepare::PreparedRendering<'_>,
     adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
     budget: &mut Budget,
-) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
+) -> Result<RenderedWithForeign, ForeignRenderError<E>> {
     render_prepared_with_foreign(prepared, &[], adapter, budget, false)
 }
 
@@ -393,7 +404,7 @@ fn render_prepared_with_foreign<E>(
     adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
     budget: &mut Budget,
     validate_final: bool,
-) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
+) -> Result<RenderedWithForeign, ForeignRenderError<E>> {
     budget.poll()?;
     let mut w = Builder {
         prepared,
@@ -518,7 +529,7 @@ fn render_prepared_with_foreign<E>(
             }
         }
     };
-    Ok(RenderedInlineWithForeign {
+    Ok(RenderedWithForeign {
         fragment: RenderedFragment {
             document_digest: prepared.identity,
             options: RenderOptions { parallel },

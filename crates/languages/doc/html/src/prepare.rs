@@ -31,6 +31,10 @@ pub struct PreparedLocalInline<'a>(pub(crate) PreparedRendering<'a>);
 /// An Inline fragment whose only remaining requirements are explicit guests.
 /// The immutable document owns every closure passed to the rendering callback.
 pub struct PreparedInlineWithForeign<'a>(pub(crate) PreparedRendering<'a>);
+/// An Article whose remaining requirements are explicit guest slots.
+/// Guest meaning validation remains the selected adapter's responsibility,
+/// including content hidden by language selection.
+pub struct PreparedArticleWithForeign<'a>(pub(crate) PreparedRendering<'a>);
 pub(crate) struct PreparedRendering<'a> {
     pub(crate) document: &'a DocumentSyntax,
     pub(crate) options: &'a RenderOptions,
@@ -112,6 +116,36 @@ pub fn prepare_inline_with_foreign<'a, C: FoundationValueCodec>(
     }
     prepare_rendering(document, options, plan.document_digest, budget)
         .map(PreparedInlineWithForeign)
+}
+
+/// Inspect the complete Article before invoking any rendering adapter.
+/// Sentence and InlineMath slots accept phrasing output. Block guests, assets
+/// and page links require separate resolution and reject this entry.
+pub fn prepare_article_with_foreign<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    options: &'a RenderOptions,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<PreparedArticleWithForeign<'a>, LocalPreparationError<'a, C::Error>> {
+    let plan = prepare::inspect(document, registry, codec, budget).map_err(|e| match e {
+        PreparationError::Stopped(s) => LocalPreparationError::Stopped(s),
+        e => LocalPreparationError::Input(e),
+    })?;
+    for requirement in &plan.requirements {
+        budget.charge(Resource::Work, 1)?;
+        if !matches!(
+            requirement,
+            prepare::DocRequirement::Foreign {
+                kind: EmbedKind::Sentence | EmbedKind::SentenceInline | EmbedKind::InlineMath,
+                ..
+            }
+        ) {
+            return Err(LocalPreparationError::NeedsResolution(plan));
+        }
+    }
+    prepare_rendering(document, options, plan.document_digest, budget)
+        .map(PreparedArticleWithForeign)
 }
 
 pub(crate) fn prepare_rendering<'a, E>(

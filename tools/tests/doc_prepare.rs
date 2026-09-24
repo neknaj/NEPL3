@@ -2,6 +2,8 @@ use nepl3_core::source::{Digest, SourceAdmission, SourceStore};
 use nepl3_doc_core::{check::Category, lower, model::*, portable, prepare::*};
 use nepl3_tools::doc::source::{budget, compiled, err, with_input};
 use nepl3_wire::foundation::FoundationCodec;
+#[path = "doc/article.rs"]
+mod article;
 #[path = "doc/retention.rs"]
 mod retention;
 
