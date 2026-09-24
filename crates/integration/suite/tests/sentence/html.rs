@@ -498,6 +498,89 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
         );
     }
     assert_eq!(shared, original);
+    // Guest occurrences overlap each other and the built-in Ruby class. The
+    // paragraph must preserve the first occurrence across both Sentence parts.
+    let mut parts = Vec::new();
+    for names in [
+        ["guest-z", "nepl-ruby", "guest-a"],
+        ["guest-a", "nepl-ruby", "guest-b"],
+    ] {
+        let part = html::render_part_with_foreign(
+            &shared,
+            &r,
+            &mut |_, _, _| {
+                Ok::<_, Error>(HtmlRequest {
+                    fragment: HtmlFragment {
+                        root: 0,
+                        nodes: vec![
+                            HtmlNode::Element {
+                                tag: HtmlTag::Span,
+                                attributes: vec![HtmlAttribute::Class {
+                                    values: names.iter().map(|s| (*s).into()).collect(),
+                                }],
+                                children: vec![1],
+                            },
+                            HtmlNode::Text {
+                                text: "class guest".into(),
+                            },
+                        ],
+                    },
+                    slot: HtmlSlot::Phrasing,
+                    policy: HtmlPolicy {
+                        classes: names.iter().map(|s| (*s).into()).collect(),
+                    },
+                })
+            },
+            &mut b(),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(err)?;
+        parts.push(part);
+    }
+    let paragraph = html::paragraph::compose(parts, &mut b()).map_err(err)?;
+    let markup = paragraph.markup();
+    assert_eq!(
+        markup.policy.classes,
+        [
+            "guest-z",
+            "nepl-ruby",
+            "guest-a",
+            "nepl-sentence",
+            "nepl-base",
+            "nepl-reading",
+            "nepl-anno",
+            "nepl-notes",
+            "nepl-note",
+            "guest-b",
+        ]
+    );
+    assert_eq!(
+        markup
+            .fragment
+            .nodes
+            .iter()
+            .filter(|n| matches!(n,
+        HtmlNode::Text { text } if text == "class guest"))
+            .count(),
+        4
+    );
+    for names in [
+        ["guest-z", "nepl-ruby", "guest-a"],
+        ["guest-a", "nepl-ruby", "guest-b"],
+    ] {
+        assert_eq!(
+            markup
+                .fragment
+                .nodes
+                .iter()
+                .filter(|node| matches!(node,
+            HtmlNode::Element { attributes, .. } if attributes.iter().any(|a| matches!(a,
+                HtmlAttribute::Class { values } if values.iter().map(String::as_str).eq(names)))))
+                .count(),
+            2
+        );
+    }
+    validate(&markup.fragment, markup.slot, &markup.policy, &mut b()).map_err(err)?;
     // References across two Sentence occurrences are resolved by the complete
     // document. Pending parts retain their input owner and element mapping.
     for duplicate in [false, true] {

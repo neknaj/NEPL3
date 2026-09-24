@@ -64,7 +64,7 @@ pub fn compose<'a>(
         },
         b,
     )?;
-    let mut classes: Vec<String> = Vec::new();
+    let mut classes = classes::Classes::default();
     let mut placements = Vec::new();
     for part in parts {
         b.charge(Resource::Work, 1)?;
@@ -89,17 +89,7 @@ pub fn compose<'a>(
         };
         push(children, root, b)?;
         for class in part.policy.classes {
-            let mut present = false;
-            for prior in &classes {
-                b.charge(Resource::Work, prior.len().min(class.len()) as u64 + 1)?;
-                if prior == &class {
-                    present = true;
-                    break;
-                }
-            }
-            if !present {
-                push(&mut classes, class, b)?;
-            }
+            classes.push(class, b)?;
         }
         for origin in &mut origins {
             b.charge(Resource::Work, 1)?;
@@ -121,6 +111,7 @@ pub fn compose<'a>(
             b,
         )?;
     }
+    let classes = classes.finish(b)?;
     let markup = HtmlRequest {
         fragment: HtmlFragment { root: 0, nodes },
         slot: HtmlSlot::Block,

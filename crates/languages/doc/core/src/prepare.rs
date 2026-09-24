@@ -174,6 +174,8 @@ pub(crate) fn requirements<'a, C: FoundationValueCodec>(
 /// Discover all members of one resolved namespace in its exact occurrence order.
 /// Each document is rechecked against this codec/registry and shared source
 /// admission before its digest and requirements can become rendering inputs.
+/// Reserve and charge the complete plan array before inspecting members. A
+/// reservation failure publishes no plan and performs no member processing.
 pub fn inspect_namespace<'a, C: FoundationValueCodec>(
     namespace: &labels::namespace::CheckedNamespace<'_, 'a>,
     registry: &SchemaRegistry,
@@ -182,19 +184,22 @@ pub fn inspect_namespace<'a, C: FoundationValueCodec>(
 ) -> Result<Vec<DocPreparationPlan>, PreparationError<'a, C::Error>> {
     b.poll()?;
     let mut plans = Vec::new();
-    for document in namespace.documents() {
+    let documents = namespace.documents();
+    let count = documents.len();
+    let bytes = count
+        .checked_mul(core::mem::size_of::<DocPreparationPlan>())
+        .and_then(|bytes| u64::try_from(bytes).ok())
+        .ok_or_else(|| b.stop(StopReason::AllocationLimit))?;
+    b.charge(Resource::AllocationUnits, bytes)?;
+    plans
+        .try_reserve_exact(count)
+        .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+    for document in documents {
         let value = portable::to_value(document, registry, c, b)?;
         let document_digest = c
             .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
             .map_err(boundary)?;
         let requirements = discover(document, registry, c, b)?;
-        b.charge(
-            Resource::AllocationUnits,
-            core::mem::size_of::<DocPreparationPlan>() as u64,
-        )?;
-        plans
-            .try_reserve_exact(1)
-            .map_err(|_| b.stop(StopReason::AllocationLimit))?;
         plans.push(DocPreparationPlan {
             document_digest,
             requirements,
