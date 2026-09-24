@@ -128,7 +128,7 @@ pub fn generate_observed(
             "profile_sha256":digest_hex(profile.digest()),
             "doc_schema_sha256":digest_hex(compiled.doc.package.schema.digest),
             "renderer":"nepl3-tools.doc-pages-composed/1",
-            "identity_contract":"NEPL3.Doc.PageNamespaces.v1",
+            "identity_contract":"NEPL3.Doc.PageNamespaces.v2",
             "identity":digest_hex(rendered.identity),
             "options":{"parallel":"Rows"},
             "files":[{"path":"document.html","mime":"text/html; charset=utf-8","sha256":digest(html.as_bytes())},

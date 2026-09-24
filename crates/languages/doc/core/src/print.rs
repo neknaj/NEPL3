@@ -18,8 +18,8 @@ use nepl3_core::{
     value_codec::{FoundationCodecError, FoundationValueCodec},
 };
 
-pub const DOCUMENT_DOMAIN: &[u8] = b"NEPL3.Doc.Print.Document.v1\0";
-pub const GUEST_DOMAIN: &[u8] = b"NEPL3.Doc.Print.Guest.v1\0";
+pub const DOCUMENT_DOMAIN: &[u8] = b"NEPL3.Doc.Print.Document.v2\0";
+pub const GUEST_DOMAIN: &[u8] = b"NEPL3.Doc.Print.Guest.v2\0";
 
 /// Retrieve retained bytes only. This does not certify correspondence between
 /// the current guest syntax and that source, and `print` never calls it as a

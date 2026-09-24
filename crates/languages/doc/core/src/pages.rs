@@ -16,7 +16,7 @@ use nepl3_core::{
 
 pub mod namespace;
 
-pub const SET_DOMAIN: &[u8] = b"NEPL3.Doc.Pages.v1\0";
+pub const SET_DOMAIN: &[u8] = b"NEPL3.Doc.Pages.v2\0";
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PageRegistration {
     pub id: String,

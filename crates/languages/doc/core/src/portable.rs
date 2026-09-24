@@ -1,5 +1,6 @@
 //! Explicit Doc NDF schema adapters. Decoding produces raw data followed by the
 //! same source/category/graph checks used by native callers, not a render proof.
+mod owners;
 pub mod pages;
 pub mod prepare;
 pub mod print;
@@ -22,7 +23,7 @@ pub fn embed_value<C: FoundationValueCodec>(
     codec: &mut C,
     budget: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
-    input.put(schema(registry)?, codec, budget)
+    owners::embed_value(input, registry, codec, budget)
 }
 /// Borrow embeds from a DocumentSyntax value generated and validated by this
 /// crate in the same call. This accessor supplies no proof for incoming data.
@@ -34,7 +35,7 @@ pub(crate) fn embedded_values<'a, E>(
     budget.charge(Resource::Work, 1)?;
     let schema = schema(registry)?;
     let document = fields(value, schema, "DocumentSyntax", 5)?;
-    let value = fields(&document[0], schema, "DocValue", 3)?;
+    let value = fields(&document[0], schema, "DocValue", 4)?;
     match &value[2] {
         NdfValue::List(values) => Ok(values),
         _ => Err(PortableError::Shape),
@@ -166,7 +167,7 @@ fn encode_with_structure<'a, C: FoundationValueCodec>(
             .map_err(StructureError::from)?;
     }
     let mut scoped = c.scoped_with_mappings(&store, &document.source_maps);
-    let value = document.value.put(s, &mut scoped, b)?;
+    let value = owners::put(&document.value, registry, &mut scoped, b)?;
     let origins = scoped
         .encode_origins(&document.origins, b)
         .map_err(boundary)?;
@@ -197,7 +198,7 @@ pub fn from_value<C: FoundationValueCodec>(
             .map_err(StructureError::from)?;
     }
     let mut scoped = c.scoped(&store);
-    let value = Value::read(&fields[0], s, &mut scoped, b)?;
+    let value = owners::read(&fields[0], registry, &mut scoped, b)?;
     let origins = scoped.decode_origins(&fields[2], b).map_err(boundary)?;
     let source_maps: alloc::vec::Vec<nepl3_core::origin::Mapping> =
         Value::read(&fields[4], s, &mut scoped, b)?;

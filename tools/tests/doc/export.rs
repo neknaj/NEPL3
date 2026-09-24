@@ -153,7 +153,7 @@ fn page_export_resolves_recursive_sentence_guests_before_serialization() -> Resu
     assert!(guide.contains("id=\"n-696e6e6572\""));
     assert!(guide.contains("Target"));
     let manifest: serde_json::Value = serde_json::from_str(&output.manifest).map_err(super::err)?;
-    assert_eq!(manifest["identity_contract"], "NEPL3.Doc.PageNamespaces.v1");
+    assert_eq!(manifest["identity_contract"], "NEPL3.Doc.PageNamespaces.v2");
     assert_eq!(manifest["renderer"], "nepl3-tools.doc-pages-composed/1");
     // Same reader succeeds; resolution must reject the missing nested target.
     inputs[1].1 =

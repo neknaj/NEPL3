@@ -3,6 +3,45 @@ use super::*;
 use crate::pages::{self, PageDocument, PageLinkPlan, PageSet};
 use alloc::vec::Vec;
 
+/// Consume an already checked, locally generated PageSet into the v2 namespace
+/// identity input. Root documents are bound by member-0 digests, so their full
+/// canonical values need not be hashed a second time. This is not a decoder.
+pub(crate) fn namespace_identity_input<E>(
+    mut value: NdfValue,
+    members: Vec<NdfValue>,
+    b: &mut Budget,
+) -> Result<NdfValue, PortableError<E>> {
+    let NdfValue::Record(set) = &mut value else {
+        return Err(PortableError::Shape);
+    };
+    let [mut pages, files]: [NdfValue; 2] = core::mem::take(&mut set.fields)
+        .try_into()
+        .map_err(|_| PortableError::Shape)?;
+    let NdfValue::List(pages) = &mut pages else {
+        return Err(PortableError::Shape);
+    };
+    let mut registrations = Vec::new();
+    for mut page in core::mem::take(pages) {
+        b.charge(Resource::Work, 1)?;
+        let NdfValue::Record(page) = &mut page else {
+            return Err(PortableError::Shape);
+        };
+        let [registration, _document]: [NdfValue; 2] = core::mem::take(&mut page.fields)
+            .try_into()
+            .map_err(|_| PortableError::Shape)?;
+        pages::push(&mut registrations, registration, b)?;
+    }
+    let mut fields = Vec::new();
+    for value in [
+        NdfValue::List(registrations),
+        files,
+        NdfValue::List(members),
+    ] {
+        pages::push(&mut fields, value, b)?;
+    }
+    Ok(NdfValue::List(fields))
+}
+
 /// Borrow a generated PageSet's document value. This shape accessor is private
 /// to the crate and does not grant validation to arbitrary incoming NDF values.
 pub(crate) fn document_value<'a, E>(

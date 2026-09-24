@@ -4,7 +4,7 @@ use super::*;
 use crate::labels::namespace::{CheckedNamespace, MemberId};
 use nepl3_core::value::NdfValue;
 
-pub const DOMAIN: &[u8] = b"NEPL3.Doc.PageNamespaces.v1\0";
+pub const DOMAIN: &[u8] = b"NEPL3.Doc.PageNamespaces.v2\0";
 
 /// Member numbers are local to a page; node numbers are local to that member.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -85,7 +85,8 @@ impl<E> From<StopReason> for Error<'_, E> {
 /// Resolve all explicit occurrences, including hidden variants. Member 0 must
 /// borrow the exact PageDocument; further members are explicitly selected by
 /// the host in occurrence order. No guest is discovered, loaded or evaluated.
-/// Identity is DOMAIN + canonical NDF `[PageSet, [[member digest bytes...],...]]`.
+/// Identity is DOMAIN + canonical NDF
+/// `[[PageRegistration...], [PageFile...], [[member digest bytes...],...]]`.
 /// Each digest is the checked DocumentSyntax digest with DOCUMENT_DOMAIN; page
 /// and member ordering, repeated occurrences, source and provenance are bound.
 /// This native proof has no wire decoder. Portable callers must reconstruct
@@ -156,11 +157,10 @@ fn resolve_inner<'n, 'm, 'a, C: FoundationValueCodec>(
         push(&mut page_values, NdfValue::List(member_values), b)?;
         push(&mut plans, inspected, b)?;
     }
-    let mut fields = Vec::new();
-    push(&mut fields, value, b)?;
-    push(&mut fields, NdfValue::List(page_values), b)?;
+    let identity_value = portable::pages::namespace_identity_input(value, page_values, b)
+        .map_err(|error| Error::Page(PageError::from(error)))?;
     let identity = codec
-        .canonical_value_digest(DOMAIN, &NdfValue::List(fields), b)
+        .canonical_value_digest(DOMAIN, &identity_value, b)
         .map_err(|error| match error.stop_reason() {
             Some(reason) => Error::Stopped(reason),
             None => Error::Page(PageError::Boundary(portable::PortableError::Foundation(

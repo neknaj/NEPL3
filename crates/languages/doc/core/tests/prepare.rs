@@ -19,6 +19,8 @@ use nepl3_doc_core::{
     prepare::{self, DocRequirement, PreparationError},
 };
 use nepl3_wire::foundation::FoundationCodec;
+#[path = "prepare/owners.rs"]
+mod owners;
 #[path = "support/closure.rs"]
 mod support;
 fn b() -> Budget {
@@ -336,7 +338,7 @@ fn preparation_discovers_distinct_placements_without_loading_assets() -> Result<
         &mut b(),
     )
     .map_err(err)?;
-    let mut bytes = b"NEPL3.Doc.Prepare.Document.v1\0".to_vec();
+    let mut bytes = b"NEPL3.Doc.Prepare.Document.v2\0".to_vec();
     bytes.extend(wire);
     assert_eq!(actual.document_digest, Digest::of(&bytes));
     let mut guest_bytes = prepare::GUEST_DOMAIN.to_vec();

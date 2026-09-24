@@ -387,7 +387,7 @@ fn pages_resolve_forward_and_relative_links_with_explicit_identity() -> Result<(
     );
     assert!(p.plan().remaining.is_empty());
     let value = portable::pages::set_to_value(&set, &r, &mut c, &mut b()).map_err(err)?;
-    let mut bytes = b"NEPL3.Doc.Pages.v1\0".to_vec();
+    let mut bytes = b"NEPL3.Doc.Pages.v2\0".to_vec();
     bytes.extend(nepl3_wire::encode(&value, &mut b()).map_err(err)?);
     assert_eq!(p.plan().identity, Digest::of(&bytes));
     for (index, page) in set.pages.iter().enumerate() {

@@ -120,7 +120,7 @@ pub(super) fn record<E, const N: usize>(
         fields: Vec::from(values),
     }))
 }
-fn variant<E, const N: usize>(
+pub(super) fn variant<E, const N: usize>(
     s: &SchemaRef,
     name: &str,
     case: &str,
@@ -155,7 +155,7 @@ pub(super) fn fields<'a, E>(
         _ => Err(PortableError::Shape),
     }
 }
-fn case<'a, E>(
+pub(super) fn case<'a, E>(
     v: &'a NdfValue,
     s: &SchemaRef,
     name: &str,

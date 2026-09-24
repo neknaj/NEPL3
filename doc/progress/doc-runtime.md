@@ -19,11 +19,24 @@ parser全体の実時間・実メモリは未測定であり、単体文書の�
 環境集合の所有付きscopeも再利用する。正常な同期readでは、collectorが保持する
 環境検査済みprefixを引き継ぎ、追加sourceだけを検査する。resume経路は残件である。
 
-Doc coreの重複Sentence parserと公開parsing APIは撤去した。literalの意味・診断位置は
-独立Sentenceで、Doc normalizationとの一致はhost bridgeで検査する。Doc portable試験は
-source・Origin・Viewを持つ型付きfixtureを使い、現行のSentencePayload境界を保持する。
-Sentence consumerの所有移行、NEPL3a、旧lexical commentの全面撤去、T07/T21全体は
-未完了のままである。HTML/rustdocの高度化をこれらの本体開発の前提にしない。
+Sentence consumerの所有移行を実装中である。Docの文章slotは独立Sentenceの
+ForeignClosureを保持し、Articleの選択guestとnamespaceを明示して描画する。
+Docのportable表現は共有provenanceをDocOwner表へ一度記録し、各DocClosureが
+内容digestで参照する。同値の独立storageも同じportable byte列へ正規化する。
+Foundationの単独ForeignClosure交換形式は維持する。
+
+128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
+parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
+本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは
+92,233,883、累積AllocationUnitsは276,016,281である。AllocationUnitsは論理的な
+累積使用量であり、ピーク物理メモリは未測定である。
+
+owner codecとnamespace identityの13試験はnative・WASIで成功し、対象Clippyと
+thumbv6m compileも成功した。toolsのArticle・namespace・印字等の22試験と通常容量試験3件は
+nativeで成功した。全core試験は旧 `tests/pages.rs` の12型エラーでcompileが停止し、
+正式Markdown生成は旧Sentence構文の `doc/tutorial/miniexpr.nepld` で停止している。
+原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
+継続する。T07/T21と正式受入は引き続き未完了である。
 
 ## 段階別の履歴
 

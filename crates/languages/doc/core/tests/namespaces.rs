@@ -130,7 +130,14 @@ fn set(r: &SchemaRegistry) -> Result<pages::PageSet, String> {
                 })
             })
             .collect::<Result<_, String>>()?,
-        files: vec![],
+        files: vec![pages::PageFile {
+            registration: pages::PageRegistration {
+                id: "attachment".into(),
+                source: "data/attachment.bin".into(),
+                route: "files/attachment.bin".into(),
+            },
+            content: pages::FileBytes(vec![0, 255]),
+        }],
     })
 }
 
@@ -225,9 +232,29 @@ fn selected_members_bind_link_owners_order_and_identity() -> Result<(), String> 
         scopes.push(NdfValue::List(members));
     }
     let mut bytes = pagespaces::DOMAIN.to_vec();
+    let NdfValue::Record(set_value) = &value else {
+        return Err("PageSet".into());
+    };
+    let [NdfValue::List(pages), files] = set_value.fields.as_slice() else {
+        return Err("pages".into());
+    };
+    let mut registrations = Vec::new();
+    for page in pages {
+        let NdfValue::Record(page) = page else {
+            return Err("PageDocument".into());
+        };
+        let [registration, _] = page.fields.as_slice() else {
+            return Err("page fields".into());
+        };
+        registrations.push(registration.clone());
+    }
     bytes.extend(
         nepl3_wire::encode(
-            &NdfValue::List(vec![value, NdfValue::List(scopes)]),
+            &NdfValue::List(vec![
+                NdfValue::List(registrations),
+                files.clone(),
+                NdfValue::List(scopes),
+            ]),
             &mut b(),
         )
         .map_err(err)?,
@@ -303,6 +330,45 @@ fn selected_members_bind_link_owners_order_and_identity() -> Result<(), String> 
 }
 
 #[test]
+fn namespace_identity_binds_attachment_content_and_registration() -> Result<(), String> {
+    fn identity(set: &pages::PageSet, r: &SchemaRegistry) -> Result<Digest, String> {
+        let mut admission = SourceAdmission::default();
+        let roots = set
+            .pages
+            .iter()
+            .map(|page| names::inspect(&page.document, r, &mut b(), &mut admission).map_err(err))
+            .collect::<Result<Vec<_>, _>>()?;
+        let first = [&roots[0]];
+        let second = [&roots[1]];
+        let first = names::resolve(&first, &mut b()).map_err(err)?;
+        let second = names::resolve(&second, &mut b()).map_err(err)?;
+        let sources = SourceStore::default();
+        let mut codec = FoundationCodec::new(r, &sources, &mut admission).map_err(err)?;
+        Ok(
+            pagespaces::resolve(set, &[&first, &second], r, &mut codec, &mut b())
+                .map_err(err)?
+                .identity(),
+        )
+    }
+    let r = registry()?;
+    let original = set(&r)?;
+    let expected = identity(&original, &r)?;
+    // Each independent change must invalidate the proof, including unchanged-size file bytes.
+    for change in 0..4 {
+        let mut changed = set(&r)?;
+        match change {
+            0 => changed.files[0].content.0[1] = 254,
+            1 => changed.files[0].registration.route = "other/attachment.bin".into(),
+            2 => changed.files[0].registration.source = "other/attachment.bin".into(),
+            3 => changed.files[0].registration.id = "renamed".into(),
+            _ => unreachable!(),
+        }
+        assert_ne!(identity(&changed, &r)?, expected);
+    }
+    Ok(())
+}
+
+#[test]
 fn composed_links_keep_relative_file_and_rejection_rules() -> Result<(), String> {
     enum Expected {
         Page(u64),
@@ -314,6 +380,7 @@ fn composed_links_keep_relative_file_and_rejection_rules() -> Result<(), String>
     }
     let r = registry()?;
     let mut set = set(&r)?;
+    set.files.clear();
     set.files.push(pages::PageFile {
         registration: pages::PageRegistration {
             id: "data".into(),

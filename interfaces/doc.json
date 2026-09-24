@@ -1044,10 +1044,23 @@
               }
             }
           }
+        ],
+        [
+          "owners",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "DocOwner"
+              }
+            }
+          }
         ]
       ],
       "constraints": [
-        "doc.category_graph"
+        "doc.category_graph",
+        "doc.canonical_owner_table"
       ]
     },
     "DocView": {
@@ -2259,9 +2272,9 @@
             "closure",
             {
               "named": {
-                "package": "nepl3.foundation",
+                "package": "nepl3.doc",
                 "revision": 1,
-                "name": "ForeignClosure"
+                "name": "DocClosure"
               }
             }
           ]
@@ -2275,6 +2288,94 @@
       },
       "constraints": [
         "doc.selected_content"
+      ]
+    },
+    "DocOwner": {
+      "record": [
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceContent"
+              }
+            }
+          }
+        ],
+        [
+          "origins",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Origin"
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceMapping"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": [
+        "doc.owner_provenance"
+      ]
+    },
+    "DocClosure": {
+      "record": [
+        [
+          "ownerDigest",
+          "Bytes32"
+        ],
+        [
+          "schema",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "SchemaRef"
+            }
+          }
+        ],
+        [
+          "category",
+          "Text"
+        ],
+        [
+          "syntax",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "SyntaxBundle"
+            }
+          }
+        ],
+        [
+          "environment",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "EnvironmentEntry"
+            }
+          }
+        ]
+      ],
+      "constraints": [
+        "doc.scoped_closure"
       ]
     }
   },

@@ -14,8 +14,8 @@ use nepl3_core::{
     value_codec::{FoundationCodecError, FoundationValueCodec},
 };
 
-pub const DOCUMENT_DOMAIN: &[u8] = b"NEPL3.Doc.PlainText.Document.v1\0";
-pub const GUEST_DOMAIN: &[u8] = b"NEPL3.Doc.PlainText.Guest.v1\0";
+pub const DOCUMENT_DOMAIN: &[u8] = b"NEPL3.Doc.PlainText.Document.v2\0";
+pub const GUEST_DOMAIN: &[u8] = b"NEPL3.Doc.PlainText.Guest.v2\0";
 /// Execute one request with the same Budget and SourceAdmission for document
 /// validation, identity computation and output. Malformed input is a boundary
 /// error; a resource stop during preparation is a formal stopped reply.

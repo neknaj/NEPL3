@@ -325,26 +325,6 @@ let f=fields(v,s,"DocNode",4)?;
 Ok(Self {kind:Value::read(&f[0],s,c,b)?,origin:Value::read(&f[1],s,c,b)?,span:Value::read(&f[2],s,c,b)?,locations:Value::read(&f[3],s,c,b)?})
 }
 }
-impl Value for DocEmbed {
-fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
-record(s,"DocEmbed",[self.kind.put(s,c,b)?,self.content.put(s,c,b)?],b)
-}
-fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
-b.charge(Resource::Work,40)?;
-let f=fields(v,s,"DocEmbed",2)?;
-Ok(Self {kind:Value::read(&f[0],s,c,b)?,content:Value::read(&f[1],s,c,b)?})
-}
-}
-impl Value for DocValue {
-fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
-record(s,"DocValue",[self.root.put(s,c,b)?,self.nodes.put(s,c,b)?,self.embeds.put(s,c,b)?],b)
-}
-fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
-b.charge(Resource::Work,40)?;
-let f=fields(v,s,"DocValue",3)?;
-Ok(Self {root:Value::read(&f[0],s,c,b)?,nodes:Value::read(&f[1],s,c,b)?,embeds:Value::read(&f[2],s,c,b)?})
-}
-}
 impl Value for DocView {
 fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
 record(s,"DocView",[self.head.put(s,c,b)?,self.view.put(s,c,b)?],b)
@@ -928,22 +908,6 @@ let (tag,f)=case(v,s,"PageDestination")?;
 match (tag,f.len()) {
 ("Page",1)=>Ok(Self::Page {index:Value::read(&f[0],s,c,b)?}),
 ("File",1)=>Ok(Self::File {index:Value::read(&f[0],s,c,b)?}),
-_=>Err(PortableError::Shape),}
-}
-}
-impl Value for DocContent {
-fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
-match self {
-Self::Syntax {closure} => variant(s,"DocContent","Syntax",[closure.put(s,c,b)?],b),
-Self::Value {value} => variant(s,"DocContent","Value",[value.put(s,c,b)?],b),
-}
-}
-fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
-b.charge(Resource::Work,42)?;
-let (tag,f)=case(v,s,"DocContent")?;
-match (tag,f.len()) {
-("Syntax",1)=>Ok(Self::Syntax {closure:Value::read(&f[0],s,c,b)?}),
-("Value",1)=>Ok(Self::Value {value:Value::read(&f[0],s,c,b)?}),
 _=>Err(PortableError::Shape),}
 }
 }

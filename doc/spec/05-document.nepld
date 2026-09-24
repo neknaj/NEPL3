@@ -35,6 +35,10 @@ body
         cons sentence cons code "interfaces/model.json" cons text " の " cons code "Doc:*" cons text " recordと " cons code "Doc/*" cons text " unionは、constructorの" cons ruby text "意味" text "いみ" cons text "を" cons ruby text "再帰的" text "さいきてき" cons text "な" cons ruby text "論理構造" text "ろんりこうぞう" cons text "として" cons ruby text "定義" text "ていぎ" cons text "する。" nil
         cons sentence cons text "Doc" cons ruby text "操作" text "そうさ" cons text "の" cons ruby text "交換形式" text "こうかんけいしき" cons text "は、" cons code "interfaces/doc.json" cons text " の " cons code "DocumentSyntax" cons text " と " cons code "DocValue" cons text " を" cons ruby text "正本" text "せいほん" cons text "とするarena" cons ruby text "表現" text "ひょうげん" cons text "である。" nil
         cons sentence cons code "DocValue.nodes" cons text " は" cons ruby text "文書" text "ぶんしょ" cons text "のnodeを" cons ruby text "格納" text "かくのう" cons text "する。" nil
+        cons "portable DocValueはroot・nodes・embeds・ownersの[順/じゅん]にfieldを[持/も]つ。ownersはDocOwnerの[表/ひょう]であり、[各/かく]entryはsources・origins・sourceMapsを[保持/ほじ]する。[同値/どうち]のowner[表/ひょう]を[一度/いちど]だけ[記録/きろく]し、Origin[列/れつ]の[順序/じゅんじょ]とIDを[維持/いじ]する。"
+        cons "ownerDigestは、domain NEPL3.Doc.Owner.v1とNUL、DocOwnerのcanonical NDF/1 CBORを[連結/れんけつ]したSHA-256である。ownersはownerDigestのbyte[列/れつ]の[昇順/しょうじゅん]とする。[同/おな]じdigestのentryは[内容全体/ないようぜんたい]を[比較/ひかく]して[統合/とうごう]し、[内容/ないよう]が[異/こと]なる[場合/ばあい]は[拒否/きょひ]する。native pointerや[共有/きょうゆう]storageの[配置/はいち]はportable identityへ[含/ふく]めない。"
+        cons "DocContent.SyntaxはDocClosureを[持/も]つ。DocClosureのfield[順/じゅん]はownerDigest・schema・category・syntax・environmentであり、syntaxはguestのSyntaxBundle、environmentは[選択/せんたく]したownerのEnvironmentEntryである。ownerDigestはBytes32である。rootはSyntaxBundle.rootから、EnvironmentRefはEnvironmentEntryから[復元/ふくげん]する。"
+        cons "[受信側/じゅしんがわ]はowner[表/ひょう]の[重複/じゅうふく]・[順序違反/じゅんじょいはん]・[未使用/みしよう]entry・[参照不足/さんしょうぶそく]を[拒否/きょひ]する。[各/かく]ownerのsource・Origin・mapを[検証/けんしょう]し、[各/かく]closureのguest[構文/こうぶん]・schema・[環境参照/かんきょうさんしょう]・[環境/かんきょう]digestを[検証/けんしょう]する。[単独/たんどく]のForeignClosure codecは[従来/じゅうらい]の[五/いつ]つのfieldを[保持/ほじ]する。"
         cons sentence cons code "DocNode.kind" cons text " がconstructorを" cons ruby text "表" text "あらわ" cons text "し、" cons ruby text "子" text "こ" cons text "のnodeはカテゴリ" cons ruby text "別" text "べつ" cons text "のindexで" cons ruby text "参照" text "さんしょう" cons text "する。" nil
         cons "wire tagはschemaの[明示的/めいじてき]なvariant[名/めい]とfield[列/れつ]に[対応/たいおう]させる。"
         cons "Rust enumの[宣言順/せんげんじゅん]からwire tagを[決定/けってい]することは[禁止/きんし]する。" nil
@@ -109,8 +113,8 @@ body
         cons "Link/Assetでは、[同/おな]じ[資源/しげん]を[参照/さんしょう]する[別/べつ]nodeは[個別/こべつ]の[要求/ようきゅう]となり、[共有/きょうゆう]nodeは[表示/ひょうじ]の[出現回数/しゅつげんかいすう]によらず[一/ひと]つの[要求/ようきゅう]となる。"
         cons "Codeも[構文/こうぶん]のままForeignとして[保持/ほじ]し、[意味/いみ]エラーを[含/ふく]む[例/れい]の[表示/ひょうじ]を[可能/かのう]にする。" nil
       cons paragraph
-        cons sentence cons text "documentDigestは " cons code "SHA-256(\"NEPL3.Doc.Prepare.Document.v1\\0\" || canonical-NDF/1-CBOR(DocumentSyntax))" cons text " で" cons ruby text "計算" text "けいさん" cons text "する。" nil
-        cons sentence cons text "guestDigestは " cons code "SHA-256(\"NEPL3.Doc.Prepare.Guest.v1\\0\" || canonical-NDF/1-CBOR(ForeignClosure))" cons text " で" cons ruby text "計算" text "けいさん" cons text "する。" nil
+        cons sentence cons text "documentDigestは " cons code "SHA-256(\"NEPL3.Doc.Prepare.Document.v2\\0\" || canonical-NDF/1-CBOR(DocumentSyntax))" cons text " で" cons ruby text "計算" text "けいさん" cons text "する。" nil
+        cons sentence cons text "guestDigestは " cons code "SHA-256(\"NEPL3.Doc.Prepare.Guest.v2\\0\" || canonical-NDF/1-CBOR(DocEmbed))" cons text " で" cons ruby text "計算" text "けいさん" cons text "する。" nil
         cons sentence cons text "domainの " cons code "\\0" cons text " はゼロbyteを" cons ruby text "表" text "あらわ" cons text "し、digestの" cons ruby text "長" text "なが" cons text "さは32byteである。" nil
         cons "digestの[入力/にゅうりょく]には、owner[環境/かんきょう]・source・Originを[含/ふく]める。"
         cons "Doc nodeとOrigin IDは[保持/ほじ]し、[共通/きょうつう]codecのsource[表順/ひょうじゅん]・guest NodeRef[正準化/せいじゅんか]に[従/したが]う。" nil
@@ -355,9 +359,9 @@ body
       cons paragraph
         cons "InlineMathは[暗黙/あんもく]にlower・[意味/いみ]check・[評価/ひょうか]しない。"
         cons sentence cons ruby text "必要" text "ひつよう" cons text "な" cons ruby text "表示" text "ひょうじ" cons text "textはhostが " cons code "ResolvedInlineText{documentDigest,embed,guestDigest,text}" cons text " として" cons ruby text "提供" text "ていきょう" cons text "する。" nil
-        cons sentence cons text "documentDigestは " cons code "SHA-256(\"NEPL3.Doc.PlainText.Document.v1\\0\" || canonical-NDF/1-CBOR(DocumentSyntax))" cons text "、guestDigestは " cons code "SHA-256(\"NEPL3.Doc.PlainText.Guest.v1\\0\" || canonical-NDF/1-CBOR(ForeignClosure))" cons text " とする。" nil
+        cons sentence cons text "documentDigestは " cons code "SHA-256(\"NEPL3.Doc.PlainText.Document.v2\\0\" || canonical-NDF/1-CBOR(DocumentSyntax))" cons text "、guestDigestは " cons code "SHA-256(\"NEPL3.Doc.PlainText.Guest.v2\\0\" || canonical-NDF/1-CBOR(DocEmbed))" cons text " とする。" nil
         cons sentence cons ruby text "引用内" text "いんようない" cons text "の " cons code "\\0" cons text " は" cons ruby text "一" text "ひと" cons text "つのゼロbyte、" cons ruby text "他" text "ほか" cons text "はASCII byteである。" nil
-        cons "[値/あたい]はそれぞれDocの[正式/せいしき]DocumentSyntax codecとfoundationの[正式/せいしき]ForeignClosure codecが[返/かえ]すschema[検査済/けんさず]み[値/あたい]であり、[型/かた]を[参照/さんしょう]するSchemaRefのdigestもcanonical CBORへ[含/ふく]める。"
+        cons "[値/あたい]はDocの[正式/せいしき]codecが[返/かえ]すschema[検査済/けんさず]みDocumentSyntaxとDocEmbedである。DocEmbedのownerDigestがowner[表/ひょう]の[内容全体/ないようぜんたい]を[識別/しきべつ]する。[型/かた]を[参照/さんしょう]するSchemaRefのdigestもcanonical CBORへ[含/ふく]める。"
         cons "guest[側/がわ]はowner[環境/かんきょう]・[元/もと]Origin[列/れつ]・source/map[閉包/へいほう]も[含/ふく]み、[局所/きょくしょ]EmbedRefだけの[一致/いっち]で[別/べつ]guestや[古/ふる]い[環境/かんきょう]のtextを[再利用/さいりよう]しない。" nil
       cons paragraph
         cons "[全提供/ぜんていきょう]entryについて32byte digest、[対象/たいしょう]InlineMath、[重複/ちょうふく]EmbedRef、[現在/げんざい]document/guest[両/りょう]identityとの[一致/いっち]を[検査/けんさ]する。"
@@ -427,7 +431,7 @@ body
         cons "[提供/ていきょう]bindingは[使用/しよう]の[有無/うむ]によらず[検査/けんさ]する。" nil
       cons paragraph
         cons sentence cons text "PrintedGuestは " cons code "{documentDigest,embed,guestDigest,text}" cons text "。" nil
-        cons sentence cons text "documentDigestは " cons code "SHA-256(\"NEPL3.Doc.Print.Document.v1\\0\" || canonical-NDF/1-CBOR(DocumentSyntax))" cons text "、guestDigestは " cons code "SHA-256(\"NEPL3.Doc.Print.Guest.v1\\0\" || canonical-NDF/1-CBOR(ForeignClosure))" cons text " とする。" nil
+        cons sentence cons text "documentDigestは " cons code "SHA-256(\"NEPL3.Doc.Print.Document.v2\\0\" || canonical-NDF/1-CBOR(DocumentSyntax))" cons text "、guestDigestは " cons code "SHA-256(\"NEPL3.Doc.Print.Guest.v2\\0\" || canonical-NDF/1-CBOR(DocEmbed))" cons text " とする。" nil
         cons sentence cons code "\\0" cons text " はゼロbyte、" cons ruby text "他" text "ほか" cons text "のdomain" cons ruby text "文字" text "もじ" cons text "はASCIIで、" cons ruby text "正式" text "せいしき" cons text "Doc/foundation codecが" cons ruby text "返" text "かえ" cons text "すschema" cons ruby text "検査済" text "けんさず" cons text "み" cons ruby text "値" text "あたい" cons text "のSchemaRef digest、owner" cons ruby text "環境" text "かんきょう" cons text "、" cons ruby text "元" text "もと" cons text "Origin" cons ruby text "表" text "ひょう" cons text "、source/map" cons ruby text "閉包" text "へいほう" cons text "を" cons ruby text "含" text "ふく" cons text "める。" nil
         cons "[全提供/ぜんていきょう]entryの32byte digest、EmbedRefの[存在/そんざい]、[重複/ちょうふく]、[両/りょう]identityを[検査/けんさ]し、[必要/ひつよう]な[印字/いんじ]がなければUnresolvedGuestとする。" nil
       cons paragraph

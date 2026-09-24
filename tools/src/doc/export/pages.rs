@@ -256,7 +256,7 @@ pub fn generate_with_resources(
     let output_identity =
         resources::execution_identity(rendered.identity, output_budget.limits(), initial_usage);
     let manifest = serde_json::to_string_pretty(&serde_json::json!({
-        "format":"nepl3.local-doc-pages/1","identity_contract":"NEPL3.Doc.PageNamespaces.v1","identity":digest_hex(rendered.identity),"pages":origins,"files":records,
+        "format":"nepl3.local-doc-pages/1","identity_contract":"NEPL3.Doc.PageNamespaces.v2","identity":digest_hex(rendered.identity),"pages":origins,"files":records,
         "execution_identity":digest_hex(output_identity),
         "phase_execution":{"contract":"nepl3.local-doc-pages.phases/1","identity":digest_hex(resources::phase_identity(output_identity,&profiles,phases))},
         "output_budget":{"contract":"nepl3.local-doc-pages.execution/1","limits":resources::limits(output_budget.limits()),

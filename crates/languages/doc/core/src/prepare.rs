@@ -14,8 +14,8 @@ use nepl3_core::{
     value_codec::{CanonicalDigestInput, FoundationCodecError, FoundationValueCodec},
 };
 
-pub const DOCUMENT_DOMAIN: &[u8] = b"NEPL3.Doc.Prepare.Document.v1\0";
-pub const GUEST_DOMAIN: &[u8] = b"NEPL3.Doc.Prepare.Guest.v1\0";
+pub const DOCUMENT_DOMAIN: &[u8] = b"NEPL3.Doc.Prepare.Document.v2\0";
+pub const GUEST_DOMAIN: &[u8] = b"NEPL3.Doc.Prepare.Guest.v2\0";
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DocRequirement {
     Link {
