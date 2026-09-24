@@ -10,6 +10,8 @@ mod article_math;
 mod article_namespace;
 #[path = "doc/retention.rs"]
 mod retention;
+#[path = "doc/sentence_slots.rs"]
+mod sentence_slots;
 
 // Both Math guests contain division by zero. Discovery retains syntax and
 // identifies dependencies without evaluating guests or fetching resources.

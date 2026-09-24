@@ -201,3 +201,189 @@ fn shared_child_still_counts_on_the_longest_path() -> Result<(), ShapeError> {
     assert_eq!(b.usage().nodes, 3);
     Ok(())
 }
+
+#[test]
+fn foreign_occurrences_preserve_sharing_order_roles_and_longest_depth() -> Result<(), ShapeError> {
+    use nepl3_doc_core::check::ForeignOccurrence;
+    let doc = value(
+        DocRoot::Block(BlockRef(3)),
+        vec![
+            DocKind::Sentence {
+                syntax: EmbedRef(0),
+            },
+            DocKind::Sentence {
+                syntax: EmbedRef(0),
+            },
+            DocKind::Paragraph {
+                items: vec![FlowRef(1), FlowRef(0)],
+            },
+            DocKind::Paragraph {
+                items: vec![FlowRef(0), FlowRef(2), FlowRef(1)],
+            },
+        ],
+    );
+    let original = doc.clone();
+    let checked = doc.validate_shape(&mut budget())?;
+    let expected: Vec<_> = [(0, 2), (1, 3), (0, 3), (1, 2)]
+        .into_iter()
+        .map(|(node, depth)| ForeignOccurrence {
+            node,
+            embed: EmbedRef(0),
+            kind: EmbedKind::Sentence,
+            depth,
+        })
+        .collect();
+    assert_eq!(checked.foreign_occurrences(&mut budget())?, expected);
+    assert_eq!(checked.foreign_depths(&mut budget())?, [3]);
+    for discovery in [false, true] {
+        let mut full = budget();
+        if discovery {
+            checked.foreign_occurrences(&mut full)?;
+        } else {
+            checked.foreign_depths(&mut full)?;
+        }
+        for resource in [
+            nepl3_core::budget::Resource::Work,
+            nepl3_core::budget::Resource::AllocationUnits,
+        ] {
+            for shortage in [0, 1] {
+                let mut limits = budget().limits();
+                let reason = match resource {
+                    nepl3_core::budget::Resource::Work => {
+                        limits.work = full.usage().work - shortage;
+                        StopReason::WorkLimit
+                    }
+                    _ => {
+                        limits.allocation_units = full.usage().allocation_units - shortage;
+                        StopReason::AllocationLimit
+                    }
+                };
+                let mut limited = Budget::new(limits);
+                let result = if discovery {
+                    checked.foreign_occurrences(&mut limited).map(|_| ())
+                } else {
+                    checked.foreign_depths(&mut limited).map(|_| ())
+                };
+                if shortage == 0 {
+                    result?;
+                } else {
+                    assert_eq!(result, Err(ShapeError::Stopped(reason)));
+                    assert_eq!(limited.poll(), Err(reason));
+                }
+            }
+        }
+        let mut cancelled = budget();
+        cancelled.cancel();
+        let result = if discovery {
+            checked.foreign_occurrences(&mut cancelled).map(|_| ())
+        } else {
+            checked.foreign_depths(&mut cancelled).map(|_| ())
+        };
+        assert_eq!(result, Err(ShapeError::Stopped(StopReason::Cancelled)));
+        let mut limits = budget().limits();
+        limits.depth = 7;
+        let mut nested = Budget::new(limits);
+        let result = nested.with_depth_at_least(5, |b| {
+            if discovery {
+                checked.foreign_occurrences(b).map(|_| ())
+            } else {
+                checked.foreign_depths(b).map(|_| ())
+            }
+        });
+        assert_eq!(result, Err(ShapeError::Stopped(StopReason::DepthLimit)));
+        assert_eq!(nested.current_depth(), 0);
+    }
+    assert_eq!(doc, original);
+    let parallel = value(
+        DocRoot::Flow(FlowRef(4)),
+        vec![
+            DocKind::Sentence {
+                syntax: EmbedRef(0),
+            },
+            DocKind::Sentence {
+                syntax: EmbedRef(0),
+            },
+            DocKind::Variant {
+                language: "ja".into(),
+                sentence: SentenceRef(0),
+            },
+            DocKind::Variant {
+                language: "en".into(),
+                sentence: SentenceRef(1),
+            },
+            DocKind::Parallel {
+                variants: vec![VariantRef(3), VariantRef(2)],
+            },
+        ],
+    );
+    assert_eq!(
+        parallel
+            .validate_shape(&mut budget())?
+            .foreign_occurrences(&mut budget())?
+            .iter()
+            .map(|o| (o.node, o.depth))
+            .collect::<Vec<_>>(),
+        [(1, 3), (0, 3)]
+    );
+    let mut figure = value(
+        DocRoot::Block(BlockRef(0)),
+        vec![
+            DocKind::CircuitFigure {
+                syntax: EmbedRef(1),
+                caption: SentenceRef(1),
+            },
+            DocKind::Sentence {
+                syntax: EmbedRef(0),
+            },
+        ],
+    );
+    let mut guest = figure.embeds[0].clone();
+    guest.kind = EmbedKind::CircuitFigure;
+    figure.embeds.push(guest);
+    let checked = figure.validate_shape(&mut budget())?;
+    assert_eq!(
+        checked
+            .foreign_occurrences(&mut budget())?
+            .iter()
+            .map(|o| (o.embed, o.kind, o.depth))
+            .collect::<Vec<_>>(),
+        [
+            (EmbedRef(1), EmbedKind::CircuitFigure, 1),
+            (EmbedRef(0), EmbedKind::Sentence, 2)
+        ]
+    );
+    assert_eq!(checked.foreign_depths(&mut budget())?, [2, 1]);
+    Ok(())
+}
+
+#[test]
+fn foreign_depths_visit_shared_dags_once_while_expansion_is_budgeted() -> Result<(), ShapeError> {
+    let mut previous = None;
+    for count in [128, 256, 512] {
+        let mut kinds = vec![DocKind::Sentence {
+            syntax: EmbedRef(0),
+        }];
+        for i in 1..count {
+            kinds.push(DocKind::Paragraph {
+                items: vec![FlowRef(i - 1), FlowRef(i - 1)],
+            });
+        }
+        let doc = value(DocRoot::Block(BlockRef(count - 1)), kinds);
+        let checked = doc.validate_shape(&mut budget())?;
+        let mut measured = budget();
+        assert_eq!(checked.foreign_depths(&mut measured)?, [count]);
+        if let Some(work) = previous {
+            assert!(measured.usage().work < work * 3);
+        }
+        previous = Some(measured.usage().work);
+        let mut limits = budget().limits();
+        limits.work = 10_000;
+        let mut limited = Budget::new(limits);
+        assert_eq!(
+            checked.foreign_occurrences(&mut limited),
+            Err(ShapeError::Stopped(StopReason::WorkLimit))
+        );
+        assert_eq!(limited.poll(), Err(StopReason::WorkLimit));
+    }
+    Ok(())
+}

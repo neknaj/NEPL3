@@ -64,21 +64,26 @@ fn article_section_resolves_sentence_guest_reference_after_first_receive() -> Re
         };
         let mut expected = None;
         for document in [&doc, &received] {
+            let selected = nepl3_suite::adapters::document::sentences::collect(
+                document,
+                surface,
+                &forms,
+                registry,
+                &mut receiver,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            assert!(core::ptr::eq(selected.document(), document));
+            assert_eq!(selected.occurrences().len(), 3);
             let mut sentences = Vec::new();
             let mut selections = Vec::new();
-            for slot in &document.value.embeds {
+            for (index, slot) in document.value.embeds.iter().enumerate() {
                 assert_eq!(slot.kind, EmbedKind::Sentence);
-                let input = sentence::lower(
-                    slot,
-                    surface,
-                    &forms,
-                    registry,
-                    &mut receiver,
-                    &mut budget(),
-                )
-                .map_err(err)?;
+                let input = selected
+                    .sentence(EmbedRef(index as u64))
+                    .ok_or("selected Sentence")?;
                 let selection = document_guests::collect(
-                    &input,
+                    input,
                     &compiled.doc.package.schema,
                     registry,
                     &mut receiver,

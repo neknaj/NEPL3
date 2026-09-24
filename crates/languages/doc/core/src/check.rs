@@ -2,9 +2,11 @@
 mod document;
 pub(crate) mod edges;
 mod graph;
+mod guests;
 use crate::model::DocValue;
 use alloc::vec::Vec;
 pub use document::{StructureError, ValidatedDocumentSyntax};
+pub use guests::ForeignOccurrence;
 use nepl3_core::budget::StopReason;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
