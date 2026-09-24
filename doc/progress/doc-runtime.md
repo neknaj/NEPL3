@@ -100,12 +100,13 @@ batch digestの各nodeで行っていた二重検索は、1回の検索と一致
 今回のWindows debug参考時間はそれぞれ3.250秒・5.931秒で、実時間の改善は未確定である。
 wire全70試験はnativeで成功し、batchの9試験はnative・WASI・独立nativeレビューで成功した。
 通常Work100Mへの適合は引き続き未達である。
-`doc/tutorial/miniexpr.nepld` は独立Sentence境界を明示する構文へ移行した。
-外部URLはSentenceのlink、次章への参照はDocのlinkへ接続し、本文・Ruby・節ID・順序を保持する。
-実原稿を通常予算でMarkdownへ投影し、両リンク・Ruby・RawCode2件の全文をnative・WASIで検査した。
-次章の参照先はこの試験に限って最小Docページを登録し、composition実原稿の処理保証と区別する。
-原稿全文と試験fixtureの独立した静的レビューを完了した。
-正式Markdown集合の生成は次の旧Sentence構文の `doc/tutorial/composition.nepld` で停止している。
+Hello・MiniExpr・compositionのtutorial正本は、独立Sentence境界を明示する構文へ移行した。
+外部URLはSentenceのlink、章間参照はDocのlinkへ接続し、本文・Ruby・節ID・順序を保持する。
+3章の実原稿を通常予算でMarkdownへ投影し、章間リンク・外部URL・Ruby・RawCode9件の全文を
+独立期待値で検査した。対象試験はnative・WASIで各1件成功した。
+原稿全文と試験差分の独立した静的レビューを完了した。今回の独立レビューは実行検証を含まない。
+正式Markdown集合の生成は次の旧Sentence構文の `doc/spec/00-contract.nepld` で停止している。
+集合生成と生成Markdownの更新は未完了である。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

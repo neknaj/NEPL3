@@ -563,7 +563,7 @@ fn annotated_page_set_keeps_stops_sticky_and_returns_no_partial_output() -> Resu
 }
 
 #[test]
-fn miniexpr_tutorial_projects_independent_sentences_and_links() -> Result<(), String> {
+fn tutorial_chapters_project_independent_sentences_and_links() -> Result<(), String> {
     let c = compiled()?;
     let set = PageSet {
         pages: vec![
@@ -574,14 +574,19 @@ fn miniexpr_tutorial_projects_independent_sentences_and_links() -> Result<(), St
                 "doc/tutorial/miniexpr.md",
                 include_str!("../../../doc/tutorial/miniexpr.nepld"),
             )?,
-            // A page target requires a registered Doc page. This minimal target
-            // isolates this chapter from the next chapter's pending migration.
             page(
                 &c,
                 "tutorial-composition",
                 "doc/tutorial/composition.nepld",
                 "doc/tutorial/composition.md",
-                r#"article en sentence "Composition" body nil"#,
+                include_str!("../../../doc/tutorial/composition.nepld"),
+            )?,
+            page(
+                &c,
+                "tutorial-hello",
+                "doc/tutorial/hello.nepld",
+                "doc/tutorial/hello.md",
+                include_str!("../../../doc/tutorial/hello.nepld"),
             )?,
         ],
         files: vec![],
@@ -594,10 +599,10 @@ fn miniexpr_tutorial_projects_independent_sentences_and_links() -> Result<(), St
         &c.doc.registry,
         &mut codec,
         &mut budget(),
-        &[&[], &[]],
+        &[&[], &[], &[]],
     )
     .map_err(err)?;
-    assert_eq!(artifact.pages.len(), 2);
+    assert_eq!(artifact.pages.len(), 3);
     let markdown = &artifact.pages[0].markdown;
     assert_eq!(
         links(markdown),
@@ -608,6 +613,43 @@ fn miniexpr_tutorial_projects_independent_sentences_and_links() -> Result<(), St
     );
     // Check the independent Sentence ruby and both original RawCode blocks.
     assert!(markdown.contains("<ruby>再帰的<rt>さいきてき</rt></ruby>"));
+    assert_eq!(
+        code_blocks(markdown)?,
+        [
+            "cargo run --locked --manifest-path conformance/extensions/hello/Cargo.toml --example miniexpr -- \"add 1 mul 2 3\"\n",
+            "add\n├── 1\n└── mul\n    ├── 2\n    └── 3\n",
+        ]
+    );
+    let composition = &artifact.pages[1].markdown;
+    assert_eq!(
+        links(composition),
+        ["https://github.com/neknaj/NEPL3/blob/main/conformance/extensions/suite/README.md"]
+    );
+    assert!(composition.contains("<ruby>二言語<rt>にげんご</rt></ruby>"));
+    assert_eq!(
+        code_blocks(composition)?,
+        [
+            "cargo run --locked --manifest-path conformance/extensions/hello/Cargo.toml --example composition -- \"add framed frame neg 7 2\"\n",
+            "MiniExpr: add\n├── MiniExpr: framed\n│   └── Frame: frame\n│       └── MiniExpr: neg 7\n└── MiniExpr: 2\n",
+            "cargo run --locked --manifest-path conformance/extensions/hello/Cargo.toml --example composition -- \"framed unknown\"\ncargo run --locked --manifest-path conformance/extensions/hello/Cargo.toml --example composition -- \"framed frame\"\n",
+            "cargo test --locked --manifest-path conformance/extensions/hello/Cargo.toml\n",
+        ]
+    );
+    let hello = &artifact.pages[2].markdown;
+    assert_eq!(links(hello), ["miniexpr.md"]);
+    assert!(hello.contains("<ruby>入力<rt>にゅうりょく</rt></ruby>"));
+    assert_eq!(
+        code_blocks(hello)?,
+        [
+            "cargo run --locked --manifest-path conformance/extensions/hello/Cargo.toml --example inspect -- \"hello 世界\"\n",
+            "Complete; cursor=12\nroot: NodeRef(0)\nnode 0: org.example.hello::Greeting [Child(NodeRef(1))]\nnode 1: org.example.hello::Name []\n",
+            "cargo run --locked --manifest-path conformance/extensions/hello/Cargo.toml --example inspect -- --partial \"hello \"\n",
+        ]
+    );
+    Ok(())
+}
+
+fn code_blocks(markdown: &str) -> Result<Vec<String>, String> {
     let mut blocks = Vec::new();
     let mut code = None;
     for event in Parser::new(markdown) {
@@ -622,14 +664,7 @@ fn miniexpr_tutorial_projects_independent_sentences_and_links() -> Result<(), St
             _ => {}
         }
     }
-    assert_eq!(
-        blocks,
-        [
-            "cargo run --locked --manifest-path conformance/extensions/hello/Cargo.toml --example miniexpr -- \"add 1 mul 2 3\"\n",
-            "add\n├── 1\n└── mul\n    ├── 2\n    └── 3\n",
-        ]
-    );
-    Ok(())
+    Ok(blocks)
 }
 
 #[test]
