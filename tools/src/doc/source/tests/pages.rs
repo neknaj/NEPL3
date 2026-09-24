@@ -93,7 +93,14 @@ fn article_sentence_doc_links_resolve_in_page_namespaces() -> Result<(), String>
         }
         let set = pages::PageSet {
             pages,
-            files: vec![],
+            files: vec![pages::PageFile {
+                registration: pages::PageRegistration {
+                    id: "download".into(),
+                    source: "download.txt".into(),
+                    route: "docs/download.txt".into(),
+                },
+                content: pages::FileBytes(b"download".to_vec()),
+            }],
         };
         let registry = &compiled.doc.registry;
         let store = SourceStore::default();
@@ -231,9 +238,298 @@ fn article_sentence_doc_links_resolve_in_page_namespaces() -> Result<(), String>
                     .map_err(err)?,
                 operand
             );
+            let options = nepl3_doc_html::RenderOptions {
+                parallel: nepl3_doc_html::ParallelMode::Rows,
+            };
+            let prepared =
+                nepl3_doc_html::pages::namespace::prepare(&resolved, &options, &mut budget())
+                    .map_err(err)?;
+            let mut measured = budget();
+            let pending = nepl3_doc_html::pages::namespace::render_member(
+                &prepared,
+                plan.owner(),
+                &mut |guest, _, b| {
+                    super::namespace::sentence_label(guest, &compiled, registry, &mut codec, b)
+                },
+                &mut measured,
+            )
+            .map_err(err)?;
+            assert_eq!(pending.owner(), plan.owner());
+            assert_eq!(pending.namespace_identity(), resolved.identity());
+            let output = pending.output();
+            assert_eq!(output.fragment.document_digest, plan.document_digest());
+            assert_eq!(output.foreign.len(), 1);
+            use nepl3_markup::html::{HtmlAttribute, HtmlHref, HtmlNode};
+            assert!(output.fragment.origins.iter().any(|origin| origin.node == link.node && matches!(&output.fragment.markup.fragment.nodes[origin.element as usize], HtmlNode::Element { attributes, .. } if attributes.contains(&HtmlAttribute::Href { value: HtmlHref::BetweenArtifacts { source: "docs/first.html".into(), target: "docs/second.html".into(), fragment: Some("n-746172676574".into()) } }))));
+            let placement = &output.foreign[0];
+            let range = placement.first_element as usize
+                ..(placement.first_element + placement.elements) as usize;
+            assert!(
+                output.fragment.markup.fragment.nodes[range]
+                    .iter()
+                    .any(|node| matches!(node, HtmlNode::Text { text } if text == "Go"))
+            );
+            let mut calls = 0;
+            assert!(matches!(
+                nepl3_doc_html::pages::namespace::render_member(
+                    &prepared,
+                    scopes::Owner {
+                        page: 0,
+                        member: namespace::MemberId(99)
+                    },
+                    &mut |_, _, _| {
+                        calls += 1;
+                        Err::<nepl3_markup::html::HtmlRequest, ()>(())
+                    },
+                    &mut budget()
+                ),
+                Err(nepl3_doc_html::pages::namespace::MemberError::Selection(_))
+            ));
+            assert_eq!(calls, 0);
+            use nepl3_core::budget::StopReason;
+            use nepl3_doc_html::pages::namespace as html;
+            for reason in [
+                StopReason::WorkLimit,
+                StopReason::AllocationLimit,
+                StopReason::Cancelled,
+            ] {
+                let mut stopped = budget();
+                stopped.stop(reason);
+                assert!(
+                    matches!(html::prepare(&resolved, &options, &mut stopped), Err(html::PreparationError::Stopped(actual)) if actual == reason)
+                );
+                assert!(
+                    matches!(html::render_member(&prepared, plan.owner(), &mut |_, _, _| { calls += 1; Err::<nepl3_markup::html::HtmlRequest, ()>(()) }, &mut stopped), Err(html::MemberError::Stopped(actual)) if actual == reason)
+                );
+                assert_eq!(calls, 0);
+                let mut stopped = budget();
+                let result = html::render_member(
+                    &prepared,
+                    plan.owner(),
+                    &mut |_, _, b| {
+                        b.stop(reason);
+                        Ok::<_, ()>(output.fragment.markup.clone())
+                    },
+                    &mut stopped,
+                );
+                assert!(
+                    matches!(result, Err(html::MemberError::Stopped(actual)) if actual == reason)
+                );
+            }
+            assert!(matches!(
+                html::render_member(
+                    &prepared,
+                    plan.owner(),
+                    &mut |_, _, _| {
+                        calls += 1;
+                        Err::<nepl3_markup::html::HtmlRequest, _>("adapter failure")
+                    },
+                    &mut budget()
+                ),
+                Err(html::MemberError::Render {
+                    error: nepl3_doc_html::ForeignRenderError::Foreign("adapter failure"),
+                    ..
+                })
+            ));
+            assert_eq!(calls, 1);
+            let target = html::render_member(
+                &prepared,
+                scopes::Owner {
+                    page: 1,
+                    member: namespace::MemberId(1),
+                },
+                &mut |guest, _, b| {
+                    super::namespace::sentence_label(guest, &compiled, registry, &mut codec, b)
+                },
+                &mut budget(),
+            )
+            .map_err(err)?;
+            // Exercise completed-output checks on the two independent Inline
+            // outputs. Article insertion and its source map are separate tests.
+            let requests = [
+                output.fragment.markup.clone(),
+                target.output().fragment.markup.clone(),
+            ];
+            let checked_output =
+                html::output::check(&prepared, &requests, &mut budget()).map_err(err)?;
+            assert_eq!(checked_output.pages().len(), 2);
+            assert_eq!(checked_output.namespace_identity(), resolved.identity());
+            exact_resource_boundaries(|b| html::prepare(&resolved, &options, b).is_ok());
+            exact_resource_boundaries(|b| {
+                html::render_member(
+                    &prepared,
+                    plan.owner(),
+                    &mut |guest, _, b| {
+                        super::namespace::sentence_label(guest, &compiled, registry, &mut codec, b)
+                    },
+                    b,
+                )
+                .is_ok()
+            });
+            exact_resource_boundaries(|b| html::output::check(&prepared, &requests, b).is_ok());
+            assert!(matches!(
+                html::output::check(&prepared, &requests[..1], &mut budget()),
+                Err(html::output::Error::PageCount)
+            ));
+            for case in 0..6 {
+                let mut modified = requests.clone();
+                for node in &mut modified[0].fragment.nodes {
+                    if let HtmlNode::Element { attributes, .. } = node {
+                        for attribute in attributes {
+                            if let HtmlAttribute::Href {
+                                value:
+                                    HtmlHref::BetweenArtifacts {
+                                        source,
+                                        target,
+                                        fragment,
+                                    },
+                            } = attribute
+                            {
+                                match case {
+                                    0 => *source = "docs/wrong.html".into(),
+                                    1 => *target = "docs/missing.html".into(),
+                                    2 => *fragment = Some("n-missing".into()),
+                                    3 => {
+                                        *attribute = HtmlAttribute::Href {
+                                            value: HtmlHref::External {
+                                                uri: "javascript:alert(1)".into(),
+                                            },
+                                        }
+                                    }
+                                    _ => {
+                                        *target = "docs/download.txt".into();
+                                        if case == 4 {
+                                            *fragment = None;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                let result = html::output::check(&prepared, &modified, &mut budget());
+                match case {
+                    0 => assert!(matches!(
+                        result,
+                        Err(html::output::Error::SourceRoute { page: 0, .. })
+                    )),
+                    1 => assert!(matches!(
+                        result,
+                        Err(html::output::Error::TargetRoute { page: 0, .. })
+                    )),
+                    2 => assert!(matches!(
+                        result,
+                        Err(html::output::Error::MissingAnchor {
+                            page: 0,
+                            target: 1,
+                            ..
+                        })
+                    )),
+                    3 => assert!(matches!(
+                        result,
+                        Err(html::output::Error::Html { page: 0, .. })
+                    )),
+                    4 => assert!(result.is_ok()),
+                    _ => assert!(matches!(
+                        result,
+                        Err(html::output::Error::FileFragment { page: 0, .. })
+                    )),
+                }
+            }
             identities.push(resolved.identity());
         }
         assert_eq!(identities[0], identities[1]);
+    }
+    Ok(())
+}
+
+fn exact_resource_boundaries(mut run: impl FnMut(&mut Budget) -> bool) {
+    use nepl3_core::budget::StopReason;
+    let mut measured = budget();
+    assert!(run(&mut measured));
+    let used = measured.usage();
+    for (reason, amount) in [
+        (StopReason::WorkLimit, used.work),
+        (StopReason::AllocationLimit, used.allocation_units),
+    ] {
+        assert!(amount > 0);
+        for limit in [amount - 1, amount] {
+            let mut limits = measured.limits();
+            match reason {
+                StopReason::WorkLimit => limits.work = limit,
+                StopReason::AllocationLimit => limits.allocation_units = limit,
+                _ => unreachable!("fixed cases"),
+            }
+            let mut limited = Budget::new(limits);
+            assert_eq!(run(&mut limited), limit == amount);
+            assert_eq!(
+                limited.poll(),
+                if limit == amount { Ok(()) } else { Err(reason) }
+            );
+        }
+    }
+}
+
+#[test]
+fn page_preparation_preserves_unresolved_asset_requirement() -> Result<(), String> {
+    let compiled = compiled()?;
+    let source = r#"article en sentence "Title" body cons image asset "figure.svg" none sentence "Alternative" none nil"#;
+    for native in [false, true] {
+        with_named_input(
+            native,
+            &compiled,
+            source,
+            "asset",
+            "Article",
+            |tree, profile, b, a| {
+                let registry = profile.registry();
+                let input = tree
+                    .tree()
+                    .bundle
+                    .validate_with_sources(registry, b, a)
+                    .map_err(err)?;
+                let store = SourceStore::default();
+                let mut admission = SourceAdmission::default();
+                let mut codec =
+                    FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+                let document = lower::document(
+                    &input,
+                    &compiled.doc.package.schema,
+                    Category::Article,
+                    registry,
+                    b,
+                    &mut codec,
+                )
+                .map_err(err)?;
+                let set = pages::PageSet {
+                    pages: vec![pages::PageDocument {
+                        registration: pages::PageRegistration {
+                            id: "asset".into(),
+                            source: "asset.nepld".into(),
+                            route: "asset.html".into(),
+                        },
+                        document,
+                    }],
+                    files: vec![],
+                };
+                let mut admission = SourceAdmission::default();
+                let member =
+                    namespace::inspect(&set.pages[0].document, registry, b, &mut admission)
+                        .map_err(err)?;
+                let members = [&member];
+                let checked = namespace::resolve(&members, b).map_err(err)?;
+                let namespaces = [&checked];
+                let resolved =
+                    scopes::resolve(&set, &namespaces, registry, &mut codec, b).map_err(err)?;
+                let options = nepl3_doc_html::RenderOptions {
+                    parallel: nepl3_doc_html::ParallelMode::Rows,
+                };
+                assert!(
+                    matches!(nepl3_doc_html::pages::namespace::prepare(&resolved, &options, b), Err(nepl3_doc_html::pages::namespace::PreparationError::NeedsResolution { owner: scopes::Owner { page: 0, member: namespace::MemberId(0) }, requirement: nepl3_doc_core::prepare::DocRequirement::Asset { asset, .. } }) if asset.id == "figure.svg")
+                );
+                Ok(())
+            },
+        )?;
     }
     Ok(())
 }

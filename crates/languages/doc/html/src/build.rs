@@ -404,7 +404,7 @@ pub(super) fn namespace_member_with_foreign<E>(
     render_prepared_with_foreign(prepared, &[], adapter, budget, false)
 }
 
-fn render_prepared_with_foreign<E>(
+pub(crate) fn render_prepared_with_foreign<E>(
     prepared: &crate::prepare::PreparedRendering<'_>,
     links: &[(u64, HtmlHref)],
     adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,

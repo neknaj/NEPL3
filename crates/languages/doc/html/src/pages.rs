@@ -11,6 +11,7 @@ use nepl3_doc_core::pages::{self, PageDestination, PageLinkPlan, PageSet};
 use nepl3_markup::html::{HtmlAttribute, HtmlHref, HtmlNode};
 
 mod anchors;
+pub mod namespace;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PagesHtmlRequest {
@@ -74,21 +75,7 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
             if link.page != page as u64 {
                 break;
             }
-            let href = HtmlHref::BetweenArtifacts {
-                source: copy(&input.registration.route, b)?,
-                target: copy(
-                    match link.target {
-                        PageDestination::Page { index } => {
-                            &request.set.pages[index as usize].registration.route
-                        }
-                        PageDestination::File { index } => {
-                            &request.set.files[index as usize].registration.route
-                        }
-                    },
-                    b,
-                )?,
-                fragment: link.fragment.as_ref().map(|s| hex_id(s, b)).transpose()?,
-            };
+            let href = link_href(&request.set, link, b)?;
             push(&mut links, (link.node, href), b)?;
             page_links = rest;
         }
@@ -167,5 +154,24 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
     Ok(RenderedPages {
         identity: plan.identity,
         fragments,
+    })
+}
+
+/// The caller supplies a link from the checked plan for this exact set.
+fn link_href(
+    set: &PageSet,
+    link: &pages::PageLink,
+    b: &mut Budget,
+) -> Result<HtmlHref, StopReason> {
+    Ok(HtmlHref::BetweenArtifacts {
+        source: copy(&set.pages[link.page as usize].registration.route, b)?,
+        target: copy(
+            match link.target {
+                PageDestination::Page { index } => &set.pages[index as usize].registration.route,
+                PageDestination::File { index } => &set.files[index as usize].registration.route,
+            },
+            b,
+        )?,
+        fragment: link.fragment.as_ref().map(|s| hex_id(s, b)).transpose()?,
     })
 }
