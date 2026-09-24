@@ -323,9 +323,11 @@ hostがSentence内の位置へ挿入する場合は、`namespace::render_part`�
 この値はmember・文書digest・Doc node対応を保持し、文書内参照を未確定のまま合成先へ渡す。単体のserialize用proofは付与しない。
 共通HTMLの`check_part`は構造・属性・挿入slotを検査し、Sentence rendererは全guestの合成後にID重複と参照解決を確定する。
 参照先のguestが未配置の場合はSentenceの表示全体を拒否し、部分HTMLを完成結果として返さない。
-InlineMathを含むnamespaceは`namespace::prepare_with_foreign`で準備する。対応するguest操作はInlineMathに限定し、他のforeign要素とlink・assetは未解決の依存要求として返す。
+明示的なguest操作を含むnamespaceは`namespace::prepare_with_foreign`で準備する。対応する役割はSentence、SentenceInline、InlineMath、DisplayMath、Code、CircuitFigureである。
+各操作はhostが選択する。GenericGuest、page link、assetは未解決の依存要求として返す。
 `namespace::render_part_with_foreign`は指定memberのguest操作を実行し、Doc参照を保持した`PendingPart`とguestの表示位置を返す。
-guest出力は局所的に有効なPhrasingを要求し、Doc参照の最終解決は合成先が担当する。停止時はpending出力も返さない。
+Sentence・SentenceInline・InlineMathの出力はPhrasing、DisplayMath・Code・CircuitFigureの出力はBlockとして検査する。
+Doc参照の最終解決は合成先が担当する。停止時はpending出力も返さない。
 Sentence annotation hostは、構造検査済みSentenceの子順からDoc断片の表示出現を事前収集する。
 Rubyの読み・Annoの注釈と共有nodeの反復を含め、出現順に文書namespaceへ登録する。
 同じembedのDoc意味モデルは不変の共有値として保持し、描画結果と由来は表示出現ごとに記録する。
@@ -348,6 +350,24 @@ Doc断片の選択とlowerは、suiteの`adapters::sentence::document_guests::co
 各出現の入力Sentence、要素範囲、nodeの由来、foreign要素の位置を保持し、移動先の要素番号へ対応させる。
 段落全体の参照・重複ID・構造・深さを共通Budgetで検査し、失敗時は部分出力を返さない。
 この段落合成はHTMLの操作であり、Docの文書モデルとArticle全体の名前解決への接続は引き続きconsumer移行で扱う。
+
+### Docが所有する文章slotの準備
+
+Docの`ValidatedDocShape::foreign_occurrences`は、型付きの子順にguestの出現を列挙する。
+各出現はDoc node、EmbedRef、役割、rootからの深さを保持する。共有nodeの反復、Parallelの全variant、存在する省略可能な子要素を含める。
+同じnodeがguestとDocの子を持つ場合はguestを先に列挙する。CircuitFigureでは回路部分がcaptionに先行する。
+`foreign_depths`はnodeとedgeを一度ずつ走査し、embedごとの最大所有深さを求める。
+両操作はDocの構造を対象とし、guestの意味検査・評価・表示は各adapterが担当する。停止時は部分列を返さない。
+
+suiteの`adapters::document::sentences::collect`は、Docの構造とsourceを検証し、Sentence・SentenceInlineの各slotを独立Sentenceへlowerする。
+同じembedのlowerは最大所有深さで一度実行し、Docの不変借用、独立Sentenceの所有値、出現列を保持する。
+すべてのvariantと存在する省略可能な子要素を検査し、表示言語の選択は後段で行う。他のguest役割は元のDocに保持する。
+入出力・評価・名前解決を実行せず、呼出元の累積Budgetとsource admissionを使用する。
+
+ArticleのsectionとSentence内のDoc参照は、明示的に選択したmember列を同じnamespaceへ渡して解決できる。
+統合試験は通常のsourceと初回CBOR受信からこの経路を実行し、定義・参照のsource identityと範囲、HTMLの参照先、各言語の要素対応を確認する。
+表示数式・コード・回路図はArticle直接描画とnamespace経由で同じ出力契約を使用する。
+通常の文書生成hostへの自動接続、再帰guest全体の選択、ページ参照・asset解決はconsumer所有移行の継続対象である。
 
 ## 注釈と移行完了条件
 
