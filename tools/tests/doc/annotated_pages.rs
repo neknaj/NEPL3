@@ -18,6 +18,17 @@ fn page(
     route: &str,
     text: &str,
 ) -> Result<PageDocument, String> {
+    page_with_lower_budget(c, id, source, route, text, &mut budget())
+}
+
+fn page_with_lower_budget(
+    c: &Compiled,
+    id: &str,
+    source: &str,
+    route: &str,
+    text: &str,
+    lower_budget: &mut Budget,
+) -> Result<PageDocument, String> {
     let document = nepl3_tools::doc::source::with_named_input(
         true,
         c,
@@ -34,7 +45,7 @@ fn page(
                 &c.doc.package.schema,
                 Category::Article,
                 profile.registry(),
-                &mut budget(),
+                lower_budget,
                 &mut codec,
             )
             .map_err(|error| format!("page {id} lower: {error:?}"))
@@ -729,6 +740,127 @@ fn contract_chapter_projects_independent_sentences_and_invariants() -> Result<()
             "INV10", "INV11", "INV12", "INV13", "INV14"
         ]
     );
+    Ok(())
+}
+
+#[test]
+fn reproducibility_chapter_preserves_code_and_external_references() -> Result<(), String> {
+    reproducibility_projection(budget(), budget())
+}
+
+/// The ordinary test retains desktop limits. This opt-in measurement locates
+/// the expense and checks content under the pre-existing corpus policy.
+#[test]
+#[ignore = "explicit reproducibility projection measurement under corpus limits"]
+fn measure_reproducibility_projection_under_corpus_limits() -> Result<(), String> {
+    #[derive(serde::Deserialize)]
+    struct Policy {
+        output_limits: nepl3_tools::doc::export::pages::resources::OutputLimits,
+    }
+    let policy: Policy =
+        serde_json::from_str(include_str!("../../../doc/canonical.json")).map_err(err)?;
+    reproducibility_projection(policy.output_limits.budget(), policy.output_limits.budget())
+}
+
+fn reproducibility_projection(
+    mut lower_budget: Budget,
+    mut render_budget: Budget,
+) -> Result<(), String> {
+    let c = compiled()?;
+    let set = PageSet {
+        pages: vec![page_with_lower_budget(
+            &c,
+            "reproducibility",
+            "doc/spec/13-reproducibility.nepld",
+            "doc/spec/13-reproducibility.md",
+            include_str!("../../../doc/spec/13-reproducibility.nepld"),
+            &mut lower_budget,
+        )?],
+        files: vec![],
+    };
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    eprintln!("reproducibility lower usage={:?}", lower_budget.usage());
+    let started = std::time::Instant::now();
+    let artifact = render(
+        &set,
+        &c.doc.registry,
+        &mut codec,
+        &mut render_budget,
+        &[&[]],
+    )
+    .map_err(err)?;
+    eprintln!(
+        "reproducibility projection elapsed_ns={} usage={:?}",
+        started.elapsed().as_nanos(),
+        render_budget.usage()
+    );
+    assert_eq!(artifact.pages.len(), 1);
+    let markdown = &artifact.pages[0].markdown;
+    assert_eq!(
+        links(markdown),
+        [
+            "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+            "https://www.rfc-editor.org/rfc/rfc3987.html",
+        ]
+    );
+    assert!(code_blocks(markdown)?.is_empty());
+    assert!(markdown.contains("<ruby>再現性<rt>さいげんせい</rt></ruby>"));
+    // These are the independently transcribed code operands, including literal
+    // Unicode escapes, quotation marks and HTML entities, in document order.
+    let codes: Vec<_> = Parser::new(markdown)
+        .filter_map(|event| match event {
+            Event::Code(code) => Some(code.into_string()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        codes,
+        [
+            "[A-Za-z][A-Za-z0-9+.-]*:",
+            "%",
+            r"\u00xx",
+            "NEPL3-SCHEMA-1",
+            "NEPL3-PACKAGE-1",
+            "CheckedLanguagePackage::semantic_json",
+            "interfaces/engine.json",
+            r#"["ListOf",cons,nil,element]"#,
+            r#"["Builtin",reader,kind,tokenKind]"#,
+            "[SchemaRef,localKind]",
+            "[SchemaRef,name]",
+            "[selector,SchemaRef,name,fallback]",
+            "[name,skipReaders,takePairs]",
+            "[category,spelling,kind,fields,binding,styles]",
+            "[category,kind,tokenKind,payloadType,binding,styles]",
+            "[defaultUnexpected,rules]",
+            "[category,unexpected,synchronization]",
+            "[ancestorCategory,kind,spellingOrNull]",
+            "NEPL3-PACKAGE-EXECUTION-1",
+            "NEPL3-ENVIRONMENT-1",
+            "&",
+            "<",
+            ">",
+            "&amp;",
+            "&lt;",
+            "&gt;",
+            "]]>",
+            "\"",
+            "&quot;",
+            "&#xD;",
+            "&#x9;",
+            "&#xA;",
+            "&#xD;",
+        ]
+    );
+    let headings: Vec<_> = Parser::new(markdown)
+        .filter_map(|event| match event {
+            Event::Start(Tag::Heading { level, .. }) => Some(level),
+            _ => None,
+        })
+        .collect();
+    use pulldown_cmark::HeadingLevel::{H1, H2, H3};
+    assert_eq!(headings, [H1, H2, H2, H3, H3, H2, H2, H2]);
     Ok(())
 }
 
