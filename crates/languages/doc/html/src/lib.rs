@@ -54,6 +54,7 @@ pub struct ForeignPlacement {
     pub first_element: u64,
     pub elements: u64,
 }
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RenderedWithForeign {
     pub fragment: RenderedFragment,
     /// One placement per display occurrence, including shared embeds.

@@ -61,6 +61,26 @@ let f=fields(v,s,"RenderedFragment",4)?;
 Ok(Self {document_digest:Value::read(&f[0],s,r,c,b)?,options:Value::read(&f[1],s,r,c,b)?,markup:Value::read(&f[2],s,r,c,b)?,origins:Value::read(&f[3],s,r,c,b)?})
 }
 }
+impl Value for ForeignPlacement {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,r:&SchemaRegistry,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"ForeignPlacement",[self.embed.put(s,r,c,b)?,self.first_element.put(s,r,c,b)?,self.elements.put(s,r,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,r:&SchemaRegistry,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,48)?;
+let f=fields(v,s,"ForeignPlacement",3)?;
+Ok(Self {embed:Value::read(&f[0],s,r,c,b)?,first_element:Value::read(&f[1],s,r,c,b)?,elements:Value::read(&f[2],s,r,c,b)?})
+}
+}
+impl Value for RenderedWithForeign {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,r:&SchemaRegistry,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"RenderedWithForeign",[self.fragment.put(s,r,c,b)?,self.foreign.put(s,r,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,r:&SchemaRegistry,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,51)?;
+let f=fields(v,s,"RenderedWithForeign",2)?;
+Ok(Self {fragment:Value::read(&f[0],s,r,c,b)?,foreign:Value::read(&f[1],s,r,c,b)?})
+}
+}
 impl Value for PagesHtmlRequest {
 fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,r:&SchemaRegistry,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
 record(s,"PagesHtmlRequest",[self.set.put(s,r,c,b)?,self.options.put(s,r,c,b)?],b)

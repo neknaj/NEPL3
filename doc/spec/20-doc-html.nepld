@@ -98,9 +98,17 @@ body
     cons "[固定/こてい]stylesheetはcrateのassets/doc.cssであり、HtmlPolicy[自己申告/じこしんこく]やfragment[単体/たんたい]を、CSS[配布済/はいふず]みの[証明/しょうめい]としない。"
     nil
   cons paragraph
-    cons "portable rendered[値/ち]は、prepared document/optionsを[明示/めいじ]して[受/う]け[取/と]る。"
+    cons "portable rendered[値/ち]の[照合/しょうごう]は、[受信側/じゅしんがわ]が[再構築/さいこうちく]するdocument/optionsと[出力/しゅつりょく]を[基準/きじゅん]とする。"
+    cons "Sentenceなどのguestを[含/ふく]む[出力/しゅつりょく]はRenderedWithForeignで[交換/こうかん]する。fragmentはRenderedFragment、foreignは[表示/ひょうじ]の[出現順/しゅつげんじゅん]に[並/なら]ぶForeignPlacementの[列/れつ]である。ForeignPlacementはDocのembed[番号/ばんごう]、HTML arenaでの[開始位置/かいしいち]firstElement、[要素数/ようそすう]elementsを[保持/ほじ]する。[共有/きょうゆう]embedの[各出現/かくしゅつげん]を[個別/こべつ]に[記録/きろく]する。"
+    cons "[受信側/じゅしんがわ]のhostはguestを[選択/せんたく]して[意味/いみ]を[検査/けんさ]し、[受信/じゅしん]したDocumentSyntaxとRenderOptionsから[期待/きたい]する[出力/しゅつりょく]を[再構築/さいこうちく]する。codecはschema[検査/けんさ]の[後/あと]にdocument digest、options、markup、Doc origins、foreignの[全/ぜん]fieldと[順序/じゅんじょ]を[照合/しょうごう]する。callbackの[実行/じっこう]はhostが[明示/めいじ]し、codec[内部/ないぶ]で[再実行/さいじっこう]しない。"
+    cons "[照合後/しょうごうご]の[返却値/へんきゃくち]は[出力/しゅつりょく]データである。namespace、asset、HTML[直列化/ちょくれつか]の[権限/けんげん]は[対応/たいおう]する[検査/けんさ]で[確定/かくてい]する。[非表示/ひひょうじ]variantを[含/ふく]むguestの[意味検査/いみけんさ]はhostと[選択/せんたく]adapterの[責務/せきむ]である。Doc originsはDoc[内/ない]の[所有者/しょゆうしゃ]を[示/しめ]し、Sentence[内部/ないぶ]のnode[番号/ばんごう]は[各/かく]guestの[対応表/たいおうひょう]で[保持/ほじ]する。"
     cons sentence
-      cons text "schema・markup・32byte digestを"
+      cons code "RenderedFragment"
+      cons text "の"
+      cons ruby text "旧" text "きゅう"
+      cons text "local"
+      cons ruby text "専用" text "せんよう"
+      cons text "APIは、schema・markup・32byte digestを"
       cons ruby text "検査" text "けんさ"
       cons text "した"
       cons ruby text "後" text "あと"

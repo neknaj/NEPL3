@@ -11,6 +11,26 @@ use nepl3_core::{schema::SchemaRegistry, source::Digest};
 use nepl3_doc_core::model::DocumentSyntax;
 use nepl3_markup::html::HtmlRequest;
 mod generated;
+impl Value for nepl3_doc_core::model::EmbedRef {
+    fn put<C: FoundationValueCodec>(
+        &self,
+        s: &SchemaRef,
+        r: &SchemaRegistry,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<NdfValue, PortableError<C::Error>> {
+        self.0.put(s, r, c, b)
+    }
+    fn read<C: FoundationValueCodec>(
+        v: &NdfValue,
+        s: &SchemaRef,
+        r: &SchemaRegistry,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<Self, PortableError<C::Error>> {
+        u64::read(v, s, r, c, b).map(Self)
+    }
+}
 impl Value for Digest {
     fn put<C: FoundationValueCodec>(
         &self,

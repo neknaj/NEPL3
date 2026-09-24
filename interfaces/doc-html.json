@@ -115,6 +115,21 @@
       ],
       "constraints": []
     },
+    "ForeignPlacement": {
+      "record": [
+        ["embed", "U64"],
+        ["firstElement", "U64"],
+        ["elements", "U64"]
+      ],
+      "constraints": []
+    },
+    "RenderedWithForeign": {
+      "record": [
+        ["fragment", {"named": {"package": "nepl3.doc.html", "revision": 1, "name": "RenderedFragment"}}],
+        ["foreign", {"list": {"named": {"package": "nepl3.doc.html", "revision": 1, "name": "ForeignPlacement"}}}]
+      ],
+      "constraints": ["doc.html.received_foreign_output_matches_receiver_reconstruction"]
+    },
     "PagesHtmlRequest": {
       "record": [
         [

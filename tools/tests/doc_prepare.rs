@@ -8,6 +8,8 @@ mod article;
 mod article_math;
 #[path = "doc/article_namespace.rs"]
 mod article_namespace;
+#[path = "doc/article_portable.rs"]
+mod article_portable;
 #[path = "doc/labels.rs"]
 mod labels;
 #[path = "doc/retention.rs"]

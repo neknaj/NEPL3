@@ -35,10 +35,17 @@ PageNamespacePlanはページ・member・文書digest・リンク・残る要求
 受信側で再構築したnamespace proofから全fieldを照合し、出現順序・所属・添付ファイルの
 変更や要求の欠落を拒否する。Doc coreの全46試験はnative・WASIで成功した。
 旧ページ試験の型エラーは解消し、root検査と選択guestのnamespace検査へ責務を移した。
-toolsのArticle・namespace・印字等の22試験と通常容量試験3件もnativeで成功した。
+RenderedWithForeignは描画結果とguestの出現順・embed・HTML範囲を交換する。
+受信側hostが再構築した出力との全field比較を行い、codecはcallbackを実行しない。
+返却値はrawデータであり、HTML・namespace・assetの検証済み型は各検査で構築する。
+正式readerとSentence rendererを使う初回CBOR受信、本文・options・配置の改変拒否、
+共有Rubyの各出現とDoc owner、Work・Allocation・Nodes・Depthの上限一致と1不足、
+事前取消の2試験はnative・WASIで成功した。独立レビューは初期2試験の実行と、
+補強後の試験・仕様の静的確認を行った。
+toolsのArticle・namespace・印字等の24試験と通常容量試験3件もnativeで成功した。
 workspace全体のcompileはDoc HTMLの旧 `tests/local.rs` にある28件の型エラーで停止した。
 正式Markdown生成は旧Sentence構文の `doc/tutorial/miniexpr.nepld` で停止している。
-原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
+旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
 ## 段階別の履歴

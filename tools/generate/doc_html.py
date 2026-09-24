@@ -19,7 +19,8 @@ def generate() -> str:
     options = adapters.Options(
         frozenset(("MarkupSyntax",)),
         MappingProxyType({"languageHint": "language_hint", "sourceMaps": "source_maps",
-                          "documentDigest": "document_digest", "guestDigest": "guest_digest"}),
+                          "documentDigest": "document_digest", "guestDigest": "guest_digest",
+                          "firstElement": "first_element"}),
         tuple_case,
         adapters.Codec.REGISTRY,
     )
