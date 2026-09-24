@@ -563,6 +563,76 @@ fn annotated_page_set_keeps_stops_sticky_and_returns_no_partial_output() -> Resu
 }
 
 #[test]
+fn miniexpr_tutorial_projects_independent_sentences_and_links() -> Result<(), String> {
+    let c = compiled()?;
+    let set = PageSet {
+        pages: vec![
+            page(
+                &c,
+                "tutorial-miniexpr",
+                "doc/tutorial/miniexpr.nepld",
+                "doc/tutorial/miniexpr.md",
+                include_str!("../../../doc/tutorial/miniexpr.nepld"),
+            )?,
+            // A page target requires a registered Doc page. This minimal target
+            // isolates this chapter from the next chapter's pending migration.
+            page(
+                &c,
+                "tutorial-composition",
+                "doc/tutorial/composition.nepld",
+                "doc/tutorial/composition.md",
+                r#"article en sentence "Composition" body nil"#,
+            )?,
+        ],
+        files: vec![],
+    };
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let artifact = render(
+        &set,
+        &c.doc.registry,
+        &mut codec,
+        &mut budget(),
+        &[&[], &[]],
+    )
+    .map_err(err)?;
+    assert_eq!(artifact.pages.len(), 2);
+    let markdown = &artifact.pages[0].markdown;
+    assert_eq!(
+        links(markdown),
+        [
+            "https://github.com/neknaj/NEPL3/blob/main/conformance/extensions/suite/README.md",
+            "composition.md",
+        ]
+    );
+    // Check the independent Sentence ruby and both original RawCode blocks.
+    assert!(markdown.contains("<ruby>再帰的<rt>さいきてき</rt></ruby>"));
+    let mut blocks = Vec::new();
+    let mut code = None;
+    for event in Parser::new(markdown) {
+        match event {
+            Event::Start(Tag::CodeBlock(_)) => code = Some(String::new()),
+            Event::Text(text) if code.is_some() => {
+                code.as_mut().ok_or("code block")?.push_str(&text);
+            }
+            Event::End(pulldown_cmark::TagEnd::CodeBlock) => {
+                blocks.push(code.take().ok_or("code block end")?);
+            }
+            _ => {}
+        }
+    }
+    assert_eq!(
+        blocks,
+        [
+            "cargo run --locked --manifest-path conformance/extensions/hello/Cargo.toml --example miniexpr -- \"add 1 mul 2 3\"\n",
+            "add\n├── 1\n└── mul\n    ├── 2\n    └── 3\n",
+        ]
+    );
+    Ok(())
+}
+
+#[test]
 fn architecture_draft_projects_with_explicit_current_markdown_dependency() -> Result<(), String> {
     architecture_projection(budget(), false)
 }
