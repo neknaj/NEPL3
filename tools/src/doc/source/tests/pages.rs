@@ -227,6 +227,20 @@ fn article_sentence_doc_links_resolve_in_page_namespaces() -> Result<(), String>
             let refs: Vec<_> = checked.iter().collect();
             let resolved =
                 scopes::resolve(set, &refs, registry, &mut codec, &mut budget()).map_err(err)?;
+            for member in resolved.members() {
+                let document = resolved.document(member.owner()).ok_or("member owner")?;
+                // Independently encode each exact owner, including non-root
+                // members. Reusing the root at another member must change this
+                // canonical byte digest, even when their source is shared.
+                let value = portable::to_value(document, registry, &mut codec, &mut budget())
+                    .map_err(err)?;
+                let mut bytes = nepl3_doc_core::prepare::DOCUMENT_DOMAIN.to_vec();
+                bytes.extend(nepl3_wire::encode(&value, &mut budget()).map_err(err)?);
+                assert_eq!(
+                    member.document_digest(),
+                    nepl3_core::source::Digest::of(&bytes)
+                );
+            }
             let plan = &resolved.members()[1];
             assert_eq!(
                 plan.owner(),

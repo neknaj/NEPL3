@@ -128,13 +128,21 @@ fn resolve_inner<'n, 'm, 'a, C: FoundationValueCodec>(
     let mut page_values = Vec::new();
     // Complete boundary inspection for every member before resolving links.
     for (page, namespace) in namespaces.iter().enumerate() {
-        let inspected =
-            prepare::inspect_namespace(namespace, registry, codec, b).map_err(|error| {
-                Error::Input {
-                    page: page as u64,
-                    error,
-                }
-            })?;
+        let inspected = prepare::inspect_namespace_encoded_root(
+            namespace,
+            (
+                &set.pages[page].document,
+                portable::pages::document_value(&value, page, b)
+                    .map_err(|error| Error::Page(PageError::from(error)))?,
+            ),
+            registry,
+            codec,
+            b,
+        )
+        .map_err(|error| Error::Input {
+            page: page as u64,
+            error,
+        })?;
         let mut member_values = Vec::new();
         for plan in &inspected {
             b.charge(Resource::Work, 32)?;

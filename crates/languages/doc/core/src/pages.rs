@@ -343,14 +343,20 @@ pub fn resolve<'a, C: FoundationValueCodec>(
         let document_digest = digests
             .next()
             .ok_or(PageError::Boundary(portable::PortableError::Shape))?;
-        let requirements =
-            prepare::requirements(&labels, registry, c, b).map_err(|error| match error {
-                PreparationError::Stopped(s) => PageError::Stopped(s),
-                error => PageError::Input {
-                    page: page as u64,
-                    error,
-                },
-            })?;
+        let requirements = prepare::requirements(
+            &labels,
+            portable::pages::document_value(&value, page, b)?,
+            registry,
+            c,
+            b,
+        )
+        .map_err(|error| match error {
+            PreparationError::Stopped(s) => PageError::Stopped(s),
+            error => PageError::Input {
+                page: page as u64,
+                error,
+            },
+        })?;
         let plan = prepare::DocPreparationPlan {
             document_digest,
             requirements,

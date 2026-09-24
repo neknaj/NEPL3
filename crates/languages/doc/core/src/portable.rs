@@ -24,6 +24,22 @@ pub fn embed_value<C: FoundationValueCodec>(
 ) -> Result<NdfValue, PortableError<C::Error>> {
     input.put(schema(registry)?, codec, budget)
 }
+/// Borrow embeds from a DocumentSyntax value generated and validated by this
+/// crate in the same call. This accessor supplies no proof for incoming data.
+pub(crate) fn embedded_values<'a, E>(
+    value: &'a NdfValue,
+    registry: &SchemaRegistry,
+    budget: &mut Budget,
+) -> Result<&'a [NdfValue], PortableError<E>> {
+    budget.charge(Resource::Work, 1)?;
+    let schema = schema(registry)?;
+    let document = fields(value, schema, "DocumentSyntax", 5)?;
+    let value = fields(&document[0], schema, "DocValue", 3)?;
+    match &value[2] {
+        NdfValue::List(values) => Ok(values),
+        _ => Err(PortableError::Shape),
+    }
+}
 pub(crate) fn label_arguments<C: FoundationValueCodec>(
     name: &str,
     paths: Option<&crate::model::LabelOccurrencePaths>,

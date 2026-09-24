@@ -235,7 +235,76 @@ fn preparation_discovers_distinct_placements_without_loading_assets() -> Result<
     let mut bytes = b"NEPL3.Doc.Prepare.Document.v1\0".to_vec();
     bytes.extend(wire);
     assert_eq!(actual.document_digest, Digest::of(&bytes));
+    let mut guest_bytes = prepare::GUEST_DOMAIN.to_vec();
+    guest_bytes.extend(
+        nepl3_wire::encode(
+            &portable::embed_value(&d.value.embeds[0], &r, &mut c, &mut b()).map_err(err)?,
+            &mut b(),
+        )
+        .map_err(err)?,
+    );
+    assert_eq!(
+        actual.requirements[2],
+        DocRequirement::Foreign {
+            embed: EmbedRef(0),
+            kind: EmbedKind::Sentence,
+            guest_digest: Digest::of(&guest_bytes),
+        }
+    );
     assert_eq!(d, copy);
+    Ok(())
+}
+
+#[test]
+fn preparation_reuses_encoded_guest_storage_for_digesting() -> Result<(), String> {
+    let r = registry()?;
+    let mut d = document(&r)?;
+    let DocContent::Syntax { closure } = &mut d.value.embeds[0].content else {
+        return Err("closure".into());
+    };
+    closure.provenance = nepl3_core::syntax::OwnerProvenance::from_parts(
+        vec![Origin::Synthetic {
+            reason: "owner provenance".repeat(4096),
+            anchor: None,
+        }],
+        vec![],
+        vec![],
+    );
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &store, &mut admission).map_err(err)?;
+    let mut optimized = b();
+    let plan = prepare::inspect(&d, &r, &mut codec, &mut optimized).map_err(err)?;
+
+    // Reconstruct the previous independent encoding path. It omits small
+    // requirement-vector costs, so saving against this lower bound establishes
+    // that the large owner payload is not encoded again for the guest digest.
+    let mut baseline = b();
+    nepl3_doc_core::labels::check(&d, &r, &mut baseline, codec.source_admission()).map_err(err)?;
+    let value = portable::to_value(&d, &r, &mut codec, &mut baseline).map_err(err)?;
+    let document_digest = codec
+        .canonical_value_digest(prepare::DOCUMENT_DOMAIN, &value, &mut baseline)
+        .map_err(err)?;
+    let guest =
+        portable::embed_value(&d.value.embeds[0], &r, &mut codec, &mut baseline).map_err(err)?;
+    let guest_digest = codec
+        .canonical_value_digest(prepare::GUEST_DOMAIN, &guest, &mut baseline)
+        .map_err(err)?;
+    assert_eq!(plan.document_digest, document_digest);
+    assert_eq!(
+        plan.requirements[2],
+        DocRequirement::Foreign {
+            embed: EmbedRef(0),
+            kind: EmbedKind::Sentence,
+            guest_digest
+        }
+    );
+    assert!(
+        optimized.usage().allocation_units < baseline.usage().allocation_units,
+        "optimized={:?} baseline={:?}",
+        optimized.usage(),
+        baseline.usage()
+    );
     Ok(())
 }
 #[test]

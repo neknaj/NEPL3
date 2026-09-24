@@ -100,13 +100,16 @@ pub(in crate::doc::export) fn render_observed(
                 &mut codec,
                 b,
             )
-            .map_err(err)?,
+            .map_err(|error| format!("Doc page discovery: {}", err(error)))?,
         );
     }
     let mut admission = SourceAdmission::default();
     let mut plans = composition::array(count, b).map_err(err)?;
     for page in &discovered {
-        plans.push(discovery::namespace::inspect(page, registry, b, &mut admission).map_err(err)?);
+        plans.push(
+            discovery::namespace::inspect(page, registry, b, &mut admission)
+                .map_err(|error| format!("Doc namespace inspection: {}", err(error)))?,
+        );
     }
     let mut members = composition::array(count, b).map_err(err)?;
     for plan in &plans {
@@ -120,7 +123,8 @@ pub(in crate::doc::export) fn render_observed(
     for namespace in &namespaces {
         refs.push(namespace);
     }
-    let resolved = scopes::resolve(&request.set, &refs, registry, &mut codec, b).map_err(err)?;
+    let resolved = scopes::resolve(&request.set, &refs, registry, &mut codec, b)
+        .map_err(|error| format!("Doc page resolution: {}", err(error)))?;
     let prepared = html::prepare(&resolved, &request.options, b).map_err(err)?;
     observe(StageMeasurement {
         stage: Stage::Prepare,

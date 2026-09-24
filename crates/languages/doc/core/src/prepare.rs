@@ -118,7 +118,7 @@ pub fn inspect<'a, C: FoundationValueCodec>(
         .map_err(boundary)?;
     Ok(DocPreparationPlan {
         document_digest,
-        requirements: requirements(&checked, registry, c, b)?,
+        requirements: requirements(&checked, &value, registry, c, b)?,
     })
 }
 
@@ -138,7 +138,7 @@ pub fn inspect_sentence<'a, C: FoundationValueCodec>(
         .map_err(boundary)?;
     Ok(DocPreparationPlan {
         document_digest,
-        requirements: discover(checked.document(), registry, c, b)?,
+        requirements: discover(checked.document(), &value, registry, c, b)?,
     })
 }
 
@@ -157,7 +157,7 @@ pub fn inspect_inline<'a, C: FoundationValueCodec>(
         .map_err(boundary)?;
     Ok(DocPreparationPlan {
         document_digest,
-        requirements: discover(checked.document(), registry, c, b)?,
+        requirements: discover(checked.document(), &value, registry, c, b)?,
     })
 }
 
@@ -165,11 +165,12 @@ pub fn inspect_inline<'a, C: FoundationValueCodec>(
 /// the canonical boundary value and its digest; external plans are never proofs.
 pub(crate) fn requirements<'a, C: FoundationValueCodec>(
     checked: &labels::CheckedLabels<'a>,
+    encoded: &nepl3_core::value::NdfValue,
     registry: &SchemaRegistry,
     c: &mut C,
     b: &mut Budget,
 ) -> Result<Vec<DocRequirement>, PreparationError<'a, C::Error>> {
-    discover(checked.document(), registry, c, b)
+    discover(checked.document(), encoded, registry, c, b)
 }
 /// Discover all members of one resolved namespace in its exact occurrence order.
 /// Each document is rechecked against this codec/registry and shared source
@@ -178,6 +179,27 @@ pub(crate) fn requirements<'a, C: FoundationValueCodec>(
 /// reservation failure publishes no plan and performs no member processing.
 pub fn inspect_namespace<'a, C: FoundationValueCodec>(
     namespace: &labels::namespace::CheckedNamespace<'_, 'a>,
+    registry: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<Vec<DocPreparationPlan>, PreparationError<'a, C::Error>> {
+    inspect_namespace_inner(namespace, None, registry, c, b)
+}
+/// Reuse the root's value produced by the current enclosing PageSet encoder.
+/// Only the identical immutable document can use it; other members are encoded
+/// normally. This is crate-private and accepts no portable validation shortcut.
+pub(crate) fn inspect_namespace_encoded_root<'a, C: FoundationValueCodec>(
+    namespace: &labels::namespace::CheckedNamespace<'_, 'a>,
+    root: (&'a DocumentSyntax, &nepl3_core::value::NdfValue),
+    registry: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<Vec<DocPreparationPlan>, PreparationError<'a, C::Error>> {
+    inspect_namespace_inner(namespace, Some(root), registry, c, b)
+}
+fn inspect_namespace_inner<'a, C: FoundationValueCodec>(
+    namespace: &labels::namespace::CheckedNamespace<'_, 'a>,
+    root: Option<(&'a DocumentSyntax, &nepl3_core::value::NdfValue)>,
     registry: &SchemaRegistry,
     c: &mut C,
     b: &mut Budget,
@@ -195,11 +217,19 @@ pub fn inspect_namespace<'a, C: FoundationValueCodec>(
         .try_reserve_exact(count)
         .map_err(|_| b.stop(StopReason::AllocationLimit))?;
     for document in documents {
-        let value = portable::to_value(document, registry, c, b)?;
+        b.charge(Resource::Work, 1)?;
+        let generated;
+        let value = match root {
+            Some((owner, value)) if core::ptr::eq(owner, document) => value,
+            _ => {
+                generated = portable::to_value(document, registry, c, b)?;
+                &generated
+            }
+        };
         let document_digest = c
-            .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
+            .canonical_value_digest(DOCUMENT_DOMAIN, value, b)
             .map_err(boundary)?;
-        let requirements = discover(document, registry, c, b)?;
+        let requirements = discover(document, value, registry, c, b)?;
         plans.push(DocPreparationPlan {
             document_digest,
             requirements,
@@ -209,6 +239,7 @@ pub fn inspect_namespace<'a, C: FoundationValueCodec>(
 }
 fn discover<'a, C: FoundationValueCodec>(
     document: &'a DocumentSyntax,
+    encoded: &nepl3_core::value::NdfValue,
     r: &SchemaRegistry,
     c: &mut C,
     b: &mut Budget,
@@ -236,11 +267,14 @@ fn discover<'a, C: FoundationValueCodec>(
             push(&mut requirements, r, b)?;
         }
     }
-    for (index, embed) in document.value.embeds.iter().enumerate() {
+    let values = portable::embedded_values(encoded, r, b)?;
+    if values.len() != document.value.embeds.len() {
+        return Err(PortableError::Shape.into());
+    }
+    for (index, (embed, guest)) in document.value.embeds.iter().zip(values).enumerate() {
         b.charge(Resource::Work, 1)?;
-        let guest = portable::embed_value(embed, r, c, b)?;
         let guest_digest = c
-            .canonical_value_digest(GUEST_DOMAIN, &guest, b)
+            .canonical_value_digest(GUEST_DOMAIN, guest, b)
             .map_err(boundary)?;
         push(
             &mut requirements,
