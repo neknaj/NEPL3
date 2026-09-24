@@ -16,6 +16,7 @@ pub enum Error<E> {
     Lower(lower::presentation::Error<E>),
     Print(print::Error),
     Shape(nepl3_sentence_core::check::Error),
+    DocSentence(nepl3_suite::adapters::document::sentence::Error<E>),
     MathLower(nepl3_math_core::lower::LowerError),
     MathShape(nepl3_math_core::check::ShapeError),
     MathPrint(Box<nepl3_math_core::print::PrintError<Error<E>>>),
@@ -55,6 +56,27 @@ impl<C: FoundationValueCodec> nepl3_math_core::print::GuestPrinter for SentenceG
     }
 }
 impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
+    /// Print a typed Doc with the explicitly selected Sentence/Doc/Math
+    /// adapters. The borrowed document and its provenance remain unchanged;
+    /// generated text has no source identity until the host assigns one.
+    /// Sentence, SentenceInline and InlineMath slots use these adapters;
+    /// other roles require their own selected host printer and are rejected.
+    pub fn document(
+        &mut self,
+        document: &nepl3_doc_core::model::DocumentSyntax,
+        mode: nepl3_doc_core::print::PrintMode,
+        b: &mut Budget,
+    ) -> Result<nepl3_doc_core::print::SourceArtifact, Error<C::Error>> {
+        let mut ceiling = b.limits();
+        ceiling.depth = ceiling.depth.min(64);
+        let result = b.with_ceiling(ceiling, |b| {
+            let document = document.clone_with_budget(b)?;
+            self.document_value(document, mode, b)
+        });
+        b.poll()?;
+        result
+    }
+
     fn sentence(
         &mut self,
         guest: &ForeignClosure,
@@ -80,30 +102,7 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
         let checked = guest
             .validate(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
-        let mut forms = Vec::new();
-        let count =
-            usize::from(self.math_surface.is_some()) + usize::from(self.doc_surface.is_some());
-        b.charge(
-            Resource::AllocationUnits,
-            (count * core::mem::size_of::<lower::ForeignInlineForm<'_>>()) as u64,
-        )?;
-        forms
-            .try_reserve_exact(count)
-            .map_err(|_| b.stop(StopReason::AllocationLimit))?;
-        if let Some(surface) = self.math_surface {
-            forms.push(lower::ForeignInlineForm {
-                kind: "Form:InlineMath",
-                guest_schema: surface,
-                guest_category: "Expr",
-            });
-        }
-        if let Some(surface) = self.doc_surface {
-            forms.push(lower::ForeignInlineForm {
-                kind: "Form:DocumentInline",
-                guest_schema: surface,
-                guest_category: "Inline",
-            });
-        }
+        let forms = selected_forms(self.math_surface, self.doc_surface, b)?;
         let sentence = lower::presentation::sentence_with_foreign(
             checked.syntax(),
             &self.sentence_package.schema,
@@ -113,6 +112,17 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
             b,
         )
         .map_err(Error::Lower)?;
+        self.sentence_value(&sentence, b)
+    }
+
+    fn sentence_value(
+        &mut self,
+        sentence: &nepl3_sentence_core::syntax::SentenceSyntax,
+        b: &mut Budget,
+    ) -> Result<String, Error<C::Error>> {
+        // Both private callers have completed the public Sentence lower/decode
+        // boundary. Printing needs its meaning shape and selected guest checks;
+        // it does not re-walk the retained presentation/source tables.
         let shape = sentence.value.validate_shape(b).map_err(Error::Shape)?;
         let depths = shape.foreign_depths(b).map_err(Error::Shape)?;
         let prepared = print::prepare(
@@ -227,11 +237,7 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
         closure: &ForeignClosure,
         b: &mut Budget,
     ) -> Result<String, Error<C::Error>> {
-        use nepl3_doc_core::{
-            check, lower,
-            model::{EmbedKind, GuestLanguage},
-            print,
-        };
+        use nepl3_doc_core::{check, lower, print};
         let checked = closure
             .validate(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
@@ -244,6 +250,20 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
             self.codec,
         )
         .map_err(Error::DocLower)?;
+        self.document_value(document, print::PrintMode::Prefix, b)
+            .map(|artifact| artifact.text)
+    }
+
+    fn document_value(
+        &mut self,
+        document: nepl3_doc_core::model::DocumentSyntax,
+        mode: nepl3_doc_core::print::PrintMode,
+        b: &mut Budget,
+    ) -> Result<nepl3_doc_core::print::SourceArtifact, Error<C::Error>> {
+        use nepl3_doc_core::{
+            model::{EmbedKind, GuestLanguage},
+            print,
+        };
         let shape = document.value.validate_shape(b).map_err(Error::DocShape)?;
         let depths = print::guest_depths(&shape, b)?;
         let identity =
@@ -265,26 +285,26 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
             .zip(&identity.guests)
             .zip(depths)
         {
-            let text = b.with_depth_at_least(base.saturating_add(depth), |b| {
-                let guest = embed.syntax().ok_or(Error::Selection)?;
-                match embed.kind {
-                    EmbedKind::Sentence => self.sentence(guest, SentenceCategory::Sentence, b),
-                    EmbedKind::SentenceInline => self.sentence(guest, SentenceCategory::Inline, b),
-                    EmbedKind::InlineMath => self.math(guest, b),
-                    _ => Err(Error::Selection),
+            let text = b.with_depth_at_least(base.saturating_add(depth), |b| match embed.kind {
+                EmbedKind::Sentence | EmbedKind::SentenceInline => {
+                    let forms = selected_forms(self.math_surface, self.doc_surface, b)?;
+                    let value = nepl3_suite::adapters::document::sentence::lower(
+                        embed,
+                        &self.sentence_package.schema,
+                        &forms,
+                        self.registry,
+                        self.codec,
+                        b,
+                    )
+                    .map_err(Error::DocSentence)?;
+                    self.sentence_value(&value, b)
                 }
+                EmbedKind::InlineMath => self.math(embed.syntax().ok_or(Error::Selection)?, b),
+                _ => Err(Error::Selection),
             })?;
             let (surface, category, language) = match embed.kind {
-                EmbedKind::Sentence => (
-                    &self.sentence_package.schema,
-                    "Sentence",
-                    GuestLanguage::Sentence,
-                ),
-                EmbedKind::SentenceInline => (
-                    &self.sentence_package.schema,
-                    "Inline",
-                    GuestLanguage::Sentence,
-                ),
+                EmbedKind::Sentence => (embed.schema(), "Sentence", GuestLanguage::Sentence),
+                EmbedKind::SentenceInline => (embed.schema(), "Inline", GuestLanguage::Sentence),
                 EmbedKind::InlineMath => (
                     self.math_surface.ok_or(Error::Selection)?,
                     "Expr",
@@ -332,7 +352,7 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
         let reply = print::print(
             &print::PrintRequest {
                 document,
-                mode: print::PrintMode::Prefix,
+                mode,
                 bindings,
                 guests,
             },
@@ -342,11 +362,40 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
         )
         .map_err(Error::DocPortable)?;
         match reply.outcome {
-            print::PrintOutcome::Complete { artifact } => Ok(artifact.text),
+            print::PrintOutcome::Complete { artifact } => Ok(artifact),
             print::PrintOutcome::Invalid { error } => Err(Error::DocPrint(error)),
             print::PrintOutcome::Stopped { reason } => Err(Error::Stopped(reason)),
         }
     }
+}
+
+fn selected_forms<'a>(
+    math: Option<&'a SchemaRef>,
+    doc: Option<&'a SchemaRef>,
+    b: &mut Budget,
+) -> Result<Vec<lower::ForeignInlineForm<'a>>, StopReason> {
+    let count = usize::from(math.is_some()) + usize::from(doc.is_some());
+    b.charge(
+        Resource::AllocationUnits,
+        (count * core::mem::size_of::<lower::ForeignInlineForm<'_>>()) as u64,
+    )?;
+    let mut forms = Vec::new();
+    forms
+        .try_reserve_exact(count)
+        .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+    for (kind, surface, guest_category) in [
+        ("Form:InlineMath", math, "Expr"),
+        ("Form:DocumentInline", doc, "Inline"),
+    ] {
+        if let Some(surface) = surface {
+            forms.push(lower::ForeignInlineForm {
+                kind,
+                guest_schema: surface,
+                guest_category,
+            });
+        }
+    }
+    Ok(forms)
 }
 
 /// Obtain the head from the host-selected compiled package. The printer only

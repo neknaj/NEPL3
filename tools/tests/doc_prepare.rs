@@ -14,6 +14,8 @@ mod labels;
 mod retention;
 #[path = "doc/sentence_slots.rs"]
 mod sentence_slots;
+#[path = "doc/typed_print.rs"]
+mod typed_print;
 
 // Both Math guests contain division by zero. Discovery retains syntax and
 // identifies dependencies without evaluating guests or fetching resources.

@@ -369,6 +369,14 @@ ArticleのsectionとSentence内のDoc参照は、明示的に選択したmember�
 表示数式・コード・回路図はArticle直接描画とnamespace経由で同じ出力契約を使用する。
 通常の文書生成hostへの自動接続、再帰guest全体の選択、ページ参照・asset解決はconsumer所有移行の継続対象である。
 
+開発hostの`SentenceGuestPrinter::document`は、型付きDocをPrefixまたはCompactで印字する。
+Sentence・SentenceInlineの意味値と構文closureを独立Sentenceの公開検証へ渡し、選択済みDoc Inline・InlineMathを各言語のprinterへ接続する。
+他のguest役割には対応するhost操作が必要である。この入口は未対応の役割を拒否する。
+入力は不変借用とし、複製・検証・guest印字・最終出力に共通Budgetと深さ上限64を適用する。停止時は部分sourceを返さない。
+出力のsource identityは保存・再解析時にhostが付与する。元の意味値と保持済みclosureのsource情報を維持する。
+型付きlist・Ruby・Annoとsourceを保持した相対リンクの合成は、nativeの意味値と初回CBOR受信から検査する。
+すべてのforeign guestをsourceなしで構築する入口は、引き続き構築APIの補完対象である。
+
 ## 注釈と移行完了条件
 
 以下は移行後にも維持する注釈契約と、旧経路を除去する際の受入条件である。実施順・各段階の残件はT07と実装状態で管理する。旧コメントの認識だけを先に削除する変更はmainへ統合しない。
