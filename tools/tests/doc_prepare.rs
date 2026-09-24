@@ -6,6 +6,8 @@ use nepl3_wire::foundation::FoundationCodec;
 mod article;
 #[path = "doc/article_math.rs"]
 mod article_math;
+#[path = "doc/article_namespace.rs"]
+mod article_namespace;
 #[path = "doc/retention.rs"]
 mod retention;
 
