@@ -6,6 +6,7 @@ use nepl3_doc_core::{
 };
 
 mod article;
+mod discovery;
 mod selection;
 
 #[test]
@@ -57,9 +58,10 @@ fn article_sentence_doc_links_resolve_in_page_namespaces() -> Result<(), String>
                     else {
                         return Err("Sentence slot".into());
                     };
-                    let selected = nepl3_suite::adapters::document::sentences::collect(
+                    let selected = crate::doc::export::pages::discovery::collect(
                         &document,
                         &compiled.others[3].schema,
+                        &compiled.doc.package.schema,
                         &[nepl3_sentence_core::lower::ForeignInlineForm {
                             kind: "Form:DocumentInline",
                             guest_schema: &compiled.doc.package.schema,
@@ -70,34 +72,17 @@ fn article_sentence_doc_links_resolve_in_page_namespaces() -> Result<(), String>
                         b,
                     )
                     .map_err(err)?;
-                    assert_eq!(selected.occurrences().len(), 2);
-                    assert_eq!(selected.occurrences()[0].embed, syntax);
-                    assert_eq!(selected.occurrences()[0].node, title.0);
-                    let (mut sentences, _) = selected.into_parts();
-                    assert_eq!(sentences.iter().flatten().count(), 2);
-                    let sentence = sentences[syntax.0 as usize]
-                        .take()
-                        .ok_or("selected title")?;
-                    let selection = nepl3_suite::adapters::sentence::document_guests::collect(
-                        &sentence,
-                        &compiled.doc.package.schema,
-                        registry,
-                        &mut codec,
-                        b,
-                    )
-                    .map_err(err)?;
-                    let (documents, occurrences) = selection.into_parts();
-                    assert_eq!(documents.len(), 1);
-                    assert_eq!(occurrences.len(), 1);
-                    assert_eq!(occurrences[0].document.index(), 0);
-                    selection::verify_inline(
-                        &documents[0],
-                        &document,
-                        &compiled,
-                        registry,
-                        &mut codec,
-                    )?;
-                    fragments.push(documents.into_iter().next().ok_or("Doc guest")?);
+                    assert_eq!(selected.members().len(), 2);
+                    let root = &selected.members()[0];
+                    assert_eq!(root.occurrences().len(), 2);
+                    assert_eq!(root.occurrences()[0].embed, syntax);
+                    assert_eq!(root.occurrences()[0].node, title.0);
+                    assert_eq!(root.sentences().iter().flatten().count(), 2);
+                    assert_eq!(root.guests().len(), 1);
+                    assert_eq!(root.guests()[0].document.index(), 1);
+                    let fragment = selected.members()[1].document();
+                    selection::verify_inline(fragment, &document, &compiled, registry, &mut codec)?;
+                    fragments.push(fragment.clone());
                     pages.push(pages::PageDocument {
                         registration: pages::PageRegistration {
                             id: name.into(),

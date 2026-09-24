@@ -48,6 +48,9 @@ impl DocumentId {
 pub struct Occurrence {
     pub embed: EmbedRef,
     pub document: DocumentId,
+    /// Structural owner and depth relative to the containing Sentence root.
+    pub node: nepl3_sentence_core::model::InlineRef,
+    pub depth: u64,
 }
 pub struct Selection {
     documents: Vec<DocumentSyntax>,
@@ -157,6 +160,8 @@ fn collect_inner<C: FoundationValueCodec>(
             Occurrence {
                 embed: occurrence.embed,
                 document,
+                node: occurrence.node,
+                depth: occurrence.depth,
             },
             b,
         )?;
