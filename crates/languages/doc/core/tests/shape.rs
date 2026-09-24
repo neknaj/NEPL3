@@ -16,6 +16,29 @@ fn budget() -> Budget {
     })
 }
 fn value(root: DocRoot, kinds: Vec<DocKind>) -> DocValue {
+    // Shape validation checks the slot role, not the independent guest schema.
+    // Full content admission is covered by foreign/portable integration tests.
+    let embeds = if kinds
+        .iter()
+        .any(|kind| matches!(kind, DocKind::Sentence { .. }))
+    {
+        vec![DocEmbed {
+            kind: EmbedKind::Sentence,
+            content: DocContent::Value {
+                value: nepl3_core::value::TypedValue::Record(nepl3_core::value::Record {
+                    schema: nepl3_core::value::SchemaRef {
+                        package: "shape-fixture".into(),
+                        revision: 1,
+                        digest: nepl3_core::source::Digest::of(b"shape fixture"),
+                    },
+                    kind: "Opaque".into(),
+                    fields: vec![],
+                }),
+            },
+        }]
+    } else {
+        vec![]
+    };
     DocValue {
         root,
         nodes: kinds
@@ -27,7 +50,7 @@ fn value(root: DocRoot, kinds: Vec<DocKind>) -> DocValue {
                 span: None,
             })
             .collect(),
-        embeds: vec![],
+        embeds,
     }
 }
 
@@ -36,7 +59,9 @@ fn categories_and_graph_are_checked_before_semantic_use() -> Result<(), ShapeErr
     let good = value(
         DocRoot::Variant(VariantRef(1)),
         vec![
-            DocKind::Sentence { inlines: vec![] },
+            DocKind::Sentence {
+                syntax: EmbedRef(0),
+            },
             DocKind::Variant {
                 language: "en".into(),
                 sentence: SentenceRef(0),
@@ -54,9 +79,9 @@ fn categories_and_graph_are_checked_before_semantic_use() -> Result<(), ShapeErr
         })
     ));
     let cycle = value(
-        DocRoot::Inline(InlineRef(0)),
-        vec![DocKind::Concat {
-            inlines: vec![InlineRef(0)],
+        DocRoot::Block(BlockRef(0)),
+        vec![DocKind::Paragraph {
+            items: vec![FlowRef(0)],
         }],
     );
     assert!(matches!(
@@ -65,7 +90,15 @@ fn categories_and_graph_are_checked_before_semantic_use() -> Result<(), ShapeErr
     ));
     let unused = value(
         DocRoot::Sentence(SentenceRef(0)),
-        vec![DocKind::Sentence { inlines: vec![] }, DocKind::Break],
+        vec![
+            DocKind::Sentence {
+                syntax: EmbedRef(0),
+            },
+            DocKind::RawCode {
+                language_hint: None,
+                text: "x".into(),
+            },
+        ],
     );
     assert!(matches!(
         unused.validate_shape(&mut budget()),
@@ -74,11 +107,13 @@ fn categories_and_graph_are_checked_before_semantic_use() -> Result<(), ShapeErr
     Ok(())
 }
 #[test]
-fn parallel_and_annotation_constraints_use_actual_child_content() -> Result<(), ShapeError> {
+fn parallel_constraints_use_actual_variant_languages() -> Result<(), ShapeError> {
     let mut parallel = value(
         DocRoot::Flow(FlowRef(3)),
         vec![
-            DocKind::Sentence { inlines: vec![] },
+            DocKind::Sentence {
+                syntax: EmbedRef(0),
+            },
             DocKind::Variant {
                 language: "en".into(),
                 sentence: SentenceRef(0),
@@ -105,52 +140,22 @@ fn parallel_and_annotation_constraints_use_actual_child_content() -> Result<(), 
             ..
         })
     ));
-    let empty = value(
-        DocRoot::Inline(InlineRef(3)),
-        vec![
-            DocKind::Text {
-                text: String::new(),
-            },
-            DocKind::Concat {
-                inlines: vec![InlineRef(0)],
-            },
-            DocKind::Text {
-                text: "reading".into(),
-            },
-            DocKind::Ruby {
-                base: InlineRef(1),
-                reading: InlineRef(2),
-            },
-        ],
-    );
-    assert!(matches!(
-        empty.validate_shape(&mut budget()),
-        Err(ShapeError::EmptyAnnotationPart(1))
-    ));
-    let break_part = value(
-        DocRoot::Inline(InlineRef(1)),
-        vec![
-            DocKind::Break,
-            DocKind::Anno {
-                base: InlineRef(0),
-                notes: vec![InlineRef(0)],
-            },
-        ],
-    );
-    break_part.validate_shape(&mut budget())?;
     Ok(())
 }
 #[test]
 fn deep_arenas_stop_and_drop_without_recursive_ownership() -> Result<(), ShapeError> {
     let count = 100_000usize;
     let mut nodes = Vec::with_capacity(count);
-    nodes.push(DocKind::Text { text: "x".into() });
+    nodes.push(DocKind::RawCode {
+        language_hint: None,
+        text: "x".into(),
+    });
     for i in 1..count {
-        nodes.push(DocKind::Strong {
-            inline: InlineRef((i - 1) as u64),
+        nodes.push(DocKind::Paragraph {
+            items: vec![FlowRef((i - 1) as u64)],
         });
     }
-    let deep = value(DocRoot::Inline(InlineRef((count - 1) as u64)), nodes);
+    let deep = value(DocRoot::Block(BlockRef((count - 1) as u64)), nodes);
     let mut shallow = budget();
     let mut limits = shallow.limits();
     limits.depth = 64;
@@ -168,14 +173,17 @@ fn deep_arenas_stop_and_drop_without_recursive_ownership() -> Result<(), ShapeEr
 #[test]
 fn shared_child_still_counts_on_the_longest_path() -> Result<(), ShapeError> {
     let dag = value(
-        DocRoot::Inline(InlineRef(2)),
+        DocRoot::Block(BlockRef(2)),
         vec![
-            DocKind::Text { text: "x".into() },
-            DocKind::Concat {
-                inlines: vec![InlineRef(0)],
+            DocKind::RawCode {
+                language_hint: None,
+                text: "x".into(),
             },
-            DocKind::Concat {
-                inlines: vec![InlineRef(0), InlineRef(1)],
+            DocKind::Paragraph {
+                items: vec![FlowRef(0)],
+            },
+            DocKind::Paragraph {
+                items: vec![FlowRef(0), FlowRef(1)],
             },
         ],
     );

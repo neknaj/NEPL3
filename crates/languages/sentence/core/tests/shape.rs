@@ -102,6 +102,44 @@ fn annotation_cannot_turn_empty_wrapped_text_into_content() {
 }
 
 #[test]
+fn migrated_doc_annotation_cases_use_sentence_shape_contract() -> Result<(), Error> {
+    let empty = value(vec![
+        Kind::Sentence {
+            inlines: vec![InlineRef(1)],
+        },
+        Kind::Ruby {
+            base: InlineRef(2),
+            reading: InlineRef(4),
+        },
+        Kind::Concat {
+            inlines: vec![InlineRef(3)],
+        },
+        Kind::Text {
+            text: String::new(),
+        },
+        Kind::Text {
+            text: "reading".into(),
+        },
+    ]);
+    assert_eq!(
+        checked(&empty, &mut budget()),
+        Err(Error::EmptyAnnotationPart(2))
+    );
+    let break_part = value(vec![
+        Kind::Sentence {
+            inlines: vec![InlineRef(1)],
+        },
+        Kind::InlineAnno {
+            base: InlineRef(2),
+            notes: vec![InlineRef(2)],
+        },
+        Kind::Break,
+    ]);
+    checked(&break_part, &mut budget())?;
+    Ok(())
+}
+
+#[test]
 fn references_categories_cycles_and_unreachable_nodes_are_rejected() {
     let cases = [
         (
