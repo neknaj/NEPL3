@@ -457,7 +457,7 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
     shared.value.embeds = input.value.embeds.clone();
     let original = shared.clone();
     let mut calls = 0;
-    let mut adapter = |closure: &ForeignClosure, embed, budget: &mut Budget| {
+    let mut adapter = |closure: &InlineContent, embed, budget: &mut Budget| {
         assert!(core::ptr::eq(closure, &shared.value.embeds[0]));
         assert_eq!(embed, EmbedRef(0));
         calls += 1;
@@ -589,7 +589,7 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
     for duplicate in [false, true] {
         let mut parts = Vec::new();
         for definition in [false, true] {
-            let mut adapter = |_: &ForeignClosure, _, _: &mut Budget| {
+            let mut adapter = |_: &InlineContent, _, _: &mut Budget| {
                 let anchor = definition || duplicate;
                 Ok::<_, Error>(HtmlRequest {
                     fragment: HtmlFragment {
@@ -918,7 +918,7 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
     ));
     assert_eq!(calls, 1);
     assert_eq!(cancelled.poll(), Err(StopReason::Cancelled));
-    let mut invalid = |_: &ForeignClosure, _, _: &mut Budget| {
+    let mut invalid = |_: &InlineContent, _, _: &mut Budget| {
         Ok::<_, Error>(HtmlRequest {
             fragment: HtmlFragment {
                 root: 0,

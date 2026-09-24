@@ -2,14 +2,17 @@ use nepl3_core::{
     budget::{Budget, Limits, StopReason},
     origin::{Origin, OriginId},
     schema::SchemaRegistry,
-    source::{SourceAdmission, SourceId, SourceSnapshot},
+    source::{SourceAdmission, SourceId, SourceSnapshot, SourceStore},
     syntax::*,
 };
+use nepl3_doc_core::{model as d, portable};
 use nepl3_sentence_core::{
+    literal::{self, SentenceOutcome},
     model::*,
     syntax::{NodeLocation, SentenceSyntax},
 };
-use nepl3_suite::adapters::sentence;
+use nepl3_suite::adapters::{document::sentence as slot, sentence};
+use nepl3_wire::foundation::FoundationCodec;
 
 fn b() -> Budget {
     Budget::new(Limits {
@@ -26,199 +29,7 @@ fn b() -> Budget {
 fn err(e: impl core::fmt::Debug) -> String {
     format!("{e:?}")
 }
-
-#[test]
-fn all_standard_inline_kinds_keep_content_order_and_shared_references() -> Result<(), String> {
-    use nepl3_doc_core::model as d;
-    let mut registry = SchemaRegistry::default();
-    for descriptor in [
-        nepl3_core::schema::foundation::descriptor(&mut b()),
-        nepl3_sentence_core::schema::descriptor(&mut b()),
-        nepl3_doc_core::schema::descriptor(&mut b()),
-    ] {
-        let descriptor = descriptor.map_err(err)?;
-        registry
-            .register(
-                descriptor.reference(&mut b()).map_err(err)?,
-                descriptor,
-                &mut b(),
-            )
-            .map_err(err)?;
-    }
-    registry.finalize(&mut b()).map_err(err)?;
-    let nodes = vec![
-        Kind::Text {
-            text: "漢字".into(),
-        },
-        Kind::Text {
-            text: "かんじ".into(),
-        },
-        Kind::Ruby {
-            base: InlineRef(0),
-            reading: InlineRef(1),
-        },
-        Kind::Code {
-            text: "x<>&".into(),
-        },
-        Kind::Emphasis {
-            inline: InlineRef(0),
-        },
-        Kind::Strong {
-            inline: InlineRef(2),
-        },
-        Kind::Break,
-        Kind::Concat {
-            inlines: vec![InlineRef(4), InlineRef(6), InlineRef(5)],
-        },
-        Kind::InlineAnno {
-            base: InlineRef(7),
-            notes: vec![InlineRef(1), InlineRef(3)],
-        },
-        Kind::ExternalLink {
-            uri: "https://example.org/".into(),
-            label: InlineRef(8),
-        },
-        Kind::Sentence {
-            inlines: (0..10).rev().map(InlineRef).collect(),
-        },
-    ];
-    let input = SentenceSyntax {
-        locations: vec![
-            NodeLocation {
-                origin: OriginId(0),
-                head: None,
-                cover: None
-            };
-            nodes.len()
-        ],
-        value: SentenceValue {
-            root: Root::Sentence(SentenceRef(10)),
-            nodes,
-            embeds: vec![],
-        },
-        sources: vec![],
-        views: vec![],
-        source_maps: vec![],
-        origins: vec![Origin::Synthetic {
-            reason: "typed adapter input".into(),
-            anchor: None,
-        }],
-    };
-    let expected = vec![
-        d::DocKind::Text {
-            text: "漢字".into(),
-        },
-        d::DocKind::Text {
-            text: "かんじ".into(),
-        },
-        d::DocKind::Ruby {
-            base: d::InlineRef(0),
-            reading: d::InlineRef(1),
-        },
-        d::DocKind::InlineCode {
-            text: "x<>&".into(),
-        },
-        d::DocKind::Emphasis {
-            inline: d::InlineRef(0),
-        },
-        d::DocKind::Strong {
-            inline: d::InlineRef(2),
-        },
-        d::DocKind::Break,
-        d::DocKind::Concat {
-            inlines: vec![d::InlineRef(4), d::InlineRef(6), d::InlineRef(5)],
-        },
-        d::DocKind::Anno {
-            base: d::InlineRef(7),
-            notes: vec![d::InlineRef(1), d::InlineRef(3)],
-        },
-        d::DocKind::Link {
-            target: d::LinkTarget::External {
-                uri: "https://example.org/".into(),
-            },
-            label: d::InlineRef(8),
-        },
-        d::DocKind::Sentence {
-            inlines: (0..10).rev().map(d::InlineRef).collect(),
-        },
-    ];
-    let mut measured = b();
-    let converted = sentence::document(
-        &input,
-        &registry,
-        &mut measured,
-        &mut SourceAdmission::default(),
-    )
-    .map_err(err)?;
-    assert_eq!(
-        converted.value.root,
-        d::DocRoot::Sentence(d::SentenceRef(10))
-    );
-    assert_eq!(
-        converted
-            .value
-            .nodes
-            .iter()
-            .map(|node| &node.kind)
-            .collect::<Vec<_>>(),
-        expected.iter().collect::<Vec<_>>()
-    );
-    assert_eq!(converted.origins, input.origins);
-    // Each resource stop returns no document and leaves the borrowed original
-    // available; only the successful call publishes the fully checked result.
-    for work in 0..measured.usage().work {
-        let mut limited = Budget::new(Limits {
-            work,
-            ..b().limits()
-        });
-        assert_eq!(
-            sentence::document(
-                &input,
-                &registry,
-                &mut limited,
-                &mut SourceAdmission::default()
-            )
-            .err(),
-            Some(sentence::Error::Stopped(StopReason::WorkLimit))
-        );
-    }
-    for allocation in 0..measured.usage().allocation_units {
-        let mut limited = Budget::new(Limits {
-            allocation_units: allocation,
-            ..b().limits()
-        });
-        assert_eq!(
-            sentence::document(
-                &input,
-                &registry,
-                &mut limited,
-                &mut SourceAdmission::default()
-            )
-            .err(),
-            Some(sentence::Error::Stopped(StopReason::AllocationLimit))
-        );
-    }
-    let mut invalid = input.clone();
-    invalid.value.root = Root::Sentence(SentenceRef(0));
-    assert!(matches!(
-        sentence::document(
-            &invalid,
-            &registry,
-            &mut b(),
-            &mut SourceAdmission::default()
-        ),
-        Err(sentence::Error::Sentence(_))
-    ));
-    let after = sentence::document(&input, &registry, &mut b(), &mut SourceAdmission::default())
-        .map_err(err)?;
-    assert_eq!(after, converted);
-    Ok(())
-}
-
-#[test]
-fn literal_bridge_and_typed_doc_share_normal_form_and_provenance() -> Result<(), String> {
-    use nepl3_doc_core::model as d;
-    use nepl3_sentence_core::literal::{self, SentenceOutcome};
+fn registry() -> Result<SchemaRegistry, String> {
     let mut r = SchemaRegistry::default();
     for descriptor in [
         nepl3_core::schema::foundation::descriptor(&mut b()),
@@ -234,10 +45,234 @@ fn literal_bridge_and_typed_doc_share_normal_form_and_provenance() -> Result<(),
         .map_err(err)?;
     }
     r.finalize(&mut b()).map_err(err)?;
+    Ok(r)
+}
+fn generated(value: SentenceValue) -> SentenceSyntax {
+    SentenceSyntax {
+        locations: vec![
+            NodeLocation {
+                origin: OriginId(0),
+                head: None,
+                cover: None
+            };
+            value.nodes.len()
+        ],
+        value,
+        sources: vec![],
+        views: vec![],
+        source_maps: vec![],
+        origins: vec![Origin::Synthetic {
+            reason: "typed Sentence slot".into(),
+            anchor: None,
+        }],
+    }
+}
+
+/// Doc owns one slot. Sentence retains its entire arena and provenance.
+/// The first receiver starts with an empty ambient SourceStore.
+fn doc_roundtrip(input: &SentenceSyntax, r: &SchemaRegistry) -> Result<SentenceSyntax, String> {
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(r, &store, &mut admission).map_err(err)?;
+    let embed = slot::embed(input, r, &mut codec, &mut b()).map_err(err)?;
+    let (root, kind, role) = match input.value.root {
+        Root::Sentence(_) => (
+            d::DocRoot::Sentence(d::SentenceRef(0)),
+            d::DocKind::Sentence {
+                syntax: d::EmbedRef(0),
+            },
+            d::EmbedKind::Sentence,
+        ),
+        Root::Inline(_) => (
+            d::DocRoot::Inline(d::InlineRef(0)),
+            d::DocKind::Anchor {
+                id: "label".into(),
+                label: d::EmbedRef(0),
+            },
+            d::EmbedKind::SentenceInline,
+        ),
+    };
+    assert_eq!(embed.kind, role);
+    let document = d::DocumentSyntax {
+        value: d::DocValue {
+            root,
+            nodes: vec![d::DocNode {
+                kind,
+                locations: vec![],
+                origin: None,
+                span: None,
+            }],
+            embeds: vec![embed],
+        },
+        sources: vec![],
+        origins: vec![],
+        views: vec![],
+        source_maps: vec![],
+    };
+    let normalized = nepl3_doc_core::normalize::document(
+        &document,
+        r,
+        &mut b(),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    assert_eq!(normalized, document);
+    let raw = portable::to_value(&document, r, &mut codec, &mut b()).map_err(err)?;
+    let wire = nepl3_wire::encode(&raw, &mut b()).map_err(err)?;
+    let mut admission = SourceAdmission::default();
+    let mut receiver = FoundationCodec::new(r, &store, &mut admission).map_err(err)?;
+    let received = portable::from_value(
+        &nepl3_wire::decode(&wire, &mut b()).map_err(err)?,
+        r,
+        &mut receiver,
+        &mut b(),
+    )
+    .map_err(err)?;
+    assert_eq!(received, document);
+    // Value decoding uses the meaning contract, with no surface form lookup.
+    let surface = r.selected("nepl3.sentence", 1).ok_or("Sentence schema")?;
+    let mut decode = b();
+    let actual = slot::lower(
+        &received.value.embeds[0],
+        surface,
+        &[],
+        r,
+        &mut receiver,
+        &mut decode,
+    )
+    .map_err(err)?;
+    assert_eq!(&actual, input);
+    assert_eq!(
+        decode.usage().source_bytes,
+        input
+            .sources
+            .iter()
+            .map(|source| source.text().len() as u64)
+            .sum()
+    );
+    let mut wrong_role = received.value.embeds[0].clone();
+    wrong_role.kind = match role {
+        d::EmbedKind::Sentence => d::EmbedKind::SentenceInline,
+        _ => d::EmbedKind::Sentence,
+    };
+    assert!(matches!(
+        slot::lower(&wrong_role, surface, &[], r, &mut receiver, &mut b()),
+        Err(slot::Error::Category)
+    ));
+    Ok(actual)
+}
+
+#[test]
+fn all_standard_inline_kinds_keep_content_order_and_shared_references() -> Result<(), String> {
+    let r = registry()?;
+    let input = generated(SentenceValue {
+        root: Root::Sentence(SentenceRef(10)),
+        nodes: vec![
+            Kind::Text {
+                text: "漢字".into(),
+            },
+            Kind::Text {
+                text: "かんじ".into(),
+            },
+            Kind::Ruby {
+                base: InlineRef(0),
+                reading: InlineRef(1),
+            },
+            Kind::Code {
+                text: "x<>&".into(),
+            },
+            Kind::Emphasis {
+                inline: InlineRef(0),
+            },
+            Kind::Strong {
+                inline: InlineRef(2),
+            },
+            Kind::Break,
+            Kind::Concat {
+                inlines: vec![InlineRef(4), InlineRef(6), InlineRef(5)],
+            },
+            Kind::InlineAnno {
+                base: InlineRef(7),
+                notes: vec![InlineRef(1), InlineRef(3)],
+            },
+            Kind::ExternalLink {
+                uri: "https://example.org/".into(),
+                label: InlineRef(8),
+            },
+            Kind::Sentence {
+                inlines: (0..10).rev().map(InlineRef).collect(),
+            },
+        ],
+        embeds: vec![],
+    });
+    let actual = doc_roundtrip(&input, &r)?;
+    assert_eq!(actual.value.nodes, input.value.nodes);
+    let store = SourceStore::default();
+    let run = |input: &SentenceSyntax, limits, cancelled| {
+        let mut budget = Budget::new(limits);
+        if cancelled {
+            budget.cancel();
+        }
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&r, &store, &mut admission).map_err(err)?;
+        let result = slot::embed(input, &r, &mut codec, &mut budget);
+        assert_eq!(budget.current_depth(), 0);
+        Ok::<_, String>((result, budget))
+    };
+    let (result, measured) = run(&input, b().limits(), false)?;
+    result.map_err(err)?;
+    for (reason, used) in [
+        (StopReason::WorkLimit, measured.usage().work),
+        (
+            StopReason::AllocationLimit,
+            measured.usage().allocation_units,
+        ),
+        (StopReason::NodeLimit, measured.usage().nodes),
+        (StopReason::DepthLimit, measured.usage().depth),
+    ] {
+        assert!(used > 0);
+        for cap in [0, used / 2, used - 1, used] {
+            let mut limits = b().limits();
+            match reason {
+                StopReason::WorkLimit => limits.work = cap,
+                StopReason::AllocationLimit => limits.allocation_units = cap,
+                StopReason::NodeLimit => limits.nodes = cap,
+                StopReason::DepthLimit => limits.depth = cap,
+                _ => return Err("resource".into()),
+            }
+            let (result, budget) = run(&input, limits, false)?;
+            if cap == used {
+                result.map_err(err)?;
+            } else {
+                assert!(
+                    matches!(result, Err(slot::Error::Stopped(actual)) if actual == reason),
+                    "{result:?}"
+                );
+                assert_eq!(budget.poll(), Err(reason));
+            }
+        }
+    }
+    assert!(matches!(
+        run(&input, b().limits(), true)?.0,
+        Err(slot::Error::Stopped(StopReason::Cancelled))
+    ));
+    let mut invalid = input.clone();
+    invalid.value.root = Root::Sentence(SentenceRef(0));
+    assert!(matches!(
+        run(&invalid, b().limits(), false)?.0,
+        Err(slot::Error::Value(_))
+    ));
+    assert_eq!(doc_roundtrip(&input, &r)?, actual);
+    Ok(())
+}
+
+#[test]
+fn literal_and_typed_slots_preserve_sentence_meaning_and_provenance() -> Result<(), String> {
+    let r = registry()?;
     let source = SourceSnapshot::new(
-        SourceId("bridge-literal".into()),
+        SourceId("slot-literal".into()),
         1,
-        "memory:bridge-literal".into(),
+        "memory:slot-literal".into(),
         b"\"ab[x/y]\"".to_vec(),
         &mut b(),
     )
@@ -253,166 +288,67 @@ fn literal_bridge_and_typed_doc_share_normal_form_and_provenance() -> Result<(),
     )
     .map_err(err)?;
     let SentenceOutcome::Matched(literal) = scan.outcome else {
-        return Err("expected literal".into());
+        return Err("literal".into());
     };
-    let doc = sentence::document(
-        &literal.syntax,
-        &r,
-        &mut b(),
-        &mut SourceAdmission::default(),
-    )
-    .map_err(err)?;
-    // Independent constructor input contains empty/adjacent Text and Concat;
-    // normalization must yield the same meaning as the actual literal reader.
-    let kinds = vec![
-        d::DocKind::Text { text: "a".into() },
-        d::DocKind::Text {
-            text: String::new(),
-        },
-        d::DocKind::Text { text: "b".into() },
-        d::DocKind::Concat {
-            inlines: vec![d::InlineRef(0), d::InlineRef(1), d::InlineRef(2)],
-        },
-        d::DocKind::Text { text: "x".into() },
-        d::DocKind::Text { text: "y".into() },
-        d::DocKind::Ruby {
-            base: d::InlineRef(4),
-            reading: d::InlineRef(5),
-        },
-        d::DocKind::Sentence {
-            inlines: vec![d::InlineRef(3), d::InlineRef(6)],
-        },
-    ];
-    let prefix = d::DocumentSyntax {
-        value: d::DocValue {
-            root: d::DocRoot::Sentence(d::SentenceRef(7)),
-            nodes: kinds
-                .into_iter()
-                .map(|kind| d::DocNode {
-                    kind,
-                    locations: vec![],
-                    origin: None,
-                    span: None,
-                })
-                .collect(),
-            embeds: vec![],
-        },
-        sources: vec![],
-        origins: vec![],
-        views: vec![],
-        source_maps: vec![],
-    };
-    let normal =
-        nepl3_doc_core::normalize::document(&prefix, &r, &mut b(), &mut SourceAdmission::default())
-            .map_err(err)?;
-    assert_eq!(normal.value.root, doc.value.root);
+    let actual = doc_roundtrip(&literal.syntax, &r)?;
+    assert_eq!(actual.sources, literal.syntax.sources);
+    assert_eq!(actual.locations, literal.syntax.locations);
+    assert_eq!(actual.views, literal.syntax.views);
+    assert_eq!(actual.origins, literal.syntax.origins);
+    assert_eq!(actual.source_maps, literal.syntax.source_maps);
+    // Typed empty/adjacent Text and Concat retain their arena. Sentence's
+    // literal projection supplies the content oracle; Doc keeps owner data.
+    let typed = generated(SentenceValue {
+        root: Root::Sentence(SentenceRef(7)),
+        nodes: vec![
+            Kind::Text { text: "a".into() },
+            Kind::Text {
+                text: String::new(),
+            },
+            Kind::Text { text: "b".into() },
+            Kind::Concat {
+                inlines: vec![InlineRef(0), InlineRef(1), InlineRef(2)],
+            },
+            Kind::Text { text: "x".into() },
+            Kind::Text { text: "y".into() },
+            Kind::Ruby {
+                base: InlineRef(4),
+                reading: InlineRef(5),
+            },
+            Kind::Sentence {
+                inlines: vec![InlineRef(3), InlineRef(6)],
+            },
+        ],
+        embeds: vec![],
+    });
+    let received = doc_roundtrip(&typed, &r)?;
+    assert_eq!(received.value, typed.value);
     assert_eq!(
-        normal
-            .value
-            .nodes
-            .iter()
-            .map(|node| &node.kind)
-            .collect::<Vec<_>>(),
-        doc.value
-            .nodes
-            .iter()
-            .map(|node| &node.kind)
-            .collect::<Vec<_>>()
+        literal::print(&received.value, &mut b()).map_err(err)?,
+        "\"ab[x/y]\""
     );
-    let mut operation = b();
-    let normalized = nepl3_doc_core::normalize::document(
-        &doc,
-        &r,
-        &mut operation,
-        &mut SourceAdmission::default(),
-    )
-    .map_err(err)?;
-    assert_eq!(normalized.views, doc.views);
-    assert_eq!(normalized.origins, doc.origins);
-    assert_eq!(operation.usage().source_bytes, source.text().len() as u64);
-    assert_eq!(doc.sources, literal.syntax.sources);
-    assert_eq!(doc.origins, literal.syntax.origins);
-    assert_eq!(doc.source_maps, literal.syntax.source_maps);
-    for (node, location) in doc.value.nodes.iter().zip(&literal.syntax.locations) {
-        assert_eq!(node.origin, Some(location.origin));
-        assert_eq!(node.span, location.cover);
-    }
+    assert_eq!(
+        literal::print(&actual.value, &mut b()).map_err(err)?,
+        "\"ab[x/y]\""
+    );
     Ok(())
 }
 
 #[test]
-fn doc_bridge_preserves_generated_shared_inline_and_rejects_unselected_foreign()
--> Result<(), String> {
-    let mut r = SchemaRegistry::default();
-    for d in [
-        nepl3_core::schema::foundation::descriptor(&mut b()),
-        nepl3_sentence_core::schema::descriptor(&mut b()),
-        nepl3_doc_core::schema::descriptor(&mut b()),
-    ] {
-        let d = d.map_err(err)?;
-        r.register(d.reference(&mut b()).map_err(err)?, d, &mut b())
-            .map_err(err)?;
-    }
-    r.finalize(&mut b()).map_err(err)?;
-    let location = NodeLocation {
-        origin: OriginId(0),
-        head: None,
-        cover: None,
-    };
-    let mut input = SentenceSyntax {
-        value: SentenceValue {
-            root: Root::Inline(InlineRef(1)),
-            embeds: vec![],
-            nodes: vec![
-                Kind::Break,
-                Kind::Concat {
-                    inlines: vec![InlineRef(0), InlineRef(0)],
-                },
-            ],
-        },
-        locations: vec![location.clone(), location.clone()],
-        sources: vec![],
-        views: vec![],
-        source_maps: vec![],
-        origins: vec![Origin::Synthetic {
-            reason: "generated sentence".into(),
-            anchor: None,
-        }],
-    };
-    let out =
-        sentence::document(&input, &r, &mut b(), &mut SourceAdmission::default()).map_err(err)?;
-    use nepl3_doc_core::model as d;
-    assert_eq!(out.value.root, d::DocRoot::Inline(d::InlineRef(1)));
-    assert_eq!(
-        out.value.nodes[1].kind,
-        d::DocKind::Concat {
-            inlines: vec![d::InlineRef(0), d::InlineRef(0)]
-        }
-    );
-    assert!(
-        out.value
-            .nodes
-            .iter()
-            .all(|n| n.span.is_none() && n.origin == Some(OriginId(0)))
-    );
-    let mut budget = b();
-    budget.cancel();
-    assert_eq!(
-        sentence::document(&input, &r, &mut budget, &mut SourceAdmission::default()).err(),
-        Some(sentence::Error::Stopped(StopReason::Cancelled))
-    );
-    let mut limits = b().limits();
-    limits.work = 0;
-    assert_eq!(
-        sentence::document(
-            &input,
-            &r,
-            &mut Budget::new(limits),
-            &mut SourceAdmission::default()
-        )
-        .err(),
-        Some(sentence::Error::Stopped(StopReason::WorkLimit))
-    );
+fn doc_slot_preserves_shared_inline_and_requires_selection_for_foreign_output() -> Result<(), String>
+{
+    let r = registry()?;
+    let mut input = generated(SentenceValue {
+        root: Root::Inline(InlineRef(1)),
+        nodes: vec![
+            Kind::Break,
+            Kind::Concat {
+                inlines: vec![InlineRef(0), InlineRef(0)],
+            },
+        ],
+        embeds: vec![],
+    });
+    assert_eq!(doc_roundtrip(&input, &r)?, input);
     let foundation = r
         .selected("nepl3.foundation", 1)
         .ok_or("foundation")?
@@ -423,9 +359,6 @@ fn doc_bridge_preserves_generated_shared_inline_and_rejects_unselected_foreign()
     };
     let digest = nepl3_wire::environment::environment_digest(&env, &foundation, &r, &mut b())
         .map_err(err)?;
-    // Structurally valid foreign syntax; no guest language or semantic role is
-    // inferred from its category or foundation kind. The bridge must require
-    // a selected adapter even after closure validation succeeds.
     let closure = ForeignClosure {
         syntax: ForeignSyntax {
             schema: foundation.clone(),
@@ -459,38 +392,44 @@ fn doc_bridge_preserves_generated_shared_inline_and_rejects_unselected_foreign()
         owner_sources: vec![],
         owner_source_maps: vec![],
     };
-    input.value.nodes = vec![Kind::ForeignInline {
-        syntax: EmbedRef(0),
-    }];
-    input.value.root = Root::Inline(InlineRef(0));
-    input.value.embeds = vec![closure.into()];
-    input.locations = vec![location];
-    input
-        .validate(&r, &mut b(), &mut SourceAdmission::default())
-        .map_err(err)?;
+    input = generated(SentenceValue {
+        root: Root::Inline(InlineRef(0)),
+        nodes: vec![Kind::ForeignInline {
+            syntax: EmbedRef(0),
+        }],
+        embeds: vec![closure.into()],
+    });
+    let actual = doc_roundtrip(&input, &r)?;
+    // Storage preserves opaque guests; output requires a selected operation.
+    let prepared = nepl3_sentence_core::print::prepare(
+        &actual.value,
+        &r,
+        &mut b(),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
     assert_eq!(
-        sentence::document(&input, &r, &mut b(), &mut SourceAdmission::default()).err(),
-        Some(sentence::Error::ForeignAdapterRequired(EmbedRef(0)))
+        prepared.render(&[], &mut b()),
+        Err(nepl3_sentence_core::print::Error::AdapterRequired(
+            EmbedRef(0)
+        ))
     );
-    // The independent consumer keeps foreign meaning in its owner. A Doc
-    // selection does not turn an unrelated category into a Doc inline.
-    let surface = r.selected("nepl3.doc", 1).ok_or("Doc schema")?;
-    let store = nepl3_core::source::SourceStore::default();
+    let surface = r.selected("nepl3.doc", 1).ok_or("Doc")?;
+    let store = SourceStore::default();
     let run = |input: &SentenceSyntax, budget: &mut Budget| {
         let mut admission = SourceAdmission::default();
-        let mut codec = nepl3_wire::foundation::FoundationCodec::new(&r, &store, &mut admission)
-            .map_err(err)?;
+        let mut codec = FoundationCodec::new(&r, &store, &mut admission).map_err(err)?;
         Ok::<_, String>(sentence::document_guests::collect(
             input, surface, &r, &mut codec, budget,
         ))
     };
-    let selected = run(&input, &mut b())?.map_err(err)?;
+    let selected = run(&actual, &mut b())?.map_err(err)?;
     assert!(selected.documents().is_empty());
     assert!(selected.occurrences().is_empty());
     let mut cancelled = b();
     cancelled.cancel();
     assert!(matches!(
-        run(&input, &mut cancelled)?,
+        run(&actual, &mut cancelled)?,
         Err(sentence::document_guests::Error::Stopped(
             StopReason::Cancelled
         ))
