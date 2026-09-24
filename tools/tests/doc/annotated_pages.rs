@@ -1,8 +1,13 @@
 use super::*;
+#[path = "namespace_projection.rs"]
+mod namespace_projection;
 use nepl3_doc_core::{check::Category, lower, pages::*};
 use nepl3_tools::doc::projection::{
     Error,
-    annotated::{self, pages::render},
+    annotated::{
+        self,
+        pages::{render, render_observed},
+    },
 };
 use pulldown_cmark::{Event, Parser, Tag};
 
@@ -60,8 +65,8 @@ fn page_projection_reuses_validation_and_matches_standalone_digest() -> Result<(
     let store = SourceStore::default();
     for count in [8, 16, 32] {
         let source = format!(
-            "article en \"A\" body {} nil",
-            "cons paragraph cons \"A structured document with repeated independent paragraphs.\" nil ".repeat(count)
+            "article en sentence \"A\" body {} nil",
+            "cons paragraph cons sentence \"A structured document with repeated independent paragraphs.\" nil ".repeat(count)
         );
         let set = PageSet {
             pages: vec![page(&c, "a", "a.md", "a.md", &source)?],
@@ -87,14 +92,23 @@ fn page_projection_reuses_validation_and_matches_standalone_digest() -> Result<(
         let mut codec =
             FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
         let mut actual = budget();
-        let output = render(&set, &c.doc.registry, &mut codec, &mut actual, &[&[]]).map_err(err)?;
+        let mut prepared = None;
+        let output = render_observed(
+            &set,
+            &c.doc.registry,
+            &mut codec,
+            &mut actual,
+            &[&[]],
+            &mut |usage| prepared = Some(usage),
+        )
+        .map_err(err)?;
         assert_eq!(output.pages[0].markdown, standalone.markdown);
         assert_eq!(output.pages[0].document_digest, standalone.document_digest);
         assert_eq!(output.pages[0].document_digest, digest);
         let extra = actual
             .usage()
             .work
-            .checked_sub(resolved.usage().work)
+            .checked_sub(prepared.ok_or("missing preparation measurement")?.work)
             .ok_or("missing resolution work")?;
         // The writer must cost less than repeating complete preparation plus
         // that same writer. Regressing to per-page inspect violates this bound.
@@ -112,20 +126,19 @@ fn page_projection_scales_with_pages_without_rescanning_all_links() -> Result<()
     let c = compiled()?;
     let store = SourceStore::default();
     // Vary page count independently of links per page. Internal links exercise
-    // plan.links; external links exercise plan.remaining. Empty pages between
+    // Doc namespace resolution; external links belong to Sentence. Empty pages between
     // populated pages exercise advancing across gaps without losing entries.
     for (internal, external) in [(0, 1), (1, 0), (3, 2)] {
         let mut pages = Vec::new();
         for index in 0..32 {
             let id = format!("p{index:02}");
             let source = if index % 4 == 1 {
-                "article en \"Empty\" body nil".to_owned()
+                "article en sentence \"Empty\" body nil".to_owned()
             } else {
                 format!(
-                    "article en \"A\" body cons paragraph cons sentence {}{}nil nil nil",
-                    "cons link page \"p00\" none text \"Local\" ".repeat(internal),
-                    "cons link external \"https://example.com/\" text \"External\" "
-                        .repeat(external)
+                    "article en sentence \"A\" body cons paragraph cons sentence sentence {}{}nil nil nil",
+                    "cons doc link page \"p00\" none text \"Local\" ".repeat(internal),
+                    "cons link \"https://example.com/\" text \"External\" ".repeat(external)
                 )
             };
             pages.push(page(
@@ -154,8 +167,16 @@ fn page_projection_scales_with_pages_without_rescanning_all_links() -> Result<()
                 FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
             let mut actual = budget();
             let aliases = vec![&[][..]; count];
-            let output =
-                render(&set, &c.doc.registry, &mut codec, &mut actual, &aliases).map_err(err)?;
+            let mut prepared = None;
+            let output = render_observed(
+                &set,
+                &c.doc.registry,
+                &mut codec,
+                &mut actual,
+                &aliases,
+                &mut |usage| prepared = Some(usage),
+            )
+            .map_err(err)?;
             assert_eq!(output.pages.len(), count);
             for (index, artifact) in output.pages.iter().enumerate() {
                 let expected = if index % 4 == 1 {
@@ -175,7 +196,7 @@ fn page_projection_scales_with_pages_without_rescanning_all_links() -> Result<()
                 actual
                     .usage()
                     .work
-                    .checked_sub(resolved.usage().work)
+                    .checked_sub(prepared.ok_or("missing preparation measurement")?.work)
                     .ok_or("resolution work mismatch")?,
             );
         }
@@ -197,25 +218,20 @@ fn page_projection_scales_with_pages_without_rescanning_all_links() -> Result<()
 
 #[test]
 fn html_pages_consume_ordered_links_once_across_empty_pages() -> Result<(), String> {
-    use nepl3_doc_html::{
-        ParallelMode, RenderOptions,
-        pages::{PagesHtmlRequest, render_pages},
-    };
-    use nepl3_markup::html::{HtmlAttribute, HtmlHref, HtmlNode};
+    use nepl3_doc_html::{ParallelMode, RenderOptions, pages::PagesHtmlRequest};
+    use nepl3_markup::html::HtmlHref;
     let c = compiled()?;
-    let store = SourceStore::default();
     for (internal, external) in [(0, 1), (1, 0), (3, 2)] {
         let mut pages = Vec::new();
         for index in 0..32 {
             let id = format!("p{index:02}");
             let input = if index % 4 == 1 {
-                "article en \"Empty\" body nil".to_owned()
+                "article en sentence \"Empty\" body nil".to_owned()
             } else {
                 format!(
-                    "article en \"A\" body cons paragraph cons sentence {}{}nil nil nil",
-                    "cons link page \"p00\" none text \"Local\" ".repeat(internal),
-                    "cons link external \"https://example.com/\" text \"External\" "
-                        .repeat(external)
+                    "article en sentence \"A\" body cons paragraph cons sentence sentence {}{}nil nil nil",
+                    "cons doc link page \"p00\" none text \"Local\" ".repeat(internal),
+                    "cons link \"https://example.com/\" text \"External\" ".repeat(external)
                 )
             };
             pages.push(page(
@@ -227,6 +243,7 @@ fn html_pages_consume_ordered_links_once_across_empty_pages() -> Result<(), Stri
             )?);
         }
         let mut work = Vec::new();
+        let mut validation = Vec::new();
         for count in [8, 16, 32] {
             let request = PagesHtmlRequest {
                 set: PageSet {
@@ -237,40 +254,9 @@ fn html_pages_consume_ordered_links_once_across_empty_pages() -> Result<(), Stri
                     parallel: ParallelMode::Rows,
                 },
             };
-            let mut admission = SourceAdmission::default();
-            let mut codec =
-                FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
-            let mut resolved = budget();
-            resolve(&request.set, &c.doc.registry, &mut codec, &mut resolved).map_err(err)?;
-            let mut admission = SourceAdmission::default();
-            let mut codec =
-                FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
-            let mut actual = budget();
-            let output =
-                render_pages(&request, &c.doc.registry, &mut codec, &mut actual).map_err(err)?;
-            assert_eq!(output.fragments.len(), count);
-            for (index, fragment) in output.fragments.iter().enumerate() {
-                let hrefs: Vec<_> = fragment
-                    .markup
-                    .fragment
-                    .nodes
-                    .iter()
-                    .filter_map(|node| {
-                        if let HtmlNode::Element { attributes, .. } = node {
-                            Some(attributes)
-                        } else {
-                            None
-                        }
-                    })
-                    .flatten()
-                    .filter_map(|attribute| {
-                        if let HtmlAttribute::Href { value } = attribute {
-                            Some(value)
-                        } else {
-                            None
-                        }
-                    })
-                    .collect();
+            let (hrefs, render_work) = namespace_projection::html_links(&c, &request, &pages)?;
+            assert_eq!(hrefs.len(), count);
+            for (index, actual) in hrefs.iter().enumerate() {
                 let mut expected = Vec::new();
                 if index % 4 != 1 {
                     expected.extend((0..internal).map(|_| HtmlHref::BetweenArtifacts {
@@ -282,18 +268,14 @@ fn html_pages_consume_ordered_links_once_across_empty_pages() -> Result<(), Stri
                         uri: "https://example.com/".into(),
                     }));
                 }
-                assert_eq!(hrefs, expected.iter().collect::<Vec<_>>());
+                assert_eq!(actual, &expected);
             }
-            work.push(
-                actual
-                    .usage()
-                    .work
-                    .checked_sub(resolved.usage().work)
-                    .ok_or("resolution work mismatch")?,
-            );
+            work.push(render_work.composition);
+            validation.push(render_work.output_validation);
         }
-        // Repeat fixed-width groups of four pages. Preparation, rendering and
-        // output-ID collection are linear; only terminal cursor checks vary.
+        // Repeat fixed-width groups of four pages with a fixed admitted source
+        // pool. Measure composition only; preparation and final output checking
+        // have separate costs. A small allowance covers terminal cursor checks.
         assert!(
             work[1] <= 2 * work[0] + 16,
             "{internal}/{external}: {work:?}"
@@ -302,6 +284,10 @@ fn html_pages_consume_ordered_links_once_across_empty_pages() -> Result<(), Stri
             work[2] <= 2 * work[1] + 16,
             "{internal}/{external}: {work:?}"
         );
+        // Complete output checking builds a route index and performs binary
+        // lookup. Doubling admits O(P log P), while composition stays linear.
+        assert!(validation[1] < 3 * validation[0], "{validation:?}");
+        assert!(validation[2] < 3 * validation[1], "{validation:?}");
     }
     Ok(())
 }
@@ -311,11 +297,12 @@ fn checked_pages_still_reject_unsafe_external_and_guest_requirements() -> Result
     let c = compiled()?;
     let store = SourceStore::default();
     for inline in [
-        r#"link external "javascript:alert(1)" text "bad""#,
-        "math Math frac 1 0",
+        r#"link "javascript:alert(1)" text "bad""#,
+        "doc math Math frac 1 0",
     ] {
-        let source =
-            format!("article en \"A\" body cons paragraph cons sentence cons {inline} nil nil nil");
+        let source = format!(
+            "article en sentence \"A\" body cons paragraph cons sentence sentence cons {inline} nil nil nil"
+        );
         let set = PageSet {
             pages: vec![page(&c, "a", "a.md", "a.md", &source)?],
             files: vec![],
@@ -325,7 +312,13 @@ fn checked_pages_still_reject_unsafe_external_and_guest_requirements() -> Result
             FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
         let failure = render(&set, &c.doc.registry, &mut codec, &mut budget(), &[&[]]);
         assert!(
-            matches!(failure, Err(Error::Text { .. } | Error::NeedsResolution)),
+            matches!(
+                failure,
+                Err(Error::Sentence {
+                    issue: nepl3_tools::doc::projection::SentenceIssue::Text,
+                    ..
+                } | Error::NeedsResolution)
+            ),
             "{failure:?}"
         );
     }
@@ -340,17 +333,17 @@ fn adjacent_lists_in_page_set_keep_links_and_separate_numbering() -> Result<(), 
         "a",
         "source/a.md",
         "docs/a.md",
-        r#"article en "A" body
-        cons list ordered 7 cons item none body cons paragraph cons sentence
-          cons link page "b" some "use" text "B" nil nil nil nil
-        cons list ordered 42 cons item none body cons paragraph cons "Second" nil nil nil nil"#,
+        r#"article en sentence "A" body
+        cons list ordered 7 cons item none body cons paragraph cons sentence sentence
+          cons doc link page "b" some "use" text "B" nil nil nil nil
+        cons list ordered 42 cons item none body cons paragraph cons sentence "Second" nil nil nil nil"#,
     )?;
     let b = page(
         &c,
         "b",
         "source/b.md",
         "docs/nested/b.md",
-        r#"article en "B" body cons section use "Use" body nil nil"#,
+        r#"article en sentence "B" body cons section use sentence "Use" body nil nil"#,
     )?;
     let set = PageSet {
         pages: vec![a, b],
@@ -388,20 +381,20 @@ fn annotated_page_set_resolves_mutual_self_and_passive_file_links() -> Result<()
         "a",
         "source/a.md",
         "docs/a.md",
-        r#"article en "A" body
-      cons paragraph cons sentence
-        cons link page "b" some "use" text "B"
-        cons text " and " cons link relative "a.md" none text "self"
-        cons text " and " cons link relative "legacy.md" none text "legacy" nil nil nil"#,
+        r#"article en sentence "A" body
+      cons paragraph cons sentence sentence
+        cons doc link page "b" some "use" text "B"
+        cons text " and " cons doc link relative "a.md" none text "self"
+        cons text " and " cons doc link relative "legacy.md" none text "legacy" nil nil nil"#,
     )?;
     let b = page(
         &c,
         "b",
         "source/b.md",
         "docs/nested/b.md",
-        r#"article en "B" body
-      cons section use "Use" body cons paragraph cons sentence
-        cons link page "a" none ruby text "戻" text "もど" nil nil nil nil"#,
+        r#"article en sentence "B" body
+      cons section use sentence "Use" body cons paragraph cons sentence sentence
+        cons doc link page "a" none ruby text "戻" text "もど" nil nil nil nil"#,
     )?;
     let mut set = PageSet {
         pages: vec![a, b],
@@ -460,7 +453,10 @@ fn annotated_page_set_resolves_mutual_self_and_passive_file_links() -> Result<()
             &mut budget(),
             &[]
         ),
-        Err(Error::NeedsResolution)
+        Err(Error::Sentence {
+            issue: nepl3_tools::doc::projection::SentenceIssue::Unsupported,
+            ..
+        })
     ));
     Ok(())
 }
@@ -482,7 +478,7 @@ fn annotated_page_set_rejects_missing_file_fragments_and_unsafe_targets() -> Res
         let mut codec =
             FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
         let input = format!(
-            "article en \"A\" body cons paragraph cons sentence cons link {target} text \"link\" nil nil nil"
+            "article en sentence \"A\" body cons paragraph cons sentence sentence cons doc link {target} text \"link\" nil nil nil"
         );
         let set = PageSet {
             pages: vec![page(&c, "a", "source/a.md", "docs/a.md", &input)?],
@@ -515,7 +511,7 @@ fn annotated_page_set_keeps_stops_sticky_and_returns_no_partial_output() -> Resu
             "a",
             "a.md",
             "a.md",
-            r#"article en "A" body cons paragraph cons sentence cons link page "a" none text "self" nil nil nil"#,
+            r#"article en sentence "A" body cons paragraph cons sentence sentence cons doc link page "a" none text "self" nil nil nil"#,
         )?],
         files: vec![],
     };
@@ -610,13 +606,19 @@ fn architecture_draft_projects_with_explicit_current_markdown_dependency() -> Re
 #[test]
 fn annotated_page_set_rejects_partial_render_and_ambiguous_registration() -> Result<(), String> {
     let c = compiled()?;
-    let a = page(&c, "a", "a.md", "a.md", r#"article en "A" body nil"#)?;
+    let a = page(
+        &c,
+        "a",
+        "a.md",
+        "a.md",
+        r#"article en sentence "A" body nil"#,
+    )?;
     let b = page(
         &c,
         "b",
         "b.md",
         "b.md",
-        r#"article en "B" body cons paragraph cons parallel cons variant en "B" cons variant ja "B" nil nil nil"#,
+        r#"article en sentence "B" body cons paragraph cons parallel cons variant en sentence "B" cons variant ja sentence "B" nil nil nil"#,
     )?;
     let mut set = PageSet {
         pages: vec![a, b],

@@ -50,6 +50,23 @@ pub fn render<C: FoundationValueCodec>(
 where
     C::Error: core::fmt::Debug,
 {
+    render_observed(set, registry, codec, budget, aliases, &mut |_| {})
+}
+
+/// Observe the cumulative usage after discovery and complete namespace
+/// resolution. The callback receives no proof or mutable budget; rendering
+/// continues in the same operation and retains all selected owners.
+pub fn render_observed<C: FoundationValueCodec>(
+    set: &PageSet,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+    aliases: &[&[Alias]],
+    prepared: &mut impl FnMut(Usage),
+) -> Result<PagesArtifact, Error>
+where
+    C::Error: core::fmt::Debug,
+{
     budget.poll()?;
     if aliases.len() != set.pages.len() {
         return Err(Error::Invalid("page alias count mismatch".into()));
@@ -132,6 +149,7 @@ where
     let value = domain::resolve(set, &refs, registry, codec, budget);
     budget.poll()?;
     let checked = value.map_err(|e| Error::Invalid(format!("{e:?}")))?;
+    prepared(budget.usage());
     let mut output = Vec::new();
     let mut dependencies = Vec::new();
     let mut pending = checked.members().iter().peekable();
