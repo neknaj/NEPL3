@@ -64,7 +64,7 @@ impl<E> From<StopReason> for Error<E> {
         Self::Stopped(reason)
     }
 }
-fn array<T>(count: usize, b: &mut Budget) -> Result<Vec<T>, StopReason> {
+pub(super) fn array<T>(count: usize, b: &mut Budget) -> Result<Vec<T>, StopReason> {
     let bytes = count
         .checked_mul(core::mem::size_of::<T>())
         .filter(|bytes| *bytes <= isize::MAX as usize)

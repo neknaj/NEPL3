@@ -15,7 +15,8 @@ fn inputs() -> Vec<(Entry, String)> {
             route: "index.html".into(),
             input: None,
         },
-        "article ja \"[本文/ほんぶん]\" body cons paragraph cons \"abc\" nil nil".into(),
+        "article ja sentence \"[本文/ほんぶん]\" body cons paragraph cons sentence \"abc\" nil nil"
+            .into(),
     )]
 }
 #[test]

@@ -14,7 +14,7 @@ fn entry(id: &str, source: &str, route: &str) -> Entry {
 fn fragment_only_doc_source_generates_a_checked_self_href() -> Result<(), String> {
     let compiled = source::compiled()?;
     let inputs = vec![(entry("guide", "doc/guide.md", "docs/guide/index.html"),
-        "article en \"Guide\" body cons paragraph cons sentence cons link relative \"\" some \"local\" text \"Here\" cons anchor local text \"Target\" nil nil nil".into())];
+        "article en sentence \"Guide\" body cons paragraph cons sentence sentence cons doc link relative \"\" some \"local\" text \"Here\" cons doc anchor local text \"Target\" nil nil nil".into())];
     let output = pages::generate(&compiled, &inputs)?;
     let html = std::str::from_utf8(&output.files["docs/guide/index.html"]).map_err(super::err)?;
     assert!(html.contains("href=\"index.html#n-6c6f63616c\""), "{html}");
@@ -25,7 +25,7 @@ fn fragment_only_doc_source_generates_a_checked_self_href() -> Result<(), String
 fn actual_doc_links_to_exact_registered_file_bytes() -> Result<(), String> {
     let compiled = source::compiled()?;
     let inputs = vec![(entry("guide", "doc/guide.md", "docs/guide/index.html"),
-        "article en \"Guide\" body cons paragraph cons sentence cons link relative \"../design/data.json\" none text \"Contract\" nil nil nil".into())];
+        "article en sentence \"Guide\" body cons paragraph cons sentence sentence cons doc link relative \"../design/data.json\" none text \"Contract\" nil nil nil".into())];
     let payload = b"{\"version\":1}\r\n".to_vec();
     let resources = vec![(
         entry("data", "design/data.json", "data/data.json"),
@@ -75,7 +75,7 @@ fn registered_resources_obey_output_stop_and_reserved_routes() -> Result<(), Str
     let compiled = source::compiled()?;
     let inputs = vec![(
         entry("guide", "doc/guide.md", "index.html"),
-        "article en \"Guide\" body nil".into(),
+        "article en sentence \"Guide\" body nil".into(),
     )];
     for route in ["index.html", "manifest.json", "assets/doc.css", "data/CON"] {
         let resources = vec![(entry("file", "data/item", route), b"x".to_vec())];
@@ -130,7 +130,7 @@ fn file_resource_export_reads_only_explicit_contained_inputs()
         fs::create_dir(&input)?;
         fs::write(
             input.join("guide.nepld"),
-            "article en \"Files\" body cons paragraph cons sentence cons link relative \"../data.bin\" none text \"Download\" nil nil nil",
+            "article en sentence \"Files\" body cons paragraph cons sentence sentence cons doc link relative \"../data.bin\" none text \"Download\" nil nil nil",
         )?;
         let bytes = [0, 255, 13, 10, 128];
         fs::write(input.join("payload.bin"), bytes)?;

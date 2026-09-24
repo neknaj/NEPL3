@@ -442,6 +442,32 @@ fn article_sentence_doc_links_resolve_in_page_namespaces() -> Result<(), String>
                         }
                     }
                 }
+                if case == 0 {
+                    // Safe custom Borrow implementations can switch arenas.
+                    // Route checking must use the exact arena validated first.
+                    struct Switching<'a> {
+                        first: &'a nepl3_markup::html::HtmlRequest,
+                        later: &'a nepl3_markup::html::HtmlRequest,
+                        calls: core::cell::Cell<usize>,
+                    }
+                    impl core::borrow::Borrow<nepl3_markup::html::HtmlRequest> for Switching<'_> {
+                        fn borrow(&self) -> &nepl3_markup::html::HtmlRequest {
+                            let calls = self.calls.get();
+                            self.calls.set(calls + 1);
+                            if calls == 0 { self.first } else { self.later }
+                        }
+                    }
+                    let switched = [0, 1].map(|index| Switching {
+                        first: &modified[index],
+                        later: &requests[index],
+                        calls: core::cell::Cell::new(0),
+                    });
+                    assert!(matches!(
+                        html::output::check(&prepared, &switched, &mut budget()),
+                        Err(html::output::Error::SourceRoute { page: 0, .. })
+                    ));
+                    assert!(switched.iter().all(|request| request.calls.get() == 1));
+                }
                 let result = html::output::check(&prepared, &modified, &mut budget());
                 match case {
                     0 => assert!(matches!(

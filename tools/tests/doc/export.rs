@@ -16,7 +16,7 @@ fn page_output_budget_is_explicit_shared_and_sticky() -> Result<(), String> {
                 source: format!("{id}.nepld"),
                 route: format!("{id}/index.html"),
             },
-            "article en \"Example\" body cons paragraph cons \"A sentence.\" nil nil".into(),
+            "article en sentence \"Example\" body cons paragraph cons sentence \"A sentence.\" nil nil".into(),
         )
     });
     let default = pages::generate(&compiled, &inputs)?;
@@ -127,6 +127,43 @@ fn page_manifest_requires_all_explicit_limit_fields() -> Result<(), String> {
         broken["output_limits"][name] = bad;
         assert!(serde_json::from_value::<Manifest>(broken).is_err());
     }
+    Ok(())
+}
+
+#[test]
+fn page_export_resolves_recursive_sentence_guests_before_serialization() -> Result<(), String> {
+    use nepl3_tools::doc::export::pages::{self, Entry};
+    let compiled = compiled()?;
+    let entry = |id: &str| Entry {
+        id: id.into(),
+        source: format!("{id}.nepld"),
+        route: format!("{id}.html"),
+        input: None,
+    };
+    let mut inputs = vec![
+        (entry("intro"), r#"article en sentence sentence cons doc link page "guide" some "inner" text "Go" nil body cons paragraph cons sentence "{[説明/せつめい]/description}。" nil nil"#.into()),
+        (entry("guide"), r#"article en sentence "Guide" body cons paragraph cons sentence sentence cons doc anchor outer concat cons doc anchor inner text "Target" nil nil nil nil"#.into()),
+    ];
+    let output = pages::generate(&compiled, &inputs)?;
+    let intro = std::str::from_utf8(&output.files["intro.html"]).map_err(super::err)?;
+    let guide = std::str::from_utf8(&output.files["guide.html"]).map_err(super::err)?;
+    assert!(intro.contains("href=\"guide.html#n-696e6e6572\""));
+    assert!(intro.contains("nepl-ruby"));
+    assert!(intro.contains("nepl-anno"));
+    assert!(guide.contains("id=\"n-696e6e6572\""));
+    assert!(guide.contains("Target"));
+    let manifest: serde_json::Value = serde_json::from_str(&output.manifest).map_err(super::err)?;
+    assert_eq!(manifest["identity_contract"], "NEPL3.Doc.PageNamespaces.v1");
+    assert_eq!(manifest["renderer"], "nepl3-tools.doc-pages-composed/1");
+    // Same reader succeeds; resolution must reject the missing nested target.
+    inputs[1].1 =
+        r#"article en sentence "Guide" body cons paragraph cons sentence "No target" nil nil"#
+            .into();
+    assert!(pages::generate(&compiled, &inputs).is_err_and(|e| e.contains("MissingFragment")));
+    // Complete HTML validation also rejects an unsafe independent Sentence URI.
+    inputs.truncate(1);
+    inputs[0].1 = r#"article en sentence "Guide" body cons paragraph cons sentence sentence cons link "javascript:alert(1)" text "Unsafe" nil nil nil"#.into();
+    assert!(pages::generate(&compiled, &inputs).is_err_and(|e| e.contains("Attribute")));
     Ok(())
 }
 
@@ -253,9 +290,9 @@ fn page_export_shares_script_free_shell_and_verifies_every_file() -> Result<(), 
     let compiled = compiled()?;
     let inputs = vec![
         (Entry { id: "intro".into(), source: "intro.nepld".into(), route: "docs/intro/index.html".into(), input: None },
-            r#"article en "Intro" body cons paragraph cons sentence cons link page "guide" none text "Guide" nil nil nil"#.into()),
+            r#"article en sentence "Intro" body cons paragraph cons sentence sentence cons doc link page "guide" none text "Guide" nil nil nil"#.into()),
         (Entry { id: "guide".into(), source: "guide.nepld".into(), route: "docs/guide/index.html".into(), input: None },
-            r#"article en "Guide" body cons paragraph cons sentence cons link page "intro" none text "Back" nil nil nil"#.into()),
+            r#"article en sentence "Guide" body cons paragraph cons sentence sentence cons doc link page "intro" none text "Back" nil nil nil"#.into()),
     ];
     let first = pages::generate(&compiled, &inputs)?;
     let second = pages::generate(&compiled, &inputs)?;

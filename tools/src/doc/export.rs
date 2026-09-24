@@ -243,9 +243,16 @@ fn shell(
                 m.fragment.nodes.len()
             )
         })?;
-    check_shell_depth(&m.fragment, output_budget)
+    checked_shell(&checked, output_budget)
+}
+
+fn checked_shell(
+    checked: &nepl3_markup::html::ValidatedHtml<'_>,
+    output_budget: &mut nepl3_core::budget::Budget,
+) -> Result<String, String> {
+    check_shell_depth(checked.fragment(), output_budget)
         .map_err(|e| format!("{e}; phase=HTML shell depth"))?;
-    let fragment = nepl3_markup::html::serialize(&checked, output_budget)
+    let fragment = nepl3_markup::html::serialize(checked, output_budget)
         .map_err(|e| format!("HTML serialization: {e:?}"))?;
     let head = "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'self'; base-uri 'none'; form-action 'none'\"><title>NEPL3 Doc</title><link rel=\"stylesheet\" href=\"assets/doc.css\"></head><body>\n";
     let tail = "\n</body></html>\n";

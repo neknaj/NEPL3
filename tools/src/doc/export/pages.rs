@@ -2,11 +2,12 @@
 //! page set renders; the final manifest is the completion marker, not a deploy.
 use super::*;
 use nepl3_doc_core::pages::{FileBytes, PageDocument, PageFile, PageRegistration, PageSet};
-use nepl3_doc_html::pages::{PagesHtmlRequest, render_pages};
+use nepl3_doc_html::pages::PagesHtmlRequest;
 use serde::Deserialize;
 use std::{collections::BTreeMap, io::Write};
 pub mod composition;
 pub mod discovery;
+mod render;
 pub mod resources;
 pub mod sentences;
 use nepl3_core::budget::Budget;
@@ -195,13 +196,8 @@ pub fn generate_with_resources(
             parallel: ParallelMode::Rows,
         },
     };
-    let r = &compiled.doc.registry;
-    let empty = SourceStore::default();
-    let mut a = SourceAdmission::default();
-    let mut c = FoundationCodec::new(r, &empty, &mut a).map_err(err)?;
-    let rendered = render_pages(&request, r, &mut c, output_budget)
+    let rendered = render::render(&request, compiled, output_budget)
         .map_err(|e| format!("resolve/render: {e:?}; usage={:?}", output_budget.usage()))?;
-    let rendered_usage = output_budget.usage();
     let mut files = BTreeMap::new();
     let mut file_kinds = BTreeMap::new();
     for file in &request.set.files {
@@ -224,17 +220,11 @@ pub fn generate_with_resources(
         )?;
         file_kinds.insert(file.registration.route.clone(), "application/octet-stream");
     }
-    for (page, fragment) in request.set.pages.iter().zip(&rendered.fragments) {
+    for (page, html) in request.set.pages.iter().zip(rendered.pages) {
         let route = &page.registration.route;
         if !route.ends_with(".html") {
             return Err("HTML route must end in .html".into());
         }
-        let html = shell(fragment, output_budget).map_err(|e| {
-            format!(
-                "page {route}: {e}; render completed usage={rendered_usage:?}; usage={:?}",
-                output_budget.usage()
-            )
-        })?;
         insert(&mut files, route.clone(), html.into_bytes())?;
         file_kinds.insert(route.clone(), "text/html; charset=utf-8");
         let css = match route.rsplit_once('/') {
@@ -266,14 +256,14 @@ pub fn generate_with_resources(
     let output_identity =
         resources::execution_identity(rendered.identity, output_budget.limits(), initial_usage);
     let manifest = serde_json::to_string_pretty(&serde_json::json!({
-        "format":"nepl3.local-doc-pages/1","identity":digest_hex(rendered.identity),"pages":origins,"files":records,
+        "format":"nepl3.local-doc-pages/1","identity_contract":"NEPL3.Doc.PageNamespaces.v1","identity":digest_hex(rendered.identity),"pages":origins,"files":records,
         "execution_identity":digest_hex(output_identity),
         "phase_execution":{"contract":"nepl3.local-doc-pages.phases/1","identity":digest_hex(resources::phase_identity(output_identity,&profiles,phases))},
         "output_budget":{"contract":"nepl3.local-doc-pages.execution/1","limits":resources::limits(output_budget.limits()),
             "initial_usage":resources::usage(initial_usage),"usage":resources::usage(output_budget.usage())},
         "registered_files":file_origins,
-        "renderer":"nepl3-doc-html pages/3","options":{"parallel":"Rows"},"viewer_scripts":false,
-        "packages":"compiled checked bootstrap fixtures","scope":"Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Assets and foreign rendering remain unsupported. Not Pages deployment evidence.",
+        "renderer":"nepl3-tools.doc-pages-composed/1","options":{"parallel":"Rows"},"viewer_scripts":false,
+        "packages":"compiled checked bootstrap fixtures","scope":"Doc/Sentence and recursively selected Doc Inline; complete page routes and emitted anchors checked. Explicit registered files and checked external http/https/mailto hrefs are supported. Other guest adapters, network checks and deployment remain outside this local export.",
         "budget_scope":"Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
         "output_usage":{"work":output_budget.usage().work,"allocation_units":output_budget.usage().allocation_units,"output_bytes":output_budget.usage().output_bytes}
     })).map_err(err)? + "\n";

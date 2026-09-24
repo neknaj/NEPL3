@@ -6,6 +6,7 @@ use super::PreparedPages;
 use crate::build::push;
 use crate::pages::anchors::OutputAnchors;
 use alloc::vec::Vec;
+use core::borrow::Borrow;
 use nepl3_core::budget::{Budget, Resource, StopReason};
 use nepl3_core::source::Digest;
 use nepl3_markup::html::{
@@ -62,7 +63,7 @@ impl From<StopReason> for Error {
 /// No request is modified, and failure exposes no partially checked page set.
 pub fn check<'a>(
     prepared: &PreparedPages<'_, '_, '_, '_>,
-    requests: &'a [HtmlRequest],
+    requests: &'a [impl Borrow<HtmlRequest>],
     b: &mut Budget,
 ) -> Result<CheckedOutput<'a>, Error> {
     b.poll()?;
@@ -73,6 +74,7 @@ pub fn check<'a>(
     let mut pages = Vec::new();
     let mut anchors = Vec::new();
     for (page, request) in requests.iter().enumerate() {
+        let request = request.borrow();
         let checked =
             validate(&request.fragment, request.slot, &request.policy, b).map_err(|error| {
                 match error {
@@ -86,8 +88,11 @@ pub fn check<'a>(
         push(&mut pages, checked, b)?;
         push(&mut anchors, None, b)?;
     }
-    for (page, request) in requests.iter().enumerate() {
-        for (element, node) in request.fragment.nodes.iter().enumerate() {
+    // Borrow each request exactly once above. A custom Borrow implementation
+    // may select a different arena on another call; the retained validation
+    // proof is the sole input to route and anchor checks.
+    for (page, request) in pages.iter().enumerate() {
+        for (element, node) in request.fragment().nodes.iter().enumerate() {
             b.charge(Resource::Work, 1)?;
             let HtmlNode::Element { attributes, .. } = node else {
                 continue;
@@ -124,10 +129,8 @@ pub fn check<'a>(
                     if let Some(id) = fragment {
                         let ids = match &mut anchors[index] {
                             Some(ids) => ids,
-                            slot @ None => slot.insert(OutputAnchors::collect(
-                                &requests[index].fragment.nodes,
-                                b,
-                            )?),
+                            slot @ None => slot
+                                .insert(OutputAnchors::collect(&pages[index].fragment().nodes, b)?),
                         };
                         if !ids.contains(id, b)? {
                             return Err(Error::MissingAnchor {

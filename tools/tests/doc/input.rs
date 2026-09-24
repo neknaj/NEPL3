@@ -6,9 +6,9 @@ use nepl3_tools::doc::{
 fn inputs() -> Vec<(Entry, String)> {
     vec![
         (Entry { id:"intro".into(),source:"docs/intro.md".into(),route:"docs/intro/index.html".into(),input:Some("drafts/a.nepld".into()) },
-            "article en \"Intro\" body cons paragraph cons sentence cons link relative \"guide.md\" none text \"Guide\" nil nil nil".into()),
+            "article en sentence \"Intro\" body cons paragraph cons sentence sentence cons doc link relative \"guide.md\" none text \"Guide\" nil nil nil".into()),
         (Entry { id:"guide".into(),source:"docs/guide.md".into(),route:"docs/guide/index.html".into(),input:Some("drafts/b.nepld".into()) },
-            "article en \"Guide\" body nil".into()),
+            "article en sentence \"Guide\" body nil".into()),
     ]
 }
 
