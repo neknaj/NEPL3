@@ -174,9 +174,8 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
                 .get(usize::try_from(node).map_err(|_| Error::Node(node))?)
                 .ok_or(Error::Node(node))?
                 .kind;
-            let (embed, display) = match kind {
-                DocKind::InlineMath { syntax } => (*syntax, Display::Inline),
-                DocKind::DisplayMath { syntax } => (*syntax, Display::Block),
+            let embed = match kind {
+                DocKind::InlineMath { syntax } | DocKind::DisplayMath { syntax } => *syntax,
                 _ => return Err(Error::Node(node)),
             };
             let guest = document
@@ -184,10 +183,25 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
                 .embeds
                 .get(embed.0 as usize)
                 .ok_or(Error::Node(node))?;
-            self.render(guest.syntax().ok_or(Error::Selection)?, display, b)
+            self.render_embed(guest, b)
         })();
         b.poll()?;
         result
+    }
+    /// Render an explicitly selected Doc math slot. Its role determines display
+    /// mode; Code and other roles require their own operation adapters.
+    pub fn render_embed(
+        &mut self,
+        guest: &nepl3_doc_core::model::DocEmbed,
+        b: &mut Budget,
+    ) -> Result<RenderedMath, Error<C::Error>> {
+        b.poll()?;
+        let display = match guest.kind {
+            nepl3_doc_core::model::EmbedKind::InlineMath => Display::Inline,
+            nepl3_doc_core::model::EmbedKind::DisplayMath => Display::Block,
+            _ => return Err(Error::Selection),
+        };
+        self.render(guest.syntax().ok_or(Error::Selection)?, display, b)
     }
     /// Retains the actual lowered Math input and each independent Sentence annotation for
     /// interpreting the backend's node-root/origin mappings after this call.

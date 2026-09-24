@@ -4,6 +4,8 @@ use nepl3_tools::doc::source::{budget, compiled, err, with_input};
 use nepl3_wire::foundation::FoundationCodec;
 #[path = "doc/article.rs"]
 mod article;
+#[path = "doc/article_math.rs"]
+mod article_math;
 #[path = "doc/retention.rs"]
 mod retention;
 
