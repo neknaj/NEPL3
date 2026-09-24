@@ -37,9 +37,10 @@ fn page(
                 &mut budget(),
                 &mut codec,
             )
-            .map_err(err)
+            .map_err(|error| format!("page {id} lower: {error:?}"))
         },
-    )?;
+    )
+    .map_err(|error| format!("page {id} input: {error}"))?;
     Ok(PageDocument {
         registration: PageRegistration {
             id: id.into(),
@@ -586,7 +587,20 @@ fn architecture_draft_projects_with_explicit_current_markdown_dependency() -> Re
     let store = SourceStore::default();
     let mut admission = SourceAdmission::default();
     let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
-    let artifact = render(&set, &c.doc.registry, &mut codec, &mut budget(), &[&[]]).map_err(err)?;
+    let mut render_budget = budget();
+    let artifact = render(
+        &set,
+        &c.doc.registry,
+        &mut codec,
+        &mut render_budget,
+        &[&[]],
+    )
+    .map_err(|error| {
+        format!(
+            "architecture projection: {error:?}; {:?}",
+            render_budget.usage()
+        )
+    })?;
     assert_eq!(
         links(&artifact.pages[0].markdown),
         ["22-external-extensions.md"]

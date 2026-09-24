@@ -59,13 +59,19 @@ Docリンク・anchor・参照を独立Sentence内から描画し、共有owner�
 追加3試験はnative・WASIで成功した。独立レビューも3試験を実行した。
 canonical関連試験は20件成功・2件失敗・2件ignoreであり、実文書の旧構文が残る。
 annotated_pagesの小規模fixtureを独立Sentence構文へ移行した。
-nativeは12件成功・1件失敗であり、残る第01章の実文書試験は旧構文の正本で解析に失敗する。
+nativeは12件成功・1件失敗である。第01章の正本はSentence境界を明示する構文へ移行し、
+解析・lowerを通過した。ページprojectionは既定Work100Mで停止しており、全体費用の改善を継続する。
 独立レビューは実文書試験を明示除外した12件を実行し、成功を確認した。
 同じ12件はWASIでも成功した。実文書試験の除外は実行コマンドに限定し、試験本体を維持する。
 Markdownは同一実行内のnamespace準備完了時のUsageを観測し、描画費用を分離する。
 HTMLは32ページのsource集合を固定して登録済みにした後、8・16・32ページの合成を測定する。
 source数に応じた索引検索課金を固定し、既存の線形上限を維持する。
 最終HTML検証は別に計測する。初回source登録を含む処理全体の線形性は未検証である。
+Doc構造検査は直前の不変ownerとregistryの検証証明を保持し、同じownerの再走査を削減する。
+各closureのguest・environment・深度・source admissionは個別に検査する。
+Doc coreの47試験はnative・WASIで成功した。深い共有Originと独立storageのDepth一致、
+別ownerの不正Origin、2番目guestの破損、資源上限一致と1不足を回帰試験で確認する。
+第01章の本文・Ruby・Anno・節ID・参照先は独立した静的レビューで保持を確認した。
 追加試験の成功を全workspaceの成功として扱わない。
 正式Markdown生成は旧Sentence構文の `doc/tutorial/miniexpr.nepld` で停止している。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
