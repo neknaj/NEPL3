@@ -119,8 +119,8 @@ pub fn prepare_inline_with_foreign<'a, C: FoundationValueCodec>(
 }
 
 /// Inspect the complete Article before invoking any rendering adapter.
-/// Sentence and InlineMath slots accept phrasing output. Block guests, assets
-/// and page links require separate resolution and reject this entry.
+/// Sentence and InlineMath slots accept phrasing output; DisplayMath, Code and
+/// CircuitFigure accept block output. Assets and page links require resolution.
 pub fn prepare_article_with_foreign<'a, C: FoundationValueCodec>(
     document: &'a DocumentSyntax,
     options: &'a RenderOptions,
@@ -137,7 +137,12 @@ pub fn prepare_article_with_foreign<'a, C: FoundationValueCodec>(
         if !matches!(
             requirement,
             prepare::DocRequirement::Foreign {
-                kind: EmbedKind::Sentence | EmbedKind::SentenceInline | EmbedKind::InlineMath,
+                kind: EmbedKind::Sentence
+                    | EmbedKind::SentenceInline
+                    | EmbedKind::InlineMath
+                    | EmbedKind::DisplayMath
+                    | EmbedKind::Code
+                    | EmbedKind::CircuitFigure,
                 ..
             }
         ) {

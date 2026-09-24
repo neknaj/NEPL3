@@ -9,6 +9,17 @@ impl Builder<'_, '_> {
             ..
         } = j;
         match k {
+            DisplayMath { syntax } | Code { syntax } => {
+                let wrapper = self.element(Some(parent), node, HtmlTag::Div)?;
+                self.foreign_job(node, *syntax, wrapper, level)?;
+            }
+            CircuitFigure { caption, syntax } => {
+                let figure = self.element(Some(parent), node, HtmlTag::Figure)?;
+                let content = self.element(Some(figure), node, HtmlTag::Div)?;
+                let label = self.element(Some(figure), node, HtmlTag::Figcaption)?;
+                self.job(caption.0, label, level)?;
+                self.foreign_job(node, *syntax, content, level)?;
+            }
             Body { blocks } => {
                 for child in blocks.iter().rev() {
                     self.job(child.0, parent, level)?;

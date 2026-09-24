@@ -88,7 +88,13 @@ impl Builder<'_, '_> {
             if matches!(role, EmbedKind::Sentence | EmbedKind::SentenceInline) {
                 check_part(&markup.fragment, HtmlSlot::Phrasing, &markup.policy, b)?;
             } else {
-                validate(&markup.fragment, HtmlSlot::Phrasing, &markup.policy, b)?;
+                let slot = match role {
+                    EmbedKind::DisplayMath | EmbedKind::Code | EmbedKind::CircuitFigure => {
+                        HtmlSlot::Block
+                    }
+                    _ => HtmlSlot::Phrasing,
+                };
+                validate(&markup.fragment, slot, &markup.policy, b)?;
             }
             Ok(())
         })?;

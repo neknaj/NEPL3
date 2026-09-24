@@ -5,15 +5,11 @@ use nepl3_doc_html::{
 use nepl3_markup::html::{HtmlAttribute, HtmlHref, HtmlNode, serialize, validate};
 
 #[test]
-fn article_requires_resolution_for_block_guests_and_assets() -> Result<(), String> {
+fn article_requires_resolution_for_assets() -> Result<(), String> {
     let compiled = compiled()?;
-    for block in [
-        "display Math add 1 2",
-        "code Math add 1 2",
-        "circuit sentence sentence nil Circuit design nil Main nil",
-        "image asset \"logo\" none sentence \"alt\" none",
-    ] {
-        // Independent parser fixtures exercise each unsupported requirement.
+    {
+        let block = "image asset \"logo\" none sentence \"alt\" none";
+        // An independent parser fixture retains the unresolved asset request.
         let source = format!("article en sentence \"Title\" body cons {block} nil");
         with_input(&compiled, &source, "Article", |tree, profile, b, a| {
             let checked = tree
@@ -55,6 +51,247 @@ fn article_requires_resolution_for_block_guests_and_assets() -> Result<(), Strin
         })?;
     }
     Ok(())
+}
+
+#[test]
+fn article_places_block_guest_results_with_caption_and_owner() -> Result<(), String> {
+    use nepl3_markup::html::{HtmlFragment, HtmlPolicy, HtmlRequest, HtmlSlot, HtmlTag};
+    let compiled = compiled()?;
+    let source = r#"article en sentence "Title" body
+      cons display Math add 1 2
+      cons code Math add 3 4
+      cons circuit sentence "Caption" Circuit design nil Main nil
+      nil"#;
+    with_input(&compiled, source, "Article", |tree, profile, b, a| {
+        let checked = tree
+            .tree()
+            .bundle
+            .validate_with_sources(profile.registry(), b, a)
+            .map_err(err)?;
+        let empty = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
+        let document = lower::document(
+            &checked,
+            &compiled.doc.package.schema,
+            Category::Article,
+            profile.registry(),
+            &mut budget(),
+            &mut codec,
+        )
+        .map_err(err)?;
+        let options = RenderOptions {
+            parallel: ParallelMode::Rows,
+        };
+        let prepared = prepare_article_with_foreign(
+            &document,
+            &options,
+            profile.registry(),
+            &mut codec,
+            &mut budget(),
+        )
+        .map_err(err)?;
+        let mut calls = Vec::new();
+        let rendered = render_article_with_foreign(
+            &prepared,
+            &mut |slot, embed, b| {
+                calls.push((slot.kind, embed));
+                if slot.kind == EmbedKind::Sentence {
+                    let sentence = nepl3_suite::adapters::document::sentence::lower(
+                        slot,
+                        slot.schema(),
+                        &[],
+                        profile.registry(),
+                        &mut codec,
+                        b,
+                    )
+                    .map_err(err)?;
+                    return nepl3_suite::adapters::sentence::html::render(
+                        &sentence,
+                        profile.registry(),
+                        b,
+                        &mut SourceAdmission::default(),
+                    )
+                    .map(|v| v.into_markup())
+                    .map_err(err);
+                }
+                // Backend contract fixture: a selected producer supplies block markup.
+                // This asserts placement, not evaluation of Math or Circuit syntax.
+                let text = match slot.kind {
+                    EmbedKind::DisplayMath => "display result",
+                    EmbedKind::Code => "code result",
+                    EmbedKind::CircuitFigure => "circuit result",
+                    _ => return Err("unexpected role".into()),
+                };
+                Ok(HtmlRequest {
+                    fragment: HtmlFragment {
+                        root: 0,
+                        nodes: vec![
+                            HtmlNode::Element {
+                                tag: HtmlTag::Div,
+                                attributes: vec![],
+                                children: vec![1],
+                            },
+                            HtmlNode::Text { text: text.into() },
+                        ],
+                    },
+                    slot: HtmlSlot::Block,
+                    policy: HtmlPolicy { classes: vec![] },
+                })
+            },
+            &mut budget(),
+        )
+        .map_err(err)?;
+        assert_eq!(
+            calls.iter().map(|v| v.0).collect::<Vec<_>>(),
+            [
+                EmbedKind::Sentence,
+                EmbedKind::DisplayMath,
+                EmbedKind::Code,
+                EmbedKind::CircuitFigure,
+                EmbedKind::Sentence
+            ]
+        );
+        assert_eq!(
+            rendered.foreign.iter().map(|p| p.embed).collect::<Vec<_>>(),
+            calls.iter().map(|v| v.1).collect::<Vec<_>>()
+        );
+        for placement in &rendered.foreign {
+            let owner = document.value.nodes.iter().position(|node| {
+                matches!(&node.kind,
+                    DocKind::Sentence { syntax } | DocKind::DisplayMath { syntax }
+                    | DocKind::Code { syntax } | DocKind::CircuitFigure { syntax, .. }
+                    if *syntax == placement.embed)
+            });
+            // Each imported node is attributed to the Doc occurrence that requested it.
+            let owner = owner.ok_or("guest owner")? as u64;
+            assert!(placement.elements > 0);
+            assert_eq!(
+                rendered
+                    .fragment
+                    .origins
+                    .iter()
+                    .filter(|origin| origin.element >= placement.first_element
+                        && origin.element < placement.first_element + placement.elements)
+                    .count() as u64,
+                placement.elements
+            );
+            assert!(
+                rendered
+                    .fragment
+                    .origins
+                    .iter()
+                    .filter(|origin| origin.element >= placement.first_element
+                        && origin.element < placement.first_element + placement.elements)
+                    .all(|origin| origin.node == owner)
+            );
+        }
+        let markup = &rendered.fragment.markup;
+        let html = serialize(
+            &validate(&markup.fragment, markup.slot, &markup.policy, &mut budget()).map_err(err)?,
+            &mut budget(),
+        )
+        .map_err(err)?;
+        let positions = [
+            "Title",
+            "display result",
+            "code result",
+            "circuit result",
+            "Caption",
+        ]
+        .map(|text| html.find(text).ok_or("missing content"));
+        let positions = positions.into_iter().collect::<Result<Vec<_>, _>>()?;
+        assert!(positions.windows(2).all(|pair| pair[0] < pair[1]));
+        assert!(html.contains("<figure>"));
+        assert!(html.contains("<figcaption>"));
+        let invalid = render_article_with_foreign(
+            &prepared,
+            &mut |slot, _, _| {
+                Ok::<_, String>(HtmlRequest {
+                    fragment: HtmlFragment {
+                        root: 0,
+                        nodes: vec![HtmlNode::Element {
+                            tag: if slot.kind == EmbedKind::Sentence {
+                                HtmlTag::Span
+                            } else {
+                                HtmlTag::Tr
+                            },
+                            attributes: vec![],
+                            children: vec![],
+                        }],
+                    },
+                    slot: HtmlSlot::Block,
+                    policy: HtmlPolicy { classes: vec![] },
+                })
+            },
+            &mut budget(),
+        );
+        assert!(matches!(
+            invalid,
+            Err(nepl3_doc_html::ForeignRenderError::Render(
+                nepl3_doc_html::RenderError::Markup(_)
+            ))
+        ));
+        // Article, Figure and content Div add three ancestors to the guest.
+        for guest_depth in [253, 254] {
+            let mut deep_budget = nepl3_core::budget::Budget::new(nepl3_core::budget::Limits {
+                depth: 1024,
+                ..budget().limits()
+            });
+            let deep = render_article_with_foreign(
+                &prepared,
+                &mut |slot, _, _| {
+                    let count = if slot.kind == EmbedKind::CircuitFigure {
+                        guest_depth
+                    } else {
+                        1
+                    };
+                    Ok::<_, String>(HtmlRequest {
+                        fragment: HtmlFragment {
+                            root: 0,
+                            nodes: (0..count)
+                                .map(|index| HtmlNode::Element {
+                                    tag: if slot.kind == EmbedKind::Sentence {
+                                        HtmlTag::Span
+                                    } else {
+                                        HtmlTag::Div
+                                    },
+                                    attributes: vec![],
+                                    children: if index + 1 < count {
+                                        vec![index + 1]
+                                    } else {
+                                        vec![]
+                                    },
+                                })
+                                .collect(),
+                        },
+                        slot: if slot.kind == EmbedKind::Sentence {
+                            HtmlSlot::Phrasing
+                        } else {
+                            HtmlSlot::Block
+                        },
+                        policy: HtmlPolicy { classes: vec![] },
+                    })
+                },
+                &mut deep_budget,
+            );
+            let circuit_node = document
+                .value
+                .nodes
+                .iter()
+                .position(|node| matches!(node.kind, DocKind::CircuitFigure { .. }))
+                .ok_or("circuit")? as u64;
+            if guest_depth == 253 {
+                deep.map_err(err)?;
+            } else {
+                assert!(
+                    matches!(deep, Err(nepl3_doc_html::ForeignRenderError::Render(nepl3_doc_html::RenderError::OutputDepth { node })) if node == circuit_node)
+                );
+            }
+        }
+        Ok(())
+    })
 }
 
 #[test]
