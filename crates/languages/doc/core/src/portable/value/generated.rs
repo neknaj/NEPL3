@@ -885,6 +885,26 @@ let f=fields(v,s,"PageLinkPlan",3)?;
 Ok(Self {identity:Value::read(&f[0],s,c,b)?,links:Value::read(&f[1],s,c,b)?,remaining:Value::read(&f[2],s,c,b)?})
 }
 }
+impl Value for PageNamespacePlan {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"PageNamespacePlan",[self.identity.put(s,c,b)?,self.members.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,49)?;
+let f=fields(v,s,"PageNamespacePlan",2)?;
+Ok(Self {identity:Value::read(&f[0],s,c,b)?,members:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for PageMemberPlan {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"PageMemberPlan",[self.page.put(s,c,b)?,self.member.put(s,c,b)?,self.document_digest.put(s,c,b)?,self.links.put(s,c,b)?,self.remaining.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,46)?;
+let f=fields(v,s,"PageMemberPlan",5)?;
+Ok(Self {page:Value::read(&f[0],s,c,b)?,member:Value::read(&f[1],s,c,b)?,document_digest:Value::read(&f[2],s,c,b)?,links:Value::read(&f[3],s,c,b)?,remaining:Value::read(&f[4],s,c,b)?})
+}
+}
 impl Value for PageFile {
 fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
 record(s,"PageFile",[self.registration.put(s,c,b)?,self.content.put(s,c,b)?],b)

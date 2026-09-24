@@ -12,6 +12,20 @@ pub struct Owner {
     pub page: u64,
     pub member: MemberId,
 }
+/// Portable data, not a native proof or permission to render supplied links.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PageNamespacePlan {
+    pub identity: Digest,
+    pub members: Vec<PageMemberPlan>,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PageMemberPlan {
+    pub page: u64,
+    pub member: u64,
+    pub document_digest: Digest,
+    pub links: Vec<PageLink>,
+    pub remaining: Vec<DocRequirement>,
+}
 pub struct MemberPlan {
     owner: Owner,
     document_digest: Digest,

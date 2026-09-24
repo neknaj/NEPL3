@@ -23,6 +23,12 @@ body
     cons "この[解決結果/かいけつけっか]は、[意味上/いみじょう]のリンク[先/さき]を[確定/かくてい]する。guest[準備/じゅんび]、[表示言語/ひょうじげんご]の[選択/せんたく]、HTML[全体/ぜんたい]の[検査/けんさ]、[出力先/しゅつりょくさき]anchorの[存在確認/そんざいかくにん]は、[後続/こうぞく]の[出力処理/しゅつりょくしょり]が[行/おこな]う。"
     nil
   cons paragraph
+    cons "PageNamespacePlanはidentity・membersの[順/じゅん]にfieldを[持/も]つ。identityはnative namespace proofのBytes32である。membersはページ[順/じゅん]・member[順/じゅん]のPageMemberPlan[列/れつ]であり、[反復/はんぷく]した[出現/しゅつげん]も[個別/こべつ]のentryとして[保持/ほじ]する。"
+    cons "PageMemberPlanのfield[順/じゅん]はpage・member・documentDigest・links・remainingである。pageはPageSetのページ[番号/ばんごう]、memberはそのページのnamespace[内/ない]の[出現番号/しゅつげんばんごう]である。documentDigestはBytes32、linksはPageLink[列/れつ]、remainingはDocRequirement[列/れつ]である。[各/かく]リンクのnodeは[所属/しょぞく]するmemberのDoc nodeを[指/さ]す。"
+    cons "[受信側/じゅしんがわ]はPageSetと[選択/せんたく]guestを[正式/せいしき]codecで[検査/けんさ]し、namespaceを[再構築/さいこうちく]して[解決/かいけつ]する。そのproofから[生成/せいせい]した[期待値/きたいち]と[受信/じゅしん]planの[全/ぜん]fieldを[順序/じゅんじょ]も[含/ふく]めて[比較/ひかく]し、[不一致/ふいっち]を[拒否/きょひ]する。この[照合/しょうごう]とcodecの[処理/しょり]にもBudgetを[適用/てきよう]する。"
+    cons "PageLinkPlanの[検査範囲/けんさはんい]は、[各/かく]ページのroot Articleが[直接/ちょくせつ][所有/しょゆう]するDoc[構造/こうぞう]である。Sentenceは[未解決/みかいけつ]のForeign[要求/ようきゅう]として[保持/ほじ]する。[選択/せんたく]guestを[含/ふく]む[交換/こうかん]にはPageNamespacePlanを[使/つか]う。[受信/じゅしん]planは[結果/けっか]データであり、HTML[生成/せいせい]にはnamespaceのnative proofと[後続/こうぞく]のHTML[検査/けんさ]を[要求/ようきゅう]する。"
+    nil
+  cons paragraph
     cons sentence cons code "interfaces/doc.json" cons text " の" cons ruby text "順序付" text "じゅんじょつ" cons text "きrecordを" cons ruby text "交換契約" text "こうかんけいやく" cons text "とする。" nil
     cons sentence
       cons code "PageRegistration"

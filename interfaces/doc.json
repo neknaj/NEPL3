@@ -2229,6 +2229,23 @@
       ],
       "constraints": []
     },
+    "PageNamespacePlan": {
+      "record": [
+        ["identity", "Bytes32"],
+        ["members", {"list": {"named": {"package": "nepl3.doc", "revision": 1, "name": "PageMemberPlan"}}}]
+      ],
+      "constraints": ["doc.received_namespace_plan_matches_checked_context"]
+    },
+    "PageMemberPlan": {
+      "record": [
+        ["page", "U64"],
+        ["member", "U64"],
+        ["documentDigest", "Bytes32"],
+        ["links", {"list": {"named": {"package": "nepl3.doc", "revision": 1, "name": "PageLink"}}}],
+        ["remaining", {"list": {"named": {"package": "nepl3.doc", "revision": 1, "name": "DocRequirement"}}}]
+      ],
+      "constraints": ["doc.namespace_member_ownership_and_order"]
+    },
     "PageFile": {
       "record": [
         [

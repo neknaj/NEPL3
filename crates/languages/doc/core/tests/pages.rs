@@ -1,13 +1,24 @@
+//! Root-only PageSet contracts. Selected Inline link cases live in namespaces.rs.
+//! Sentence URI behavior belongs to the Article integration tests.
 use nepl3_core::{
-    budget::{Budget, Limits, Resource},
+    budget::{Budget, Limits, Resource, StopReason},
+    origin::{Origin, OriginId},
     schema::SchemaRegistry,
-    source::{Digest, SourceAdmission, SourceStore},
+    source::{Digest, SourceAdmission, SourceId, SourceSnapshot, SourceStore},
+    syntax::{
+        Environment, EnvironmentEntry, EnvironmentRef, ForeignClosure, ForeignSyntax, NodeRef,
+        SyntaxBundle, SyntaxNode,
+    },
     value::NdfValue,
+    value_codec::FoundationValueCodec,
 };
-use nepl3_doc_core::{model::*, pages::*, portable};
+use nepl3_doc_core::{model::*, pages::*, portable, prepare::DocRequirement};
 use nepl3_wire::foundation::FoundationCodec;
+#[path = "support/closure.rs"]
+mod support;
 fn b() -> Budget {
     Budget::new(Limits {
+        source_bytes: 1_000_000,
         work: 100_000_000,
         allocation_units: 100_000_000,
         nodes: 1_000_000,
@@ -18,85 +29,6 @@ fn b() -> Budget {
 }
 fn err(e: impl core::fmt::Debug) -> String {
     format!("{e:?}")
-}
-
-#[test]
-fn batch_encoding_preserves_checked_documents_and_stops() -> Result<(), String> {
-    let r = registry()?;
-    let sources = SourceStore::default();
-    let mut admission = SourceAdmission::default();
-    let mut codec = FoundationCodec::new(&r, &sources, &mut admission).map_err(err)?;
-    let example = set().pages.remove(0);
-    let mut standalone_budget = b();
-    let standalone = portable::to_value(&example.document, &r, &mut codec, &mut standalone_budget)
-        .map_err(err)?;
-    let mut previous_work = None;
-    for count in [4, 8, 16] {
-        let input = PageSet {
-            pages: (0..count)
-                .map(|i| PageDocument {
-                    registration: PageRegistration {
-                        id: format!("page-{i:02}"),
-                        source: format!("doc/page-{i:02}.nepld"),
-                        route: format!("docs/page-{i:02}.html"),
-                    },
-                    document: example.document.clone(),
-                })
-                .collect(),
-            files: vec![],
-        };
-        let mut budget = b();
-        let value =
-            portable::pages::set_to_value(&input, &r, &mut codec, &mut budget).map_err(err)?;
-        let NdfValue::Record(root) = &value else {
-            return Err("PageSet record".into());
-        };
-        let NdfValue::List(pages) = &root.fields[0] else {
-            return Err("page list".into());
-        };
-        for page in pages {
-            let NdfValue::Record(page) = page else {
-                return Err("PageDocument record".into());
-            };
-            // The standalone checked public adapter is an independent entry to
-            // the same wire contract; batching must preserve every document.
-            assert_eq!(page.fields[1], standalone);
-        }
-        if let Some(previous) = previous_work {
-            assert!(budget.usage().work < previous * 3);
-        }
-        previous_work = Some(budget.usage().work);
-        // This fixture permits 20% above independently checked standalone
-        // documents for PageSet/PageDocument wrappers and registrations.
-        // A second DocumentSyntax schema walk exceeds this allowance.
-        let allowance = standalone_budget.usage().work * count as u64 * 6 / 5;
-        assert!(budget.usage().work < allowance);
-        let mut limits = b().limits();
-        limits.work = budget.usage().work - 1;
-        let mut limited = Budget::new(limits);
-        assert!(matches!(
-            portable::pages::set_to_value(&input, &r, &mut codec, &mut limited),
-            Err(portable::PortableError::Stopped(
-                nepl3_core::budget::StopReason::WorkLimit
-            ))
-        ));
-        let mut corrupt = value;
-        let NdfValue::Record(root) = &mut corrupt else {
-            return Err("PageSet record".into());
-        };
-        let NdfValue::List(pages) = &mut root.fields[0] else {
-            return Err("page list".into());
-        };
-        let NdfValue::Record(page) = &mut pages[0] else {
-            return Err("PageDocument record".into());
-        };
-        page.fields[1] = NdfValue::Unit;
-        assert!(portable::pages::set_from_value(&corrupt, &r, &mut codec, &mut b()).is_err());
-        let mut invalid = input;
-        invalid.pages[0].document.value.root = DocRoot::Article(ArticleRef(u64::MAX));
-        assert!(portable::pages::set_to_value(&invalid, &r, &mut codec, &mut b()).is_err());
-    }
-    Ok(())
 }
 fn registry() -> Result<SchemaRegistry, String> {
     let mut r = SchemaRegistry::default();
@@ -111,38 +43,35 @@ fn registry() -> Result<SchemaRegistry, String> {
     r.finalize(&mut b()).map_err(err)?;
     Ok(r)
 }
-fn doc(target: LinkTarget) -> DocumentSyntax {
+fn doc(r: &SchemaRegistry) -> Result<DocumentSyntax, String> {
+    let mut closure = support::closure(r)?;
+    closure.syntax.category = "Sentence".into();
     let kinds = vec![
         DocKind::Article {
             language: "ja".into(),
             title: SentenceRef(1),
-            body: BodyRef(3),
+            body: BodyRef(2),
         },
         DocKind::Sentence {
-            inlines: vec![InlineRef(2)],
-        },
-        DocKind::Text {
-            text: "文書".into(),
+            syntax: EmbedRef(0),
         },
         DocKind::Body {
-            blocks: vec![BlockRef(4)],
+            blocks: vec![BlockRef(3)],
         },
-        DocKind::Paragraph {
-            items: vec![FlowRef(5)],
-        },
-        DocKind::Sentence {
-            inlines: vec![InlineRef(6), InlineRef(7)],
-        },
-        DocKind::Anchor {
+        DocKind::Section {
             id: "導入".into(),
-            label: InlineRef(2),
+            title: SentenceRef(1),
+            body: BodyRef(4),
         },
-        DocKind::Link {
-            target,
-            label: InlineRef(2),
+        DocKind::Body {
+            blocks: vec![BlockRef(5)],
+        },
+        DocKind::RawCode {
+            language_hint: None,
+            text: "文書".into(),
         },
     ];
-    DocumentSyntax {
+    Ok(DocumentSyntax {
         value: DocValue {
             root: DocRoot::Article(ArticleRef(0)),
             nodes: kinds
@@ -154,187 +83,122 @@ fn doc(target: LinkTarget) -> DocumentSyntax {
                     span: None,
                 })
                 .collect(),
-            embeds: vec![],
+            embeds: vec![DocEmbed {
+                kind: EmbedKind::Sentence,
+                content: DocContent::Syntax {
+                    closure: Box::new(closure),
+                },
+            }],
         },
         sources: vec![],
         origins: vec![],
         views: vec![],
         source_maps: vec![],
-    }
+    })
 }
-fn set() -> PageSet {
-    PageSet {
+fn set(r: &SchemaRegistry) -> Result<PageSet, String> {
+    Ok(PageSet {
+        pages: ["first", "second"]
+            .into_iter()
+            .map(|id| {
+                Ok(PageDocument {
+                    registration: PageRegistration {
+                        id: id.into(),
+                        source: format!("doc/{id}.nepld"),
+                        route: format!("docs/{id}/index.html"),
+                    },
+                    document: doc(r)?,
+                })
+            })
+            .collect::<Result<_, String>>()?,
         files: vec![],
-        pages: vec![
-            PageDocument {
-                registration: PageRegistration {
-                    id: "first".into(),
-                    source: "doc/first.nepld".into(),
-                    route: "docs/first/index.html".into(),
-                },
-                document: doc(LinkTarget::Page {
-                    page: "second".into(),
-                    fragment: Some("導入".into()),
-                }),
-            },
-            PageDocument {
-                registration: PageRegistration {
-                    id: "second".into(),
-                    source: "doc/next/second.nepld".into(),
-                    route: "docs/second/index.html".into(),
-                },
-                document: doc(LinkTarget::Relative {
-                    path: ".././first.nepld".into(),
-                    fragment: Some("導入".into()),
-                }),
-            },
-        ],
-    }
+    })
 }
-fn run(set: &PageSet) -> Result<PageLinkPlan, String> {
-    let r = registry()?;
+fn run(set: &PageSet, r: &SchemaRegistry) -> Result<PageLinkPlan, String> {
     let empty = SourceStore::default();
     let mut a = SourceAdmission::default();
-    let mut c = FoundationCodec::new(&r, &empty, &mut a).map_err(err)?;
-    Ok(resolve(set, &r, &mut c, &mut b())
-        .map_err(err)?
-        .plan()
-        .clone())
+    let mut c = FoundationCodec::new(r, &empty, &mut a).map_err(err)?;
+    Ok(resolve(set, r, &mut c, &mut b()).map_err(err)?.into_plan())
 }
+
 #[test]
-fn empty_relative_path_is_only_a_nonempty_self_fragment() -> Result<(), String> {
-    let mut input = set();
-    input.pages[0].document.value.nodes[7].kind = DocKind::Link {
-        target: LinkTarget::Relative {
-            path: String::new(),
-            fragment: Some("導入".into()),
-        },
-        label: InlineRef(2),
-    };
-    let plan = run(&input)?;
-    assert_eq!(plan.links[0].target, PageDestination::Page { index: 0 });
-    assert_eq!(plan.links[0].fragment.as_deref(), Some("導入"));
+fn batch_encoding_preserves_checked_documents_and_stops() -> Result<(), String> {
     let r = registry()?;
-    let empty = SourceStore::default();
+    let sources = SourceStore::default();
     let mut admission = SourceAdmission::default();
-    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
-    let value = portable::pages::set_to_value(&input, &r, &mut codec, &mut b()).map_err(err)?;
-    let encoded = nepl3_wire::encode(&value, &mut b()).map_err(err)?;
-    let received = nepl3_wire::decode(&encoded, &mut b()).map_err(err)?;
-    let decoded =
-        portable::pages::set_from_value(&received, &r, &mut codec, &mut b()).map_err(err)?;
-    assert_eq!(decoded, input);
-    assert_eq!(run(&decoded)?, plan);
-    for fragment in [None, Some(String::new()), Some("未登録".into())] {
-        let expected = if fragment.as_ref().is_some_and(|s| !s.is_empty()) {
-            "MissingFragment"
-        } else {
-            "InvalidRelative"
+    let mut codec = FoundationCodec::new(&r, &sources, &mut admission).map_err(err)?;
+    let example = doc(&r)?;
+    let mut standalone_budget = b();
+    let standalone =
+        portable::to_value(&example, &r, &mut codec, &mut standalone_budget).map_err(err)?;
+    let mut previous_work = None;
+    for count in [4, 8, 16] {
+        let input = PageSet {
+            pages: (0..count)
+                .map(|i| PageDocument {
+                    registration: PageRegistration {
+                        id: format!("page-{i:02}"),
+                        source: format!("doc/page-{i:02}.nepld"),
+                        route: format!("docs/page-{i:02}.html"),
+                    },
+                    document: example.clone(),
+                })
+                .collect(),
+            files: vec![],
         };
-        input.pages[0].document.value.nodes[7].kind = DocKind::Link {
-            target: LinkTarget::Relative {
-                path: String::new(),
-                fragment,
-            },
-            label: InlineRef(2),
+        let mut budget = b();
+        let value =
+            portable::pages::set_to_value(&input, &r, &mut codec, &mut budget).map_err(err)?;
+        let NdfValue::Record(root) = &value else {
+            return Err("PageSet".into());
         };
-        let error = run(&input).err().ok_or("unexpected success")?;
-        assert!(error.contains(expected), "{error}");
-    }
-    Ok(())
-}
-#[test]
-fn registered_file_bytes_are_resolved_and_bound_to_the_portable_plan() -> Result<(), String> {
-    let r = registry()?;
-    let mut input = set();
-    input.pages[0].document.value.nodes[7].kind = DocKind::Link {
-        target: LinkTarget::Relative {
-            path: "../design/contracts.json".into(),
-            fragment: None,
-        },
-        label: InlineRef(2),
-    };
-    input.files.push(PageFile {
-        registration: PageRegistration {
-            id: "contracts".into(),
-            source: "design/contracts.json".into(),
-            route: "data/contracts.json".into(),
-        },
-        content: FileBytes(vec![0, 255, 13, 10]),
-    });
-    let plan = run(&input)?;
-    assert_eq!(plan.links[0].target, PageDestination::File { index: 0 });
-    let empty = SourceStore::default();
-    let mut admission = SourceAdmission::default();
-    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
-    let encoded = portable::pages::set_to_value(&input, &r, &mut codec, &mut b()).map_err(err)?;
-    let bytes = nepl3_wire::encode(&encoded, &mut b()).map_err(err)?;
-    let received = nepl3_wire::decode(&bytes, &mut b()).map_err(err)?;
-    let decoded =
-        portable::pages::set_from_value(&received, &r, &mut codec, &mut b()).map_err(err)?;
-    assert_eq!(decoded, input);
-    assert_eq!(run(&decoded)?, plan);
-    let encoded_plan =
-        portable::pages::plan_to_value(&plan, &input, &r, &mut codec, &mut b()).map_err(err)?;
-    input.files[0].content.0[1] = 254;
-    assert_ne!(run(&input)?.identity, plan.identity);
-    assert!(
-        portable::pages::plan_from_value(&encoded_plan, &input, &r, &mut codec, &mut b()).is_err()
-    );
-    Ok(())
-}
-#[test]
-fn file_registration_cannot_shadow_pages_or_claim_doc_anchors() -> Result<(), String> {
-    let mut input = set();
-    let file = PageFile {
-        registration: PageRegistration {
-            id: "resource".into(),
-            source: "data/item".into(),
-            route: "download/item".into(),
-        },
-        content: FileBytes(vec![]),
-    };
-    input.files.push(file.clone());
-    for field in [PageField::Id, PageField::Source, PageField::Route] {
-        input.files[0] = file.clone();
-        match field {
-            PageField::Id => {
-                input.files[0].registration.id = input.pages[0].registration.id.clone()
-            }
-            PageField::Source => input.files[0].registration.source = "doc".into(),
-            PageField::Route => input.files[0].registration.route = "docs/first".into(),
+        let NdfValue::List(pages) = &root.fields[0] else {
+            return Err("pages".into());
+        };
+        for page in pages {
+            let NdfValue::Record(page) = page else {
+                return Err("page".into());
+            };
+            assert_eq!(page.fields[1], standalone);
         }
-        assert!(run(&input).is_err());
-    }
-    input.files[0] = file;
-    for target in [
-        LinkTarget::Page {
-            page: "resource".into(),
-            fragment: None,
-        },
-        LinkTarget::Relative {
-            path: "../data/item".into(),
-            fragment: Some("anchor".into()),
-        },
-        LinkTarget::Relative {
-            path: "../data/unknown".into(),
-            fragment: None,
-        },
-    ] {
-        input.pages[0].document.value.nodes[7].kind = DocKind::Link {
-            target,
-            label: InlineRef(2),
+        if let Some(previous) = previous_work {
+            assert!(budget.usage().work < previous * 3);
+        }
+        previous_work = Some(budget.usage().work);
+        // Wrappers permit 20% above one checked standalone document per page;
+        // repeating the DocumentSyntax schema walk exceeds this allowance.
+        assert!(budget.usage().work < standalone_budget.usage().work * count as u64 * 6 / 5);
+        let mut limits = b().limits();
+        limits.work = budget.usage().work - 1;
+        assert!(matches!(
+            portable::pages::set_to_value(&input, &r, &mut codec, &mut Budget::new(limits)),
+            Err(portable::PortableError::Stopped(StopReason::WorkLimit))
+        ));
+        let mut corrupt = value;
+        let NdfValue::Record(root) = &mut corrupt else {
+            return Err("PageSet".into());
         };
-        assert!(run(&input).is_err());
+        let NdfValue::List(pages) = &mut root.fields[0] else {
+            return Err("pages".into());
+        };
+        let NdfValue::Record(page) = &mut pages[0] else {
+            return Err("page".into());
+        };
+        page.fields[1] = NdfValue::Unit;
+        assert!(portable::pages::set_from_value(&corrupt, &r, &mut codec, &mut b()).is_err());
+        let mut invalid = input;
+        invalid.pages[0].document.value.root = DocRoot::Article(ArticleRef(u64::MAX));
+        assert!(portable::pages::set_to_value(&invalid, &r, &mut codec, &mut b()).is_err());
     }
     Ok(())
 }
+
 #[test]
 fn page_boundary_validation_still_precedes_earlier_page_label_failures() -> Result<(), String> {
     let r = registry()?;
-    let mut input = set();
-    input.pages[0].document.value.nodes[5].kind = DocKind::Sentence {
-        inlines: vec![InlineRef(6), InlineRef(6), InlineRef(7)],
+    let mut input = set(&r)?;
+    input.pages[0].document.value.nodes[2].kind = DocKind::Body {
+        blocks: vec![BlockRef(3), BlockRef(3)],
     };
     let original = input.pages[1].document.value.nodes[0].kind.clone();
     input.pages[1].document.value.nodes[0].kind = DocKind::Article {
@@ -343,15 +207,15 @@ fn page_boundary_validation_still_precedes_earlier_page_label_failures() -> Resu
         body: BodyRef(u64::MAX),
     };
     let empty = SourceStore::default();
-    let mut admission = SourceAdmission::default();
-    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let mut a = SourceAdmission::default();
+    let mut c = FoundationCodec::new(&r, &empty, &mut a).map_err(err)?;
     assert!(matches!(
-        resolve(&input, &r, &mut codec, &mut b()),
+        resolve(&input, &r, &mut c, &mut b()),
         Err(PageError::Boundary(portable::PortableError::Structure(_)))
     ));
     input.pages[1].document.value.nodes[0].kind = original;
     assert!(matches!(
-        resolve(&input, &r, &mut codec, &mut b()),
+        resolve(&input, &r, &mut c, &mut b()),
         Err(PageError::Input {
             page: 0,
             error: nepl3_doc_core::prepare::PreparationError::Label(_)
@@ -359,43 +223,37 @@ fn page_boundary_validation_still_precedes_earlier_page_label_failures() -> Resu
     ));
     Ok(())
 }
+
 #[test]
-fn pages_resolve_forward_and_relative_links_with_explicit_identity() -> Result<(), String> {
+fn root_plan_binds_documents_and_retains_sentence_requirements() -> Result<(), String> {
     let r = registry()?;
-    let set = set();
+    let set = set(&r)?;
     let original = set.clone();
     let empty = SourceStore::default();
     let mut a = SourceAdmission::default();
     let mut c = FoundationCodec::new(&r, &empty, &mut a).map_err(err)?;
     let p = resolve(&set, &r, &mut c, &mut b()).map_err(err)?;
-    assert_eq!(
-        p.plan().links,
-        vec![
-            PageLink {
-                page: 0,
-                node: 7,
-                target: PageDestination::Page { index: 1 },
-                fragment: Some("導入".into())
-            },
-            PageLink {
-                page: 1,
-                node: 7,
-                target: PageDestination::Page { index: 0 },
-                fragment: Some("導入".into())
+    assert!(p.plan().links.is_empty());
+    assert_eq!(p.plan().remaining.len(), 2);
+    for (page, requirement) in p.plan().remaining.iter().enumerate() {
+        assert_eq!(requirement.page, page as u64);
+        assert!(matches!(
+            requirement.requirement,
+            DocRequirement::Foreign {
+                embed: EmbedRef(0),
+                kind: EmbedKind::Sentence,
+                ..
             }
-        ]
-    );
-    assert!(p.plan().remaining.is_empty());
+        ));
+    }
     let value = portable::pages::set_to_value(&set, &r, &mut c, &mut b()).map_err(err)?;
     let mut bytes = b"NEPL3.Doc.Pages.v2\0".to_vec();
     bytes.extend(nepl3_wire::encode(&value, &mut b()).map_err(err)?);
     assert_eq!(p.plan().identity, Digest::of(&bytes));
     for (index, page) in set.pages.iter().enumerate() {
-        // Independently assemble the specified domain + canonical NDF bytes.
-        // A digest of digests or a PageSet child at the wrong index must differ.
-        let document = portable::to_value(&page.document, &r, &mut c, &mut b()).map_err(err)?;
+        let value = portable::to_value(&page.document, &r, &mut c, &mut b()).map_err(err)?;
         let mut expected = nepl3_doc_core::prepare::DOCUMENT_DOMAIN.to_vec();
-        expected.extend(nepl3_wire::encode(&document, &mut b()).map_err(err)?);
+        expected.extend(nepl3_wire::encode(&value, &mut b()).map_err(err)?);
         assert_eq!(p.document_digest(index as u64), Some(Digest::of(&expected)));
         assert_eq!(
             p.document_digest(index as u64),
@@ -411,26 +269,43 @@ fn pages_resolve_forward_and_relative_links_with_explicit_identity() -> Result<(
     assert_eq!(set, original);
     let mut changed = set.clone();
     changed.pages[1].registration.route = "other/index.html".into();
-    assert_ne!(run(&changed)?.identity, p.plan().identity);
+    assert_ne!(run(&changed, &r)?.identity, p.plan().identity);
     changed = set.clone();
-    if let DocKind::Text { text } = &mut changed.pages[1].document.value.nodes[2].kind {
-        *text = "changed".into();
-    }
-    assert_ne!(run(&changed)?.identity, p.plan().identity);
+    changed.pages[1].document.value.nodes[5].kind = DocKind::RawCode {
+        language_hint: None,
+        text: "changed".into(),
+    };
+    assert_ne!(run(&changed, &r)?.identity, p.plan().identity);
     Ok(())
 }
+
 #[test]
-fn registry_collisions_and_unknown_destinations_are_rejected() -> Result<(), String> {
-    for field in [PageField::Id, PageField::Source, PageField::Route] {
-        let mut s = set();
-        let first = s.pages[0].registration.clone();
-        let second = &mut s.pages[1].registration;
-        match field {
-            PageField::Id => second.id = first.id,
-            PageField::Source => second.source = first.source,
-            PageField::Route => second.route = first.route,
+fn page_and_file_registrations_reject_collisions_and_path_overlap() -> Result<(), String> {
+    let r = registry()?;
+    for file in [false, true] {
+        for field in [PageField::Id, PageField::Source, PageField::Route] {
+            let mut s = set(&r)?;
+            let first = s.pages[0].registration.clone();
+            let second = if file {
+                s.files.push(PageFile {
+                    registration: PageRegistration {
+                        id: "file".into(),
+                        source: "data/file".into(),
+                        route: "data/file".into(),
+                    },
+                    content: FileBytes(vec![]),
+                });
+                &mut s.files[0].registration
+            } else {
+                &mut s.pages[1].registration
+            };
+            match field {
+                PageField::Id => second.id = first.id,
+                PageField::Source => second.source = first.source,
+                PageField::Route => second.route = first.route,
+            }
+            assert!(matches!(run(&s, &r), Err(e) if e.contains("Collision")));
         }
-        assert!(matches!(run(&s), Err(e) if e.contains("Collision")));
     }
     for route in [
         "docs/first/index.html/child",
@@ -440,74 +315,45 @@ fn registry_collisions_and_unknown_destinations_are_rejected() -> Result<(), Str
         "a/%2e/b",
         "a//b",
     ] {
-        let mut s = set();
+        let mut s = set(&r)?;
         s.pages[1].registration.route = route.into();
-        assert!(run(&s).is_err(), "{route}");
-    }
-    for target in [
-        LinkTarget::Page {
-            page: "absent".into(),
-            fragment: None,
-        },
-        LinkTarget::Page {
-            page: "second".into(),
-            fragment: Some("missing".into()),
-        },
-        LinkTarget::Relative {
-            path: "../../escape".into(),
-            fragment: None,
-        },
-        LinkTarget::Relative {
-            path: "next/%73econd.nepld".into(),
-            fragment: None,
-        },
-    ] {
-        let mut s = set();
-        if let DocKind::Link { target: t, .. } = &mut s.pages[0].document.value.nodes[7].kind {
-            *t = target;
-        }
-        assert!(run(&s).is_err());
+        assert!(run(&s, &r).is_err(), "{route}");
     }
     assert!(
-        run(&PageSet {
-            pages: vec![],
-            files: vec![]
-        })
+        run(
+            &PageSet {
+                pages: vec![],
+                files: vec![]
+            },
+            &r
+        )
         .is_err()
     );
     Ok(())
 }
+
 #[test]
-fn external_links_remain_requirements_not_successful_page_links() -> Result<(), String> {
-    let mut s = set();
-    if let DocKind::Link { target, .. } = &mut s.pages[0].document.value.nodes[7].kind {
-        *target = LinkTarget::External {
-            uri: "https://example.org/".into(),
-        };
-    }
-    let p = run(&s)?;
-    assert_eq!(p.links.len(), 1);
-    assert_eq!(p.remaining.len(), 1);
-    assert_eq!(p.remaining[0].page, 0);
-    Ok(())
-}
-#[test]
-fn first_cbor_receiver_recomputes_plan_and_rejects_forged_or_stale_links() -> Result<(), String> {
+fn first_root_receiver_recomputes_plan_and_rejects_forged_or_stale_data() -> Result<(), String> {
     let r = registry()?;
-    let s = set();
+    let mut s = set(&r)?;
+    s.files.push(PageFile {
+        registration: PageRegistration {
+            id: "file".into(),
+            source: "data/raw".into(),
+            route: "files/raw".into(),
+        },
+        content: FileBytes(vec![0, 255, 13, 10]),
+    });
     let empty = SourceStore::default();
     let mut a = SourceAdmission::default();
     let mut c = FoundationCodec::new(&r, &empty, &mut a).map_err(err)?;
-    let plan = resolve(&s, &r, &mut c, &mut b())
-        .map_err(err)?
-        .plan()
-        .clone();
+    let plan = run(&s, &r)?;
     let packet = nepl3_wire::encode(
         &portable::pages::set_to_value(&s, &r, &mut c, &mut b()).map_err(err)?,
         &mut b(),
     )
     .map_err(err)?;
-    let mut p = portable::pages::plan_to_value(&plan, &s, &r, &mut c, &mut b()).map_err(err)?;
+    let p = portable::pages::plan_to_value(&plan, &s, &r, &mut c, &mut b()).map_err(err)?;
     let packet_p = nepl3_wire::encode(&p, &mut b()).map_err(err)?;
     let mut fresh_a = SourceAdmission::default();
     let mut fresh = FoundationCodec::new(&r, &empty, &mut fresh_a).map_err(err)?;
@@ -518,28 +364,40 @@ fn first_cbor_receiver_recomputes_plan_and_rejects_forged_or_stale_links() -> Re
         &mut b(),
     )
     .map_err(err)?;
+    assert_eq!(received, s);
     let received_p = nepl3_wire::decode(&packet_p, &mut b()).map_err(err)?;
     assert_eq!(
         portable::pages::plan_from_value(&received_p, &received, &r, &mut fresh, &mut b())
             .map_err(err)?,
         plan
     );
-    let NdfValue::Record(ref mut bad) = p else {
-        return Err("expected plan record".into());
+    let mut omitted = p;
+    let NdfValue::Record(plan) = &mut omitted else {
+        return Err("plan".into());
     };
-    bad.fields[1] = NdfValue::List(vec![]);
-    assert!(portable::pages::plan_from_value(&p, &received, &r, &mut fresh, &mut b()).is_err());
-    let mut changed = received;
-    changed.pages[1].registration.route = "moved.html".into();
+    plan.fields[2] = NdfValue::List(vec![]);
     assert!(
-        portable::pages::plan_from_value(&received_p, &changed, &r, &mut fresh, &mut b()).is_err()
+        portable::pages::plan_from_value(&omitted, &received, &r, &mut fresh, &mut b()).is_err()
     );
+    for route in [false, true] {
+        let mut changed = received.clone();
+        if route {
+            changed.pages[1].registration.route = "moved.html".into();
+        } else {
+            changed.files[0].content.0[1] = 254;
+        }
+        assert!(
+            portable::pages::plan_from_value(&received_p, &changed, &r, &mut fresh, &mut b())
+                .is_err()
+        );
+    }
     Ok(())
 }
+
 #[test]
 fn page_resolution_obeys_sticky_resource_limits() -> Result<(), String> {
     let r = registry()?;
-    let s = set();
+    let s = set(&r)?;
     let original = s.clone();
     let empty = SourceStore::default();
     for resource in [Resource::Work, Resource::AllocationUnits] {
@@ -552,14 +410,12 @@ fn page_resolution_obeys_sticky_resource_limits() -> Result<(), String> {
             let mut budget = Budget::new(limits);
             let mut a = SourceAdmission::default();
             let mut c = FoundationCodec::new(&r, &empty, &mut a).map_err(err)?;
-            assert!(matches!(
-                resolve(&s, &r, &mut c, &mut budget),
-                Err(PageError::Stopped(_))
-            ));
-            assert!(matches!(
-                resolve(&s, &r, &mut c, &mut budget),
-                Err(PageError::Stopped(_))
-            ));
+            for _ in 0..2 {
+                assert!(matches!(
+                    resolve(&s, &r, &mut c, &mut budget),
+                    Err(PageError::Stopped(_))
+                ));
+            }
             assert_eq!(s, original);
         }
     }

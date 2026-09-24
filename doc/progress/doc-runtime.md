@@ -25,15 +25,18 @@ Docのportable表現は共有provenanceをDocOwner表へ一度記録し、各Doc
 内容digestで参照する。同値の独立storageも同じportable byte列へ正規化する。
 Foundationの単独ForeignClosure交換形式は維持する。
 
-128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
+`16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは
 92,233,883、累積AllocationUnitsは276,016,281である。AllocationUnitsは論理的な
 累積使用量であり、ピーク物理メモリは未測定である。
 
-owner codecとnamespace identityの13試験はnative・WASIで成功し、対象Clippyと
-thumbv6m compileも成功した。toolsのArticle・namespace・印字等の22試験と通常容量試験3件は
-nativeで成功した。全core試験は旧 `tests/pages.rs` の12型エラーでcompileが停止し、
+PageNamespacePlanはページ・member・文書digest・リンク・残る要求を交換する。
+受信側で再構築したnamespace proofから全fieldを照合し、出現順序・所属・添付ファイルの
+変更や要求の欠落を拒否する。Doc coreの全46試験はnative・WASIで成功した。
+旧ページ試験の型エラーは解消し、root検査と選択guestのnamespace検査へ責務を移した。
+toolsのArticle・namespace・印字等の22試験と通常容量試験3件もnativeで成功した。
+workspace全体のcompileはDoc HTMLの旧 `tests/local.rs` にある28件の型エラーで停止した。
 正式Markdown生成は旧Sentence構文の `doc/tutorial/miniexpr.nepld` で停止している。
 原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。

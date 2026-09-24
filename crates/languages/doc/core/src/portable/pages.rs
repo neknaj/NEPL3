@@ -2,6 +2,7 @@
 use super::*;
 use crate::pages::{self, PageDocument, PageLinkPlan, PageSet};
 use alloc::vec::Vec;
+pub mod namespace;
 
 /// Consume an already checked, locally generated PageSet into the v2 namespace
 /// identity input. Root documents are bound by member-0 digests, so their full

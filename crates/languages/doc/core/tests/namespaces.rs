@@ -17,6 +17,8 @@ use nepl3_doc_core::{
     portable,
 };
 use nepl3_wire::foundation::FoundationCodec;
+#[path = "namespaces/portable.rs"]
+mod packets;
 #[path = "support/closure.rs"]
 mod support;
 
@@ -375,7 +377,7 @@ fn composed_links_keep_relative_file_and_rejection_rules() -> Result<(), String>
         File,
         Relative,
         Missing,
-        Fragment,
+        Fragment(u64),
         FileFragment,
     }
     let r = registry()?;
@@ -406,6 +408,20 @@ fn composed_links_keep_relative_file_and_rejection_rules() -> Result<(), String>
         ),
         (
             LinkTarget::Relative {
+                path: ".././doc/second.nepld".into(),
+                fragment: Some("target".into()),
+            },
+            Expected::Page(1),
+        ),
+        (
+            LinkTarget::Relative {
+                path: "".into(),
+                fragment: Some("未登録".into()),
+            },
+            Expected::Fragment(0),
+        ),
+        (
+            LinkTarget::Relative {
                 path: "./second.nepld".into(),
                 fragment: Some("target".into()),
             },
@@ -429,6 +445,13 @@ fn composed_links_keep_relative_file_and_rejection_rules() -> Result<(), String>
             LinkTarget::Relative {
                 path: "".into(),
                 fragment: None,
+            },
+            Expected::Relative,
+        ),
+        (
+            LinkTarget::Relative {
+                path: "".into(),
+                fragment: Some(String::new()),
             },
             Expected::Relative,
         ),
@@ -465,7 +488,7 @@ fn composed_links_keep_relative_file_and_rejection_rules() -> Result<(), String>
                 page: "second".into(),
                 fragment: Some("absent".into()),
             },
-            Expected::Fragment,
+            Expected::Fragment(1),
         ),
         (
             LinkTarget::Relative {
@@ -528,13 +551,13 @@ fn composed_links_keep_relative_file_and_rejection_rules() -> Result<(), String>
                         error,
                         pages::PageError::MissingPage { page: 0, node: 0 }
                     )),
-                    Expected::Fragment => assert!(matches!(
+                    Expected::Fragment(expected) => assert!(matches!(
                         error,
                         pages::PageError::MissingFragment {
                             page: 0,
                             node: 0,
-                            target: 1
-                        }
+                            target
+                        } if target == expected
                     )),
                     Expected::FileFragment => assert!(matches!(
                         error,
