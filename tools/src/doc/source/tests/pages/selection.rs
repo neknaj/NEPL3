@@ -1,6 +1,6 @@
 use super::*;
 use nepl3_doc_core::model::{BlockRef, DocRoot, DocumentSyntax, FlowRef};
-use nepl3_suite::adapters::document::sentence::selection;
+use nepl3_suite::adapters::document::sentences as selection;
 
 pub(super) fn verify_inline<C: FoundationValueCodec>(
     inline: &DocumentSyntax,
@@ -22,18 +22,19 @@ where
         &mut budget(),
     )
     .map_err(err)?;
-    assert_eq!(selected.sentences().len(), 1);
     assert_eq!(selected.occurrences().len(), 1);
+    let sentence_value = selected
+        .sentence(selected.occurrences()[0].embed)
+        .ok_or("Inline sentence")?;
     assert_eq!(
-        selected.occurrences()[0].owner.kind,
+        selected.occurrences()[0].kind,
         nepl3_doc_core::model::EmbedKind::SentenceInline
     );
     assert!(matches!(
-        selected.sentences()[0].value.root,
+        sentence_value.value.root,
         nepl3_sentence_core::model::Root::Inline(_)
     ));
-    let label =
-        sentence::embed(&selected.sentences()[0], registry, codec, &mut budget()).map_err(err)?;
+    let label = sentence::embed(sentence_value, registry, codec, &mut budget()).map_err(err)?;
     hidden_variant(article, &label, compiled, registry, codec)?;
     let mut wrong = article.clone();
     let slot = wrong
@@ -57,7 +58,7 @@ where
             codec,
             &mut budget()
         ),
-        Err(selection::SelectionError::Sentence {
+        Err(selection::Error::Sentence {
             error: sentence::Error::Category,
             ..
         })
@@ -150,7 +151,7 @@ where
         valid
             .occurrences()
             .iter()
-            .map(|item| item.owner.node)
+            .map(|item| item.node)
             .collect::<Vec<_>>(),
         vec![
             match document.value.nodes[root.0 as usize].kind {
@@ -165,7 +166,7 @@ where
     // Keep the Doc role and NDF schema valid; only the guest root is incompatible.
     document.value.embeds[hidden_embed.0 as usize].content = inline_label.content.clone();
     assert!(
-        matches!(selection::collect(&document, &compiled.others[3].schema, &forms, registry, codec, &mut budget()), Err(selection::SelectionError::Sentence { owner, error: nepl3_suite::adapters::document::sentence::Error::Category }) if owner.node == hidden && owner.embed == hidden_embed)
+        matches!(selection::collect(&document, &compiled.others[3].schema, &forms, registry, codec, &mut budget()), Err(selection::Error::Sentence { embed, error: nepl3_suite::adapters::document::sentence::Error::Category }) if embed == hidden_embed)
     );
     Ok(())
 }
@@ -222,15 +223,21 @@ where
         &mut budget(),
     )
     .map_err(err)?;
-    assert_eq!(result.sentences().len(), 2);
     let occurrences = result.occurrences();
     assert_eq!(occurrences.len(), 3);
-    assert_eq!(occurrences[0].sentence.index(), 0);
-    assert_eq!(occurrences[1].sentence, occurrences[2].sentence);
-    assert_eq!(occurrences[1].owner.embed, occurrences[2].owner.embed);
-    assert_eq!(occurrences[1].owner.node, occurrences[2].owner.node);
-    assert_eq!(occurrences[1].owner.depth, 4);
-    assert_eq!(occurrences[2].owner.depth, 5);
+    assert!(result.sentence(occurrences[0].embed).is_some());
+    assert!(core::ptr::eq(
+        result
+            .sentence(occurrences[1].embed)
+            .ok_or("shared Sentence")?,
+        result
+            .sentence(occurrences[2].embed)
+            .ok_or("shared Sentence")?
+    ));
+    assert_eq!(occurrences[1].embed, occurrences[2].embed);
+    assert_eq!(occurrences[1].node, occurrences[2].node);
+    assert_eq!(occurrences[1].depth, 4);
+    assert_eq!(occurrences[2].depth, 5);
     deepest_lowering(&shared, &result, compiled, registry, codec)?;
     super::exact_resource_boundaries(|b| {
         selection::collect(
@@ -247,7 +254,7 @@ where
     wrong.digest = Digest::of(b"unselected Sentence grammar");
     assert!(matches!(
         selection::collect(&shared, &wrong, &forms, registry, codec, &mut budget()),
-        Err(selection::SelectionError::Sentence {
+        Err(selection::Error::Sentence {
             error: nepl3_suite::adapters::document::sentence::Error::Selection,
             ..
         })
@@ -266,7 +273,7 @@ where
     let mut limits = measured.limits();
     limits.depth = measured.usage().depth;
     let mut limited = Budget::new(limits);
-    let result = limited.with_depth_at_least::<_, selection::SelectionError<C::Error>>(1, |b| {
+    let result = limited.with_depth_at_least::<_, selection::Error<C::Error>>(1, |b| {
         selection::collect(
             &shared,
             &compiled.others[3].schema,
@@ -278,7 +285,7 @@ where
     });
     assert!(matches!(
         result,
-        Err(selection::SelectionError::Stopped(
+        Err(selection::Error::Stopped(
             nepl3_core::budget::StopReason::DepthLimit
         ))
     ));
@@ -287,7 +294,7 @@ where
 
 fn deepest_lowering<C: FoundationValueCodec>(
     shared: &DocumentSyntax,
-    selection: &selection::Selection,
+    selection: &selection::Selection<'_>,
     compiled: &Compiled,
     registry: &nepl3_core::schema::SchemaRegistry,
     codec: &mut C,
@@ -297,7 +304,10 @@ where
 {
     use nepl3_sentence_core::model::{InlineRef, Kind, Root};
     use nepl3_suite::adapters::document::sentence;
-    let mut sentence = selection.sentences()[1].clone();
+    let mut sentence = selection
+        .sentence(selection.occurrences()[1].embed)
+        .ok_or("body Sentence")?
+        .clone();
     let Root::Sentence(root) = sentence.value.root else {
         return Err("Sentence root".into());
     };
@@ -320,10 +330,10 @@ where
     };
     let guest = sentence::embed(&sentence, registry, codec, &mut budget()).map_err(err)?;
     let mut document = shared.clone();
-    document.value.embeds[selection.occurrences()[1].owner.embed.0 as usize] = guest;
+    document.value.embeds[selection.occurrences()[1].embed.0 as usize] = guest;
     let mut local = budget();
     sentence::lower(
-        &document.value.embeds[selection.occurrences()[1].owner.embed.0 as usize],
+        &document.value.embeds[selection.occurrences()[1].embed.0 as usize],
         &compiled.others[3].schema,
         &[],
         registry,
@@ -361,7 +371,7 @@ where
             codec,
             &mut Budget::new(limits)
         ),
-        Err(selection::SelectionError::Stopped(
+        Err(selection::Error::Stopped(
             nepl3_core::budget::StopReason::DepthLimit
         ))
     ));

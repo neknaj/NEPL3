@@ -57,7 +57,7 @@ fn article_sentence_doc_links_resolve_in_page_namespaces() -> Result<(), String>
                     else {
                         return Err("Sentence slot".into());
                     };
-                    let selected = nepl3_suite::adapters::document::sentence::selection::collect(
+                    let selected = nepl3_suite::adapters::document::sentences::collect(
                         &document,
                         &compiled.others[3].schema,
                         &[nepl3_sentence_core::lower::ForeignInlineForm {
@@ -70,13 +70,14 @@ fn article_sentence_doc_links_resolve_in_page_namespaces() -> Result<(), String>
                         b,
                     )
                     .map_err(err)?;
-                    assert_eq!(selected.sentences().len(), 2);
                     assert_eq!(selected.occurrences().len(), 2);
-                    assert_eq!(selected.occurrences()[0].owner.embed, syntax);
-                    assert_eq!(selected.occurrences()[0].owner.node, title.0);
-                    assert_eq!(selected.occurrences()[0].sentence.index(), 0);
-                    let (sentences, _) = selected.into_parts();
-                    let sentence = sentences.into_iter().next().ok_or("selected title")?;
+                    assert_eq!(selected.occurrences()[0].embed, syntax);
+                    assert_eq!(selected.occurrences()[0].node, title.0);
+                    let (mut sentences, _) = selected.into_parts();
+                    assert_eq!(sentences.iter().flatten().count(), 2);
+                    let sentence = sentences[syntax.0 as usize]
+                        .take()
+                        .ok_or("selected title")?;
                     let selection = nepl3_suite::adapters::sentence::document_guests::collect(
                         &sentence,
                         &compiled.doc.package.schema,

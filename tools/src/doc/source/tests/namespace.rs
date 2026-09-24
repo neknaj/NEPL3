@@ -562,7 +562,7 @@ fn foreign_namespace_parts_preserve_refs_and_guest_boundaries() -> Result<(), St
                 // Article titles remain Sentence-owned. DisplayMath uses its
                 // independently selected Block operation in the same member.
                 let before = inputs[3].document().clone();
-                let sentences = nepl3_suite::adapters::document::sentence::selection::collect(
+                let sentences = nepl3_suite::adapters::document::sentences::collect(
                     inputs[3].document(),
                     &compiled.others[3].schema,
                     &[],
@@ -571,10 +571,9 @@ fn foreign_namespace_parts_preserve_refs_and_guest_boundaries() -> Result<(), St
                     b,
                 )
                 .map_err(err)?;
-                assert_eq!(sentences.sentences().len(), 1);
                 assert_eq!(sentences.occurrences().len(), 1);
                 assert_eq!(
-                    sentences.occurrences()[0].owner.kind,
+                    sentences.occurrences()[0].kind,
                     nepl3_doc_core::model::EmbedKind::Sentence
                 );
                 assert_eq!(inputs[3].document(), &before);

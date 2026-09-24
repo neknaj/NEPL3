@@ -9,8 +9,6 @@ use nepl3_core::{
 use nepl3_doc_core::model::{DocContent, DocEmbed, EmbedKind};
 use nepl3_sentence_core::{lower, model::Root, syntax::SentenceSyntax};
 
-pub mod selection;
-
 #[derive(Debug)]
 pub enum Error<E> {
     Stopped(StopReason),

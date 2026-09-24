@@ -49,6 +49,11 @@ impl<'a> Selection<'a> {
     pub fn occurrences(&self) -> &[ForeignOccurrence] {
         &self.occurrences
     }
+    /// Transfer the embed-indexed Sentence slots and structural occurrences.
+    /// Empty slots belong to other guest roles retained by the original Doc.
+    pub fn into_parts(self) -> (Vec<Option<SentenceSyntax>>, Vec<ForeignOccurrence>) {
+        (self.slots, self.occurrences)
+    }
 }
 /// Validate Doc provenance and lower every Sentence/Inline label slot at its
 /// deepest owner occurrence. All Parallel alternatives and optional content are
