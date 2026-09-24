@@ -2,11 +2,11 @@
 //! Operations use independent default budgets and fresh admission contexts.
 use nepl3_core::{
     source::{SourceAdmission, SourceStore},
-    value_codec::FoundationValueCodec,
+    value_codec::{FoundationCodecError, FoundationValueCodec},
 };
 use nepl3_doc_core::{check::Category, lower, model::DocContent, portable};
 use nepl3_tools::doc::source::{budget, compiled, err, with_input_route};
-use nepl3_wire::foundation::FoundationCodec;
+use nepl3_wire::{foundation::FoundationCodec, syntax::ForeignClosureEncoder};
 use std::time::Instant;
 
 #[test]
@@ -76,7 +76,61 @@ fn measure_sentence_closure_materialization() -> Result<(), String> {
                 measured.usage(),
                 encoded.as_ref().err()
             );
-            encoded.map_err(err)?;
+            let encoded = encoded.map_err(err)?;
+            // Isolate canonical traversal and hashing from closure/schema
+            // validation and NDF construction. Reuse one representative body
+            // closure; this is not a measurement of the complete embed set.
+            let mut measured = budget();
+            let start = Instant::now();
+            codec
+                .canonical_value_digest(b"capacity.closure", &encoded, &mut measured)
+                .map_err(err)?;
+            println!(
+                "operation=one_closure_canonical_digest elapsed_ns={} usage={:?}",
+                start.elapsed().as_nanos(),
+                measured.usage(),
+            );
+            // Measure the shared-owner path on the actual lowered document.
+            // Each result is a ForeignClosure digest, not a Doc/PageSet digest;
+            // this isolates feasibility before changing the enclosing identity
+            // traversal. Include owner preparation in this operation's usage.
+            // Preparation must succeed; record bounded stops during traversal.
+            let mut measured = budget();
+            let mut admission = SourceAdmission::default();
+            let start = Instant::now();
+            let encoder = ForeignClosureEncoder::new(
+                &closure.provenance,
+                registry
+                    .selected("nepl3.foundation", 1)
+                    .ok_or("foundation schema")?,
+                registry,
+                &mut admission,
+                &mut measured,
+            )
+            .map_err(err)?;
+            let mut completed = 0;
+            let mut stopped = None;
+            for embed in embeds {
+                let DocContent::Syntax { closure } = &embed.content else {
+                    return Err("Sentence syntax closure".into());
+                };
+                match encoder.digest(b"capacity.closure", closure, &mut admission, &mut measured) {
+                    Ok(_) => completed += 1,
+                    Err(error) => match error.stop_reason() {
+                        Some(reason) => {
+                            stopped = Some(reason);
+                            break;
+                        }
+                        None => return Err(err(error)),
+                    },
+                }
+            }
+            println!(
+                "operation=shared_closure_digests completed={completed}/{} elapsed_ns={} usage={:?} stop={stopped:?}",
+                embeds.len(),
+                start.elapsed().as_nanos(),
+                measured.usage(),
+            );
             let mut measured = budget();
             let mut admission = SourceAdmission::default();
             let mut codec =
