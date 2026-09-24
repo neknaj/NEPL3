@@ -53,6 +53,115 @@ fn doc_fields(value: &mut NdfValue) -> Result<&mut Vec<NdfValue>, String> {
     };
     Ok(&mut value.fields)
 }
+
+#[test]
+fn structure_reuses_only_identical_owner_tables_and_checks_each_guest() -> Result<(), String> {
+    use nepl3_core::syntax::SyntaxError;
+    use nepl3_doc_core::check::StructureError;
+    let r = registry()?;
+    let mut shared = pair(&r, false, false)?;
+    let mut origins = (0..16)
+        .map(|i| Origin::Composite(vec![OriginId(i + 1)]))
+        .collect::<Vec<_>>();
+    origins.push(Origin::Synthetic {
+        reason: "deep owner".into(),
+        anchor: None,
+    });
+    let owner = OwnerProvenance::from_parts(origins, vec![], vec![]);
+    for embed in &mut shared.value.embeds {
+        let DocContent::Syntax { closure } = &mut embed.content else {
+            return Err("syntax".into());
+        };
+        closure.provenance = owner.clone();
+    }
+    let mut independent = shared.clone();
+    for embed in &mut independent.value.embeds {
+        let DocContent::Syntax { closure } = &mut embed.content else {
+            return Err("syntax".into());
+        };
+        closure.provenance = OwnerProvenance::from_parts(owner.origins().to_vec(), vec![], vec![]);
+    }
+    let run = |doc: &DocumentSyntax, budget: &mut Budget| {
+        doc.validate_structure(&r, budget, &mut SourceAdmission::default())
+            .map(|_| ())
+    };
+    let mut shared_budget = b();
+    run(&shared, &mut shared_budget).map_err(err)?;
+    let mut independent_budget = b();
+    run(&independent, &mut independent_budget).map_err(err)?;
+    // The title uses slot 0; the deeper image-alt occurrence uses slot 1.
+    // Reusing the owner must preserve the full traversal's relative depth.
+    assert!(shared_budget.usage().depth > 16);
+    assert_eq!(
+        shared_budget.usage().depth,
+        independent_budget.usage().depth
+    );
+    #[cfg(target_has_atomic = "ptr")]
+    assert!(shared_budget.usage().work < independent_budget.usage().work);
+    // The second slot shares the first owner's tables, but its selected
+    // environment and guest graph must still be validated independently.
+    for environment in [true, false] {
+        let mut bad = shared.clone();
+        let DocContent::Syntax { closure } = &mut bad.value.embeds[1].content else {
+            return Err("syntax".into());
+        };
+        if environment {
+            closure.owner_environment.id += 1;
+        } else {
+            closure.syntax.root = NodeRef(u64::MAX);
+        }
+        assert!(matches!(
+            run(&bad, &mut b()),
+            Err(StructureError::Syntax(_))
+        ));
+    }
+    // A replacement owner cannot inherit the preceding proof.
+    let mut bad = shared.clone();
+    let DocContent::Syntax { closure } = &mut bad.value.embeds[1].content else {
+        return Err("syntax".into());
+    };
+    closure.provenance = OwnerProvenance::from_parts(
+        vec![closure.syntax.bundle.origins[0].clone()],
+        vec![],
+        vec![],
+    );
+    assert!(matches!(
+        run(&bad, &mut b()),
+        Err(StructureError::Syntax(SyntaxError::Origin(_)))
+    ));
+    let usage = shared_budget.usage();
+    for (reason, amount) in [
+        (StopReason::WorkLimit, usage.work),
+        (StopReason::AllocationLimit, usage.allocation_units),
+        (StopReason::NodeLimit, usage.nodes),
+        (StopReason::DepthLimit, usage.depth),
+    ] {
+        for limit in [amount - 1, amount] {
+            let mut limits = b().limits();
+            match reason {
+                StopReason::WorkLimit => limits.work = limit,
+                StopReason::AllocationLimit => limits.allocation_units = limit,
+                StopReason::NodeLimit => limits.nodes = limit,
+                StopReason::DepthLimit => limits.depth = limit,
+                _ => return Err("test resource".into()),
+            }
+            let mut limited = Budget::new(limits);
+            if limit == amount {
+                run(&shared, &mut limited).map_err(err)?;
+            } else {
+                assert!(
+                    matches!(run(&shared, &mut limited), Err(StructureError::Stopped(s)) if s == reason)
+                );
+                let stopped = limited.usage();
+                assert!(
+                    matches!(run(&shared, &mut limited), Err(StructureError::Stopped(s)) if s == reason)
+                );
+                assert_eq!(limited.usage(), stopped);
+            }
+        }
+    }
+    Ok(())
+}
 fn owner_table(value: &mut NdfValue) -> Result<&mut Vec<NdfValue>, String> {
     let NdfValue::List(values) = &mut doc_fields(value)?[3] else {
         return Err("owners".into());

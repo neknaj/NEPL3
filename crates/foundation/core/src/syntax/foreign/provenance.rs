@@ -31,6 +31,12 @@ pub struct ValidatedOwnerProvenance<'a> {
 }
 
 impl ValidatedOwnerProvenance<'_> {
+    /// Whether this proof borrows the same immutable tables. This comparison
+    /// grants no guest, depth or source-admission proof; use `validate_closure`
+    /// for those checks in the receiving operation.
+    pub fn matches_owner(&self, owner: &OwnerProvenance) -> bool {
+        self.owner.same_tables(owner)
+    }
     /// Validate each guest and its selected environment. Only the unchanged
     /// owner tables reuse validation; guest graphs and environment values are
     /// checked on every call. Native environment hash recomputation remains a
@@ -42,7 +48,7 @@ impl ValidatedOwnerProvenance<'_> {
         admission: &mut SourceAdmission,
     ) -> Result<ValidatedForeignClosure<'s>, SyntaxError> {
         b.charge(Resource::Work, 1)?;
-        if !self.owner.same_tables(&closure.provenance) {
+        if !self.matches_owner(&closure.provenance) {
             return Err(SyntaxError::Reference);
         }
         b.observe_depth(self.depth)?;

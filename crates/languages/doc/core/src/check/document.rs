@@ -6,7 +6,7 @@ use nepl3_core::{
     origin::{OriginError, OriginGraph, SourceMap},
     schema::SchemaRegistry,
     source::{SourceAdmission, SourceError, SourceStore},
-    syntax::SyntaxError,
+    syntax::{SyntaxError, ValidatedOwnerProvenance},
     view::ViewError,
 };
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -234,11 +234,25 @@ impl DocumentSyntax {
             }
         }
         let base = b.current_depth();
+        // Adjacent Sentence slots commonly share immutable owner tables. Retain
+        // one proof without a scan or allocation; a different owner replaces it.
+        // Each closure still checks its guest, environment, depth and admission.
+        let mut owner: Option<ValidatedOwnerProvenance<'_>> = None;
         for (embed, depth) in self.value.embeds.iter().zip(embeds) {
             b.with_depth_at_least::<_, StructureError>(base.saturating_add(depth), |b| {
                 match &embed.content {
                     DocContent::Syntax { closure } => {
-                        closure.validate(registry, b, admission)?;
+                        b.charge(Resource::Work, 1)?;
+                        if !owner
+                            .as_ref()
+                            .is_some_and(|proof| proof.matches_owner(&closure.provenance))
+                        {
+                            owner = Some(closure.provenance.validate(registry, b, admission)?);
+                        }
+                        owner
+                            .as_ref()
+                            .ok_or(SyntaxError::Reference)?
+                            .validate_closure(closure, b, admission)?;
                     }
                     DocContent::Value { value } => {
                         if !matches!(embed.kind, EmbedKind::Sentence | EmbedKind::SentenceInline) {
