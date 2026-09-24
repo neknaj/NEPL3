@@ -205,14 +205,14 @@ impl Adapter<'_, '_> {
         if !accepted {
             return Err(LowerError::Operand { node: id, field: f });
         }
-        let [FieldValue::Foreign(foreign)] = node.fields.as_slice() else {
+        let [FieldValue::Foreign(_)] = node.fields.as_slice() else {
             return Err(LowerError::Operand {
                 node: child,
                 field: 0,
             });
         };
         let closure =
-            ForeignClosure::capture(foreign, self.checked, self.registry, self.b, admission)?;
+            ForeignClosure::capture_at(self.checked, child, 0, self.registry, self.b, admission)?;
         let index = EmbedRef(self.embeds.len() as u64);
         self.b.charge(
             Resource::AllocationUnits,
@@ -240,11 +240,11 @@ impl Adapter<'_, '_> {
         kind: EmbedKind,
         admission: &mut SourceAdmission,
     ) -> Result<EmbedRef, LowerError> {
-        let Some(FieldValue::Foreign(foreign)) = node.fields.get(field) else {
+        let Some(FieldValue::Foreign(_)) = node.fields.get(field) else {
             return Err(LowerError::Operand { node: id, field });
         };
         let closure =
-            ForeignClosure::capture(foreign, self.checked, self.registry, self.b, admission)?;
+            ForeignClosure::capture_at(self.checked, id, field, self.registry, self.b, admission)?;
         let index = EmbedRef(self.embeds.len() as u64);
         self.b.charge(
             Resource::AllocationUnits,

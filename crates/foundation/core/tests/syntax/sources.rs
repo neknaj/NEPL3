@@ -30,6 +30,159 @@ fn snapshot(id: &str, revision: u64, text: &str) -> Result<SourceSnapshot, Sourc
 }
 
 #[test]
+fn positioned_capture_preserves_closure_and_rejects_invalid_positions() -> Result<(), SyntaxError> {
+    let (registry, schema) = registry()?;
+    let mut owner = bundle(&schema);
+    let original = snapshot("original", 0, "値")?;
+    let transformed = snapshot("transformed", 0, "value")?;
+    owner.origins = vec![
+        Origin::Composite(vec![OriginId(1)]),
+        Origin::Direct(original.span(0, 3)?),
+    ];
+    owner.source_maps.push(Mapping {
+        source: original.span(0, 3)?,
+        target: transformed.span(0, 5)?,
+        kind: MappingKind::Transformed,
+    });
+    owner.sources = vec![original, transformed];
+    owner.environments.push(environment());
+    owner.nodes[0].fields = vec![
+        FieldValue::Child(NodeRef(1)),
+        guest(&schema, bundle(&schema)),
+    ];
+    let mut second = bundle(&schema);
+    second.nodes[0]
+        .fields
+        .push(FieldValue::Atom(NdfScalar::Text("second".into())));
+    owner
+        .nodes
+        .push(node(&schema, vec![guest(&schema, second.clone())]));
+    let before = owner.clone();
+    let checked = owner.validate(&registry, &mut budget())?;
+    let FieldValue::Foreign(selected) = &owner.nodes[0].fields[1] else {
+        return Err(SyntaxError::Reference);
+    };
+    let expected = ForeignClosure::capture(
+        selected,
+        &checked,
+        &registry,
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    let actual = ForeignClosure::capture_at(
+        &checked,
+        NodeRef(0),
+        1,
+        &registry,
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    assert_eq!(actual, expected);
+    assert_eq!(actual.owner_origins, owner.origins);
+    assert_eq!(actual.owner_sources, owner.sources);
+    assert_eq!(actual.owner_source_maps, owner.source_maps);
+    assert_eq!(actual.owner_environment, owner.environments[0]);
+    let other = ForeignClosure::capture_at(
+        &checked,
+        NodeRef(1),
+        0,
+        &registry,
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    assert_eq!(other.syntax.bundle, second);
+    assert_ne!(actual.syntax.bundle, other.syntax.bundle);
+    for (node, field) in [
+        (NodeRef(u64::MAX), 0),
+        (NodeRef(0), usize::MAX),
+        (NodeRef(0), 0),
+    ] {
+        assert_eq!(
+            ForeignClosure::capture_at(
+                &checked,
+                node,
+                field,
+                &registry,
+                &mut budget(),
+                &mut SourceAdmission::default(),
+            ),
+            Err(SyntaxError::Reference),
+        );
+    }
+    for (work, allocation, reason) in [
+        (0, 1_000_000, StopReason::WorkLimit),
+        (1_000_000, 0, StopReason::AllocationLimit),
+    ] {
+        let mut b = Budget::new(Limits {
+            work,
+            allocation_units: allocation,
+            ..budget().limits()
+        });
+        assert_eq!(
+            ForeignClosure::capture_at(
+                &checked,
+                NodeRef(0),
+                1,
+                &registry,
+                &mut b,
+                &mut SourceAdmission::default(),
+            ),
+            Err(SyntaxError::Stopped(reason)),
+        );
+    }
+    // A structurally identical foreign value outside this owner is not a member.
+    let detached = selected.clone();
+    assert_eq!(
+        ForeignClosure::capture(
+            &detached,
+            &checked,
+            &registry,
+            &mut budget(),
+            &mut SourceAdmission::default()
+        ),
+        Err(SyntaxError::Reference),
+    );
+    assert_eq!(owner, before);
+    Ok(())
+}
+
+#[test]
+fn positioned_capture_cost_is_independent_of_unrelated_owner_nodes() -> Result<(), SyntaxError> {
+    let (registry, schema) = registry()?;
+    let mut usages = Vec::new();
+    for count in [32, 128, 512] {
+        let mut owner = bundle(&schema);
+        owner.environments.push(environment());
+        // A flat, reachable owner isolates selection cost from provenance and
+        // guest size. Put the foreign operand last so a full scan grows with it.
+        for index in 1..count {
+            owner.nodes[0]
+                .fields
+                .push(FieldValue::Child(NodeRef(index)));
+            owner.nodes.push(node(&schema, vec![]));
+        }
+        owner.nodes[0].fields.push(guest(&schema, bundle(&schema)));
+        let checked = owner.validate(&registry, &mut budget())?;
+        let mut b = budget();
+        let result = ForeignClosure::capture_at(
+            &checked,
+            NodeRef(0),
+            (count - 1) as usize,
+            &registry,
+            &mut b,
+            &mut SourceAdmission::default(),
+        )?;
+        assert_eq!(result.syntax.bundle, bundle(&schema));
+        usages.push(b.usage());
+    }
+    assert!(
+        usages.windows(2).all(|pair| pair[0] == pair[1]),
+        "{usages:?}"
+    );
+    Ok(())
+}
+
+#[test]
 fn closure_retains_guest_proof_only_after_owner_validation() -> Result<(), SyntaxError> {
     let (registry, schema) = registry()?;
     let mut input = closure(&schema, vec![]);
