@@ -13,6 +13,7 @@ use nepl3_doc_core::{
 };
 use nepl3_sentence_core::{lower::ForeignInlineForm, syntax::SentenceSyntax};
 
+#[cfg(feature = "sentence-html")]
 pub mod html;
 
 #[derive(Debug)]
@@ -92,17 +93,18 @@ pub fn collect<'a, C: FoundationValueCodec>(
             .try_reserve_exact(count)
             .map_err(|_| b.stop(StopReason::AllocationLimit))?;
         let base = b.current_depth();
+        let mut lowerer = sentence::Lowerer::new(registry);
         for (index, slot) in document.value.embeds.iter().enumerate() {
             b.charge(Resource::Work, 1)?;
             let input = if matches!(slot.kind, EmbedKind::Sentence | EmbedKind::SentenceInline) {
                 Some(
                     b.with_depth_at_least(base.saturating_add(depths[index]), |b| {
-                        sentence::lower(slot, surface, forms, registry, codec, b).map_err(|error| {
-                            Error::Sentence {
+                        lowerer
+                            .lower(slot, surface, forms, codec, b)
+                            .map_err(|error| Error::Sentence {
                                 embed: EmbedRef(index as u64),
                                 error,
-                            }
-                        })
+                            })
                     })?,
                 )
             } else {

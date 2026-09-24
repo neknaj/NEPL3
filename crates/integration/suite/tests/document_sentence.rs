@@ -230,6 +230,123 @@ fn doc_consumes_independent_sentence_with_sharing_and_generated_provenance() -> 
 }
 
 #[test]
+fn sentence_collection_reuses_owner_checks_without_skipping_guest_validation() -> Result<(), String>
+{
+    use nepl3_doc_core::model::{
+        BlockRef, DocKind, DocNode, DocRoot, DocValue, DocumentSyntax, EmbedRef, FlowRef,
+    };
+    use nepl3_suite::adapters::document::sentences;
+    let (registry, surface, mut input) = input()?;
+    let DocContent::Syntax { closure } = &mut input.content else {
+        return Err("syntax".into());
+    };
+    closure.provenance = OwnerProvenance::from_parts(
+        vec![Origin::Synthetic {
+            reason: "shared owner".repeat(1000),
+            anchor: None,
+        }],
+        vec![],
+        vec![],
+    );
+    let kinds = [
+        DocKind::Sentence {
+            syntax: EmbedRef(0),
+        },
+        DocKind::Sentence {
+            syntax: EmbedRef(1),
+        },
+        DocKind::Paragraph {
+            items: vec![FlowRef(0), FlowRef(1)],
+        },
+    ];
+    let shared = DocumentSyntax {
+        value: DocValue {
+            root: DocRoot::Block(BlockRef(2)),
+            nodes: kinds
+                .into_iter()
+                .map(|kind| DocNode {
+                    kind,
+                    locations: vec![],
+                    origin: None,
+                    span: None,
+                })
+                .collect(),
+            embeds: vec![input.clone(), input],
+        },
+        sources: vec![],
+        origins: vec![],
+        views: vec![],
+        source_maps: vec![],
+    };
+    let mut independent = shared.clone();
+    let DocContent::Syntax { closure } = &mut independent.value.embeds[1].content else {
+        return Err("syntax".into());
+    };
+    closure.provenance =
+        OwnerProvenance::from_parts(closure.provenance.origins().to_vec(), vec![], vec![]);
+    let run = |doc: &DocumentSyntax, b: &mut Budget| {
+        let sources = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&registry, &sources, &mut admission).map_err(err)?;
+        sentences::collect(doc, &surface, &[], &registry, &mut codec, b)
+            .map_err(err)
+            .map(|v| v.into_parts())
+    };
+    let mut costs = Vec::new();
+    let mut outputs = Vec::new();
+    for doc in [&shared, &independent] {
+        let mut shape = budget();
+        doc.validate_structure(&registry, &mut shape, &mut SourceAdmission::default())
+            .map_err(err)?;
+        let mut total = budget();
+        outputs.push(run(doc, &mut total)?);
+        // Isolate collection after its common Doc validation. The comparison
+        // therefore detects removal of the lowerer's own reuse, independently
+        // of the Doc structure checker's owner proof reuse.
+        costs.push(
+            total
+                .usage()
+                .work
+                .checked_sub(shape.usage().work)
+                .ok_or("measurement")?,
+        );
+    }
+    assert_eq!(outputs[0], outputs[1]);
+    #[cfg(target_has_atomic = "ptr")]
+    assert!(costs[0] < costs[1], "{costs:?}");
+    let parts = &outputs[0].0;
+    for part in parts.iter().flatten() {
+        assert_eq!(
+            part.value.nodes,
+            vec![
+                Kind::Break,
+                Kind::Sentence {
+                    inlines: vec![InlineRef(0), InlineRef(0)]
+                }
+            ]
+        );
+    }
+    let mut bad = shared.clone();
+    let DocContent::Syntax { closure } = &mut bad.value.embeds[1].content else {
+        return Err("syntax".into());
+    };
+    // A valid common graph with the wrong selected category still reaches
+    // the lowerer's category check for the second shared-owner slot.
+    closure.syntax.category = "Inline".into();
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&registry, &sources, &mut admission).map_err(err)?;
+    assert!(matches!(
+        sentences::collect(&bad, &surface, &[], &registry, &mut codec, &mut budget()),
+        Err(sentences::Error::Sentence {
+            embed: EmbedRef(1),
+            error: Error::Category
+        })
+    ));
+    Ok(())
+}
+
+#[test]
 fn inline_slot_accepts_inline_root_and_rejects_owner_mismatch() -> Result<(), String> {
     let (registry, surface, mut input) = input()?;
     input.kind = EmbedKind::SentenceInline;

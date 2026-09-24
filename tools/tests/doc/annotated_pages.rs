@@ -564,6 +564,24 @@ fn annotated_page_set_keeps_stops_sticky_and_returns_no_partial_output() -> Resu
 
 #[test]
 fn architecture_draft_projects_with_explicit_current_markdown_dependency() -> Result<(), String> {
+    architecture_projection(budget())
+}
+
+/// Explicit measurement under the existing corpus policy. The ordinary test
+/// above keeps the desktop allowance and continues to expose its Work failure.
+#[test]
+#[ignore = "explicit architecture projection measurement under corpus limits"]
+fn measure_architecture_projection_under_corpus_limits() -> Result<(), String> {
+    #[derive(serde::Deserialize)]
+    struct Policy {
+        output_limits: nepl3_tools::doc::export::pages::resources::OutputLimits,
+    }
+    let policy: Policy =
+        serde_json::from_str(include_str!("../../../doc/canonical.json")).map_err(err)?;
+    architecture_projection(policy.output_limits.budget())
+}
+
+fn architecture_projection(mut render_budget: Budget) -> Result<(), String> {
     let c = compiled()?;
     let set = PageSet {
         pages: vec![page(
@@ -587,20 +605,37 @@ fn architecture_draft_projects_with_explicit_current_markdown_dependency() -> Re
     let store = SourceStore::default();
     let mut admission = SourceAdmission::default();
     let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
-    let mut render_budget = budget();
-    let artifact = render(
+    let mut prepared = None;
+    let started = std::time::Instant::now();
+    let mut prepared_at = None;
+    let artifact = render_observed(
         &set,
         &c.doc.registry,
         &mut codec,
         &mut render_budget,
         &[&[]],
+        &mut |usage| {
+            prepared = Some(usage);
+            prepared_at = Some(started.elapsed());
+        },
     )
     .map_err(|error| {
         format!(
-            "architecture projection: {error:?}; {:?}",
+            "architecture projection: {error:?}; prepared={prepared:?}; {:?}",
             render_budget.usage()
         )
     })?;
+    let finished = started.elapsed();
+    println!(
+        "architecture namespace elapsed_ns={} usage={:?}",
+        prepared_at.ok_or("preparation time")?.as_nanos(),
+        prepared.ok_or("preparation usage")?
+    );
+    println!(
+        "architecture projection elapsed_ns={} usage={:?}",
+        finished.as_nanos(),
+        render_budget.usage()
+    );
     assert_eq!(
         links(&artifact.pages[0].markdown),
         ["22-external-extensions.md"]

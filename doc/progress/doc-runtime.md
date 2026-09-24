@@ -72,6 +72,15 @@ Doc構造検査は直前の不変ownerとregistryの検証証明を保持し、�
 Doc coreの47試験はnative・WASIで成功した。深い共有Originと独立storageのDepth一致、
 別ownerの不正Origin、2番目guestの破損、資源上限一致と1不足を回帰試験で確認する。
 第01章の本文・Ruby・Anno・節ID・参照先は独立した静的レビューで保持を確認した。
+Sentence collectionも同一operation内のowner証明を再利用し、公開の単独lowerは呼出しごとに検証する。
+共有storageと独立storageの意味一致・lower部分のWork差・2番目slotのcategory拒否を確認する。
+最小のdoc-sentence featureではHTMLモジュールを除外し、sentence-htmlの選択時に有効にする。
+第01章の既定Work上限での停止位置はnamespace準備中であり、Markdown描画は未到達である。
+明示計測は既存registryの文書集合用予算を使用し、namespace準備Work144,986,392、
+projection完了Work145,020,457・累積AllocationUnits125,596,233で本文とリンクの検査に成功した。
+Windows debugの参考時間は準備6.338秒、projection完了6.344秒で、解析・lowerを含まない。
+通常試験のWork100Mと失敗状態は維持する。この計測は通常予算への適合や全章の性能保証を示さない。
+Sentence adapterの6試験と実言語を含む9試験はnative・WASIで成功し、独立レビューも6試験を実行した。
 追加試験の成功を全workspaceの成功として扱わない。
 正式Markdown生成は旧Sentence構文の `doc/tutorial/miniexpr.nepld` で停止している。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を

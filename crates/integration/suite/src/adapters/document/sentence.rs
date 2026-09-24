@@ -2,7 +2,7 @@
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::SchemaRegistry,
-    syntax::SyntaxError,
+    syntax::{SyntaxError, ValidatedOwnerProvenance},
     value::{NdfValue, SchemaRef, TypedValue},
     value_codec::FoundationValueCodec,
 };
@@ -71,59 +71,104 @@ pub fn lower<C: FoundationValueCodec>(
     codec: &mut C,
     budget: &mut Budget,
 ) -> Result<SentenceSyntax, Error<C::Error>> {
-    budget.poll()?;
-    let result = (|| {
-        let category = match input.kind {
-            EmbedKind::Sentence => "Sentence",
-            EmbedKind::SentenceInline => "Inline",
-            _ => return Err(Error::Role),
-        };
-        let sentence = match &input.content {
-            DocContent::Value { value } => {
-                let value = match value.clone_with_budget(budget)? {
-                    TypedValue::Record(v) => NdfValue::Record(v),
-                    TypedValue::Variant(v) => NdfValue::Variant(v),
-                };
-                nepl3_sentence_core::portable::syntax::from_value(&value, registry, codec, budget)
-                    .map_err(Error::Value)?
-            }
-            DocContent::Syntax { closure } => {
-                budget.charge(
-                    Resource::Work,
-                    (closure.syntax.schema.package.len()
-                        + surface.package.len()
-                        + closure.syntax.category.len()
-                        + category.len()) as u64
-                        + 33,
-                )?;
-                if &closure.syntax.schema != surface {
-                    return Err(Error::Selection);
-                }
-                if closure.syntax.category != category {
-                    return Err(Error::Category);
-                }
-                let checked = closure
-                    .validate(registry, budget, codec.source_admission())
-                    .map_err(Error::Closure)?;
-                lower::presentation::sentence_with_foreign(
-                    checked.syntax(),
-                    surface,
-                    forms,
-                    registry,
-                    codec,
-                    budget,
-                )
-                .map_err(Error::Lower)?
-            }
-        };
-        if !matches!(
-            (input.kind, sentence.value.root),
-            (EmbedKind::Sentence, Root::Sentence(_)) | (EmbedKind::SentenceInline, Root::Inline(_))
-        ) {
-            return Err(Error::Category);
+    Lowerer::new(registry).lower(input, surface, forms, codec, budget)
+}
+
+/// One immutable registry and the most recent owner proof. Scoped to one
+/// collection operation; each selected guest still receives complete checks.
+pub(super) struct Lowerer<'a> {
+    registry: &'a SchemaRegistry,
+    owner: Option<ValidatedOwnerProvenance<'a>>,
+}
+impl<'a> Lowerer<'a> {
+    pub(super) fn new(registry: &'a SchemaRegistry) -> Self {
+        Self {
+            registry,
+            owner: None,
         }
-        Ok(sentence)
-    })();
-    budget.poll()?;
-    result
+    }
+    pub(super) fn lower<C: FoundationValueCodec>(
+        &mut self,
+        input: &'a DocEmbed,
+        surface: &SchemaRef,
+        forms: &[lower::ForeignInlineForm<'_>],
+        codec: &mut C,
+        budget: &mut Budget,
+    ) -> Result<SentenceSyntax, Error<C::Error>> {
+        let registry = self.registry;
+        budget.poll()?;
+        let result = (|| {
+            let category = match input.kind {
+                EmbedKind::Sentence => "Sentence",
+                EmbedKind::SentenceInline => "Inline",
+                _ => return Err(Error::Role),
+            };
+            let sentence = match &input.content {
+                DocContent::Value { value } => {
+                    let value = match value.clone_with_budget(budget)? {
+                        TypedValue::Record(v) => NdfValue::Record(v),
+                        TypedValue::Variant(v) => NdfValue::Variant(v),
+                    };
+                    nepl3_sentence_core::portable::syntax::from_value(
+                        &value, registry, codec, budget,
+                    )
+                    .map_err(Error::Value)?
+                }
+                DocContent::Syntax { closure } => {
+                    budget.charge(
+                        Resource::Work,
+                        (closure.syntax.schema.package.len()
+                            + surface.package.len()
+                            + closure.syntax.category.len()
+                            + category.len()) as u64
+                            + 33,
+                    )?;
+                    if &closure.syntax.schema != surface {
+                        return Err(Error::Selection);
+                    }
+                    if closure.syntax.category != category {
+                        return Err(Error::Category);
+                    }
+                    budget.charge(Resource::Work, 1)?;
+                    if !self
+                        .owner
+                        .as_ref()
+                        .is_some_and(|proof| proof.matches_owner(&closure.provenance))
+                    {
+                        self.owner = Some(
+                            closure
+                                .provenance
+                                .validate(registry, budget, codec.source_admission())
+                                .map_err(Error::Closure)?,
+                        );
+                    }
+                    let checked = self
+                        .owner
+                        .as_ref()
+                        .ok_or(Error::Closure(SyntaxError::Reference))?
+                        .validate_closure(closure, budget, codec.source_admission())
+                        .map_err(Error::Closure)?;
+                    lower::presentation::sentence_with_foreign(
+                        checked.syntax(),
+                        surface,
+                        forms,
+                        registry,
+                        codec,
+                        budget,
+                    )
+                    .map_err(Error::Lower)?
+                }
+            };
+            if !matches!(
+                (input.kind, sentence.value.root),
+                (EmbedKind::Sentence, Root::Sentence(_))
+                    | (EmbedKind::SentenceInline, Root::Inline(_))
+            ) {
+                return Err(Error::Category);
+            }
+            Ok(sentence)
+        })();
+        budget.poll()?;
+        result
+    }
 }
