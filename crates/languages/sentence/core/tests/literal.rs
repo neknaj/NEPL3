@@ -7,6 +7,8 @@ use nepl3_sentence_core::{
     literal::{self, SentenceCode, SentenceError, SentenceLiteral, SentenceOutcome},
     model::{InlineRef, Kind, Root, SentenceRef, SentenceValue},
 };
+#[path = "literal/position.rs"]
+mod position;
 fn b() -> Budget {
     Budget::new(Limits {
         source_bytes: 2_000_000,

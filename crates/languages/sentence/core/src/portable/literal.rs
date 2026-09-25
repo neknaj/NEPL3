@@ -1,9 +1,10 @@
 //! A single literal's payload references its owner's source without embedding
 //! the whole document in every token. This is not the general syntax envelope.
 use super::{
-    Error, boundary, schema, syntax, validate_named,
+    Error, boundary, schema, validate_named,
     value::{self, fields, record, reserve},
 };
+mod position;
 use crate::{
     model::{Kind, Root},
     syntax::{SentenceSyntax, SentenceView},
@@ -101,9 +102,15 @@ pub fn to_value<C: FoundationValueCodec>(
     let value = value::encode(&input.value, s, &mut scoped, b)?;
     let mut locations = reserve(input.locations.len(), b)?;
     for location in &input.locations {
-        locations.push(syntax::location(location, s, &mut scoped, b)?);
+        locations.push(position::encode_location(location, s, b)?);
     }
-    let origins = scoped.encode_origins(&input.origins, b).map_err(boundary)?;
+    let mut origins = reserve(input.origins.len(), b)?;
+    for origin in &input.origins {
+        let Origin::Direct(span) = origin else {
+            return Err(Error::Shape);
+        };
+        origins.push(position::encode(span, s, b)?);
+    }
     let head = scoped.encode_span(&view.head, b).map_err(boundary)?;
     let presentation = scoped.encode_views(&view.view, b).map_err(boundary)?;
     let digest = scoped
@@ -123,7 +130,12 @@ pub fn to_value<C: FoundationValueCodec>(
     let out = record(
         s,
         "SentenceLiteralPayload",
-        [value, NdfValue::List(locations), origins, view],
+        [
+            value,
+            NdfValue::List(locations),
+            NdfValue::List(origins),
+            view,
+        ],
         b,
     )?;
     validate_named(r, &out, "SentenceLiteralPayload", b)?;
@@ -146,8 +158,12 @@ pub fn from_value<C: FoundationValueCodec>(
 ) -> Result<SentenceSyntax, Error<C::Error>> {
     let s = schema(r, b)?;
     validate_named(r, input, "SentenceLiteralPayload", b)?;
-    let [value, NdfValue::List(locations), origins, view] =
-        fields(input, s, "SentenceLiteralPayload")?
+    let [
+        value,
+        NdfValue::List(locations),
+        NdfValue::List(origins),
+        view,
+    ] = fields(input, s, "SentenceLiteralPayload")?
     else {
         return Err(Error::Shape);
     };
@@ -160,9 +176,12 @@ pub fn from_value<C: FoundationValueCodec>(
     let value = value::decode(value, s, &mut scoped, b)?;
     let mut decoded_locations = reserve(locations.len(), b)?;
     for location in locations {
-        decoded_locations.push(syntax::location_from(location, s, &mut scoped, b)?);
+        decoded_locations.push(position::decode_location(location, s, owner, b)?);
     }
-    let origins = scoped.decode_origins(origins, b).map_err(boundary)?;
+    let mut decoded_origins = reserve(origins.len(), b)?;
+    for origin in origins {
+        decoded_origins.push(Origin::Direct(position::decode(origin, s, owner, b)?));
+    }
     let [
         NdfValue::U64(owner_index),
         head,
@@ -192,7 +211,7 @@ pub fn from_value<C: FoundationValueCodec>(
         value,
         locations: decoded_locations,
         sources: vec![owner.clone_with_budget(b)?],
-        origins,
+        origins: decoded_origins,
         views: vec![view],
         source_maps: vec![],
     };

@@ -433,6 +433,18 @@
       ],
       "constraints": ["sentence.literal_view_digest"]
     },
+    "SentenceLiteralSpan": {
+      "record": [["start", "U64"], ["end", "U64"]],
+      "constraints": ["sentence.literal_owner_range"]
+    },
+    "SentenceLiteralLocation": {
+      "record": [
+        ["origin", "U64"],
+        ["head", {"option": {"named": {"package": "nepl3.sentence", "revision": 1, "name": "SentenceLiteralSpan"}}}],
+        ["cover", {"named": {"package": "nepl3.sentence", "revision": 1, "name": "SentenceLiteralSpan"}}]
+      ],
+      "constraints": []
+    },
     "SentenceLiteralPayload": {
       "record": [
         [
@@ -452,7 +464,7 @@
               "named": {
                 "package": "nepl3.sentence",
                 "revision": 1,
-                "name": "SentenceNodeLocation"
+                "name": "SentenceLiteralLocation"
               }
             }
           }
@@ -462,9 +474,9 @@
           {
             "list": {
               "named": {
-                "package": "nepl3.foundation",
+                "package": "nepl3.sentence",
                 "revision": 1,
-                "name": "Origin"
+                "name": "SentenceLiteralSpan"
               }
             }
           }

@@ -114,7 +114,12 @@ Textや改行へ黙って変換しない。独立LanguagePackageの汎用printer
 readerとprinterは非再帰で処理し、共有値を展開した実出力にもBudgetを適用する。
 
 reader/providerのliteral受渡しには`SentenceLiteralPayload`を用意する。SentenceValue、
-denseなlocations、Direct Origin列、`SentenceLiteralView`を順序付きfieldとして持つ。
+denseなlocations、Direct Originの位置列、`SentenceLiteralView`を順序付きfieldとして持つ。
+`SentenceLiteralLocation`はoriginのU64 index、任意のhead、必須のcoverを持つ。
+位置は`SentenceLiteralSpan { start: U64, end: U64 }`で表し、owner source内の絶対byte範囲とする。
+originsも同じ範囲型の列とし、順序を保持してDirect Originへ復元する。
+各範囲は明示入力のowner snapshotに属し、UTF-8境界・範囲・literal head内包含を検査する。
+一つのliteralが単一sourceに属する契約を利用し、各位置のsource identity反復を削減する。
 SentenceLiteralViewはrootのowner index、headのSpan、ViewBundleの内容digestを保持する。
 digestは`SHA256("NEPL3.Sentence.Literal.View.v1\0" || canonical NDF/1 CBOR(ViewBundle))`である。
 完全なschema identity、要素順、参照、role、relationを含むView全体を対象とする。
