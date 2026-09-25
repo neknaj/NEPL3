@@ -25,6 +25,29 @@ struct Batch<'a, 'v> {
     states: Vec<State>,
     active: Vec<usize>,
     scopes: Vec<usize>,
+    // Canonical bytes pending for exactly the current active hash set. Flush
+    // before entering/leaving a requested value so sibling bytes never leak
+    // into a selected subtree's digest.
+    bytes: Vec<u8>,
+}
+
+const CHUNK: usize = 1024;
+
+impl Batch<'_, '_> {
+    fn flush(&mut self) -> Result<(), WireError> {
+        if self.bytes.is_empty() {
+            return Ok(());
+        }
+        for &request in &self.active {
+            self.states[request]
+                .hash
+                .as_mut()
+                .ok_or(WireError::InvalidType)?
+                .update(&self.bytes);
+        }
+        self.bytes.clear();
+        Ok(())
+    }
 }
 
 fn storage<T>(count: usize, b: &mut Budget) -> Result<Vec<T>, WireError> {
@@ -118,11 +141,14 @@ impl Sink for Batch<'_, '_> {
             if state.hash.is_some() {
                 return Err(WireError::InvalidType);
             }
+            if count == 0 {
+                self.flush()?;
+            }
             let domain = self.inputs[request].domain;
             b.charge(Resource::Work, domain.len() as u64)?;
             let mut hash = Sha256::new();
             hash.update(domain);
-            state.hash = Some(hash);
+            self.states[request].hash = Some(hash);
             self.active.push(request);
             count += 1;
         }
@@ -134,6 +160,7 @@ impl Sink for Batch<'_, '_> {
     }
 
     fn leave(&mut self, b: &mut Budget) -> Result<(), WireError> {
+        self.flush()?;
         let count = self.scopes.pop().ok_or(WireError::InvalidType)?;
         for _ in 0..count {
             b.charge(Resource::Work, 1)?;
@@ -146,16 +173,22 @@ impl Sink for Batch<'_, '_> {
     }
 
     fn write(&mut self, bytes: &[u8], b: &mut Budget) -> Result<(), WireError> {
-        // One encoding traversal feeds every active enclosing/selected hash.
+        // Preserve the per-fragment encoding and hash charges before buffering.
+        // Each buffered byte is prepaid for exactly the current active set;
+        // enter/leave flush it before that set changes.
         b.charge(Resource::Work, bytes.len() as u64)?;
-        for &request in &self.active {
+        for _ in &self.active {
             b.charge(Resource::Work, 1)?;
             b.charge(Resource::Work, bytes.len() as u64)?;
-            self.states[request]
-                .hash
-                .as_mut()
-                .ok_or(WireError::InvalidType)?
-                .update(bytes);
+        }
+        let mut remaining = bytes;
+        while !remaining.is_empty() {
+            let count = remaining.len().min(CHUNK - self.bytes.len());
+            self.bytes.extend_from_slice(&remaining[..count]);
+            remaining = &remaining[count..];
+            if self.bytes.len() == CHUNK {
+                self.flush()?;
+            }
         }
         Ok(())
     }
@@ -173,6 +206,7 @@ pub(crate) fn digests(
         states: storage(count, b)?,
         active: storage(count, b)?,
         scopes: storage(count, b)?,
+        bytes: storage(if count == 0 { 0 } else { CHUNK }, b)?,
     };
     let mut result = storage(count, b)?;
     for (request, input) in inputs.iter().enumerate() {

@@ -52,6 +52,17 @@ Sentence coreのnative・WASI各57試験と、独立実行したliteral・lower�
 374,091,577 Workへ減少し、他のUsage項目と内容検査は維持された。
 並行検査を含む実行のため実時間の改善率は評価しない。通常Work上限への適合は未達である。
 
+namespace準備のbatch digestは、canonical byte列を固定1KiBのbufferへまとめてhashへ渡す。
+要求された部分値への開始・終了時にflushし、親headerや兄弟のbyte列をその部分値へ
+混入させない。従来の各断片のWork課金は処理前に維持し、非空batchごとに
+AllocationUnits 1,024を追加する。入力全体のbyte列を保持する領域は確保しない。
+第01章の単回debug native測定では、独立したdigest計算が1.23秒から1.03秒となった。
+Work 23,520,416は一致し、AllocationUnitsは23,968から24,992となった。
+この観測から一般的な速度改善率や通常予算への適合を推定しない。
+独立single hashとの一致、chunk境界、別domain、入れ子、配置非依存のUsage、
+Work・Allocation上限と1不足を含むwireのnative・WASI各92試験が成功した。
+独立レビューではbatchの10試験を別targetで実行した。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

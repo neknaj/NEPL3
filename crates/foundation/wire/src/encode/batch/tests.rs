@@ -339,7 +339,7 @@ fn resource_boundaries_and_empty_cancel_are_sticky() -> Result<(), WireError> {
 }
 
 #[test]
-fn enclosing_request_encodes_large_child_once_without_a_byte_buffer() -> Result<(), WireError> {
+fn enclosing_request_encodes_large_child_once_with_bounded_storage() -> Result<(), WireError> {
     let root = NdfValue::List(vec![NdfValue::Text("x".repeat(100_000))]);
     let NdfValue::List(children) = &root else {
         return Err(WireError::InvalidType);
@@ -366,5 +366,70 @@ fn enclosing_request_encodes_large_child_once_without_a_byte_buffer() -> Result<
     assert_eq!(digests(&inputs, &mut batch)?, expected);
     assert!(batch.usage().work + 90_000 < independent.usage().work);
     assert_eq!(batch.usage().nodes, 2);
+    Ok(())
+}
+
+#[test]
+fn buffered_hashes_preserve_scope_and_stop_at_chunk_boundaries() -> Result<(), WireError> {
+    let mut allocation = None;
+    for length in [0, CHUNK - 1, CHUNK, CHUNK + 1, 3 * CHUNK + 7] {
+        let root = NdfValue::List(vec![
+            NdfValue::Bytes(vec![0x41; length]),
+            NdfValue::List(vec![NdfValue::Text("selected".into())]),
+            NdfValue::Bytes(vec![0x5a; length]),
+        ]);
+        let NdfValue::List(children) = &root else {
+            return Err(WireError::InvalidType);
+        };
+        let inputs = [
+            CanonicalDigestInput {
+                domain: b"root",
+                value: &root,
+            },
+            CanonicalDigestInput {
+                domain: b"middle",
+                value: &children[1],
+            },
+            CanonicalDigestInput {
+                domain: b"last",
+                value: &children[2],
+            },
+            CanonicalDigestInput {
+                domain: b"duplicate",
+                value: &children[1],
+            },
+        ];
+        // Independent single-value hashing includes exactly each selected
+        // subtree and its domain, irrespective of the batch chunk boundaries.
+        let expected = inputs
+            .iter()
+            .map(|input| super::super::digest(input.domain, input.value, &mut budget()))
+            .collect::<Result<Vec<_>, _>>()?;
+        let mut measured = budget();
+        assert_eq!(digests(&inputs, &mut measured)?, expected);
+        let usage = measured.usage();
+        if let Some(previous) = allocation {
+            assert_eq!(usage.allocation_units, previous);
+        }
+        allocation = Some(usage.allocation_units);
+        for work_limit in [true, false] {
+            for short in [false, true] {
+                let mut limits = budget().limits();
+                let reason = if work_limit {
+                    limits.work = usage.work - u64::from(short);
+                    StopReason::WorkLimit
+                } else {
+                    limits.allocation_units = usage.allocation_units - u64::from(short);
+                    StopReason::AllocationLimit
+                };
+                let result = digests(&inputs, &mut Budget::new(limits));
+                if short {
+                    assert_eq!(result, Err(WireError::Stopped(reason)));
+                } else {
+                    assert_eq!(result?, expected);
+                }
+            }
+        }
+    }
     Ok(())
 }
