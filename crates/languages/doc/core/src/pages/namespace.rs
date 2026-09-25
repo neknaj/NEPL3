@@ -4,7 +4,7 @@ use super::*;
 use crate::labels::namespace::{CheckedNamespace, MemberId};
 use nepl3_core::value::NdfValue;
 mod scoped;
-pub use scoped::{NamespaceDocument, ScopedError, with_resolved};
+pub use scoped::{NamespaceDocument, ScopedError, with_resolved, with_validated_roots};
 
 pub const DOMAIN: &[u8] = b"NEPL3.Doc.PageNamespaces.v2\0";
 

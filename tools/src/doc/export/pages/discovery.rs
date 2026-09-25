@@ -7,7 +7,7 @@ use nepl3_core::{
     value_codec::FoundationValueCodec,
 };
 use nepl3_doc_core::{
-    check::ForeignOccurrence,
+    check::{ForeignOccurrence, RegistryValidatedDocumentSyntax},
     model::{DocumentSyntax, EmbedRef},
 };
 use nepl3_sentence_core::{lower::ForeignInlineForm, syntax::SentenceSyntax};
@@ -166,7 +166,58 @@ pub fn collect<'a, C: FoundationValueCodec>(
     codec: &mut C,
     b: &mut Budget,
 ) -> Result<Collected<'a>, Failure<'a, C::Error>> {
+    collect_inner(
+        Root::Raw(root),
+        sentence_surface,
+        doc_surface,
+        forms,
+        registry,
+        codec,
+        b,
+    )
+}
+
+/// Discover from a retained root proof. Sentence collection checks the receiving
+/// registry, source admission and depth before lowering the root's guests.
+pub fn collect_validated<'a, C: FoundationValueCodec>(
+    root: &RegistryValidatedDocumentSyntax<'a, '_>,
+    sentence_surface: &SchemaRef,
+    doc_surface: &SchemaRef,
+    forms: &[ForeignInlineForm<'_>],
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<Collected<'a>, Failure<'a, C::Error>> {
+    collect_inner(
+        Root::Validated(root),
+        sentence_surface,
+        doc_surface,
+        forms,
+        registry,
+        codec,
+        b,
+    )
+}
+
+enum Root<'a, 'r, 'p> {
+    Raw(&'a DocumentSyntax),
+    Validated(&'p RegistryValidatedDocumentSyntax<'a, 'r>),
+}
+
+fn collect_inner<'a, C: FoundationValueCodec>(
+    root: Root<'a, '_, '_>,
+    sentence_surface: &SchemaRef,
+    doc_surface: &SchemaRef,
+    forms: &[ForeignInlineForm<'_>],
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<Collected<'a>, Failure<'a, C::Error>> {
     b.poll()?;
+    let (root, checked) = match root {
+        Root::Raw(document) => (document, None),
+        Root::Validated(proof) => (proof.structure().document(), Some(proof)),
+    };
     let mut members = Vec::new();
     let result = (|| {
         push(
@@ -186,15 +237,26 @@ pub fn collect<'a, C: FoundationValueCodec>(
             b.charge(Resource::Work, 1)?;
             let depth = members[index].depth;
             let selected = b.with_depth_at_least(depth, |b| {
-                sentences::collect(
-                    members[index].document(),
-                    sentence_surface,
-                    forms,
-                    registry,
-                    codec,
-                    b,
-                )
-                .map_err(|error| Error::Sentence {
+                let result = if let Some(checked) = checked.filter(|_| index == 0) {
+                    sentences::collect_validated(
+                        checked,
+                        sentence_surface,
+                        forms,
+                        registry,
+                        codec,
+                        b,
+                    )
+                } else {
+                    sentences::collect(
+                        members[index].document(),
+                        sentence_surface,
+                        forms,
+                        registry,
+                        codec,
+                        b,
+                    )
+                };
+                result.map_err(|error| Error::Sentence {
                     document: DocumentId(index),
                     error,
                 })

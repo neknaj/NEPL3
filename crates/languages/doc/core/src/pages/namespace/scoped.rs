@@ -33,6 +33,33 @@ pub fn with_resolved<'a, C: FoundationValueCodec, T, E>(
     b: &mut Budget,
     output: impl FnOnce(&CheckedPageNamespaces<'_, '_, 'a>, &mut C, &mut Budget) -> Result<T, E>,
 ) -> Result<T, ScopedError<'a, C::Error, E>> {
+    resolve_with_inputs(set, selected, registry, codec, b, None, output)
+}
+
+/// Reuse exact page-root validation from discovery. Inputs must correspond in
+/// page order to the identical immutable root documents. Each receiving codec
+/// still admits sources and applies depth; registry changes fully revalidate.
+pub fn with_validated_roots<'a, C: FoundationValueCodec, T, E>(
+    set: &'a PageSet,
+    selected: &[&[NamespaceDocument<'a>]],
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+    roots: Vec<crate::check::RegistryValidatedDocumentSyntax<'a, '_>>,
+    output: impl FnOnce(&CheckedPageNamespaces<'_, '_, 'a>, &mut C, &mut Budget) -> Result<T, E>,
+) -> Result<T, ScopedError<'a, C::Error, E>> {
+    resolve_with_inputs(set, selected, registry, codec, b, Some(roots), output)
+}
+
+fn resolve_with_inputs<'a, C: FoundationValueCodec, T, E>(
+    set: &'a PageSet,
+    selected: &[&[NamespaceDocument<'a>]],
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+    roots: Option<Vec<crate::check::RegistryValidatedDocumentSyntax<'a, '_>>>,
+    output: impl FnOnce(&CheckedPageNamespaces<'_, '_, 'a>, &mut C, &mut Budget) -> Result<T, E>,
+) -> Result<T, ScopedError<'a, C::Error, E>> {
     b.poll().map_err(ScopedError::Stopped)?;
     let result = (|| {
         registrations(set, b).map_err(|e| ScopedError::Preparation(Error::Page(e)))?;
@@ -50,7 +77,7 @@ pub fn with_resolved<'a, C: FoundationValueCodec, T, E>(
             }
         }
         let (value, structures) =
-            portable::pages::set_to_value_with_structures(set, registry, codec, b)
+            portable::pages::set_to_value_with_inputs(set, registry, codec, b, roots)
                 .map_err(|e| ScopedError::Preparation(Error::Page(PageError::from(e))))?;
         let base = b.current_depth();
         let mut inspected = Vec::new();

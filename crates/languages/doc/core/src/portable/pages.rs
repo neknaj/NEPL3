@@ -81,13 +81,44 @@ pub(crate) fn set_to_value_with_structures<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<(NdfValue, Vec<crate::check::ValidatedDocumentSyntax<'a>>), PortableError<C::Error>> {
+    set_to_value_with_inputs(set, r, c, b, None)
+}
+
+pub(crate) fn set_to_value_with_inputs<'a, C: FoundationValueCodec>(
+    set: &'a PageSet,
+    r: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+    inputs: Option<Vec<EncodingInput<'a, '_>>>,
+) -> Result<(NdfValue, Vec<crate::check::ValidatedDocumentSyntax<'a>>), PortableError<C::Error>> {
+    if inputs
+        .as_ref()
+        .is_some_and(|inputs| inputs.len() != set.pages.len())
+    {
+        return Err(PortableError::Shape);
+    }
+    let mut inputs = inputs.map(Vec::into_iter);
     let s = schema(r)?;
     let mut values = Vec::new();
     let mut structures = Vec::new();
     for page in &set.pages {
         b.charge(Resource::Work, 1)?;
         let registration = page.registration.put(s, c, b)?;
-        let (document, structure) = encode_with_structure(&page.document, r, c, b)?;
+        let (document, structure) = match inputs.as_mut() {
+            Some(inputs) => {
+                let input = inputs.next().ok_or(PortableError::Shape)?;
+                if !core::ptr::eq(input.structure.document(), &page.document) {
+                    return Err(PortableError::Shape);
+                }
+                if core::ptr::eq(input.registry, r) {
+                    input.validate_for(r, b, c.source_admission())?;
+                    encode_input(input, c, b)?
+                } else {
+                    encode_with_structure(&page.document, r, c, b)?
+                }
+            }
+            None => encode_with_structure(&page.document, r, c, b)?,
+        };
         pages::push(&mut structures, structure, b)?;
         let value = record(s, "PageDocument", [registration, document], b)?;
         pages::push(&mut values, value, b)?;

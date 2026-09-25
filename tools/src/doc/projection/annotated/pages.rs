@@ -131,22 +131,25 @@ where
         )?;
     }
     let mut discovered = Vec::new();
+    let mut roots = Vec::new();
     for page in &set.pages {
-        let value = discovery::collect(
+        let root = nepl3_doc_core::check::RegistryValidatedDocumentSyntax::new(
             &page.document,
-            sentence,
-            doc,
-            &forms,
             registry,
-            codec,
             budget,
+            codec.source_admission(),
         );
+        budget.poll()?;
+        let root = root.map_err(|error| Error::Invalid(format!("{error:?}")))?;
+        let value =
+            discovery::collect_validated(&root, sentence, doc, &forms, registry, codec, budget);
         budget.poll()?;
         push(
             &mut discovered,
             value.map_err(|e| Error::Invalid(format!("{e:?}")))?,
             budget,
         )?;
+        push(&mut roots, root, budget)?;
     }
     observe(Stage::Discovery, budget.usage());
     let mut plans = Vec::new();
@@ -174,12 +177,20 @@ where
     for documents in &selected {
         push(&mut refs, documents.as_slice(), budget)?;
     }
-    let value = domain::with_resolved(set, &refs, registry, codec, budget, |checked, _, budget| {
-        observe(Stage::Resolution, budget.usage());
-        let artifact = render_checked(set, &discovered, &plans, checked, budget, aliases)?;
-        observe(Stage::Projection, budget.usage());
-        Ok(artifact)
-    });
+    let value = domain::with_validated_roots(
+        set,
+        &refs,
+        registry,
+        codec,
+        budget,
+        roots,
+        |checked, _, budget| {
+            observe(Stage::Resolution, budget.usage());
+            let artifact = render_checked(set, &discovered, &plans, checked, budget, aliases)?;
+            observe(Stage::Projection, budget.usage());
+            Ok(artifact)
+        },
+    );
     budget.poll()?;
     value.map_err(|error| match error {
         domain::ScopedError::Stopped(reason) => Error::Stopped(reason),

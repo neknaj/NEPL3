@@ -225,7 +225,16 @@ NDF encoderとSentence collectorは同じ型を構築し、独立していたpro
 入れ子の受信位置を試験した。Sentence処理はfresh予算のWork・Allocation・Depth・Sourceの
 上限一致／1不足と取消しで型付き停止を確認した。core・Doc・suiteはnative・WASI各287件成功し、
 補強後の関連8件も両targetで成功した。独立レビューは補強後8件を実行した。
-ページ生成でこのproofをdiscoveryからnamespace準備へ保持する接続と、その全体費用の測定は残る。
+Markdownページ生成は、このproofをdiscoveryからnamespace準備へ保持する。
+各ページの同一文書・順序・件数を照合し、別registryでは完全検証する。
+受信側のsource受入・深度と、生成PageSetのschema検査を維持する。
+第03章のcorpus上限を使う内容検査は成功し、投影Workは233,592,456から209,301,684へ
+約10.4%減少した。discoveryまでのWorkは72,988,032から74,712,238へ増加し、
+namespace準備での再検証削減が全体費用を減らした。単独NDF構築・digestの費用は同じである。
+通常ページのWork上限100,000,000への適合と、HTMLページ生成への接続は残る。
+受信側Work・Allocation・Depth・Sourceの上限一致／1不足、文書の複製・順序・件数の不一致、
+空registryの拒否とcallback未実行を検査した。独立レビューは関連4件を実行して成功した。
+guest専用schemaだけを欠くregistryの拒否は、この追加試験の範囲に含めない。
 
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
