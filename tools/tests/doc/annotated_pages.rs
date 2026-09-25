@@ -1458,6 +1458,39 @@ fn measure_page_encoding(
     let mut b = Budget::new(limits);
     let mut admission = SourceAdmission::default();
     let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    // Measure the shared exchange independently. Native references are collected
+    // outside the timed boundary; no bundle is cloned or source scope pruned.
+    {
+        use nepl3_core::value_codec::FoundationValueCodec;
+        let bundles: Vec<_> = set.pages[0]
+            .document
+            .value
+            .embeds
+            .iter()
+            .filter_map(|embed| match &embed.content {
+                nepl3_doc_core::model::DocContent::Syntax { closure } => {
+                    Some(&closure.syntax.bundle)
+                }
+                nepl3_doc_core::model::DocContent::Value { .. } => None,
+            })
+            .collect();
+        let mut shared_admission = SourceAdmission::default();
+        let mut shared_codec =
+            FoundationCodec::new(&c.doc.registry, &store, &mut shared_admission).map_err(err)?;
+        let mut shared_budget = Budget::new(limits);
+        let started = std::time::Instant::now();
+        let shared = shared_codec
+            .encode_syntax_set(&bundles, &mut shared_budget)
+            .map_err(err)?;
+        let elapsed = started.elapsed();
+        println!(
+            "{label} shared_root_bundles count={} elapsed_ns={} nodes={} usage={:?}",
+            bundles.len(),
+            elapsed.as_nanos(),
+            value_nodes(&shared),
+            shared_budget.usage()
+        );
+    }
     let started = std::time::Instant::now();
     let encoded =
         nepl3_doc_core::portable::pages::set_to_value(set, &c.doc.registry, &mut codec, &mut b)

@@ -145,6 +145,24 @@ pub trait FoundationValueCodec {
         value: &crate::syntax::SyntaxBundle,
         budget: &mut Budget,
     ) -> Result<NdfValue, Self::Error>;
+    /// Self-contained root bundle set with explicit source/map tables. Borrowed
+    /// inputs avoid copying bundles solely to assemble the exchange unit.
+    /// Each member retains its declaration scope; ambient and adjacent sources
+    /// cannot complete missing references. Nested foreign bundles retain their
+    /// ordinary closure. This format has its own canonical identity.
+    fn encode_syntax_set(
+        &mut self,
+        values: &[&crate::syntax::SyntaxBundle],
+        budget: &mut Budget,
+    ) -> Result<NdfValue, Self::Error>;
+    /// Validate the entire table and every member before returning any bundle.
+    /// Rejection preserves consumed resources and source admission, while no
+    /// partial set is returned. Resolution uses only the explicit member scope.
+    fn decode_syntax_set(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<Vec<crate::syntax::SyntaxBundle>, Self::Error>;
     fn encode_foreign_closure(
         &mut self,
         value: &crate::syntax::ForeignClosure,

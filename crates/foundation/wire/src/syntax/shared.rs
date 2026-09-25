@@ -110,6 +110,17 @@ pub fn encode(
     admission: &mut SourceAdmission,
     b: &mut Budget,
 ) -> Result<Vec<u8>, WireError> {
+    let value = value(bundles.iter(), schema, registry, admission, b)?;
+    crate::encode_checked(&value, &expected("SyntaxBundleSet"), registry, b)
+}
+
+pub(crate) fn value<'a>(
+    bundles: impl IntoIterator<Item = &'a SyntaxBundle>,
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<NdfValue, WireError> {
     let (mut sources, mut maps, mut members) = (Vec::new(), Vec::new(), Vec::new());
     for bundle in bundles {
         b.charge(Resource::Work, 1)?;
@@ -138,13 +149,12 @@ pub fn encode(
         )?;
         push(&mut members, member, b)?;
     }
-    let value = record(
+    record(
         schema,
         "SyntaxBundleSet",
         [table(sources, b)?, table(maps, b)?, NdfValue::List(members)],
         b,
-    )?;
-    crate::encode_checked(&value, &expected("SyntaxBundleSet"), registry, b)
+    )
 }
 
 fn read_table(values: &NdfValue, domain: &[u8], b: &mut Budget) -> Result<Vec<Entry>, WireError> {
@@ -193,7 +203,17 @@ pub fn decode(
     b: &mut Budget,
 ) -> Result<Vec<SyntaxBundle>, WireError> {
     let input = crate::decode_checked(input, &expected("SyntaxBundleSet"), registry, b)?;
-    let fields = fields(input.value(), schema, "SyntaxBundleSet", 3)?;
+    from_value(input.value(), schema, registry, admission, b)
+}
+
+pub(crate) fn from_value(
+    input: &NdfValue,
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<Vec<SyntaxBundle>, WireError> {
+    let fields = fields(input, schema, "SyntaxBundleSet", 3)?;
     let mut sources = read_table(&fields[0], SOURCE_DOMAIN, b)?;
     let mut maps = read_table(&fields[1], MAP_DOMAIN, b)?;
     let mut bundles = Vec::new();

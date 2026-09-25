@@ -280,6 +280,29 @@ impl FoundationValueCodec for FoundationCodec<'_> {
         result.validate_with_sources(self.registry, budget, self.admission)?;
         Ok(result)
     }
+    fn encode_syntax_set(
+        &mut self,
+        values: &[&nepl3_core::syntax::SyntaxBundle],
+        b: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
+        let value = crate::syntax::shared::value(
+            values.iter().copied(),
+            self.schema,
+            self.registry,
+            self.admission,
+            b,
+        )?;
+        self.validate(&value, "SyntaxBundleSet", b)?;
+        Ok(value)
+    }
+    fn decode_syntax_set(
+        &mut self,
+        value: &NdfValue,
+        b: &mut Budget,
+    ) -> Result<Vec<nepl3_core::syntax::SyntaxBundle>, WireError> {
+        self.validate(value, "SyntaxBundleSet", b)?;
+        crate::syntax::shared::from_value(value, self.schema, self.registry, self.admission, b)
+    }
     fn encode_foreign_closure(
         &mut self,
         value: &nepl3_core::syntax::ForeignClosure,

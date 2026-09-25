@@ -4,6 +4,56 @@ use nepl3_core::{
     origin::{Mapping, MappingKind},
 };
 
+#[test]
+fn typed_set_codec_matches_wire_and_keeps_ambient_sources_outside_members() -> TestResult {
+    use nepl3_core::{source::SourceStore, value_codec::FoundationValueCodec};
+    use nepl3_wire::foundation::FoundationCodec;
+    let (s, r, bundle) = multiple_entries()?;
+    let bundles = [&bundle, &bundle];
+    let mut store = SourceStore::default();
+    for source in &bundle.sources {
+        store
+            .insert_with_budget(source.clone(), &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+    }
+    let mut admission = SourceAdmission::default();
+    let mut codec =
+        FoundationCodec::new(&r, &store, &mut admission).map_err(|e| format!("{e:?}"))?;
+    let value = codec
+        .encode_syntax_set(&bundles, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let bytes = encode(&value, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    let wire = shared::encode(
+        &[bundle.clone(), bundle.clone()],
+        &s,
+        &r,
+        &mut SourceAdmission::default(),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(bytes, wire);
+    assert_eq!(
+        codec
+            .decode_syntax_set(&value, &mut budget())
+            .map_err(|e| format!("{e:?}"))?,
+        vec![bundle.clone(), bundle]
+    );
+    let mut invalid = value.clone();
+    edit_member(&mut invalid, 0, 0, NdfValue::List(vec![]))?;
+    assert_eq!(
+        codec
+            .decode_syntax_set(&invalid, &mut budget())
+            .err()
+            .ok_or("ambient source leak")?,
+        WireError::Source(nepl3_core::source::SourceError::MissingSnapshot)
+    );
+    let mut limited = budget();
+    limited.cancel();
+    assert!(codec.decode_syntax_set(&value, &mut limited).is_err());
+    assert_eq!(limited.poll(), Err(StopReason::Cancelled));
+    Ok(())
+}
+
 fn fixture_with_map() -> Result<(SchemaRef, SchemaRegistry, SyntaxBundle), String> {
     let (s, r, mut bundle) = fixture()?;
     let source = &bundle.sources[0];

@@ -260,6 +260,18 @@ encode/decodeの資源上限一致と1不足、取消・depth復帰を含む追�
 thumb向けcheck、repository checkが成功した。正式受入は未実行である。
 初期encoderは通常のNDF bundleを構築してから共有表へ集約するため、構築中の重複費用が残る。
 Doc生成への接続、通常予算での全章処理、生成Markdownの更新は継続作業である。
+
+共有形式を `FoundationValueCodec::encode_syntax_set` / `decode_syntax_set` へ接続した。
+入力はbundleの不変借用であり、呼出し側で交換単位を組むためのbundle複製を要求しない。
+byte codecと値codecは同じ構築・復元処理を使用する。typed境界もschema検査を行い、
+ambient sourceをmemberの不足宣言へ補完しない。追加試験を含む7件をnative・WASIで実行し、
+独立レビューも7件を実行した。
+第13章の147 root bundleを共有形式へ変換したnative debugの明示計測は675,511 NDF節点、
+160,084,088 Work、237,215,742 AllocationUnits、約4.27秒となった。
+同じ入力の現行PageSet全体の構築は72,935,975 Work、214,929,421 AllocationUnits、約2.93秒である。
+両者は交換範囲が異なる。共有形式はroot bundleだけを扱い、Doc構造・owner等を含まない。
+それでも現行の全体構築より高い費用を要するため、出現ごとの内容ハッシュと通常bundleの
+中間構築を改善してからDoc portable表現へ採用する。今回の測定を全体性能の改善とは扱わない。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
