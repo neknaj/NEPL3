@@ -257,6 +257,12 @@ rendererを`nepl3-tools.markdown-annotated/5`へ更新し、canonical registry�
 WorkLimitへ到達した。全Doc試験の先行実行は59件成功・39件失敗・14件ignoreで、
 旧入力・残るprojection経路・大型ページ予算を継続して修正する。
 
+リスト・表のannotated Markdown試験7件も独立Sentenceの境界へ移行し、native・WASIで成功した。
+番号・checkbox・項目の所属、表の整列・セル内容、Ruby・注釈・コード内のpipeの期待値を維持する。
+負例15件は正式readerとlowerの成功後に型付きprojectionエラーを確認し、単一文書hostでも
+同じ拒否結果を得ることを検査する。構文エラーや資源停止による偽陽性を防ぐ。
+clippyとrepository検査も成功した。全Doc試験と生成物の一致確認は引き続き未完了である。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは
