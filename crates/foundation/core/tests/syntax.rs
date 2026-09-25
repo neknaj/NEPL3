@@ -1,6 +1,8 @@
 use nepl3_core::{budget::*, origin::*, schema::*, source::*, syntax::*, value::*, view::*};
 #[path = "syntax/capture.rs"]
 mod capture;
+#[path = "syntax/owned.rs"]
+mod owned;
 #[path = "syntax/sources.rs"]
 mod sources;
 fn budget() -> Budget {

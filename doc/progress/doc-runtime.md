@@ -509,6 +509,13 @@ parseと検証は127,080,117 Work、lowerは112,724,216 Work、projectionは379,
 通常上限を維持し、検証結果の再利用と全段階の費用削減を継続する。生成物は更新していない。
 Clippy、repository check、fmt、diff検査は成功した。
 
+検証結果を所有したまま渡す前段として、coreにOwnedValidatedSyntaxBundleを追加した。
+構文グラフの検証後に元の配列を移動し、不変なregistryとbundleを保持する。raw値を取り出す操作はproofを消費する。
+検証失敗時は追加割当を伴わず元のbundleを返し、消費済みBudgetとSourceAdmissionを維持する。
+追加2試験は配列の保持、raw編集後の再検証、Work/Allocationの不足境界を検査した。
+このproofは参照・source geometryの構造保証であり、別操作のadmission、選択context、domain意味の保証を追加しない。
+parserのCompletedParseとDoc hostへの接続は未実装であり、第03章の通常予算への適合も残件である。
+
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

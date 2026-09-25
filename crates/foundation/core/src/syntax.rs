@@ -15,11 +15,13 @@ mod environment;
 pub use environment::{EnvironmentContext, ValidatedEnvironment};
 mod copy;
 mod foreign;
+mod owned;
 pub use foreign::resources as validate_resources;
 pub use foreign::{
     ForeignCapture, ForeignClosure, OwnerProvenance, ValidatedForeignClosure,
     ValidatedOwnerProvenance,
 };
+pub use owned::{OwnedValidatedSyntaxBundle, SyntaxValidationFailure};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct NodeRef(pub u64);
