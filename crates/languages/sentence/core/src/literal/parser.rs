@@ -85,8 +85,7 @@ pub fn read<'a>(
     let schema = registry
         .selected("nepl3.sentence", 1)
         .ok_or(SchemaError::UnknownSchema)?;
-    let expected = crate::schema::descriptor(budget)?.reference(budget)?;
-    if schema != &expected {
+    if !crate::schema::matches(schema, budget)? {
         return Err(SentenceError::SchemaIdentity);
     }
     budget.charge(Resource::AllocationUnits, 64 + schema.package.len() as u64)?;

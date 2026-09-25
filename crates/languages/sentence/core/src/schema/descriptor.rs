@@ -27,3 +27,8 @@ super::NamedType { name: "View:Ruby".into(), shape: super::TypeShape::Record { f
 super::NamedType { name: "View:Sentence".into(), shape: super::TypeShape::Record { fields: alloc::vec![] }, constraints: alloc::vec![] },
 super::NamedType { name: "View:TextRun".into(), shape: super::TypeShape::Record { fields: alloc::vec![] }, constraints: alloc::vec![] }], operations: alloc::vec![] })
 }
+
+pub(super) const EXPECTED_PACKAGE: &str = "nepl3.sentence";
+pub(super) const EXPECTED_REVISION: u64 = 1;
+#[rustfmt::skip]
+pub(super) const EXPECTED_DIGEST: [u8; 32] = [179, 213, 168, 236, 27, 73, 79, 168, 26, 3, 80, 25, 176, 190, 191, 7, 171, 236, 151, 230, 41, 246, 0, 132, 60, 237, 153, 173, 51, 102, 90, 198];

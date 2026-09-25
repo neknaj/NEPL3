@@ -825,6 +825,23 @@ fn literal_print_rejects_prefix_only_break_and_stops_expanding_shared_values() -
 fn escape_prefixes_need_more_and_changed_schema_is_not_silently_accepted() -> Result<(), String> {
     let r = registry()?;
     let s = source(r#""\u{1d11e}\n""#)?;
+    // Identical descriptors in an independent finalized registry are valid.
+    let other = registry()?;
+    assert_eq!(parse("\"same\"", &r)?, parse("\"same\"", &other)?);
+    assert!(matches!(
+        literal::read(
+            &s,
+            0,
+            s.text().len() as u64,
+            true,
+            &SchemaRegistry::default(),
+            &mut b(),
+            &mut SourceAdmission::default()
+        ),
+        Err(SentenceError::Schema(
+            nepl3_core::schema::SchemaError::Unfinalized
+        ))
+    ));
     for end in 0..s.text().len() {
         let scan = literal::read(
             &s,

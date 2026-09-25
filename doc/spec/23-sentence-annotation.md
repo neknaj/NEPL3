@@ -136,6 +136,10 @@ head外の位置、root以外が所有するView、prefix専用node、foreign、
 検査・canonical hash・Viewの複製には同じBudgetを適用する。
 新schemaのdigestはdescriptorから算出し、旧Doc payloadの
 identityやdecoderをSentenceの契約として使い回さない。
+実装が期待するschema identityは、同じdescriptorのcanonical hashから生成できる。
+生成したidentityの利用時も、registryのfinalize、登録の存在、package・revision・digestの
+完全一致を確認する。生成物検査とruntime descriptorのhash照合によって更新漏れを検出する。
+この照合に続く入力値・位置・source閉包・意味構造の検査は、各操作の契約に従って実行する。
 
 開発hostのSentence reader adapterは`nepl3.sentence.reader`の`literal`操作を明示登録する。
 ReadRequest/ReadReply、Unit state、SentenceLiteralPayloadを使用し、ReaderSessionの通常の
