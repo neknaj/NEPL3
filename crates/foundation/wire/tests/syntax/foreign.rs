@@ -174,7 +174,10 @@ fn standalone_foreign_keeps_selected_owner_environment_and_origin_arena() -> Tes
         received.owner_environment,
         received.syntax.bundle.environments[0]
     );
-    assert_ne!(received.owner_origins[0], received.syntax.bundle.origins[0]);
+    assert_ne!(
+        received.provenance.origins()[0],
+        received.syntax.bundle.origins[0]
+    );
     assert_eq!(
         received.owner_environment.value.bindings[0].origin,
         Some(OriginId(0))
@@ -203,13 +206,21 @@ fn standalone_foreign_rejects_missing_owner_closure_hash_and_cross_arena_claims(
     let (schema, registry, value) = closed()?;
     let mut variants = Vec::new();
     let mut bad = value.clone();
-    bad.owner_sources.clear();
+    bad.provenance = nepl3_core::syntax::OwnerProvenance::from_parts(
+        bad.provenance.origins().to_vec(),
+        vec![],
+        bad.provenance.source_maps().to_vec(),
+    );
     variants.push(bad);
     let mut bad = value.clone();
     bad.syntax.bundle.sources.clear();
     variants.push(bad);
     let mut bad = value.clone();
-    bad.owner_origins.clear();
+    bad.provenance = nepl3_core::syntax::OwnerProvenance::from_parts(
+        vec![],
+        bad.provenance.sources().to_vec(),
+        bad.provenance.source_maps().to_vec(),
+    );
     variants.push(bad);
     let mut bad = value.clone();
     bad.owner_environment.id = 10;
@@ -218,7 +229,13 @@ fn standalone_foreign_rejects_missing_owner_closure_hash_and_cross_arena_claims(
     bad.owner_environment.value.bindings[0].name = "forged".into();
     variants.push(bad);
     let mut bad = value.clone();
-    bad.owner_sources.push(bad.owner_sources[0].clone());
+    let mut duplicates = bad.provenance.sources().to_vec();
+    duplicates.push(duplicates[0].clone());
+    bad.provenance = nepl3_core::syntax::OwnerProvenance::from_parts(
+        bad.provenance.origins().to_vec(),
+        duplicates,
+        bad.provenance.source_maps().to_vec(),
+    );
     variants.push(bad);
     for bad in variants {
         assert!(
@@ -234,7 +251,7 @@ fn standalone_foreign_rejects_missing_owner_closure_hash_and_cross_arena_claims(
     }
     let mut ambient = SourceStore::default();
     ambient
-        .insert(value.owner_sources[0].clone())
+        .insert(value.provenance.sources()[0].clone())
         .map_err(|e| format!("{e:?}"))?;
     let bytes = encode_foreign_closure(
         &value,

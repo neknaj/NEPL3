@@ -12,7 +12,10 @@ use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::SchemaRegistry,
     source::{SourceAdmission, Span},
-    syntax::{FieldValue, ForeignClosure, NodeRef, SyntaxError, SyntaxNode, ValidatedSyntaxBundle},
+    syntax::{
+        FieldValue, ForeignCapture, ForeignClosure, NodeRef, SyntaxError, SyntaxNode,
+        ValidatedSyntaxBundle,
+    },
     value::SchemaRef,
 };
 
@@ -73,6 +76,7 @@ enum Mapped {
 }
 struct Adapter<'a, 'b> {
     checked: &'a ValidatedSyntaxBundle<'a>,
+    captures: &'b mut ForeignCapture<'a>,
     registry: &'a SchemaRegistry,
     mapping: Vec<Option<Mapped>>,
     nodes: Vec<MathNode>,
@@ -120,8 +124,10 @@ pub fn expression(
         (size as u64).saturating_mul((core::mem::size_of::<Option<Mapped>>() + 1) as u64),
     )?;
     let mut done = vec![false; size];
+    let mut captures = ForeignCapture::new(&checked);
     let mut a = Adapter {
         checked: &checked,
+        captures: &mut captures,
         registry,
         mapping: vec![None; size],
         nodes: Vec::new(),

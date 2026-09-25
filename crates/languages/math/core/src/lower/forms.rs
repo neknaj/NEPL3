@@ -10,6 +10,7 @@ impl<'a> Adapter<'a, '_> {
     ) -> Result<(), LowerError> {
         let Self {
             checked,
+            captures,
             registry,
             mapping,
             nodes,
@@ -19,6 +20,7 @@ impl<'a> Adapter<'a, '_> {
         b.with_depth_at_least(depth, |b| {
             let mut adapter = Adapter {
                 checked,
+                captures,
                 registry,
                 mapping: core::mem::take(mapping),
                 nodes: core::mem::take(nodes),
@@ -202,14 +204,9 @@ impl<'a> Adapter<'a, '_> {
                 let Some(FieldValue::Foreign(_)) = n.fields.first() else {
                     return Err(LowerError::Operand { node: id, field: 0 });
                 };
-                let closure = ForeignClosure::capture_at(
-                    self.checked,
-                    id,
-                    0,
-                    self.registry,
-                    self.b,
-                    admission,
-                )?;
+                let closure = self
+                    .captures
+                    .capture_at(id, 0, self.registry, self.b, admission)?;
                 let syntax = EmbedRef(self.embeds.len() as u64);
                 push(&mut self.embeds, closure, self.b)?;
                 MathKind::SentenceGuest { syntax }

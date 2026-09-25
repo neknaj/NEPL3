@@ -455,9 +455,7 @@ fn doc_bridge_preserves_generated_shared_inline_and_rejects_unselected_foreign()
             digest,
             value: env,
         },
-        owner_origins: vec![],
-        owner_sources: vec![],
-        owner_source_maps: vec![],
+        provenance: nepl3_core::syntax::OwnerProvenance::from_parts(vec![], vec![], vec![]),
     };
     input.value.nodes = vec![Kind::ForeignInline {
         syntax: EmbedRef(0),

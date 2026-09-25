@@ -210,8 +210,9 @@ impl Adapter<'_, '_> {
                 field: 0,
             });
         };
-        let closure =
-            ForeignClosure::capture_at(self.checked, child, 0, self.registry, self.b, admission)?;
+        let closure = self
+            .captures
+            .capture_at(child, 0, self.registry, self.b, admission)?;
         let index = EmbedRef(self.embeds.len() as u64);
         push(&mut self.embeds, DocEmbed { kind, closure }, self.b)?;
         Ok(index)

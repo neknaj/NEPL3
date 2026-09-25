@@ -175,6 +175,7 @@ impl Adapter<'_, '_> {
     ) -> Result<(), D::Error> {
         let Self {
             checked,
+            captures,
             registry,
             mapping,
             nodes,
@@ -186,6 +187,7 @@ impl Adapter<'_, '_> {
         b.with_depth_at_least(depth, |b| {
             let mut adapter = Adapter {
                 checked,
+                captures,
                 registry,
                 mapping: core::mem::take(mapping),
                 nodes: core::mem::take(nodes),

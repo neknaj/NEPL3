@@ -90,9 +90,7 @@ fn fixture() -> Result<(SchemaRegistry, SentenceValue), String> {
             digest,
             value: environment,
         },
-        owner_sources: vec![],
-        owner_origins: vec![],
-        owner_source_maps: vec![],
+        provenance: nepl3_core::syntax::OwnerProvenance::from_parts(vec![], vec![], vec![]),
     };
     Ok((
         registry,

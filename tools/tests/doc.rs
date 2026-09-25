@@ -378,10 +378,13 @@ fn assert_doc_retention(
             before.closure.owner_environment,
             after.closure.owner_environment
         );
-        assert_eq!(before.closure.owner_origins, after.closure.owner_origins);
         assert_eq!(
-            before.closure.owner_source_maps,
-            after.closure.owner_source_maps
+            before.closure.provenance.origins(),
+            after.closure.provenance.origins()
+        );
+        assert_eq!(
+            before.closure.provenance.source_maps(),
+            after.closure.provenance.source_maps()
         );
     }
 }

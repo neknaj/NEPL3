@@ -13,9 +13,7 @@ fn closure(schema: &SchemaRef, sources: Vec<SourceSnapshot>) -> ForeignClosure {
             },
         },
         owner_environment: environment(),
-        owner_origins: vec![],
-        owner_sources: sources,
-        owner_source_maps: vec![],
+        provenance: OwnerProvenance::from_parts(vec![], sources, vec![]),
     }
 }
 
@@ -70,9 +68,11 @@ fn indexed_source_validation_preserves_origins_and_stop_causes() -> Result<(), S
     let (registry, schema) = registry()?;
     let source = snapshot("source", 0, "値")?;
     let mut foreign = closure(&schema, vec![source.clone()]);
-    foreign
-        .owner_origins
-        .push(Origin::Direct(source.span(0, 3)?));
+    foreign.provenance = OwnerProvenance::from_parts(
+        vec![Origin::Direct(source.span(0, 3)?)],
+        foreign.provenance.sources().to_vec(),
+        vec![],
+    );
     foreign.validate(&registry, &mut budget(), &mut SourceAdmission::default())?;
     for (work, allocation, reason) in [
         (0, 1_000_000, StopReason::WorkLimit),
@@ -96,7 +96,11 @@ fn indexed_source_validation_preserves_origins_and_stop_causes() -> Result<(), S
         );
         assert_eq!(foreign, before);
     }
-    foreign.owner_sources.clear();
+    foreign.provenance = nepl3_core::syntax::OwnerProvenance::from_parts(
+        foreign.provenance.origins().to_vec(),
+        vec![],
+        foreign.provenance.source_maps().to_vec(),
+    );
     assert!(
         foreign
             .validate(&registry, &mut budget(), &mut SourceAdmission::default())
@@ -117,7 +121,7 @@ fn admitted_ordered_sources_avoid_repeated_pairwise_duplicate_scans() -> Result<
         input.sources = sources.clone();
         let foreign = closure(&schema, sources);
         let mut admission = SourceAdmission::default();
-        for source in &foreign.owner_sources {
+        for source in foreign.provenance.sources() {
             admission.admit_existing(source, &mut budget())?;
         }
         // Measure duplicate validation and index construction after operation-wide

@@ -345,9 +345,11 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
             digest,
             value: environment,
         },
-        owner_origins: vec![Origin::Direct(owner_span)],
-        owner_sources: vec![source.clone()],
-        owner_source_maps: vec![],
+        provenance: nepl3_core::syntax::OwnerProvenance::from_parts(
+            vec![Origin::Direct(owner_span)],
+            vec![source.clone()],
+            vec![],
+        ),
     };
     let value = SentenceValue {
         root: Root::Sentence(SentenceRef(0)),
@@ -422,11 +424,15 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
     assert_eq!(actual, value);
     assert_eq!(b.usage().source_bytes, 7);
     assert_ne!(
-        actual.embeds[0].owner_origins,
+        actual.embeds[0].provenance.origins(),
         actual.embeds[0].syntax.bundle.origins
     );
     let mut bad_native = value.clone();
-    bad_native.embeds[0].owner_sources.clear();
+    bad_native.embeds[0].provenance = nepl3_core::syntax::OwnerProvenance::from_parts(
+        bad_native.embeds[0].provenance.origins().to_vec(),
+        vec![],
+        bad_native.embeds[0].provenance.source_maps().to_vec(),
+    );
     assert!(encode(&bad_native, &r).is_err());
     {
         use nepl3_sentence_core::text::{self, AnnotationPolicy::*, Error};
@@ -479,7 +485,11 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
             Err(Error::Unresolved(EmbedRef(0)))
         );
         // Even a reading excluded from output must have a valid source closure.
-        annotated.embeds[0].owner_sources.clear();
+        annotated.embeds[0].provenance = nepl3_core::syntax::OwnerProvenance::from_parts(
+            annotated.embeds[0].provenance.origins().to_vec(),
+            vec![],
+            annotated.embeds[0].provenance.source_maps().to_vec(),
+        );
         assert!(matches!(
             text::prepare(
                 &annotated,

@@ -344,9 +344,7 @@ impl CopyCost for ForeignClosure {
         self.syntax.category.charge(b)?;
         self.syntax.bundle.charge_clone(b)?;
         self.owner_environment.charge(b)?;
-        self.owner_origins.charge(b)?;
-        self.owner_sources.charge(b)?;
-        self.owner_source_maps.charge(b)
+        self.provenance.charge_clone(b)
     }
 }
 owned_part!(

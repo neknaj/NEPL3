@@ -306,8 +306,14 @@ fn source_preparation_retains_code_and_identifies_each_foreign_closure() -> Resu
         {
             assert_eq!(a.kind, b.kind);
             assert_eq!(a.closure.owner_environment, b.closure.owner_environment);
-            assert_eq!(a.closure.owner_origins, b.closure.owner_origins);
-            assert_eq!(a.closure.owner_source_maps, b.closure.owner_source_maps);
+            assert_eq!(
+                a.closure.provenance.origins(),
+                b.closure.provenance.origins()
+            );
+            assert_eq!(
+                a.closure.provenance.source_maps(),
+                b.closure.provenance.source_maps()
+            );
             assert_eq!(a.closure.syntax.schema, b.closure.syntax.schema);
             assert_eq!(a.closure.syntax.category, b.closure.syntax.category);
             let sources = |values: &[SourceSnapshot]| {
@@ -319,8 +325,8 @@ fn source_preparation_retains_code_and_identifies_each_foreign_closure() -> Resu
                 rows
             };
             assert_eq!(
-                sources(&a.closure.owner_sources),
-                sources(&b.closure.owner_sources),
+                sources(a.closure.provenance.sources()),
+                sources(b.closure.provenance.sources()),
                 "embed {index} sources"
             );
         }
