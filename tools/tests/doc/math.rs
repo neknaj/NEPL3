@@ -26,6 +26,20 @@ fn article_math_nodes_select_display_without_evaluating_code() -> Result<(), Str
             &mut codec,
         )
         .map_err(err)?;
+        assert_eq!(document.value.embeds.len(), 3);
+        // Inline Math, display Math and code use the same checked Doc owner.
+        // Their distinct guest syntax retains one immutable owner arena.
+        #[cfg(target_has_atomic = "ptr")]
+        for pair in document.value.embeds.windows(2) {
+            assert!(core::ptr::eq(
+                pair[0].closure.provenance.origins(),
+                pair[1].closure.provenance.origins(),
+            ));
+            assert!(core::ptr::eq(
+                pair[0].closure.provenance.sources(),
+                pair[1].closure.provenance.sources(),
+            ));
+        }
         let raw = nepl3_doc_core::portable::to_value(
             &document,
             profile.registry(),
