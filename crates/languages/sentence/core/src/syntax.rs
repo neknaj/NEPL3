@@ -155,7 +155,8 @@ impl SentenceSyntax {
         }
         let store = sources(&self.sources, admission, b)?;
         OriginGraph::validate_origins(&self.origins, &store, b)?;
-        let maps = SourceMap::validate_mappings(&self.source_maps, &store, b)?;
+        let maps =
+            SourceMap::validate_mappings(&self.source_maps, &store, b)?.bind_sources(&store, b)?;
         for (index, location) in self.locations.iter().enumerate() {
             b.charge(Resource::Work, 1)?;
             if usize::try_from(location.origin.0)

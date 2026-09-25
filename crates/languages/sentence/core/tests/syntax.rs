@@ -104,6 +104,55 @@ fn checked(v: &SentenceSyntax, r: &SchemaRegistry) -> Result<(), Error> {
     v.validate(r, &mut b(), &mut SourceAdmission::default())
         .map(|_| ())
 }
+
+#[test]
+fn repeated_views_reuse_mapping_source_checks_within_one_validation() -> Result<(), String> {
+    let r = registry()?;
+    let mut prior_delta = None;
+    for mappings in [16, 64, 256] {
+        let mut v = fixture(&r)?;
+        let mapped = SourceSnapshot::new(
+            SourceId("mapped".into()),
+            1,
+            "memory:mapped".into(),
+            "漢".repeat(mappings).into_bytes(),
+            &mut b(),
+        )
+        .map_err(err)?;
+        for index in 0..mappings {
+            v.source_maps.push(Mapping {
+                kind: MappingKind::Exact,
+                source: v.sources[0].span(1, 4).map_err(err)?,
+                target: mapped
+                    .span(index as u64 * 3, (index as u64 + 1) * 3)
+                    .map_err(err)?,
+            });
+        }
+        v.sources.push(mapped);
+        let mut baseline = b();
+        v.validate(&r, &mut baseline, &mut SourceAdmission::default())
+            .map_err(err)?;
+        let view = v.views[0].clone();
+        for _ in 0..32 {
+            v.views.push(view.clone());
+        }
+        let mut repeated = b();
+        v.validate(&r, &mut repeated, &mut SourceAdmission::default())
+            .map_err(err)?;
+        let delta = repeated.usage().work - baseline.usage().work;
+        // These views are locally contained. Adding them must not repeat the
+        // complete mapping declaration scan; mapping validation itself remains.
+        if let Some(prior) = prior_delta {
+            assert!(delta <= prior * 2, "{mappings}: {delta} vs {prior}");
+        }
+        prior_delta = Some(delta);
+        // A new invocation must check its own declarations, despite a previous
+        // successful validation of this same model.
+        v.sources.pop();
+        assert!(checked(&v, &r).is_err());
+    }
+    Ok(())
+}
 fn encode(v: &SentenceSyntax, r: &SchemaRegistry) -> Result<NdfValue, String> {
     let empty = SourceStore::default();
     let mut a = SourceAdmission::default();
