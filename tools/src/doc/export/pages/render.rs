@@ -17,7 +17,10 @@ use std::time::Instant;
 #[cfg(test)]
 mod tests;
 
-pub(in crate::doc::export) struct SerializedPages {
+/// Complete script-free HTML documents in request page order. The identity
+/// binds the resolved page namespace; presentation options remain in the request.
+/// This owned output is data, not a reusable validation or execution proof.
+pub struct SerializedPages {
     pub identity: Digest,
     pub pages: Vec<String>,
 }

@@ -306,6 +306,13 @@ CRLF・非BMP文字・source位置・Origin・view・source map・options・embe
 タイトルと選択した英語variantの表示も固定期待値で確認した。native・WASI各1件とclippyは成功した。
 この交換は受信dataの照合であり、guestの実行権限やnamespaceの検証proofを生成しない。
 
+型付き`PagesHtmlRequest`から完全なページ合成を実行するhost入口`render_request`を追加した。
+文書の再検証、独立Sentenceの探索、namespace解決、最終HTML検査は既存処理へ委譲し、
+渡されたBudgetの使用量と停止状態を維持する。戻り値はHTMLとnamespace identityを持つdataである。
+言語選択で非表示になるanchorへのページ間参照は、参照元0・参照先1の`MissingAnchor`で拒否する。
+Rowsと日本語選択の成功、英語選択の拒否、取消状態についてnative・WASI各1件と独立native1件が成功した。
+この試験はnative requestを対象とする。ページ集合のCBOR受信と返信照合の移行は継続する。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

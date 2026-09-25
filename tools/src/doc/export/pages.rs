@@ -8,6 +8,7 @@ use std::{collections::BTreeMap, io::Write};
 pub mod composition;
 pub mod discovery;
 pub(super) mod render;
+pub use render::SerializedPages;
 pub mod resources;
 pub mod sentences;
 use nepl3_core::budget::Budget;
@@ -54,6 +55,19 @@ fn input_path(entry: &Entry) -> Result<&str, String> {
 pub struct GeneratedPages {
     pub files: BTreeMap<String, Vec<u8>>,
     pub manifest: String,
+}
+
+/// Render an explicitly supplied page request, including requests decoded from
+/// portable data. Revalidate documents, discover independent Sentence owners,
+/// resolve the complete namespace and check output before serializing shells.
+/// No filesystem access or ambient page discovery occurs. The caller supplies
+/// the finite output budget, whose existing usage and stopped state are retained.
+pub fn render_request(
+    compiled: &Compiled,
+    request: &PagesHtmlRequest,
+    output_budget: &mut Budget,
+) -> Result<SerializedPages, String> {
+    render::render(request, compiled, output_budget)
 }
 
 /// In-memory host input pairs. Paths are logical names, not filesystem access.

@@ -200,11 +200,11 @@ fn page_output_rejects_an_anchor_hidden_by_language_selection() -> Result<(), St
     for (id, input) in [
         (
             "from",
-            r#"article en "From" body cons paragraph cons sentence cons link page "to" some "hidden" text "go" nil nil nil"#,
+            r#"article en sentence "From" body cons paragraph cons sentence sentence cons doc link page "to" some "hidden" text "go" nil nil nil"#,
         ),
         (
             "to",
-            r#"article ja "To" body cons paragraph cons parallel cons variant ja sentence cons anchor hidden text "対象" nil cons variant en "Translation" nil nil nil"#,
+            r#"article ja sentence "To" body cons paragraph cons parallel cons variant ja sentence sentence cons doc anchor hidden text "対象" nil cons variant en sentence "Translation" nil nil nil"#,
         ),
     ] {
         let document = nepl3_tools::doc::source::with_named_input(
@@ -243,10 +243,6 @@ fn page_output_rejects_an_anchor_hidden_by_language_selection() -> Result<(), St
             document,
         });
     }
-    let r = &compiled.doc.registry;
-    let empty = SourceStore::default();
-    let mut a = SourceAdmission::default();
-    let mut c = FoundationCodec::new(r, &empty, &mut a).map_err(err)?;
     let mut request = nepl3_doc_html::pages::PagesHtmlRequest {
         set: PageSet {
             pages,
@@ -256,33 +252,36 @@ fn page_output_rejects_an_anchor_hidden_by_language_selection() -> Result<(), St
             parallel: nepl3_doc_html::ParallelMode::Rows,
         },
     };
-    assert!(nepl3_doc_html::pages::render_pages(&request, r, &mut c, &mut budget()).is_ok());
+    let render = |request: &nepl3_doc_html::pages::PagesHtmlRequest, b: &mut Budget| {
+        nepl3_tools::doc::export::pages::render_request(&compiled, request, b)
+    };
+    let rows = render(&request, &mut budget())?;
+    assert!(rows.pages[0].contains("href=\"../to/index.html#n-68696464656e\""));
+    assert!(rows.pages[1].contains("id=\"n-68696464656e\""));
     request.options.parallel = nepl3_doc_html::ParallelMode::Single {
         language: "en".into(),
         fallbacks: vec![],
     };
-    assert!(matches!(
-        nepl3_doc_html::pages::render_pages(&request, r, &mut c, &mut budget()),
-        Err(
-            nepl3_doc_html::pages::PagesRenderError::MissingOutputAnchor {
-                page: 0,
-                target: 1,
-                ..
-            }
-        )
-    ));
+    let error = render(&request, &mut budget())
+        .err()
+        .ok_or("hidden target accepted")?;
+    assert!(
+        error.starts_with("MissingAnchor { page: 0, element:"),
+        "{error}"
+    );
+    assert!(error.ends_with(", target: 1 }"), "{error}");
     request.options.parallel = nepl3_doc_html::ParallelMode::Single {
         language: "ja".into(),
         fallbacks: vec![],
     };
-    assert!(nepl3_doc_html::pages::render_pages(&request, r, &mut c, &mut budget()).is_ok());
+    let selected = render(&request, &mut budget())?;
+    assert!(selected.pages[1].contains("id=\"n-68696464656e\""));
+    assert!(!selected.pages[1].contains("Translation"));
     let mut cancelled = budget();
     cancelled.cancel();
-    assert!(matches!(
-        nepl3_doc_html::pages::render_pages(&request, r, &mut c, &mut cancelled),
-        Err(nepl3_doc_html::pages::PagesRenderError::Stopped(
-            StopReason::Cancelled
-        ))
-    ));
+    assert_eq!(
+        render(&request, &mut cancelled).err(),
+        Some("Cancelled".into())
+    );
     Ok(())
 }
