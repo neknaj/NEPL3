@@ -920,6 +920,116 @@ fn html_delivery_chapter_preserves_sections_sentences_and_annotation() -> Result
     Ok(())
 }
 
+#[test]
+fn circuit_chapter_preserves_operations_lists_and_state_notation() -> Result<(), String> {
+    circuit_projection(budget())
+}
+
+#[test]
+#[ignore = "explicit Circuit chapter projection measurement under corpus limits"]
+fn measure_circuit_projection_under_corpus_limits() -> Result<(), String> {
+    #[derive(serde::Deserialize)]
+    struct Policy {
+        output_limits: nepl3_tools::doc::export::pages::resources::OutputLimits,
+    }
+    let policy: Policy =
+        serde_json::from_str(include_str!("../../../doc/canonical.json")).map_err(err)?;
+    circuit_projection(policy.output_limits.budget())
+}
+
+fn circuit_projection(mut render_budget: Budget) -> Result<(), String> {
+    let c = compiled()?;
+    let set = PageSet {
+        pages: vec![page(
+            &c,
+            "circuit",
+            "doc/spec/07-circuit.nepld",
+            "doc/spec/07-circuit.md",
+            include_str!("../../../doc/spec/07-circuit.nepld"),
+        )?],
+        files: vec![],
+    };
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let started = std::time::Instant::now();
+    let artifact = render(
+        &set,
+        &c.doc.registry,
+        &mut codec,
+        &mut render_budget,
+        &[&[]],
+    )
+    .map_err(|error| format!("Circuit projection: {error:?}; {:?}", render_budget.usage()))?;
+    let finished = started.elapsed();
+    eprintln!(
+        "circuit projection elapsed_ns={} usage={:?}",
+        finished.as_nanos(),
+        render_budget.usage()
+    );
+    assert_eq!(artifact.pages.len(), 1);
+    let markdown = &artifact.pages[0].markdown;
+    assert!(links(markdown).is_empty());
+    assert!(code_blocks(markdown)?.is_empty());
+    assert!(markdown.contains("<ruby>同期離散時間<rt>どうきりさんじかん</rt></ruby>"));
+    let mut headings = Vec::new();
+    let mut codes = Vec::new();
+    let mut lists = Vec::new();
+    let mut current_list = None;
+    let mut visible = String::new();
+    for event in Parser::new(markdown) {
+        match event {
+            Event::Start(Tag::Heading { level, .. }) => headings.push(level),
+            Event::Code(code) => codes.push(code.into_string()),
+            Event::Text(text) => visible.push_str(&text),
+            Event::Start(Tag::List(start)) => {
+                assert!(current_list.is_none());
+                current_list = Some((start, 0));
+            }
+            Event::Start(Tag::Item) => current_list.as_mut().ok_or("list item")?.1 += 1,
+            Event::End(pulldown_cmark::TagEnd::List(_)) => {
+                lists.push(current_list.take().ok_or("list end")?);
+            }
+            _ => {}
+        }
+    }
+    // Declaration kinds are unordered; elaboration stages start at one.
+    assert_eq!(lists, [(None, 5), (Some(1), 6)]);
+    use pulldown_cmark::HeadingLevel::{H1, H2};
+    assert_eq!(headings, [H1, H2, H2, H2, H2, H2, H2, H2, H2, H2]);
+    assert_eq!(
+        codes,
+        [
+            "(width, unsigned value)",
+            "0 <= value < 2^width",
+            "wire name expr",
+            "state name width initial",
+            "next name expr",
+            "next q q",
+            "inst name module arguments",
+            "output name width expr",
+            "[lo,lo+width)",
+            "initial(PreparedNetlist)",
+            "step",
+            "observe",
+        ]
+    );
+    for expression in [
+        "not a = nor a a。",
+        "or a b = not (nor a b)。",
+        "and a b = nor (not a) (not b)。",
+        "xor a b = nor (nor a b) (and a b)。",
+        "mux = (select AND yes) OR ((NOT select) AND no)。",
+        "(q_{k+1},y_k)",
+    ] {
+        assert!(
+            visible.contains(expression),
+            "missing expression: {expression}"
+        );
+    }
+    Ok(())
+}
+
 /// The ordinary test retains desktop limits. This opt-in measurement locates
 /// the expense and checks content under the pre-existing corpus policy.
 #[test]

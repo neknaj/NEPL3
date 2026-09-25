@@ -169,6 +169,17 @@ native・WASIで各1件成功し、独立レビューでもnative1件の成功�
 native・WASIで各1件成功した。原文との独立レビューと独立native1件も成功した。
 対象のclippy、fmt、diff検査を完了した。正式Markdown集合生成は第18章を通過し、
 次の旧構文の `doc/spec/07-circuit.nepld` で停止した。
+第07章の正本を独立Sentence構文へ移行した。本文・Ruby・節ID・文境界・順序を保持し、
+正式reader/lowerとMarkdown投影で9節、宣言5項目、elaborationの6段階、
+InlineCode12件、NORの5式と状態表記を独立期待値と照合した。
+通常Work100Mの投影試験はWorkLimitとなり、失敗状態と上限を維持する。
+既存の文書集合用予算を明示する別試験はnative・WASIで各1件成功した。
+lowerはこの別試験でも通常予算を使用する。投影は両targetとも116,549,905 Workで、
+nativeの累積AllocationUnitsは134,077,642、WASIは102,166,374だった。
+Windows debugの投影参考時間は6.06秒であり、通常予算への適合は未達である。
+原稿の独立レビューと独立native1件も成功し、対象のclippy、fmt、diff検査を完了した。
+正式Markdown集合生成は第07章を通過し、次の旧構文の
+`doc/spec/19-html-fragment.nepld` で停止した。生成Markdownの更新は引き続き未完了である。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
