@@ -220,6 +220,23 @@ Workの上限一致と1不足、停止状態の維持を検査した。native全
 同原稿の通常Work上限超過は引き続き残る。source表現の重複とdigest計算の費用も継続課題である。
 wireのclippy、thumbv6m向けcompile、repository check、fmt、diff検査を完了した。
 独立レビューは最終の追加3件を実行し、通常予算の未達を含む記録を確認した。
+第13章の147個のroot guestについて、native source一覧と生成済みportable fieldを測定した。
+source出現数は23,762件、完全identityで区別したsourceは271件である。
+本文byte数は重複込み5,012,911、重複除去後35,294だった。root guestのmappingは24,528件である。
+各root SyntaxBundleのfield部分木を合計すると、sourcesは166,481 node、tokensは577,617 node、
+mappingsは392,595 nodeだった。tokensの内訳ではpayloadが318,248、viewsが235,870を占めた。
+これらはportable値のnode数であり、Budgetの累積Nodesとは区別する。root fieldの部分木には
+その内部の埋め込みを含む。native source一覧の集計はroot guestだけを対象とする。
+計測用の走査は符号化時間・digest時間の測定区間外で実行し、productionのUsageへ加算しない。
+この結果からsource本文に加え、token payload/viewとmappingを共有化の評価対象とする。
+未参照に見えるsourceの削除による縮小は実施していない。通常予算への適合は引き続き未達である。
+第01章の67個のroot guestでも同じ計測を行った。sourceは8,751出現・221種類で、
+本文byte数は重複込み1,306,602、重複除去後20,730だった。portable fieldのsourcesは
+61,324 node、tokensは183,090 node、mappingsは242,259 nodeとなった。
+投影は142,716,827 Workであり、この章も通常Work100Mを超える。
+両章の明示計測試験はnativeで各1件成功した。独立レビューは第13章を1件実行し、
+集計範囲とUsageの区別を確認した。対象clippy、fmt、diff検査も成功した。
+WASIとworkspace全体はこの計測追加では再実行していない。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

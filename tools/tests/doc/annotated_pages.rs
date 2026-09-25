@@ -1419,9 +1419,24 @@ fn measure_page_encoding(
     assert_eq!(set.pages.len(), 1, "single-page measurement");
     let mut sources_in_single_node_guest = 0;
     let mut maps_in_single_node_guest = 0;
+    let mut source_occurrences = 0;
+    let mut source_text_bytes = 0;
+    let mut distinct_sources = std::collections::BTreeMap::new();
+    let mut mapping_occurrences = 0;
     for embed in &set.pages[0].document.value.embeds {
         if let nepl3_doc_core::model::DocContent::Syntax { closure } = &embed.content {
             let bundle = &closure.syntax.bundle;
+            // Root guest bundles only: nested bundles are already represented
+            // within each root's encoding and are not counted a second time.
+            mapping_occurrences += bundle.source_maps.len();
+            for source in &bundle.sources {
+                source_occurrences += 1;
+                source_text_bytes += source.text().len();
+                if let Some(prior) = distinct_sources.insert(source.identity(), source) {
+                    assert_eq!(prior.uri(), source.uri());
+                    assert_eq!(prior.text(), source.text());
+                }
+            }
             if bundle.nodes.len() == 1 {
                 sources_in_single_node_guest =
                     sources_in_single_node_guest.max(bundle.sources.len());
@@ -1431,6 +1446,11 @@ fn measure_page_encoding(
     }
     println!(
         "{label} single_node_guest max_sources={sources_in_single_node_guest} max_maps={maps_in_single_node_guest}"
+    );
+    let unique_text_bytes: usize = distinct_sources.values().map(|s| s.text().len()).sum();
+    println!(
+        "{label} root_guest_sources occurrences={source_occurrences} distinct={} text_bytes={source_text_bytes} unique_text_bytes={unique_text_bytes} mappings={mapping_occurrences}",
+        distinct_sources.len()
     );
     // Isolated component run with fresh admission, not a subtraction from
     // the enclosing projection. Keep the same immutable input and limits.
@@ -1481,6 +1501,65 @@ fn measure_page_encoding(
             value_nodes(field)
         );
     }
+    // Attribute each root SyntaxBundle's NDF nodes to its seven foundation
+    // fields. This is structural observation of the generated value; no source
+    // parsing, source pruning, or alternative encoding is performed here.
+    let mut bundle_fields = [0_usize; 7];
+    let mut token_fields = [0_usize; 5];
+    let mut bundles = 0;
+    for embed in embeds {
+        let NdfValue::Record(embed) = embed else {
+            return Err("DocEmbed record".into());
+        };
+        let Some(NdfValue::Variant(content)) = embed.fields.get(1) else {
+            return Err("DocContent variant".into());
+        };
+        if content.variant == "Value" {
+            continue;
+        }
+        assert_eq!(content.variant, "Syntax");
+        let Some(NdfValue::Record(closure)) = content.fields.first() else {
+            return Err("DocClosure record".into());
+        };
+        let Some(NdfValue::Record(bundle)) = closure.fields.get(3) else {
+            return Err("SyntaxBundle record".into());
+        };
+        assert_eq!(bundle.schema, *codec.foundation_schema());
+        assert_eq!(bundle.kind, "SyntaxBundle");
+        assert_eq!(bundle.fields.len(), bundle_fields.len());
+        bundles += 1;
+        for (total, field) in bundle_fields.iter_mut().zip(&bundle.fields) {
+            *total += value_nodes(field);
+        }
+        let NdfValue::List(tokens) = &bundle.fields[5] else {
+            return Err("tokens list".into());
+        };
+        for token in tokens {
+            let NdfValue::Record(token) = token else {
+                return Err("Token record".into());
+            };
+            assert_eq!(token.schema, *codec.foundation_schema());
+            assert_eq!(token.kind, "Token");
+            assert_eq!(token.fields.len(), token_fields.len());
+            for (total, field) in token_fields.iter_mut().zip(&token.fields) {
+                *total += value_nodes(field);
+            }
+        }
+    }
+    println!(
+        "{label} root_guest_bundle_fields bundles={bundles} sources={} nodes={} origins={} root={} environments={} tokens={} mappings={}",
+        bundle_fields[0],
+        bundle_fields[1],
+        bundle_fields[2],
+        bundle_fields[3],
+        bundle_fields[4],
+        bundle_fields[5],
+        bundle_fields[6]
+    );
+    println!(
+        "{label} root_guest_token_fields kind={} head={} payload={} views={} trivia={}",
+        token_fields[0], token_fields[1], token_fields[2], token_fields[3], token_fields[4]
+    );
     let mut inputs = vec![CanonicalDigestInput {
         domain: nepl3_doc_core::prepare::DOCUMENT_DOMAIN,
         value: document,
