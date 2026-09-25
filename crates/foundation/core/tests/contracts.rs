@@ -24,6 +24,71 @@ fn source(id: &str, revision: u64, text: &str) -> Result<SourceSnapshot, SourceE
 }
 
 #[test]
+fn identity_comparison_preserves_full_order_and_stop_boundaries() -> Result<(), StopReason> {
+    use core::cmp::Ordering;
+    let original = SnapshotId {
+        source: SourceId("name".repeat(1000)),
+        revision: 7,
+        digest: Digest([1; 32]),
+    };
+    let independent = original.clone();
+    let limits = budget().limits();
+    let full_work = original.source.0.len() as u64 + 41;
+    assert_eq!(
+        original.compare_with_budget(&original, &mut Budget::new(Limits { work: 1, ..limits }))?,
+        Ordering::Equal
+    );
+    assert_eq!(
+        original.compare_with_budget(
+            &independent,
+            &mut Budget::new(Limits {
+                work: full_work,
+                ..limits
+            })
+        )?,
+        Ordering::Equal
+    );
+    for (other, work) in [(&original, 0), (&independent, full_work - 1)] {
+        let mut short = Budget::new(Limits { work, ..limits });
+        assert_eq!(
+            original.compare_with_budget(other, &mut short),
+            Err(StopReason::WorkLimit)
+        );
+        assert_eq!(short.poll(), Err(StopReason::WorkLimit));
+    }
+    for greater in [
+        SnapshotId {
+            source: SourceId("z".into()),
+            ..independent.clone()
+        },
+        SnapshotId {
+            revision: 8,
+            ..independent.clone()
+        },
+        SnapshotId {
+            digest: Digest([2; 32]),
+            ..independent
+        },
+    ] {
+        assert_eq!(
+            original.compare_with_budget(&greater, &mut budget())?,
+            Ordering::Less
+        );
+        assert_eq!(
+            greater.compare_with_budget(&original, &mut budget())?,
+            Ordering::Greater
+        );
+    }
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert_eq!(
+        original.compare_with_budget(&original, &mut cancelled),
+        Err(StopReason::Cancelled)
+    );
+    Ok(())
+}
+
+#[test]
 fn spans_share_immutable_identity_and_preserve_independent_value_semantics()
 -> Result<(), SourceError> {
     let name = "source".repeat(10_000);

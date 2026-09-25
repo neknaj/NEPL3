@@ -53,6 +53,26 @@ pub struct SnapshotId {
     pub revision: u64,
     pub digest: Digest,
 }
+impl SnapshotId {
+    /// Compare complete immutable identities. An identical live value needs
+    /// only one comparison; independent storage retains the full byte bound.
+    /// This establishes identity order and grants no source admission or scope.
+    pub fn compare_with_budget(
+        &self,
+        other: &Self,
+        budget: &mut Budget,
+    ) -> Result<core::cmp::Ordering, StopReason> {
+        budget.charge(Resource::Work, 1)?;
+        if core::ptr::eq(self, other) {
+            return Ok(core::cmp::Ordering::Equal);
+        }
+        budget.charge(
+            Resource::Work,
+            self.source.0.len().min(other.source.0.len()) as u64 + 40,
+        )?;
+        Ok(self.cmp(other))
+    }
+}
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct SourceRef {
     pub source_id: SourceId,
