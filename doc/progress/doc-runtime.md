@@ -299,6 +299,13 @@ native・WASI各2件とclippyは成功した。表示言語の選択やportable�
 不正な言語指定の拒否を確認した。native・WASI各1件と独立レビューのnative1件は成功した。
 portable受信とページ集合の残る試験は、引き続き移行対象である。
 
+実sourceのHTML交換試験を独立Sentenceと`RenderedWithForeign`へ接続した。
+初回受信したrequestから公開APIで期待出力を再構築し、CBORで受信したreplyの全fieldを照合する。
+CRLF・非BMP文字・source位置・Origin・view・source map・options・embedの保持を確認し、
+本文・origin・表示条件・guest配置を改変した返信は`Mismatch`として拒否する。
+タイトルと選択した英語variantの表示も固定期待値で確認した。native・WASI各1件とclippyは成功した。
+この交換は受信dataの照合であり、guestの実行権限やnamespaceの検証proofを生成しない。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

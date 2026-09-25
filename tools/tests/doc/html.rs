@@ -448,7 +448,49 @@ fn compiled_html() -> Result<Compiled, String> {
 }
 fn real_source_html_roundtrip(compiled: &Compiled) -> Result<(), String> {
     use nepl3_doc_html::{LocalHtmlRequest, portable};
-    let input = "article ja \"原稿🙂\"\r\nbody cons paragraph cons parallel cons variant ja \"[文/ぶん]\" cons variant en \"text\" nil nil nil";
+    fn compose<C: nepl3_core::value_codec::FoundationValueCodec>(
+        request: &LocalHtmlRequest,
+        registry: &nepl3_core::schema::SchemaRegistry,
+        codec: &mut C,
+        operation: &mut nepl3_core::budget::Budget,
+    ) -> Result<nepl3_doc_html::RenderedWithForeign, String>
+    where
+        C::Error: core::fmt::Debug,
+    {
+        let prepared = nepl3_doc_html::prepare_article_with_foreign(
+            &request.document,
+            &request.options,
+            registry,
+            codec,
+            operation,
+        )
+        .map_err(err)?;
+        nepl3_doc_html::render_article_with_foreign(
+            &prepared,
+            &mut |slot, _, b| {
+                let sentence = nepl3_suite::adapters::document::sentence::lower(
+                    slot,
+                    slot.schema(),
+                    &[],
+                    registry,
+                    codec,
+                    b,
+                )
+                .map_err(err)?;
+                nepl3_suite::adapters::sentence::html::render(
+                    &sentence,
+                    registry,
+                    b,
+                    &mut SourceAdmission::default(),
+                )
+                .map(|rendered| rendered.into_markup())
+                .map_err(err)
+            },
+            operation,
+        )
+        .map_err(err)
+    }
+    let input = "article ja sentence \"原稿🙂\"\r\nbody cons paragraph cons parallel cons variant ja sentence \"[文/ぶん]\" cons variant en sentence \"text\" nil nil nil";
     with_input(compiled, input, "Article", |tree, profile, b, a| {
         let r = profile.registry();
         let checked = tree
@@ -476,23 +518,27 @@ fn real_source_html_roundtrip(compiled: &Compiled) -> Result<(), String> {
                 },
             },
         };
-        let prepared = prepare_local(
-            &request.document,
-            &request.options,
-            r,
-            &mut codec,
+        let native = compose(&request, r, &mut codec, &mut budget())?;
+        // Title and selected English variant are the two displayed guests.
+        assert_eq!(native.foreign.len(), 2);
+        let markup = &native.fragment.markup;
+        let checked_html = nepl3_markup::html::validate(
+            &markup.fragment,
+            markup.slot,
+            &markup.policy,
             &mut budget(),
         )
         .map_err(err)?;
-        let native = render(&prepared, &mut budget()).map_err(err)?;
+        let output = nepl3_markup::html::serialize(&checked_html, &mut budget()).map_err(err)?;
+        assert!(output.contains("原稿🙂") && output.contains("text"));
+        assert!(!output.contains("ぶん"));
         let request_bytes = nepl3_wire::encode(
             &portable::request_to_value(&request, r, &mut codec, &mut budget()).map_err(err)?,
             &mut budget(),
         )
         .map_err(err)?;
         let reply_bytes = nepl3_wire::encode(
-            &portable::rendered_to_value(&native, &prepared, r, &mut codec, &mut budget())
-                .map_err(err)?,
+            &portable::foreign::to_value(&native, r, &mut codec, &mut budget()).map_err(err)?,
             &mut budget(),
         )
         .map_err(err)?;
@@ -521,23 +567,22 @@ fn real_source_html_roundtrip(compiled: &Compiled) -> Result<(), String> {
                 .iter()
                 .any(|n| n.span.is_some())
         );
-        let p = prepare_local(
-            &received.document,
-            &received.options,
-            r,
-            &mut receiver,
-            &mut operation,
-        )
-        .map_err(err)?;
+        assert_eq!(received.options, request.options);
+        assert_eq!(
+            received.document.value.embeds,
+            request.document.value.embeds
+        );
+        let expected = compose(&received, r, &mut receiver, &mut operation)?;
         let value = nepl3_wire::decode(&reply_bytes, &mut operation).map_err(err)?;
         assert_eq!(
-            portable::rendered_from_value(&value, &p, r, &mut receiver, &mut operation)
+            portable::foreign::from_value(&value, &expected, r, &mut receiver, &mut operation)
                 .map_err(err)?,
             native
         );
         // Valid type and valid HTML still do not authorize altered contents.
         let mut changed = native.clone();
         let text = changed
+            .fragment
             .markup
             .fragment
             .nodes
@@ -548,14 +593,32 @@ fn real_source_html_roundtrip(compiled: &Compiled) -> Result<(), String> {
             })
             .ok_or("selected text")?;
         *text = "forged".into();
-        assert!(
-            portable::rendered_to_value(&changed, &p, r, &mut receiver, &mut budget()).is_err()
-        );
+        let forged =
+            portable::foreign::to_value(&changed, r, &mut receiver, &mut budget()).map_err(err)?;
+        assert!(matches!(
+            portable::foreign::from_value(&forged, &expected, r, &mut receiver, &mut budget()),
+            Err(portable::PortableError::Mismatch)
+        ));
+        let mut changed_options = native.clone();
+        changed_options.fragment.options.parallel = ParallelMode::Rows;
+        let mut changed_placement = native.clone();
+        changed_placement.foreign[0].embed.0 = u64::MAX;
+        for changed in [changed_options, changed_placement] {
+            let forged = portable::foreign::to_value(&changed, r, &mut receiver, &mut budget())
+                .map_err(err)?;
+            assert!(matches!(
+                portable::foreign::from_value(&forged, &expected, r, &mut receiver, &mut budget()),
+                Err(portable::PortableError::Mismatch)
+            ));
+        }
         let mut changed = native.clone();
-        changed.origins[0].node = u64::MAX;
-        assert!(
-            portable::rendered_to_value(&changed, &p, r, &mut receiver, &mut budget()).is_err()
-        );
+        changed.fragment.origins[0].node = u64::MAX;
+        let forged =
+            portable::foreign::to_value(&changed, r, &mut receiver, &mut budget()).map_err(err)?;
+        assert!(matches!(
+            portable::foreign::from_value(&forged, &expected, r, &mut receiver, &mut budget()),
+            Err(portable::PortableError::Mismatch)
+        ));
         Ok(())
     })
 }
