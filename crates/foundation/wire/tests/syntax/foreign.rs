@@ -64,7 +64,100 @@ fn closed() -> Result<(SchemaRef, SchemaRegistry, ForeignClosure), String> {
         &mut SourceAdmission::default(),
     )
     .map_err(|e| format!("{e:?}"))?;
+    let positioned = ForeignClosure::capture_at(
+        &checked,
+        NodeRef(0),
+        0,
+        &registry,
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(positioned, value);
     Ok((schema, registry, value))
+}
+#[test]
+fn positioned_capture_ignores_unrelated_fields_and_checks_positions() -> TestResult {
+    let mut previous = None;
+    for count in [128, 512, 2048] {
+        let (_, registry, mut owner) = fixture()?;
+        owner.nodes[0]
+            .fields
+            .extend((0..count).map(|_| FieldValue::Atom(NdfScalar::Bool(false))));
+        let checked = owner
+            .validate(&registry, &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+        let mut b = budget();
+        let value = ForeignClosure::capture_at(
+            &checked,
+            NodeRef(0),
+            0,
+            &registry,
+            &mut b,
+            &mut SourceAdmission::default(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        if let Some(usage) = previous {
+            assert_eq!(b.usage(), usage);
+        }
+        previous = Some(b.usage());
+        let FieldValue::Foreign(guest) = &owner.nodes[0].fields[0] else {
+            return Err("guest".into());
+        };
+        let old = ForeignClosure::capture(
+            guest,
+            &checked,
+            &registry,
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        assert_eq!(value, old);
+        for (node, field) in [
+            (NodeRef(u64::MAX), 0),
+            (NodeRef(0), usize::MAX),
+            (NodeRef(0), 1),
+        ] {
+            assert_eq!(
+                ForeignClosure::capture_at(
+                    &checked,
+                    node,
+                    field,
+                    &registry,
+                    &mut budget(),
+                    &mut SourceAdmission::default()
+                ),
+                Err(SyntaxError::Reference)
+            );
+        }
+        let mut stopped = budget();
+        stopped.cancel();
+        assert_eq!(
+            ForeignClosure::capture_at(
+                &checked,
+                NodeRef(0),
+                0,
+                &registry,
+                &mut stopped,
+                &mut SourceAdmission::default()
+            ),
+            Err(SyntaxError::Stopped(StopReason::Cancelled))
+        );
+        let mut low = budget().limits();
+        low.work = 0;
+        assert_eq!(
+            ForeignClosure::capture_at(
+                &checked,
+                NodeRef(0),
+                0,
+                &registry,
+                &mut Budget::new(low),
+                &mut SourceAdmission::default()
+            ),
+            Err(SyntaxError::Stopped(StopReason::WorkLimit))
+        );
+    }
+    Ok(())
 }
 #[test]
 fn standalone_foreign_keeps_selected_owner_environment_and_origin_arena() -> TestResult {
