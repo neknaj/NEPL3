@@ -1,4 +1,6 @@
 use super::*;
+#[path = "editor_chapter.rs"]
+mod editor_chapter;
 #[path = "model_invariants.rs"]
 mod model_invariants;
 #[path = "namespace_projection.rs"]

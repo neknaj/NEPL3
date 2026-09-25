@@ -423,6 +423,16 @@ nativeが156,176,112、WASIが114,371,540だった。lowerは通常予算を使�
 Clippy、repository check、fmt、diff検査も成功した。正式Markdown集合生成は第12章を通過し、
 次の `doc/spec/08-editor.nepld` の旧構文で停止した。生成Markdownの更新と通常ページ予算への適合は継続する。
 
+第08章の正本にも独立Sentenceの境界を追加した。独立レビューで、差分は285個のsentence挿入に限定され、
+引用文字列の内容と順序、10節・58段落を保持することを確認した。正式reader/lowerで各段落の文境界を検査し、
+Markdown解析で11個のInlineCode、Ruby、不要な表・リスト・リンク・コードブロックの不在を確認する。
+lowerは通常予算で47,531,397 Workに収まる。projectionは通常Work100Mで停止し、既存の文書集合予算では
+native/WASI各1件が成功した。projectionのWorkは両targetとも202,583,499、累積AllocationUnitsは
+nativeが279,857,852、WASIが204,782,384だった。通常上限は維持し、その試験も有効のまま残す。
+独立native試験も1件成功したが、その時点ではlowerにも文書集合予算を使用していた。最終版ではlowerを
+通常予算へ限定し、独立担当はその差分を静的に再確認した。Clippy、repository check、fmt、diff検査は成功した。
+正式Markdown集合生成は第08章を通過し、第20章の旧構文で停止した。集合生成物はまだ更新していない。
+
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
