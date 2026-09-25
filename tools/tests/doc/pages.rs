@@ -1,6 +1,113 @@
 use super::*;
 use nepl3_doc_core::{check::Category, lower, pages::*, portable};
 
+fn composed(
+    compiled: &Compiled,
+    request: &nepl3_doc_html::pages::PagesHtmlRequest,
+) -> Result<
+    (
+        nepl3_core::source::Digest,
+        Vec<nepl3_doc_html::RenderedWithForeign>,
+    ),
+    String,
+> {
+    use nepl3_doc_core::{labels::namespace as labels, pages::namespace as scopes};
+    use nepl3_doc_html::pages::namespace as html;
+    use nepl3_tools::doc::export::pages::{composition, discovery};
+    let registry = &compiled.doc.registry;
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+    let mut b = budget();
+    let forms = [nepl3_sentence_core::lower::ForeignInlineForm {
+        kind: "Form:DocumentInline",
+        guest_schema: &compiled.doc.package.schema,
+        guest_category: "Inline",
+    }];
+    let mut found = Vec::new();
+    for page in &request.set.pages {
+        found.push(
+            discovery::collect(
+                &page.document,
+                registry
+                    .selected("nepl3.syntax.sentence", 1)
+                    .ok_or("Sentence")?,
+                &compiled.doc.package.schema,
+                &forms,
+                registry,
+                &mut codec,
+                &mut b,
+            )
+            .map_err(err)?,
+        );
+    }
+    let mut render_admission = SourceAdmission::default();
+    let mut plans = Vec::new();
+    for page in &found {
+        plans.push(
+            discovery::namespace::inspect(page, registry, &mut b, &mut render_admission)
+                .map_err(err)?,
+        );
+    }
+    let mut members = Vec::new();
+    for plan in &plans {
+        members.push(plan.member_refs(&mut b).map_err(err)?);
+    }
+    let mut namespaces = Vec::new();
+    for members in &members {
+        namespaces.push(labels::resolve(members, &mut b).map_err(err)?);
+    }
+    let refs: Vec<_> = namespaces.iter().collect();
+    let checked =
+        scopes::resolve(&request.set, &refs, registry, &mut codec, &mut b).map_err(err)?;
+    // Independent expectations: the two authored links retain page ownership,
+    // direction and fragment after recursive guest discovery and wire receipt.
+    assert_eq!(
+        checked
+            .members()
+            .iter()
+            .flat_map(|m| m.links())
+            .map(|l| (l.page, l.target, l.fragment.as_deref()))
+            .collect::<Vec<_>>(),
+        vec![
+            (0, PageDestination::Page { index: 1 }, Some("usage")),
+            (1, PageDestination::Page { index: 0 }, Some("start")),
+        ]
+    );
+    let prepared = html::prepare(&checked, &request.options, &mut b).map_err(err)?;
+    let mut outputs = Vec::new();
+    for (page, plan) in plans.iter().enumerate() {
+        outputs.push(
+            composition::render(
+                plan.selection(),
+                &prepared,
+                page as u64,
+                registry,
+                &mut |_, _, _, _, _| Err(nepl3_doc_html::RenderError::InternalShape),
+                &mut |_, _, _, _| Err(nepl3_doc_html::RenderError::InternalShape),
+                &mut b,
+                &mut render_admission,
+            )
+            .map_err(err)?,
+        );
+    }
+    let roots: Vec<_> = outputs
+        .iter()
+        .map(|o| {
+            o.members()
+                .first()
+                .ok_or("root")
+                .map(|m| m.document().output())
+        })
+        .collect::<Result<_, _>>()?;
+    let markup: Vec<_> = roots.iter().map(|o| &o.fragment.markup).collect();
+    let final_output = html::output::check(&prepared, &markup, &mut b).map_err(err)?;
+    Ok((
+        final_output.namespace_identity(),
+        roots.into_iter().cloned().collect(),
+    ))
+}
+
 #[test]
 fn real_two_page_sources_resolve_without_ambient_documents() -> Result<(), String> {
     let mut compiled = compiled()?;
@@ -25,17 +132,17 @@ fn real_two_page_sources_resolve_without_ambient_documents() -> Result<(), Strin
             "intro",
             "doc/intro.nepld",
             "docs/intro/index.html",
-            r#"article ja "入門"
-body cons paragraph cons sentence cons anchor start text "入口"
-cons link page "guide" some "usage" text "使い方" nil nil nil"#,
+            r#"article ja sentence "入門"
+body cons paragraph cons sentence sentence cons doc anchor start text "入口"
+cons doc link page "guide" some "usage" text "使い方" nil nil nil"#,
         ),
         (
             "guide",
             "doc/reference/guide.nepld",
             "docs/reference/guide/index.html",
-            r#"article ja "使い方"
-body cons section usage "利用方法" body cons paragraph cons sentence
-cons link relative "../intro.nepld" some "start" text "入門へ戻る" nil nil nil nil"#,
+            r#"article ja sentence "使い方"
+body cons section usage sentence "利用方法" body cons paragraph cons sentence sentence
+cons doc link relative "../intro.nepld" some "start" text "入門へ戻る" nil nil nil nil"#,
         ),
     ];
     let mut pages = Vec::new();
@@ -85,40 +192,16 @@ cons link relative "../intro.nepld" some "start" text "入門へ戻る" nil nil 
     let empty = SourceStore::default();
     let mut a = SourceAdmission::default();
     let mut c = FoundationCodec::new(r, &empty, &mut a).map_err(err)?;
-    let plan = resolve(&set, r, &mut c, &mut budget())
-        .map_err(err)?
-        .plan()
-        .clone();
-    assert_eq!(
-        plan.links
-            .iter()
-            .map(|l| (l.page, l.target, l.fragment.as_deref()))
-            .collect::<Vec<_>>(),
-        vec![
-            (
-                0,
-                nepl3_doc_core::pages::PageDestination::Page { index: 1 },
-                Some("usage")
-            ),
-            (
-                1,
-                nepl3_doc_core::pages::PageDestination::Page { index: 0 },
-                Some("start")
-            )
-        ]
-    );
-    assert!(plan.remaining.is_empty());
     let request = nepl3_doc_html::pages::PagesHtmlRequest {
         set: set.clone(),
         options: nepl3_doc_html::RenderOptions {
             parallel: nepl3_doc_html::ParallelMode::Rows,
         },
     };
-    let rendered =
-        nepl3_doc_html::pages::render_pages(&request, r, &mut c, &mut budget()).map_err(err)?;
+    let (identity, rendered) = composed(&compiled, &request)?;
     let mut html = Vec::new();
-    for f in &rendered.fragments {
-        let m = &f.markup;
+    for f in &rendered {
+        let m = &f.fragment.markup;
         let checked = nepl3_markup::html::validate(&m.fragment, m.slot, &m.policy, &mut budget())
             .map_err(err)?;
         html.push(nepl3_markup::html::serialize(&checked, &mut budget()).map_err(err)?);
@@ -127,15 +210,19 @@ cons link relative "../intro.nepld" some "start" text "入門へ戻る" nil nil 
     assert!(html[1].contains("href=\"../../intro/index.html#n-7374617274\""));
     assert!(html[0].contains("id=\"n-7374617274\""));
     assert!(html[1].contains("id=\"n-7573616765\""));
-    let rendered_value = nepl3_doc_html::portable::pages::rendered_to_value(
-        &rendered,
-        &request,
-        r,
-        &mut c,
-        &mut budget(),
-    )
-    .map_err(err)?;
-    let rendered_bytes = nepl3_wire::encode(&rendered_value, &mut budget()).map_err(err)?;
+    let exported =
+        nepl3_tools::doc::export::pages::render_request(&compiled, &request, &mut budget())?;
+    assert_eq!(exported.identity, identity);
+    assert_eq!(exported.pages.len(), html.len());
+    for (page, fragment) in exported.pages.iter().zip(&html) {
+        assert!(page.contains(fragment));
+    }
+    let mut rendered_bytes = Vec::new();
+    for output in &rendered {
+        let value = nepl3_doc_html::portable::foreign::to_value(output, r, &mut c, &mut budget())
+            .map_err(err)?;
+        rendered_bytes.push(nepl3_wire::encode(&value, &mut budget()).map_err(err)?);
+    }
     let bytes = nepl3_wire::encode(
         &portable::pages::set_to_value(&set, r, &mut c, &mut budget()).map_err(err)?,
         &mut budget(),
@@ -150,46 +237,55 @@ cons link relative "../intro.nepld" some "start" text "入門へ戻る" nil nil 
         &mut budget(),
     )
     .map_err(err)?;
-    assert_eq!(
-        &plan,
-        resolve(&received, r, &mut receiver, &mut budget())
-            .map_err(err)?
-            .plan()
-    );
+    assert_eq!(received.pages.len(), set.pages.len());
+    for (received, original) in received.pages.iter().zip(&set.pages) {
+        assert_eq!(received.registration, original.registration);
+        super::retention::assert_doc_retention(&original.document, &received.document)?;
+    }
     let received_request = nepl3_doc_html::pages::PagesHtmlRequest {
         set: received,
         options: request.options.clone(),
     };
-    let rendered_received = nepl3_wire::decode(&rendered_bytes, &mut budget()).map_err(err)?;
-    assert_eq!(
-        rendered,
-        nepl3_doc_html::portable::pages::rendered_from_value(
-            &rendered_received,
-            &received_request,
-            r,
-            &mut receiver,
-            &mut budget()
-        )
-        .map_err(err)?
-    );
+    let (received_identity, expected) = composed(&compiled, &received_request)?;
+    assert_eq!(identity, received_identity);
+    assert_eq!(rendered.len(), expected.len());
+    for ((bytes, expected), native) in rendered_bytes.iter().zip(&expected).zip(&rendered) {
+        let value = nepl3_wire::decode(bytes, &mut budget()).map_err(err)?;
+        assert_eq!(
+            &nepl3_doc_html::portable::foreign::from_value(
+                &value,
+                expected,
+                r,
+                &mut receiver,
+                &mut budget()
+            )
+            .map_err(err)?,
+            native
+        );
+    }
     let mut changed = received_request;
     changed.set.pages[0].registration.route = "moved/index.html".into();
-    assert!(
-        nepl3_doc_html::portable::pages::rendered_from_value(
-            &rendered_received,
-            &changed,
-            r,
-            &mut receiver,
-            &mut budget()
-        )
-        .is_err()
-    );
-    let mut missing = set.clone();
-    missing.pages.pop();
-    assert!(matches!(
-        resolve(&missing, r, &mut c, &mut budget()),
-        Err(PageError::MissingPage { .. })
-    ));
+    let (changed_identity, changed_outputs) = composed(&compiled, &changed)?;
+    assert_ne!(identity, changed_identity);
+    for (bytes, changed_output) in rendered_bytes.iter().zip(&changed_outputs) {
+        let value = nepl3_wire::decode(bytes, &mut budget()).map_err(err)?;
+        assert!(matches!(
+            nepl3_doc_html::portable::foreign::from_value(
+                &value,
+                changed_output,
+                r,
+                &mut receiver,
+                &mut budget()
+            ),
+            Err(nepl3_doc_html::portable::PortableError::Mismatch)
+        ));
+    }
+    let mut missing = request;
+    missing.set.pages.pop();
+    let error = composed(&compiled, &missing)
+        .err()
+        .ok_or("missing page accepted")?;
+    assert!(error.contains("MissingPage"), "{error}");
     Ok(())
 }
 

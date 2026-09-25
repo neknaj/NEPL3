@@ -313,6 +313,14 @@ CRLF・非BMP文字・source位置・Origin・view・source map・options・embe
 Rowsと日本語選択の成功、英語選択の拒否、取消状態についてnative・WASI各1件と独立native1件が成功した。
 この試験はnative requestを対象とする。ページ集合のCBOR受信と返信照合の移行は継続する。
 
+双方向リンクを持つ2ページの試験を、独立SentenceとDoc Inlineのnamespaceへ移行した。
+初回受信したPageSetから公開APIでnamespaceと出力を再構築し、各ページの`RenderedWithForeign`を
+CBORで交換して全fieldを照合する。登録情報とsource対応、リンクの方向とfragment、HTMLのhrefとIDを検査し、
+route変更後の旧返信は`Mismatch`、参照先ページの欠落は`MissingPage`で拒否する。
+公開hostの完全HTMLと、公開APIを組み合わせた試験側出力の一致も確認した。
+対象2件は独立nativeとWASIで成功し、主担当の初回native1件、clippy・repository検査も成功した。
+annotated pagesを含む広範囲検査は別途継続しており、この記録は全章の成功を表さない。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは
