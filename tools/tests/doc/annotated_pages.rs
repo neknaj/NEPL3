@@ -5,6 +5,8 @@ mod conformance_chapter;
 mod editor_chapter;
 #[path = "html_chapter.rs"]
 mod html_chapter;
+#[path = "math_chapter.rs"]
+mod math_chapter;
 #[path = "math_html_chapter.rs"]
 mod math_html_chapter;
 #[path = "model_invariants.rs"]
