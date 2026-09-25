@@ -474,6 +474,19 @@ lowerは通常予算で45,717,812 Workだった。projectionは通常Work100Mで
 diff検査も成功した。正式Markdown集合生成は第06章を通過し、第16章の旧構文で停止した。
 通常予算への適合と集合生成物の更新は継続する。この原稿試験はMathの意味処理の正式受入を実行するものではない。
 
+第16章の正本を独立Sentence構文へ移行した。独立レビューはsentence178箇所・doc2箇所の追加と、
+全引用値・Ruby・移行条件の保持を確認した。readerが検出した3文の移行漏れを修正し、再レビューした。
+構造・表示試験は7節の親子関係、29個の節内段落、手順リスト2件・9項目、表1件・12セル、
+InlineCode30件、リンク2件を検査する。通常試験はparse後の構文木検証でWork100Mに達し、
+lowerとprojectionへ進まない。解析だけ明示上限を選んだ診断でも、lowerが通常Work100Mで停止した。
+各段階へ既存の文書集合上限を明示したignored計測はnative/WASI各1件、独立native1件が成功した。
+parseと検証は111,311,847 Work、lowerは108,677,967 Work、projectionは329,875,518 Workである。
+累積AllocationUnitsは順にnativeで184,390,035・63,205,672・230,560,702、WASIで
+132,901,183・45,934,476・166,260,486だった。通常試験とproductionの上限は維持し、
+通常予算への適合を性能改善の残件として扱う。Clippy、repository check、fmt、diff検査は成功した。
+正式canonical集合生成も第16章の構文木検証でWorkLimitとなった。canonicalのsource名を用いる
+parseは86,302,966 Workであり、試験用source名の計測と区別する。生成物の更新は保留する。
+
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

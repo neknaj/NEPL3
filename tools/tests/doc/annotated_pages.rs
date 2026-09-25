@@ -9,6 +9,8 @@ mod html_chapter;
 mod math_chapter;
 #[path = "math_html_chapter.rs"]
 mod math_html_chapter;
+#[path = "migration_chapter.rs"]
+mod migration_chapter;
 #[path = "model_invariants.rs"]
 mod model_invariants;
 #[path = "namespace_projection.rs"]
