@@ -982,6 +982,30 @@
         ]
       ]
     },
+    "SharedViewField": {
+      "fields": [["name", "Text"], ["children", "List<U64>"]]
+    },
+    "SharedPresentationClass": {
+      "fields": [["schema", "U64"], ["name", "Text"], ["fallback", "FallbackRole"]]
+    },
+    "SharedViewRelation": {
+      "fields": [["schema", "U64"], ["kind", "Text"], ["target", "U64"]]
+    },
+    "SharedViewElement": {
+      "fields": [
+        ["schema", "U64"], ["kind", "U64"], ["source", "U64"],
+        ["start", "U64"], ["end", "U64"],
+        ["fields", "List<SharedViewField>"],
+        ["roles", "List<SharedPresentationClass>"],
+        ["relations", "List<SharedViewRelation>"]
+      ]
+    },
+    "SharedViewBundle": {
+      "fields": [
+        ["schemas", "List<SchemaRef>"], ["sources", "List<SourceRef>"],
+        ["elements", "List<SharedViewElement>"], ["roots", "List<U64>"]
+      ]
+    },
     "ViewBundle": {
       "fields": [
         [

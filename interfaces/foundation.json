@@ -2488,6 +2488,169 @@
         "Warning": []
       }
     },
+    "SharedPresentationClass": {
+      "constraints": [],
+      "record": [
+        [
+          "schema",
+          "U64"
+        ],
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "fallback",
+          {
+            "named": {
+              "name": "FallbackRole",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "SharedViewBundle": {
+      "constraints": [],
+      "record": [
+        [
+          "schemas",
+          {
+            "list": {
+              "named": {
+                "name": "SchemaRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "name": "SourceRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "elements",
+          {
+            "list": {
+              "named": {
+                "name": "SharedViewElement",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "roots",
+          {
+            "list": "U64"
+          }
+        ]
+      ]
+    },
+    "SharedViewElement": {
+      "constraints": [],
+      "record": [
+        [
+          "schema",
+          "U64"
+        ],
+        [
+          "kind",
+          "U64"
+        ],
+        [
+          "source",
+          "U64"
+        ],
+        [
+          "start",
+          "U64"
+        ],
+        [
+          "end",
+          "U64"
+        ],
+        [
+          "fields",
+          {
+            "list": {
+              "named": {
+                "name": "SharedViewField",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "roles",
+          {
+            "list": {
+              "named": {
+                "name": "SharedPresentationClass",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "relations",
+          {
+            "list": {
+              "named": {
+                "name": "SharedViewRelation",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "SharedViewField": {
+      "constraints": [],
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "children",
+          {
+            "list": "U64"
+          }
+        ]
+      ]
+    },
+    "SharedViewRelation": {
+      "constraints": [],
+      "record": [
+        [
+          "schema",
+          "U64"
+        ],
+        [
+          "kind",
+          "Text"
+        ],
+        [
+          "target",
+          "U64"
+        ]
+      ]
+    },
     "SourceBundle": {
       "constraints": [
         "source.bundle"

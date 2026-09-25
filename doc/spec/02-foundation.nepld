@@ -142,6 +142,10 @@ body
         nil
       cons paragraph
         cons "SyntaxBundleはsourceMapsを[所有/しょゆう]し、その[全端点/ぜんたんてん]を[同/おな]じbundleのsourcesで[解決/かいけつ]する。"
+        cons "SharedViewBundleはschemas・sources・elements・rootsの[順/じゅん]でViewBundleを[格納/かくのう]する。[局所表/きょくしょひょう]schemasはpackage・revision・digest、sourcesはSourceId・revision・digestの[辞書順/じしょじゅん]とし、[完全/かんぜん]identityの[重複/ちょうふく]と[未使用/みしよう]entryを[拒否/きょひ]する。"
+        cons "SharedViewElementはschema index・local kind・source index・start・end・fields・roles・relationsを[保持/ほじ]する。rolesとrelationsのschemaも[同/おな]じ[局所表/きょくしょひょう]を[参照/さんしょう]する。roots・children・relation targetは[元/もと]のViewRefのU64[値/ち]とし、[各列/かくれつ]の[順序/じゅんじょ]と[重複/ちょうふく]を[保持/ほじ]する。"
+        cons "[表/ひょう]のindexは[範囲内/はんいない]を[要求/ようきゅう]する。source[表/ひょう]は[識別子/しきべつし]だけを[保持/ほじ]し、[受信側/じゅしんがわ]の[宣言集合/せんげんしゅうごう]で[全/すべ]てのsnapshotを[解決/かいけつ]する。[復元後/ふくげんご]に[通常/つうじょう]のViewBundle[検査/けんさ]を[行/おこな]い、Tokenへの[接続時/せつぞくじ]にはheadとの[包含/ほうがん]とsource mappingの[検査/けんさ]を[行/おこな]う。"
+        cons "[局所表/きょくしょひょう]は[一/ひと]つのViewBundleに[属/ぞく]する。[他/ほか]のViewBundleの[追加/ついか]や[並替/ならびか]えによって、[局所表/きょくしょひょう]のindexは[変化/へんか]しない。"
         cons "foreignのmapはguest bundleに[局所/きょくしょ]であり、hostのtableで[不足/ふそく]を[補/おぎな]わない。"
         cons "map[列/れつ]は[宣言順/せんげんじゅん]を[保存/ほぞん]し、nodeの[再採番/さいさいばん]から[独立/どくりつ]させる。"
         cons "Tokenの[各/かく]viewとViewElementの[各/かく][子/こ]には、[直接包含/ちょくせつほうがん]か、[検査済/けんさず]みmapによる[包含/ほうがん]を[要求/ようきゅう]する。"
