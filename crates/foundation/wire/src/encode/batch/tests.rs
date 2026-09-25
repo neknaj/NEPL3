@@ -14,6 +14,64 @@ fn budget() -> Budget {
 }
 
 #[test]
+fn each_requested_kind_preserves_parent_and_selected_child_digest() -> Result<(), WireError> {
+    use alloc::{boxed::Box, string::String};
+    use nepl3_core::value::{Integer, Rational, Record, SchemaRef, Variant};
+    let schema = SchemaRef {
+        package: String::from("test"),
+        revision: 1,
+        digest: Digest([0; 32]),
+    };
+    let root = NdfValue::List(vec![
+        NdfValue::Unit,
+        NdfValue::Bool(true),
+        NdfValue::U64(19),
+        NdfValue::Integer(Integer::from(-7_i64)),
+        NdfValue::Rational(
+            Rational::from_canonical(Integer::from(1_i64), &[2])
+                .map_err(|_| WireError::InvalidType)?,
+        ),
+        NdfValue::Text(String::from("語句")),
+        NdfValue::Bytes(vec![0, 255]),
+        NdfValue::List(vec![NdfValue::Bool(false)]),
+        NdfValue::None,
+        NdfValue::Some(Box::new(NdfValue::U64(31))),
+        NdfValue::Record(Record {
+            schema: schema.clone(),
+            kind: String::from("Entry"),
+            fields: vec![NdfValue::Unit],
+        }),
+        NdfValue::Variant(Variant {
+            schema,
+            type_name: String::from("Choice"),
+            variant: String::from("Left"),
+            fields: vec![NdfValue::None],
+        }),
+    ]);
+    let NdfValue::List(children) = &root else {
+        return Err(WireError::InvalidType);
+    };
+    let root_hash = Digest::domain(b"root", &crate::encode(&root, &mut budget())?);
+    // Select each kind separately: siblings of absent kinds still contribute
+    // bytes to the parent, while only the chosen child starts its own hash.
+    for child in children {
+        let expected = Digest::domain(b"child", &crate::encode(child, &mut budget())?);
+        let inputs = [
+            CanonicalDigestInput {
+                domain: b"root",
+                value: &root,
+            },
+            CanonicalDigestInput {
+                domain: b"child",
+                value: child,
+            },
+        ];
+        assert_eq!(digests(&inputs, &mut budget())?, vec![root_hash, expected]);
+    }
+    Ok(())
+}
+
+#[test]
 fn index_sort_preserves_partial_runs_and_duplicate_order() -> Result<(), WireError> {
     for count in [0_usize, 1, 3, 7, 129, 255, 257] {
         let mut index: Vec<_> = (0..count)
@@ -23,6 +81,39 @@ fn index_sort_preserves_partial_runs_and_duplicate_order() -> Result<(), WireErr
         expected.sort_by_key(|entry| entry.0);
         sort_index(&mut index, &mut budget())?;
         assert_eq!(index, expected);
+    }
+    Ok(())
+}
+
+#[test]
+fn absent_scalar_kinds_do_not_pay_per_request_search_cost() -> Result<(), WireError> {
+    for count in [8, 64, 256] {
+        let requested = vec![NdfValue::Bool(true); count];
+        let mut previous = None;
+        for length in [1024, 2048] {
+            let root = NdfValue::List(vec![NdfValue::Unit; length]);
+            let mut inputs = vec![CanonicalDigestInput {
+                domain: b"root",
+                value: &root,
+            }];
+            inputs.extend(requested.iter().map(|value| CanonicalDigestInput {
+                domain: b"separate",
+                value,
+            }));
+            let mut measured = budget();
+            let hashes = digests(&inputs, &mut measured)?;
+            assert_eq!(
+                hashes[0],
+                Digest::domain(b"root", &crate::encode(&root, &mut budget())?)
+            );
+            if let Some(work) = previous {
+                // Both list lengths use the same CBOR header width. Each added
+                // Unit needs constant traversal/encoding/hash work; unrelated
+                // Bool requests must not add a logarithmic search per Unit.
+                assert!(measured.usage().work - work <= 10 * 1024);
+            }
+            previous = Some(measured.usage().work);
+        }
     }
     Ok(())
 }

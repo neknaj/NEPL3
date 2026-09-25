@@ -22,6 +22,7 @@ struct Batch<'a, 'v> {
     // Addresses identify live immutable references only within this call.
     // They never enter CBOR, hashes, schema data, or persistent cache state.
     index: Vec<(usize, usize)>,
+    requested_kinds: u16,
     states: Vec<State>,
     active: Vec<usize>,
     scopes: Vec<usize>,
@@ -32,6 +33,26 @@ struct Batch<'a, 'v> {
 }
 
 const CHUNK: usize = 1024;
+
+// A requested value can only match a node of the same immutable NDF variant.
+// This filter depends on logical input kinds, not allocation addresses. All
+// values still pass through emit's complete intrinsic validation and encoding.
+fn kind_bit(value: &NdfValue) -> u16 {
+    match value {
+        NdfValue::Unit => 1 << 0,
+        NdfValue::Bool(_) => 1 << 1,
+        NdfValue::U64(_) => 1 << 2,
+        NdfValue::Integer(_) => 1 << 3,
+        NdfValue::Rational(_) => 1 << 4,
+        NdfValue::Text(_) => 1 << 5,
+        NdfValue::Bytes(_) => 1 << 6,
+        NdfValue::List(_) => 1 << 7,
+        NdfValue::None => 1 << 8,
+        NdfValue::Some(_) => 1 << 9,
+        NdfValue::Record(_) => 1 << 10,
+        NdfValue::Variant(_) => 1 << 11,
+    }
+}
 
 impl Batch<'_, '_> {
     fn flush(&mut self) -> Result<(), WireError> {
@@ -119,6 +140,10 @@ fn sort_index(index: &mut Vec<(usize, usize)>, b: &mut Budget) -> Result<(), Wir
 
 impl Sink for Batch<'_, '_> {
     fn enter(&mut self, value: &NdfValue, b: &mut Budget) -> Result<bool, WireError> {
+        b.charge(Resource::Work, 1)?;
+        if self.requested_kinds & kind_bit(value) == 0 {
+            return Ok(false);
+        }
         let address = core::ptr::from_ref(value).addr();
         let mut position = bound(&self.index, address, b)?;
         let mut count = 0;
@@ -203,6 +228,7 @@ pub(crate) fn digests(
     let mut batch = Batch {
         inputs,
         index: storage(count, b)?,
+        requested_kinds: 0,
         states: storage(count, b)?,
         active: storage(count, b)?,
         scopes: storage(count, b)?,
@@ -210,10 +236,11 @@ pub(crate) fn digests(
     };
     let mut result = storage(count, b)?;
     for (request, input) in inputs.iter().enumerate() {
-        b.charge(Resource::Work, 1)?;
+        b.charge(Resource::Work, 2)?;
         b.charge(Resource::OutputBytes, 32)?;
         let address = core::ptr::from_ref(input.value).addr();
         batch.index.push((address, request));
+        batch.requested_kinds |= kind_bit(input.value);
         batch.states.push(State {
             hash: None,
             digest: None,

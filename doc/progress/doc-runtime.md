@@ -149,6 +149,18 @@ fresh admissionでWork・Allocation・Source・Depthの上限と1不足を検査
 Doc coreのnative・WASI各51件、独立レビューのportable・prepare・capture関連32件が
 成功した。clippy、thumbv6m向けcompileも成功した。
 
+batch digestは要求されたNDF variantを保持し、対象外variantのnodeでaddress索引検索を
+省く。全nodeの符号化・深度・Nodes課金と親hashへのbyte入力は維持する。
+variant集合と判定はWorkへ計上し、allocatorの配置から独立したUsageを保持する。
+第03章の内容検査が成功し、投影は320,694,930から313,855,198 Work、
+単独digest処理は118,353,283から111,513,551 Workとなった。削減量は6,839,732である。
+単独符号化の102,601,505 Workは維持した。通常page予算への適合は継続課題である。
+12種のvariantそれぞれを選択して親・子のdigestを照合し、対象外scalarの処理費用が
+要求数の増加に伴う検索費用を含まないことを増大入力で確認した。
+wire全体はnative・WASI各95件、増大入力試験の追加後はbatch各12件が成功した。
+独立レビューは初回11件と追加1件を実行した。clippy、repository、fmt、diff検査と
+thumbv6m向けcompileも成功した。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは
