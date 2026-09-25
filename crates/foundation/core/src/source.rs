@@ -6,10 +6,14 @@ use alloc::sync::Arc;
 use alloc::{string::String, vec::Vec};
 #[cfg(target_has_atomic = "ptr")]
 type SnapshotStorage = alloc::sync::Arc<SnapshotData>;
+#[cfg(target_has_atomic = "ptr")]
+type IdentityStorage = alloc::sync::Arc<SnapshotId>;
 // Keep alloc-only targets without pointer atomics supported, and retain their
 // Send/Sync properties. Those targets keep the original owned-copy behavior.
 #[cfg(not(target_has_atomic = "ptr"))]
 type SnapshotStorage = SnapshotData;
+#[cfg(not(target_has_atomic = "ptr"))]
+type IdentityStorage = SnapshotId;
 use sha2::{Digest as _, Sha256};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -48,6 +52,26 @@ pub struct SnapshotId {
     pub source: SourceId,
     pub revision: u64,
     pub digest: Digest,
+}
+impl SnapshotId {
+    /// Compare complete immutable identities. An identical live value needs
+    /// only one comparison; independent storage retains the full byte bound.
+    /// This establishes identity order and grants no source admission or scope.
+    pub fn compare_with_budget(
+        &self,
+        other: &Self,
+        budget: &mut Budget,
+    ) -> Result<core::cmp::Ordering, StopReason> {
+        budget.charge(Resource::Work, 1)?;
+        if core::ptr::eq(self, other) {
+            return Ok(core::cmp::Ordering::Equal);
+        }
+        budget.charge(
+            Resource::Work,
+            self.source.0.len().min(other.source.0.len()) as u64 + 40,
+        )?;
+        Ok(self.cmp(other))
+    }
 }
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct SourceRef {
@@ -88,7 +112,7 @@ pub struct SourceSnapshot {
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct SnapshotData {
-    id: SnapshotId,
+    id: IdentityStorage,
     uri: String,
     text: String,
 }
@@ -143,10 +167,14 @@ impl SourceSnapshot {
         #[cfg(target_has_atomic = "ptr")]
         budget.charge(
             Resource::AllocationUnits,
-            (core::mem::size_of::<SnapshotData>() + 2 * core::mem::size_of::<usize>()) as u64,
+            (core::mem::size_of::<SnapshotData>()
+                + core::mem::size_of::<SnapshotId>()
+                + 4 * core::mem::size_of::<usize>()) as u64,
         )?;
         #[cfg(not(target_has_atomic = "ptr"))]
         budget.poll()?;
+        #[cfg(target_has_atomic = "ptr")]
+        let id = IdentityStorage::new(id);
         let data = SnapshotData { id, uri, text };
         #[cfg(target_has_atomic = "ptr")]
         let storage = SnapshotStorage::new(data);
@@ -155,7 +183,7 @@ impl SourceSnapshot {
         Ok(Self { storage })
     }
     pub fn id(&self) -> SnapshotId {
-        self.storage.id.clone()
+        self.identity().clone()
     }
     pub fn uri(&self) -> &str {
         &self.storage.uri
@@ -267,9 +295,13 @@ impl SourceSnapshot {
         budget: &mut Budget,
     ) -> Result<Span, SourceError> {
         self.check_range(start, end)?;
+        #[cfg(target_has_atomic = "ptr")]
+        let identity_bytes = 0;
+        #[cfg(not(target_has_atomic = "ptr"))]
+        let identity_bytes = self.storage.id.source.0.len() as u64;
         budget.charge(
             Resource::AllocationUnits,
-            core::mem::size_of::<Span>() as u64 + self.storage.id.source.0.len() as u64,
+            core::mem::size_of::<Span>() as u64 + identity_bytes,
         )?;
         self.span(start, end)
     }
@@ -326,16 +358,30 @@ fn valid_locator(uri: &str) -> bool {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Span {
-    snapshot: SnapshotId,
+    snapshot: IdentityStorage,
     start: u64,
     end: u64,
 }
 impl Span {
+    /// Copy only the immutable span storage. This is not a cost bound for
+    /// comparing an independently supplied identity or source name.
+    pub fn clone_with_budget(&self, budget: &mut Budget) -> Result<Self, StopReason> {
+        #[cfg(target_has_atomic = "ptr")]
+        let bytes = 0u64;
+        #[cfg(not(target_has_atomic = "ptr"))]
+        let bytes = self.snapshot.source.0.len() as u64;
+        budget.charge(Resource::Work, bytes.saturating_add(1))?;
+        budget.charge(
+            Resource::AllocationUnits,
+            bytes.saturating_add(core::mem::size_of::<Self>() as u64),
+        )?;
+        Ok(self.clone())
+    }
     pub fn snapshot_ref(&self) -> &SnapshotId {
         &self.snapshot
     }
     pub fn snapshot(&self) -> SnapshotId {
-        self.snapshot.clone()
+        self.snapshot_ref().clone()
     }
     pub fn start(&self) -> u64 {
         self.start
@@ -403,7 +449,7 @@ impl LineIndex {
             end: bytes.len(),
         });
         Ok(Self {
-            snapshot: source.storage.id.clone(),
+            snapshot: source.identity().clone(),
             lines,
         })
     }
@@ -472,7 +518,7 @@ impl LineIndex {
         }
     }
     fn verify(&self, source: &SourceSnapshot) -> Result<(), SourceError> {
-        if self.snapshot == source.storage.id {
+        if &self.snapshot == source.identity() {
             Ok(())
         } else {
             Err(SourceError::SnapshotMismatch)

@@ -676,11 +676,7 @@ fn snapshot_dag<'a>(
             let mut found = None;
             if let Some(index) = recent[slot] {
                 let prior = nodes[index];
-                budget.charge(
-                    Resource::Work,
-                    prior.source.0.len().min(identity.source.0.len()) as u64 + 41,
-                )?;
-                if prior == identity {
+                if prior.compare_with_budget(identity, budget)? == core::cmp::Ordering::Equal {
                     found = Some(index);
                 }
             }
@@ -689,11 +685,7 @@ fn snapshot_dag<'a>(
                 && let Some(at) = ordered_hint
             {
                 let prior = nodes[ordered[at]];
-                budget.charge(
-                    Resource::Work,
-                    prior.source.0.len().min(identity.source.0.len()) as u64 + 41,
-                )?;
-                let neighbor = match prior.cmp(identity) {
+                let neighbor = match prior.compare_with_budget(identity, budget)? {
                     core::cmp::Ordering::Equal => {
                         found = Some(ordered[at]);
                         None
@@ -712,11 +704,7 @@ fn snapshot_dag<'a>(
                 // the complete snapshot identity still decides every hit.
                 if let Some(next) = neighbor {
                     let prior = nodes[ordered[next]];
-                    budget.charge(
-                        Resource::Work,
-                        prior.source.0.len().min(identity.source.0.len()) as u64 + 41,
-                    )?;
-                    match prior.cmp(identity) {
+                    match prior.compare_with_budget(identity, budget)? {
                         core::cmp::Ordering::Equal => {
                             found = Some(ordered[next]);
                             ordered_hint = Some(next);
@@ -730,11 +718,7 @@ fn snapshot_dag<'a>(
                 let mid = low + (high - low) / 2;
                 let index = ordered[mid];
                 let prior = nodes[index];
-                budget.charge(
-                    Resource::Work,
-                    prior.source.0.len().min(identity.source.0.len()) as u64 + 41,
-                )?;
-                match prior.cmp(identity) {
+                match prior.compare_with_budget(identity, budget)? {
                     core::cmp::Ordering::Equal => {
                         found = Some(index);
                         ordered_hint = Some(mid);
