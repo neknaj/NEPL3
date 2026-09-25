@@ -76,6 +76,18 @@ thumbv6mはcompileを確認した。実機での実行は未検証である。
 第03章のDiscoveryは127,522,196から101,233,571 Work、投影全体は374,091,577から
 347,802,952 Workへ減少した。内容検査は成功し、通常予算への適合は継続課題である。
 
+DocとSentenceのsource宣言検査は、SourceStoreの重複拒否付き挿入APIを共有する。
+source admission後にsource/revisionを一度検索し、占有済みキーを拒否する。
+別revisionの受理、宣言順序、停止時の非変更を維持する。第03章の収集段階は
+101,233,571から99,889,889 Work、投影全体は347,802,952から346,397,720 Workへ
+減少した。lowerは85,244,365から85,182,815 Workとなった。通常の投影Work上限
+100,000,000への適合は継続課題である。
+
+core・Doc core・Sentence coreのnativeとWASI試験は各267件、独立レビューの局所試験は
+22件成功した。第03章の内容検査、clippy、repository検査、fmt、diff検査を実施し、
+thumbv6mのcompileも確認した。実機試験と生成文書全体のstaleness検査はこの変更の
+確認範囲に含めていない。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

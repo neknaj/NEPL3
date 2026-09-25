@@ -958,7 +958,7 @@ impl SourceStore {
     /// occupied key returns false without comparing or replacing its contents.
     /// Syntax declaration tables reject every repeated key, including equal
     /// snapshots. Callers retain their operation-wide source admission checks.
-    pub(crate) fn insert_distinct_ref_with_budget(
+    pub fn insert_distinct_ref_with_budget(
         &mut self,
         snapshot: &SourceSnapshot,
         budget: &mut Budget,

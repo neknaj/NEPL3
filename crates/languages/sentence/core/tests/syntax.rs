@@ -215,6 +215,50 @@ fn missing_sources_stale_snapshots_and_duplicate_revisions_are_rejected() -> Res
 }
 
 #[test]
+fn source_declarations_preserve_order_and_reject_repeated_revision() -> Result<(), String> {
+    let r = registry()?;
+    let mut syntax = fixture(&r)?;
+    let first = syntax.sources[0].clone();
+    let next = SourceSnapshot::new(
+        first.identity().source.clone(),
+        first.identity().revision + 1,
+        "memory:next".into(),
+        b"next revision".to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    let other = SourceSnapshot::new(
+        SourceId("別".into()),
+        0,
+        "memory:other".into(),
+        b"other source".to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    let sources = [first, next, other];
+    // Logical keys permit different revisions; storage order is source order.
+    for order in [
+        [0, 1, 2],
+        [0, 2, 1],
+        [1, 0, 2],
+        [1, 2, 0],
+        [2, 0, 1],
+        [2, 1, 0],
+    ] {
+        syntax.sources = order.iter().map(|i| sources[*i].clone()).collect();
+        let original = syntax.sources.clone();
+        checked(&syntax, &r).map_err(err)?;
+        assert_eq!(syntax.sources, original);
+        for repeated in &sources {
+            syntax.sources.push(repeated.clone());
+            assert_eq!(checked(&syntax, &r), Err(Error::DuplicateSource));
+            syntax.sources.pop();
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn head_cover_and_view_owner_are_independent_rejected_boundaries() -> Result<(), String> {
     let r = registry()?;
     let v = fixture(&r)?;

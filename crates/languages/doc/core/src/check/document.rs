@@ -100,13 +100,9 @@ impl DocumentSyntax {
         let mut store = SourceStore::default();
         for source in &self.sources {
             admission.admit_existing(source, b)?;
-            if store
-                .get_revision_with_budget(&source.identity().source, source.identity().revision, b)?
-                .is_some()
-            {
+            if !store.insert_distinct_ref_with_budget(source, b)? {
                 return Err(StructureError::DuplicateSource);
             }
-            store.insert_with_budget(source.clone_with_budget(b)?, b)?;
         }
         OriginGraph::validate_origins(&self.origins, &store, b)?;
         let maps =
