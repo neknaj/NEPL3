@@ -236,12 +236,17 @@ impl<'a> ForeignCapture<'a> {
             return Err(SyntaxError::Reference);
         };
         if self.prepared.is_none() {
+            if !registry.is_finalized() {
+                return Err(crate::schema::SchemaError::Unfinalized.into());
+            }
+            // The checked owner already certifies these immutable source,
+            // origin and mapping tables. Copying preserves their geometry and
+            // relative depth. Guest contents and admission remain per capture.
             let provenance = OwnerProvenance::capture(owner, b)?;
-            let depth = provenance.validate(registry, b, admission)?.depth;
             self.prepared = Some(PreparedOwner {
                 provenance,
                 registry,
-                depth,
+                depth: self.owner.owner_depth,
             });
         }
         let prepared = self.prepared.as_mut().ok_or(SyntaxError::Reference)?;

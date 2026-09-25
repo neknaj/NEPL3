@@ -288,7 +288,7 @@ impl SourceMap {
     ) -> Result<u64, OriginError> {
         Self::checked_mapping_parts(mappings, &[], sources, budget).map(|(_, depth)| depth)
     }
-    fn checked_mapping_parts<'a>(
+    pub(crate) fn checked_mapping_parts<'a>(
         mappings: &'a [Mapping],
         additional: &'a [Mapping],
         sources: &SourceStore,

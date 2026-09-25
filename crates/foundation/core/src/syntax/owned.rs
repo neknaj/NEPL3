@@ -13,6 +13,7 @@ use super::*;
 pub struct OwnedValidatedSyntaxBundle<'r> {
     bundle: SyntaxBundle,
     registry: &'r SchemaRegistry,
+    owner_depth: u64,
 }
 
 /// Validation failure retains the exact owned graph, including partial source
@@ -35,10 +36,14 @@ impl SyntaxBundle {
         admission: &mut SourceAdmission,
     ) -> Result<OwnedValidatedSyntaxBundle<'r>, SyntaxValidationFailure> {
         match self.validate_with_sources(registry, budget, admission) {
-            Ok(_) => Ok(OwnedValidatedSyntaxBundle {
-                bundle: self,
-                registry,
-            }),
+            Ok(proof) => {
+                let owner_depth = proof.owner_depth;
+                Ok(OwnedValidatedSyntaxBundle {
+                    bundle: self,
+                    registry,
+                    owner_depth,
+                })
+            }
             Err(error) => Err(SyntaxValidationFailure {
                 error,
                 bundle: self,
@@ -52,6 +57,7 @@ impl OwnedValidatedSyntaxBundle<'_> {
     pub fn as_validated(&self) -> ValidatedSyntaxBundle<'_> {
         ValidatedSyntaxBundle {
             bundle: &self.bundle,
+            owner_depth: self.owner_depth,
         }
     }
 

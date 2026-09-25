@@ -168,6 +168,9 @@ impl From<SchemaError> for SyntaxError {
 #[derive(Debug)]
 pub struct ValidatedSyntaxBundle<'a> {
     bundle: &'a SyntaxBundle,
+    // Root owner tables are registry-independent. Retain their exact relative
+    // graph depth for capture into an independently budgeted operation.
+    owner_depth: u64,
 }
 impl<'a> ValidatedSyntaxBundle<'a> {
     pub fn bundle(&self) -> &'a SyntaxBundle {
@@ -199,6 +202,7 @@ impl SyntaxBundle {
             core::mem::size_of::<(&Self, u64)>() as u64,
         )?;
         let mut bundles = alloc::vec![(self, 1u64)];
+        let mut owner_depth = 0;
         while let Some((bundle, depth)) = bundles.pop() {
             budget.observe_depth(depth)?;
             bundle.node(bundle.root)?;
@@ -211,7 +215,7 @@ impl SyntaxBundle {
             }
             // The table is borrowed. OriginGraph meters its validation scratch
             // storage; there is no additional owned Origin table to charge.
-            OriginGraph::validate_origins(&bundle.origins, &sources, budget)?;
+            let origins_depth = OriginGraph::validation_depth(&bundle.origins, &sources, budget)?;
             for (index, environment) in bundle.environments.iter().enumerate() {
                 if bundle.environments[..index]
                     .iter()
@@ -221,8 +225,12 @@ impl SyntaxBundle {
                 }
                 foreign::environment(&environment.value, bundle.origins.len(), registry, budget)?;
             }
-            let maps = SourceMap::validate_mappings(&bundle.source_maps, &sources, budget)?
-                .bind_sources(&sources, budget)?;
+            let (maps, maps_depth) =
+                SourceMap::checked_mapping_parts(&bundle.source_maps, &[], &sources, budget)?;
+            if core::ptr::eq(bundle, self) {
+                owner_depth = origins_depth.max(maps_depth);
+            }
+            let maps = maps.bind_sources(&sources, budget)?;
             for token in &bundle.tokens {
                 token.validate_with_maps(&sources, registry, &maps, budget)?;
             }
@@ -302,7 +310,10 @@ impl SyntaxBundle {
                 }
             }
         }
-        Ok(ValidatedSyntaxBundle { bundle: self })
+        Ok(ValidatedSyntaxBundle {
+            bundle: self,
+            owner_depth,
+        })
     }
     pub fn node(&self, reference: NodeRef) -> Result<&SyntaxNode, SyntaxError> {
         usize::try_from(reference.0)

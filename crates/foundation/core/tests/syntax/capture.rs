@@ -1,5 +1,162 @@
 use super::*;
 
+#[test]
+fn first_capture_reuses_checked_owner_tables_with_exact_relative_depth() -> Result<(), SyntaxError>
+{
+    let (registry, schema) = registry()?;
+    for mapping in [false, true] {
+        let mut input = owner(&schema)?;
+        if mapping {
+            let source = SourceSnapshot::new(
+                SourceId("chain".into()),
+                0,
+                "memory:chain".into(),
+                b"xxxxxxxxx".to_vec(),
+                &mut budget(),
+            )?;
+            for index in 0..8 {
+                input.source_maps.push(Mapping {
+                    source: source.span(index, index + 1)?,
+                    target: source.span(index + 1, index + 2)?,
+                    kind: MappingKind::Exact,
+                });
+            }
+            input.sources.push(source);
+        } else {
+            let mut parent = OriginId(0);
+            for _ in 0..7 {
+                let next = OriginId(input.origins.len() as u64);
+                input.origins.push(Origin::Composite(vec![parent]));
+                parent = next;
+            }
+        }
+        let owned = input
+            .clone()
+            .try_into_validated(&registry, &mut budget(), &mut SourceAdmission::default())
+            .map_err(|failure| failure.error)?;
+        for owned_route in [false, true] {
+            let mut preparation = budget();
+            preparation.observe_depth(99)?;
+            let checked = if owned_route {
+                owned.as_validated()
+            } else {
+                preparation.with_depth_at_least(2, |b| input.validate(&registry, b))?
+            };
+            for caller in [0, 3] {
+                for shortage in [0, 1] {
+                    let mut b = Budget::new(Limits {
+                        depth: caller + 9 - shortage,
+                        ..budget().limits()
+                    });
+                    let result = b.with_depth_at_least(caller, |b| {
+                        ForeignCapture::new(&checked).capture_at(
+                            NodeRef(0),
+                            0,
+                            &registry,
+                            b,
+                            &mut SourceAdmission::default(),
+                        )
+                    });
+                    if shortage == 0 {
+                        result?;
+                        assert_eq!(b.usage().depth, caller + 9);
+                    } else {
+                        assert_eq!(result, Err(SyntaxError::Stopped(StopReason::DepthLimit)));
+                    }
+                    assert_eq!(b.current_depth(), 0);
+                }
+            }
+            let unfinalized = SchemaRegistry::default();
+            assert_eq!(
+                ForeignCapture::new(&checked).capture_at(
+                    NodeRef(0),
+                    0,
+                    &unfinalized,
+                    &mut budget(),
+                    &mut SourceAdmission::default()
+                ),
+                Err(SyntaxError::Schema(SchemaError::Unfinalized))
+            );
+            let mut denied = Budget::new(Limits {
+                source_bytes: 0,
+                ..budget().limits()
+            });
+            assert_eq!(
+                ForeignCapture::new(&checked).capture_at(
+                    NodeRef(0),
+                    0,
+                    &registry,
+                    &mut denied,
+                    &mut SourceAdmission::default()
+                ),
+                Err(SyntaxError::Stopped(StopReason::SourceLimit))
+            );
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn first_capture_avoids_owner_revalidation_work() -> Result<(), SyntaxError> {
+    let (registry, schema) = registry()?;
+    let mut input = owner(&schema)?;
+    for _ in 0..128 {
+        input.origins.push(Origin::Synthetic {
+            reason: "validated owner".into(),
+            anchor: None,
+        });
+    }
+    let checked = input.validate(&registry, &mut budget())?;
+    let mut full = budget();
+    let expected = ForeignClosure::capture_at(
+        &checked,
+        NodeRef(0),
+        0,
+        &registry,
+        &mut full,
+        &mut SourceAdmission::default(),
+    )?;
+    let mut reused = budget();
+    let actual = ForeignCapture::new(&checked).capture_at(
+        NodeRef(0),
+        0,
+        &registry,
+        &mut reused,
+        &mut SourceAdmission::default(),
+    )?;
+    assert_eq!(actual, expected);
+    assert_eq!(reused.usage().source_bytes, 3);
+    #[cfg(target_has_atomic = "ptr")]
+    {
+        assert!(reused.usage().work < full.usage().work);
+        assert!(reused.usage().allocation_units < full.usage().allocation_units);
+        let mut limited = Budget::new(Limits {
+            work: reused.usage().work,
+            ..budget().limits()
+        });
+        ForeignCapture::new(&checked).capture_at(
+            NodeRef(0),
+            0,
+            &registry,
+            &mut limited,
+            &mut SourceAdmission::default(),
+        )?;
+        let mut limited = Budget::new(limited.limits());
+        assert_eq!(
+            ForeignClosure::capture_at(
+                &checked,
+                NodeRef(0),
+                0,
+                &registry,
+                &mut limited,
+                &mut SourceAdmission::default()
+            ),
+            Err(SyntaxError::Stopped(StopReason::WorkLimit))
+        );
+    }
+    Ok(())
+}
+
 fn owner(schema: &SchemaRef) -> Result<SyntaxBundle, SyntaxError> {
     let source = SourceSnapshot::new(
         SourceId("owner".into()),

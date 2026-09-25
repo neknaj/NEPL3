@@ -546,6 +546,19 @@ canonical Markdown生成も第03章のlowerで同じ停止に達した。部分�
 engineのnative・WASI各75試験、Doc export各8試験が成功した。独立レビューはengine43試験と
 Doc proof再利用1試験に成功し、追加指摘はなかった。Clippy、repository check、fmt、diff検査も成功した。
 
+初回ForeignCaptureでも、検証済み構文が保持するownerのOrigin・SourceMap検証結果を再利用した。
+相対深度を構文の借用proofと所有proofへ保持し、capture先の現在深度に対して再確認する。
+source admission、guestとenvironmentの検証、registry変更時の再検証は維持する。
+原子的参照共有を持たないtargetでは、複製後の完全検証を維持する。
+新しい境界試験はOrigin・SourceMapの深度、所有proofへの移動、source上限、
+未確定registryの拒否、Work上限と内容保持を確認する。
+
+第03章のcorpus測定ではlowerのWorkが112,724,216から112,591,100へ減少した。
+AllocationUnitsは98,454,201から98,364,072へ減少した。parseとMarkdown出力の使用量は同一である。
+今回削減したowner再検証の費用は小さく、lowerの通常上限100,000,000への適合は継続課題である。
+coreはnative・WASI各157試験に成功し、独立レビューはsyntax全30試験に成功した。
+ARMv6-Mはcompileを確認した。Clippy、repository check、fmt、diff検査は成功した。
+
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
