@@ -271,6 +271,15 @@ projectionの制約を検査する。固定された歴史Markdown入力を保�
 独立レビューでもnative10件・Python4件を実行し、すべて成功した。固定依存環境の
 basedpyrightは警告・エラー0件で、clippy・repository・fmt・diff検査も成功した。
 
+公開例の`line-break.nepld`と`linear-combination.nepld`を独立Sentence境界へ移行し、
+対応するHTML試験を合成済みnamespaceを扱うproduction exportへ接続した。
+線型結合の本文・Ruby・Annoを保持し、2件の節参照はDoc Inlineに所属させる。
+型付きDoc上で4節の順序、10組の日英variant、表のheaderと3行・各3セルの所属を確認する。
+Text内のLFと明示breakの区別、native/owned解析木の一致も維持する。
+関連3試験はnative・WASIとも成功し、独立レビューでもnative3件が成功した。
+線型結合例の`doc-html export`も通常予算で成功した。clippy・repository・fmt・diff検査は成功した。
+他のlocal-only HTML試験とページ集合の試験入力は、引き続き移行対象である。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

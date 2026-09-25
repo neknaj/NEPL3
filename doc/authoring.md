@@ -12,6 +12,13 @@ Sentence literalは、Text・Ruby・Annoからなる文章を引用符内に記�
 
 一つのliteralは一つのSentenceを表す。本文では、著者が対応させる文ごとにliteralを記述する。見出しや表のセルでは、短い語句も一つのSentenceとして扱える。Sentenceの境界は著者が指定し、literal内の句点は本文の一部として扱う。
 
+Docの見出し・本文・表のセル・variantから独立Sentenceへ入る位置には、Doc側の
+`sentence`を記述する。literalを使う場合は`sentence "本文"`、前置構築を使う場合は
+`sentence sentence cons text "本文" nil`となる。前者の`sentence`は言語境界、後者の
+二つ目の`sentence`はSentence言語のconstructorである。
+Sentence内からDocのラベルや参照を使用する場合は、`doc ref target text "参照名"`などの
+Doc Inline境界を明示する。以下のSentence単体の例は、その境界内の表記を示す。
+
 literalはソース上の一行に記述する。引用符は `\"`、バックスラッシュは `\\`、文字としての注釈区切りは `\[` などでescapeする。`\n`はTextのデータとしてLFを保持するescapeである。
 
 文書構造として指定する改行には、前置構築の[`break`](#明示的な改行はbreak)を使う。画面幅に応じた折返しは表示側が処理する。長い文も著者が指定した対応単位を保持し、編集上の都合に応じて前置構築を選択する。
@@ -60,8 +67,8 @@ sentence
 
 ```text
 parallel
-  cons variant ja "これは{[文書/ぶんしょ]/document}の[例/れい]です。"
-  cons variant en "This is an example of a document."
+  cons variant ja sentence "これは{[文書/ぶんしょ]/document}の[例/れい]です。"
+  cons variant en sentence "This is an example of a document."
   nil
 ```
 

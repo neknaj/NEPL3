@@ -41,18 +41,106 @@ fn html(source: &str, options: RenderOptions) -> Result<String, String> {
 }
 #[test]
 fn annotated_linear_combination_document_reaches_real_html() -> Result<(), String> {
-    let out = html(
-        include_str!("../../../examples/document/linear-combination.nepld"),
-        RenderOptions {
-            parallel: ParallelMode::Rows,
-        },
-    )?;
+    use nepl3_doc_core::model::{Alignment, DocKind, DocRoot};
+    let compiled = compiled()?;
+    let source = include_str!("../../../examples/document/linear-combination.nepld");
+    with_input_route(true, &compiled, source, "Article", |tree, profile, b, a| {
+        let store = SourceStore::default();
+        let mut codec = FoundationCodec::new(profile.registry(), &store, a).map_err(err)?;
+        let document = lower::document(
+            tree.syntax(),
+            &compiled.doc.package.schema,
+            Category::Article,
+            profile.registry(),
+            b,
+            &mut codec,
+        )
+        .map_err(err)?;
+        let kind = |id: u64| &document.value.nodes[id as usize].kind;
+        let DocRoot::Article(root) = document.value.root else {
+            return Err("article root".into());
+        };
+        let DocKind::Article { body, .. } = kind(root.0) else {
+            return Err("article".into());
+        };
+        let DocKind::Body { blocks } = kind(body.0) else {
+            return Err("article body".into());
+        };
+        assert_eq!(blocks.len(), 4);
+        for (block, (expected_id, sentence_pairs, has_table)) in blocks.iter().zip([
+            ("linear_combination", 2, false),
+            ("span", 2, false),
+            ("plane", 3, true),
+            ("independence", 3, false),
+        ]) {
+            let DocKind::Section { id, body, .. } = kind(block.0) else {
+                return Err("section".into());
+            };
+            assert_eq!(id, expected_id);
+            let DocKind::Body { blocks } = kind(body.0) else {
+                return Err("section body".into());
+            };
+            assert_eq!(blocks.len(), if has_table { 2 } else { 1 });
+            let DocKind::Paragraph { items } = kind(blocks[0].0) else {
+                return Err("paragraph".into());
+            };
+            assert_eq!(items.len(), sentence_pairs);
+            for item in items {
+                let DocKind::Parallel { variants } = kind(item.0) else {
+                    return Err("parallel".into());
+                };
+                assert_eq!(variants.len(), 2);
+                for (variant, expected) in variants.iter().zip(["ja", "en"]) {
+                    let DocKind::Variant { language, sentence } = kind(variant.0) else {
+                        return Err("variant".into());
+                    };
+                    assert_eq!(language, expected);
+                    assert!(matches!(kind(sentence.0), DocKind::Sentence { .. }));
+                }
+            }
+            if has_table {
+                let DocKind::Table {
+                    columns,
+                    header,
+                    rows,
+                } = kind(blocks[1].0)
+                else {
+                    return Err("table".into());
+                };
+                assert_eq!(
+                    columns,
+                    &[Alignment::Left, Alignment::Left, Alignment::Right]
+                );
+                assert_eq!(rows.len(), 3);
+                for row in
+                    std::iter::once(header.ok_or("table header")?).chain(rows.iter().copied())
+                {
+                    let DocKind::Row { cells } = kind(row.0) else {
+                        return Err("row".into());
+                    };
+                    assert_eq!(cells.len(), 3);
+                    for cell in cells {
+                        assert!(matches!(kind(cell.0), DocKind::Sentence { .. }));
+                    }
+                }
+            }
+        }
+        Ok(())
+    })?;
+    let out = nepl3_tools::doc::export::generate(&compiled, source)?.html;
     assert_eq!(out.matches("<section ").count(), 4);
     assert_eq!(out.matches("<table").count(), 1);
     assert_eq!(out.matches("class=\"nepl-parallel").count(), 10);
     assert!(out.contains("linear combination"));
     assert!(out.contains("class=\"nepl-ruby\""));
     assert!(out.contains("class=\"nepl-anno\""));
+    // Both language variants refer to the same declared section through Doc Inline.
+    assert_eq!(
+        out.matches("href=\"#n-6c696e6561725f636f6d62696e6174696f6e\"")
+            .count(),
+        2
+    );
+    assert!(out.contains("<section id=\"n-6c696e6561725f636f6d62696e6174696f6e\">"));
     assert!(!out.contains("<script"));
     Ok(())
 }
@@ -185,20 +273,18 @@ fn article_html_preserves_nested_paragraph_order_without_nested_p() -> Result<()
 
 #[test]
 fn explicit_break_renders_br_without_reinterpreting_text_line_feeds() -> Result<(), String> {
-    let out = html(
+    let compiled = compiled()?;
+    let out = nepl3_tools::doc::export::generate(
+        &compiled,
         include_str!("../../../examples/document/line-break.nepld"),
-        RenderOptions {
-            parallel: ParallelMode::Rows,
-        },
-    )?;
+    )?
+    .html;
     assert_eq!(out.matches("<br>").count(), 2);
     assert!(out.contains("This sentence continues<br>on the next line."));
-    let out = html(
-        r#"article en "Title" body cons paragraph cons sentence cons text "a\nb" cons break cons text "c" nil nil nil"#,
-        RenderOptions {
-            parallel: ParallelMode::Rows,
-        },
-    )?;
+    let out = nepl3_tools::doc::export::generate(
+        &compiled,
+        r#"article en sentence "Title" body cons paragraph cons sentence sentence cons text "a\nb" cons break cons text "c" nil nil nil"#,
+    )?.html;
     assert!(out.contains("a\nb<br>c"));
     assert_eq!(out.matches("<br>").count(), 1);
     Ok(())

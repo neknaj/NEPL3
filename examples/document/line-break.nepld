@@ -1,14 +1,14 @@
-article ja "[明示的/めいじてき]な[改行/かいぎょう]"
+article ja sentence "[明示的/めいじてき]な[改行/かいぎょう]"
 body
   cons paragraph
     cons parallel
-      cons variant ja sentence
+      cons variant ja sentence sentence
         cons text "ここで"
         cons break
         cons ruby text "改行" text "かいぎょう"
         cons text "します。"
         nil
-      cons variant en sentence
+      cons variant en sentence sentence
         cons text "This sentence continues"
         cons break
         cons text "on the next line."
