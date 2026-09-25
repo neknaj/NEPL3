@@ -837,6 +837,89 @@ fn external_extensions_chapter_preserves_layers_and_separation_conditions() -> R
     Ok(())
 }
 
+#[test]
+fn html_delivery_chapter_preserves_sections_sentences_and_annotation() -> Result<(), String> {
+    use nepl3_doc_core::model::DocKind;
+    let c = compiled()?;
+    let set = PageSet {
+        pages: vec![page(
+            &c,
+            "html-delivery",
+            "doc/spec/18-html-delivery.nepld",
+            "doc/spec/18-html-delivery.md",
+            include_str!("../../../doc/spec/18-html-delivery.nepld"),
+        )?],
+        files: vec![],
+    };
+    let document = &set.pages[0].document.value;
+    let node = |id: u64| -> Result<&DocKind, String> {
+        document
+            .nodes
+            .get(usize::try_from(id).map_err(err)?)
+            .map(|node| &node.kind)
+            .ok_or_else(|| "document node".into())
+    };
+    let nepl3_doc_core::model::DocRoot::Article(root) = document.root else {
+        return Err("article root category".into());
+    };
+    let DocKind::Article { body, .. } = node(root.0)? else {
+        return Err("article root".into());
+    };
+    let DocKind::Body { blocks } = node(body.0)? else {
+        return Err("article body".into());
+    };
+    let mut sections = Vec::new();
+    let mut paragraph_sizes = Vec::new();
+    for block in blocks {
+        match node(block.0)? {
+            DocKind::Paragraph { items } => paragraph_sizes.push(items.len()),
+            DocKind::Section { id, body, .. } => {
+                sections.push(id.as_str());
+                let DocKind::Body { blocks } = node(body.0)? else {
+                    return Err("section body".into());
+                };
+                for block in blocks {
+                    let DocKind::Paragraph { items } = node(block.0)? else {
+                        return Err("section paragraph".into());
+                    };
+                    paragraph_sizes.push(items.len());
+                }
+            }
+            _ => return Err("chapter block".into()),
+        }
+    }
+    // Original chapter: introduction, four sections, twelve paragraphs and
+    // forty-two explicitly authored sentence boundaries.
+    assert_eq!(
+        sections,
+        [
+            "implementation_dependencies",
+            "document_preparation",
+            "math_and_browser",
+            "documentation_migration"
+        ]
+    );
+    assert_eq!(paragraph_sizes, [3, 3, 3, 3, 4, 3, 4, 4, 2, 3, 3, 7]);
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let artifact = render(&set, &c.doc.registry, &mut codec, &mut budget(), &[&[]]).map_err(err)?;
+    assert_eq!(artifact.pages.len(), 1);
+    let markdown = &artifact.pages[0].markdown;
+    assert!(links(markdown).is_empty());
+    assert!(code_blocks(markdown)?.is_empty());
+    assert!(markdown.contains(r"<ruby>資源閉包<rt>しげんへいほう</rt></ruby>\{resource closure\}"));
+    let headings: Vec<_> = Parser::new(markdown)
+        .filter_map(|event| match event {
+            Event::Start(Tag::Heading { level, .. }) => Some(level),
+            _ => None,
+        })
+        .collect();
+    use pulldown_cmark::HeadingLevel::{H1, H2};
+    assert_eq!(headings, [H1, H2, H2, H2, H2]);
+    Ok(())
+}
+
 /// The ordinary test retains desktop limits. This opt-in measurement locates
 /// the expense and checks content under the pre-existing corpus policy.
 #[test]

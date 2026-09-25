@@ -1,77 +1,77 @@
-article ja "18. HTMLを[先行利用/せんこうりよう]する[実装段階/じっそうだんかい]"
+article ja sentence "18. HTMLを[先行利用/せんこうりよう]する[実装段階/じっそうだんかい]"
 body
   cons paragraph
-    cons "この[章/しょう]はHTML[生成/せいせい]の[各層/かくそう]の[接続/せつぞく]と、[先行利用/せんこうりよう]の[範囲/はんい]を[定/さだ]める。"
-    cons "[構文/こうぶん]を[印字/いんじ]するsource printerをHTML rendererへ[読/よ]み[替/か]えない。"
-    cons "[採用/さいよう]の[経緯/けいい]は[設計判断/せっけいはんだん]0006、[現在/げんざい]の[実装状態/じっそうじょうたい]はimplementation-status.jsonを[参照/さんしょう]する。" nil
-  cons section implementation_dependencies "[実装依存/じっそういぞん]"
+    cons sentence "この[章/しょう]はHTML[生成/せいせい]の[各層/かくそう]の[接続/せつぞく]と、[先行利用/せんこうりよう]の[範囲/はんい]を[定/さだ]める。"
+    cons sentence "[構文/こうぶん]を[印字/いんじ]するsource printerをHTML rendererへ[読/よ]み[替/か]えない。"
+    cons sentence "[採用/さいよう]の[経緯/けいい]は[設計判断/せっけいはんだん]0006、[現在/げんざい]の[実装状態/じっそうじょうたい]はimplementation-status.jsonを[参照/さんしょう]する。" nil
+  cons section implementation_dependencies sentence "[実装依存/じっそういぞん]"
     body
       cons paragraph
-        cons "H0〜H3はT22〜T25に[対応/たいおう]する[作業段階/さぎょうだんかい]であり、[順序/じゅんじょ]・[成果物/せいかぶつ]・[受入条件/うけいれじょうけん]の[正本/せいほん]はdesign/tasks.jsonとする。"
-        cons "[各段階/かくだんかい]では[利用/りよう]する[前段/ぜんだん]の[実/じつ]APIを[検証/けんしょう]し、[空/から]のfragmentで[未実装/みじっそう]を[隠/かく]さない。"
-        cons "T22はT01〜T09の[全体完了/ぜんたいかんりょう]を[着手条件/ちゃくしゅじょうけん]にせず、T23では[未対応/みたいおう]embedを[型付/かたつ]きで[拒否/きょひ]し、T24でMathの[実解決/じつかいけつ]を[追加/ついか]する。" nil
+        cons sentence "H0〜H3はT22〜T25に[対応/たいおう]する[作業段階/さぎょうだんかい]であり、[順序/じゅんじょ]・[成果物/せいかぶつ]・[受入条件/うけいれじょうけん]の[正本/せいほん]はdesign/tasks.jsonとする。"
+        cons sentence "[各段階/かくだんかい]では[利用/りよう]する[前段/ぜんだん]の[実/じつ]APIを[検証/けんしょう]し、[空/から]のfragmentで[未実装/みじっそう]を[隠/かく]さない。"
+        cons sentence "T22はT01〜T09の[全体完了/ぜんたいかんりょう]を[着手条件/ちゃくしゅじょうけん]にせず、T23では[未対応/みたいおう]embedを[型付/かたつ]きで[拒否/きょひ]し、T24でMathの[実解決/じつかいけつ]を[追加/ついか]する。" nil
       cons paragraph
-        cons "[各層/かくそう]の[詳細契約/しょうさいけいやく]は、Docの[意味/いみ]・[構造/こうぞう]が05[章/しょう]、[数式表示/すうしきひょうじ]が17[章/しょう]、[型付/かたつ]きmarkupとserializerが19[章/しょう]、DocのprepareとHTML[変換/へんかん]が20[章/しょう]、[集合/しゅうごう]のpage・anchor[解決/かいけつ]が21[章/しょう]である。"
-        cons "15[章/しょう]は[生成済/せいせいず]み[文書/ぶんしょ]の[配置/はいち]と[公開/こうかい]、16[章/しょう]は[正式文書/せいしきぶんしょ]の[正本切替/せいほんきりかえ]を[所有/しょゆう]する。"
-        cons "[以下/いか]はそれらの[接続/せつぞく]に[必要/ひつよう]な[保証/ほしょう]の[要約/ようやく]であり、[各層/かくそう]の[独立/どくりつ]した[検査/けんさ]を[置/お]き[換/か]えない。" nil
+        cons sentence "[各層/かくそう]の[詳細契約/しょうさいけいやく]は、Docの[意味/いみ]・[構造/こうぞう]が05[章/しょう]、[数式表示/すうしきひょうじ]が17[章/しょう]、[型付/かたつ]きmarkupとserializerが19[章/しょう]、DocのprepareとHTML[変換/へんかん]が20[章/しょう]、[集合/しゅうごう]のpage・anchor[解決/かいけつ]が21[章/しょう]である。"
+        cons sentence "15[章/しょう]は[生成済/せいせいず]み[文書/ぶんしょ]の[配置/はいち]と[公開/こうかい]、16[章/しょう]は[正式文書/せいしきぶんしょ]の[正本切替/せいほんきりかえ]を[所有/しょゆう]する。"
+        cons sentence "[以下/いか]はそれらの[接続/せつぞく]に[必要/ひつよう]な[保証/ほしょう]の[要約/ようやく]であり、[各層/かくそう]の[独立/どくりつ]した[検査/けんさ]を[置/お]き[換/か]えない。" nil
       cons paragraph
-        cons "T10・T11・T13・T15・T17・T18は[先行経路/せんこうけいろ]を[再利用/さいりよう]して、[当初/とうしょ]の[全責務/ぜんせきむ]を[実装/じっそう]する。"
-        cons "Math evaluate、Circuit、LSP、[汎用/はんよう]provider、reference profileのUI、Pages[全受入/ぜんうけいれ]、T21[文書移行/ぶんしょいこう]の[完成/かんせい]を[先行利用/せんこうりよう]の[成功/せいこう]から[推定/すいてい]しない。"
-        cons "T16はT25と[既存/きそん]の[最終依存/さいしゅういぞん]、すべてのrequired[受入条件/うけいれじょうけん]を[要求/ようきゅう]する。" nil
+        cons sentence "T10・T11・T13・T15・T17・T18は[先行経路/せんこうけいろ]を[再利用/さいりよう]して、[当初/とうしょ]の[全責務/ぜんせきむ]を[実装/じっそう]する。"
+        cons sentence "Math evaluate、Circuit、LSP、[汎用/はんよう]provider、reference profileのUI、Pages[全受入/ぜんうけいれ]、T21[文書移行/ぶんしょいこう]の[完成/かんせい]を[先行利用/せんこうりよう]の[成功/せいこう]から[推定/すいてい]しない。"
+        cons sentence "T16はT25と[既存/きそん]の[最終依存/さいしゅういぞん]、すべてのrequired[受入条件/うけいれじょうけん]を[要求/ようきゅう]する。" nil
       nil
-  cons section document_preparation "H0/H1の[契約/けいやく]"
+  cons section document_preparation sentence "H0/H1の[契約/けいやく]"
     body
       cons paragraph
-        cons "Docの[既存/きそん]arenaは[表/ひょう]・list・page link・relative link・external link・imageなどを[保持/ほじ]するが、[構造/こうぞう]proofやCheckedLabelsは[完全/かんぜん]なPreparedArticleではない。"
-        cons "[文書検査/ぶんしょけんさ]は、[表示対象/ひょうじたいしょう]language・parallel policy、[外部/がいぶ]page・asset・foreign requirementsを[明示/めいじ]する。"
-        cons "prepareは[対象/たいしょう]documentのidentity、[全要求/ぜんようきゅう]、[解決結果/かいけつけっか]の[型/かた]・[位置/いち]・{[資源閉包/しげんへいほう]/resource closure}を[照合/しょうごう]する。"
-        cons "backendへ[未解決/みかいけつ]slotやhostの[任意/にんい]HTMLを[渡/わた]さない。"
+        cons sentence "Docの[既存/きそん]arenaは[表/ひょう]・list・page link・relative link・external link・imageなどを[保持/ほじ]するが、[構造/こうぞう]proofやCheckedLabelsは[完全/かんぜん]なPreparedArticleではない。"
+        cons sentence "[文書検査/ぶんしょけんさ]は、[表示対象/ひょうじたいしょう]language・parallel policy、[外部/がいぶ]page・asset・foreign requirementsを[明示/めいじ]する。"
+        cons sentence "prepareは[対象/たいしょう]documentのidentity、[全要求/ぜんようきゅう]、[解決結果/かいけつけっか]の[型/かた]・[位置/いち]・{[資源閉包/しげんへいほう]/resource closure}を[照合/しょうごう]する。"
+        cons sentence "backendへ[未解決/みかいけつ]slotやhostの[任意/にんい]HTMLを[渡/わた]さない。"
         nil
       cons paragraph
-        cons "markupは、table・header・cell、ordered・unordered listとstart・checkbox、img・alt・caption、[一般/いっぱん]linkに[必要/ひつよう]な[要素/ようそ]・[属性/ぞくせい]・[内容/ないよう]モデルを、[閉/と]じた[型/かた]として[持/も]つ。"
-        cons "[同/どう]artifactのanchor、page ID、[相対/そうたい]path、external URI、asset[参照/さんしょう]を[区別/くべつ]する。"
-        cons "[危険/きけん]scheme、path traversal、[重複/ちょうふく]path、[未宣言/みせんげん]asset、[偽/にせ]digest、wrong slotを[拒否/きょひ]し、I/O[権限/けんげん]はhostに[残/のこ]す。"
+        cons sentence "markupは、table・header・cell、ordered・unordered listとstart・checkbox、img・alt・caption、[一般/いっぱん]linkに[必要/ひつよう]な[要素/ようそ]・[属性/ぞくせい]・[内容/ないよう]モデルを、[閉/と]じた[型/かた]として[持/も]つ。"
+        cons sentence "[同/どう]artifactのanchor、page ID、[相対/そうたい]path、external URI、asset[参照/さんしょう]を[区別/くべつ]する。"
+        cons sentence "[危険/きけん]scheme、path traversal、[重複/ちょうふく]path、[未宣言/みせんげん]asset、[偽/にせ]digest、wrong slotを[拒否/きょひ]し、I/O[権限/けんげん]はhostに[残/のこ]す。"
         nil
       cons paragraph
-        cons "Paragraphを[入/い]れ[子/こ]のpへ[機械変換/きかいへんかん]せず、[文/ぶん]のrunと[子/こ]blockのwrapperを[使/つか]う。"
-        cons "Sentence[間/かん]に[空白/くうはく]を[追加/ついか]しない。"
-        cons "Ruby・Anno、Parallel、heading、[空/から]の[表/ひょう]、list start、codeの[改行/かいぎょう]、[画像/がぞう]の[代替説明/だいたいせつめい]を[保持/ほじ]し、ブラウザparserのtree[補正/ほせい]で[意味/いみ]が[変/か]わっていないか[確認/かくにん]する。"
-        cons "[一般/いっぱん]DocとKaTeXの[双方/そうほう]を、[検査済/けんさず]みmarkupとserializerへ[通/とお]す。"
-        nil
-      nil
-  cons section math_and_browser "H2/H3の[契約/けいやく]と[検証/けんしょう]"
-    body
-      cons paragraph
-        cons "17[章/しょう]を[適用/てきよう]する。"
-        cons "[数式/すうしき]の[正本/せいほん]は[構造/こうぞう]であり、[本文/ほんぶん]のdollar[探索/たんさく]、MathMLからのTeX[推測/すいそく]、source printer[文字列/もじれつ]を[数式/すうしき]として[利用/りよう]しない。"
-        cons "[非結合/ひけつごう]operand、[負号/ふごう]と[累乗/るいじょう]、[多文字/たもじ]Unicode[記号/きごう]、[片側/かたがわ]fence、Doc[注記/ちゅうき]の[忠実性/ちゅうじつせい]を[共通試験/きょうつうしけん]へ[結/むす]び[付/つ]ける。"
-        cons "[表示/ひょうじ]のためにevaluateを[実行/じっこう]しない。"
-        nil
-      cons paragraph
-        cons "[実/じつ].nepldからHTMLまでのpositive・negative、MathML-only、KaTeX[不在/ふざい]、optional module[失敗/しっぱい]、[局所失敗/きょくしょしっぱい]と[全体/ぜんたい]Stopped、[安全性違反/あんぜんせいいはん]、asset[不足/ふそく]を[検証/けんしょう]する。"
-        cons "NodeとDOMなしの[実/じつ]Workerで、[固定版/こていばん]・[入力/にゅうりょく]・[設定/せってい]が[同/おな]じ[正準/せいじゅん]markup・manifestを[生成/せいせい]することを[比較/ひかく]する。"
-        nil
-      cons paragraph
-        cons "Chromium・Firefox・WebKitで、script[禁止/きんし]かつsame-origin[権限/けんげん]なしのpreview、CSP・CORS・font・[非/ひ]root path、[古/ふる]い[返信/へんしん]の[拒否/きょひ]、[停止/ていし]とepoch、[同/どう]artifactのexportを[実行/じっこう]する。"
-        cons "[書/か]き[出/だ]し[済/ず]みHTMLのJavaScript[無効表示/むこうひょうじ]、offline bundle、zoom・[狭/せま]い[幅/はば]・[印刷/いんさつ]・アクセシビリティtreeを[確認/かくにん]し、DOMの[存在/そんざい]だけを[視覚組版/しかくくみはん]の[成功/せいこう]にしない。"
-        cons "WebKit[自動試験/じどうしけん]とSafari・iOSの[実機確認/じっきかくにん]を[区別/くべつ]する。"
-        nil
-      cons paragraph
-        cons "[各段階/かくだんかい]は、[実/じつ]API・command・source・spec・target・ログ・[独立/どくりつ]レビューと[未検証範囲/みけんしょうはんい]を[記録/きろく]する。"
-        cons "[既存/きそん]bootstrap、Doc source printer、source・Origin、[予算/よさん]、no_std・WASIの[回帰/かいき]を[維持/いじ]する。"
-        cons "ローカルでの[成功/せいこう]は、Pages[公開/こうかい]の[証拠/しょうこ]ではない。"
+        cons sentence "Paragraphを[入/い]れ[子/こ]のpへ[機械変換/きかいへんかん]せず、[文/ぶん]のrunと[子/こ]blockのwrapperを[使/つか]う。"
+        cons sentence "Sentence[間/かん]に[空白/くうはく]を[追加/ついか]しない。"
+        cons sentence "Ruby・Anno、Parallel、heading、[空/から]の[表/ひょう]、list start、codeの[改行/かいぎょう]、[画像/がぞう]の[代替説明/だいたいせつめい]を[保持/ほじ]し、ブラウザparserのtree[補正/ほせい]で[意味/いみ]が[変/か]わっていないか[確認/かくにん]する。"
+        cons sentence "[一般/いっぱん]DocとKaTeXの[双方/そうほう]を、[検査済/けんさず]みmarkupとserializerへ[通/とお]す。"
         nil
       nil
-  cons section documentation_migration "[正式文書/せいしきぶんしょ]のDoc[移行/いこう]"
+  cons section math_and_browser sentence "H2/H3の[契約/けいやく]と[検証/けんしょう]"
     body
       cons paragraph
-        cons "T23で[必要/ひつよう]な[表現/ひょうげん]が[使/つか]えるページから、T21の[棚卸/たなおろ]し・[変換/へんかん]を[進/すす]める。"
-        cons "[数式/すうしき]を[含/ふく]むspecは、T24の[実生成経路/じつせいせいけいろ]を[使用/しよう]する。"
-        cons "T21はT19・T24[全体/ぜんたい]の[完了/かんりょう]を[一括/いっかつ]の[前提/ぜんてい]にせず、ページが[使/つか]うDoc・Mathの[操作/そうさ]ごとに[必要/ひつよう]な[実装/じっそう]と[検査/けんさ]を[確認/かくにん]する。"
-        cons "NEPL3dを[正式/せいしき]な[正本/せいほん]とし、HTMLは[再生成/さいせいせい]できる[表示用/ひょうじよう]の[出力/しゅつりょく]とする。"
-        cons "Pages[公開/こうかい]とrustdocの[詳細監査/しょうさいかんさ]を、Docの[本体開発/ほんたいかいはつ]・[正本移行/せいほんいこう]を[止/と]める[条件/じょうけん]にしない。"
-        cons "ページ[単位/たんい]の[意味/いみ]・リンク・[安定/あんてい]ID・[生成物対応/せいせいぶつたいおう]とbootstrapの[条件/じょうけん]は、16[章/しょう]のまま[維持/いじ]する。"
-        cons "README・AGENTSなどのMarkdown[入口/いりぐち]は、[必要/ひつよう]に[応/おう]じて.nepld[正本/せいほん]から[生成/せいせい]し、[二重/にじゅう][手書/てが]き[保守/ほしゅ]をしない。"
+        cons sentence "17[章/しょう]を[適用/てきよう]する。"
+        cons sentence "[数式/すうしき]の[正本/せいほん]は[構造/こうぞう]であり、[本文/ほんぶん]のdollar[探索/たんさく]、MathMLからのTeX[推測/すいそく]、source printer[文字列/もじれつ]を[数式/すうしき]として[利用/りよう]しない。"
+        cons sentence "[非結合/ひけつごう]operand、[負号/ふごう]と[累乗/るいじょう]、[多文字/たもじ]Unicode[記号/きごう]、[片側/かたがわ]fence、Doc[注記/ちゅうき]の[忠実性/ちゅうじつせい]を[共通試験/きょうつうしけん]へ[結/むす]び[付/つ]ける。"
+        cons sentence "[表示/ひょうじ]のためにevaluateを[実行/じっこう]しない。"
+        nil
+      cons paragraph
+        cons sentence "[実/じつ].nepldからHTMLまでのpositive・negative、MathML-only、KaTeX[不在/ふざい]、optional module[失敗/しっぱい]、[局所失敗/きょくしょしっぱい]と[全体/ぜんたい]Stopped、[安全性違反/あんぜんせいいはん]、asset[不足/ふそく]を[検証/けんしょう]する。"
+        cons sentence "NodeとDOMなしの[実/じつ]Workerで、[固定版/こていばん]・[入力/にゅうりょく]・[設定/せってい]が[同/おな]じ[正準/せいじゅん]markup・manifestを[生成/せいせい]することを[比較/ひかく]する。"
+        nil
+      cons paragraph
+        cons sentence "Chromium・Firefox・WebKitで、script[禁止/きんし]かつsame-origin[権限/けんげん]なしのpreview、CSP・CORS・font・[非/ひ]root path、[古/ふる]い[返信/へんしん]の[拒否/きょひ]、[停止/ていし]とepoch、[同/どう]artifactのexportを[実行/じっこう]する。"
+        cons sentence "[書/か]き[出/だ]し[済/ず]みHTMLのJavaScript[無効表示/むこうひょうじ]、offline bundle、zoom・[狭/せま]い[幅/はば]・[印刷/いんさつ]・アクセシビリティtreeを[確認/かくにん]し、DOMの[存在/そんざい]だけを[視覚組版/しかくくみはん]の[成功/せいこう]にしない。"
+        cons sentence "WebKit[自動試験/じどうしけん]とSafari・iOSの[実機確認/じっきかくにん]を[区別/くべつ]する。"
+        nil
+      cons paragraph
+        cons sentence "[各段階/かくだんかい]は、[実/じつ]API・command・source・spec・target・ログ・[独立/どくりつ]レビューと[未検証範囲/みけんしょうはんい]を[記録/きろく]する。"
+        cons sentence "[既存/きそん]bootstrap、Doc source printer、source・Origin、[予算/よさん]、no_std・WASIの[回帰/かいき]を[維持/いじ]する。"
+        cons sentence "ローカルでの[成功/せいこう]は、Pages[公開/こうかい]の[証拠/しょうこ]ではない。"
+        nil
+      nil
+  cons section documentation_migration sentence "[正式文書/せいしきぶんしょ]のDoc[移行/いこう]"
+    body
+      cons paragraph
+        cons sentence "T23で[必要/ひつよう]な[表現/ひょうげん]が[使/つか]えるページから、T21の[棚卸/たなおろ]し・[変換/へんかん]を[進/すす]める。"
+        cons sentence "[数式/すうしき]を[含/ふく]むspecは、T24の[実生成経路/じつせいせいけいろ]を[使用/しよう]する。"
+        cons sentence "T21はT19・T24[全体/ぜんたい]の[完了/かんりょう]を[一括/いっかつ]の[前提/ぜんてい]にせず、ページが[使/つか]うDoc・Mathの[操作/そうさ]ごとに[必要/ひつよう]な[実装/じっそう]と[検査/けんさ]を[確認/かくにん]する。"
+        cons sentence "NEPL3dを[正式/せいしき]な[正本/せいほん]とし、HTMLは[再生成/さいせいせい]できる[表示用/ひょうじよう]の[出力/しゅつりょく]とする。"
+        cons sentence "Pages[公開/こうかい]とrustdocの[詳細監査/しょうさいかんさ]を、Docの[本体開発/ほんたいかいはつ]・[正本移行/せいほんいこう]を[止/と]める[条件/じょうけん]にしない。"
+        cons sentence "ページ[単位/たんい]の[意味/いみ]・リンク・[安定/あんてい]ID・[生成物対応/せいせいぶつたいおう]とbootstrapの[条件/じょうけん]は、16[章/しょう]のまま[維持/いじ]する。"
+        cons sentence "README・AGENTSなどのMarkdown[入口/いりぐち]は、[必要/ひつよう]に[応/おう]じて.nepld[正本/せいほん]から[生成/せいせい]し、[二重/にじゅう][手書/てが]き[保守/ほしゅ]をしない。"
         nil
       nil
   nil

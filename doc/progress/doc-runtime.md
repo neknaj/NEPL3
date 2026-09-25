@@ -163,6 +163,12 @@ native・WASIで各1件成功し、独立レビューでもnative1件の成功�
 対象のclippy、fmt、diff検査も成功した。
 正式Markdown集合生成は第22章を通過し、次の旧構文の
 `doc/spec/18-html-delivery.nepld` で停止した。生成Markdownの更新は未完了である。
+第18章の正本も独立Sentence構文へ移行した。本文・Ruby・Anno・節IDを保持し、
+正式reader/lowerによるモデル上で4節・12段落・42文の所属と順序を確認した。
+通常予算のMarkdown投影で見出し階層とresource closureのAnnoを検査し、
+native・WASIで各1件成功した。原文との独立レビューと独立native1件も成功した。
+対象のclippy、fmt、diff検査を完了した。正式Markdown集合生成は第18章を通過し、
+次の旧構文の `doc/spec/07-circuit.nepld` で停止した。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
