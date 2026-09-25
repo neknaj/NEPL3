@@ -205,6 +205,82 @@ fn shared_pool_work_scales_below_quadratic_for_distinct_declarations() -> TestRe
     Ok(())
 }
 
+#[test]
+fn mapping_keys_preserve_revision_span_kind_and_pool_position_independence() -> TestResult {
+    let (s, r, original) = fixture_with_map()?;
+    let mut bundles = Vec::new();
+    for (revision, start, kind) in [
+        (1, 0, MappingKind::Exact),
+        (1, 0, MappingKind::Transformed),
+        (1, 1, MappingKind::Transformed),
+        (2, 0, MappingKind::Transformed),
+    ] {
+        let mut bundle = original.clone();
+        let source = SourceSnapshot::new(
+            SourceId("extra".into()),
+            revision,
+            "memory:key".into(),
+            b"xxxx".to_vec(),
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        bundle.source_maps.push(Mapping {
+            source: source
+                .span(start, start + 1)
+                .map_err(|e| format!("{e:?}"))?,
+            target: source.span(3, 4).map_err(|e| format!("{e:?}"))?,
+            kind,
+        });
+        bundle.sources.push(source);
+        bundles.push(bundle);
+    }
+    for shift in [false, true] {
+        if shift {
+            // This declaration shifts all later pool positions but leaves the
+            // meaning and canonical digest of every mapping unchanged.
+            bundles[0].sources.push(
+                SourceSnapshot::new(
+                    SourceId("a-first".into()),
+                    1,
+                    "memory:first".into(),
+                    b"x".to_vec(),
+                    &mut budget(),
+                )
+                .map_err(|e| format!("{e:?}"))?,
+            );
+        }
+        let bytes = shared::encode(
+            &bundles,
+            &s,
+            &r,
+            &mut SourceAdmission::default(),
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        assert_eq!(bytes, reference_set(&bundles, &s, &r)?);
+        let value = decode(&bytes, &mut budget()).map_err(|e| format!("{e:?}"))?;
+        let NdfValue::Record(set) = &value else {
+            return Err("set".into());
+        };
+        let NdfValue::List(maps) = &set.fields[1] else {
+            return Err("maps".into());
+        };
+        assert_eq!(maps.len(), 5);
+        let restored = shared::decode(
+            &bytes,
+            &s,
+            &r,
+            &mut SourceAdmission::default(),
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        for (actual, expected) in restored.iter().zip(&bundles) {
+            assert_eq!(actual.source_maps, expected.source_maps);
+        }
+    }
+    Ok(())
+}
+
 fn edit_member(
     value: &mut NdfValue,
     member: usize,

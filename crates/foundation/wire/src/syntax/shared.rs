@@ -107,11 +107,24 @@ pub(crate) fn value<'a>(
         push(&mut inputs, bundle, b)?;
     }
     let sources = pool::Pool::new(sources, SOURCE_DOMAIN, schema, admission, b)?;
+    let mut indexed_maps = Vec::new();
+    for mapping in maps {
+        push(&mut indexed_maps, sources.mapping(mapping, b)?, b)?;
+    }
+    let mut maps = Vec::new();
+    for mapping in &indexed_maps {
+        push(&mut maps, mapping, b)?;
+    }
     let maps = pool::Pool::new(maps, MAP_DOMAIN, schema, admission, b)?;
+    let mut remaining_maps = indexed_maps.as_slice();
     let mut members = Vec::new();
     for bundle in inputs {
         let source_refs = sources.references(&bundle.sources, true, b)?;
-        let map_refs = maps.references(&bundle.source_maps, false, b)?;
+        let (selected, remaining) = remaining_maps
+            .split_at_checked(bundle.source_maps.len())
+            .ok_or(WireError::InvalidType)?;
+        remaining_maps = remaining;
+        let map_refs = maps.references(selected, false, b)?;
         let body = bundle_body_value(bundle, schema, registry, admission, b)?;
         let member = record(
             schema,
@@ -120,6 +133,9 @@ pub(crate) fn value<'a>(
             b,
         )?;
         push(&mut members, member, b)?;
+    }
+    if !remaining_maps.is_empty() {
+        return Err(WireError::InvalidType);
     }
     record(
         schema,

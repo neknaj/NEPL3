@@ -54,29 +54,20 @@ impl Content for SourceSnapshot {
         values.pop().ok_or(WireError::InvalidType)
     }
 }
-impl Content for Mapping {
+/// Comparison keys belong to one immutable source pool. Positions are local
+/// search metadata; encoding always uses the complete original Mapping.
+pub(super) struct IndexedMapping<'a> {
+    mapping: &'a Mapping,
+    key: (usize, u64, u64, usize, u64, u64, u8),
+}
+impl Content for IndexedMapping<'_> {
     fn compare(&self, other: &Self, b: &mut Budget) -> Result<Ordering, WireError> {
-        for (a, z) in [(&self.source, &other.source), (&self.target, &other.target)] {
-            let order = identity(a.snapshot_ref(), z.snapshot_ref(), b)?;
-            if order != Ordering::Equal {
-                return Ok(order);
-            }
-            b.charge(Resource::Work, 2)?;
-            let order = (a.start(), a.end()).cmp(&(z.start(), z.end()));
-            if order != Ordering::Equal {
-                return Ok(order);
-            }
-        }
-        b.charge(Resource::Work, 1)?;
-        let rank = |kind| match kind {
-            MappingKind::Exact => 0,
-            MappingKind::Transformed => 1,
-        };
-        Ok(rank(self.kind).cmp(&rank(other.kind)))
+        b.charge(Resource::Work, 7)?;
+        Ok(self.key.cmp(&other.key))
     }
     fn same(&self, _: &Self, b: &mut Budget) -> Result<bool, WireError> {
         b.charge(Resource::Work, 1)?;
-        Ok(true) // compare includes both complete spans and mapping kind.
+        Ok(true) // Source positions uniquely identify complete snapshot identities.
     }
     fn value(
         &self,
@@ -84,13 +75,51 @@ impl Content for Mapping {
         _: &mut SourceAdmission,
         b: &mut Budget,
     ) -> Result<NdfValue, WireError> {
-        mapping_value(self, schema, b)
+        mapping_value(self.mapping, schema, b)
     }
 }
 
 pub(super) struct Pool<'a, T> {
     entries: Vec<(&'a T, Digest)>,
     pub values: Vec<Entry>,
+}
+impl Pool<'_, SourceSnapshot> {
+    fn position(&self, wanted: &SnapshotId, b: &mut Budget) -> Result<usize, WireError> {
+        let (mut low, mut high) = (0, self.entries.len());
+        while low < high {
+            let mid = low + (high - low) / 2;
+            match identity(self.entries[mid].0.identity(), wanted, b)? {
+                Ordering::Less => low = mid + 1,
+                Ordering::Greater => high = mid,
+                Ordering::Equal => return Ok(mid),
+            }
+        }
+        Err(WireError::InvalidType)
+    }
+    pub fn mapping<'m>(
+        &self,
+        mapping: &'m Mapping,
+        b: &mut Budget,
+    ) -> Result<IndexedMapping<'m>, WireError> {
+        let source = self.position(mapping.source.snapshot_ref(), b)?;
+        let target = self.position(mapping.target.snapshot_ref(), b)?;
+        b.charge(Resource::Work, 5)?;
+        Ok(IndexedMapping {
+            mapping,
+            key: (
+                source,
+                mapping.source.start(),
+                mapping.source.end(),
+                target,
+                mapping.target.start(),
+                mapping.target.end(),
+                match mapping.kind {
+                    MappingKind::Exact => 0,
+                    MappingKind::Transformed => 1,
+                },
+            ),
+        })
+    }
 }
 impl<'a, T: Content> Pool<'a, T> {
     pub fn new(

@@ -295,6 +295,16 @@ Doc core全48試験はnative・WASI、toolsのprepare24試験とfeature有効の
 共有化前の319,330,279 Workに対してWorkは増加し、通常Work100Mへの適合は未達である。
 DocValueは1,195,011から691,029 NDF節点へ、独立した148件のdigest計算は153,194,743から
 75,756,838 Workへ縮小した。索引構築費用の削減、残る正本移行と生成Markdown更新を継続する。
+
+mappingの索引構築では、完全SnapshotIdをsource表へ照合してから、表内位置・byte範囲・
+kindを一時的な整数キーとして使用する。位置は交換形式へ出さず、元のMappingから
+内容digestとcanonical値を生成する。memberの宣言順序も保持する。
+revision・範囲・kindの相違とsource表内位置の変化を独立oracleへ照合した。
+wire全85試験、WASIの共有形式10試験、Doc prepare12試験が成功し、独立レビューも10試験を実行した。
+Clippy、thumb向けcheck、repository checkも成功した。
+第13章の投影は308,211,465 Work、164,738,513 AllocationUnits、native debugで約8.62秒となった。
+Workは28,200,092減少し、一時的な整数キーの保持によりAllocationUnitsは1,766,016増加した。
+通常Work100Mへの適合は継続課題である。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
