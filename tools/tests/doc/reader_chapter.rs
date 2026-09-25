@@ -22,6 +22,86 @@ fn measure_reader_chapter_under_corpus_limits() -> Result<(), String> {
     )
 }
 
+#[test]
+#[ignore = "explicit Reader lower validation cost measurement"]
+fn measure_reader_lower_validation_costs() -> Result<(), String> {
+    #[derive(serde::Deserialize)]
+    struct Policy {
+        output_limits: nepl3_tools::doc::export::pages::resources::OutputLimits,
+    }
+    let policy: Policy =
+        serde_json::from_str(include_str!("../../../doc/canonical.json")).map_err(err)?;
+    let c = compiled()?;
+    nepl3_tools::doc::source::with_named_validated_input_limits(
+        true,
+        &c,
+        include_str!("../../../doc/spec/03-reader.nepld"),
+        "reader",
+        "Article",
+        policy.output_limits.budget().limits(),
+        |tree, profile, _, _| {
+            let mut input_budget = policy.output_limits.budget();
+            tree.syntax()
+                .bundle()
+                .validate_with_sources(
+                    profile.registry(),
+                    &mut input_budget,
+                    &mut SourceAdmission::default(),
+                )
+                .map_err(err)?;
+            let mut lower_budget = policy.output_limits.budget();
+            let document = lower::prefix(
+                &tree.syntax(),
+                &c.doc.package.schema,
+                Category::Article,
+                profile.registry(),
+                &mut lower_budget,
+                &mut SourceAdmission::default(),
+            )
+            .map_err(err)?;
+            let mut output_budget = policy.output_limits.budget();
+            document
+                .validate_structure(
+                    profile.registry(),
+                    &mut output_budget,
+                    &mut SourceAdmission::default(),
+                )
+                .map_err(err)?;
+            // Independent operations use fresh budgets and admissions. These
+            // measurements identify costs; their sum is not a lower receipt.
+            eprintln!("Reader lower input validation={:?}", input_budget.usage());
+            eprintln!("Reader complete lower={:?}", lower_budget.usage());
+            eprintln!("Reader output validation={:?}", output_budget.usage());
+            let mut capture_budget = policy.output_limits.budget();
+            let mut capture_admission = SourceAdmission::default();
+            let checked = tree.syntax();
+            let mut captures = nepl3_core::syntax::ForeignCapture::new(&checked);
+            let mut count = 0;
+            for (index, node) in checked.bundle().nodes.iter().enumerate() {
+                for (field, value) in node.fields.iter().enumerate() {
+                    if matches!(value, nepl3_core::syntax::FieldValue::Foreign(_)) {
+                        captures
+                            .capture_at(
+                                nepl3_core::syntax::NodeRef(index as u64),
+                                field,
+                                profile.registry(),
+                                &mut capture_budget,
+                                &mut capture_admission,
+                            )
+                            .map_err(err)?;
+                        count += 1;
+                    }
+                }
+            }
+            eprintln!(
+                "Reader {count} root foreign captures={:?}",
+                capture_budget.usage()
+            );
+            Ok(())
+        },
+    )
+}
+
 fn project(
     parse_limits: nepl3_core::budget::Limits,
     mut lower_budget: Budget,

@@ -58,12 +58,6 @@ impl CopyCost for Span {
     }
 }
 
-impl CopyCost for SourceSnapshot {
-    fn charge(&self, b: &mut Budget) -> Result<(), StopReason> {
-        self.charge_clone(b)
-    }
-}
-
 impl CopyCost for NdfValue {
     fn charge(&self, b: &mut Budget) -> Result<(), StopReason> {
         self.charge_clone(b)
@@ -246,7 +240,12 @@ fn push<'a>(
     pending.push((item, depth));
     Ok(())
 }
-fn charge(root: Pending<'_>, b: &mut Budget) -> Result<(), StopReason> {
+#[derive(Clone, Copy)]
+enum Purpose {
+    Clone,
+    ComparisonBound,
+}
+fn charge(root: Pending<'_>, purpose: Purpose, b: &mut Budget) -> Result<(), StopReason> {
     let base = b.current_depth();
     let mut pending = Vec::new();
     push(&mut pending, root, 1, b)?;
@@ -277,7 +276,13 @@ fn charge(root: Pending<'_>, b: &mut Budget) -> Result<(), StopReason> {
                     }
                     Pending::Bundle(bundle) => {
                         slot::<SyntaxBundle>(b)?;
-                        bundle.sources.charge(b)?;
+                        slot::<Vec<SourceSnapshot>>(b)?;
+                        for source in &bundle.sources {
+                            match purpose {
+                                Purpose::Clone => source.charge_shared_clone(b)?,
+                                Purpose::ComparisonBound => source.charge_clone(b)?,
+                            }
+                        }
                         bundle.origins.charge(b)?;
                         bundle.environments.charge(b)?;
                         bundle.tokens.charge(b)?;
@@ -301,23 +306,28 @@ fn charge(root: Pending<'_>, b: &mut Budget) -> Result<(), StopReason> {
     Ok(())
 }
 impl SyntaxBundle {
-    /// Precharge storage/work for `Clone`, including foreign bundles and all owned
-    /// source, token, environment and value payloads. This is not semantic validation.
+    /// Conservative storage/work bound, also covering source comparisons against
+    /// separately decoded snapshots. This is not semantic validation.
     /// Foreign ownership depth is observed iteratively; source admission is unchanged.
     pub fn charge_clone(&self, budget: &mut Budget) -> Result<(), StopReason> {
-        charge(Pending::Bundle(self), budget)
+        charge(Pending::Bundle(self), Purpose::ComparisonBound, budget)
     }
+    /// Precharge and copy storage, sharing immutable sources where supported.
+    /// Subsequent structural comparisons require their own accounting.
     pub fn clone_with_budget(&self, budget: &mut Budget) -> Result<Self, StopReason> {
-        self.charge_clone(budget)?;
+        charge(Pending::Bundle(self), Purpose::Clone, budget)?;
         Ok(self.clone())
     }
 }
 impl FieldValue {
+    /// Conservative bound including independently stored foreign source bytes.
     pub fn charge_clone(&self, budget: &mut Budget) -> Result<(), StopReason> {
-        charge(Pending::Field(self), budget)
+        charge(Pending::Field(self), Purpose::ComparisonBound, budget)
     }
+    /// Copy the field and nested bundles with actual source-storage costs.
+    /// Subsequent structural comparisons require their own accounting.
     pub fn clone_with_budget(&self, budget: &mut Budget) -> Result<Self, StopReason> {
-        self.charge_clone(budget)?;
+        charge(Pending::Field(self), Purpose::Clone, budget)?;
         Ok(self.clone())
     }
 }

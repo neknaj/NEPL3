@@ -559,6 +559,22 @@ AllocationUnitsは98,454,201から98,364,072へ減少した。parseとMarkdown�
 coreはnative・WASI各157試験に成功し、独立レビューはsyntax全30試験に成功した。
 ARMv6-Mはcompileを確認した。Clippy、repository check、fmt、diff検査は成功した。
 
+第03章のlowerを独立した公開操作で分離測定した。入力構文検証は26,810,018 Work、
+出力文書検証は28,150,770 Work、rootのforeign field 333件のcaptureは58,186,747 Workだった。
+各測定は新しいBudgetとadmissionを使うため、合算をlower全体の実行証拠として扱わない。
+
+構文の実cloneがSourceSnapshotの比較用上限も計上していたため、SyntaxBundleとFieldValueの
+cloneを既存の共有storage課金へ接続した。charge_cloneは独立decodeとの比較上限を保持する。
+非atomic targetは本文の複製費用を保持する。これは第02章の実cloneと比較の課金契約に対応する。
+修正後のcaptureは30,840,012 Work、lower全体は85,244,365 Workとなった。
+入力・出力検証のWorkとlowerのAllocationUnitsは同一である。実行時間の短縮率を示す結果ではない。
+新試験は入れ子のsource、本文長の増加、内容保持、Work・Allocation停止と比較上限の維持を確認する。
+core・engineはnative・WASI各233試験に成功した。独立レビューはsyntax31件とengine parse28件、
+最終assert修正後のcopy試験1件に成功した。ARMv6-M compile、Clippy、repository check、fmt、diffも成功した。
+第03章はcorpus上限で本文・コード・リンクを保持した。Markdown projectionのWorkは379,349,041で同一だった。
+通常上限ではparse・lowerが成功し、projectionがWorkLimitとなる。canonical生成は第03章を通過し、
+未移行表記を含む第04章でRecoveredを検出して停止した。出力先は作成されず、生成物は更新していない。
+
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
