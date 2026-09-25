@@ -1,7 +1,7 @@
-article ja "20. DocのHTML[変換/へんかん]"
+article ja sentence "20. DocのHTML[変換/へんかん]"
 body
   cons paragraph
-    cons sentence
+    cons sentence sentence
       cons code "nepl3-doc-html"
       cons text " はDoc coreとmarkupへ"
       cons ruby text "依存" text "いぞん"
@@ -13,7 +13,7 @@ body
       cons ruby text "実行" text "じっこう"
       cons text "しない。"
       nil
-    cons sentence
+    cons sentence sentence
       cons ruby text "言語中立" text "げんごちゅうりつ"
       cons text "の"
       cons ruby text "値" text "あたい"
@@ -23,17 +23,17 @@ body
       cons ruby text "定義" text "ていぎ"
       cons text "する。"
       nil
-    cons "[本章/ほんしょう]のlocal[入口/いりぐち]は、[外部要求/がいぶようきゅう]が[一/ひと]つもないArticleまたはSentenceをHTML fragmentへ[変換/へんかん]する[制約/せいやく]を[持/も]つ。"
-    cons "Sentence[単独/たんどく]の[入口/いりぐち]はArticleとは[別/べつ]の[型/かた]で[準備済/じゅんびず]みであることを[表/あらわ]し、phrasing fragmentを[返/かえ]す。Ruby・Anno・BreakにはArticleと[同/おな]じ[変換規則/へんかんきそく]とCSSを[使/つか]う。rootはclass nepl-sentenceのspanとし、[空白/くうはく]を[保持/ほじ]するが、Article[用/よう]の[余白/よはく]・[背景/はいけい]・fontは[設定/せってい]しない。"
-    cons "[単独/たんどく]Sentenceのanchorとrefは、そのSentenceだけの[名前空間/なまえくうかん]で[検査/けんさ]する。[前方参照/ぜんぽうさんしょう]を[認/みと]め、[重複定義/じゅうふくていぎ]・[複数表示経路/ふくすうひょうじけいろ]・[未解決参照/みかいけつさんしょう]を[拒否/きょひ]する。[周囲/しゅうい]のArticleやforeign[文書/ぶんしょ]から[暗黙/あんもく]にlabelを[取/と]り[込/こ]まない。Article[内/ない]のSentenceには、[従来/じゅうらい]どおりArticle[全体/ぜんたい]の[規則/きそく]を[適用/てきよう]する。"
-    cons "[準備計画/じゅんびけいかく]はDocumentSyntaxのrootを[含/ふく]むdigestと[全/すべ]ての[外部要求/がいぶようきゅう]を[保持/ほじ]する。NDF[受信側/じゅしんがわ]はrootに[対応/たいおう]するArticleまたはSentenceの[検査/けんさ]を[再実行/さいじっこう]し、[送信側/そうしんがわ]の[計画/けいかく]との[一致/いっち]を[要求/ようきゅう]する。"
-    cons "document shellと[固定/こてい]CSSの[配布/はいふ]は、[後述/こうじゅつ]の[開発/かいはつ]hostが[担当/たんとう]する。"
-    cons "[一般/いっぱん]page/asset/foreign[解決/かいけつ]と[完全/かんぜん]なReport[操作/そうさ]は、このlocal[入口/いりぐち]の[責務/せきむ]に[含/ふく]めず、[別/べつ]の[統合経路/とうごうけいろ]で[扱/あつか]う。"
+    cons sentence "[旧/きゅう]local APIは、[外部要求/がいぶようきゅう]が[一/ひと]つもないDoc[所有/しょゆう]のArticleまたはSentenceをHTML fragmentへ[変換/へんかん]する。[独立/どくりつ]Sentenceを[含/ふく]むArticleは、guestを[明示的/めいじてき]に[選択/せんたく]する[合成経路/ごうせいけいろ]で[処理/しょり]する。"
+    cons sentence "Sentence[単独/たんどく]の[入口/いりぐち]はArticleとは[別/べつ]の[型/かた]で[準備済/じゅんびず]みであることを[表/あらわ]し、phrasing fragmentを[返/かえ]す。Ruby・Anno・BreakにはArticleと[同/おな]じ[変換規則/へんかんきそく]とCSSを[使/つか]う。rootはclass nepl-sentenceのspanとし、[空白/くうはく]を[保持/ほじ]するが、Article[用/よう]の[余白/よはく]・[背景/はいけい]・fontは[設定/せってい]しない。"
+    cons sentence "[単独/たんどく]Sentenceのanchorとrefは、そのSentenceだけの[名前空間/なまえくうかん]で[検査/けんさ]する。[前方参照/ぜんぽうさんしょう]を[認/みと]め、[重複定義/じゅうふくていぎ]・[複数表示経路/ふくすうひょうじけいろ]・[未解決参照/みかいけつさんしょう]を[拒否/きょひ]する。[周囲/しゅうい]のArticleやforeign[文書/ぶんしょ]から[暗黙/あんもく]にlabelを[取/と]り[込/こ]まない。Article[内/ない]のSentenceには、[従来/じゅうらい]どおりArticle[全体/ぜんたい]の[規則/きそく]を[適用/てきよう]する。"
+    cons sentence "[準備計画/じゅんびけいかく]はDocumentSyntaxのrootを[含/ふく]むdigestと[全/すべ]ての[外部要求/がいぶようきゅう]を[保持/ほじ]する。NDF[受信側/じゅしんがわ]はrootに[対応/たいおう]するArticleまたはSentenceの[検査/けんさ]を[再実行/さいじっこう]し、[送信側/そうしんがわ]の[計画/けいかく]との[一致/いっち]を[要求/ようきゅう]する。"
+    cons sentence "document shellと[固定/こてい]CSSの[配布/はいふ]は、[後述/こうじゅつ]の[開発/かいはつ]hostが[担当/たんとう]する。"
+    cons sentence "[一般/いっぱん]page/asset/foreign[解決/かいけつ]と[完全/かんぜん]なReport[操作/そうさ]は、このlocal[入口/いりぐち]の[責務/せきむ]に[含/ふく]めず、[別/べつ]の[統合経路/とうごうけいろ]で[扱/あつか]う。"
     nil
   cons paragraph
-    cons sentence cons code "LocalHtmlRequest" cons text " はDocumentSyntaxとRenderOptionsを" cons ruby text "所有" text "しょゆう" cons text "する。" nil
-    cons "request codecはDocの[構造/こうぞう]・source[閉包/へいほう]を[再検査/さいけんさ]し、optionsをraw[値/ち]として[復元/ふくげん]する。"
-    cons sentence
+    cons sentence sentence cons code "LocalHtmlRequest" cons text " はDocumentSyntaxとRenderOptionsを" cons ruby text "所有" text "しょゆう" cons text "する。" nil
+    cons sentence "request codecはDocの[構造/こうぞう]・source[閉包/へいほう]を[再検査/さいけんさ]し、optionsをraw[値/ち]として[復元/ふくげん]する。"
+    cons sentence sentence
       cons ruby text "実行準備" text "じっこうじゅんび"
       cons text " "
       cons code "prepare_local"
@@ -45,47 +45,47 @@ body
       cons ruby text "実行" text "じっこう"
       cons text "する。"
       nil
-    cons "[外部要求/がいぶようきゅう]があれば[完全/かんぜん]なplanをNeedsResolutionとして[返/かえ]し、[空/から]fragmentへ[変/か]えない。"
-    cons "この[拒否/きょひ]は、[外部/がいぶ]URIの[合法性/ごうほうせい]やMath[式/しき]の[意味/いみ]エラーを[判定/はんてい]したものではない。"
-    cons "[要求/ようきゅう]がなければoptionsとlocal backend[制約/せいやく]を[検査/けんさ]し、[対象/たいしょう]document/optionsを[借用/しゃくよう]する[非公開/ひこうかい]constructorのPreparedLocalArticleを[発行/はっこう]する。"
+    cons sentence "[外部要求/がいぶようきゅう]があれば[完全/かんぜん]なplanをNeedsResolutionとして[返/かえ]し、[空/から]fragmentへ[変/か]えない。"
+    cons sentence "この[拒否/きょひ]は、[外部/がいぶ]URIの[合法性/ごうほうせい]やMath[式/しき]の[意味/いみ]エラーを[判定/はんてい]したものではない。"
+    cons sentence "[要求/ようきゅう]がなければoptionsとlocal backend[制約/せいやく]を[検査/けんさ]し、[対象/たいしょう]document/optionsを[借用/しゃくよう]する[非公開/ひこうかい]constructorのPreparedLocalArticleを[発行/はっこう]する。"
     nil
   cons paragraph
-    cons "ParallelModeは、Rows、Columns、Single(language,fallbacks)のいずれかとする。"
-    cons "Singleの[言語/げんご]タグは[共通/きょうつう]Lang[規則/きそく]に[従/したが]い、[候補/こうほ]の[重複/ちょうふく]はASCII case-insensitiveで[拒否/きょひ]する。"
-    cons "[各/かく]Parallelは、[指定/してい]languageから[明示/めいじ]fallback[順/じゅん]に[一致/いっち]するvariantを[選/えら]び、[存在/そんざい]しなければMissingVariantとする。"
-    cons "[空/から]Sentenceは、[存在/そんざい]するvariantとして[保持/ほじ]する。"
-    cons "Rows/Columnsは、[元順/もとじゅん]の[全/ぜん]variantを[表示/ひょうじ]する。"
-    cons "[各表示出現/かくひょうじしゅつげん]のdata-nepl-groupは[生成/せいせい]elementの[番号/ばんごう]から[決定/けってい]し、[同/おな]じDoc nodeを[複数表示/ふくすうひょうじ]しても[出現/しゅつげん]を[区別/くべつ]する。"
+    cons sentence "ParallelModeは、Rows、Columns、Single(language,fallbacks)のいずれかとする。"
+    cons sentence "Singleの[言語/げんご]タグは[共通/きょうつう]Lang[規則/きそく]に[従/したが]い、[候補/こうほ]の[重複/ちょうふく]はASCII case-insensitiveで[拒否/きょひ]する。"
+    cons sentence "[各/かく]Parallelは、[指定/してい]languageから[明示/めいじ]fallback[順/じゅん]に[一致/いっち]するvariantを[選/えら]び、[存在/そんざい]しなければMissingVariantとする。"
+    cons sentence "[空/から]Sentenceは、[存在/そんざい]するvariantとして[保持/ほじ]する。"
+    cons sentence "Rows/Columnsは、[元順/もとじゅん]の[全/ぜん]variantを[表示/ひょうじ]する。"
+    cons sentence "[各表示出現/かくひょうじしゅつげん]のdata-nepl-groupは[生成/せいせい]elementの[番号/ばんごう]から[決定/けってい]し、[同/おな]じDoc nodeを[複数表示/ふくすうひょうじ]しても[出現/しゅつげん]を[区別/くべつ]する。"
     nil
   cons paragraph
-    cons "Articleはclass nepl-docと[言語/げんご]を[持/も]つarticle、titleはh1とする。"
-    cons "SectionはUTF-8 byteの[小文字/こもじ]hexにn-を[付/つ]けたidと[見出/みだ]しを[持/も]ち、sectionの[入/い]れ[子/こ]ごとにlevelを[増/ふ]やす。"
-    cons "6を[超/こ]える[見出/みだ]しは、role=heading/aria-levelのdivとする。"
-    cons "Anchor/Referenceも[同/おな]じid[写像/しゃぞう]を[使用/しよう]する。"
-    cons "Paragraphはdivとし、[連続/れんぞく]Sentence/Parallelをpへまとめ、[子/こ]Blockは[独立/どくりつ]div[内/ない]へ[出/だ]し、[前後/ぜんご]のpを[閉/と]じる。"
-    cons "[子/こ]の[元順/もとじゅん]と[空白/くうはく]を[保持/ほじ]する。"
+    cons sentence "Articleはclass nepl-docと[言語/げんご]を[持/も]つarticle、titleはh1とする。"
+    cons sentence "SectionはUTF-8 byteの[小文字/こもじ]hexにn-を[付/つ]けたidと[見出/みだ]しを[持/も]ち、sectionの[入/い]れ[子/こ]ごとにlevelを[増/ふ]やす。"
+    cons sentence "6を[超/こ]える[見出/みだ]しは、role=heading/aria-levelのdivとする。"
+    cons sentence "Anchor/Referenceも[同/おな]じid[写像/しゃぞう]を[使用/しよう]する。"
+    cons sentence "Paragraphはdivとし、[連続/れんぞく]Sentence/Parallelをpへまとめ、[子/こ]Blockは[独立/どくりつ]div[内/ない]へ[出/だ]し、[前後/ぜんご]のpを[閉/と]じる。"
+    cons sentence "[子/こ]の[元順/もとじゅん]と[空白/くうはく]を[保持/ほじ]する。"
     nil
   cons paragraph
-    cons "Sentence/Concatはspan、Emphasis/Strongはem/strong、[明示/めいじ]Breakはbrとする。"
-    cons "Ruby/Annoは[型付/かたつ]きspanと[固定/こてい]CSSを[使/つか]い、base/reading/[全/ぜん]noteを[別要素/べつようそ]として[保持/ほじ]する。"
-    cons "Tableはheaderのthead、[順序付/じゅんじょつ]きtbody/trとth/td、[列/れつ]alignmentの[固定/こてい]classを[使/つか]う。"
-    cons "[空表/くうひょう]は、[空/から]tableのままにする。"
-    cons "Listはul/ol、itemはliとBody、[明示/めいじ]checkboxは[状態/じょうたい]を[持/も]つ[表示/ひょうじ]spanとする。"
-    cons "HTMLのol.start[範囲/はんい]を[超/こ]えるU64はListStartとして[拒否/きょひ]し、[丸/まる]めない。"
-    cons "RawCodeはfigureの[任意/にんい]captionにlanguageHintを[保持/ほじ]し、pre/codeには[元/もと]Textを[置/お]く。"
-    cons "hintをparser[実行要求/じっこうようきゅう]へ[変/か]えない。"
+    cons sentence "Sentence/Concatはspan、Emphasis/Strongはem/strong、[明示/めいじ]Breakはbrとする。"
+    cons sentence "Ruby/Annoは[型付/かたつ]きspanと[固定/こてい]CSSを[使/つか]い、base/reading/[全/ぜん]noteを[別要素/べつようそ]として[保持/ほじ]する。"
+    cons sentence "Tableはheaderのthead、[順序付/じゅんじょつ]きtbody/trとth/td、[列/れつ]alignmentの[固定/こてい]classを[使/つか]う。"
+    cons sentence "[空表/くうひょう]は、[空/から]tableのままにする。"
+    cons sentence "Listはul/ol、itemはliとBody、[明示/めいじ]checkboxは[状態/じょうたい]を[持/も]つ[表示/ひょうじ]spanとする。"
+    cons sentence "HTMLのol.start[範囲/はんい]を[超/こ]えるU64はListStartとして[拒否/きょひ]し、[丸/まる]めない。"
+    cons sentence "RawCodeはfigureの[任意/にんい]captionにlanguageHintを[保持/ほじ]し、pre/codeには[元/もと]Textを[置/お]く。"
+    cons sentence "hintをparser[実行要求/じっこうようきゅう]へ[変/か]えない。"
     nil
   cons paragraph
-    cons "renderはHTML arenaを[反復構築/はんぷくこうちく]し、[全生成/ぜんせいせい]node・[属性/ぞくせい]・[文字列/もじれつ]・[処理待/しょりま]ち・[深/ふか]さをBudgetへ[計上/けいじょう]する。"
-    cons "[全結果/ぜんけっか]を[共通/きょうつう]markup validatorへ[通/とお]す。"
-    cons "[本文/ほんぶん]/[属性/ぞくせい]のXML[不適合/ふてきごう]やHTML[内容不適合/ないようふてきごう]は、[型付/かたつ]きMarkup[失敗/しっぱい]とする。"
-    cons "これらを[削除/さくじょ]して[成功/せいこう]にしない。"
-    cons "[出力/しゅつりょく]fragmentの[深/ふか]さは256までとし、[超過/ちょうか]はOutputDepthとして[元/もと]Doc nodeを[示/しめ]す。"
-    cons "これはbrowser[出力/しゅつりょく]profileの[限界/げんかい]であり、[入力意味/にゅうりょくいみ]モデルを[平坦化/へいたんか]する[規則/きそく]ではない。"
-    cons "[文書/ぶんしょ]shellは[残/のこ]りの[閲覧側深度/えつらんがわしんど]を[含/ふく]めて[検査/けんさ]し、[実/じつ]browserで[再確認/さいかくにん]する。"
+    cons sentence "renderはHTML arenaを[反復構築/はんぷくこうちく]し、[全生成/ぜんせいせい]node・[属性/ぞくせい]・[文字列/もじれつ]・[処理待/しょりま]ち・[深/ふか]さをBudgetへ[計上/けいじょう]する。"
+    cons sentence "[全結果/ぜんけっか]を[共通/きょうつう]markup validatorへ[通/とお]す。"
+    cons sentence "[本文/ほんぶん]/[属性/ぞくせい]のXML[不適合/ふてきごう]やHTML[内容不適合/ないようふてきごう]は、[型付/かたつ]きMarkup[失敗/しっぱい]とする。"
+    cons sentence "これらを[削除/さくじょ]して[成功/せいこう]にしない。"
+    cons sentence "[出力/しゅつりょく]fragmentの[深/ふか]さは256までとし、[超過/ちょうか]はOutputDepthとして[元/もと]Doc nodeを[示/しめ]す。"
+    cons sentence "これはbrowser[出力/しゅつりょく]profileの[限界/げんかい]であり、[入力意味/にゅうりょくいみ]モデルを[平坦化/へいたんか]する[規則/きそく]ではない。"
+    cons sentence "[文書/ぶんしょ]shellは[残/のこ]りの[閲覧側深度/えつらんがわしんど]を[含/ふく]めて[検査/けんさ]し、[実/じつ]browserで[再確認/さいかくにん]する。"
     nil
   cons paragraph
-    cons sentence
+    cons sentence sentence
       cons code "RenderedFragment"
       cons text " はdocumentDigest、RenderOptions、HtmlRequest、ElementOrigin(element,node)"
       cons ruby text "列" text "れつ"
@@ -93,16 +93,16 @@ body
       cons ruby text "保持" text "ほじ"
       cons text "する。"
       nil
-    cons "elementは[出力/しゅつりょく]arena、nodeは[明示/めいじ]Doc arenaの[番号/ばんごう]で、[生成/せいせい]したText/elementごとに[一/ひと]つの[原因/げんいん]を[出力順/しゅつりょくじゅん]で[保持/ほじ]する。"
-    cons "[元/もと]DocのSpan/Origin/source[表/ひょう]を[参照/さんしょう]し、[架空/かくう]の[生成/せいせい]source[位置/いち]を[作/つく]らない。"
-    cons "[固定/こてい]stylesheetはcrateのassets/doc.cssであり、HtmlPolicy[自己申告/じこしんこく]やfragment[単体/たんたい]を、CSS[配布済/はいふず]みの[証明/しょうめい]としない。"
+    cons sentence "elementは[出力/しゅつりょく]arena、nodeは[明示/めいじ]Doc arenaの[番号/ばんごう]で、[生成/せいせい]したText/elementごとに[一/ひと]つの[原因/げんいん]を[出力順/しゅつりょくじゅん]で[保持/ほじ]する。"
+    cons sentence "[元/もと]DocのSpan/Origin/source[表/ひょう]を[参照/さんしょう]し、[架空/かくう]の[生成/せいせい]source[位置/いち]を[作/つく]らない。"
+    cons sentence "[固定/こてい]stylesheetはcrateのassets/doc.cssであり、HtmlPolicy[自己申告/じこしんこく]やfragment[単体/たんたい]を、CSS[配布済/はいふず]みの[証明/しょうめい]としない。"
     nil
   cons paragraph
-    cons "portable rendered[値/ち]の[照合/しょうごう]は、[受信側/じゅしんがわ]が[再構築/さいこうちく]するdocument/optionsと[出力/しゅつりょく]を[基準/きじゅん]とする。"
-    cons "Sentenceなどのguestを[含/ふく]む[出力/しゅつりょく]はRenderedWithForeignで[交換/こうかん]する。fragmentはRenderedFragment、foreignは[表示/ひょうじ]の[出現順/しゅつげんじゅん]に[並/なら]ぶForeignPlacementの[列/れつ]である。ForeignPlacementはDocのembed[番号/ばんごう]、HTML arenaでの[開始位置/かいしいち]firstElement、[要素数/ようそすう]elementsを[保持/ほじ]する。[共有/きょうゆう]embedの[各出現/かくしゅつげん]を[個別/こべつ]に[記録/きろく]する。"
-    cons "[受信側/じゅしんがわ]のhostはguestを[選択/せんたく]して[意味/いみ]を[検査/けんさ]し、[受信/じゅしん]したDocumentSyntaxとRenderOptionsから[期待/きたい]する[出力/しゅつりょく]を[再構築/さいこうちく]する。codecはschema[検査/けんさ]の[後/あと]にdocument digest、options、markup、Doc origins、foreignの[全/ぜん]fieldと[順序/じゅんじょ]を[照合/しょうごう]する。callbackの[実行/じっこう]はhostが[明示/めいじ]し、codec[内部/ないぶ]で[再実行/さいじっこう]しない。"
-    cons "[照合後/しょうごうご]の[返却値/へんきゃくち]は[出力/しゅつりょく]データである。namespace、asset、HTML[直列化/ちょくれつか]の[権限/けんげん]は[対応/たいおう]する[検査/けんさ]で[確定/かくてい]する。[非表示/ひひょうじ]variantを[含/ふく]むguestの[意味検査/いみけんさ]はhostと[選択/せんたく]adapterの[責務/せきむ]である。Doc originsはDoc[内/ない]の[所有者/しょゆうしゃ]を[示/しめ]し、Sentence[内部/ないぶ]のnode[番号/ばんごう]は[各/かく]guestの[対応表/たいおうひょう]で[保持/ほじ]する。"
-    cons sentence
+    cons sentence "portable rendered[値/ち]の[照合/しょうごう]は、[受信側/じゅしんがわ]が[再構築/さいこうちく]するdocument/optionsと[出力/しゅつりょく]を[基準/きじゅん]とする。"
+    cons sentence "Sentenceなどのguestを[含/ふく]む[出力/しゅつりょく]はRenderedWithForeignで[交換/こうかん]する。fragmentはRenderedFragment、foreignは[表示/ひょうじ]の[出現順/しゅつげんじゅん]に[並/なら]ぶForeignPlacementの[列/れつ]である。ForeignPlacementはDocのembed[番号/ばんごう]、HTML arenaでの[開始位置/かいしいち]firstElement、[要素数/ようそすう]elementsを[保持/ほじ]する。[共有/きょうゆう]embedの[各出現/かくしゅつげん]を[個別/こべつ]に[記録/きろく]する。"
+    cons sentence "[受信側/じゅしんがわ]のhostはguestを[選択/せんたく]して[意味/いみ]を[検査/けんさ]し、[受信/じゅしん]したDocumentSyntaxとRenderOptionsから[期待/きたい]する[出力/しゅつりょく]を[再構築/さいこうちく]する。codecはschema[検査/けんさ]の[後/あと]にdocument digest、options、markup、Doc origins、foreignの[全/ぜん]fieldと[順序/じゅんじょ]を[照合/しょうごう]する。callbackの[実行/じっこう]はhostが[明示/めいじ]し、codec[内部/ないぶ]で[再実行/さいじっこう]しない。"
+    cons sentence "[照合後/しょうごうご]の[返却値/へんきゃくち]は[出力/しゅつりょく]データである。namespace、asset、HTML[直列化/ちょくれつか]の[権限/けんげん]は[対応/たいおう]する[検査/けんさ]で[確定/かくてい]する。[非表示/ひひょうじ]variantを[含/ふく]むguestの[意味検査/いみけんさ]はhostと[選択/せんたく]adapterの[責務/せきむ]である。Doc originsはDoc[内/ない]の[所有者/しょゆうしゃ]を[示/しめ]し、Sentence[内部/ないぶ]のnode[番号/ばんごう]は[各/かく]guestの[対応表/たいおうひょう]で[保持/ほじ]する。"
+    cons sentence sentence
       cons code "RenderedFragment"
       cons text "の"
       cons ruby text "旧" text "きゅう"
@@ -126,18 +126,18 @@ body
       cons ruby text "比較" text "ひかく"
       cons text "する。"
       nil
-    cons "[改変/かいへん]markup、[原因対応/げんいんたいおう]の[欠落/けつらく]・[変更/へんこう]、[別/べつ]document/optionsの[結果/けっか]を、raw[受信/じゅしん]したproofとして[採用/さいよう]しない。"
-    cons "これは[現在/げんざい]の[純粋/じゅんすい]local[変換/へんかん]の[再実行比較/さいじっこうひかく]であり、[将来/しょうらい]の[外部/がいぶ]rendererの[授権/じゅけん]や[完全/かんぜん]なArtifact[検査/けんさ]を[代行/だいこう]しない。"
-    cons "[全体/ぜんたい]の[停止/ていし]・[資源/しげん]Usageは、[同/おな]じBudgetで[単調/たんちょう]に[保持/ほじ]する。"
+    cons sentence "[改変/かいへん]markup、[原因対応/げんいんたいおう]の[欠落/けつらく]・[変更/へんこう]、[別/べつ]document/optionsの[結果/けっか]を、raw[受信/じゅしん]したproofとして[採用/さいよう]しない。"
+    cons sentence "これは[現在/げんざい]の[純粋/じゅんすい]local[変換/へんかん]の[再実行比較/さいじっこうひかく]であり、[将来/しょうらい]の[外部/がいぶ]rendererの[授権/じゅけん]や[完全/かんぜん]なArtifact[検査/けんさ]を[代行/だいこう]しない。"
+    cons sentence "[全体/ぜんたい]の[停止/ていし]・[資源/しげん]Usageは、[同/おな]じBudgetで[単調/たんちょう]に[保持/ほじ]する。"
     nil
   cons paragraph
-    cons "local[入口/いりぐち]と[要求発見/ようきゅうはっけん]だけで、T23やT21を[完成/かんせい]にはしない。"
-    cons "ページの[外部/がいぶ]リンク・[画像/がぞう]・foreign[表現/ひょうげん]を[含/ふく]む[正式要求/せいしきようきゅう]を[満/み]たしてから、16[章/しょう]/18[章/しょう]に[従/したが]って.nepld[正本/せいほん]へ[切/き]り[替/か]える。"
+    cons sentence "local[入口/いりぐち]と[要求発見/ようきゅうはっけん]だけで、T23やT21を[完成/かんせい]にはしない。"
+    cons sentence "ページの[外部/がいぶ]リンク・[画像/がぞう]・foreign[表現/ひょうげん]を[含/ふく]む[正式要求/せいしきようきゅう]を[満/み]たしてから、16[章/しょう]/18[章/しょう]に[従/したが]って.nepld[正本/せいほん]へ[切/き]り[替/か]える。"
     nil
-  cons section local_export "[開発/かいはつ]hostによるローカル[文書/ぶんしょ]の[書/か]き[出/だ]し"
+  cons section local_export sentence "[開発/かいはつ]hostによるローカル[文書/ぶんしょ]の[書/か]き[出/だ]し"
     body
       cons paragraph
-        cons sentence
+        cons sentence sentence
           cons code "nepl3-tools doc-html export <input.nepld> <new-directory>"
           cons text " は、"
           cons ruby text "共通" text "きょうつう"
@@ -159,31 +159,32 @@ body
           cons ruby text "書" text "か"
           cons text "く。"
           nil
-        cons "[既存/きそん]の[出力/しゅつりょく]は[上書/うわが]きしない。"
-        cons "[入力/にゅうりょく]はUTF-8、[読取/よみと]り[上限/じょうげん]は10,000,000 bytesとし、[上限/じょうげん]を[超/こ]えた[内容/ないよう]を[解析/かいせき]しない。"
-        cons "[生成/せいせい]を[完了/かんりょう]してから[出力/しゅつりょく]ディレクトリを[作/つく]る。"
-        cons "I/O[途中/とちゅう]の[失敗/しっぱい]では[不完全/ふかんぜん]なディレクトリが[残/のこ]り[得/う]るため、manifestは[最後/さいご]に[書/か]き、[失敗/しっぱい]を[成功/せいこう]にしない。"
+        cons sentence "[既存/きそん]の[出力/しゅつりょく]は[上書/うわが]きしない。"
+        cons sentence "[入力/にゅうりょく]はUTF-8、[読取/よみと]り[上限/じょうげん]は10,000,000 bytesとし、[上限/じょうげん]を[超/こ]えた[内容/ないよう]を[解析/かいせき]しない。"
+        cons sentence "[生成/せいせい]を[完了/かんりょう]してから[出力/しゅつりょく]ディレクトリを[作/つく]る。"
+        cons sentence "I/O[途中/とちゅう]の[失敗/しっぱい]では[不完全/ふかんぜん]なディレクトリが[残/のこ]り[得/う]るため、manifestは[最後/さいご]に[書/か]き、[失敗/しっぱい]を[成功/せいこう]にしない。"
         nil
       cons paragraph
-        cons "この[入口/いりぐち]は[開発用/かいはつよう]hostであり、[検査済/けんさず]みbootstrap fixtureをGrammar compilerへ[渡/わた]してpackageを[構成/こうせい]する。"
-        cons "[正式/せいしき]CLI、[生成/せいせい]package[配布/はいふ]、suite、[全資源解決/ぜんしげんかいけつ]の[完成/かんせい]とは[区別/くべつ]する。"
-        cons "source[読取/よみと]り/[検査/けんさ]、lower、prepare/render/serializeは、それぞれ[明示/めいじ]した[独立/どくりつ]Budgetを[持/も]つ。"
-        cons "manifestのUsageはその[単位/たんい]で[記録/きろく]し、[文書全体/ぶんしょぜんたい]が[一/ひと]つのBudgetで[完走/かんそう]した[記録/きろく]へ[読/よ]み[替/か]えない。"
-        cons "ファイルI/OとmanifestのJSON[整形/せいけい]は、hostの[責務/せきむ]である。"
+        cons sentence "この[入口/いりぐち]は[開発用/かいはつよう]hostであり、[検査済/けんさず]みbootstrap fixtureをGrammar compilerへ[渡/わた]してpackageを[構成/こうせい]する。"
+        cons sentence "hostは[一/ひと]つのArticleをdocumentというpage ID、document.nepldというsource、document.htmlというrouteで[登録/とうろく]する。[独立/どくりつ]Sentenceと[再帰的/さいきてき]なDoc Inlineを[選択/せんたく]し、Article[全体/ぜんたい]のnamespaceを[解決/かいけつ]してからHTMLを[生成/せいせい]する。"
+        cons sentence "[正式/せいしき]CLI、[生成/せいせい]package[配布/はいふ]、suite、[全資源解決/ぜんしげんかいけつ]の[完成/かんせい]とは[区別/くべつ]する。"
+        cons sentence "source[読取/よみと]り/[検査/けんさ]、lower、prepare/render/serializeは、それぞれ[明示/めいじ]した[独立/どくりつ]Budgetを[持/も]つ。"
+        cons sentence "manifestのUsageはその[単位/たんい]で[記録/きろく]し、[文書全体/ぶんしょぜんたい]が[一/ひと]つのBudgetで[完走/かんそう]した[記録/きろく]へ[読/よ]み[替/か]えない。"
+        cons sentence "ファイルI/OとmanifestのJSON[整形/せいけい]は、hostの[責務/せきむ]である。"
         nil
       cons paragraph
-        cons "shellは[固定/こてい]HTMLと[検査済/けんさず]みfragmentだけから[作/つく]り、stylesheetはbackendの[同/おな]じ[固定/こてい]byte[列/れつ]を[配布/はいふ]する。"
-        cons "CSPは[既定/きてい]の[取得/しゅとく]・script・formを[禁止/きんし]し、[同/おな]じoriginのstylesheetだけを[許可/きょか]する。"
-        cons "manifestは[入力/にゅうりょく]、Profile、Doc schema、[生成/せいせい]HTML/CSSのdigestと[表示/ひょうじ]optionsを[保持/ほじ]する。"
-        cons "[現在/げんざい]の[形式/けいしき]はlocal export[用/よう]の[記録/きろく]であり、17[章/しょう]のKaTeX[資源/しげん]bundleや[汎用/はんよう]Artifactの[境界検査/きょうかいけんさ]を[代行/だいこう]しない。"
-        cons "HTTPの[非/ひ]root pathとJavaScript[無効/むこう]の[実/じつ]browserで、[生成物/せいせいぶつ]を[検査/けんさ]する。"
-        cons "[外部/がいぶ]page/asset/foreignが[必要/ひつよう]な[文書/ぶんしょ]はNeedsResolutionのまま[拒否/きょひ]し、リンクや[埋/う]め[込/こ]みを[落/お]としたHTMLを[書/か]き[出/だ]さない。"
+        cons sentence "shellは[固定/こてい]HTMLと[検査済/けんさず]みfragmentだけから[作/つく]り、stylesheetはbackendの[同/おな]じ[固定/こてい]byte[列/れつ]を[配布/はいふ]する。"
+        cons sentence "CSPは[既定/きてい]の[取得/しゅとく]・script・formを[禁止/きんし]し、[同/おな]じoriginのstylesheetだけを[許可/きょか]する。"
+        cons sentence "manifestは[入力/にゅうりょく]、Profile、Doc schema、[生成/せいせい]HTML/CSSのdigestと[表示/ひょうじ]optionsを[保持/ほじ]する。"
+        cons sentence "[現在/げんざい]の[形式/けいしき]はlocal export[用/よう]の[記録/きろく]であり、17[章/しょう]のKaTeX[資源/しげん]bundleや[汎用/はんよう]Artifactの[境界検査/きょうかいけんさ]を[代行/だいこう]しない。"
+        cons sentence "HTTPの[非/ひ]root pathとJavaScript[無効/むこう]の[実/じつ]browserで、[生成物/せいせいぶつ]を[検査/けんさ]する。"
+        cons sentence "[他/ほか]のpageやasset、[選択/せんたく]した[範囲外/はんいがい]のguestにはhostの[明示的/めいじてき]な[解決/かいけつ]またはadapterを[要求/ようきゅう]する。[未解決/みかいけつ]の[要求/ようきゅう]は[失敗/しっぱい]として[返/かえ]し、リンクや[埋/う]め[込/こ]みを[保持/ほじ]した[出力/しゅつりょく]の[成立/せいりつ]を[要求/ようきゅう]する。"
         nil
       nil
-  cons section baseline "[固定/こてい]CSSのbaselineと[対応範囲/たいおうはんい]"
+  cons section baseline sentence "[固定/こてい]CSSのbaselineと[対応範囲/たいおうはんい]"
     body
       cons paragraph
-        cons sentence
+        cons sentence sentence
           cons text "Rubyはreadingを"
           cons ruby text "第" text "だい"
           cons text "1"
@@ -202,7 +203,7 @@ body
           cons ruby text "公開" text "こうかい"
           cons text "する。"
           nil
-        cons sentence
+        cons sentence sentence
           cons text "Annoはbaseを"
           cons ruby text "第" text "だい"
           cons text "1"
@@ -217,30 +218,30 @@ body
           cons ruby text "使" text "つか"
           cons text "う。"
           nil
-        cons "[空/から]の[先頭行/せんとうぎょう]を[挟/はさ]まない。"
-        cons "これにより、[入/い]れ[子/こ]のbaseも[内側要素/うちがわようそ]が[公開/こうかい]するbaselineで[整列/せいれつ]する。"
-        cons "[明示改行/めいじかいぎょう]を[含/ふく]むbaseの[場合/ばあい]、Rubyは[最後/さいご]の[行/ぎょう]、Annoは[最初/さいしょ]の[行/ぎょう]が[整列基準/せいれつきじゅん]になる。"
-        cons "[高/たか]さを[仮定/かてい]した[固定/こてい]offsetやJavaScriptで[合/あ]わせない。"
+        cons sentence "[空/から]の[先頭行/せんとうぎょう]を[挟/はさ]まない。"
+        cons sentence "これにより、[入/い]れ[子/こ]のbaseも[内側要素/うちがわようそ]が[公開/こうかい]するbaselineで[整列/せいれつ]する。"
+        cons sentence "[明示改行/めいじかいぎょう]を[含/ふく]むbaseの[場合/ばあい]、Rubyは[最後/さいご]の[行/ぎょう]、Annoは[最初/さいしょ]の[行/ぎょう]が[整列基準/せいれつきじゅん]になる。"
+        cons sentence "[高/たか]さを[仮定/かてい]した[固定/こてい]offsetやJavaScriptで[合/あ]わせない。"
         nil
       cons paragraph
-        cons sentence
+        cons sentence sentence
           cons text "この"
           cons ruby text "指定" text "してい"
           cons text "は "
-          cons link external "https://drafts.csswg.org/css-inline/#baseline-source" text "CSS Inline Layoutのbaseline-source"
+          cons link "https://drafts.csswg.org/css-inline/#baseline-source" text "CSS Inline Layoutのbaseline-source"
           cons text " と "
-          cons link external "https://www.w3.org/TR/css-grid-1/#grid-baselines" concat cons text "Gridのbaseline" cons ruby text "規則" text "きそく" nil
+          cons link "https://www.w3.org/TR/css-grid-1/#grid-baselines" concat cons text "Gridのbaseline" cons ruby text "規則" text "きそく" nil
           cons text " に"
           cons ruby text "基" text "もと"
           cons text "づく。"
           nil
-        cons "Inline Layoutは[草案/そうあん]であり、[仕様/しよう]の[存在/そんざい]だけを[全/ぜん]browserでの[実装証拠/じっそうしょうこ]にしない。"
-        cons "[生成文書/せいせいぶんしょ]の[対応/たいおう]browserは、[固定/こてい]CSSとの[実試験/じつしけん]で[確認/かくにん]する。"
-        cons "[幅/はば]が[狭/せま]い[場合/ばあい]にもRuby/Annoの[内部/ないぶ]を[任意位置/にんいいち]で[分割/ぶんかつ]せず、max-contentの[一/ひと]つのinline boxとして[保持/ほじ]する。"
-        cons "[長/なが]いbase/reading/notesやpre[内/ない]codeは[横/よこ]にはみ[出/だ]し[得/う]るため、hostの[閲覧/えつらん]・[印刷/いんさつ]profileは、その[表示/ひょうじ]と[移動手段/いどうしゅだん]を[別途検証/べっとけんしょう]する。"
+        cons sentence "Inline Layoutは[草案/そうあん]であり、[仕様/しよう]の[存在/そんざい]だけを[全/ぜん]browserでの[実装証拠/じっそうしょうこ]にしない。"
+        cons sentence "[生成文書/せいせいぶんしょ]の[対応/たいおう]browserは、[固定/こてい]CSSとの[実試験/じつしけん]で[確認/かくにん]する。"
+        cons sentence "[幅/はば]が[狭/せま]い[場合/ばあい]にもRuby/Annoの[内部/ないぶ]を[任意位置/にんいいち]で[分割/ぶんかつ]せず、max-contentの[一/ひと]つのinline boxとして[保持/ほじ]する。"
+        cons sentence "[長/なが]いbase/reading/notesやpre[内/ない]codeは[横/よこ]にはみ[出/だ]し[得/う]るため、hostの[閲覧/えつらん]・[印刷/いんさつ]profileは、その[表示/ひょうじ]と[移動手段/いどうしゅだん]を[別途検証/べっとけんしょう]する。"
         nil
       cons paragraph
-        cons sentence
+        cons sentence sentence
           cons code "baseline-source:first/last"
           cons text "の"
           cons ruby text "両方" text "りょうほう"
@@ -256,25 +257,25 @@ body
           cons ruby text "適用" text "てきよう"
           cons text "する。"
           nil
-        cons "readingは[上側/うえがわ]、notesは[下側/したがわ]のtable-captionとし、baseを[持/も]つ[唯一/ゆいいつ]の[行/ぎょう]からbaselineを[公開/こうかい]する。"
-        cons "Rubyのbaseはinline-blockとして[最終行/さいしゅうぎょう]のbaselineを、Annoのbaseはtable-cellとして[最初/さいしょ]の[行/ぎょう]のbaselineを[公開/こうかい]する。"
-        cons "DOMの[順序/じゅんじょ]や[注釈内容/ちゅうしゃくないよう]を[変更/へんこう]せず、HTMLの[表要素/ひょうようそ]やJavaScriptを[追加/ついか]しない。"
-        cons "この[代替/だいたい]はWebKitで[基底文字/きていもじ]が[本文/ほんぶん]より[下/さ]がる[不具合/ふぐあい]への[対応/たいおう]であり、[型付/かたつ]きmarkup・[意味正規形/いみせいきけい]は[変更/へんこう]しない。"
+        cons sentence "readingは[上側/うえがわ]、notesは[下側/したがわ]のtable-captionとし、baseを[持/も]つ[唯一/ゆいいつ]の[行/ぎょう]からbaselineを[公開/こうかい]する。"
+        cons sentence "Rubyのbaseはinline-blockとして[最終行/さいしゅうぎょう]のbaselineを、Annoのbaseはtable-cellとして[最初/さいしょ]の[行/ぎょう]のbaselineを[公開/こうかい]する。"
+        cons sentence "DOMの[順序/じゅんじょ]や[注釈内容/ちゅうしゃくないよう]を[変更/へんこう]せず、HTMLの[表要素/ひょうようそ]やJavaScriptを[追加/ついか]しない。"
+        cons sentence "この[代替/だいたい]はWebKitで[基底文字/きていもじ]が[本文/ほんぶん]より[下/さ]がる[不具合/ふぐあい]への[対応/たいおう]であり、[型付/かたつ]きmarkup・[意味正規形/いみせいきけい]は[変更/へんこう]しない。"
         nil
       cons paragraph
-        cons sentence
+        cons sentence sentence
           cons ruby text "代替" text "だいたい"
           cons text "の"
           cons ruby text "根拠" text "こんきょ"
           cons text "は "
-          cons link external "https://www.w3.org/TR/CSS2/visudet.html#leading" text "CSS2のinline-block baseline"
+          cons link "https://www.w3.org/TR/CSS2/visudet.html#leading" text "CSS2のinline-block baseline"
           cons text " と "
-          cons link external "https://www.w3.org/TR/CSS2/tables.html#height-layout" concat cons text "tableのbaseline" cons ruby text "規則" text "きそく" nil
+          cons link "https://www.w3.org/TR/CSS2/tables.html#height-layout" concat cons text "tableのbaseline" cons ruby text "規則" text "きそく" nil
           cons text " である。"
           nil
-        cons "[対応/たいおう]propertyの[有無/うむ]だけで[合否/ごうひ]を[決/き]めず、[実際/じっさい]のproduction HTMLとCSSをChromium・Firefox・WebKitで[表示/ひょうじ]し、[本文/ほんぶん]とのbaseline、[読/よ]み・[注釈/ちゅうしゃく]の[上下配置/じょうげはいち]、[複数行/ふくすうぎょう]の[基準/きじゅん]、[入/い]れ[子/こ]と[前後行/ぜんごぎょう]の[高/たか]さ[予約/よやく]を[検査/けんさ]する。"
-        cons "[文書内/ぶんしょない]のJavaScriptは[無効/むこう]とする。"
-        cons "この[静的文書/せいてきぶんしょ]の[検査/けんさ]はWasm・Playground・[支援技術/しえんぎじゅつ]による[実操作/じつそうさ]の[受入/うけいれ]を[代行/だいこう]しない。"
+        cons sentence "[対応/たいおう]propertyの[有無/うむ]だけで[合否/ごうひ]を[決/き]めず、[実際/じっさい]のproduction HTMLとCSSをChromium・Firefox・WebKitで[表示/ひょうじ]し、[本文/ほんぶん]とのbaseline、[読/よ]み・[注釈/ちゅうしゃく]の[上下配置/じょうげはいち]、[複数行/ふくすうぎょう]の[基準/きじゅん]、[入/い]れ[子/こ]と[前後行/ぜんごぎょう]の[高/たか]さ[予約/よやく]を[検査/けんさ]する。"
+        cons sentence "[文書内/ぶんしょない]のJavaScriptは[無効/むこう]とする。"
+        cons sentence "この[静的文書/せいてきぶんしょ]の[検査/けんさ]はWasm・Playground・[支援技術/しえんぎじゅつ]による[実操作/じつそうさ]の[受入/うけいれ]を[代行/だいこう]しない。"
         nil
       nil
   nil

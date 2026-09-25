@@ -433,6 +433,17 @@ nativeが279,857,852、WASIが204,782,384だった。通常上限は維持し、
 通常予算へ限定し、独立担当はその差分を静的に再確認した。Clippy、repository check、fmt、diff検査は成功した。
 正式Markdown集合生成は第08章を通過し、第20章の旧構文で停止した。集合生成物はまだ更新していない。
 
+第20章を独立Sentence構文へ移行し、外部リンク4件はSentenceのExternalLinkへ接続した。
+旧local APIのDoc所有モデルと、開発hostによる独立Sentence・再帰Doc Inlineの合成を本文で区別した。
+hostのpage登録、namespace解決、追加guestのadapter要求も現行実装へ対応させた。
+独立レビューはこれら3箇所の説明変更をコードと照合し、他の引用文字列・文境界の保持を確認した。
+正式reader/lowerとMarkdown解析による16段落・2節・InlineCode14件・外部リンク4件の試験は、
+通常予算でnative/WASI各1件、独立native1件が成功した。両targetでlowerは17,135,091 Work、
+projectionは85,209,206 Workだった。projectionの累積AllocationUnitsはnativeが105,891,274、
+WASIが77,479,222である。既存export試験7件、Clippy、repository check、fmt、diff検査も成功した。
+正式Markdown集合生成は第20章を通過し、第17章の旧構文で停止した。生成物の更新と、
+他章の通常予算への適合、旧local APIの撤去は継続する。
+
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
