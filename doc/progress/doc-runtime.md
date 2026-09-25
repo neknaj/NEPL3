@@ -358,6 +358,13 @@ memberのsource参照生成も同じ副索引へ接続し、位置の正準整�
 第13章の投影は227,798,829 Workとなり、AllocationUnitsは156,122,689のままである。
 native/WASIのwire全90試験、独立レビューの共有形式10試験、Clippy、thumb向けcheck、
 repository checkが成功した。独立した形式oracleとmemberの権限境界の試験を維持している。
+投影hostへ段階観測を追加し、同じ操作の累積Usageと実時間を測定した。第13章では
+Discoveryが84,678,623 Work、namespace検査の追加分が20,594,917 Work、
+namespace解決・encoding・digest計算の追加分が122,443,739 Work、最終投影が81,550 Workであった。
+native debug単回の累積実時間は順に約1.98秒、2.18秒、6.27秒、6.27秒である。
+通常入口との出力・Usage一致、通知順序、Discovery直後の停止で後段を完了通知しないことを
+native/WASIで確認し、独立レビューでも同じ試験が成功した。時刻と計測結果は成果物へ含めない。
+次の性能改善では検証・変換・digest計算を優先し、最終Markdown出力の費用と区別する。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

@@ -72,6 +72,96 @@ fn links(markdown: &str) -> Vec<String> {
 }
 
 #[test]
+fn projection_profile_preserves_output_usage_and_completed_stage_order() -> Result<(), String> {
+    use annotated::pages::{Stage, render_profiled};
+    let c = compiled()?;
+    let set = PageSet {
+        pages: vec![page(
+            &c,
+            "a",
+            "a.nepld",
+            "a.md",
+            "article en sentence \"Title\" body cons paragraph cons sentence \"Body\" nil nil",
+        )?],
+        files: vec![],
+    };
+    let store = SourceStore::default();
+    let mut ordinary_admission = SourceAdmission::default();
+    let mut ordinary_codec =
+        FoundationCodec::new(&c.doc.registry, &store, &mut ordinary_admission).map_err(err)?;
+    let mut ordinary_budget = budget();
+    let ordinary = render(
+        &set,
+        &c.doc.registry,
+        &mut ordinary_codec,
+        &mut ordinary_budget,
+        &[&[]],
+    )
+    .map_err(err)?;
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let mut measured = budget();
+    let mut stages = Vec::new();
+    let profiled = render_profiled(
+        &set,
+        &c.doc.registry,
+        &mut codec,
+        &mut measured,
+        &[&[]],
+        &mut |stage, usage| stages.push((stage, usage)),
+    )
+    .map_err(err)?;
+    assert_eq!(ordinary.identity, profiled.identity);
+    assert_eq!(ordinary.pages[0].markdown, profiled.pages[0].markdown);
+    assert_eq!(
+        ordinary.pages[0].document_digest,
+        profiled.pages[0].document_digest
+    );
+    assert_eq!(ordinary_budget.usage(), measured.usage());
+    assert_eq!(
+        stages.iter().map(|(stage, _)| *stage).collect::<Vec<_>>(),
+        [
+            Stage::Discovery,
+            Stage::Inspection,
+            Stage::Resolution,
+            Stage::Projection
+        ]
+    );
+    assert_eq!(
+        stages.last().ok_or("missing final stage")?.1,
+        measured.usage()
+    );
+    for pair in stages.windows(2) {
+        assert!(pair[0].1.work <= pair[1].1.work);
+        assert!(pair[0].1.allocation_units <= pair[1].1.allocation_units);
+    }
+    // Stop immediately after the completed discovery boundary. Its observation
+    // remains available; no later stage is reported as completed.
+    // Keep all non-Work resources equal to the normal test operation.
+    let mut limited = Budget::new(Limits {
+        work: stages[0].1.work,
+        ..budget().limits()
+    });
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let mut completed = Vec::new();
+    assert!(
+        render_profiled(
+            &set,
+            &c.doc.registry,
+            &mut codec,
+            &mut limited,
+            &[&[]],
+            &mut |stage, _| completed.push(stage)
+        )
+        .is_err()
+    );
+    assert_eq!(limited.poll(), Err(StopReason::WorkLimit));
+    assert_eq!(completed, [Stage::Discovery]);
+    Ok(())
+}
+
+#[test]
 fn page_projection_reuses_validation_and_matches_standalone_digest() -> Result<(), String> {
     let c = compiled()?;
     let store = SourceStore::default();
@@ -1202,13 +1292,22 @@ fn reproducibility_projection(
     eprintln!("reproducibility lower usage={:?}", lower_budget.usage());
     let started = std::time::Instant::now();
     let mut prepared = None;
-    let artifact = render_observed(
+    let artifact = annotated::pages::render_profiled(
         &set,
         &c.doc.registry,
         &mut codec,
         &mut render_budget,
         &[&[]],
-        &mut |usage| prepared = Some((started.elapsed(), usage)),
+        &mut |stage, usage| {
+            let elapsed = started.elapsed();
+            eprintln!(
+                "reproducibility stage={stage:?} elapsed_ns={} usage={usage:?}",
+                elapsed.as_nanos()
+            );
+            if stage == annotated::pages::Stage::Resolution {
+                prepared = Some((elapsed, usage));
+            }
+        },
     )
     .map_err(err)?;
     let finished = started.elapsed();

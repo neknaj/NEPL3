@@ -67,6 +67,42 @@ pub fn render_observed<C: FoundationValueCodec>(
 where
     C::Error: core::fmt::Debug,
 {
+    render_profiled(
+        set,
+        registry,
+        codec,
+        budget,
+        aliases,
+        &mut |stage, usage| {
+            if stage == Stage::Resolution {
+                prepared(usage);
+            }
+        },
+    )
+}
+
+/// Completed host stages. Usage is cumulative in one unchanged operation.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Stage {
+    Discovery,
+    Inspection,
+    Resolution,
+    Projection,
+}
+
+/// Observe completed stages without exposing mutable state or validation proofs.
+/// The host may measure elapsed time alongside each cumulative usage snapshot.
+pub fn render_profiled<C: FoundationValueCodec>(
+    set: &PageSet,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+    aliases: &[&[Alias]],
+    observe: &mut impl FnMut(Stage, Usage),
+) -> Result<PagesArtifact, Error>
+where
+    C::Error: core::fmt::Debug,
+{
     budget.poll()?;
     if aliases.len() != set.pages.len() {
         return Err(Error::Invalid("page alias count mismatch".into()));
@@ -116,6 +152,7 @@ where
             budget,
         )?;
     }
+    observe(Stage::Discovery, budget.usage());
     let mut admission = SourceAdmission::default();
     let mut plans = Vec::new();
     for page in &discovered {
@@ -127,6 +164,7 @@ where
             budget,
         )?;
     }
+    observe(Stage::Inspection, budget.usage());
     let mut members = Vec::new();
     for plan in &plans {
         let refs = plan.member_refs(budget)?;
@@ -149,7 +187,7 @@ where
     let value = domain::resolve(set, &refs, registry, codec, budget);
     budget.poll()?;
     let checked = value.map_err(|e| Error::Invalid(format!("{e:?}")))?;
-    prepared(budget.usage());
+    observe(Stage::Resolution, budget.usage());
     let mut output = Vec::new();
     let mut dependencies = Vec::new();
     let mut pending = checked.members().iter().peekable();
@@ -251,6 +289,7 @@ where
     for (artifact, _) in output {
         push(&mut pages, artifact, budget)?;
     }
+    observe(Stage::Projection, budget.usage());
     Ok(PagesArtifact {
         identity: checked.identity(),
         pages,
