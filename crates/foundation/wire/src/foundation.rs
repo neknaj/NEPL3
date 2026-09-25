@@ -50,6 +50,38 @@ impl<'a> FoundationCodec<'a> {
         self.registry.validate(&expected(name), value, budget)?;
         Ok(())
     }
+    /// Encode compact view bytes using this codec's declared sources and mapping
+    /// scope. Mappings are supplied by `scoped_with_mappings`; the compact bytes
+    /// retain local identities, while source and mapping authority remain external.
+    pub fn encode_shared_views(
+        &mut self,
+        views: &ViewBundle,
+        budget: &mut Budget,
+    ) -> Result<Vec<u8>, WireError> {
+        shared::admit_views(views, self.sources, self.admission, budget)?;
+        self.validate_views(views, budget)?;
+        crate::encode_checked(
+            &shared::value(views, self.schema, budget)?,
+            &expected("SharedViewBundle"),
+            self.registry,
+            budget,
+        )
+    }
+    /// Decode compact view bytes against this codec's source and mapping scope.
+    /// Missing endpoints, invalid mappings, and unproven containment are rejected.
+    /// The mapping proof follows the same invalidation rules as ordinary views.
+    pub fn decode_shared_views(
+        &mut self,
+        bytes: &[u8],
+        budget: &mut Budget,
+    ) -> Result<ViewBundle, WireError> {
+        let checked =
+            crate::decode_checked(bytes, &expected("SharedViewBundle"), self.registry, budget)?;
+        let views = shared::from_value(checked.value(), self.schema, self.sources, budget)?;
+        shared::admit_views(&views, self.sources, self.admission, budget)?;
+        self.validate_views(&views, budget)?;
+        Ok(views)
+    }
     fn span_admission(&mut self, span: &Span, budget: &mut Budget) -> Result<(), WireError> {
         budget.charge(
             Resource::AllocationUnits,
@@ -62,6 +94,27 @@ impl<'a> FoundationCodec<'a> {
         self.admission.admit_existing(source, budget)?;
         source.slice(span)?;
         Ok(())
+    }
+    /// Reborrow this codec for a source scope with direct containment only.
+    pub fn scoped<'s>(&'s mut self, sources: &'s SourceStore) -> FoundationCodec<'s> {
+        self.scoped_with_mappings(sources, &[])
+    }
+    /// Reborrow for explicit mapping authority. Both this scope and its parent
+    /// lose cached mapping validation when rebinding; validation is lazy.
+    pub fn scoped_with_mappings<'s>(
+        &'s mut self,
+        sources: &'s SourceStore,
+        mappings: &'s [Mapping],
+    ) -> FoundationCodec<'s> {
+        self.validated_mappings = None;
+        FoundationCodec {
+            schema: self.schema,
+            registry: self.registry,
+            sources,
+            mappings,
+            validated_mappings: None,
+            admission: self.admission,
+        }
     }
     fn mapping_admission(&mut self, budget: &mut Budget) -> Result<(), WireError> {
         for mapping in self.mappings {
@@ -233,30 +286,14 @@ impl FoundationValueCodec for FoundationCodec<'_> {
         &'a mut self,
         sources: &'a SourceStore,
     ) -> impl FoundationValueCodec<Error = WireError> + 'a {
-        self.validated_mappings = None;
-        FoundationCodec {
-            schema: self.schema,
-            registry: self.registry,
-            sources,
-            mappings: &[],
-            validated_mappings: None,
-            admission: self.admission,
-        }
+        FoundationCodec::scoped(self, sources)
     }
     fn scoped_with_mappings<'a>(
         &'a mut self,
         sources: &'a SourceStore,
         mappings: &'a [Mapping],
     ) -> impl FoundationValueCodec<Error = WireError> + 'a {
-        self.validated_mappings = None;
-        FoundationCodec {
-            schema: self.schema,
-            registry: self.registry,
-            sources,
-            mappings,
-            validated_mappings: None,
-            admission: self.admission,
-        }
+        FoundationCodec::scoped_with_mappings(self, sources, mappings)
     }
     fn encode_syntax(
         &mut self,
