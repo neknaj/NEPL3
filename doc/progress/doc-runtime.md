@@ -311,6 +311,11 @@ Workは28,200,092減少し、一時的な整数キーの保持によりAllocatio
 独立レビューはunitと共有形式の計11試験を実行した。
 第13章の投影は300,237,833 Work、164,738,513 AllocationUnits、native debugで約8.88秒となった。
 Workは7,973,632減少した。単回測定の実時間は改善しておらず、通常Work100Mへの適合も未達である。
+共有表のsource・mapping参照検索も、一致位置の確定後に同じキーを再比較しない共通処理へ統一した。
+存在・不在と比較回数の境界を追加し、wire全87試験、WASIのpool試験2件、独立レビュー12試験が成功した。
+第13章の投影は300,042,375 Workとなり、削減は195,458 Workに留まる。
+AllocationUnitsは164,738,513のままで、native debugの単回測定は約8.94秒であった。
+残る主な調査対象はtokenのpayload・viewを含むencodingとcanonical digest計算である。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

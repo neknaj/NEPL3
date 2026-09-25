@@ -93,18 +93,27 @@ pub(super) struct Pool<'a, T> {
     entries: Vec<(&'a T, Digest)>,
     pub values: Vec<Entry>,
 }
-impl Pool<'_, SourceSnapshot> {
-    fn position(&self, wanted: &SnapshotId, b: &mut Budget) -> Result<usize, WireError> {
+impl<T> Pool<'_, T> {
+    fn find(
+        &self,
+        mut compare: impl FnMut(&T, &mut Budget) -> Result<Ordering, WireError>,
+        b: &mut Budget,
+    ) -> Result<usize, WireError> {
         let (mut low, mut high) = (0, self.entries.len());
         while low < high {
             let mid = low + (high - low) / 2;
-            match identity(self.entries[mid].0.identity(), wanted, b)? {
+            match compare(self.entries[mid].0, b)? {
                 Ordering::Less => low = mid + 1,
                 Ordering::Greater => high = mid,
                 Ordering::Equal => return Ok(mid),
             }
         }
         Err(WireError::InvalidType)
+    }
+}
+impl Pool<'_, SourceSnapshot> {
+    fn position(&self, wanted: &SnapshotId, b: &mut Budget) -> Result<usize, WireError> {
+        self.find(|source, b| identity(source.identity(), wanted, b), b)
     }
     pub fn mapping<'m>(
         &self,
@@ -205,23 +214,8 @@ impl<'a, T: Content> Pool<'a, T> {
     ) -> Result<NdfValue, WireError> {
         let mut positions = Vec::new();
         for input in inputs {
-            let (mut low, mut high) = (0, self.entries.len());
-            while low < high {
-                let mid = low + (high - low) / 2;
-                match self.entries[mid].0.compare(input, b)? {
-                    Ordering::Less => low = mid + 1,
-                    Ordering::Greater => high = mid,
-                    Ordering::Equal => {
-                        low = mid;
-                        break;
-                    }
-                }
-            }
-            let (found, _) = self.entries.get(low).ok_or(WireError::InvalidType)?;
-            if found.compare(input, b)? != Ordering::Equal {
-                return Err(WireError::InvalidType);
-            }
-            push(&mut positions, low, b)?;
+            let position = self.find(|found, b| found.compare(input, b), b)?;
+            push(&mut positions, position, b)?;
         }
         // Source lists are already validated unique. Normalize their positions
         // with an explicitly metered O(n log n) heap.

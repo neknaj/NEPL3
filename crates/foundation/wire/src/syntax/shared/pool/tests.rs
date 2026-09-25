@@ -2,6 +2,64 @@ use super::*;
 use nepl3_core::{budget::Limits, source::SourceId};
 
 #[test]
+fn pool_search_commits_the_matched_position_without_recomparison() -> Result<(), WireError> {
+    let values = [2_u64, 4, 6, 8, 10, 12, 14];
+    let pool = Pool {
+        entries: values.iter().map(|v| (v, Digest::of(b"test"))).collect(),
+        values: Vec::new(),
+    };
+    for wanted in 0..=16 {
+        let mut budget = Budget::new(Limits {
+            work: 3,
+            ..Limits::default()
+        });
+        let actual = pool.find(
+            |candidate, b| {
+                b.charge(Resource::Work, 1)?;
+                Ok(candidate.cmp(&wanted))
+            },
+            &mut budget,
+        );
+        let expected = values
+            .iter()
+            .position(|v| *v == wanted)
+            .ok_or(WireError::InvalidType);
+        assert_eq!(actual, expected);
+    }
+    // The middle entry succeeds on the only permitted comparison. No search
+    // or equality check may follow the successful match.
+    let mut budget = Budget::new(Limits {
+        work: 1,
+        ..Limits::default()
+    });
+    assert_eq!(
+        pool.find(
+            |candidate, b| {
+                b.charge(Resource::Work, 1)?;
+                Ok(candidate.cmp(&8))
+            },
+            &mut budget
+        )?,
+        3
+    );
+    let mut budget = Budget::new(Limits {
+        work: 0,
+        ..Limits::default()
+    });
+    assert_eq!(
+        pool.find(
+            |candidate, b| {
+                b.charge(Resource::Work, 1)?;
+                Ok(candidate.cmp(&8))
+            },
+            &mut budget
+        ),
+        Err(WireError::Stopped(StopReason::WorkLimit))
+    );
+    Ok(())
+}
+
+#[test]
 fn borrowed_identity_equality_is_metered_and_storage_independent() -> Result<(), WireError> {
     let a = SnapshotId {
         source: SourceId("long-source".repeat(1024)),
