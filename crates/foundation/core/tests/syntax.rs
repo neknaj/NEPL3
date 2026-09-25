@@ -279,9 +279,78 @@ fn foreign_nesting_adds_to_containing_node_path_depth() -> Result<(), SyntaxErro
         outer.validate(&registry, &mut Budget::new(limits)),
         Err(SyntaxError::Stopped(StopReason::DepthLimit))
     ));
-    let mut budget = budget();
-    outer.validate(&registry, &mut budget)?;
-    assert_eq!(budget.usage().depth, 4);
+    let mut measured = budget();
+    let proof = outer.validate(&registry, &mut measured)?;
+    assert_eq!(measured.usage().depth, 4);
+    assert_eq!(proof.validation_depth(), 4);
+    let mut reused = budget();
+    reused.observe_depth(90)?;
+    let depth = reused.with_depth_at_least(7, |b| {
+        outer.validate(&registry, b).map(|p| p.validation_depth())
+    })?;
+    assert_eq!(depth, 4);
+    assert_eq!(reused.usage().depth, 90);
+    assert_eq!(reused.current_depth(), 0);
+    let owned = outer
+        .try_into_validated(&registry, &mut reused, &mut SourceAdmission::default())
+        .map_err(|failure| failure.error)?;
+    assert_eq!(owned.as_validated().validation_depth(), 4);
+    Ok(())
+}
+
+#[test]
+fn validation_depth_includes_token_payloads_under_the_current_caller() -> Result<(), SyntaxError> {
+    let (registry, schema) = registry()?;
+    let mut input = bundle(&schema);
+    let source = SourceSnapshot::new(
+        SourceId("depth".into()),
+        0,
+        "memory:depth".into(),
+        b"x".to_vec(),
+        &mut budget(),
+    )?;
+    let mut payload = NdfValue::Unit;
+    for _ in 0..8 {
+        payload = NdfValue::List(vec![payload]);
+    }
+    input.tokens.push(Token {
+        kind: KindRef {
+            schema,
+            local_kind: 0,
+        },
+        head: source.span(0, 1)?,
+        payload,
+        views: ViewBundle {
+            elements: vec![],
+            roots: vec![],
+        },
+        leading_trivia: vec![],
+    });
+    input.sources.push(source);
+    let mut prior = budget();
+    prior.observe_depth(90)?;
+    let depth = prior.with_depth_at_least(7, |b| {
+        input.validate(&registry, b).map(|p| p.validation_depth())
+    })?;
+    assert_eq!(depth, 9); // Eight list levels plus the Unit leaf.
+    assert_eq!(prior.usage().depth, 90);
+    for limit in [15, 16] {
+        let mut b = Budget::new(Limits {
+            depth: limit,
+            ..budget().limits()
+        });
+        let result = b.with_depth_at_least(7, |b| input.validate(&registry, b));
+        if limit == 16 {
+            assert_eq!(result?.validation_depth(), 9);
+        } else {
+            assert!(matches!(
+                result,
+                Err(SyntaxError::Stopped(StopReason::DepthLimit))
+            ));
+            assert_eq!(b.poll(), Err(StopReason::DepthLimit));
+        }
+        assert_eq!(b.current_depth(), 0);
+    }
     Ok(())
 }
 

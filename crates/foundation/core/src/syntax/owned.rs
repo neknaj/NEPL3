@@ -14,6 +14,7 @@ pub struct OwnedValidatedSyntaxBundle<'r> {
     bundle: SyntaxBundle,
     registry: &'r SchemaRegistry,
     owner_depth: u64,
+    validation_depth: u64,
 }
 
 /// Validation failure retains the exact owned graph, including partial source
@@ -38,10 +39,12 @@ impl SyntaxBundle {
         match self.validate_with_sources(registry, budget, admission) {
             Ok(proof) => {
                 let owner_depth = proof.owner_depth;
+                let validation_depth = proof.validation_depth;
                 Ok(OwnedValidatedSyntaxBundle {
                     bundle: self,
                     registry,
                     owner_depth,
+                    validation_depth,
                 })
             }
             Err(error) => Err(SyntaxValidationFailure {
@@ -58,6 +61,7 @@ impl OwnedValidatedSyntaxBundle<'_> {
         ValidatedSyntaxBundle {
             bundle: &self.bundle,
             owner_depth: self.owner_depth,
+            validation_depth: self.validation_depth,
         }
     }
 

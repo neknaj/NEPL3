@@ -171,10 +171,16 @@ pub struct ValidatedSyntaxBundle<'a> {
     // Root owner tables are registry-independent. Retain their exact relative
     // graph depth for capture into an independently budgeted operation.
     owner_depth: u64,
+    validation_depth: u64,
 }
 impl<'a> ValidatedSyntaxBundle<'a> {
     pub fn bundle(&self) -> &'a SyntaxBundle {
         self.bundle
+    }
+    /// Relative depth observed by this structural validation, including token
+    /// payloads and nested guests. This number grants no source or schema proof.
+    pub fn validation_depth(&self) -> u64 {
+        self.validation_depth
     }
 }
 
@@ -194,6 +200,20 @@ impl SyntaxBundle {
         budget: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<ValidatedSyntaxBundle<'a>, SyntaxError> {
+        let (owner_depth, validation_depth) =
+            budget.measure_depth(|budget| self.validate_contents(registry, budget, admission))?;
+        Ok(ValidatedSyntaxBundle {
+            bundle: self,
+            owner_depth,
+            validation_depth,
+        })
+    }
+    fn validate_contents(
+        &self,
+        registry: &SchemaRegistry,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<u64, SyntaxError> {
         if !registry.is_finalized() {
             return Err(SchemaError::Unfinalized.into());
         }
@@ -310,10 +330,7 @@ impl SyntaxBundle {
                 }
             }
         }
-        Ok(ValidatedSyntaxBundle {
-            bundle: self,
-            owner_depth,
-        })
+        Ok(owner_depth)
     }
     pub fn node(&self, reference: NodeRef) -> Result<&SyntaxNode, SyntaxError> {
         usize::try_from(reference.0)

@@ -111,6 +111,17 @@ Doc coreのnative・WASI各51試験、独立レビューのportable・prepare計
 第03章の内容検査、clippy、repository、fmt、diff検査とthumbv6m compileを確認した。
 通常予算への適合は未達である。生成文書全体のstalenessと実機動作は未確認である。
 
+guest構文の検証再利用に向け、構文検証型へ検証操作の相対深度を保持する処理を追加した。
+Budget内部の局所記録は累積Usageを維持し、先行処理の最大深度を分離する。
+入れ子の検証深度は外側へ反映し、失敗時の課金とsticky stopを保持する。
+owned構文検証型から借用する際も同じ深度を保持する。この深度値はsource権限や
+registryの検証を代替する情報として使用しない。codecでの検証再利用は後続の接続対象である。
+
+core・wire・engineはnative・WASI各327件が成功し、payload深度試験の追加後に
+coreの単体・syntax計36件を両targetで再実行した。独立レビューは初回33件と、
+追加payload試験・修正したBudget試験の計3件を実行した。clippy、repository、fmt、
+diff検査とthumbv6m compileも成功した。第03章の内容と投影Work 346,355,447は維持した。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは
