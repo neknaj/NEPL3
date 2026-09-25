@@ -15,6 +15,8 @@ mod migration_chapter;
 mod model_invariants;
 #[path = "namespace_projection.rs"]
 mod namespace_projection;
+#[path = "reader_chapter.rs"]
+mod reader_chapter;
 use nepl3_doc_core::{check::Category, lower, pages::*};
 use nepl3_tools::doc::projection::{
     Error,

@@ -498,6 +498,17 @@ projectionは329,875,518から275,563,786 Workへ減少したが、通常Work100
 追加unit・syntax・store計31件が成功し、追加指摘はなかった。Clippy、repository check、fmt、diff検査も成功した。
 正式canonical集合生成は第16章を通過し、第03章の旧構文で停止した。生成物の更新と通常projection予算への適合を継続する。
 
+第03章の正本を独立Sentence構文へ移行した。独立レビューはsentence333箇所の追加、external2箇所の削除、
+全引用値・Ruby・義務の保持を確認した。構造・表示試験は10節の親子関係、56個の節内段落、
+combinatorリスト20項目、InlineCode41件、外部リンク2件を検査する。
+既存の文書集合上限を明示したignored試験はnative/WASI各1件、独立native1件が成功した。
+parseと検証は127,080,117 Work、lowerは112,724,216 Work、projectionは379,349,041 Workである。
+累積AllocationUnitsは順にnativeで267,251,785・98,454,201・353,758,878、WASIで
+194,215,841・71,669,853・255,186,930だった。通常試験と正式canonical集合生成は、
+解析後の構文木検証でWork100Mへ到達した。解析終了時のWorkは98,080,963である。
+通常上限を維持し、検証結果の再利用と全段階の費用削減を継続する。生成物は更新していない。
+Clippy、repository check、fmt、diff検査は成功した。
+
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
