@@ -860,10 +860,26 @@
     "Doc:Sentence": {
       "record": [
         [
-          "inlines",
-          "List<Doc/Inline>"
+          "content",
+          "Doc:SentenceContent"
         ]
       ]
+    },
+    "Doc:SentenceContent": {
+      "sum": {
+        "Syntax": [
+          [
+            "closure",
+            "ForeignClosure"
+          ]
+        ],
+        "Value": [
+          [
+            "value",
+            "TypedValue"
+          ]
+        ]
+      }
     },
     "Doc/Sentence": {
       "union": {
@@ -910,46 +926,6 @@
         "Variant": "Doc:Variant"
       }
     },
-    "Doc:Text": {
-      "record": [
-        [
-          "text",
-          "Text"
-        ]
-      ]
-    },
-    "Doc:Concat": {
-      "record": [
-        [
-          "inlines",
-          "List<Doc/Inline>"
-        ]
-      ]
-    },
-    "Doc:Ruby": {
-      "record": [
-        [
-          "base",
-          "Doc/Inline"
-        ],
-        [
-          "reading",
-          "Doc/Inline"
-        ]
-      ]
-    },
-    "Doc:Anno": {
-      "record": [
-        [
-          "base",
-          "Doc/Inline"
-        ],
-        [
-          "notes",
-          "List<Doc/Inline>"
-        ]
-      ]
-    },
     "Doc:InlineMath": {
       "record": [
         [
@@ -966,7 +942,7 @@
         ],
         [
           "label",
-          "Doc/Inline"
+          "Doc:SentenceContent"
         ]
       ]
     },
@@ -978,43 +954,16 @@
         ],
         [
           "label",
-          "Doc/Inline"
+          "Doc:SentenceContent"
         ]
       ]
-    },
-    "Doc:Emphasis": {
-      "record": [
-        [
-          "inline",
-          "Doc/Inline"
-        ]
-      ]
-    },
-    "Doc:Strong": {
-      "record": [
-        [
-          "inline",
-          "Doc/Inline"
-        ]
-      ]
-    },
-    "Doc:Break": {
-      "record": []
     },
     "Doc/Inline": {
       "union": {
-        "Text": "Doc:Text",
-        "Concat": "Doc:Concat",
-        "Ruby": "Doc:Ruby",
-        "Anno": "Doc:Anno",
         "InlineMath": "Doc:InlineMath",
         "Anchor": "Doc:Anchor",
         "Reference": "Doc:Reference",
-        "Emphasis": "Doc:Emphasis",
-        "Strong": "Doc:Strong",
-        "Break": "Doc:Break",
         "Link": "Doc:Link",
-        "InlineCode": "Doc:InlineCode",
         "InlineImage": "Doc:InlineImage"
       }
     },
@@ -1588,15 +1537,7 @@
         ],
         [
           "label",
-          "Doc/Inline"
-        ]
-      ]
-    },
-    "Doc:InlineCode": {
-      "record": [
-        [
-          "text",
-          "Text"
+          "Doc:SentenceContent"
         ]
       ]
     },

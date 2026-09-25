@@ -2256,14 +2256,14 @@
       "type": "DocumentSyntax",
       "scope": "Typed domain value; decoding does not issue a checked-domain or prepared-domain execution proof."
     },
-    "DocSentenceReader": {
-      "descriptor": "interfaces/doc-reader.json",
-      "package": "nepl3.doc.reader",
-      "operation": "sentenceReferenced",
+    "SentenceLiteralReader": {
+      "descriptor": "interfaces/sentence-reader.json",
+      "package": "nepl3.sentence.reader",
+      "operation": "literal",
       "input": "nepl3.reader.ReadRequest",
       "output": "nepl3.reader.ReadReply",
-      "value_output": "nepl3.doc.SentencePayload",
-      "scope": "Executable reader adapter. The explanatory doc.lower/check/prepare/render entries remain domain contracts; their complete operation error and partial-result envelopes are not provided by this adapter. The doc.facts/v1 compilation signature does not establish a completed Facts implementation."
+      "value_output": "nepl3.sentence.SentenceLiteralPayload",
+      "scope": "Independent Sentence literal reader. Doc selects this guest through its sentence slot and retains the foreign closure; the suite adapter lowers it to SentenceSyntax without copying Inline nodes into Doc. The explanatory doc.lower/check/prepare/render entries remain domain contracts; this reader does not establish their complete operation error and partial-result envelopes or a completed Facts implementation."
     },
     "DocPlainText": {
       "descriptor": "interfaces/doc.json",

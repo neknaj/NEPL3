@@ -117,7 +117,8 @@ body
       cons "payload[内/ない]に[現/あらわ]れる[数値/すうち]を[外側/そとがわ]node IDと[推測/すいそく]して[再採番/さいさいばん]しない。"
       cons "この[所有契約/しょゆうけいやく]により、outer nodeのcanonical[再採番/さいさいばん]はopaque payloadを[壊/こわ]さず[行/おこな]える。" nil
     cons paragraph
-      cons "DocのSentenceLiteralはlower[後/ご]にDoc:Sentenceとなる。"
+      cons "Sentence literalとprefix[構築/こうちく]は[独立/どくりつ]したSentenceSyntaxへlowerする。Doc:SentenceはDocEmbedを[参照/さんしょう]する[文章/ぶんしょう]slotであり、Sentenceの[意味/いみ]nodeとsource・Origin・ViewはSentenceが[所有/しょゆう]する。"
+      cons "[論理/ろんり]モデルのDoc:SentenceContentは、SyntaxのForeignClosureまたはValueのportable SentenceSyntaxを[表/あらわ]す。Doc:SentenceのcontentはSentence root、Anchor・Reference・LinkのlabelはInline rootを[要求/ようきゅう]する。[受信側/じゅしんがわ]は[選択/せんたく]したschema・root category・source[閉包/へいほう]を[検査/けんさ]する。arena[表現/ひょうげん]では[同/おな]じ[内容/ないよう]をDocEmbedへ[置/お]き、EmbedRefで[参照/さんしょう]する。"
       cons "raw Textには[注釈構文/ちゅうしゃくこうぶん]を[再適用/さいてきよう]しない。"
       cons "MathのNumberは[有限十進/ゆうげんじっしん]で[表現/ひょうげん]できるRational（[約分後/やくぶんご]の[分母/ぶんぼ]の[素因数/そいんすう]が2と5だけ）と[元/もと]の[表記範囲/ひょうきはんい]を[持/も]ち、SymbolNameはMath:Symbolへ[統合/とうごう]する。"
       cons "[違反/いはん]はNonFiniteDecimalNumber。"

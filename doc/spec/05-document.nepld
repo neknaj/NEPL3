@@ -8,8 +8,8 @@ body
       cons "[元/もと]のsource[表記/ひょうき]は、[意味/いみ]モデルに[対応/たいおう]する[情報/じょうほう]として[保持/ほじ]する。" nil
     cons paragraph
       cons "[文章構造/ぶんしょうこうぞう]を[所有/しょゆう]する[言語/げんご]はNEPL3sentenceであり、Docはその[文章/ぶんしょう]を[文書構造/ぶんしょこうぞう]へ[配置/はいち]する。"
-      cons "[現在/げんざい]の[実装/じっそう]は[所有移行/しょゆういこう]の[途中/とちゅう]にあり、[開発/かいはつ]hostがSentenceのliteral readerの[結果/けっか]を[明示的/めいじてき]なadapterでDocのSentencePayloadへ[変換/へんかん]する。"
-      cons "[本章/ほんしょう]のDocValue・DocView・payloadは、このDoc consumerが[扱/あつか]う[値/あたい]と[操作/そうさ]の[契約/けいやく]を[定/さだ]める。"
+      cons "DocはSentenceの[構文/こうぶん][閉包/へいほう]またはportable SentenceSyntaxをDocEmbedへ[保持/ほじ]する。suiteのadapterが[選択/せんたく]したSentence schemaと[役割/やくわり]を[検査/けんさ]し、[独立/どくりつ]したSentenceSyntaxを[各/かく][表示操作/ひょうじそうさ]へ[渡/わた]す。"
+      cons "[本章/ほんしょう]はDocの[文書構造/ぶんしょこうぞう]とguestを[配置/はいち]する[操作/そうさ]を[定/さだ]める。Sentenceの[意味/いみ]モデルとliteral payloadの[契約/けいやく]は23[章/しょう]に[従/したが]う。"
       cons "NEPL3sentenceの[値/あたい]は、[独立/どくりつ]したSentence schemaで[定義/ていぎ]する。"
       cons sentence cons ruby text "所有関係" text "しょゆうかんけい" cons text "と" cons ruby text "未完了" text "みかんりょう" cons text "のconsumer" cons ruby text "移行" text "いこう" cons text "は" cons link relative "23-sentence-annotation.md" none text "23章" cons text "を" cons ruby text "参照" text "さんしょう" cons text "する。" nil nil
     nil
@@ -21,14 +21,14 @@ body
     cons paragraph
       cons "ParagraphはFlowの[列/れつ]として[本文/ほんぶん]を[構成/こうせい]する。"
       cons "FlowにはSentence、Parallel、およびBlockの[各/かく]variantを[配置/はいち]できるため、Paragraphの[再帰的/さいきてき]な[構成/こうせい]も[可能/かのう]である。"
-      cons "SentenceはInlineの[列/れつ]であり、[文章内/ぶんしょうない]の[内容/ないよう]と[順序/じゅんじょ]を[保持/ほじ]する。"
+      cons "DocのSentenceはDocEmbedを[参照/さんしょう]する[文章/ぶんしょう]slotである。[独立/どくりつ]Sentenceの[意味/いみ]モデルがInlineの[列/れつ]として[文章内/ぶんしょうない]の[内容/ないよう]と[順序/じゅんじょ]を[保持/ほじ]する。"
       cons "Parallelは2[個以上/こいじょう]のVariantの[列/れつ]であり、[各/かく]VariantはlanguageとSentence[型/がた]のsentenceを[持/も]つ。"
       cons "Variantの[本文/ほんぶん]に[指定/してい]できる[型/かた]はSentenceに[限定/げんてい]する。" nil
     cons paragraph
-      cons "Inlineの[種類/しゅるい]はText、Concat、Ruby(base,reading)、Anno(base,notes)、InlineMath、Anchor(id,label)、Reference(target,label)、Emphasis、Strong、Break、Link、InlineCode、InlineImageである。" nil
+      cons "DocのInlineはInlineMath、Anchor、Reference、Link、InlineImageを[表/あらわ]す。Anchor・Reference・Linkのlabelは[独立/どくりつ]SentenceのInlineを[保持/ほじ]する。Text・Concat・Ruby・Anno・Emphasis・Strong・Break・Code・ExternalLinkはSentenceの[意味/いみ]モデルが[所有/しょゆう]する。" nil
     cons paragraph
       cons "[各/かく]constructorの[全/ぜん]signatureはdoc-signaturesを[参照/さんしょう]する。"
-      cons "Sentence/Flowの[位置/いち]に[引用符/いんようふ]で[囲/かこ]んだ[文字列/もじれつ]を[直接/ちょくせつ][記述/きじゅつ]すると、SentenceLiteralとして[読/よ]み[取/と]る。"
+      cons "Docのsentence constructorは[独立/どくりつ]Sentenceの[構文/こうぶん]を[一/ひと]つ[受/う]け[取/と]る。そのguest[位置/いち]に[引用符/いんようふ]で[囲/かこ]んだ[文章/ぶんしょう]を[記述/きじゅつ]すると、Sentenceのliteral readerがSentenceLiteralとして[読/よ]み[取/と]る。"
       cons sentence cons code "text" cons text " の" cons ruby text "子" text "こ" cons text "は" cons ruby text "通常" text "つうじょう" cons text "のText" cons ruby text "値" text "あたい" cons text "であり、" cons code "[" cons text " や " cons code "{" cons text " も" cons ruby text "文字" text "もじ" cons text "として" cons ruby text "保持" text "ほじ" cons text "する。" nil nil
     cons section arena "1.1 [意味/いみ]モデルと[公開/こうかい]arena" body
       cons paragraph
@@ -186,36 +186,13 @@ body
       cons "[正規化/せいきか]の[対象/たいしょう]は、Concatの[平坦化/へいたんか]、[空/くう]Textの[除去/じょきょ]、[同/おな]じInline[列内/れつない]の[隣接/りんせつ]Textの[結合/けつごう]に[限定/げんてい]する。"
       cons "Ruby/Annoの[境界/きょうかい]、noteの[順/じゅん]、[明示/めいじ]Break、Math[等/など]の[埋/う]め[込/こ]みは[保存/ほぞん]する。" nil
     cons paragraph
-      cons "[受理済/じゅりず]みSentenceLiteralとprefix constructorの[混在/こんざい]lowerでは、literal payloadを[明示/めいじ]DocumentSyntax schemaとpayload[自身/じしん]のsource[宣言/せんげん]で[検査/けんさ]する。"
-      cons "payloadの[単一/たんいつ]View owner/headと[局所/きょくしょ]Viewは[外/そと]tokenのものと[一致/いっち]し、[意味/いみ]nodeのSpanとOriginの[位置/いち]は[同/おな]じtoken head[内/ない]、または[明示/めいじ]SourceMapの[全経路/ぜんけいろ]でその[範囲内/はんいない]へ[戻/もど]らなければならない。"
-      cons "[別/べつ]tokenのpayloadや、Viewだけを[合/あ]わせて[意味位置/いみいち]を[別/べつ]source・[別範囲/べつはんい]へ[移/うつ]した[値/あたい]は[拒否/きょひ]する。"
-      cons "[元/もと]テキストを[再/さい]parseして[意味値/いみち]を[推測/すいそく]し[直/なお]さない。"
-      cons "[外側構文/そとがわこうぶん]のOrigin IDとtoken-local View IDは[保持/ほじ]し、literal[内/ない]のOrigin[参照/さんしょう]だけを[結合後/けつごうご]のarenaへ[再配置/さいはいち]する。"
-      cons "ForeignClosureのowner-local Originと[環境/かんきょう]digestにはこの[再配置/さいはいち]を[適用/てきよう]しない。"
-      cons "source admissionは[操作内/そうさない]で[共有/きょうゆう]し、payload[宣言/せんげん]の[欠落/けつらく]をambient source storeから[補/おぎな]わない。" nil
+      cons "literalの[受渡/うけわた]しは、[独立/どくりつ]SentenceのSentenceLiteralPayloadと23[章/しょう]の[受信契約/じゅしんけいやく]に[従/したが]う。SentenceValue・[位置表/いちひょう]・Direct Origin・root[所有/しょゆう]Viewを[保持/ほじ]し、[呼出側/よびだしがわ]が[明示/めいじ]する[単一/たんいつ]sourceで[解決/かいけつ]する。"
+      cons "[受信時/じゅしんじ]はsourceの[完全/かんぜん]なidentity、head[内/ない]の[位置/いち]、Viewの[所有者/しょゆうしゃ]、literalで[許可/きょか]するnodeを[検査/けんさ]する。foreign・mapping・prefix[専用/せんよう]nodeを[拒否/きょひ]し、[欠落/けつらく]sourceをambient storeから[補/おぎな]わない。"
+      cons "lowerは[包/つつ]むtokenのhead・Viewとの[一致/いっち]を[追加検査/ついかけんさ]し、[別/べつ]tokenのpayloadや[位置/いち]を[改変/かいへん]した[値/あたい]を[拒否/きょひ]する。[元/もと]テキストの[再解析/さいかいせき]で[検査/けんさ]を[代替/だいたい]しない。"
+      cons "[一般/いっぱん]の[生成/せいせい]・[変換/へんかん][結果/けっか]は、source・Origin・View・SourceMapを[所有/しょゆう]するSentenceSyntaxで[交換/こうかん]する。Docへの[配置/はいち]では[独立/どくりつ]した[所有/しょゆう]を[保持/ほじ]し、owner-local Originと[環境/かんきょう]digestを[変更/へんこう]しない。" nil
     cons paragraph
-      cons sentence cons ruby text "単一" text "たんいつ" cons text "source" cons ruby text "内" text "ない" cons text "で" cons ruby text "完結" text "かんけつ" cons text "するreader" cons ruby text "向" text "む" cons text "けには、" cons ruby text "追加" text "ついか" cons text "の" cons ruby text "交換型" text "こうかんがた" cons text " " cons code "SentencePayload" cons text " を" cons ruby text "用意" text "ようい" cons text "する。" nil
-      cons sentence cons text "field" cons ruby text "順" text "じゅん" cons text "は " cons code "value: DocValue" cons text "、" cons code "origins: List<Origin>" cons text "、" cons code "view: DocView" cons text " とし、" cons code "view.head" cons text " のSpanが" cons ruby text "元" text "もと" cons text "sourceの" cons ruby text "完全" text "かんぜん" cons text "なsnapshot" cons ruby text "参照" text "さんしょう" cons text "を" cons ruby text "保持" text "ほじ" cons text "する。" nil
-      cons "[本文/ほんぶん]byte[列/れつ]はpayloadへ[重複格納/ちょうふくかくのう]せず、[呼出/よびだ]し[元/もと]が[明示/めいじ]するowner sourceから[解決/かいけつ]する。"
-      cons "[受信/じゅしん]codecはその[一/ひと]つのsourceだけをscopeとし、[同/おな]じURIやsource[名/めい]だけが[一致/いっち]する[別/べつ]revision・[別/べつ]digest、ambientにしかないsourceで[参照/さんしょう]を[補/おぎな]わない。" nil
-    cons paragraph
-      cons "この[型/かた]はSentence root、Text・Concat・Ruby・Annoのみのnode、[単一/たんいつ]DocView、[単一/たんいつ]source、[空/から]のembeds・sourceMapsに[限定/げんてい]する。"
-      cons "[各意味/かくいみ]nodeはSpanとOriginを[持/も]ち、[位置/いち]はhead[内/ない]に[含/ふく]まれる。"
-      cons "Originの[合成/ごうせい]は[既存/きそん]の[非循環/ひじゅんかん]・[参照検査/さんしょうけんさ]に[従/したが]い、Direct・[生成呼出/せいせいよびだ]し[位置/いち]・Synthetic anchorの[実在/じつざい]Spanも[同/おな]じhead[内/ない]を[要求/ようきゅう]する。"
-      cons "[型/かた]・source[閉包/へいほう]・[位置/いち]の[検査/けんさ]と[資源計上/しげんけいじょう]はnative/portableで[共通/きょうつう]に[行/おこな]い、[停止理由/ていしりゆう]を[変更/へんこう]しない。"
-      cons "[対応/たいおう]するRustの[型付/かたつ]き[意味値/いみち]は[既存/きそん]のDocumentSyntaxであり、codec[受信時/じゅしんじ]に[明示/めいじ]owner sourceを[加/くわ]えて[構築/こうちく]する。" nil
-    cons paragraph
-      cons "この[追加型/ついかがた]は、[別生成/べつせいせい]sourceから[明示/めいじ]SourceMapで[戻/もど]す[従来/じゅうらい]のDocumentSyntax payloadを[置/お]き[換/か]えない。"
-      cons "providerは[署名/しょめい]で[返却型/へんきゃくがた]を[明示/めいじ]し、lowerでは[型/かた]ごとに[検査/けんさ]する。"
-      cons "SentencePayload[単独/たんどく]の[受信検査/じゅしんけんさ]は[指定/してい]source[内/ない]のliteralデータを[検査/けんさ]するものであり、[特定/とくてい]tokenへの[所属/しょぞく]を[証明/しょうめい]しない。"
-      cons "lowerが[実際/じっさい]のowner bundleのsource[宣言/せんげん]から[対象/たいしょう]を[選/えら]び、[外/そと]tokenのheadと[局所/きょくしょ]Viewの[完全一致/かんぜんいっち]を[追加/ついか]で[要求/ようきゅう]する。"
-      cons "[元本文/もとほんぶん]の[省略/しょうりゃく]、[再/さい]parse、[架空/かくう]のsource[位置/いち]、provider[版/ばん]の[暗黙/あんもく]な[切替/きりか]えによって[重複/ちょうふく]を[減/へ]らしてはならない。" nil
-    cons paragraph
-      cons sentence cons ruby text "標準文法" text "ひょうじゅんぶんぽう" cons text "は " cons code "doc.reader/sentence-v2" cons text " を" cons ruby text "明示" text "めいじ" cons text "して" cons ruby text "選択" text "せんたく" cons text "し、" cons code "nepl3.doc.reader" cons text " の " cons code "sentenceReferenced" cons text " " cons ruby text "操作" text "そうさ" cons text "を" cons ruby text "呼" text "よ" cons text "ぶ。" nil
-      cons "[包絡/ほうらく]はReadRequest/ReadReplyのままで、ProviderSignatureのvalue[出力/しゅつりょく]をSentencePayloadとする。"
-      cons "readerの[操作/そうさ]descriptorはsentenceReferencedだけを[公開/こうかい]し、[旧/きゅう]sentence[操作/そうさ]の[要求/ようきゅう]を[拒否/きょひ]する。"
-      cons "Profileの[解決済/かいけつず]み[署名/しょめい]・[文法/ぶんぽう]source・provider identityを[現行/げんこう]descriptorに[対応/たいおう]させる。"
-      cons "lowerは[受信/じゅしん]recordの[型/かた]を[選/えら]んでから[対応/たいおう]するcodecを[一度/いちど]だけ[呼/よ]び、SentencePayloadの[検査失敗/けんさしっぱい]を[旧/きゅう]codecで[再試行/さいしこう]しない。" nil
+      cons "hostはnepl3.sentence.readerのliteral[操作/そうさ]を[明示登録/めいじとうろく]し、ReadRequest/ReadReplyとSentenceLiteralPayloadを[使用/しよう]する。Profileの[署名/しょめい]・[文法/ぶんぽう]・provider identityを[選択/せんたく]したdescriptorへ[対応/たいおう]させる。"
+      cons "[受信値/じゅしんち]のschemaとslotの[役割/やくわり]を[照合/しょうごう]し、[旧/きゅう]Doc payloadのdecoderによる[再試行/さいしこう]を[禁止/きんし]する。[構造/こうぞう]・source[閉包/へいほう]・[位置/いち]の[検査/けんさ]と[資源計上/しげんけいじょう]はnative/portableで[共有/きょうゆう]し、[元/もと]の[停止理由/ていしりゆう]を[保持/ほじ]する。" nil
     cons paragraph
       cons "[意味値/いみち]からliteralを[出力/しゅつりょく]するprinterはText/Ruby/Annoだけの[表現/ひょうげん]ならescapeを[行/おこな]ってliteral[化/か]できる。"
       cons "[他/ほか]のInlineがあればprefix[構文/こうぶん]を[出力/しゅつりょく]する。"

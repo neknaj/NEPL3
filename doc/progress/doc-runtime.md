@@ -191,6 +191,15 @@ Windows debugの投影参考時間は8.53秒であり、通常予算への適合
 独立レビューでも初回のlink拒否を確認し、修正後の独立native1件と静的再レビューが成功した。
 対象のclippy、fmt、diff検査も成功した。正式Markdown集合生成は第19章を通過し、
 `doc/spec/12-model-invariants.nepld` の旧構文で停止した。生成物の更新は未完了である。
+第12章の移行準備で、論理モデルと第05・23章に旧Doc Sentence所有の契約が残ることを確認した。
+`interfaces/model.json` の旧文章内8型を除去し、SentenceのcontentとDoc参照のlabelを
+構文閉包または型付きSentence値として保持する。Sentence rootとInline rootの制約を第12章へ明記した。
+操作対応表の廃止Doc readerを独立Sentenceのliteral操作へ訂正し、本文の旧payload変換手順も更新した。
+論理モデルとportableモデルのSyntax/Value、field名・型、reader・payload参照を横断する試験を追加した。
+型参照試験7件とconsumer試験native・WASI各6件が成功した。独立レビューは新試験1件を実行し、
+field型の期待値を補強した最終差分を静的に再確認した。主担当も補強後の1件を再実行した。
+repository check、toolsのclippy、fmt、diff検査を実行した。第05・12章の全文構文移行と
+生成物更新は未完了であり、今回の契約検査は両章の正式readerによる完走を保証しない。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

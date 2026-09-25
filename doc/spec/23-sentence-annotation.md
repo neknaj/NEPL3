@@ -258,28 +258,27 @@ Mathの文章注釈では、内側Mathのnode対応と注釈対応をSentenceの
 
 ## Doc本文readerへの接続
 
-この節はconsumer所有移行中のadapter契約である。Sentenceの恒久的な意味モデルと、現在のDoc payloadへの変換を区別する。移行完了後も必要なforeign adapterと、旧所有を除去するまでの互換変換を同じ完成条件にしない。
-
-Doc readerは独立Sentence coreのliteral読取りを使用し、suiteの`doc-sentence` featureで公開する
-`nepl3_suite::adapters::sentence::document`を通して現在のDoc consumerへ渡す。
-adapterは`no_std + alloc`で動作し、DocとSentenceの公開型・検査を接続する。
+Docの`sentence` constructorは、独立Sentenceの構文を一つのforeign fieldとして読む。
+literalとprefix構築の読取り規則、文章内部の意味モデルはSentenceが所有する。
+Docの`Sentence { syntax: EmbedRef }`は、文書構造内の文章slotを表す。
+DocEmbedは構文の`ForeignClosure`または型付きのportable `SentenceSyntax`を保持する。
+suiteの`doc-sentence` featureで公開する`adapters::document::sentence`が、
+DocとSentenceの公開型・検査を`no_std + alloc`で接続する。
 suiteの既定featureはこのdomain依存を有効にしない。開発hostはfeatureを明示して利用する。
 Doc/Sentence core間の直接依存と、coreからtoolsへの依存を禁止する。
-adapterはSentenceSyntaxを検査し、全標準Inlineを同じarena index・順序でDoc値へ変換した後、
-Doc側でも構造を再検査する。CodeはDocのInlineCode、外部linkはLinkTarget::Externalへ対応し、
-foreign CodeやDoc固有のpage参照へ読み替えない。foreign-inlineは個別adapterを要求する。
-Source/Origin/SourceMapとViewを保持し、元SentenceSyntaxのdense位置・View ownerも呼出側で保持できる。
-入力の共有・source-less Syntheticを展開や架空Spanで置き換えず、失敗・停止時は部分Doc値を返さない。
 
-Doc catalogはSentenceの実descriptorを登録する。Doc readerの現在の出力は明示変換後の
-Doc SentencePayloadであり、同じschema identityで独立Sentence payloadを装わない。
-本文の意味を保持し、出力Viewの所有schemaをDoc schemaへ対応させる。文書の内部identityは
-生成manifestに記録する。Markdownの出自はページ固有のsourceと実際の参照入力に対応する。
-正本から生成し、本文・リンク・注釈の一致とmanifestの整合を確認する。
-この接続はDoc本文の解析を独立Sentenceへ移す段階である。重複parserの撤去後も、Doc意味schemaの
-Sentence所有と、現行lowerが受信するDoc SentencePayloadは残る。
-DocのInlineMath・DisplayMathをMath表示へ接続するadapterも引き続き必要である。
-Mathの文章注釈は独立Sentenceを直接使用する。Doc本文の二重所有は後続のconsumer所有移行で整理する。
+`sentence::lower`は選択したsurface identity、slotの役割、root categoryと閉包を検査し、
+独立したSentenceSyntaxを返す。portable値の入力にはSentenceの受信検査を適用する。
+`sentence::embed`はSentenceSyntaxを検査・符号化し、SentenceまたはSentenceInlineの役割を持つ
+DocEmbedを構築する。両操作は呼出元の累積Budgetを使い、Sentenceのsource・Origin・View・
+位置表と内部guestの所有を保持する。guestの評価・印字・HTML表示は後段の選択操作が担当する。
+標準Codeと外部linkはSentenceの意味nodeとして保持し、Doc固有の参照・Math等は明示したforeign adapterで接続する。
+
+Doc catalogは独立Sentenceの実descriptorを登録する。旧Doc SentencePayloadと、
+SentenceのInlineをDoc nodeへ複製する変換経路は撤去した。文書の内部identityは生成manifestへ、
+Markdownの出自はページ固有のsourceと実際の参照入力へ記録する。
+正本・fixture・生成物の移行と通常予算への適合は継続中であり、
+公開型の所有移行だけでT07/T21全体の完了を判定しない。
 
 ## hostが選択するforeign Inlineの構築
 
@@ -345,7 +344,8 @@ Doc断片の選択とlowerは、suiteの`adapters::sentence::document_guests::co
 返却値は一意なDoc文書の所有列と、各表示出現から文書を参照する`DocumentId`の列を持つ。
 同じembedは最深の出現位置で一度解析し、表示順と共有を保持する。処理は`no_std + alloc`で成立し、I/O・HTML・原子的参照カウントを要求しない。
 他言語のguestは各adapterが担当し、名前解決と表示は後段で実行する。開発hostはこの結果を既存のnamespaceとHTML処理へ接続する。
-このnamespaceは一つのSentence表示に属する。外側のArticle全体とのnamespace共有、およびDocの旧Sentence所有の撤去はconsumer所有移行の残件である。
+この収集入口は一つのSentence内のDoc断片を対象とする。外側のArticleと共有するnamespaceは、
+後述のDoc slot収集とArticleのmember列を組み合わせて準備する。
 複数のSentenceを一つの文書へ配置するrendererは、suiteの`html::render_part_with_foreign`で`PendingSentence`を取得できる。
 この値は局所syntax・guest closure・Phrasing構造の検査と要素の由来を保持し、HTML IDの重複とfragment参照の解決を合成後の文書検査へ委譲する。
 各Sentenceのsource所有者を保持して要素位置を再対応させ、完成したHTML全体を検証した後にserializeする。
@@ -353,7 +353,8 @@ Doc断片の選択とlowerは、suiteの`adapters::sentence::document_guests::co
 `html::paragraph::compose`はSentence断片を表示順に消費し、段落のHTMLを構成する。
 各出現の入力Sentence、要素範囲、nodeの由来、foreign要素の位置を保持し、移動先の要素番号へ対応させる。
 段落全体の参照・重複ID・構造・深さを共通Budgetで検査し、失敗時は部分出力を返さない。
-この段落合成はHTMLの操作であり、Docの文書モデルとArticle全体の名前解決への接続は引き続きconsumer移行で扱う。
+この段落合成はHTMLの操作である。DocのArticleへ配置する場合は、Doc slotの所有と
+Article全体のnamespaceを保持するconsumer経路へ接続する。
 
 ### Docが所有する文章slotの準備
 

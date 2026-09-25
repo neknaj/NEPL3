@@ -251,6 +251,78 @@ mod tests {
     }
 
     #[test]
+    fn sentence_consumer_contracts_reference_the_independent_reader() -> Result<()> {
+        let (model, contracts) = documents()?;
+        let reader: Value =
+            serde_json::from_str(include_str!("../../../interfaces/sentence-reader.json"))?;
+        let sentence: Value =
+            serde_json::from_str(include_str!("../../../interfaces/sentence.json"))?;
+        let correspondence = &contracts["schema_correspondence"]["SentenceLiteralReader"];
+        assert_eq!(correspondence["package"], reader["package"]);
+        assert_eq!(
+            correspondence["descriptor"],
+            "interfaces/sentence-reader.json"
+        );
+        let operation = correspondence["operation"]
+            .as_str()
+            .ok_or("reader operation")?;
+        assert!(reader["operations"][operation].is_object());
+        assert_eq!(
+            correspondence["value_output"],
+            format!(
+                "{}.SentenceLiteralPayload",
+                sentence["package"].as_str().ok_or("sentence package")?
+            )
+        );
+        assert!(sentence["types"]["SentenceLiteralPayload"].is_object());
+        // The logical consumer preserves the same two input representations as
+        // the portable Doc schema; Inline meaning remains in Sentence.
+        let doc: Value = serde_json::from_str(include_str!("../../../interfaces/doc.json"))?;
+        let logical = object(&model["types"]["Doc:SentenceContent"], "sum")?;
+        let portable = object(&doc["types"]["DocContent"], "variant")?;
+        let doc_kinds = object(&doc["types"]["DocKind"], "variant")?;
+        assert_eq!(
+            logical.keys().collect::<Vec<_>>(),
+            portable.keys().collect::<Vec<_>>()
+        );
+        assert_eq!(logical["Syntax"], json!([["closure", "ForeignClosure"]]));
+        assert_eq!(logical["Value"], json!([["value", "TypedValue"]]));
+        assert_eq!(portable["Value"], json!([["value", "TypedValue"]]));
+        // The portable closure refers to its content-addressed owner table;
+        // the logical model describes the resolved ForeignClosure.
+        assert_eq!(
+            portable["Syntax"],
+            json!([["closure", {"named": {
+                "package": "nepl3.doc", "revision": 1, "name": "DocClosure"
+            }}]])
+        );
+        assert_eq!(
+            model["types"]["Doc:Sentence"]["record"],
+            json!([["content", "Doc:SentenceContent"]])
+        );
+        for owner in ["Doc:Anchor", "Doc:Reference", "Doc:Link"] {
+            assert_eq!(
+                model["types"][owner]["record"][1],
+                json!(["label", "Doc:SentenceContent"])
+            );
+        }
+        for removed in [
+            "Text",
+            "Concat",
+            "Ruby",
+            "Anno",
+            "Emphasis",
+            "Strong",
+            "Break",
+            "InlineCode",
+        ] {
+            assert!(model["types"][format!("Doc:{removed}")].is_null());
+            assert!(!doc_kinds.contains_key(removed));
+        }
+        Ok(())
+    }
+
+    #[test]
     fn rejects_unresolved_nested_fields_union_targets_and_undeclared_parameters() -> Result<()> {
         let (model, contracts) = documents()?;
         for ty in [
