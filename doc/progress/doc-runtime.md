@@ -390,6 +390,13 @@ wireのnative/WASI各91試験、独立レビュー18試験、Clippy、thumb向�
 AllocationUnitsは153,021,007、native debug単回は約6.32秒であり、実時間の改善は確認していない。
 captureはownerの由来とguestの明示宣言を保持する。任意payload内のsource参照を扱う契約を
 追加せずに宣言を削減する処理は採用していない。通常Work100Mへの適合は継続課題である。
+単独Article・Sentence・Inlineのprepareでは、文書とregistryを不変借用するEncodingInputを
+ラベル検査とportable化で共有し、native構造検査の反復を除去した。構造・ラベル・符号化・
+出力schema検査の順序と構造エラーの分類を保持する。3種類のrootで従来経路とのdigest一致、
+WorkとAllocationUnitsの削減、exact・不足境界、owner改変後の拒否を確認した。
+Doc coreのnative/WASI各49試験、host準備24試験が成功した。独立レビューはprepare/portableの
+20試験と最終API整理の静的確認を行い、追加指摘はなかった。Clippy、thumb向けcheck、
+repository checkも成功した。この再利用は単独prepareを対象とし、ページ集合投影の削減値には含めない。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

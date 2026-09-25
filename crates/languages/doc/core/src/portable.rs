@@ -144,18 +144,45 @@ pub fn to_value<C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
-    let (value, _) = encode_with_structure(document, registry, c, b)?;
-    check(registry, &value, b)?;
-    Ok(value)
+    EncodingInput::new(document, registry, b, c.source_admission())?.into_value(c, b)
 }
 
 // Retain the native immutable proof for the same operation's label traversal.
 // The caller must validate the generated NDF at its output boundary: either
 // DocumentSyntax in to_value, or the enclosing PageSet in pages::set_to_value.
 // This helper retains all native structure and foundation codec validation.
-struct EncodingInput<'d, 'r> {
+pub(crate) struct EncodingInput<'d, 'r> {
     structure: crate::check::ValidatedDocumentSyntax<'d>,
     registry: &'r SchemaRegistry,
+}
+
+impl<'d, 'r> EncodingInput<'d, 'r> {
+    pub(crate) fn new(
+        document: &'d DocumentSyntax,
+        registry: &'r SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut nepl3_core::source::SourceAdmission,
+    ) -> Result<Self, StructureError> {
+        Ok(Self {
+            structure: document.validate_structure(registry, b, admission)?,
+            registry,
+        })
+    }
+    pub(crate) fn structure(&self) -> &crate::check::ValidatedDocumentSyntax<'d> {
+        &self.structure
+    }
+    /// Consume this operation's native proof and check the complete NDF output.
+    /// No registry or document can be substituted between these two stages.
+    pub(crate) fn into_value<C: FoundationValueCodec>(
+        self,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<NdfValue, PortableError<C::Error>> {
+        let registry = self.registry;
+        let (value, _) = encode_input(self, c, b)?;
+        check(registry, &value, b)?;
+        Ok(value)
+    }
 }
 
 fn encode_with_structure<'a, C: FoundationValueCodec>(
@@ -164,11 +191,16 @@ fn encode_with_structure<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<(NdfValue, crate::check::ValidatedDocumentSyntax<'a>), PortableError<C::Error>> {
-    let structure = document.validate_structure(registry, b, c.source_admission())?;
-    let input = EncodingInput {
-        structure,
-        registry,
-    };
+    let input = EncodingInput::new(document, registry, b, c.source_admission())?;
+    encode_input(input, c, b)
+}
+fn encode_input<'a, C: FoundationValueCodec>(
+    input: EncodingInput<'a, '_>,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<(NdfValue, crate::check::ValidatedDocumentSyntax<'a>), PortableError<C::Error>> {
+    let document = input.structure.document();
+    let registry = input.registry;
     let s = schema(registry)?;
     let sources = c.encode_sources(&document.sources, b).map_err(boundary)?;
     let mut store = SourceStore::default();

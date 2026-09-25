@@ -159,6 +159,14 @@ pub fn check_sentence<'a>(
     admission: &mut SourceAdmission,
 ) -> Result<CheckedSentenceLabels<'a>, LabelError<'a>> {
     let structure = document.validate_structure(registry, b, admission)?;
+    check_sentence_structure(&structure, b)
+}
+pub(crate) fn check_sentence_structure<'a>(
+    structure: &crate::check::ValidatedDocumentSyntax<'a>,
+    b: &mut Budget,
+) -> Result<CheckedSentenceLabels<'a>, LabelError<'a>> {
+    b.poll()?;
+    let document = structure.document();
     let DocRoot::Sentence(root) = document.value.root else {
         return Err(LabelError::ExpectedSentence);
     };
@@ -173,6 +181,14 @@ pub fn check_inline<'a>(
     admission: &mut SourceAdmission,
 ) -> Result<CheckedInlineLabels<'a>, LabelError<'a>> {
     let structure = document.validate_structure(registry, b, admission)?;
+    check_inline_structure(&structure, b)
+}
+pub(crate) fn check_inline_structure<'a>(
+    structure: &crate::check::ValidatedDocumentSyntax<'a>,
+    b: &mut Budget,
+) -> Result<CheckedInlineLabels<'a>, LabelError<'a>> {
+    b.poll()?;
+    let document = structure.document();
     let DocRoot::Inline(root) = document.value.root else {
         return Err(LabelError::ExpectedInline);
     };

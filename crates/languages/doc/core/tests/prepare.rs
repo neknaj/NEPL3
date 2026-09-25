@@ -21,6 +21,8 @@ use nepl3_doc_core::{
 use nepl3_wire::foundation::FoundationCodec;
 #[path = "prepare/owners.rs"]
 mod owners;
+#[path = "prepare/structure.rs"]
+mod structure;
 #[path = "support/closure.rs"]
 mod support;
 fn b() -> Budget {

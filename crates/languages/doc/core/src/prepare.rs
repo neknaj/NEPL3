@@ -112,8 +112,10 @@ pub fn inspect<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<DocPreparationPlan, PreparationError<'a, C::Error>> {
-    let checked = labels::check(document, registry, b, c.source_admission())?;
-    let value = portable::to_value(document, registry, c, b)?;
+    let input = portable::EncodingInput::new(document, registry, b, c.source_admission())
+        .map_err(labels::LabelError::from)?;
+    let checked = labels::check_structure(input.structure(), b)?;
+    let value = input.into_value(c, b)?;
     encoded_plan(checked.document(), &value, registry, c, b)
 }
 
@@ -126,8 +128,10 @@ pub fn inspect_sentence<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<DocPreparationPlan, PreparationError<'a, C::Error>> {
-    let checked = labels::check_sentence(document, registry, b, c.source_admission())?;
-    let value = portable::to_value(document, registry, c, b)?;
+    let input = portable::EncodingInput::new(document, registry, b, c.source_admission())
+        .map_err(labels::LabelError::from)?;
+    let checked = labels::check_sentence_structure(input.structure(), b)?;
+    let value = input.into_value(c, b)?;
     encoded_plan(checked.document(), &value, registry, c, b)
 }
 
@@ -139,8 +143,10 @@ pub fn inspect_inline<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<DocPreparationPlan, PreparationError<'a, C::Error>> {
-    let checked = labels::check_inline(document, registry, b, c.source_admission())?;
-    let value = portable::to_value(document, registry, c, b)?;
+    let input = portable::EncodingInput::new(document, registry, b, c.source_admission())
+        .map_err(labels::LabelError::from)?;
+    let checked = labels::check_inline_structure(input.structure(), b)?;
+    let value = input.into_value(c, b)?;
     encoded_plan(checked.document(), &value, registry, c, b)
 }
 
