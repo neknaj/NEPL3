@@ -237,6 +237,18 @@ mappingsは392,595 nodeだった。tokensの内訳ではpayloadが318,248、view
 両章の明示計測試験はnativeで各1件成功した。独立レビューは第13章を1件実行し、
 集計範囲とUsageの区別を確認した。対象clippy、fmt、diff検査も成功した。
 WASIとworkspace全体はこの計測追加では再実行していない。
+共有provenance表の設計レビューでは、共有保存と各bundleの宣言scopeを分離し、
+opaque payloadの走査によるsource削除を行わず、交換単位が共有表を明示所有する条件を確認した。
+source/map共有後もtoken payload/viewの費用は残る。共有表schemaとDocへの接続は未実装である。
+前段としてSourceStoreへ完全なSourceRefをBudget付き索引で解決するAPIを追加し、wireのSpan復元へ接続した。
+source/revision検索とdigest照合を事前課金し、scope外・digest不一致は未解決として返す。
+source数1・128・512、上限一致と1不足、取消、割当なし、store不変を検査した。
+構造decode分だけのWork予算でSpan復元が停止する回帰も追加し、未課金検索への退行を検出する。
+core契約31件とwire全74件がnativeで成功し、追加後のwire source4件はnative・WASIで成功した。
+core追加1件もWASIで成功した。独立レビューはcore1件・wire source3件を実行し、
+後から追加したwire回帰を静的確認した。core/wireのclippy、thumbv6m向けcompile、fmt、diff検査も成功した。
+第13章の明示計測はnative1件成功し、投影は319,330,279 Work、247,434,268 AllocationUnitsとなった。
+参照検索の追加課金でWorkは1,251,621増加した。通常Work100Mへの適合と共有表導入は継続する。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
