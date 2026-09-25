@@ -155,6 +155,15 @@ pub trait FoundationValueCodec {
         values: &[&crate::syntax::SyntaxBundle],
         budget: &mut Budget,
     ) -> Result<NdfValue, Self::Error>;
+    /// Encode the same portable set while reusing structural proofs bound to
+    /// the codec's immutable registry. A different registry requires complete
+    /// validation. The receiving operation still enforces source admission,
+    /// relative depth, environment hashes and generated NDF schema validation.
+    fn encode_validated_syntax_set(
+        &mut self,
+        values: &[crate::syntax::RegistryValidatedSyntaxBundle<'_, '_>],
+        budget: &mut Budget,
+    ) -> Result<NdfValue, Self::Error>;
     /// Validate the entire table and every member before returning any bundle.
     /// Rejection preserves consumed resources and source admission, while no
     /// partial set is returned. Resolution uses only the explicit member scope.

@@ -122,6 +122,20 @@ coreの単体・syntax計36件を両targetで再実行した。独立レビュ�
 追加payload試験・修正したBudget試験の計3件を実行した。clippy、repository、fmt、
 diff検査とthumbv6m compileも成功した。第03章の内容と投影Work 346,355,447は維持した。
 
+構文proofと検証時のregistryを不変借用する`RegistryValidatedSyntaxBundle`を追加した。
+同一registryへの再利用では、検証時の相対深度を現在のBudgetへ適用し、未接続node内の
+foreignを含む全sourceを現在のSourceAdmissionへ再受理する。別registryでは完全検証する。
+owned構文proofからも同じ借用型を取得できる。通常の構文proofへ任意のregistryを
+後付けする入口は設けない。
+
+Foundation codecの`encode_validated_syntax_set`は、このproofを既存の集合encoderへ
+渡す。environment digestの再計算と生成NDFのschema検査は維持する。関連試験では、
+通常経路との出力一致、受信操作のWork・Allocation・Source・Depth上限と1不足、
+異なるregistry、未接続guestのsource受理、偽造environment digestの拒否を確認した。
+Doc側で検証済みguestを保持する接続は継続作業であり、文書全体の費用削減は未測定である。
+core・wire・engineのnative・WASI各333件、独立レビューのcore syntax・wire syntax
+計57件が成功した。clippyとthumbv6m向けcompileも成功した。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

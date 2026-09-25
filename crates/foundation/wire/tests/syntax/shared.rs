@@ -5,6 +5,103 @@ use nepl3_core::{
 };
 
 #[test]
+fn validated_set_matches_raw_encoding_and_preserves_receiving_limits() -> TestResult {
+    use nepl3_core::{
+        source::SourceStore,
+        value_codec::{FoundationCodecError, FoundationValueCodec},
+    };
+    use nepl3_wire::foundation::FoundationCodec;
+    let (_, registry, bundle) = fixture_with_map()?;
+    let proof = bundle
+        .validate_in_registry(&registry, &mut budget(), &mut SourceAdmission::default())
+        .map_err(|e| format!("{e:?}"))?;
+    let empty = SourceStore::default();
+    let encode = |checked, b: &mut Budget| {
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&registry, &empty, &mut admission)?;
+        if checked {
+            codec.encode_validated_syntax_set(core::slice::from_ref(&proof), b)
+        } else {
+            codec.encode_syntax_set(&[&bundle], b)
+        }
+    };
+    let mut raw = budget();
+    let expected = encode(false, &mut raw).map_err(|e| format!("{e:?}"))?;
+    let mut checked = budget();
+    let actual = encode(true, &mut checked).map_err(|e| format!("{e:?}"))?;
+    assert_eq!(actual, expected);
+    assert!(checked.usage().work < raw.usage().work);
+    assert_eq!(checked.usage().source_bytes, raw.usage().source_bytes);
+    // Exact observed receiving budgets suffice; one less stops even with a proof.
+    for resource in 0..4 {
+        for short in [false, true] {
+            let delta = u64::from(short);
+            let mut limits = budget().limits();
+            let reason = match resource {
+                0 => {
+                    limits.work = checked.usage().work - delta;
+                    StopReason::WorkLimit
+                }
+                1 => {
+                    limits.allocation_units = checked.usage().allocation_units - delta;
+                    StopReason::AllocationLimit
+                }
+                2 => {
+                    limits.source_bytes = checked.usage().source_bytes - delta;
+                    StopReason::SourceLimit
+                }
+                _ => {
+                    limits.depth = checked.usage().depth - delta;
+                    StopReason::DepthLimit
+                }
+            };
+            let mut current = Budget::new(limits);
+            let result = encode(true, &mut current);
+            if short {
+                assert_eq!(
+                    result.err().ok_or("missing stop")?.stop_reason(),
+                    Some(reason)
+                );
+                assert_eq!(current.poll(), Err(reason));
+            } else {
+                assert_eq!(result.map_err(|e| format!("{e:?}"))?, expected);
+            }
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn validated_set_still_rejects_forged_environment_hash() -> TestResult {
+    use nepl3_core::{
+        source::{Digest, SourceStore},
+        value_codec::FoundationValueCodec,
+    };
+    use nepl3_wire::foundation::FoundationCodec;
+    let (_, registry, mut bundle) = fixture()?;
+    let forged = Digest([0; 32]);
+    bundle.environments[0].digest = forged;
+    let FieldValue::Foreign(guest) = &mut bundle.nodes[0].fields[0] else {
+        return Err("foreign fixture".into());
+    };
+    guest.environment.digest = forged;
+    // Native graph validation checks correspondence. Hash recomputation belongs
+    // to the portable codec and remains necessary after graph-proof reuse.
+    let proof = bundle
+        .validate_in_registry(&registry, &mut budget(), &mut SourceAdmission::default())
+        .map_err(|e| format!("{e:?}"))?;
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec =
+        FoundationCodec::new(&registry, &empty, &mut admission).map_err(|e| format!("{e:?}"))?;
+    assert!(matches!(
+        codec.encode_validated_syntax_set(&[proof], &mut budget()),
+        Err(WireError::Syntax(SyntaxError::Environment))
+    ));
+    Ok(())
+}
+
+#[test]
 fn typed_set_codec_matches_wire_and_keeps_ambient_sources_outside_members() -> TestResult {
     use nepl3_core::{source::SourceStore, value_codec::FoundationValueCodec};
     use nepl3_wire::foundation::FoundationCodec;

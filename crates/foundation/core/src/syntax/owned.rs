@@ -56,6 +56,14 @@ impl SyntaxBundle {
 }
 
 impl OwnedValidatedSyntaxBundle<'_> {
+    /// Borrow both the graph proof and its immutable registry for codec reuse.
+    pub fn as_registry_validated(&self) -> RegistryValidatedSyntaxBundle<'_, '_> {
+        RegistryValidatedSyntaxBundle {
+            syntax: self.as_validated(),
+            registry: self.registry,
+        }
+    }
+
     /// Borrow the established proof. No table is copied or revalidated.
     pub fn as_validated(&self) -> ValidatedSyntaxBundle<'_> {
         ValidatedSyntaxBundle {

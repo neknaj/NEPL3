@@ -94,10 +94,56 @@ pub(crate) fn value<'a>(
     admission: &mut SourceAdmission,
     b: &mut Budget,
 ) -> Result<NdfValue, WireError> {
+    value_inputs(
+        bundles.into_iter().map(Input::Raw),
+        schema,
+        registry,
+        admission,
+        b,
+    )
+}
+
+pub(crate) fn validated_value(
+    bundles: &[nepl3_core::syntax::RegistryValidatedSyntaxBundle<'_, '_>],
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<NdfValue, WireError> {
+    value_inputs(
+        bundles.iter().map(Input::Validated),
+        schema,
+        registry,
+        admission,
+        b,
+    )
+}
+
+enum Input<'a, 'r> {
+    Raw(&'a SyntaxBundle),
+    Validated(&'a nepl3_core::syntax::RegistryValidatedSyntaxBundle<'a, 'r>),
+}
+
+fn value_inputs<'a, 'r: 'a>(
+    bundles: impl IntoIterator<Item = Input<'a, 'r>>,
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<NdfValue, WireError> {
     let (mut sources, mut maps, mut inputs) = (Vec::new(), Vec::new(), Vec::new());
-    for bundle in bundles {
+    for input in bundles {
         b.charge(Resource::Work, 1)?;
-        bundle.validate_with_sources(registry, b, admission)?;
+        let bundle = match input {
+            Input::Raw(bundle) => {
+                bundle.validate_with_sources(registry, b, admission)?;
+                bundle
+            }
+            Input::Validated(proof) => {
+                proof.validate_for(registry, b, admission)?;
+                proof.bundle()
+            }
+        };
         for source in &bundle.sources {
             push(&mut sources, source, b)?;
         }

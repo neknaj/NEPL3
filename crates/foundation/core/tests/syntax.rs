@@ -5,6 +5,8 @@ mod capture;
 mod copy;
 #[path = "syntax/owned.rs"]
 mod owned;
+#[path = "syntax/scoped.rs"]
+mod scoped;
 #[path = "syntax/sources.rs"]
 mod sources;
 fn budget() -> Budget {

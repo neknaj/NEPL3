@@ -16,12 +16,14 @@ pub use environment::{EnvironmentContext, ValidatedEnvironment};
 mod copy;
 mod foreign;
 mod owned;
+mod scoped;
 pub use foreign::resources as validate_resources;
 pub use foreign::{
     ForeignCapture, ForeignClosure, OwnerProvenance, ValidatedForeignClosure,
     ValidatedOwnerProvenance,
 };
 pub use owned::{OwnedValidatedSyntaxBundle, SyntaxValidationFailure};
+pub use scoped::RegistryValidatedSyntaxBundle;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct NodeRef(pub u64);

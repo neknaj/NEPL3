@@ -295,6 +295,21 @@ impl FoundationValueCodec for FoundationCodec<'_> {
         self.validate(&value, "SyntaxBundleSet", b)?;
         Ok(value)
     }
+    fn encode_validated_syntax_set(
+        &mut self,
+        values: &[nepl3_core::syntax::RegistryValidatedSyntaxBundle<'_, '_>],
+        b: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
+        let value = crate::syntax::shared::validated_value(
+            values,
+            self.schema,
+            self.registry,
+            self.admission,
+            b,
+        )?;
+        self.validate(&value, "SyntaxBundleSet", b)?;
+        Ok(value)
+    }
     fn decode_syntax_set(
         &mut self,
         value: &NdfValue,
