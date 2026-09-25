@@ -162,7 +162,7 @@ fn cached_article_keeps_shared_sentence_occurrences_distinct() -> Result<(), Str
 
 pub(super) fn verify<C: FoundationValueCodec>(
     prepared: &html::PreparedPages<'_, '_, '_, '_>,
-    plans: &[crate::doc::export::pages::discovery::namespace::Plan<'_, '_>],
+    plans: &[crate::doc::export::pages::discovery::namespace::InspectedPlan<'_, '_>],
     compiled: &Compiled,
     registry: &SchemaRegistry,
     codec: &mut C,
@@ -423,7 +423,7 @@ where
 
 fn verify_discovered(
     prepared: &html::PreparedPages<'_, '_, '_, '_>,
-    plans: &[crate::doc::export::pages::discovery::namespace::Plan<'_, '_>],
+    plans: &[crate::doc::export::pages::discovery::namespace::InspectedPlan<'_, '_>],
     registry: &SchemaRegistry,
     expected: &[nepl3_markup::html::HtmlRequest],
 ) -> Result<(), String> {
@@ -431,7 +431,7 @@ fn verify_discovered(
     for (page, (plan, expected)) in plans.iter().zip(expected).enumerate() {
         let run = |b: &mut Budget| {
             host::render(
-                plan,
+                plan.selection(),
                 prepared,
                 page as u64,
                 registry,
@@ -447,7 +447,7 @@ fn verify_discovered(
             &output.members()[0].document().output().fragment.markup,
             expected
         );
-        assert!(core::ptr::eq(output.plan(), plan));
+        assert!(core::ptr::eq(output.plan(), plan.selection()));
         // The nested Doc label belongs to a distinct Sentence arena; each
         // insertion retains its own placement and original syntax reference.
         for (input, member) in plan.input().members().iter().zip(output.members()) {
@@ -520,7 +520,7 @@ fn verify_discovered(
         ));
         assert!(matches!(
             host::render(
-                plan,
+                plan.selection(),
                 prepared,
                 99,
                 registry,

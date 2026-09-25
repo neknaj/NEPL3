@@ -231,10 +231,20 @@ Markdownページ生成は、このproofをdiscoveryからnamespace準備へ保�
 第03章のcorpus上限を使う内容検査は成功し、投影Workは233,592,456から209,301,684へ
 約10.4%減少した。discoveryまでのWorkは72,988,032から74,712,238へ増加し、
 namespace準備での再検証削減が全体費用を減らした。単独NDF構築・digestの費用は同じである。
-通常ページのWork上限100,000,000への適合と、HTMLページ生成への接続は残る。
+第03章の通常ページWork上限100,000,000への適合は残る。
 受信側Work・Allocation・Depth・Sourceの上限一致／1不足、文書の複製・順序・件数の不一致、
 空registryの拒否とcallback未実行を検査した。独立レビューは関連4件を実行して成功した。
 guest専用schemaだけを欠くregistryの拒否は、この追加試験の範囲に含めない。
+
+HTMLページ生成も同じroot proofとscoped namespace検査へ接続した。
+表示選択の`Plan`と、独立にlabelを検査した`InspectedPlan`を区別する。
+全memberのnamespace検査後に描画し、最終HTML検査と出力前の停止確認を維持する。
+共有anchorの重複、未解決参照、非選択variantの危険URIを実際のexport入口で拒否し、
+Work・Allocation・Nodes・Depth・Output・Sourceの上限一致／1不足を検査する。
+個別の公開APIで検査・合成する経路とHTML全byte・namespace identityが一致し、
+準備のWorkが減少することを試験した。512文の容量試験も通常上限で成功し、
+prepareのWorkは39,562,172、描画・直列化までの累積Workは41,376,208、
+累積AllocationUnitsは86,495,493だった。この測定は第03章の通常予算適合を示すものには使用しない。
 
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、

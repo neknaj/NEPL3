@@ -94,7 +94,7 @@ fn discovered_rendering_checks_hidden_slots_and_stops_adapters() -> Result<(), S
                     let mut sentence_calls = 0;
                     let mut document_calls = 0;
                     let result = composition::render(
-                        &plan,
+                        plan.selection(),
                         &prepared,
                         0,
                         registry,
@@ -261,7 +261,7 @@ fn discovered_rendering_preserves_recursive_shared_occurrences() -> Result<(), S
                 let prepared = nepl3_doc_html::pages::namespace::prepare(&resolved, &options, b)
                     .map_err(err)?;
                 let output = composition::render(
-                    &plan,
+                    plan.selection(),
                     &prepared,
                     0,
                     registry,

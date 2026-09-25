@@ -18,7 +18,6 @@ pub struct Occurrence {
 }
 pub struct Plan<'c, 'd> {
     input: &'c Collected<'d>,
-    inspected: Vec<labels::Member<'c>>,
     occurrences: Vec<Occurrence>,
 }
 impl<'c, 'd> Plan<'c, 'd> {
@@ -28,12 +27,29 @@ impl<'c, 'd> Plan<'c, 'd> {
     pub fn occurrences(&self) -> &[Occurrence] {
         &self.occurrences
     }
+}
+/// Selection and independently inspected labels. Rendering consumes only the
+/// selection, after matching it to a fully checked page namespace.
+pub struct InspectedPlan<'c, 'd> {
+    selection: Plan<'c, 'd>,
+    inspected: Vec<labels::Member<'c>>,
+}
+impl<'c, 'd> InspectedPlan<'c, 'd> {
+    pub fn selection(&self) -> &Plan<'c, 'd> {
+        &self.selection
+    }
+    pub fn input(&self) -> &'c Collected<'d> {
+        self.selection.input()
+    }
+    pub fn occurrences(&self) -> &[Occurrence] {
+        self.selection.occurrences()
+    }
     /// Repeated owners deliberately produce repeated member references. The
     /// namespace checker can therefore detect duplicate display identities.
     pub fn member_refs(&self, b: &mut Budget) -> Result<Vec<&labels::Member<'c>>, StopReason> {
         b.poll()?;
         let mut refs = Vec::new();
-        for occurrence in &self.occurrences {
+        for occurrence in self.occurrences() {
             push(&mut refs, &self.inspected[occurrence.document.index()], b)?;
         }
         Ok(refs)
@@ -80,7 +96,7 @@ pub fn inspect<'c, 'd>(
     registry: &SchemaRegistry,
     b: &mut Budget,
     admission: &mut SourceAdmission,
-) -> Result<Plan<'c, 'd>, Error<'c>> {
+) -> Result<InspectedPlan<'c, 'd>, Error<'c>> {
     b.poll()?;
     let result = (|| {
         let mut inspected = Vec::new();
@@ -98,15 +114,25 @@ pub fn inspect<'c, 'd>(
             })?;
             push(&mut inspected, item, b)?;
         }
-        let occurrences = select_occurrences(input, b)?;
-        Ok(Plan {
-            input,
+        let selection = select(input, b)?;
+        Ok(InspectedPlan {
+            selection,
             inspected,
-            occurrences,
         })
     })();
     b.poll()?;
     result
+}
+
+/// Record display selection without granting label or output validation.
+pub fn select<'c, 'd>(
+    input: &'c Collected<'d>,
+    b: &mut Budget,
+) -> Result<Plan<'c, 'd>, StopReason> {
+    Ok(Plan {
+        input,
+        occurrences: select_occurrences(input, b)?,
+    })
 }
 
 /// Expand only the host-selected display occurrences. This grants no label or

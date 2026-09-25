@@ -80,7 +80,7 @@ pub(super) fn html_links(
     for (page, plan) in plans.iter().enumerate() {
         outputs.push(
             composition::render(
-                plan,
+                plan.selection(),
                 &prepared,
                 page as u64,
                 registry,
