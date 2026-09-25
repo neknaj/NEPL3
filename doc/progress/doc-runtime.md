@@ -1,5 +1,20 @@
 # Doc runtime の段階実装
 
+## 局所View表の符号化（2026-09-25、接続前checkpoint）
+
+Reader章の測定で、root canonical表現32,150,265 bytesのうちtoken viewsが
+15,707,059 bytesを占めた。局所schema/source表を持つSharedViewBundleを
+Foundation契約へ追加し、独立encoder/decoderを実装した。
+表の完全identity順序、重複・未使用・範囲外indexの拒否、復元後のView検査、
+SourceAdmission、Work／Allocation／Depth／取消境界を検査する。
+独立レビューで指摘されたSourceBytes課金不足を修正し、再レビューを通した。
+native・WASIのview試験は各5件、独立nativeも5件成功。wire clippyは成功した。
+128／256／512要素の反復identity入力では、通常Token符号化の半分未満のbyte数となる。
+
+SyntaxBundleSetへの接続、複数schema/sourceを含む独立受信fixture、
+全生成物の再生成、実文書の通常予算検査は未完了である。
+このcheckpointは統合候補としない。
+
 ## SourceMap prefix の検証再利用（2026-09-25）
 
 SyntaxBundle の同一検証内で、root の検証済み mapping と完全一致する child prefix の

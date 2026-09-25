@@ -142,6 +142,10 @@ body
         nil
       cons paragraph
         cons "SyntaxBundleはsourceMapsを[所有/しょゆう]し、その[全端点/ぜんたんてん]を[同/おな]じbundleのsourcesで[解決/かいけつ]する。"
+        cons "SharedViewBundleはschemas・sources・elements・rootsの[順/じゅん]でViewBundleを[格納/かくのう]する。[局所表/きょくしょひょう]schemasはpackage・revision・digest、sourcesはSourceId・revision・digestの[辞書順/じしょじゅん]とし、[完全/かんぜん]identityの[重複/ちょうふく]と[未使用/みしよう]entryを[拒否/きょひ]する。"
+        cons "SharedViewElementはschema index・local kind・source index・start・end・fields・roles・relationsを[保持/ほじ]する。rolesとrelationsのschemaも[同/おな]じ[局所表/きょくしょひょう]を[参照/さんしょう]する。roots・children・relation targetは[元/もと]のViewRefのU64[値/ち]とし、[各列/かくれつ]の[順序/じゅんじょ]と[重複/ちょうふく]を[保持/ほじ]する。"
+        cons "[表/ひょう]のindexは[範囲内/はんいない]を[要求/ようきゅう]する。source[表/ひょう]は[識別子/しきべつし]だけを[保持/ほじ]し、[受信側/じゅしんがわ]の[宣言集合/せんげんしゅうごう]で[全/すべ]てのsnapshotを[解決/かいけつ]する。[復元後/ふくげんご]に[通常/つうじょう]のViewBundle[検査/けんさ]を[行/おこな]い、Tokenへの[接続時/せつぞくじ]にはheadとの[包含/ほうがん]とsource mappingの[検査/けんさ]を[行/おこな]う。"
+        cons "[局所表/きょくしょひょう]は[一/ひと]つのViewBundleに[属/ぞく]する。Sentence literalのviewDigestは[復元/ふくげん]した[通常/つうじょう]のViewBundleのcanonical[表現/ひょうげん]から[求/もと]める。[共有表/きょうゆうひょう]のindexをviewDigestへ[流用/りゅうよう]しない。"
         cons "SyntaxBundleSetはsources・sourceMaps・bundlesの[順/じゅん]で[共有表/きょうゆうひょう]とroot bundle[列/れつ]を[所有/しょゆう]する。SharedSyntaxBundleはsources・sourceMapsのdigest[列/れつ]とSyntaxBodyを[持/も]ち、SyntaxBodyはnodes・origins・root・environments・tokensをこの[順/じゅん]で[保持/ほじ]する。"
         cons "[共有表/きょうゆうひょう]のSourceContentとSourceMappingは、それぞれASCII domain NEPL3.SyntaxBundleSet.Source.v1とNEPL3.SyntaxBundleSet.Mapping.v1、NUL、entryのcanonical NDF/1 CBORを[連結/れんけつ]したSHA-256で[識別/しきべつ]する。[各表/かくひょう]はdigest[昇順/しょうじゅん]で[一意/いちい]とし、digest[衝突時/しょうとつじ]の[異内容/いないよう]、[未参照/みさんしょう]entry、[未登録/みとうろく]digestを[拒否/きょひ]する。"
         cons "[各/かく]memberのsource digest[列/れつ]はSourceRefのcanonical[順/じゅん]、mapping digest[列/れつ]は[元/もと]の[宣言順/せんげんじゅん]を[保持/ほじ]する。[選択/せんたく]したentryだけからbundleを[復元/ふくげん]して[閉包/へいほう]を[検査/けんさ]する。[隣接/りんせつ]memberや[共有表全体/きょうゆうひょうぜんたい]による[参照補完/さんしょうほかん]を[禁止/きんし]する。"

@@ -1,4 +1,5 @@
 //! Typed token/view projection. Numeric references remain local to each token.
+pub mod shared;
 use crate::{WireError, decode_checked, encode_checked, source::*};
 use alloc::{string::String, vec::Vec};
 use nepl3_core::{

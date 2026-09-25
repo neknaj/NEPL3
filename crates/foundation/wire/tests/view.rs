@@ -95,6 +95,242 @@ fn fixture() -> Result<(SchemaRef, SchemaRegistry, SourceStore, Token), String> 
 }
 
 #[test]
+fn shared_views_reduce_repeated_identity_bytes_with_bounded_growth() -> TestResult {
+    let (schema, registry, sources, mut token) = fixture()?;
+    let mut previous_work = None;
+    for count in [128, 256, 512] {
+        let mut leaf = token.views.elements[0].clone();
+        leaf.fields.clear();
+        leaf.roles.clear();
+        leaf.relations.clear();
+        token.views.elements = vec![leaf; count];
+        token.views.roots = (0..count as u64).map(ViewRef).collect();
+        let mut b = budget();
+        let bytes = shared::encode(
+            &token.views,
+            &schema,
+            &registry,
+            &sources,
+            &mut SourceAdmission::default(),
+            &mut b,
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        let ordinary = encode_token(
+            &token,
+            &schema,
+            &registry,
+            &sources,
+            &mut SourceAdmission::default(),
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        // Repeated full schema/source identities dominate the ordinary form;
+        // the local table must remove that byte cost, not merely rename it.
+        assert!(bytes.len() * 2 < ordinary.len());
+        if let Some(previous) = previous_work {
+            assert!(b.usage().work < previous * 3);
+        }
+        previous_work = Some(b.usage().work);
+        assert_eq!(
+            shared::decode(
+                &bytes,
+                &schema,
+                &registry,
+                &sources,
+                &mut SourceAdmission::default(),
+                &mut budget()
+            )
+            .map_err(|e| format!("{e:?}"))?,
+            token.views
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn shared_views_preserve_structure_and_reject_table_authority() -> TestResult {
+    let (schema, registry, sources, token) = fixture()?;
+    let mut measured = budget();
+    let bytes = shared::encode(
+        &token.views,
+        &schema,
+        &registry,
+        &sources,
+        &mut SourceAdmission::default(),
+        &mut measured,
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let restored = shared::decode(
+        &bytes,
+        &schema,
+        &registry,
+        &sources,
+        &mut SourceAdmission::default(),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(restored, token.views);
+    let mut decoded_budget = budget();
+    shared::decode(
+        &bytes,
+        &schema,
+        &registry,
+        &sources,
+        &mut SourceAdmission::default(),
+        &mut decoded_budget,
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let usage = decoded_budget.usage();
+    for reason in [
+        StopReason::WorkLimit,
+        StopReason::AllocationLimit,
+        StopReason::DepthLimit,
+        StopReason::Cancelled,
+    ] {
+        for shortage in [0, 1] {
+            let mut limits = budget().limits();
+            match reason {
+                StopReason::WorkLimit => limits.work = usage.work - shortage,
+                StopReason::AllocationLimit => {
+                    limits.allocation_units = usage.allocation_units - shortage
+                }
+                StopReason::DepthLimit => limits.depth = usage.depth - shortage,
+                StopReason::Cancelled => {}
+                _ => return Err("boundary reason".into()),
+            }
+            let mut b = Budget::new(limits);
+            if reason == StopReason::Cancelled {
+                b.stop(reason);
+            }
+            let result = shared::decode(
+                &bytes,
+                &schema,
+                &registry,
+                &sources,
+                &mut SourceAdmission::default(),
+                &mut b,
+            );
+            if shortage == 0 && reason != StopReason::Cancelled {
+                assert_eq!(result.map_err(|e| format!("{e:?}"))?, token.views);
+            } else {
+                assert!(result.is_err());
+                assert_eq!(b.poll(), Err(reason));
+            }
+        }
+    }
+    for decoding in [false, true] {
+        let mut b = Budget::new(Limits {
+            source_bytes: 0,
+            ..budget().limits()
+        });
+        let mut admission = SourceAdmission::default();
+        let stopped = if decoding {
+            shared::decode(&bytes, &schema, &registry, &sources, &mut admission, &mut b).is_err()
+        } else {
+            shared::encode(
+                &token.views,
+                &schema,
+                &registry,
+                &sources,
+                &mut admission,
+                &mut b,
+            )
+            .is_err()
+        };
+        assert!(stopped);
+        assert_eq!(b.poll(), Err(StopReason::SourceLimit));
+    }
+    assert_eq!(
+        shared::encode(
+            &restored,
+            &schema,
+            &registry,
+            &sources,
+            &mut SourceAdmission::default(),
+            &mut budget()
+        )
+        .map_err(|e| format!("{e:?}"))?,
+        bytes
+    );
+    assert!(
+        shared::decode(
+            &bytes,
+            &schema,
+            &registry,
+            &SourceStore::default(),
+            &mut SourceAdmission::default(),
+            &mut budget()
+        )
+        .is_err()
+    );
+    for shortage in [0, 1] {
+        let mut b = Budget::new(Limits {
+            work: measured.usage().work - shortage,
+            ..budget().limits()
+        });
+        let result = shared::encode(
+            &token.views,
+            &schema,
+            &registry,
+            &sources,
+            &mut SourceAdmission::default(),
+            &mut b,
+        );
+        if shortage == 0 {
+            assert_eq!(result.map_err(|e| format!("{e:?}"))?, bytes);
+        } else {
+            assert!(result.is_err());
+            assert_eq!(b.poll(), Err(StopReason::WorkLimit));
+        }
+    }
+    for mutation in 0..4 {
+        let mut b = budget();
+        let mut value = decode(&bytes, &mut b).map_err(|e| format!("{e:?}"))?;
+        let NdfValue::Record(record) = &mut value else {
+            return Err("SharedViewBundle".into());
+        };
+        match mutation {
+            0 | 1 => {
+                let NdfValue::List(table) = &mut record.fields[mutation] else {
+                    return Err("table".into());
+                };
+                table.push(table[0].clone());
+            }
+            2 => {
+                let NdfValue::List(elements) = &mut record.fields[2] else {
+                    return Err("elements".into());
+                };
+                let NdfValue::Record(element) = &mut elements[0] else {
+                    return Err("element".into());
+                };
+                element.fields[2] = NdfValue::U64(u64::MAX);
+            }
+            3 => {
+                let NdfValue::List(elements) = &mut record.fields[2] else {
+                    return Err("elements".into());
+                };
+                elements.clear();
+                record.fields[3] = NdfValue::List(vec![]);
+            }
+            _ => return Err("mutation".into()),
+        }
+        let altered = encode(&value, &mut b).map_err(|e| format!("{e:?}"))?;
+        assert!(
+            shared::decode(
+                &altered,
+                &schema,
+                &registry,
+                &sources,
+                &mut SourceAdmission::default(),
+                &mut budget()
+            )
+            .is_err()
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn structured_payload_views_roles_relations_and_trivia_roundtrip_without_reparse() -> TestResult {
     let (schema, registry, sources, token) = fixture()?;
     let mut admission = SourceAdmission::default();
