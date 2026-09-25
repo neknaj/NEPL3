@@ -2,6 +2,79 @@ use super::*;
 use nepl3_core::{budget::Limits, source::SourceId};
 
 #[test]
+fn storage_deduplication_preserves_independent_values_and_exact_limits() -> Result<(), WireError> {
+    let make = || {
+        SourceSnapshot::new(
+            SourceId("same".into()),
+            1,
+            "memory:same".into(),
+            b"same".to_vec(),
+            &mut Budget::new(Limits {
+                source_bytes: 64,
+                work: 1024,
+                allocation_units: 1024,
+                ..Limits::default()
+            }),
+        )
+    };
+    let first = make()?;
+    let second = make()?;
+    assert!(!core::ptr::eq(first.identity(), second.identity()));
+    let allocation =
+        (4 * (2 * core::mem::size_of::<usize>() + core::mem::size_of::<bool>())) as u64;
+    for inputs in [
+        alloc::vec![&first, &second, &first, &second],
+        alloc::vec![&second, &second, &first, &first],
+    ] {
+        let mut budget = Budget::new(Limits {
+            work: 36,
+            allocation_units: allocation,
+            ..Limits::default()
+        });
+        let original_first = inputs[0];
+        let result = unique_source_storage(inputs, &mut budget)?;
+        assert!(core::ptr::eq(
+            result[0].identity(),
+            original_first.identity()
+        ));
+        assert_eq!(result.len(), 2);
+        assert!(
+            result
+                .iter()
+                .any(|source| core::ptr::eq(source.identity(), first.identity()))
+        );
+        assert!(
+            result
+                .iter()
+                .any(|source| core::ptr::eq(source.identity(), second.identity()))
+        );
+        assert_eq!(budget.usage().work, 36);
+        assert_eq!(budget.usage().allocation_units, allocation);
+    }
+    for (work, allocation_units, reason) in [
+        (35, allocation, StopReason::WorkLimit),
+        (36, allocation - 1, StopReason::AllocationLimit),
+    ] {
+        let mut budget = Budget::new(Limits {
+            work,
+            allocation_units,
+            ..Limits::default()
+        });
+        assert!(
+            matches!(unique_source_storage(alloc::vec![&first; 4], &mut budget), Err(WireError::Stopped(actual)) if actual == reason)
+        );
+        assert_eq!(budget.poll(), Err(reason));
+    }
+    let mut budget = Budget::new(Limits::default());
+    budget.cancel();
+    assert!(matches!(
+        unique_source_storage(Vec::new(), &mut budget),
+        Err(WireError::Stopped(StopReason::Cancelled))
+    ));
+    Ok(())
+}
+
+#[test]
 fn pool_search_commits_the_matched_position_without_recomparison() -> Result<(), WireError> {
     let values = [2_u64, 4, 6, 8, 10, 12, 14];
     let pool = Pool {

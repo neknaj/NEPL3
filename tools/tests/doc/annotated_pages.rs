@@ -1475,6 +1475,23 @@ fn measure_page_encoding(
             })
             .collect();
         let mut shared_admission = SourceAdmission::default();
+        let mut validation_budget = Budget::new(limits);
+        let started = std::time::Instant::now();
+        for bundle in &bundles {
+            bundle
+                .validate_with_sources(
+                    &c.doc.registry,
+                    &mut validation_budget,
+                    &mut shared_admission,
+                )
+                .map_err(err)?;
+        }
+        println!(
+            "{label} shared_native_validation elapsed_ns={} usage={:?}",
+            started.elapsed().as_nanos(),
+            validation_budget.usage()
+        );
+        let mut shared_admission = SourceAdmission::default();
         let mut shared_codec =
             FoundationCodec::new(&c.doc.registry, &store, &mut shared_admission).map_err(err)?;
         let mut shared_budget = Budget::new(limits);

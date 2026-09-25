@@ -24,6 +24,95 @@ fn identity(a: &SnapshotId, z: &SnapshotId, b: &mut Budget) -> Result<Ordering, 
 #[cfg(test)]
 mod tests;
 
+/// Collapse repeated immutable storage before comparing full source identities.
+/// Address order is local scratch only; Pool::new subsequently establishes the
+/// content order and checks independently stored declarations for conflicts.
+pub(super) fn unique_source_storage<'a>(
+    mut inputs: Vec<&'a SourceSnapshot>,
+    b: &mut Budget,
+) -> Result<Vec<&'a SourceSnapshot>, WireError> {
+    b.poll()?;
+    let count = inputs.len();
+    if count < 2 {
+        return Ok(inputs);
+    }
+    let bytes = count
+        .checked_mul(2 * core::mem::size_of::<usize>() + core::mem::size_of::<bool>())
+        .filter(|bytes| *bytes <= isize::MAX as usize)
+        .ok_or_else(|| b.stop(StopReason::AllocationLimit))?;
+    b.charge(Resource::AllocationUnits, bytes as u64)?;
+    let mut order = Vec::new();
+    let mut scratch = Vec::new();
+    let mut selected = Vec::new();
+    order
+        .try_reserve_exact(count)
+        .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+    scratch
+        .try_reserve_exact(count)
+        .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+    selected
+        .try_reserve_exact(count)
+        .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+    b.charge(Resource::Work, count as u64)?;
+    order.extend(0..count);
+    selected.resize(count, false);
+    let mut width = 1_usize;
+    while width < count {
+        scratch.clear();
+        let mut start = 0_usize;
+        while start < count {
+            let middle = start.saturating_add(width).min(count);
+            let end = middle.saturating_add(width).min(count);
+            let (mut left, mut right) = (start, middle);
+            while left < middle || right < end {
+                // Stable merging and fixed work per output slot ensure that
+                // addresses affect neither representatives nor charged work.
+                b.charge(Resource::Work, 3)?;
+                let take_left = left < middle
+                    && (right == end
+                        || core::ptr::from_ref(inputs[order[left]].identity()).addr()
+                            <= core::ptr::from_ref(inputs[order[right]].identity()).addr());
+                let at = if take_left {
+                    let at = left;
+                    left += 1;
+                    at
+                } else {
+                    let at = right;
+                    right += 1;
+                    at
+                };
+                scratch.push(order[at]);
+            }
+            start = end;
+        }
+        core::mem::swap(&mut order, &mut scratch);
+        width = width.saturating_mul(2);
+    }
+    for at in 0..count {
+        b.charge(Resource::Work, 1)?;
+        if at == 0
+            || !core::ptr::eq(
+                inputs[order[at - 1]].identity(),
+                inputs[order[at]].identity(),
+            )
+        {
+            selected[order[at]] = true;
+        }
+    }
+    // Restore first occurrence order before content sorting; otherwise address
+    // order could change the later content comparison cost.
+    let mut retained = 0;
+    for at in 0..count {
+        b.charge(Resource::Work, 1)?;
+        if selected[at] {
+            inputs[retained] = inputs[at];
+            retained += 1;
+        }
+    }
+    inputs.truncate(retained);
+    Ok(inputs)
+}
+
 pub(super) trait Content {
     fn compare(&self, other: &Self, b: &mut Budget) -> Result<Ordering, WireError>;
     fn same(&self, other: &Self, b: &mut Budget) -> Result<bool, WireError>;

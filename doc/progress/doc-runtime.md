@@ -327,6 +327,15 @@ Clippy、thumb向けcheckとrepository checkも成功した。正式受入の完
 第13章の投影は286,046,899 Work、159,308,444 AllocationUnits、native debug単回で約6.39秒となった。
 独立した148件のdigest計算は75,756,838から51,363,577 Workへ減少した。
 通常Work100Mへの適合、未移行正本と生成物の更新は引き続き未完了である。
+共有syntaxのnative検証を独立計測すると19,657,161 Workであった。共有表を構築する前に、
+同じ不変snapshot storageの重複を集約し、完全identityの整列対象を削減した。
+索引整列の課金を固定し、最初の出現順を復元することで、address配置が後段の比較費用へ影響する経路を除いた。
+別storageは保持し、memberごとの検証と内容競合検査を従来通り実行する。
+wire全88試験、WASIのpool試験3件と共有形式10件、Clippy、thumb向けcheck、repository checkが成功した。
+独立レビューでもpool試験3件と共有形式10件が成功した。URI競合の拒否型に関する試験の期待値を修正した。
+第13章の投影は256,474,813 Work、159,712,398 AllocationUnits、native debug単回で約6.53秒となった。
+Workは29,572,086減少し、集約用索引によりAllocationUnitsは403,954増加した。
+通常Work100Mへの適合は未達であり、native検証・変換・digestの費用を継続して削減する。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

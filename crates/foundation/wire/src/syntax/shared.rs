@@ -106,6 +106,7 @@ pub(crate) fn value<'a>(
         }
         push(&mut inputs, bundle, b)?;
     }
+    let sources = pool::unique_source_storage(sources, b)?;
     let sources = pool::Pool::new(sources, SOURCE_DOMAIN, schema, admission, b)?;
     let mut indexed_maps = Vec::new();
     for mapping in maps {

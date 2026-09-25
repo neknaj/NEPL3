@@ -146,6 +146,32 @@ fn indexed_pool_preserves_independent_format_for_repeated_and_distinct_members()
         )
         .map_err(|e| format!("{e:?}"))?;
     }
+    let mut conflicting = independent.clone();
+    let source = &mut conflicting.sources[0];
+    *source = SourceSnapshot::new(
+        source.identity().source.clone(),
+        source.identity().revision,
+        "memory:conflicting-uri".into(),
+        source.text().as_bytes().to_vec(),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let conflict = shared::encode(
+        &[first.clone(), conflicting],
+        &s,
+        &r,
+        &mut SourceAdmission::default(),
+        &mut budget(),
+    );
+    assert!(
+        matches!(
+            conflict,
+            Err(WireError::Syntax(nepl3_core::syntax::SyntaxError::Source(
+                nepl3_core::source::SourceError::IdentityConflict
+            )))
+        ),
+        "{conflict:?}"
+    );
     for bundles in [
         vec![],
         vec![first.clone()],
