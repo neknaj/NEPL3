@@ -541,66 +541,62 @@ fn real_source_html_roundtrip(compiled: &Compiled) -> Result<(), String> {
 // ASCII A/B have identical font metrics; B is always the annotated base.
 #[test]
 fn browser_layout_corpus_from_real_doc_source() -> Result<(), String> {
+    let compiled = compiled()?;
     for (name, source) in [
         (
             "ruby",
-            r#"article en "Layout" body cons paragraph cons "A[B/read]C" nil nil"#,
+            r#"article en sentence "Layout" body cons paragraph cons sentence "A[B/read]C" nil nil"#,
         ),
         (
             "anno",
-            r#"article en "Layout" body cons paragraph cons "A{B/note}C" nil nil"#,
+            r#"article en sentence "Layout" body cons paragraph cons sentence "A{B/note}C" nil nil"#,
         ),
         (
             "anno-ruby",
-            r#"article en "Layout" body cons paragraph cons "A{[B/read]/note}C" nil nil"#,
+            r#"article en sentence "Layout" body cons paragraph cons sentence "A{[B/read]/note}C" nil nil"#,
         ),
         (
             "ruby-anno",
-            r#"article en "Layout" body cons paragraph cons "A[{B/note}/read]C" nil nil"#,
+            r#"article en sentence "Layout" body cons paragraph cons sentence "A[{B/note}/read]C" nil nil"#,
         ),
         (
             "ruby-ruby",
-            r#"article en "Layout" body cons paragraph cons "A[[B/read]/outer]C" nil nil"#,
+            r#"article en sentence "Layout" body cons paragraph cons sentence "A[[B/read]/outer]C" nil nil"#,
         ),
         (
             "table-ruby",
-            r#"article en "Layout" body cons table cons left nil none cons row cons "A[B/read]C" nil nil nil"#,
+            r#"article en sentence "Layout" body cons table cons left nil none cons row cons sentence "A[B/read]C" nil nil nil"#,
         ),
         (
             "list-ruby",
-            r#"article en "Layout" body cons list unordered cons item none body cons paragraph cons "A[B/read]C" nil nil nil nil"#,
+            r#"article en sentence "Layout" body cons list unordered cons item none body cons paragraph cons sentence "A[B/read]C" nil nil nil nil"#,
         ),
         (
             "ruby-multiline",
-            r#"article en "Layout" body cons paragraph cons sentence cons text "A" cons ruby concat cons text "D" cons break cons text "B" nil text "read" cons text "C" nil nil nil"#,
+            r#"article en sentence "Layout" body cons paragraph cons sentence sentence cons text "A" cons ruby concat cons text "D" cons break cons text "B" nil text "read" cons text "C" nil nil nil"#,
         ),
         (
             "anno-multiline",
-            r#"article en "Layout" body cons paragraph cons sentence cons text "A" cons anno concat cons text "B" cons break cons text "D" nil cons text "note" nil cons text "C" nil nil nil"#,
+            r#"article en sentence "Layout" body cons paragraph cons sentence sentence cons text "A" cons anno concat cons text "B" cons break cons text "D" nil cons text "note" nil cons text "C" nil nil nil"#,
         ),
         (
             "reading-ruby",
-            r#"article en "Layout" body cons paragraph cons "A[B/[read/outer]]C" nil nil"#,
+            r#"article en sentence "Layout" body cons paragraph cons sentence "A[B/[read/outer]]C" nil nil"#,
         ),
         (
             "notes-ruby",
-            r#"article en "Layout" body cons paragraph cons "A{B/[note/read]/second}C" nil nil"#,
+            r#"article en sentence "Layout" body cons paragraph cons sentence "A{B/[note/read]/second}C" nil nil"#,
         ),
         (
             "anno-anno",
-            r#"article en "Layout" body cons paragraph cons "A{{B/inner}/outer}C" nil nil"#,
+            r#"article en sentence "Layout" body cons paragraph cons sentence "A{{B/inner}/outer}C" nil nil"#,
         ),
         (
             "line-reservation",
-            r#"article en "Layout" body cons paragraph cons sentence cons text "Z" cons break cons text "A" cons anno ruby text "B" ruby text "read" text "outer" cons ruby text "note" text "reading" cons text "second" nil cons text "C" cons break cons text "Y" nil nil nil"#,
+            r#"article en sentence "Layout" body cons paragraph cons sentence sentence cons text "Z" cons break cons text "A" cons anno ruby text "B" ruby text "read" text "outer" cons ruby text "note" text "reading" cons text "second" nil cons text "C" cons break cons text "Y" nil nil nil"#,
         ),
     ] {
-        let out = html(
-            source,
-            RenderOptions {
-                parallel: ParallelMode::Rows,
-            },
-        )?;
+        let out = nepl3_tools::doc::export::generate(&compiled, source)?.html;
         assert!(out.contains("nepl-base"));
         let hex: String = out
             .as_bytes()

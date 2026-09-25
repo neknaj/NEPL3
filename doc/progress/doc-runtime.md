@@ -280,6 +280,14 @@ Text内のLFと明示breakの区別、native/owned解析木の一致も維持す
 線型結合例の`doc-html export`も通常予算で成功した。clippy・repository・fmt・diff検査は成功した。
 他のlocal-only HTML試験とページ集合の試験入力は、引き続き移行対象である。
 
+ブラウザ表示検査の13入力も独立Sentenceへ移行し、production exportの完全HTMLを使用する。
+表示検査は同一originの文書とCSSだけをPlaywrightのrouteで供給し、CSPとJavaScript無効を維持する。
+他の要求は拒否し、service workerも無効にする。CSSの取得元・指定font size・CSPの内容を確認してから、
+既存の注釈配置・改行・baselineの条件を測定する。native・WASIのcorpus生成各1件とPython6件は成功し、
+独立レビューでもnative1件・Python6件が成功した。basedpyrightは警告・エラー0件である。
+最終ブラウザ実行ではChromium・Firefox・WebKitの計702条件が成功した。
+clippy・repository・fmt・diff検査も成功した。残るHTML試験や正式受入全体の完了は含まない。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

@@ -1,7 +1,9 @@
 """Measure production Doc HTML in Chromium, Firefox and WebKit, without document JS.
 
 Supply the --nocapture log of browser_layout_corpus_from_real_doc_source and the
-production stylesheet. By default use the pinned Playwright browser binaries;
+production stylesheet. Full exported documents retain their CSP and load the
+stylesheet through a same-origin intercepted request. No network server is used.
+By default use the pinned Playwright browser binaries;
 optional executable paths allow explicit local runners. Missing engines fail.
 This checks static document layout, not browser Wasm or Playground completion.
 """
@@ -43,8 +45,16 @@ def extract_cases(corpus: bytes) -> Mapping[CaseName, str]:
 # A and B use the same font and size: their text rectangle bottoms must match.
 # Multiline B is placed on Ruby's last / Anno's first line by the source corpus.
 # Property support is recorded, not assumed to prove correct layout.
-MEASURE = """caseName => {
+MEASURE = """([caseName, fontSize]) => {
   const article = document.querySelector('article');
+  if(getComputedStyle(article).fontSize !== `${fontSize}px`)
+    throw Error('requested stylesheet parameters were not applied');
+  if(document.styleSheets.length !== 1 ||
+     document.styleSheets[0].href !== 'https://nepl3-doc.invalid/assets/doc.css')
+    throw Error('expected the exported same-origin stylesheet');
+  if(document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.content !==
+     "default-src 'none'; style-src 'self'; base-uri 'none'; form-action 'none'")
+    throw Error('exported content security policy changed');
   const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT);
   const texts = []; while(walker.nextNode()) texts.push(walker.currentNode);
   const one = text => {
@@ -102,7 +112,7 @@ class Arguments(argparse.Namespace):
 
 
 def main() -> None:
-    from playwright.sync_api import sync_playwright
+    from playwright.sync_api import Route, sync_playwright
 
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ["corpus", "css", "output"]:
@@ -125,17 +135,30 @@ def main() -> None:
                 rows: list[Row] = []
                 try:
                     for width in [375, 1280]:
-                        context = browser.new_context(java_script_enabled=False,
+                        context = browser.new_context(java_script_enabled=False, service_workers='block',
                                                       viewport={"width": width, "height": 900})
                         page = context.new_page()
+                        document = ""
+                        stylesheet = ""
+
+                        def serve(route: Route) -> None:
+                            match route.request.url:
+                                case "https://nepl3-doc.invalid/document.html":
+                                    route.fulfill(content_type="text/html; charset=utf-8", body=document)
+                                case "https://nepl3-doc.invalid/assets/doc.css":
+                                    route.fulfill(content_type="text/css; charset=utf-8", body=stylesheet)
+                                case _:
+                                    route.abort()
+
+                        _ = page.route("**/*", serve)
                         for case, html in cases.items():
                             for size in [12, 20, 32]:
                                 heights: tuple[LineHeight, ...] = ('normal', '1.2', '2')
                                 for height in heights:
-                                    page.set_content("<!DOCTYPE html><meta charset=utf-8><style>" + css.decode("utf-8")
-                                                     + f".nepl-doc{{font-family:Arial,sans-serif;font-size:{size}px;line-height:{height}}}"
-                                                     + "</style>" + html)
-                                    measured: object = page.evaluate(MEASURE, case)  # pyright: ignore[reportAny]
+                                    document = html
+                                    stylesheet = css.decode("utf-8") + f"\n.nepl-doc{{font-family:Arial,sans-serif;font-size:{size}px;line-height:{height}}}"
+                                    _ = page.goto("https://nepl3-doc.invalid/document.html", wait_until="load")
+                                    measured: object = page.evaluate(MEASURE, [case, size])  # pyright: ignore[reportAny]
                                     rows.append(Row(case, width, size, height, geometry(measured)))
                         context.close()
                 finally:
