@@ -88,7 +88,12 @@ pub fn sentence<C: FoundationValueCodec>(
     // The reader's semantic arena is nested inside the syntax leaf. Include
     // that ownership depth while decoding, then restore the caller's base.
     b.with_depth_at_least(b.current_depth().saturating_add(1), |b| {
-        let result = portable::literal::from_value(&token.payload, owner, registry, codec, b)?;
+        let result =
+            portable::literal::from_value(&token.payload, owner, &token.views, registry, codec, b)
+                .map_err(|error| match error {
+                    portable::Error::LiteralViewMismatch => Error::TokenMismatch(id),
+                    other => Error::from(other),
+                })?;
         let [view] = result.views.as_slice() else {
             return Err(Error::TokenMismatch(id));
         };

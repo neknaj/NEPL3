@@ -8,7 +8,7 @@ use crate::{
     model::{Kind, Root},
     syntax::{SentenceSyntax, SentenceView},
 };
-use alloc::vec;
+use alloc::{vec, vec::Vec};
 use nepl3_core::{
     budget::{Budget, Resource},
     origin::Origin,
@@ -16,7 +16,11 @@ use nepl3_core::{
     source::{SourceSnapshot, SourceStore, Span},
     value::NdfValue,
     value_codec::FoundationValueCodec,
+    view::ViewBundle,
 };
+
+/// Binds the payload to the complete, separately supplied token presentation.
+pub const VIEW_DOMAIN: &[u8] = b"NEPL3.Sentence.Literal.View.v1\0";
 
 fn checked<C: FoundationValueCodec>(
     input: &SentenceSyntax,
@@ -102,10 +106,18 @@ pub fn to_value<C: FoundationValueCodec>(
     let origins = scoped.encode_origins(&input.origins, b).map_err(boundary)?;
     let head = scoped.encode_span(&view.head, b).map_err(boundary)?;
     let presentation = scoped.encode_views(&view.view, b).map_err(boundary)?;
+    let digest = scoped
+        .canonical_value_digest(VIEW_DOMAIN, &presentation, b)
+        .map_err(boundary)?;
+    b.charge(Resource::AllocationUnits, 32)?;
     let view = record(
         s,
-        "SentenceView",
-        [NdfValue::U64(view.owner), head, presentation],
+        "SentenceLiteralView",
+        [
+            NdfValue::U64(view.owner),
+            head,
+            NdfValue::Bytes(Vec::from(digest.0)),
+        ],
         b,
     )?;
     let out = record(
@@ -119,11 +131,13 @@ pub fn to_value<C: FoundationValueCodec>(
     Ok(out)
 }
 
-/// Ambient sources cannot complete this payload. Matching the returned head
-/// and View to the enclosing token is the consuming lower operation's job.
+/// The owner and complete token presentation are explicit inputs. The scoped
+/// codec validates presentation and its canonical digest before reconstruction.
+/// The consuming lower operation also checks the enclosing token's head.
 pub fn from_value<C: FoundationValueCodec>(
     input: &NdfValue,
     owner: &SourceSnapshot,
+    presentation: &ViewBundle,
     r: &SchemaRegistry,
     c: &mut C,
     b: &mut Budget,
@@ -147,13 +161,26 @@ pub fn from_value<C: FoundationValueCodec>(
         decoded_locations.push(syntax::location_from(location, s, &mut scoped, b)?);
     }
     let origins = scoped.decode_origins(origins, b).map_err(boundary)?;
-    let [NdfValue::U64(owner_index), head, view] = fields(view, s, "SentenceView")? else {
+    let [
+        NdfValue::U64(owner_index),
+        head,
+        NdfValue::Bytes(expected_digest),
+    ] = fields(view, s, "SentenceLiteralView")?
+    else {
         return Err(Error::Shape);
     };
+    let encoded = scoped.encode_views(presentation, b).map_err(boundary)?;
+    let digest = scoped
+        .canonical_value_digest(VIEW_DOMAIN, &encoded, b)
+        .map_err(boundary)?;
+    b.charge(Resource::Work, 32)?;
+    if expected_digest.as_slice() != digest.0 {
+        return Err(Error::LiteralViewMismatch);
+    }
     let view = SentenceView {
         owner: *owner_index,
         head: scoped.decode_span(head, b).map_err(boundary)?,
-        view: scoped.decode_views(view, b).map_err(boundary)?,
+        view: presentation.clone_with_budget(b)?,
     };
     b.charge(
         Resource::AllocationUnits,

@@ -311,7 +311,7 @@ fn sentence_payload_cannot_be_reassigned_to_another_doc_occurrence() -> Result<(
                     &mut codec,
                     &mut budget(),
                 );
-                if field.is_none() {
+                if field.is_none() || field == Some(3) {
                     assert!(
                         matches!(result, Err(sentence::Error::Lower(presentation::Error::Literal(literal::Error::TokenMismatch(id)))) if id == root),
                         "{result:?}"
@@ -361,7 +361,14 @@ fn sentence_payload_cannot_be_reassigned_to_another_doc_occurrence() -> Result<(
             let nepl3_core::value::NdfValue::Record(view) = &mut payload.fields[3] else {
                 return Err("view".into());
             };
-            view.fields[2] = encoded;
+            let digest = codec
+                .canonical_value_digest(
+                    nepl3_sentence_core::portable::literal::VIEW_DOMAIN,
+                    &encoded,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+            view.fields[2] = nepl3_core::value::NdfValue::Bytes(digest.0.to_vec());
             assert!(
                 matches!(sentence::lower(&changed, changed.schema(), &[], profile.registry(), &mut codec, &mut budget()), Err(sentence::Error::Lower(presentation::Error::Literal(literal::Error::TokenMismatch(id)))) if id == root)
             );

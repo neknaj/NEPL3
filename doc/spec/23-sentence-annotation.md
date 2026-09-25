@@ -114,13 +114,22 @@ Textや改行へ黙って変換しない。独立LanguagePackageの汎用printer
 readerとprinterは非再帰で処理し、共有値を展開した実出力にもBudgetを適用する。
 
 reader/providerのliteral受渡しには`SentenceLiteralPayload`を用意する。SentenceValue、
-denseなlocations、Direct Origin列、一つのroot所有Viewを順序付きfieldとして持ち、
-SourceContentをliteralごとにwireへ複製しない。`portable::literal`の受信は呼出側が明示した
-一つのSourceSnapshotだけでcodecをscopeする。同じID/revisionでも本文digestが異なるsource、
+denseなlocations、Direct Origin列、`SentenceLiteralView`を順序付きfieldとして持つ。
+SentenceLiteralViewはrootのowner index、headのSpan、ViewBundleの内容digestを保持する。
+digestは`SHA256("NEPL3.Sentence.Literal.View.v1\0" || canonical NDF/1 CBOR(ViewBundle))`である。
+完全なschema identity、要素順、参照、role、relationを含むView全体を対象とする。
+SourceContentとtoken側のViewBundleの重複保存を避け、受信APIはowner SourceSnapshotと
+tokenのViewBundleを明示入力として要求する。payload単体の復元は提供しない。
+`portable::literal`の受信は指定された一つのSourceSnapshotだけでcodecをscopeし、
+Viewの構造・sourceを検査してdigestを照合する。復元後もliteral全体を検査する。
+同じID/revisionでも本文digestが異なるsource、
 head外の位置、root以外が所有するView、prefix専用node、foreign、mappingを拒否する。
 一般の生成・変換済みsyntaxは閉包付きSentenceSyntaxを使い、このliteral契約へ縮小しない。
-受渡しの構造検査は本文の再parseによる意味一致のproofではない。包むTokenのhead/Viewとの
-照合はconsumerのlower操作が行う。新schemaのdigestはdescriptorから算出し、旧Doc payloadの
+受渡しの構造検査が保証するのはschema・位置・所有関係である。
+包むTokenとのhead照合はconsumerのlower操作が行い、View照合は受信時のdigest検査が担う。
+このdigestはpayloadと表示構造の対応を保証する。両者を同時に変更した入力の真正性は保証しない。
+検査・canonical hash・Viewの複製には同じBudgetを適用する。
+新schemaのdigestはdescriptorから算出し、旧Doc payloadの
 identityやdecoderをSentenceの契約として使い回さない。
 
 開発hostのSentence reader adapterは`nepl3.sentence.reader`の`literal`操作を明示登録する。

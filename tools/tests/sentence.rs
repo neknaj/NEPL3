@@ -294,6 +294,7 @@ fn run(input: &str, final_input: bool, stop: Option<StopReason>) -> Result<ReadR
         let syntax = nepl3_sentence_core::portable::literal::from_value(
             &value,
             &snapshot,
+            view,
             &r,
             &mut codec,
             &mut budget,

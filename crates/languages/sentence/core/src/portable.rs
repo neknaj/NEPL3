@@ -19,6 +19,7 @@ pub enum Error<E> {
     Foundation(E),
     Shape,
     SchemaIdentity,
+    LiteralViewMismatch,
     Presentation(crate::syntax::Error),
 }
 impl<E> From<crate::syntax::Error> for Error<E> {

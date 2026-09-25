@@ -78,8 +78,15 @@ fn referenced_literal_roundtrip_does_not_serialize_the_document_per_token() -> R
         let bytes = nepl3_wire::encode(&raw, &mut b()).map_err(err)?;
         sizes.push(bytes.len());
         let raw = nepl3_wire::decode(&bytes, &mut b()).map_err(err)?;
-        let actual = payload::from_value(&raw, &v.syntax.sources[0], &r, &mut codec, &mut b())
-            .map_err(err)?;
+        let actual = payload::from_value(
+            &raw,
+            &v.syntax.sources[0],
+            &v.syntax.views[0].view,
+            &r,
+            &mut codec,
+            &mut b(),
+        )
+        .map_err(err)?;
         assert_eq!(actual, v.syntax);
     }
     // The suffix is outside the literal. Only fixed-size snapshot identity
@@ -117,7 +124,15 @@ fn migrated_doc_payload_preserves_annotations_and_exact_owner_after_cbor() -> Re
     // hand-authored Doc fixture; no owner source bytes may enter the payload.
     assert_eq!(bytes.len(), short_bytes.len());
     let received = nepl3_wire::decode(&bytes, &mut b()).map_err(err)?;
-    let actual = payload::from_value(&received, owner, &r, &mut codec, &mut b()).map_err(err)?;
+    let actual = payload::from_value(
+        &received,
+        owner,
+        &v.syntax.views[0].view,
+        &r,
+        &mut codec,
+        &mut b(),
+    )
+    .map_err(err)?;
     assert_eq!(actual, v.syntax);
     // Independent expected meaning, not only an encoder/decoder roundtrip.
     assert_eq!(
@@ -158,7 +173,17 @@ fn migrated_doc_payload_preserves_annotations_and_exact_owner_after_cbor() -> Re
         source("different bytes")?,
     ] {
         // The correct ambient snapshot cannot replace the explicit owner.
-        assert!(payload::from_value(&received, &wrong, &r, &mut codec, &mut b()).is_err());
+        assert!(
+            payload::from_value(
+                &received,
+                &wrong,
+                &v.syntax.views[0].view,
+                &r,
+                &mut codec,
+                &mut b()
+            )
+            .is_err()
+        );
     }
     Ok(())
 }
@@ -177,7 +202,17 @@ fn referenced_literal_rejects_wrong_owner_even_when_ambient_source_is_correct() 
     let raw = payload::to_value(&v.syntax, &r, &mut codec, &mut b()).map_err(err)?;
     // Same id/revision and same literal, different document bytes.
     let wrong = source("\"[漢/かん]\" fail")?;
-    assert!(payload::from_value(&raw, &wrong, &r, &mut codec, &mut b()).is_err());
+    assert!(
+        payload::from_value(
+            &raw,
+            &wrong,
+            &v.syntax.views[0].view,
+            &r,
+            &mut codec,
+            &mut b()
+        )
+        .is_err()
+    );
     let mut wrong_kind = v.syntax.clone();
     wrong_kind.value.nodes[0] = Kind::Code { text: "漢".into() };
     assert!(matches!(
@@ -204,7 +239,97 @@ fn referenced_literal_rejects_wrong_owner_even_when_ambient_source_is_correct() 
         return Err("view".into());
     };
     view.fields[0] = nepl3_core::value::NdfValue::U64(0);
-    assert!(payload::from_value(&forged, &v.syntax.sources[0], &r, &mut codec, &mut b()).is_err());
+    assert!(
+        payload::from_value(
+            &forged,
+            &v.syntax.sources[0],
+            &v.syntax.views[0].view,
+            &r,
+            &mut codec,
+            &mut b()
+        )
+        .is_err()
+    );
+    Ok(())
+}
+
+#[test]
+fn literal_payload_binds_the_separately_supplied_complete_view() -> Result<(), String> {
+    use nepl3_core::{
+        source::Digest, value::NdfValue, value_codec::FoundationValueCodec, view::ViewBundle,
+    };
+    use nepl3_sentence_core::portable::{self, literal as payload};
+    use nepl3_wire::foundation::FoundationCodec;
+    let r = registry()?;
+    let literal = parse("\"[漢/かん]\"", &r)?;
+    let owner = &literal.syntax.sources[0];
+    let view = &literal.syntax.views[0].view;
+    let mut sources = SourceStore::default();
+    sources.insert(owner.clone()).map_err(err)?;
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &sources, &mut admission).map_err(err)?;
+    let raw = payload::to_value(&literal.syntax, &r, &mut codec, &mut b()).map_err(err)?;
+    let NdfValue::Record(record) = &raw else {
+        return Err("payload".into());
+    };
+    let NdfValue::Record(reference) = &record.fields[3] else {
+        return Err("view reference".into());
+    };
+    assert_eq!(reference.kind, "SentenceLiteralView");
+    // Independent preimage construction checks both the dedicated domain and
+    // the complete canonical ViewBundle, rather than a roundtrip alone.
+    let encoded = codec.encode_views(view, &mut b()).map_err(err)?;
+    let mut preimage = b"NEPL3.Sentence.Literal.View.v1\0".to_vec();
+    preimage.extend(nepl3_wire::encode(&encoded, &mut b()).map_err(err)?);
+    assert_eq!(
+        reference.fields[2],
+        NdfValue::Bytes(Digest::of(&preimage).0.to_vec())
+    );
+    let empty = ViewBundle {
+        roots: vec![],
+        elements: vec![],
+    };
+    codec.encode_views(&empty, &mut b()).map_err(err)?;
+    assert_eq!(
+        payload::from_value(&raw, owner, &empty, &r, &mut codec, &mut b()),
+        Err(portable::Error::LiteralViewMismatch)
+    );
+    for length in [31, 32, 33] {
+        let mut forged = raw.clone();
+        let NdfValue::Record(record) = &mut forged else {
+            return Err("payload".into());
+        };
+        let NdfValue::Record(reference) = &mut record.fields[3] else {
+            return Err("view reference".into());
+        };
+        reference.fields[2] = NdfValue::Bytes(vec![0; length]);
+        let result = payload::from_value(&forged, owner, view, &r, &mut codec, &mut b());
+        if length == 32 {
+            assert_eq!(result, Err(portable::Error::LiteralViewMismatch));
+        } else {
+            assert!(matches!(
+                result,
+                Err(portable::Error::Schema(
+                    nepl3_core::schema::SchemaError::WrongType
+                ))
+            ));
+        }
+    }
+    let mut old = raw.clone();
+    let NdfValue::Record(record) = &mut old else {
+        return Err("payload".into());
+    };
+    let NdfValue::Record(reference) = &mut record.fields[3] else {
+        return Err("view reference".into());
+    };
+    reference.kind = "SentenceView".into();
+    reference.fields[2] = encoded;
+    assert!(matches!(
+        payload::from_value(&old, owner, view, &r, &mut codec, &mut b()),
+        Err(portable::Error::Schema(
+            nepl3_core::schema::SchemaError::WrongType
+        ))
+    ));
     Ok(())
 }
 
@@ -224,6 +349,7 @@ fn referenced_literal_encode_and_decode_preserve_stop_reasons() -> Result<(), St
         StopReason::NodeLimit,
         StopReason::AllocationLimit,
         StopReason::DepthLimit,
+        StopReason::OutputLimit,
         StopReason::Cancelled,
     ] {
         for receiving in [false, true] {
@@ -236,6 +362,7 @@ fn referenced_literal_encode_and_decode_preserve_stop_reasons() -> Result<(), St
                 StopReason::NodeLimit => limits.nodes = 0,
                 StopReason::AllocationLimit => limits.allocation_units = 0,
                 StopReason::DepthLimit => limits.depth = 0,
+                StopReason::OutputLimit => limits.output_bytes = 0,
                 _ => {}
             }
             let mut budget = Budget::new(limits);
@@ -244,7 +371,14 @@ fn referenced_literal_encode_and_decode_preserve_stop_reasons() -> Result<(), St
             }
             if receiving {
                 assert_eq!(
-                    payload::from_value(&raw, &v.syntax.sources[0], &r, &mut codec, &mut budget),
+                    payload::from_value(
+                        &raw,
+                        &v.syntax.sources[0],
+                        &v.syntax.views[0].view,
+                        &r,
+                        &mut codec,
+                        &mut budget
+                    ),
                     Err(portable::Error::Stopped(reason))
                 );
             } else {

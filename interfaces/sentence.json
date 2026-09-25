@@ -425,6 +425,14 @@
       "record": [],
       "constraints": []
     },
+    "SentenceLiteralView": {
+      "record": [
+        ["owner", "U64"],
+        ["head", {"named": {"package": "nepl3.foundation", "revision": 1, "name": "Span"}}],
+        ["viewDigest", "Bytes32"]
+      ],
+      "constraints": ["sentence.literal_view_digest"]
+    },
     "SentenceLiteralPayload": {
       "record": [
         [
@@ -467,7 +475,7 @@
             "named": {
               "package": "nepl3.sentence",
               "revision": 1,
-              "name": "SentenceView"
+              "name": "SentenceLiteralView"
             }
           }
         ]

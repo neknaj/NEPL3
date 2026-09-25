@@ -1538,6 +1538,7 @@ fn measure_page_encoding(
     // tables are reported above as DocValue fields 4 and 5.
     let mut bundle_fields = [0_usize; 7];
     let mut token_fields = [0_usize; 5];
+    let mut token_records = std::collections::BTreeMap::new();
     let mut bundles = 0;
     for embed in embeds {
         let NdfValue::Record(embed) = embed else {
@@ -1590,6 +1591,23 @@ fn measure_page_encoding(
             for (total, field) in token_fields.iter_mut().zip(&token.fields) {
                 *total += value_nodes(field);
             }
+            for (part, root) in [("payload", &token.fields[2]), ("views", &token.fields[3])] {
+                let mut pending = vec![root];
+                while let Some(value) = pending.pop() {
+                    match value {
+                        NdfValue::Record(record) => {
+                            *token_records
+                                .entry((part, record.schema.package.as_str(), record.kind.as_str()))
+                                .or_insert(0_usize) += 1;
+                            pending.extend(&record.fields);
+                        }
+                        NdfValue::Variant(variant) => pending.extend(&variant.fields),
+                        NdfValue::List(values) => pending.extend(values),
+                        NdfValue::Some(value) => pending.push(value),
+                        _ => {}
+                    }
+                }
+            }
         }
     }
     println!(
@@ -1606,6 +1624,9 @@ fn measure_page_encoding(
         "{label} root_guest_token_fields kind={} head={} payload={} views={} trivia={}",
         token_fields[0], token_fields[1], token_fields[2], token_fields[3], token_fields[4]
     );
+    for ((part, package, kind), count) in token_records {
+        println!("{label} token_records part={part} package={package} kind={kind} count={count}");
+    }
     let mut inputs = vec![CanonicalDigestInput {
         domain: nepl3_doc_core::prepare::DOCUMENT_DOMAIN,
         value: document,

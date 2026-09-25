@@ -316,6 +316,17 @@ Workは7,973,632減少した。単回測定の実時間は改善しておらず�
 第13章の投影は300,042,375 Workとなり、削減は195,458 Workに留まる。
 AllocationUnitsは164,738,513のままで、native debugの単回測定は約8.94秒であった。
 残る主な調査対象はtokenのpayload・viewを含むencodingとcanonical digest計算である。
+構造別計測により、129件のSentence literalが11,743個のViewElementをpayloadとtokenへ
+二重保存していることを確認した。literal専用のSentenceLiteralViewをowner・head・viewDigestとし、
+受信APIへtokenのViewBundleを明示的に渡す。ownerのみのscopeで完全Viewを検査・hash照合し、
+復元後のliteral検査も維持する。一般SentenceSyntaxの表現は変更しない。
+異なる妥当View、別token、zero-width View、31/33byte digest、旧View表現と資源停止を検査した。
+独立レビューで既存Doc試験の追従漏れ2件を修正し、独立Sentence試験19件と修正後Doc試験10件が成功した。
+Sentence全57試験、host5試験、Doc payload10試験はnative/WASIで成功し、suite統合6試験はnativeで成功した。
+Clippy、thumb向けcheckとrepository checkも成功した。正式受入の完了を示す結果には含めない。
+第13章の投影は286,046,899 Work、159,308,444 AllocationUnits、native debug単回で約6.39秒となった。
+独立した148件のdigest計算は75,756,838から51,363,577 Workへ減少した。
+通常Work100Mへの適合、未移行正本と生成物の更新は引き続き未完了である。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
