@@ -200,6 +200,16 @@ Windows debugの投影参考時間は8.53秒であり、通常予算への適合
 field型の期待値を補強した最終差分を静的に再確認した。主担当も補強後の1件を再実行した。
 repository check、toolsのclippy、fmt、diff検査を実行した。第05・12章の全文構文移行と
 生成物更新は未完了であり、今回の契約検査は両章の正式readerによる完走を保証しない。
+canonical encoderの作業stackは論理容量を保持し、容量の増加分だけを事前に課金する。
+取り出したslotとhash終了markerのslotを再利用し、各pushのWork・深さ・出力の課金を維持する。
+第13章の投影は314,972,126 Workで不変、累積AllocationUnitsは266,936,252から
+247,434,268へ減少した。通常Work100Mへの適合は未達である。
+独立したCBOR期待値、digest、各資源の上限一致と1不足、広い入力の早期停止を検査した。
+wireのnative全71件、encoderのWASI11件、独立レビューのnative11件が成功した。
+thumbv6m向けcompile、wireのclippy、fmt、diff検査も成功した。
+第13章の文書集合用予算による計測試験はnativeで1件成功した。
+AllocationUnitsは論理的な累積量であり、今回ピーク物理メモリと速度改善率は測定していない。
+workspace全体、生成物の一致、正式受入の再実行は未完了である。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

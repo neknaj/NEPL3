@@ -10,6 +10,8 @@ use sha2::{Digest as _, Sha256};
 
 mod batch;
 pub(super) use batch::digests;
+#[cfg(test)]
+mod tests;
 
 // Both destinations consume the same canonical encoding traversal. Only the
 // byte-vector destination materializes the encoded output.
@@ -93,24 +95,49 @@ fn schema(out: &mut impl Sink, schema: &SchemaRef, budget: &mut Budget) -> Resul
     raw(out, 2, &schema.digest.0, budget)
 }
 
-fn push<'a>(
-    stack: &mut Vec<(Option<&'a NdfValue>, u64)>,
-    value: &'a NdfValue,
-    depth: u64,
-    budget: &mut Budget,
-) -> Result<(), WireError> {
-    budget.charge(Resource::Work, 1)?;
-    budget.charge(
-        Resource::AllocationUnits,
-        core::mem::size_of::<(Option<&NdfValue>, u64)>() as u64,
-    )?;
-    stack.push((Some(value), depth));
-    Ok(())
+struct Pending<'a> {
+    items: Vec<(Option<&'a NdfValue>, u64)>,
+    // Track requested slots separately from allocator-provided capacity.
+    // Popped entries, including hash-scope exits, reuse that storage.
+    slots: usize,
+}
+impl<'a> Pending<'a> {
+    fn push(
+        &mut self,
+        value: Option<&'a NdfValue>,
+        depth: u64,
+        budget: &mut Budget,
+    ) -> Result<(), WireError> {
+        use nepl3_core::budget::StopReason;
+        budget.charge(Resource::Work, 1)?;
+        if self.items.len() == self.slots {
+            let next = self
+                .slots
+                .checked_mul(2)
+                .ok_or_else(|| budget.stop(StopReason::AllocationLimit))?
+                .max(1);
+            let size = core::mem::size_of::<(Option<&NdfValue>, u64)>();
+            next.checked_mul(size)
+                .filter(|bytes| *bytes <= isize::MAX as usize)
+                .ok_or_else(|| budget.stop(StopReason::AllocationLimit))?;
+            let bytes = (next - self.slots)
+                .checked_mul(size)
+                .and_then(|bytes| u64::try_from(bytes).ok())
+                .ok_or_else(|| budget.stop(StopReason::AllocationLimit))?;
+            budget.charge(Resource::AllocationUnits, bytes)?;
+            self.items
+                .try_reserve_exact(next - self.items.len())
+                .map_err(|_| budget.stop(StopReason::AllocationLimit))?;
+            self.slots = next;
+        }
+        self.items.push((value, depth));
+        Ok(())
+    }
 }
 
 fn children<'a>(
     out: &mut impl Sink,
-    stack: &mut Vec<(Option<&'a NdfValue>, u64)>,
+    stack: &mut Pending<'a>,
     values: &'a [NdfValue],
     depth: u64,
     budget: &mut Budget,
@@ -120,7 +147,7 @@ fn children<'a>(
         .checked_add(1)
         .ok_or(nepl3_core::budget::StopReason::DepthLimit)?;
     for value in values.iter().rev() {
-        push(stack, value, next, budget)?;
+        stack.push(Some(value), next, budget)?;
     }
     Ok(())
 }
@@ -134,9 +161,12 @@ fn emit_at(
     budget: &mut Budget,
     depth: u64,
 ) -> Result<(), WireError> {
-    let mut pending = Vec::new();
-    push(&mut pending, item, depth, budget)?;
-    while let Some((item, depth)) = pending.pop() {
+    let mut pending = Pending {
+        items: Vec::new(),
+        slots: 0,
+    };
+    pending.push(Some(item), depth, budget)?;
+    while let Some((item, depth)) = pending.items.pop() {
         let Some(item) = item else {
             out.leave(budget)?;
             continue;
@@ -144,12 +174,7 @@ fn emit_at(
         budget.observe_depth(depth)?;
         budget.charge(Resource::Nodes, 1)?;
         if out.enter(item, budget)? {
-            budget.charge(Resource::Work, 1)?;
-            budget.charge(
-                Resource::AllocationUnits,
-                core::mem::size_of::<(Option<&NdfValue>, u64)>() as u64,
-            )?;
-            pending.push((None, depth));
+            pending.push(None, depth, budget)?;
         }
         match item {
             NdfValue::Unit => {
@@ -200,9 +225,8 @@ fn emit_at(
             NdfValue::Some(v) => {
                 head(out, 4, 2, budget)?;
                 head(out, 0, 9, budget)?;
-                push(
-                    &mut pending,
-                    v,
+                pending.push(
+                    Some(v),
                     depth
                         .checked_add(1)
                         .ok_or(nepl3_core::budget::StopReason::DepthLimit)?,
