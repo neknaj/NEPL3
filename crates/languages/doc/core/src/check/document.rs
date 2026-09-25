@@ -76,6 +76,9 @@ impl From<SyntaxError> for StructureError {
 pub struct ValidatedDocumentSyntax<'a> {
     document: &'a DocumentSyntax,
     shape: ValidatedDocShape<'a>,
+    // The declaration index belongs to this immutable document proof. Retain
+    // it for the same operation's scoped codec instead of rebuilding it.
+    sources: SourceStore,
 }
 impl<'a> ValidatedDocumentSyntax<'a> {
     pub fn document(&self) -> &'a DocumentSyntax {
@@ -83,6 +86,9 @@ impl<'a> ValidatedDocumentSyntax<'a> {
     }
     pub fn shape(&self) -> &ValidatedDocShape<'a> {
         &self.shape
+    }
+    pub(crate) fn sources(&self) -> &SourceStore {
+        &self.sources
     }
 }
 impl DocumentSyntax {
@@ -265,6 +271,7 @@ impl DocumentSyntax {
         Ok(ValidatedDocumentSyntax {
             document: self,
             shape,
+            sources: store,
         })
     }
 }

@@ -99,6 +99,18 @@ View関連fieldは576,189 nodeを占める。これらはNDF表現のnode数で�
 canonical digest・Usage・停止境界の試験は成功したが、実文書の速度改善を確認できず、
 候補は撤回した。通常のhash実装と資源上限は維持する。
 
+Docの構造検証型は、検証時に構築したsource索引を所有する。privateな符号化経路が
+同じ索引を借用し、sourceのcloneと再挿入を省く。索引の保持期間はproofの寿命まで
+延びる。新規呼出しのsource admission、codec検査、出力schema検査は維持する。
+第03章のportable構築は128,304,295から128,262,022 Work、投影全体は
+346,397,720から346,355,447 Workとなった。これは局所的な削減であり、guest構文の
+深い再検証とportable表現の構築費用は引き続き改善対象である。
+
+Doc coreのnative・WASI各51試験、独立レビューのportable・prepare計20試験が成功した。
+符号化のWork・Allocation・Source上限と1不足をfresh admissionで検査する。
+第03章の内容検査、clippy、repository、fmt、diff検査とthumbv6m compileを確認した。
+通常予算への適合は未達である。生成文書全体のstalenessと実機動作は未確認である。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

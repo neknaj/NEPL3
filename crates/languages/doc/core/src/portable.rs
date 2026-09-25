@@ -203,13 +203,7 @@ fn encode_input<'a, C: FoundationValueCodec>(
     let registry = input.registry;
     let s = schema(registry)?;
     let sources = c.encode_sources(&document.sources, b).map_err(boundary)?;
-    let mut store = SourceStore::default();
-    for source in &document.sources {
-        store
-            .insert_with_budget(source.clone_with_budget(b)?, b)
-            .map_err(StructureError::from)?;
-    }
-    let mut scoped = c.scoped_with_mappings(&store, &document.source_maps);
+    let mut scoped = c.scoped_with_mappings(input.structure.sources(), &document.source_maps);
     let value = owners::put(&input, &mut scoped, b)?;
     let origins = scoped
         .encode_origins(&document.origins, b)
@@ -222,6 +216,7 @@ fn encode_input<'a, C: FoundationValueCodec>(
         [value, sources, origins, views, maps],
         b,
     )?;
+    drop(scoped);
     Ok((output, input.structure))
 }
 pub fn from_value<C: FoundationValueCodec>(

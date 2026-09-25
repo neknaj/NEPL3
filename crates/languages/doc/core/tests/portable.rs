@@ -230,6 +230,35 @@ fn document_ndf_and_cbor_first_receiver_preserve_source_view_and_meaning() -> Re
     let mut budget = b();
     let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
     let value = portable::to_value(&doc, &r, &mut codec, &mut budget).map_err(err)?;
+    let used = budget.usage();
+    // The retained source index stays inside one encoding operation. A fresh
+    // call must still admit its sources and honor its own stopping boundaries.
+    for (amount, reason) in [
+        (used.work, StopReason::WorkLimit),
+        (used.allocation_units, StopReason::AllocationLimit),
+        (used.source_bytes, StopReason::SourceLimit),
+    ] {
+        for below in [false, true] {
+            let mut limits = b().limits();
+            let limit = amount - u64::from(below);
+            match reason {
+                StopReason::WorkLimit => limits.work = limit,
+                StopReason::AllocationLimit => limits.allocation_units = limit,
+                StopReason::SourceLimit => limits.source_bytes = limit,
+                _ => return Err("enumerated resource".into()),
+            }
+            let mut bounded = Budget::new(limits);
+            let mut admission = SourceAdmission::default();
+            let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+            let encoded = portable::to_value(&doc, &r, &mut codec, &mut bounded);
+            if below {
+                assert!(encoded.is_err());
+                assert_eq!(bounded.poll(), Err(reason));
+            } else {
+                assert_eq!(encoded.map_err(err)?, value);
+            }
+        }
+    }
     assert_eq!(
         budget.usage().source_bytes,
         doc.sources[0].text().len() as u64
