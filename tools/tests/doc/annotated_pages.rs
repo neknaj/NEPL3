@@ -921,6 +921,137 @@ fn html_delivery_chapter_preserves_sections_sentences_and_annotation() -> Result
 }
 
 #[test]
+fn html_fragment_chapter_preserves_paragraphs_codes_and_references() -> Result<(), String> {
+    html_fragment_projection(budget())
+}
+
+#[test]
+#[ignore = "explicit HTML fragment chapter projection measurement under corpus limits"]
+fn measure_html_fragment_projection_under_corpus_limits() -> Result<(), String> {
+    #[derive(serde::Deserialize)]
+    struct Policy {
+        output_limits: nepl3_tools::doc::export::pages::resources::OutputLimits,
+    }
+    let policy: Policy =
+        serde_json::from_str(include_str!("../../../doc/canonical.json")).map_err(err)?;
+    html_fragment_projection(policy.output_limits.budget())
+}
+
+fn html_fragment_projection(mut render_budget: Budget) -> Result<(), String> {
+    use nepl3_doc_core::model::{DocKind, DocRoot};
+    let c = compiled()?;
+    let set = PageSet {
+        pages: vec![page(
+            &c,
+            "html-fragment",
+            "doc/spec/19-html-fragment.nepld",
+            "doc/spec/19-html-fragment.md",
+            include_str!("../../../doc/spec/19-html-fragment.nepld"),
+        )?],
+        files: vec![],
+    };
+    let document = &set.pages[0].document.value;
+    let node = |id: u64| -> Result<&DocKind, String> {
+        document
+            .nodes
+            .get(usize::try_from(id).map_err(err)?)
+            .map(|node| &node.kind)
+            .ok_or_else(|| "document node".into())
+    };
+    let DocRoot::Article(root) = document.root else {
+        return Err("article root category".into());
+    };
+    let DocKind::Article { body, .. } = node(root.0)? else {
+        return Err("article root".into());
+    };
+    let DocKind::Body { blocks } = node(body.0)? else {
+        return Err("article body".into());
+    };
+    let mut paragraph_sizes = Vec::new();
+    for block in blocks {
+        let DocKind::Paragraph { items } = node(block.0)? else {
+            return Err("chapter paragraph".into());
+        };
+        paragraph_sizes.push(items.len());
+    }
+    // The source authors eighteen paragraphs and 102 separate sentences.
+    assert_eq!(
+        paragraph_sizes,
+        [3, 12, 8, 9, 8, 7, 4, 7, 5, 6, 4, 5, 3, 2, 7, 2, 4, 6]
+    );
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let started = std::time::Instant::now();
+    let artifact = render(
+        &set,
+        &c.doc.registry,
+        &mut codec,
+        &mut render_budget,
+        &[&[]],
+    )
+    .map_err(|error| {
+        format!(
+            "HTML fragment projection: {error:?}; {:?}",
+            render_budget.usage()
+        )
+    })?;
+    let finished = started.elapsed();
+    eprintln!(
+        "html-fragment projection elapsed_ns={} usage={:?}",
+        finished.as_nanos(),
+        render_budget.usage()
+    );
+    assert_eq!(artifact.pages.len(), 1);
+    let markdown = &artifact.pages[0].markdown;
+    assert!(code_blocks(markdown)?.is_empty());
+    assert_eq!(
+        links(markdown),
+        [
+            "https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3",
+            "https://html.spec.whatwg.org/multipage/tables.html#the-table-element",
+            "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element",
+            "https://url.spec.whatwg.org/",
+            "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element",
+        ]
+    );
+    let mut headings = Vec::new();
+    let mut codes = Vec::new();
+    for event in Parser::new(markdown) {
+        match event {
+            Event::Start(Tag::Heading { level, .. }) => headings.push(level),
+            Event::Code(code) => codes.push(code.into_string()),
+            _ => {}
+        }
+    }
+    assert_eq!(headings, [pulldown_cmark::HeadingLevel::H1]);
+    assert_eq!(
+        codes,
+        [
+            "nepl3.safe-markup/2",
+            "nepl3.markup",
+            "interfaces/markup.json",
+            "nepl3-markup",
+            "[a-z][a-z0-9-]*",
+            "[a-z][a-z0-9-]*",
+            "-_.",
+            ".",
+            "..",
+            "BetweenArtifacts(source,target,fragment)",
+            "../",
+            "#fragment",
+            "docs/a/index.html",
+            "docs/b/index.html",
+            "../b/index.html",
+            "../",
+            "BetweenArtifacts",
+        ]
+    );
+    assert!(markdown.contains("<ruby>構造契約<rt>こうぞうけいやく</rt></ruby>"));
+    Ok(())
+}
+
+#[test]
 fn circuit_chapter_preserves_operations_lists_and_state_notation() -> Result<(), String> {
     circuit_projection(budget())
 }

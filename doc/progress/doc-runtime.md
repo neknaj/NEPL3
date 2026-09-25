@@ -180,6 +180,17 @@ Windows debugの投影参考時間は6.06秒であり、通常予算への適合
 原稿の独立レビューと独立native1件も成功し、対象のclippy、fmt、diff検査を完了した。
 正式Markdown集合生成は第07章を通過し、次の旧構文の
 `doc/spec/19-html-fragment.nepld` で停止した。生成Markdownの更新は引き続き未完了である。
+第19章も独立Sentence構文へ移行し、外部リンク5件をSentenceのExternalLinkへ接続した。
+URI・label・本文・Ruby・文境界を保持し、正式reader/lowerで18段落102文の所属と順序、
+Markdown投影でInlineCode17件・外部リンク5件・単一H1を独立期待値と照合する。
+初回試験は旧linkのexternal headを拒否し、修正後は通常Work100Mの投影で停止した。
+通常試験と上限を維持し、既存の文書集合用予算による別試験はnative・WASIで各1件成功した。
+lowerは両試験とも通常予算である。投影は187,567,897 Workでtarget間に一致し、
+累積AllocationUnitsはnativeで180,235,993、WASIで137,374,225だった。
+Windows debugの投影参考時間は8.53秒であり、通常予算への適合は残る。
+独立レビューでも初回のlink拒否を確認し、修正後の独立native1件と静的再レビューが成功した。
+対象のclippy、fmt、diff検査も成功した。正式Markdown集合生成は第19章を通過し、
+`doc/spec/12-model-invariants.nepld` の旧構文で停止した。生成物の更新は未完了である。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
