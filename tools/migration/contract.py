@@ -2,7 +2,8 @@
 
 Only this page's headings, paragraphs, flat lists and single-backtick code are
 accepted. A new Markdown feature is an error, never silently flattened.
-The historical Markdown input is not the current specification. Current source
+The historical Markdown input is fixed; the generated candidate uses the current
+Doc Sentence boundary. The input is not the current specification. Current source
 ownership belongs to doc/canonical.json; this converter does not rewrite it.
 """
 import argparse
@@ -62,10 +63,10 @@ def sentence(text: str) -> str:
         if re.search(r"[\[\]<>*_\\&$~|#]|^[-+>]|!", plain):
             raise ValueError("unsupported inline Markdown")
     if len(parts) == 1:
-        return quoted(text, literal=True)
+        return "sentence " + quoted(text, literal=True)
     inlines = [f'{"code" if i % 2 else "text"} {quoted(part)}'
                for i, part in enumerate(parts) if part]
-    return "sentence " + " ".join("cons " + item for item in inlines) + " nil"
+    return "sentence sentence " + " ".join("cons " + item for item in inlines) + " nil"
 
 
 def generate(source: str) -> str:

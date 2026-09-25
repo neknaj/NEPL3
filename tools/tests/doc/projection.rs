@@ -1,17 +1,55 @@
 use super::*;
 use nepl3_tools::doc::projection::from_source;
 
+fn rejection(
+    compiled: &Compiled,
+    source: &str,
+) -> Result<nepl3_tools::doc::projection::Error, String> {
+    use nepl3_tools::doc::projection::{Error, SentenceIssue, markdown};
+    let error = with_input_route(true, compiled, source, "Article", |tree, profile, b, a| {
+        let store = SourceStore::default();
+        let mut codec = FoundationCodec::new(profile.registry(), &store, a).map_err(err)?;
+        let document = nepl3_doc_core::lower::document(
+            tree.syntax(),
+            &compiled.doc.package.schema,
+            nepl3_doc_core::check::Category::Article,
+            profile.registry(),
+            b,
+            &mut codec,
+        )
+        .map_err(err)?;
+        match markdown(&document, profile.registry(), &mut codec, b) {
+            Err(
+                error @ (Error::Unsupported { .. }
+                | Error::Text { .. }
+                | Error::Sentence {
+                    issue: SentenceIssue::Unsupported | SentenceIssue::Text,
+                    ..
+                }),
+            ) => Ok(error),
+            other => Err(format!(
+                "expected projection rejection for {source}: {other:?}"
+            )),
+        }
+    })?;
+    let host_error = from_source(compiled, source)
+        .err()
+        .ok_or_else(|| format!("host accepted unsupported source: {source}"))?;
+    assert_eq!(host_error, format!("{error:?}"), "{source}");
+    Ok(error)
+}
+
 #[test]
 fn sentence_sequences_preserve_one_paragraph_and_author_spacing() -> Result<(), String> {
     use pulldown_cmark::{Event, Parser, Tag};
     let compiled = compiled()?;
-    let source = r##"article ja "Title" body
-      cons paragraph cons "最初の文。" cons "次の文。"
-        cons "First. " cons "Second." cons sentence cons text " [x] " cons code "`a`" nil
-        cons sentence cons text " &amp; " cons code " both " nil nil
+    let source = r##"article ja sentence "Title" body
+      cons paragraph cons sentence "最初の文。" cons sentence "次の文。"
+        cons sentence "First. " cons sentence "Second." cons sentence sentence cons text " [x] " cons code "`a`" nil
+        cons sentence sentence cons text " &amp; " cons code " both " nil nil
       cons list unordered cons item none body cons paragraph
-        cons "One. " cons sentence cons text "Two" cons break cons text "# Three." nil
-        cons "Four." nil nil nil nil"##;
+        cons sentence "One. " cons sentence sentence cons text "Two" cons break cons text "# Three." nil
+        cons sentence "Four." nil nil nil nil"##;
     let output = from_source(&compiled, source)?;
     let mut text = String::new();
     let mut codes = Vec::new();
@@ -43,17 +81,17 @@ fn sentence_sequences_preserve_one_paragraph_and_author_spacing() -> Result<(), 
 fn sentence_boundaries_do_not_hide_unsupported_flow_or_code_collisions() -> Result<(), String> {
     let compiled = compiled()?;
     for items in [
-        r#"cons sentence cons code "a" nil cons sentence cons code "b" nil"#,
-        r#"cons "a" cons paragraph cons "nested" nil"#,
-        r#"cons "a" cons parallel cons variant en "b" nil"#,
-        r#"cons "a" cons """#,
-        r#"cons " leading" cons "b""#,
-        r#"cons "a" cons "trailing ""#,
-        r#"cons "a" cons sentence cons break cons text "b" nil"#,
-        r#"cons sentence cons text "a" cons break nil cons "b""#,
+        r#"cons sentence sentence cons code "a" nil cons sentence sentence cons code "b" nil"#,
+        r#"cons sentence "a" cons paragraph cons sentence "nested" nil"#,
+        r#"cons sentence "a" cons parallel cons variant en sentence "b" cons variant ja sentence "c" nil"#,
+        r#"cons sentence "a" cons sentence """#,
+        r#"cons sentence " leading" cons sentence "b""#,
+        r#"cons sentence "a" cons sentence "trailing ""#,
+        r#"cons sentence "a" cons sentence sentence cons break cons text "b" nil"#,
+        r#"cons sentence sentence cons text "a" cons break nil cons sentence "b""#,
     ] {
-        let source = format!("article en \"T\" body cons paragraph {items} nil nil");
-        assert!(from_source(&compiled, &source).is_err(), "{source}");
+        let source = format!("article en sentence \"T\" body cons paragraph {items} nil nil");
+        rejection(&compiled, &source)?;
     }
     Ok(())
 }
@@ -62,10 +100,10 @@ fn sentence_boundaries_do_not_hide_unsupported_flow_or_code_collisions() -> Resu
 fn raw_code_projection_preserves_bytes_and_distinct_blocks() -> Result<(), String> {
     use pulldown_cmark::{CodeBlockKind, Event, Parser, Tag};
     let compiled = compiled()?;
-    let source = r##"article en "T" body
+    let source = r##"article en sentence "T" body
       cons rawcode some "Rust" "\tlet x = \"<script>\";\n```\n````\n  日本語  \n\n"
       cons rawcode none ""
-      cons paragraph cons "after" nil nil"##;
+      cons paragraph cons sentence "after" nil nil"##;
     let output = from_source(&compiled, source)?;
     let mut blocks = Vec::new();
     let mut active = false;
@@ -109,11 +147,11 @@ fn raw_code_projection_rejects_normalized_bytes_and_ambiguous_hints() -> Result<
         r#"some "bad`hint" "x\n""#,
         r#"some "<tag>" "x\n""#,
     ] {
-        let source = format!("article en \"T\" body cons rawcode {raw} nil");
-        assert!(
-            from_source(&compiled, &source).is_err_and(|e| e.starts_with("Text")),
-            "{source}"
-        );
+        let source = format!("article en sentence \"T\" body cons rawcode {raw} nil");
+        assert!(matches!(
+            rejection(&compiled, &source)?,
+            nepl3_tools::doc::projection::Error::Text { .. }
+        ));
     }
     Ok(())
 }
@@ -122,11 +160,11 @@ fn raw_code_projection_rejects_normalized_bytes_and_ambiguous_hints() -> Result<
 fn explicit_breaks_preserve_markdown_paragraph_and_list_structure() -> Result<(), String> {
     use pulldown_cmark::{Event, Parser, Tag};
     let compiled = compiled()?;
-    let source = r##"article en "Title" body
-      cons paragraph cons sentence cons text "first" cons break cons text "# second" nil nil
+    let source = r##"article en sentence "Title" body
+      cons paragraph cons sentence sentence cons text "first" cons break cons text "# second" nil nil
       cons list unordered
-        cons item none body cons paragraph cons sentence cons code "one" cons break cons text "- two" nil nil nil
-        cons item none body cons paragraph cons "third" nil nil
+        cons item none body cons paragraph cons sentence sentence cons code "one" cons break cons text "- two" nil nil nil
+        cons item none body cons paragraph cons sentence "third" nil nil
       nil nil"##;
     let output = from_source(&compiled, source)?;
     let mut observed = Vec::new();
@@ -175,15 +213,16 @@ fn markdown_breaks_refuse_lossy_edges_and_heading_line_splitting() -> Result<(),
         "cons text \"x \" cons break cons text \"y\"",
         "cons text \"x\" cons break cons text \" y\"",
     ] {
-        let source =
-            format!("article en \"T\" body cons paragraph cons sentence {inlines} nil nil nil");
-        assert!(from_source(&compiled, &source).is_err(), "{source}");
+        let source = format!(
+            "article en sentence \"T\" body cons paragraph cons sentence sentence {inlines} nil nil nil"
+        );
+        rejection(&compiled, &source)?;
     }
     for source in [
-        r#"article en sentence cons text "x" cons break cons text "y" nil body nil"#,
-        r#"article en "T" body cons section s sentence cons text "x" cons break cons text "y" nil body nil nil"#,
+        r#"article en sentence sentence cons text "x" cons break cons text "y" nil body nil"#,
+        r#"article en sentence "T" body cons section s sentence sentence cons text "x" cons break cons text "y" nil body nil nil"#,
     ] {
-        assert!(from_source(&compiled, source).is_err(), "{source}");
+        rejection(&compiled, source)?;
     }
     Ok(())
 }
@@ -191,7 +230,7 @@ fn markdown_breaks_refuse_lossy_edges_and_heading_line_splitting() -> Result<(),
 #[test]
 fn markdown_projection_preserves_literal_punctuation_and_code_delimiters() -> Result<(), String> {
     let compiled = compiled()?;
-    let source = r##"article en "Title" body cons paragraph cons sentence cons text "[x] &amp; *y* " cons code "`a`" cons text " / " cons code " both " nil nil nil"##;
+    let source = r##"article en sentence "Title" body cons paragraph cons sentence sentence cons text "[x] &amp; *y* " cons code "`a`" cons text " / " cons code " both " nil nil nil"##;
     let output = from_source(&compiled, source)?;
     let mut texts = String::new();
     let mut codes = Vec::new();
@@ -251,23 +290,22 @@ fn historical_contract_projects_to_equivalent_markdown_events() -> Result<(), St
 fn projection_refuses_lossy_or_unsupported_doc_shapes() -> Result<(), String> {
     let compiled = compiled()?;
     for body in [
-        r#"cons paragraph cons "" nil nil"#,
-        r#"cons paragraph cons " leading" nil nil"#,
-        r#"cons paragraph cons "trailing " nil nil"#,
-        r#"cons paragraph cons "[base/reading]" nil nil"#,
-        r#"cons paragraph cons sentence cons break nil nil nil"#,
-        r#"cons paragraph cons sentence cons code "a" nil cons sentence cons code "b" nil nil nil"#,
-        r#"cons paragraph cons sentence cons text "x\ny" nil nil nil"#,
-        r#"cons paragraph cons sentence cons code "a" cons code "b" nil nil nil"#,
-        r#"cons section s "Section" body cons paragraph cons "inside" nil nil cons paragraph cons "outside" nil nil"#,
-        r#"cons section s "Section" body cons section nested "Nested" body nil nil nil"#,
-        r#"cons list unordered cons item none body cons paragraph cons "x" nil nil nil cons list unordered cons item none body cons paragraph cons "y" nil nil nil nil"#,
+        r#"cons paragraph cons sentence "" nil nil"#,
+        r#"cons paragraph cons sentence " leading" nil nil"#,
+        r#"cons paragraph cons sentence "trailing " nil nil"#,
+        r#"cons paragraph cons sentence "[base/reading]" nil nil"#,
+        r#"cons paragraph cons sentence sentence cons break nil nil nil"#,
+        r#"cons paragraph cons sentence sentence cons code "a" nil cons sentence sentence cons code "b" nil nil nil"#,
+        r#"cons paragraph cons sentence sentence cons text "x\ny" nil nil nil"#,
+        r#"cons paragraph cons sentence sentence cons code "a" cons code "b" nil nil nil"#,
+        r#"cons section s sentence "Section" body cons paragraph cons sentence "inside" nil nil cons paragraph cons sentence "outside" nil nil"#,
+        r#"cons section s sentence "Section" body cons section nested sentence "Nested" body nil nil nil"#,
+        r#"cons list unordered cons item none body cons paragraph cons sentence "x" nil nil nil cons list unordered cons item none body cons paragraph cons sentence "y" nil nil nil nil"#,
     ] {
-        let result = from_source(&compiled, &format!("article en \"Title\" body {body}"));
-        assert!(
-            result.is_err_and(|e| e.starts_with("Unsupported") || e.starts_with("Text")),
-            "{body}"
-        );
+        rejection(
+            &compiled,
+            &format!("article en sentence \"Title\" body {body}"),
+        )?;
     }
     Ok(())
 }
@@ -279,7 +317,7 @@ fn projection_stops_without_returning_partial_markdown() -> Result<(), String> {
     let compiled = compiled()?;
     with_input(
         &compiled,
-        r#"article en "Title" body cons paragraph cons "Body" nil cons rawcode some "sh" "echo example\n```\n" nil"#,
+        r#"article en sentence "Title" body cons paragraph cons sentence "Body" nil cons rawcode some "sh" "echo example\n```\n" nil"#,
         "Article",
         |tree, profile, b, a| {
             let checked = tree

@@ -25,6 +25,9 @@ commitとdigestは同じdirectoryのREADMEに記録しています。現在の�
 変換器の入力に戻さず、固定fixtureから再生成して内容・構造を比較します。手書き保守はしません。
 `authored/` の執筆原稿や `doc/spec/00-contract.nepld` の正式正本とは用途が異なります。
 
+固定する原本はMarkdown入力である。生成候補は現行Doc構文に対応させ、Sentenceの
+独立境界を明示する。再生成後も元のMarkdownとのblock・text・codeのevent比較を行う。
+
 最初の変換器検証用fixtureは [対象と設計上の決定](00-contract.nepld)。
 `python tools/migration/contract.py --write` で生成し、同コマンドの引数なし実行で
 固定した移行前入力との対応を検査します。この変換器が扱うのは該当ページの見出し・段落・flat list・

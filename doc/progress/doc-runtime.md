@@ -263,6 +263,14 @@ WorkLimitへ到達した。全Doc試験の先行実行は59件成功・39件失�
 同じ拒否結果を得ることを検査する。構文エラーや資源停止による偽陽性を防ぐ。
 clippyとrepository検査も成功した。全Doc試験と生成物の一致確認は引き続き未完了である。
 
+基本Markdown projectionの試験入力も独立Sentenceへ移行した。負例32件は正式reader・lowerを
+通過してから型付きの拒否結果を確認する。parallelの負例は2言語のvariantを持つ有効な構造とし、
+projectionの制約を検査する。固定された歴史Markdown入力を保全し、限定変換器の生成候補を
+現行のSentence境界へ更新した。元のMarkdownとのevent比較、本文の空白・改行・コードの保持、
+資源停止時の出力拒否を含むnative・WASI各10試験と、Pythonの4試験が成功した。
+独立レビューでもnative10件・Python4件を実行し、すべて成功した。固定依存環境の
+basedpyrightは警告・エラー0件で、clippy・repository・fmt・diff検査も成功した。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

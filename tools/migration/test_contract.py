@@ -22,7 +22,7 @@ class ContractMigration(unittest.TestCase):
         source = contract.SOURCE.read_text(encoding="utf-8")
         result = contract.generate(source)
         self.assertEqual(result, contract.TARGET.read_text(encoding="utf-8"))
-        self.assertIn('sentence cons text "list', result)
+        self.assertIn('sentence sentence cons text "list', result)
         self.assertIn('cons code "cons"', result)
         self.assertEqual(result.count("cons section contract_"), 6)
 
@@ -41,7 +41,7 @@ class ContractMigration(unittest.TestCase):
     def test_plain_soft_break_and_literal_escape(self) -> None:
         source = contract.SOURCE.read_text(encoding="utf-8")
         self.assertIn('"first second"', contract.generate(source + "\nfirst\nsecond\n"))
-        self.assertEqual(contract.sentence('a {b}'), '"a \\{b\\}"')
+        self.assertEqual(contract.sentence('a {b}'), 'sentence "a \\{b\\}"')
 
 
 if __name__ == "__main__":
