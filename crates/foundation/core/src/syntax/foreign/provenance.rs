@@ -76,13 +76,9 @@ impl OwnerProvenance {
         let mut store = SourceStore::default();
         for source in self.sources() {
             admission.admit_existing(source, b)?;
-            if store
-                .get_revision_with_budget(&source.identity().source, source.identity().revision, b)?
-                .is_some()
-            {
+            if !store.insert_distinct_ref_with_budget(source, b)? {
                 return Err(SyntaxError::DuplicateSource);
             }
-            store.insert_with_budget(source.clone_with_budget(b)?, b)?;
         }
         let origins_depth = OriginGraph::validation_depth(self.origins(), &store, b)?;
         let maps_depth = SourceMap::validation_depth(self.source_maps(), &store, b)?;

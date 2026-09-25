@@ -487,6 +487,17 @@ parseと検証は111,311,847 Work、lowerは108,677,967 Work、projectionは329,
 正式canonical集合生成も第16章の構文木検証でWorkLimitとなった。canonicalのsource名を用いる
 parseは86,302,966 Workであり、試験用source名の計測と区別する。生成物の更新は保留する。
 
+第16章の停止を調査し、SyntaxBundleとowner provenanceのsource登録で、重複確認と挿入が同じ索引を
+二度検索する経路を除去した。admissionを先行させ、内容競合・重複宣言の拒否、宣言順序、停止前の状態保持を
+維持する。追加2試験はWork/Allocationの不足境界を走査し、逆順128宣言でも結果を比較する。
+構文検証単独のWorkは30,585,274から19,855,646、構文木検証全体は32,590,339から21,860,711へ減少した。
+独立したBudgetで各公開検証APIを測る診断試験を追加した。分解値の合計を実行receiptとして扱わない。
+第16章は通常予算でparse・検証89,852,591 Work、lower76,489,083 Workとなり、両段階を通過した。
+projectionは329,875,518から275,563,786 Workへ減少したが、通常Work100Mの試験は引き続き停止する。
+明示上限の内容保持試験はnative/WASI各1件が成功した。core全体はnative/WASI各153件、独立nativeは
+追加unit・syntax・store計31件が成功し、追加指摘はなかった。Clippy、repository check、fmt、diff検査も成功した。
+正式canonical集合生成は第16章を通過し、第03章の旧構文で停止した。生成物の更新と通常projection予算への適合を継続する。
+
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

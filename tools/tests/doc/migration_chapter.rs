@@ -22,6 +22,94 @@ fn measure_migration_chapter_under_corpus_limits() -> Result<(), String> {
     )
 }
 
+#[test]
+#[ignore = "explicit split of syntax and selection validation costs"]
+fn measure_migration_validation_components() -> Result<(), String> {
+    #[derive(serde::Deserialize)]
+    struct Policy {
+        output_limits: nepl3_tools::doc::export::pages::resources::OutputLimits,
+    }
+    let policy: Policy =
+        serde_json::from_str(include_str!("../../../doc/canonical.json")).map_err(err)?;
+    let c = compiled()?;
+    nepl3_tools::doc::source::with_named_input_limits(
+        true,
+        &c,
+        include_str!("../../../doc/spec/16-doc-migration.nepld"),
+        "migration",
+        "Article",
+        policy.output_limits.budget().limits(),
+        |tree, profile, _, admission| {
+            let mut syntax_budget = policy.output_limits.budget();
+            tree.syntax()
+                .bundle()
+                .validate_with_sources(profile.registry(), &mut syntax_budget, admission)
+                .map_err(err)?;
+            let mut tree_budget = policy.output_limits.budget();
+            tree.tree()
+                .validate(profile, &mut tree_budget, admission)
+                .map_err(err)?;
+            eprintln!(
+                "Syntax validation usage={:?}; full tree validation usage={:?}",
+                syntax_budget.usage(),
+                tree_budget.usage()
+            );
+            // Diagnostic decomposition only: the complete validator above is
+            // authoritative. These independent budgets measure public component
+            // operations; their sum is not an execution receipt.
+            let mut sources_budget = policy.output_limits.budget();
+            let mut origins_budget = policy.output_limits.budget();
+            let mut maps_budget = policy.output_limits.budget();
+            let mut tokens_budget = policy.output_limits.budget();
+            let mut pending = vec![tree.syntax().bundle()];
+            while let Some(bundle) = pending.pop() {
+                let mut sources = SourceStore::default();
+                for source in &bundle.sources {
+                    admission
+                        .admit_existing(source, &mut sources_budget)
+                        .map_err(err)?;
+                    sources
+                        .insert_ref_with_budget(source, &mut sources_budget)
+                        .map_err(err)?;
+                }
+                nepl3_core::origin::OriginGraph::validate_origins(
+                    &bundle.origins,
+                    &sources,
+                    &mut origins_budget,
+                )
+                .map_err(err)?;
+                let maps = nepl3_core::origin::SourceMap::validate_mappings(
+                    &bundle.source_maps,
+                    &sources,
+                    &mut maps_budget,
+                )
+                .and_then(|maps| maps.bind_sources(&sources, &mut maps_budget))
+                .map_err(err)?;
+                for token in &bundle.tokens {
+                    token
+                        .validate_with_maps(&sources, profile.registry(), &maps, &mut tokens_budget)
+                        .map_err(err)?;
+                }
+                for node in &bundle.nodes {
+                    for field in &node.fields {
+                        if let nepl3_core::syntax::FieldValue::Foreign(foreign) = field {
+                            pending.push(&foreign.bundle);
+                        }
+                    }
+                }
+            }
+            eprintln!(
+                "Component Work: sources={}, origins={}, maps={}, tokens={}",
+                sources_budget.usage().work,
+                origins_budget.usage().work,
+                maps_budget.usage().work,
+                tokens_budget.usage().work
+            );
+            Ok(())
+        },
+    )
+}
+
 fn project(
     parse_limits: nepl3_core::budget::Limits,
     mut lower_budget: Budget,

@@ -810,6 +810,9 @@ pub struct SourceStore {
     #[cfg(target_has_atomic = "ptr")]
     owner: Option<Arc<()>>,
 }
+#[cfg(test)]
+#[path = "source/insertion_tests.rs"]
+mod insertion_tests;
 /// Native ownership witness for one unchanged source collection. This is not
 /// source admission, schema validation, or a portable source identity.
 #[derive(Clone, Debug)]
@@ -946,19 +949,52 @@ impl SourceStore {
                 }
             }
             Err(at) => {
-                budget.charge(Resource::Work, (self.index.len() - at) as u64)?;
-                budget.charge(
-                    Resource::AllocationUnits,
-                    core::mem::size_of::<usize>() as u64,
-                )?;
-                let owned = snapshot.clone_with_budget(budget)?;
-                self.index.insert(at, self.snapshots.len());
-                self.snapshots.push(owned);
-                self.insertion_hint = Some(at);
-                self.invalidate_scope();
+                self.insert_new_ref_at(snapshot, at, budget)?;
                 Ok(())
             }
         }
+    }
+    /// Insert a declaration only if its source/revision key is absent. An
+    /// occupied key returns false without comparing or replacing its contents.
+    /// Syntax declaration tables reject every repeated key, including equal
+    /// snapshots. Callers retain their operation-wide source admission checks.
+    pub(crate) fn insert_distinct_ref_with_budget(
+        &mut self,
+        snapshot: &SourceSnapshot,
+        budget: &mut Budget,
+    ) -> Result<bool, SourceError> {
+        budget.poll()?;
+        match source_index_position(
+            &self.index,
+            |i| &self.snapshots[i],
+            snapshot,
+            self.insertion_hint,
+            budget,
+        )? {
+            Ok(_) => Ok(false),
+            Err(at) => {
+                self.insert_new_ref_at(snapshot, at, budget)?;
+                Ok(true)
+            }
+        }
+    }
+    fn insert_new_ref_at(
+        &mut self,
+        snapshot: &SourceSnapshot,
+        at: usize,
+        budget: &mut Budget,
+    ) -> Result<(), SourceError> {
+        budget.charge(Resource::Work, (self.index.len() - at) as u64)?;
+        budget.charge(
+            Resource::AllocationUnits,
+            core::mem::size_of::<usize>() as u64,
+        )?;
+        let owned = snapshot.clone_with_budget(budget)?;
+        self.index.insert(at, self.snapshots.len());
+        self.snapshots.push(owned);
+        self.insertion_hint = Some(at);
+        self.invalidate_scope();
+        Ok(())
     }
     /// Find a host source/revision with every index comparison charged.
     pub fn get_revision_with_budget(

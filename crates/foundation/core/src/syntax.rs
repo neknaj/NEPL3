@@ -203,21 +203,9 @@ impl SyntaxBundle {
             let mut sources = SourceStore::default();
             for source in &bundle.sources {
                 admission.admit_existing(source, budget)?;
-                if sources
-                    .get_revision_with_budget(
-                        &source.identity().source,
-                        source.identity().revision,
-                        budget,
-                    )?
-                    .is_some()
-                {
+                if !sources.insert_distinct_ref_with_budget(source, budget)? {
                     return Err(SyntaxError::DuplicateSource);
                 }
-                // Keep the existing duplicate/admission checks, but meter the
-                // actual immutable snapshot clone and source index insertion.
-                // Pointer-atomic targets share storage; other targets still
-                // charge and copy the complete snapshot through this API.
-                sources.insert_ref_with_budget(source, budget)?;
             }
             // The table is borrowed. OriginGraph meters its validation scratch
             // storage; there is no additional owned Origin table to charge.
