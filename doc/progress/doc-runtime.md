@@ -414,6 +414,15 @@ WASIのhost選択試験は19件成功・4件ignoreである。既知のWorkLimit
 通常上限100,000,000を維持したhost試験では第13・19章がWorkLimitとなる。この2件とcanonical生成物の
 更新は継続課題であり、今回の改善による通常ページ予算への到達は未完了である。
 
+第12章の正本を独立Sentence構文へ移行した。本文・Ruby・コード・参照を保持し、Docの文章slotと
+Sentence内部の構築、Doc固有の相対リンクの境界を明示した。独立レビューは旧原稿との全引用文字列の
+内容・順序一致を確認した。正式reader/lowerとMarkdown解析で7節・32段落の文境界、制約表17項目、
+InlineCode9件、相対リンク1件を検査する。通常Work100Mの投影試験は停止を継続し、既存の文書集合予算による
+明示試験はnative/WASI各1件と独立native1件に成功した。両targetのWorkは137,729,143、累積AllocationUnitsは
+nativeが156,176,112、WASIが114,371,540だった。lowerは通常予算を使用する。
+Clippy、repository check、fmt、diff検査も成功した。正式Markdown集合生成は第12章を通過し、
+次の `doc/spec/08-editor.nepld` の旧構文で停止した。生成Markdownの更新と通常ページ予算への適合は継続する。
+
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

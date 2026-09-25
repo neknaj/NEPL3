@@ -1,4 +1,6 @@
 use super::*;
+#[path = "model_invariants.rs"]
+mod model_invariants;
 #[path = "namespace_projection.rs"]
 mod namespace_projection;
 use nepl3_doc_core::{check::Category, lower, pages::*};
