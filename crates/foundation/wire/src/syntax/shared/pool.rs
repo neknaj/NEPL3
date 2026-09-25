@@ -305,6 +305,14 @@ impl<'a, T: Content> Pool<'a, T> {
             let position = self.find(|found, b| found.compare(input, b), b)?;
             push(&mut positions, position, b)?;
         }
+        self.references_at(positions, canonical, b)
+    }
+    fn references_at(
+        &self,
+        mut positions: Vec<usize>,
+        canonical: bool,
+        b: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
         // Source lists are already validated unique. Normalize their positions
         // with an explicitly metered O(n log n) heap.
         if canonical {

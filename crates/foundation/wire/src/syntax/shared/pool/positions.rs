@@ -21,6 +21,19 @@ fn compare(a: &SnapshotId, z: &SnapshotId, b: &mut Budget) -> Result<Ordering, W
 }
 
 impl<'p, 's> SourcePositions<'p, 's> {
+    pub(in crate::syntax::shared) fn references(
+        &self,
+        sources: &[SourceSnapshot],
+        b: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
+        let mut positions = Vec::new();
+        for source in sources {
+            let position = self.position(source.identity(), b)?;
+            push(&mut positions, position, b)?;
+        }
+        self.pool.references_at(positions, true, b)
+    }
+
     pub(in crate::syntax::shared) fn new(
         pool: &'p Pool<'s, SourceSnapshot>,
         b: &mut Budget,

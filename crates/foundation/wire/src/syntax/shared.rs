@@ -121,7 +121,7 @@ pub(crate) fn value<'a>(
     let mut remaining_maps = indexed_maps.as_slice();
     let mut members = Vec::new();
     for bundle in inputs {
-        let source_refs = sources.references(&bundle.sources, true, b)?;
+        let source_refs = positions.references(&bundle.sources, b)?;
         let (selected, remaining) = remaining_maps
             .split_at_checked(bundle.source_maps.len())
             .ok_or(WireError::InvalidType)?;
