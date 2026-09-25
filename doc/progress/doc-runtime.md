@@ -201,6 +201,21 @@ batch digestはhash更新時に各active stateのWorkを課金する。符号化
 独立レビューはbatch 15件が成功した。clippy、repository、fmt・diff検査とthumbv6m向け
 compileも成功した。正式受入と生成物の整合確認は未完了である。
 
+第03章の明示計測にcanonical byte数と個別hashの照合を追加した。通常encoderの出力へ
+domainを付けてhashし、文書と333件のguestの全digestをbatch結果と比較する。
+文書は32,150,265 bytes、全hash入力は62,258,318 bytes、domainは9,021 bytesだった。
+現codec契約のbyte課金だけで94,417,604 Workを要し、残る走査・検索等は5,194,396 Workである。
+token fieldのうちviewは15,707,059 bytes、payloadは6,573,733 bytesを占める。
+このfield集計は外側のToken recordとlist headerを含まない。次の改善では、view等の交換表現と
+検証済み構造の再利用を検討する。出力の由来・完全identity・schema検査は保持する。
+
+Windows nativeのrelease構成でdebug assertionとoverflow検査を有効にした単独再実行も成功した。
+投影は1.889秒、独立したNDF構築は0.847秒、batch digestは0.284秒だった。これらは
+一回の測定値であり、独立計測を投影時間へ加算しない。Workはdebug構成と一致した。
+文書・guestのbyte計測には各encodeで64 MiBの有限出力上限を使い、通常page・render予算を維持する。
+通常予算への適合は継続課題である。独立レビューでは第01章の68 digestも照合し、生成済み
+試験binaryの直接実行で1件成功・exit 0を確認した。clippy、repository、fmt・diff検査も成功した。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

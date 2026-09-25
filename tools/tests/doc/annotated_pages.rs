@@ -1672,6 +1672,7 @@ fn measure_page_encoding(
     // tables are reported above as DocValue fields 4 and 5.
     let mut bundle_fields = [0_usize; 7];
     let mut token_fields = [0_usize; 5];
+    let mut token_bytes = [0_usize; 5];
     let mut token_records = std::collections::BTreeMap::new();
     let mut bundles = 0;
     for embed in embeds {
@@ -1722,8 +1723,18 @@ fn measure_page_encoding(
             assert_eq!(token.schema, *codec.foundation_schema());
             assert_eq!(token.kind, "Token");
             assert_eq!(token.fields.len(), token_fields.len());
-            for (total, field) in token_fields.iter_mut().zip(&token.fields) {
+            for ((total, byte_total), field) in token_fields
+                .iter_mut()
+                .zip(&mut token_bytes)
+                .zip(&token.fields)
+            {
                 *total += value_nodes(field);
+                // Independent field encodings identify the byte contribution
+                // while retaining the existing finite corpus limits. Their
+                // sum excludes the enclosing Token record and list headers.
+                *byte_total += nepl3_wire::encode(field, &mut Budget::new(limits))
+                    .map_err(err)?
+                    .len();
             }
             for (part, root) in [("payload", &token.fields[2]), ("views", &token.fields[3])] {
                 let mut pending = vec![root];
@@ -1758,6 +1769,10 @@ fn measure_page_encoding(
         "{label} root_guest_token_fields kind={} head={} payload={} views={} trivia={}",
         token_fields[0], token_fields[1], token_fields[2], token_fields[3], token_fields[4]
     );
+    println!(
+        "{label} root_guest_token_bytes kind={} head={} payload={} views={} trivia={}",
+        token_bytes[0], token_bytes[1], token_bytes[2], token_bytes[3], token_bytes[4]
+    );
     for ((part, package, kind), count) in token_records {
         println!("{label} token_records part={part} package={package} kind={kind} count={count}");
     }
@@ -1782,6 +1797,38 @@ fn measure_page_encoding(
         digest_budget.usage()
     );
     assert_eq!(digests.len(), inputs.len());
+    // Explicit corpus measurement only. Materializing canonical bytes needs a
+    // separate finite output allowance; the page/render limits above remain
+    // unchanged. Compare the batch result with the ordinary encoder and an
+    // independent domain-prefixed hash, rather than another batch invocation.
+    let mut byte_limits = limits;
+    byte_limits.output_bytes = 64 * 1024 * 1024;
+    let mut root_bytes = 0_u64;
+    let mut hash_bytes = 0_u64;
+    let mut domains = 0_u64;
+    let mut peak_request_bytes = 0_usize;
+    let started = std::time::Instant::now();
+    for (index, (input, digest)) in inputs.iter().zip(&digests).enumerate() {
+        let bytes = nepl3_wire::encode(input.value, &mut Budget::new(byte_limits)).map_err(err)?;
+        assert_eq!(*digest, Digest::domain(input.domain, &bytes));
+        if index == 0 {
+            root_bytes = bytes.len() as u64;
+        }
+        hash_bytes += bytes.len() as u64;
+        domains += input.domain.len() as u64;
+        peak_request_bytes = peak_request_bytes.max(bytes.len());
+    }
+    // All requested embeds are subvalues of this document. Even perfect
+    // traversal sharing must encode the root once and hash each request's
+    // bytes under the current codec contract. This excludes validation,
+    // traversal, lookup, allocation and flush-iteration work.
+    let byte_work_floor = root_bytes + hash_bytes + domains;
+    assert!(digest_budget.usage().work >= byte_work_floor);
+    println!(
+        "{label} canonical_digest_bytes root={root_bytes} hash_inputs={hash_bytes} domains={domains} byte_work_floor={byte_work_floor} other_work={} largest_request={peak_request_bytes} elapsed_ns={}",
+        digest_budget.usage().work - byte_work_floor,
+        started.elapsed().as_nanos(),
+    );
     Ok(())
 }
 
