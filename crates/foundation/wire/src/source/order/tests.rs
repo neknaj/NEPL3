@@ -58,6 +58,20 @@ fn canonical_order_preserves_all_fields_and_rejects_duplicate_identity() -> Resu
             sort(&mut entries, &mut budget()),
             Err(WireError::Source(SourceError::IdentityConflict))
         ));
+        // The descending prefix enters heapsort before the nonadjacent
+        // duplicate can be found. Both equal and conflicting digests reject.
+        let mut duplicate = references[2].clone();
+        duplicate.digest = digest;
+        let mut entries = [
+            (references[0].clone(), &source),
+            (references[2].clone(), &source),
+            (references[1].clone(), &source),
+            (duplicate, &source),
+        ];
+        assert!(matches!(
+            sort(&mut entries, &mut budget()),
+            Err(WireError::Source(SourceError::IdentityConflict))
+        ));
     }
     Ok(())
 }
@@ -155,6 +169,12 @@ fn empty_singleton_and_odd_unicode_source_sets_are_canonical() -> Result<(), Wir
                 )
             })
             .collect();
+        let mut cancelled = budget();
+        cancelled.stop(StopReason::Cancelled);
+        assert!(matches!(
+            sort(&mut entries, &mut cancelled),
+            Err(WireError::Stopped(StopReason::Cancelled))
+        ));
         sort(&mut entries, &mut budget())?;
         let expected: &[&str] = match names.len() {
             0 => &[],
