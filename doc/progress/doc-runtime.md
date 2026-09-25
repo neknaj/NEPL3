@@ -365,6 +365,16 @@ native debug単回の累積実時間は順に約1.98秒、2.18秒、6.27秒、6.
 通常入口との出力・Usage一致、通知順序、Discovery直後の停止で後段を完了通知しないことを
 native/WASIで確認し、独立レビューでも同じ試験が成功した。時刻と計測結果は成果物へ含めない。
 次の性能改善では検証・変換・digest計算を優先し、最終Markdown出力の費用と区別する。
+Spanはpointer atomicsを持つtargetで不変SnapshotIdを共有し、source名の反復複製を削減した。
+非atomic targetは従来のowned表現を維持する。snapshot取得は独立した値を返し、
+Spanの等値・範囲・寿命とportable形式は維持する。identityの追加共有領域はsource作成時に課金し、
+実複製用のSpan::clone_with_budgetをSentenceの位置保持へ接続した。独立値の比較用課金は維持する。
+第13章のlowerは39,722,678 AllocationUnits、投影は153,021,007 AllocationUnitsとなった。
+投影Workは227,777,241、同時検証終了後のnative debug単回は約6.38秒である。
+この測定は主に複製費用の改善を示し、実時間の短縮や通常Work100Mへの適合を示す結果には含めない。
+core・wire・Sentenceのnative/WASI各296試験、独立レビュー61試験、Clippy、thumb向けcheck、
+workspaceの`--all-targets` check、repository checkが成功した。reader・engine・Doc coreの
+native206試験も成功した。正式受入の状態は変更していない。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

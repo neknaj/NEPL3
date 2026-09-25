@@ -52,12 +52,7 @@ impl<E> From<crate::syntax::Error> for Error<E> {
     }
 }
 fn span(value: &Span, b: &mut Budget) -> Result<Span, StopReason> {
-    b.charge(Resource::Work, value.snapshot_ref().source.0.len() as u64)?;
-    b.charge(
-        Resource::AllocationUnits,
-        (core::mem::size_of::<Span>() + value.snapshot_ref().source.0.len()) as u64,
-    )?;
-    Ok(value.clone())
+    value.clone_with_budget(b)
 }
 fn push<T>(out: &mut Vec<T>, value: T, b: &mut Budget) -> Result<(), StopReason> {
     b.charge(Resource::AllocationUnits, core::mem::size_of::<T>() as u64)?;
