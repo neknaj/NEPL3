@@ -7,6 +7,7 @@ use crate::{
     value::{KindRef, NdfValue, SchemaRef},
 };
 use alloc::{string::String, vec::Vec};
+mod fields;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct ViewRef(pub u64);
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -155,11 +156,10 @@ impl ViewBundle {
                 .get_ref(element.span.snapshot_ref())
                 .ok_or(SourceError::MissingSnapshot)?
                 .slice(&element.span)?;
+            let duplicate = fields::first_duplicate(&element.fields, budget)?;
             for (index, field) in element.fields.iter().enumerate() {
                 budget.charge(Resource::Work, 1)?;
-                if field.name.is_empty()
-                    || element.fields[..index].iter().any(|f| f.name == field.name)
-                {
+                if duplicate == Some(index) {
                     return Err(ViewError::DuplicateField);
                 }
                 for child in &field.children {
