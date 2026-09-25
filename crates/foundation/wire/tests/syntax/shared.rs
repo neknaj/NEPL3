@@ -170,6 +170,135 @@ fn fixture_with_map() -> Result<(SchemaRef, SchemaRegistry, SyntaxBundle), Strin
 
 // Independent format oracle: ordinary bundle encoding supplies complete tables;
 // test-owned maps deduplicate canonical content without production pool indexing.
+fn reference_views(value: &NdfValue, schema: &SchemaRef) -> Result<NdfValue, String> {
+    use nepl3_core::value::Record;
+    use std::collections::BTreeMap;
+    type Identity = (String, u64, Vec<u8>);
+    fn fields(value: &NdfValue) -> Result<&[NdfValue], String> {
+        match value {
+            NdfValue::Record(v) => Ok(&v.fields),
+            _ => Err("record".into()),
+        }
+    }
+    fn list(value: &NdfValue) -> Result<&[NdfValue], String> {
+        match value {
+            NdfValue::List(v) => Ok(v),
+            _ => Err("list".into()),
+        }
+    }
+    fn key(value: &NdfValue) -> Result<Identity, String> {
+        let [
+            NdfValue::Text(name),
+            NdfValue::U64(revision),
+            NdfValue::Bytes(digest),
+        ] = fields(value)?
+        else {
+            return Err("identity".into());
+        };
+        Ok((name.clone(), *revision, digest.clone()))
+    }
+    fn index(table: &BTreeMap<Identity, NdfValue>, value: &NdfValue) -> Result<NdfValue, String> {
+        let key = key(value)?;
+        let at = table
+            .keys()
+            .position(|v| v == &key)
+            .ok_or("identity index")?;
+        Ok(NdfValue::U64(at as u64))
+    }
+    fn refs(value: &NdfValue) -> Result<NdfValue, String> {
+        Ok(NdfValue::List(
+            list(value)?
+                .iter()
+                .map(|v| {
+                    let [NdfValue::U64(id)] = fields(v)? else {
+                        return Err("ref".into());
+                    };
+                    Ok(NdfValue::U64(*id))
+                })
+                .collect::<Result<_, String>>()?,
+        ))
+    }
+    let record = |kind: &str, fields| {
+        NdfValue::Record(Record {
+            schema: schema.clone(),
+            kind: kind.into(),
+            fields,
+        })
+    };
+    let root = fields(value)?;
+    let elements = list(&root[0])?;
+    let (mut schemas, mut sources) = (BTreeMap::new(), BTreeMap::new());
+    for element in elements {
+        let f = fields(element)?;
+        let kind = &fields(&f[0])?[0];
+        let source = &fields(&f[1])?[0];
+        schemas.insert(key(kind)?, kind.clone());
+        sources.insert(key(source)?, source.clone());
+        for part in [&f[3], &f[4]] {
+            for value in list(part)? {
+                let value = &fields(value)?[0];
+                schemas.insert(key(value)?, value.clone());
+            }
+        }
+    }
+    let mut output = Vec::new();
+    for element in elements {
+        let f = fields(element)?;
+        let kind = fields(&f[0])?;
+        let span = fields(&f[1])?;
+        let mut children = Vec::new();
+        for child in list(&f[2])? {
+            let child = fields(child)?;
+            children.push(record(
+                "SharedViewField",
+                vec![child[0].clone(), refs(&child[1])?],
+            ));
+        }
+        let mut roles = Vec::new();
+        for role in list(&f[3])? {
+            let role = fields(role)?;
+            roles.push(record(
+                "SharedPresentationClass",
+                vec![index(&schemas, &role[0])?, role[1].clone(), role[2].clone()],
+            ));
+        }
+        let mut relations = Vec::new();
+        for relation in list(&f[4])? {
+            let relation = fields(relation)?;
+            relations.push(record(
+                "SharedViewRelation",
+                vec![
+                    index(&schemas, &relation[0])?,
+                    relation[1].clone(),
+                    fields(&relation[2])?[0].clone(),
+                ],
+            ));
+        }
+        output.push(record(
+            "SharedViewElement",
+            vec![
+                index(&schemas, &kind[0])?,
+                kind[1].clone(),
+                index(&sources, &span[0])?,
+                span[1].clone(),
+                span[2].clone(),
+                NdfValue::List(children),
+                NdfValue::List(roles),
+                NdfValue::List(relations),
+            ],
+        ));
+    }
+    Ok(record(
+        "SharedViewBundle",
+        vec![
+            NdfValue::List(schemas.into_values().collect()),
+            NdfValue::List(sources.into_values().collect()),
+            NdfValue::List(output),
+            refs(&root[1])?,
+        ],
+    ))
+}
+
 fn reference_set(
     bundles: &[SyntaxBundle],
     s: &SchemaRef,
@@ -210,7 +339,18 @@ fn reference_set(
             }
             refs.push(NdfValue::List(selected));
         }
-        refs.push(record("SyntaxBody", value.fields[1..6].to_vec()));
+        let mut body = value.fields[1..6].to_vec();
+        let NdfValue::List(tokens) = &mut body[4] else {
+            return Err("tokens".into());
+        };
+        for token in tokens {
+            let NdfValue::Record(token) = token else {
+                return Err("token".into());
+            };
+            token.kind = "SharedToken".into();
+            token.fields[3] = reference_views(&token.fields[3], s)?;
+        }
+        refs.push(record("SyntaxBody", body));
         members.push(record("SharedSyntaxBundle", refs));
     }
     let [sources, maps] = pools;

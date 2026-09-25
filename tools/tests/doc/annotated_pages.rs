@@ -1718,10 +1718,10 @@ fn measure_page_encoding(
         };
         for token in tokens {
             let NdfValue::Record(token) = token else {
-                return Err("Token record".into());
+                return Err("SharedToken record".into());
             };
             assert_eq!(token.schema, *codec.foundation_schema());
-            assert_eq!(token.kind, "Token");
+            assert_eq!(token.kind, "SharedToken");
             assert_eq!(token.fields.len(), token_fields.len());
             for ((total, byte_total), field) in token_fields
                 .iter_mut()

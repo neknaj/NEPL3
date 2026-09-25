@@ -283,6 +283,33 @@ pub(crate) fn token_value(
     schema: &SchemaRef,
     budget: &mut Budget,
 ) -> Result<NdfValue, WireError> {
+    token_encoding(token, schema, budget, TokenForm::Standard)
+}
+pub(crate) fn shared_token_value(
+    token: &Token,
+    schema: &SchemaRef,
+    budget: &mut Budget,
+) -> Result<NdfValue, WireError> {
+    token_encoding(token, schema, budget, TokenForm::Shared)
+}
+enum TokenForm {
+    Standard,
+    Shared,
+}
+impl TokenForm {
+    fn name(&self) -> &'static str {
+        match self {
+            Self::Standard => "Token",
+            Self::Shared => "SharedToken",
+        }
+    }
+}
+fn token_encoding(
+    token: &Token,
+    schema: &SchemaRef,
+    budget: &mut Budget,
+    form: TokenForm,
+) -> Result<NdfValue, WireError> {
     let trivia = collect(&token.leading_trivia, budget, |trivia, budget| {
         let name = match trivia.kind {
             TriviaKind::Whitespace => "Whitespace",
@@ -302,12 +329,15 @@ pub(crate) fn token_value(
     })?;
     record(
         schema,
-        "Token",
+        form.name(),
         [
             kind_value(&token.kind, schema, budget)?,
             span_value(&token.head, schema, budget)?,
             token.payload.clone_with_budget(budget)?,
-            views_value(&token.views, schema, budget)?,
+            match form {
+                TokenForm::Standard => views_value(&token.views, schema, budget)?,
+                TokenForm::Shared => shared::value(&token.views, schema, budget)?,
+            },
             NdfValue::List(trivia),
         ],
         budget,
@@ -319,7 +349,24 @@ pub(crate) fn token_from(
     sources: &SourceStore,
     budget: &mut Budget,
 ) -> Result<Token, WireError> {
-    let f = fields(value, schema, "Token", 5)?;
+    token_decoding(value, schema, sources, budget, TokenForm::Standard)
+}
+pub(crate) fn shared_token_from(
+    value: &NdfValue,
+    schema: &SchemaRef,
+    sources: &SourceStore,
+    budget: &mut Budget,
+) -> Result<Token, WireError> {
+    token_decoding(value, schema, sources, budget, TokenForm::Shared)
+}
+fn token_decoding(
+    value: &NdfValue,
+    schema: &SchemaRef,
+    sources: &SourceStore,
+    budget: &mut Budget,
+    form: TokenForm,
+) -> Result<Token, WireError> {
+    let f = fields(value, schema, form.name(), 5)?;
     let trivia = collect(list(&f[4])?, budget, |value, budget| {
         let f = fields(value, schema, "Trivia", 2)?;
         let kind = match enum_name(&f[1], schema, "TriviaKind")? {
@@ -338,7 +385,10 @@ pub(crate) fn token_from(
         kind: kind_from(&f[0], schema, budget)?,
         head: span_from_value(&f[1], schema, sources, budget)?,
         payload: f[2].clone_with_budget(budget)?,
-        views: views_from(&f[3], schema, sources, budget)?,
+        views: match form {
+            TokenForm::Standard => views_from(&f[3], schema, sources, budget)?,
+            TokenForm::Shared => shared::from_value(&f[3], schema, sources, budget)?,
+        },
         leading_trivia: trivia,
     })
 }

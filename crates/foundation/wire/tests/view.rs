@@ -95,6 +95,183 @@ fn fixture() -> Result<(SchemaRef, SchemaRegistry, SourceStore, Token), String> 
 }
 
 #[test]
+fn shared_views_receive_independent_multi_identity_fixture() -> TestResult {
+    use nepl3_core::{
+        schema::SchemaDescriptor,
+        value::{Record, Variant},
+    };
+    let (schema, mut registry, mut sources, token) = fixture()?;
+    let descriptor = SchemaDescriptor {
+        package: "zz.presentation".into(),
+        revision: 3,
+        types: vec![],
+        operations: vec![],
+    };
+    let presentation = descriptor
+        .reference(&mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    registry
+        .register(presentation.clone(), descriptor, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    registry
+        .finalize(&mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let extra = SourceSnapshot::new(
+        SourceId("z".into()),
+        9,
+        "memory:z".into(),
+        b"z".to_vec(),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    sources
+        .insert(extra.clone())
+        .map_err(|e| format!("{e:?}"))?;
+    let record = |kind: &str, fields| {
+        NdfValue::Record(Record {
+            schema: schema.clone(),
+            kind: kind.into(),
+            fields,
+        })
+    };
+    let schema_value = |s: &SchemaRef| {
+        record(
+            "SchemaRef",
+            vec![
+                NdfValue::Text(s.package.clone()),
+                NdfValue::U64(s.revision),
+                NdfValue::Bytes(s.digest.0.to_vec()),
+            ],
+        )
+    };
+    let source_value = |s: &nepl3_core::source::SnapshotId| {
+        record(
+            "SourceRef",
+            vec![
+                NdfValue::Text(s.source.0.clone()),
+                NdfValue::U64(s.revision),
+                NdfValue::Bytes(s.digest.0.to_vec()),
+            ],
+        )
+    };
+    let empty = || NdfValue::List(vec![]);
+    let role = record(
+        "SharedPresentationClass",
+        vec![
+            NdfValue::U64(1),
+            NdfValue::Text("body".into()),
+            NdfValue::Variant(Variant {
+                schema: schema.clone(),
+                type_name: "FallbackRole".into(),
+                variant: "Content".into(),
+                fields: vec![],
+            }),
+        ],
+    );
+    let relation = record(
+        "SharedViewRelation",
+        vec![
+            NdfValue::U64(1),
+            NdfValue::Text("peer".into()),
+            NdfValue::U64(1),
+        ],
+    );
+    let first = &token.views.elements[0];
+    let value = record(
+        "SharedViewBundle",
+        vec![
+            NdfValue::List(vec![schema_value(&schema), schema_value(&presentation)]),
+            NdfValue::List(vec![
+                source_value(first.span.snapshot_ref()),
+                source_value(extra.identity()),
+            ]),
+            NdfValue::List(vec![
+                record(
+                    "SharedViewElement",
+                    vec![
+                        NdfValue::U64(0),
+                        NdfValue::U64(first.kind.local_kind),
+                        NdfValue::U64(0),
+                        NdfValue::U64(first.span.start()),
+                        NdfValue::U64(first.span.end()),
+                        empty(),
+                        NdfValue::List(vec![role]),
+                        NdfValue::List(vec![relation]),
+                    ],
+                ),
+                record(
+                    "SharedViewElement",
+                    vec![
+                        NdfValue::U64(0),
+                        NdfValue::U64(first.kind.local_kind),
+                        NdfValue::U64(1),
+                        NdfValue::U64(0),
+                        NdfValue::U64(1),
+                        empty(),
+                        empty(),
+                        empty(),
+                    ],
+                ),
+            ]),
+            NdfValue::List(vec![NdfValue::U64(0), NdfValue::U64(1)]),
+        ],
+    );
+    let bytes = encode(&value, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    let expected = ViewBundle {
+        roots: vec![ViewRef(0), ViewRef(1)],
+        elements: vec![
+            ViewElement {
+                kind: first.kind.clone(),
+                span: first.span.clone(),
+                fields: vec![],
+                roles: vec![PresentationClass {
+                    schema: presentation.clone(),
+                    name: "body".into(),
+                    fallback: FallbackRole::Content,
+                }],
+                relations: vec![ViewRelation {
+                    schema: presentation,
+                    kind: "peer".into(),
+                    target: ViewRef(1),
+                }],
+            },
+            ViewElement {
+                kind: first.kind.clone(),
+                span: extra.span(0, 1).map_err(|e| format!("{e:?}"))?,
+                fields: vec![],
+                roles: vec![],
+                relations: vec![],
+            },
+        ],
+    };
+    assert_eq!(
+        shared::decode(
+            &bytes,
+            &schema,
+            &registry,
+            &sources,
+            &mut SourceAdmission::default(),
+            &mut budget()
+        )
+        .map_err(|e| format!("{e:?}"))?,
+        expected
+    );
+    assert_eq!(
+        shared::encode(
+            &expected,
+            &schema,
+            &registry,
+            &sources,
+            &mut SourceAdmission::default(),
+            &mut budget()
+        )
+        .map_err(|e| format!("{e:?}"))?,
+        bytes
+    );
+    Ok(())
+}
+
+#[test]
 fn shared_views_reduce_repeated_identity_bytes_with_bounded_growth() -> TestResult {
     let (schema, registry, sources, mut token) = fixture()?;
     let mut previous_work = None;

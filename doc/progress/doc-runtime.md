@@ -1,5 +1,18 @@
 # Doc runtime の段階実装
 
+## 共有bundleへのView接続（2026-09-25）
+
+SyntaxBodyのroot tokenをSharedTokenへ接続した。nested ForeignSyntaxは通常Tokenを
+保持し、各memberのsource集合からViewを復元して既存のbundle検証へ渡す。
+独立した表構築oracleと、複数schema/sourceを手構築した受信fixtureを追加した。
+native・WASIのsyntax 22件／view 6件、独立native 28件、Docの単独／集合digest一致と
+2ページ送受信の2件、wire clippy、repository checkが成功した。
+
+Reader章の有限corpus予算測定では、token viewsが15,707,059から3,964,503 bytes、
+root canonical表現が32,150,265から20,415,593 bytesへ減少した。
+projection Workは209,265,590から178,649,511へ減少した。
+通常上限100,000,000への適合と全生成文書の更新は継続課題である。
+
 ## 局所View表の符号化（2026-09-25、接続前checkpoint）
 
 Reader章の測定で、root canonical表現32,150,265 bytesのうちtoken viewsが

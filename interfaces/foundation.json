@@ -2538,6 +2538,57 @@
         ]
       ]
     },
+    "SharedToken": {
+      "constraints": [],
+      "record": [
+        [
+          "kind",
+          {
+            "named": {
+              "name": "KindRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "head",
+          {
+            "named": {
+              "name": "Span",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "payload",
+          "NdfValue"
+        ],
+        [
+          "views",
+          {
+            "named": {
+              "name": "SharedViewBundle",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "leadingTrivia",
+          {
+            "list": {
+              "named": {
+                "name": "Trivia",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
     "SharedViewBundle": {
       "constraints": [],
       "record": [
@@ -2947,7 +2998,7 @@
           {
             "list": {
               "named": {
-                "name": "Token",
+                "name": "SharedToken",
                 "package": "nepl3.foundation",
                 "revision": 1
               }

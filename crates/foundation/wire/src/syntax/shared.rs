@@ -275,7 +275,7 @@ pub(crate) fn from_value(
             ],
             b,
         )?;
-        let bundle = bundle_from(&value, schema, registry, admission, b)?;
+        let bundle = bundle_decoding(&value, schema, registry, admission, b, true)?;
         bundle.validate_with_sources(registry, b, admission)?;
         push(&mut bundles, bundle, b)?;
     }

@@ -768,7 +768,7 @@
         ["origins", "List<Origin>"],
         ["root", "NodeRef"],
         ["environments", "List<EnvironmentEntry>"],
-        ["tokens", "List<Token>"]
+        ["tokens", "List<SharedToken>"]
       ]
     },
     "SharedSyntaxBundle": {
@@ -1051,6 +1051,12 @@
           "kind",
           "TriviaKind"
         ]
+      ]
+    },
+    "SharedToken": {
+      "fields": [
+        ["kind", "KindRef"], ["head", "Span"], ["payload", "NdfValue"],
+        ["views", "SharedViewBundle"], ["leadingTrivia", "List<Trivia>"]
       ]
     },
     "Token": {

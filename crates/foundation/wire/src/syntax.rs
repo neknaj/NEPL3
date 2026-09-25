@@ -254,7 +254,7 @@ fn bundle_encoding(
                                 entry_value(entry, schema, registry, b)
                             })?,
                             sequence(&bundle.tokens, budget, |token, b| {
-                                token_value(token, schema, b)
+                                crate::view::shared_token_value(token, schema, b)
                             })?,
                         ],
                         budget,
@@ -304,6 +304,16 @@ pub(crate) fn bundle_from(
     registry: &SchemaRegistry,
     admission: &mut SourceAdmission,
     budget: &mut Budget,
+) -> Result<SyntaxBundle, WireError> {
+    bundle_decoding(value, schema, registry, admission, budget, false)
+}
+fn bundle_decoding(
+    value: &NdfValue,
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    budget: &mut Budget,
+    shared_root: bool,
 ) -> Result<SyntaxBundle, WireError> {
     let mut pending = Vec::new();
     let mut results = Vec::new();
@@ -364,7 +374,11 @@ pub(crate) fn bundle_from(
                         entry_from(value, schema, registry, b)
                     })?,
                     tokens: collect(list(&f[5])?, budget, |value, b| {
-                        token_from(value, schema, &sources, b)
+                        if shared_root && pending.is_empty() {
+                            crate::view::shared_token_from(value, schema, &sources, b)
+                        } else {
+                            token_from(value, schema, &sources, b)
+                        }
                     })?,
                     source_maps: collect(list(&f[6])?, budget, |value, b| {
                         mapping_from(value, schema, &sources, b)
