@@ -51,6 +51,18 @@ pub fn sentence<C: FoundationValueCodec>(
         .bundle()
         .validate_with_sources(registry, b, codec.source_admission())
         .map_err(PrefixError::from)?;
+    sentence_checked(&checked, surface, registry, codec, b)
+}
+
+// The presentation closure entry establishes this proof in the same immutable
+// registry, source admission and Budget immediately before calling this helper.
+pub(super) fn sentence_checked<C: FoundationValueCodec>(
+    checked: &ValidatedSyntaxBundle<'_>,
+    surface: &SchemaRef,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<SentenceSyntax, Error<C::Error>> {
     let bundle = checked.bundle();
     let id = bundle.root;
     let root = bundle.node(id).map_err(PrefixError::from)?;

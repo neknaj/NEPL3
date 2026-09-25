@@ -221,6 +221,19 @@ pub fn prefix_with_foreign(
     let checked = input
         .bundle()
         .validate_with_sources(registry, b, admission)?;
+    prefix_checked(&checked, surface, foreign_forms, registry, b, admission)
+}
+
+// Only callers that just validated this exact bundle in the same operation,
+// registry, admission and Budget may enter here.
+fn prefix_checked(
+    checked: &ValidatedSyntaxBundle<'_>,
+    surface: &SchemaRef,
+    foreign_forms: &[ForeignInlineForm<'_>],
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<Projection, Error> {
     let bundle = checked.bundle();
     let count = bundle.nodes.len();
     b.charge(
@@ -235,7 +248,7 @@ pub fn prefix_with_foreign(
     };
     let mut stack = Vec::new();
     let mut embeds = Vec::new();
-    let mut captures = ForeignCapture::new(&checked);
+    let mut captures = ForeignCapture::new(checked);
     push(&mut stack, (bundle.root, 0usize), b)?;
     while let Some((id, field)) = stack.last_mut() {
         b.charge(Resource::Work, 1)?;

@@ -9,7 +9,7 @@ use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::SchemaRegistry,
     source::Span,
-    syntax::ValidatedSyntaxBundle,
+    syntax::{ForeignClosure, SyntaxError, ValidatedOwnerProvenance, ValidatedSyntaxBundle},
     value::SchemaRef,
     value_codec::FoundationValueCodec,
 };
@@ -21,6 +21,9 @@ pub enum Error<E> {
     Literal(literal::Error<E>),
     Presentation(crate::syntax::Error),
     Mapping,
+    Closure(SyntaxError),
+    Selection,
+    Category,
 }
 impl<E> From<StopReason> for Error<E> {
     fn from(s: StopReason) -> Self {
@@ -97,6 +100,103 @@ pub fn sentence_with_foreign<C: FoundationValueCodec>(
         b,
         codec.source_admission(),
     )?;
+    finish_prefix(projected, bundle, registry, codec, b)
+}
+
+/// Lower selected closures against one immutable registry. Owner provenance
+/// may be reused; every guest is validated at the caller's current depth and
+/// source admission. The fresh guest proof is consumed by the private lowering
+/// helpers in this call, with no second graph traversal and no guest execution.
+pub struct ClosureLowerer<'a> {
+    registry: &'a SchemaRegistry,
+    owner: Option<ValidatedOwnerProvenance<'a>>,
+}
+impl<'a> ClosureLowerer<'a> {
+    pub fn new(registry: &'a SchemaRegistry) -> Self {
+        Self {
+            registry,
+            owner: None,
+        }
+    }
+
+    pub fn lower<C: FoundationValueCodec>(
+        &mut self,
+        closure: &'a ForeignClosure,
+        surface: &SchemaRef,
+        forms: &[ForeignInlineForm<'_>],
+        codec: &mut C,
+        b: &mut Budget,
+    ) -> Result<SentenceSyntax, Error<C::Error>> {
+        b.poll()?;
+        let result = (|| {
+            b.charge(Resource::Work, 1)?;
+            if !self
+                .owner
+                .as_ref()
+                .is_some_and(|proof| proof.matches_owner(&closure.provenance))
+            {
+                self.owner = Some(
+                    closure
+                        .provenance
+                        .validate(self.registry, b, codec.source_admission())
+                        .map_err(Error::Closure)?,
+                );
+            }
+            let checked = self
+                .owner
+                .as_ref()
+                .ok_or(Error::Mapping)?
+                .validate_closure(closure, b, codec.source_admission())
+                .map_err(Error::Closure)?;
+            b.charge(
+                Resource::Work,
+                (closure.syntax.schema.package.len()
+                    + surface.package.len()
+                    + closure.syntax.category.len()) as u64
+                    + 40,
+            )?;
+            if &closure.syntax.schema != surface
+                || !matches!(closure.syntax.category.as_str(), "Sentence" | "Inline")
+            {
+                return Err(Error::Selection);
+            }
+            let input = checked.syntax();
+            let bundle = input.bundle();
+            let root = bundle.node(bundle.root).map_err(super::Error::from)?;
+            b.charge(Resource::Work, root.kind.len() as u64 + 1)?;
+            let output = if root.kind == "Leaf:SentenceLiteral" {
+                literal::sentence_checked(input, surface, self.registry, codec, b)?
+            } else {
+                let projected = super::prefix_checked(
+                    input,
+                    surface,
+                    forms,
+                    self.registry,
+                    b,
+                    codec.source_admission(),
+                )?;
+                finish_prefix(projected, bundle, self.registry, codec, b)?
+            };
+            if !matches!(
+                (closure.syntax.category.as_str(), output.value.root),
+                ("Sentence", Root::Sentence(_)) | ("Inline", Root::Inline(_))
+            ) {
+                return Err(Error::Category);
+            }
+            Ok(output)
+        })();
+        b.poll()?;
+        result
+    }
+}
+
+fn finish_prefix<C: FoundationValueCodec>(
+    projected: super::Projection,
+    bundle: &nepl3_core::syntax::SyntaxBundle,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<SentenceSyntax, Error<C::Error>> {
     let root = match projected.value.root {
         Root::Sentence(r) => r.0,
         Root::Inline(r) => r.0,

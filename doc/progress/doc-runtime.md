@@ -63,6 +63,19 @@ Work 23,520,416は一致し、AllocationUnitsは23,968から24,992となった�
 Work・Allocation上限と1不足を含むwireのnative・WASI各92試験が成功した。
 独立レビューではbatchの10試験を別targetで実行した。
 
+Sentenceの `lower::presentation::ClosureLowerer` は不変なregistryとowner proofを保持し、
+各呼出しでsource admission・現在のDepth・guest構文・環境を検査した直後にlowerする。
+この操作内のprivateなlower経路は、直前に検証したguestの構文検査を再利用する。
+既存のpublicな単独lower入口は、呼出し側の資源条件で引き続き再検証する。
+Doc consumerを新入口へ接続し、意味rootと宣言categoryの不一致は従来の
+`Error::Category` を保持した。独立レビューで発見された初期の分類回帰は修正済みである。
+literal・foreign inlineを含むprefixの出力一致、Work・Allocation・Depthの上限と1不足、
+再利用時のsource不足と呼出深度不足、selection・不正構文・未確定registryを検査した。
+Sentence core 57件とsuiteの関連14件はnative・WASIで成功し、独立再実行10件も成功した。
+thumbv6mはcompileを確認した。実機での実行は未検証である。
+第03章のDiscoveryは127,522,196から101,233,571 Work、投影全体は374,091,577から
+347,802,952 Workへ減少した。内容検査は成功し、通常予算への適合は継続課題である。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

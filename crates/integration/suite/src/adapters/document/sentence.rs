@@ -2,7 +2,7 @@
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::SchemaRegistry,
-    syntax::{SyntaxError, ValidatedOwnerProvenance},
+    syntax::SyntaxError,
     value::{NdfValue, SchemaRef, TypedValue},
     value_codec::FoundationValueCodec,
 };
@@ -78,13 +78,13 @@ pub fn lower<C: FoundationValueCodec>(
 /// collection operation; each selected guest still receives complete checks.
 pub(super) struct Lowerer<'a> {
     registry: &'a SchemaRegistry,
-    owner: Option<ValidatedOwnerProvenance<'a>>,
+    closures: lower::presentation::ClosureLowerer<'a>,
 }
 impl<'a> Lowerer<'a> {
     pub(super) fn new(registry: &'a SchemaRegistry) -> Self {
         Self {
             registry,
-            owner: None,
+            closures: lower::presentation::ClosureLowerer::new(registry),
         }
     }
     pub(super) fn lower<C: FoundationValueCodec>(
@@ -129,34 +129,13 @@ impl<'a> Lowerer<'a> {
                     if closure.syntax.category != category {
                         return Err(Error::Category);
                     }
-                    budget.charge(Resource::Work, 1)?;
-                    if !self
-                        .owner
-                        .as_ref()
-                        .is_some_and(|proof| proof.matches_owner(&closure.provenance))
-                    {
-                        self.owner = Some(
-                            closure
-                                .provenance
-                                .validate(registry, budget, codec.source_admission())
-                                .map_err(Error::Closure)?,
-                        );
-                    }
-                    let checked = self
-                        .owner
-                        .as_ref()
-                        .ok_or(Error::Closure(SyntaxError::Reference))?
-                        .validate_closure(closure, budget, codec.source_admission())
-                        .map_err(Error::Closure)?;
-                    lower::presentation::sentence_with_foreign(
-                        checked.syntax(),
-                        surface,
-                        forms,
-                        registry,
-                        codec,
-                        budget,
-                    )
-                    .map_err(Error::Lower)?
+                    self.closures
+                        .lower(closure, surface, forms, codec, budget)
+                        .map_err(|error| match error {
+                            lower::presentation::Error::Closure(error) => Error::Closure(error),
+                            lower::presentation::Error::Category => Error::Category,
+                            error => Error::Lower(error),
+                        })?
                 }
             };
             if !matches!(

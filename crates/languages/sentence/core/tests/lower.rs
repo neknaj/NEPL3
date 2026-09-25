@@ -21,6 +21,182 @@ fn b() -> Budget {
 fn err(e: impl core::fmt::Debug) -> String {
     format!("{e:?}")
 }
+
+fn check_closure_entry(
+    bundle: &SyntaxBundle,
+    surface: &SchemaRef,
+    registry: &SchemaRegistry,
+    forms: &[lower::ForeignInlineForm<'_>],
+    expected: &nepl3_sentence_core::syntax::SentenceSyntax,
+) -> Result<(), String> {
+    use lower::presentation::{ClosureLowerer, Error};
+    use nepl3_core::source::SourceStore;
+    use nepl3_wire::foundation::FoundationCodec;
+    let environment = Environment {
+        bindings: vec![],
+        resources: vec![],
+    };
+    let digest = nepl3_wire::environment::environment_digest(
+        &environment,
+        registry
+            .selected("nepl3.foundation", 1)
+            .ok_or("foundation")?,
+        registry,
+        &mut b(),
+    )
+    .map_err(err)?;
+    let closure = ForeignClosure {
+        syntax: ForeignSyntax {
+            schema: surface.clone(),
+            category: match expected.value.root {
+                Root::Sentence(_) => "Sentence",
+                Root::Inline(_) => "Inline",
+            }
+            .into(),
+            root: bundle.root,
+            bundle: bundle.clone(),
+            environment: EnvironmentRef { id: 0, digest },
+        },
+        owner_environment: EnvironmentEntry {
+            id: 0,
+            digest,
+            value: environment,
+        },
+        provenance: OwnerProvenance::from_parts(vec![], vec![], vec![]),
+    };
+    let store = SourceStore::default();
+    let run = |limits| {
+        let mut budget = Budget::new(limits);
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+        let output =
+            ClosureLowerer::new(registry).lower(&closure, surface, forms, &mut codec, &mut budget);
+        Ok::<_, String>((output, budget))
+    };
+    let (output, measured) = run(b().limits())?;
+    assert_eq!(output.map_err(err)?, *expected);
+    for reason in [
+        StopReason::WorkLimit,
+        StopReason::AllocationLimit,
+        StopReason::DepthLimit,
+    ] {
+        for short in [false, true] {
+            let mut limits = b().limits();
+            match reason {
+                StopReason::WorkLimit => {
+                    limits.work = measured.usage().work - u64::from(short);
+                }
+                StopReason::AllocationLimit => {
+                    limits.allocation_units = measured.usage().allocation_units - u64::from(short);
+                }
+                StopReason::DepthLimit => {
+                    limits.depth = measured.usage().depth - u64::from(short);
+                }
+                _ => return Err("resource".into()),
+            }
+            let (output, budget) = run(limits)?;
+            assert_eq!(budget.current_depth(), 0);
+            if short {
+                assert_eq!(output.err(), Some(Error::Stopped(reason)));
+            } else {
+                assert_eq!(output.map_err(err)?, *expected);
+            }
+        }
+    }
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+    let mut lowerer = ClosureLowerer::new(registry);
+    assert_eq!(
+        lowerer
+            .lower(&closure, surface, forms, &mut codec, &mut b())
+            .map_err(err)?,
+        *expected
+    );
+    let mut limited = b().limits();
+    limited.depth = 0;
+    assert_eq!(
+        lowerer
+            .lower(
+                &closure,
+                surface,
+                forms,
+                &mut codec,
+                &mut Budget::new(limited)
+            )
+            .err(),
+        Some(Error::Stopped(StopReason::DepthLimit))
+    );
+    let mut nested_limits = b().limits();
+    nested_limits.depth = measured.usage().depth;
+    let mut nested = Budget::new(nested_limits);
+    let stopped = nested.with_depth_at_least(1, |budget| {
+        lowerer.lower(&closure, surface, forms, &mut codec, budget)
+    });
+    assert_eq!(stopped.err(), Some(Error::Stopped(StopReason::DepthLimit)));
+    assert_eq!(nested.current_depth(), 0);
+    if !bundle.sources.is_empty() {
+        // Reused owner proof does not grant sources to a fresh admission.
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+        let mut limits = b().limits();
+        limits.source_bytes = 0;
+        assert_eq!(
+            lowerer
+                .lower(
+                    &closure,
+                    surface,
+                    forms,
+                    &mut codec,
+                    &mut Budget::new(limits)
+                )
+                .err(),
+            Some(Error::Stopped(StopReason::SourceLimit))
+        );
+    }
+    let mut wrong = closure.clone();
+    let mut other_surface = surface.clone();
+    other_surface.revision += 1;
+    assert_eq!(
+        ClosureLowerer::new(registry)
+            .lower(&closure, &other_surface, forms, &mut codec, &mut b())
+            .err(),
+        Some(Error::Selection)
+    );
+    if !wrong.syntax.bundle.tokens.is_empty() {
+        wrong.syntax.bundle.tokens[0].views.roots.clear();
+        wrong.syntax.bundle.tokens[0].views.elements.clear();
+        assert!(matches!(
+            ClosureLowerer::new(registry).lower(&wrong, surface, forms, &mut codec, &mut b()),
+            Err(Error::Literal(lower::literal::Error::TokenMismatch(_)))
+        ));
+        wrong = closure.clone();
+    }
+    wrong.syntax.category = match expected.value.root {
+        Root::Sentence(_) => "Inline",
+        Root::Inline(_) => "Sentence",
+    }
+    .into();
+    assert_eq!(
+        ClosureLowerer::new(registry)
+            .lower(&wrong, surface, forms, &mut codec, &mut b())
+            .err(),
+        Some(Error::Category)
+    );
+    wrong.syntax.category = closure.syntax.category.clone();
+    wrong.syntax.bundle.root = NodeRef(u64::MAX);
+    assert!(matches!(
+        ClosureLowerer::new(registry).lower(&wrong, surface, forms, &mut codec, &mut b()),
+        Err(Error::Closure(_))
+    ));
+    let unfinalized = SchemaRegistry::default();
+    assert!(matches!(
+        ClosureLowerer::new(&unfinalized).lower(&closure, surface, forms, &mut codec, &mut b()),
+        Err(Error::Closure(SyntaxError::Schema(
+            SchemaError::Unfinalized
+        )))
+    ));
+    Ok(())
+}
 fn fixture() -> Result<(SchemaRegistry, SchemaRef, SyntaxBundle), String> {
     // Hand-authored source-less subset, separate from the production Grammar
     // test. Descriptor identities are computed, not fabricated digests.
@@ -299,6 +475,7 @@ fn literal_consumer_matches_owner_token_and_returns_typed_stops() -> Result<(), 
         lower::presentation::sentence(&checked, &surface, &r, &mut codec, &mut b()).map_err(err)?,
         read.syntax
     );
+    check_closure_entry(&bundle, &surface, &r, &[], &read.syntax)?;
     for (limits, cancel, expected) in [
         (
             {
@@ -454,6 +631,7 @@ fn selected_foreign_inline_retains_closure_and_checks_identity() -> Result<(), S
     assert_eq!(syntax.value, result.value);
     assert_eq!(syntax.locations[0].origin, OriginId(0));
     assert_eq!(syntax.origins, bundle.origins);
+    check_closure_entry(&bundle, &surface, &r, &[selection(&surface)], &syntax)?;
     let mut wrong = surface.clone();
     wrong.revision += 1;
     assert!(matches!(
