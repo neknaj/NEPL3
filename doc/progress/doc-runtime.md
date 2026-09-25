@@ -321,6 +321,14 @@ route変更後の旧返信は`Mismatch`、参照先ページの欠落は`Missing
 対象2件は独立nativeとWASIで成功し、主担当の初回native1件、clippy・repository検査も成功した。
 annotated pagesを含む広範囲検査は別途継続しており、この記録は全章の成功を表さない。
 
+上記の広範囲検査はnative・WASIとも27件成功・5件失敗・14件除外で完了した。
+Grammar章は解析時、Editor・Math・Migration・Reader章はprojection時のWork上限へ到達した。
+SentenceからDoc guestを探索する処理では、完全検証後にembed表が空の場合の追加走査を省いた。
+16・128・1024個のTextを持つ入力で完全検証とのUsage一致を確認し、不正な位置情報・不存在embed参照・
+Work不足・取消の拒否を維持した。native・WASI各4件と独立native4件、clippy・repository検査は成功した。
+Reader章のDiscovery Workは74,712,238から74,676,144、AllocationUnitsは131,806,978から131,512,898へ減少した。
+章全体は引き続きWorkLimitで停止する。今回の改善はguest不在時の追加走査に限定される。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

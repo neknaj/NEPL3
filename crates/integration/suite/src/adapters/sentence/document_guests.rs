@@ -112,6 +112,15 @@ fn collect_inner<C: FoundationValueCodec>(
             nepl3_sentence_core::syntax::Error::Stopped(reason) => Error::Stopped(reason),
             error => Error::Sentence(error),
         })?;
+    // Complete validation establishes that every ForeignInline refers to a
+    // present embed. An empty embed table therefore needs no occurrence/depth
+    // walks or selection storage, regardless of the local Sentence's size.
+    if sentence.value.embeds.is_empty() {
+        return Ok(Selection {
+            documents: Vec::new(),
+            occurrences: Vec::new(),
+        });
+    }
     let shape_error = |error| match error {
         nepl3_sentence_core::check::Error::Stopped(reason) => Error::Stopped(reason),
         error => Error::Shape(error),

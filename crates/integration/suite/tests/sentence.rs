@@ -68,6 +68,83 @@ fn generated(value: SentenceValue) -> SentenceSyntax {
     }
 }
 
+#[test]
+fn guest_free_selection_uses_only_complete_sentence_validation() -> Result<(), String> {
+    let registry = registry()?;
+    let surface = registry.selected("nepl3.doc", 1).ok_or("Doc")?;
+    let store = SourceStore::default();
+    for count in [16, 128, 1024] {
+        let mut nodes = vec![Kind::Sentence {
+            inlines: (1..=count).map(InlineRef).collect(),
+        }];
+        nodes.extend((0..count).map(|_| Kind::Text { text: "文".into() }));
+        let mut input = generated(SentenceValue {
+            root: Root::Sentence(SentenceRef(0)),
+            nodes,
+            embeds: vec![],
+        });
+        let mut validation = b();
+        input
+            .validate(&registry, &mut validation, &mut SourceAdmission::default())
+            .map_err(err)?;
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&registry, &store, &mut admission).map_err(err)?;
+        let mut selection = b();
+        let result = sentence::document_guests::collect(
+            &input,
+            surface,
+            &registry,
+            &mut codec,
+            &mut selection,
+        )
+        .map_err(err)?;
+        assert!(result.documents().is_empty() && result.occurrences().is_empty());
+        // No second traversal/allocation for absent guests. Full validation's
+        // resource accounting and depth remain mandatory at every input size.
+        assert_eq!(selection.usage(), validation.usage());
+        let mut limits = b().limits();
+        limits.work = validation.usage().work - 1;
+        let mut short = Budget::new(limits);
+        assert!(matches!(
+            sentence::document_guests::collect(&input, surface, &registry, &mut codec, &mut short),
+            Err(sentence::document_guests::Error::Stopped(
+                StopReason::WorkLimit
+            ))
+        ));
+        let mut cancelled = b();
+        cancelled.cancel();
+        assert!(matches!(
+            sentence::document_guests::collect(
+                &input,
+                surface,
+                &registry,
+                &mut codec,
+                &mut cancelled
+            ),
+            Err(sentence::document_guests::Error::Stopped(
+                StopReason::Cancelled
+            ))
+        ));
+        let original = input.value.nodes[1].clone();
+        input.value.nodes[1] = Kind::ForeignInline {
+            syntax: EmbedRef(0),
+        };
+        assert!(
+            sentence::document_guests::collect(&input, surface, &registry, &mut codec, &mut b())
+                .is_err()
+        );
+        input.value.nodes[1] = original;
+        input.locations.clear();
+        assert!(matches!(
+            sentence::document_guests::collect(&input, surface, &registry, &mut codec, &mut b()),
+            Err(sentence::document_guests::Error::Sentence(
+                nepl3_sentence_core::syntax::Error::LocationCount
+            ))
+        ));
+    }
+    Ok(())
+}
+
 /// Doc owns one slot. Sentence retains its entire arena and provenance.
 /// The first receiver starts with an empty ambient SourceStore.
 fn doc_roundtrip(input: &SentenceSyntax, r: &SchemaRegistry) -> Result<SentenceSyntax, String> {
