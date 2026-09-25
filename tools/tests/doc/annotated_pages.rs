@@ -748,6 +748,95 @@ fn reproducibility_chapter_preserves_code_and_external_references() -> Result<()
     reproducibility_projection(budget(), budget(), false)
 }
 
+#[test]
+fn external_extensions_chapter_preserves_layers_and_separation_conditions() -> Result<(), String> {
+    let c = compiled()?;
+    let set = PageSet {
+        pages: vec![page(
+            &c,
+            "external",
+            "doc/spec/22-external-extensions.nepld",
+            "doc/spec/22-external-extensions.md",
+            include_str!("../../../doc/spec/22-external-extensions.nepld"),
+        )?],
+        files: vec![],
+    };
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let artifact = render(&set, &c.doc.registry, &mut codec, &mut budget(), &[&[]]).map_err(err)?;
+    assert_eq!(artifact.pages.len(), 1);
+    let markdown = &artifact.pages[0].markdown;
+    assert!(links(markdown).is_empty());
+    assert!(code_blocks(markdown)?.is_empty());
+    assert!(markdown.contains("<ruby>外部言語<rt>がいぶげんご</rt></ruby>"));
+    let mut headings = Vec::new();
+    let mut codes = Vec::new();
+    let mut rows = 0;
+    let mut cells = 0;
+    let mut tables = 0;
+    let mut lists = Vec::new();
+    let mut items = 0;
+    let mut cell_text = None;
+    let mut table_cells = Vec::new();
+    for event in Parser::new_ext(markdown, pulldown_cmark::Options::ENABLE_TABLES) {
+        match event {
+            Event::Start(Tag::Heading { level, .. }) => headings.push(level),
+            Event::Code(code) => codes.push(code.into_string()),
+            Event::Start(Tag::Table(alignments)) => {
+                assert_eq!(alignments, [pulldown_cmark::Alignment::None; 2]);
+                tables += 1;
+            }
+            Event::Start(Tag::TableRow) => rows += 1,
+            Event::Start(Tag::TableCell) => {
+                cells += 1;
+                cell_text = Some(String::new());
+            }
+            Event::Text(text) if cell_text.is_some() => {
+                cell_text.as_mut().ok_or("table cell")?.push_str(&text);
+            }
+            Event::End(pulldown_cmark::TagEnd::TableCell) => {
+                table_cells.push(cell_text.take().ok_or("table cell end")?);
+            }
+            Event::Start(Tag::List(start)) => lists.push(start),
+            Event::Start(Tag::Item) => items += 1,
+            _ => {}
+        }
+    }
+    // Original chapter: five architectural layers plus the header, six
+    // ordered separation conditions, and four exact inline-code operands.
+    assert_eq!((tables, rows, cells), (1, 5, 12));
+    assert_eq!(lists, [Some(1)]);
+    assert_eq!(items, 6);
+    use pulldown_cmark::HeadingLevel::{H1, H2};
+    assert_eq!(headings, [H1, H2, H2, H2, H2]);
+    assert_eq!(
+        codes,
+        [
+            "no_std + alloc",
+            "conformance/extensions/hello/",
+            "hello <name>",
+            "python tools/extensions/run.py",
+        ]
+    );
+    assert_eq!(
+        table_cells
+            .iter()
+            .skip(2)
+            .step_by(2)
+            .map(String::as_str)
+            .collect::<Vec<_>>(),
+        [
+            "Foundation",
+            "Language infrastructure",
+            "Domain / Language package",
+            "Backend / Adapter",
+            "Composition",
+        ]
+    );
+    Ok(())
+}
+
 /// The ordinary test retains desktop limits. This opt-in measurement locates
 /// the expense and checks content under the pre-existing corpus policy.
 #[test]

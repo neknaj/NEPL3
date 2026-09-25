@@ -156,6 +156,13 @@ frameの拡大も資源計上し、祖先の対応表を保持する期間の延
 wireのnative全69件とsyntax codecのWASI10件が成功した。独立レビューでもnative10件が成功した。
 128子とguestのarena順序変更、Work・Allocationのexact/不足境界、停止後の入力保持を確認した。
 wireのclippyとthumbv6m向けcompileも成功した。workspace全体と正式受入は今回再実行していない。
+第22章の正本を独立Sentence構文へ移行した。本文・Ruby・節ID・順序を保持し、
+正式readerとlowerを通した通常予算のMarkdown投影で、五層の表の列・順序、
+六つの分離条件、InlineCode4件、見出し階層を独立期待値と照合した。
+native・WASIで各1件成功し、独立レビューでもnative1件の成功を確認した。
+対象のclippy、fmt、diff検査も成功した。
+正式Markdown集合生成は第22章を通過し、次の旧構文の
+`doc/spec/18-html-delivery.nepld` で停止した。生成Markdownの更新は未完了である。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
