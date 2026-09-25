@@ -88,6 +88,17 @@ core・Doc core・Sentence coreのnativeとWASI試験は各267件、独立レビ
 thumbv6mのcompileも確認した。実機試験と生成文書全体のstaleness検査はこの変更の
 確認範囲に含めていない。
 
+第03章のcorpus試験へ既存のportable構築・digest独立計測を接続した。
+`58024b91` の入力では、構築が128,304,295 Work、documentとguestのbatch digestが
+118,353,283 Workだった。それぞれ新しいBudgetを使うため、投影内の増分として
+加算・減算しない。符号化されたdocumentは1,087,664 nodeで、root guestのtoken内の
+View関連fieldは576,189 nodeを占める。これらはNDF表現のnode数である。
+次の改善対象はportable構築と、その内部の検証・表現の重複である。
+
+単一digestの短いCBOR断片を256-byte固定bufferへまとめる候補も検査した。
+canonical digest・Usage・停止境界の試験は成功したが、実文書の速度改善を確認できず、
+候補は撤回した。通常のhash実装と資源上限は維持する。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

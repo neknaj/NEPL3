@@ -3,7 +3,7 @@ use nepl3_doc_core::model::{DocKind, DocRoot, ListKind};
 
 #[test]
 fn reader_chapter_preserves_contracts_and_combinators() -> Result<(), String> {
-    project(budget().limits(), budget(), budget())
+    project(budget().limits(), budget(), budget(), false)
 }
 
 #[test]
@@ -19,6 +19,7 @@ fn measure_reader_chapter_under_corpus_limits() -> Result<(), String> {
         policy.output_limits.budget().limits(),
         policy.output_limits.budget(),
         policy.output_limits.budget(),
+        true,
     )
 }
 
@@ -106,6 +107,7 @@ fn project(
     parse_limits: nepl3_core::budget::Limits,
     mut lower_budget: Budget,
     mut render_budget: Budget,
+    measure_encoding: bool,
 ) -> Result<(), String> {
     let c = compiled()?;
     let document = nepl3_tools::doc::source::with_named_validated_input_limits(
@@ -354,5 +356,8 @@ fn project(
             "read_accepted_with_host_recover",
         ]
     );
+    if measure_encoding {
+        measure_page_encoding("reader", &set, &c, render_budget.limits())?;
+    }
     Ok(())
 }
