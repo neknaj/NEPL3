@@ -24,6 +24,84 @@ fn source(id: &str, revision: u64, text: &str) -> Result<SourceSnapshot, SourceE
 }
 
 #[test]
+fn spans_share_immutable_identity_and_preserve_independent_value_semantics()
+-> Result<(), SourceError> {
+    let name = "source".repeat(10_000);
+    let original = source(&name, 7, "世界")?;
+    let left = original.span(0, 3)?;
+    let whole = original.span(0, 6)?;
+    #[cfg(target_has_atomic = "ptr")]
+    {
+        assert!(core::ptr::eq(original.identity(), left.snapshot_ref()));
+        assert!(core::ptr::eq(left.snapshot_ref(), whole.snapshot_ref()));
+    }
+    let independent = source(&name, 7, "世界")?;
+    assert!(!core::ptr::eq(original.identity(), independent.identity()));
+    assert_eq!(independent.span(0, 3)?, left);
+    assert!(whole.contains(&independent.span(0, 3)?));
+    assert_eq!(independent.slice(&left)?, "世");
+    for changed in [
+        source(&name, 8, "世界")?,
+        source("other", 7, "世界")?,
+        source(&name, 7, "世人")?,
+    ] {
+        assert_eq!(changed.slice(&left), Err(SourceError::SnapshotMismatch));
+        assert!(!whole.contains(&changed.span(0, 3)?));
+    }
+    let limits = budget().limits();
+    let mut usage = Budget::new(limits);
+    let retained = left.clone_with_budget(&mut usage)?;
+    #[cfg(target_has_atomic = "ptr")]
+    {
+        assert_eq!(usage.usage().work, 1);
+        assert_eq!(
+            usage.usage().allocation_units,
+            core::mem::size_of::<Span>() as u64
+        );
+    }
+    let exact = Limits {
+        work: usage.usage().work,
+        allocation_units: usage.usage().allocation_units,
+        ..limits
+    };
+    assert_eq!(left.clone_with_budget(&mut Budget::new(exact))?, left);
+    for (bounded, reason) in [
+        (
+            Limits {
+                work: exact.work - 1,
+                ..exact
+            },
+            StopReason::WorkLimit,
+        ),
+        (
+            Limits {
+                allocation_units: exact.allocation_units - 1,
+                ..exact
+            },
+            StopReason::AllocationLimit,
+        ),
+    ] {
+        let mut b = Budget::new(bounded);
+        assert_eq!(left.clone_with_budget(&mut b), Err(reason));
+        assert_eq!(b.poll(), Err(reason));
+    }
+    let mut cancelled = Budget::new(limits);
+    cancelled.cancel();
+    assert_eq!(
+        left.clone_with_budget(&mut cancelled),
+        Err(StopReason::Cancelled)
+    );
+    let mut detached = retained.snapshot();
+    detached.source.0.push('!');
+    drop(original);
+    drop(left);
+    drop(whole);
+    assert_eq!(independent.slice(&retained)?, "世");
+    assert_ne!(&detached, retained.snapshot_ref());
+    Ok(())
+}
+
+#[test]
 fn snapshot_metadata_copy_is_bounded_but_independent_comparison_is_not_free()
 -> Result<(), SourceError> {
     let id = SourceId("名".repeat(20_000));
