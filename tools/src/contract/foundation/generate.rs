@@ -94,6 +94,18 @@ pub(crate) fn source(descriptor: &SchemaDescriptor) -> Result<String> {
     )
 }
 
+/// Identity constants use the production descriptor canonicalization. They
+/// describe expected schema identity only; consumers still validate values.
+pub(crate) fn identity_constants(descriptor: &SchemaDescriptor) -> Result<String> {
+    let identity = descriptor
+        .reference(&mut budget())
+        .map_err(|e| format!("schema identity: {e:?}"))?;
+    Ok(format!(
+        "\npub(super) const EXPECTED_PACKAGE: &str = {:?};\npub(super) const EXPECTED_REVISION: u64 = {};\n#[rustfmt::skip]\npub(super) const EXPECTED_DIGEST: [u8; 32] = {:?};\n",
+        identity.package, identity.revision, identity.digest.0,
+    ))
+}
+
 pub(crate) fn source_with(descriptor: &SchemaDescriptor, output: Output) -> Result<String> {
     let mut cost = Cost {
         allocator: output.allocator,

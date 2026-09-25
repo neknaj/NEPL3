@@ -64,9 +64,7 @@ fn schema<'a, E>(registry: &'a SchemaRegistry, b: &mut Budget) -> Result<&'a Sch
     let selected = registry
         .selected("nepl3.sentence", 1)
         .ok_or(SchemaError::UnknownSchema)?;
-    let expected = crate::schema::descriptor(b)?.reference(b)?;
-    b.charge(Resource::Work, expected.package.len() as u64 + 40)?;
-    if selected != &expected {
+    if !crate::schema::matches(selected, b)? {
         return Err(Error::SchemaIdentity);
     }
     Ok(selected)

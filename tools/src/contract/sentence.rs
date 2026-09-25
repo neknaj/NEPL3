@@ -21,10 +21,12 @@ fn projection(value: &Value) -> Result<String> {
     if descriptor.package != "nepl3.sentence" || descriptor.revision != 1 {
         return Err("unexpected Sentence package identity".into());
     }
-    foundation::generate::source_with(
+    let mut source = foundation::generate::source_with(
         &descriptor,
         foundation::generate::Output::domain("interfaces/sentence.json", "sentence"),
-    )
+    )?;
+    source.push_str(&foundation::generate::identity_constants(&descriptor)?);
+    Ok(source)
 }
 pub(crate) fn check(root: &Path) -> Result<()> {
     let value: Value = json(root, "interfaces/sentence.json")?;
