@@ -847,6 +847,57 @@ fn indexed_admission_keeps_unique_bytes_and_checks_empty_cancel() -> Result<(), 
 }
 
 #[test]
+fn metered_source_resolution_preserves_identity_scope_and_stop_boundaries()
+-> Result<(), SourceError> {
+    for count in [1, 128, 512] {
+        let mut store = SourceStore::default();
+        for i in (0..count).rev() {
+            store.insert(source(&format!("source-{i:04}"), 7, "文")?)?;
+        }
+        let wanted = source("source-0000", 7, "文")?;
+        let reference = wanted.reference();
+        let mut measured = budget();
+        assert_eq!(
+            store.resolve_with_budget(&reference, &mut measured)?,
+            Some(&wanted)
+        );
+        assert_eq!(measured.usage().allocation_units, 0);
+        assert!(measured.usage().work < 512);
+        for work in [measured.usage().work, measured.usage().work - 1] {
+            let mut limited = Budget::new(Limits {
+                work,
+                ..budget().limits()
+            });
+            let result = store.resolve_with_budget(&reference, &mut limited);
+            if work == measured.usage().work {
+                assert_eq!(result?, Some(&wanted));
+            } else {
+                assert_eq!(result, Err(StopReason::WorkLimit));
+                assert_eq!(limited.poll(), Err(StopReason::WorkLimit));
+            }
+        }
+        let mut forged = reference.clone();
+        forged.digest = Digest::of(b"different");
+        assert_eq!(store.resolve_with_budget(&forged, &mut budget())?, None);
+        forged = reference.clone();
+        forged.revision += 1;
+        assert_eq!(store.resolve_with_budget(&forged, &mut budget())?, None);
+        assert_eq!(
+            SourceStore::default().resolve_with_budget(&reference, &mut budget())?,
+            None
+        );
+        let mut stopped = budget();
+        stopped.cancel();
+        assert_eq!(
+            SourceStore::default().resolve_with_budget(&reference, &mut stopped),
+            Err(StopReason::Cancelled)
+        );
+        assert_eq!(store.snapshots().len(), count);
+    }
+    Ok(())
+}
+
+#[test]
 fn source_references_resolve_full_identity_after_mixed_insertions() -> Result<(), SourceError> {
     let originals = [
         source("文", u64::MAX, "日本語")?,

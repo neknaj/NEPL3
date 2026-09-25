@@ -274,7 +274,7 @@ pub(crate) fn span_from_value(
     let fields = fields(value, schema, "Span", 3)?;
     let reference = reference(&fields[0], schema, budget)?;
     let source = sources
-        .resolve(&reference)
+        .resolve_with_budget(&reference, budget)?
         .ok_or(SourceError::MissingSnapshot)?;
     budget.charge(
         Resource::AllocationUnits,

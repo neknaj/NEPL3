@@ -957,6 +957,23 @@ impl SourceStore {
         self.revision(&reference.source_id, reference.revision)
             .filter(|snapshot| snapshot.storage.id.digest == reference.digest)
     }
+    /// Resolve the complete portable identity through this store's declarations.
+    /// Charge index comparisons and the digest check before use. A matching
+    /// source/revision with a different digest remains unresolved. This lookup
+    /// neither admits a source nor expands the caller's declaration scope.
+    pub fn resolve_with_budget(
+        &self,
+        reference: &SourceRef,
+        budget: &mut Budget,
+    ) -> Result<Option<&SourceSnapshot>, StopReason> {
+        let Some(snapshot) =
+            self.get_revision_with_budget(&reference.source_id, reference.revision, budget)?
+        else {
+            return Ok(None);
+        };
+        budget.charge(Resource::Work, 32)?;
+        Ok((snapshot.storage.id.digest == reference.digest).then_some(snapshot))
+    }
     // The immutable index is keyed by source/revision. Callers still compare
     // the digest: a matching key alone does not resolve a portable identity.
     // These non-budgeted APIs retain their existing accounting contract.
