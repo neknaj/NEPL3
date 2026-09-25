@@ -2,6 +2,8 @@
 mod foreign;
 #[path = "parse/host.rs"]
 mod host;
+#[path = "parse/owned.rs"]
+mod owned;
 #[path = "parse/support.rs"]
 mod support;
 use nepl3_core::{
@@ -46,6 +48,7 @@ fn run_options(
 struct Scenario {
     forms: Option<&'static [&'static str]>,
     sealed: bool,
+    owned_validation: bool,
     work: Option<u64>,
     list: bool,
     cap: Option<u64>,
@@ -62,6 +65,7 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
     let Scenario {
         forms,
         sealed,
+        owned_validation,
         list,
         cap,
         work,
@@ -694,6 +698,9 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
     if let ParseOutcome::Complete { tree, .. } | ParseOutcome::Recovered { tree, .. } =
         &reply.outcome
     {
+        if owned_validation {
+            owned::check(tree, &resolved)?;
+        }
         let proof = tree
             .validate(&resolved, &mut budget(), &mut SourceAdmission::default())
             .map_err(|e| format!("tree: {e:?}"))?;
@@ -1712,5 +1719,26 @@ fn native_host_nested_stop_is_sticky_without_host_mutating_budget() -> TestResul
         }
     ));
     assert_eq!(reply.report.diagnostics.len(), 1);
+    Ok(())
+}
+
+#[test]
+fn owned_parse_validation_preserves_proofs_and_rejected_input() -> Result<(), String> {
+    for (input, provider, text) in [
+        ("let x x", false, false),
+        ("let x", false, false),
+        ("x", true, false),
+    ] {
+        run_scenario(
+            input,
+            true,
+            Scenario {
+                owned_validation: true,
+                provider,
+                text,
+                ..Scenario::default()
+            },
+        )?;
+    }
     Ok(())
 }

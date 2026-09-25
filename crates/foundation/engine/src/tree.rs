@@ -14,6 +14,8 @@ use nepl3_core::{
     value::{KindRef, NdfValue},
 };
 use nepl3_reader::builtin::BuiltinReader;
+mod owned;
+pub use owned::{OwnedValidatedParseTree, ParseTreeValidationFailure};
 #[derive(Debug, Eq, PartialEq)]
 pub enum TreeError {
     Stopped(StopReason),
@@ -486,229 +488,248 @@ impl ParseTree {
         let syntax = self
             .bundle
             .validate_with_sources(registry, budget, admission)?;
-        let mut contexts: Vec<(&SyntaxBundle, IndexedContext<'_>)> = Vec::new();
-        for context in &self.contexts {
-            let bundle = path(&self.bundle, &context.path, registry, budget)?;
-            budget.charge(Resource::Work, contexts.len() as u64 + 1)?;
-            if contexts
-                .iter()
-                .any(|(prior, _)| core::ptr::eq(*prior, bundle))
-            {
-                return Err(TreeError::Duplicate);
-            }
-            let indexed = IndexedContext::new(context, bundle.nodes.len(), budget)?;
-            push(&mut contexts, (bundle, indexed), budget)?;
-        }
-        let mut recoveries = Vec::new();
-        for recovery in &self.recovery {
-            let bundle = path(&self.bundle, &recovery.path, registry, budget)?;
-            budget.charge(Resource::Work, recoveries.len() as u64 + 1)?;
-            if recovery.entries.is_empty()
-                || recoveries
-                    .iter()
-                    .any(|(prior, _)| core::ptr::eq(*prior, bundle))
-            {
-                return Err(TreeError::Duplicate);
-            }
-            push(&mut recoveries, (bundle, recovery), budget)?;
-        }
-        let mut pending = Vec::new();
-        push(&mut pending, (&self.bundle, 1u64), budget)?;
-        while let Some((bundle, depth)) = pending.pop() {
-            budget.observe_depth(depth)?;
-            budget.charge(
-                Resource::Work,
-                contexts.len() as u64 + recoveries.len() as u64 + 1,
-            )?;
-            let context = contexts
-                .iter()
-                .find(|(b, _)| core::ptr::eq(*b, bundle))
-                .map(|(_, c)| c)
-                .ok_or(TreeError::Selection)?;
-            let recovery = recoveries
-                .iter()
-                .find(|(b, _)| core::ptr::eq(*b, bundle))
-                .map(|(_, c)| c);
-            budget.charge(Resource::AllocationUnits, bundle.nodes.len() as u64)?;
-            let mut reached = alloc::vec![false;bundle.nodes.len()];
-            let mut nodes = Vec::new();
-            push(&mut nodes, bundle.root, budget)?;
-            while let Some(id) = nodes.pop() {
-                budget.charge(Resource::Work, 1)?;
-                let index = usize::try_from(id.0).map_err(|_| TreeError::Path)?;
-                let seen = reached.get_mut(index).ok_or(TreeError::Path)?;
-                if *seen {
-                    continue;
-                }
-                *seen = true;
-                for field in &node(bundle, id)?.fields {
-                    match field {
-                        FieldValue::Child(id) => push(&mut nodes, *id, budget)?,
-                        FieldValue::Children(ids) => {
-                            for id in ids {
-                                push(&mut nodes, *id, budget)?;
-                            }
-                        }
-                        FieldValue::Foreign(f) => push(
-                            &mut pending,
-                            (
-                                &f.bundle,
-                                depth.checked_add(1).ok_or(StopReason::DepthLimit)?,
-                            ),
-                            budget,
-                        )?,
-                        _ => {}
-                    }
-                }
-            }
-            if reached.iter().any(|v| !*v) {
-                return Err(TreeError::Unreachable);
-            }
-            if context.raw.nodes.len() != bundle.nodes.len() {
-                return Err(TreeError::Selection);
-            }
-            // Every node was reached above. Reuse that checked node-indexed
-            // storage to consume each selection exactly once, in input order.
-            // Selection order itself remains unrestricted.
-            for selected in &context.raw.nodes {
-                budget.charge(Resource::Work, 1)?;
-                let index = usize::try_from(selected.node.0).map_err(|_| TreeError::Path)?;
-                let unselected = reached.get_mut(index).ok_or(TreeError::Path)?;
-                if !*unselected {
-                    return Err(TreeError::Duplicate);
-                }
-                *unselected = false;
-                let node = node(bundle, selected.node)?;
-                let checked = profile.validate_entry(&selected.entry, budget)?;
-                if profile.execution_digest(&selected.entry.alias, budget)?
-                    != selected.execution_digest
-                {
-                    return Err(TreeError::ExecutionIdentity);
-                }
-                let package = checked.package();
-                let valid = match &selected.shape {
-                    ShapeSelection::Form { index } => usize::try_from(*index)
-                        .ok()
-                        .and_then(|i| package.forms.get(i))
-                        .is_some_and(|f| {
-                            f.category == selected.entry.category
-                                && same_kind(node, &f.kind, registry)
-                                && f.fields.len() == node.fields.len()
-                        }),
-                    ShapeSelection::Leaf { index } => usize::try_from(*index)
-                        .ok()
-                        .and_then(|i| package.leaves.get(i))
-                        .is_some_and(|l| {
-                            l.category == selected.entry.category
-                                && same_kind(node, &l.kind, registry)
-                                && node.fields.is_empty()
-                        }),
-                    ShapeSelection::Builtin { read } => {
-                        matches!(package.read(*read)?,ReadSpec::Builtin{kind,..} if same_kind(node,kind,registry)&&node.fields.is_empty())
-                    }
-                    ShapeSelection::List { read, cons } => {
-                        matches!(package.read(*read)?,ReadSpec::ListOf{cons:c,nil,..} if same_kind(node,if *cons{c}else{nil},registry)&&node.fields.len()==if *cons{2}else{0})
-                    }
-                    ShapeSelection::Dynamic {
-                        provider, shape, ..
-                    } => {
-                        let registered = profile.head_provider(
-                            &selected.entry.alias,
-                            &selected.entry.category,
-                            budget,
-                        )?;
-                        budget.charge(
-                            Resource::Work,
-                            (provider.shape.schema.package.len()
-                                + provider.shape.name.len()
-                                + provider.child_context.schema.package.len()
-                                + provider.child_context.name.len())
-                                as u64
-                                + 66,
-                        )?;
-                        if registered != Some(provider) {
-                            return Err(TreeError::UnvalidatedDynamic);
-                        }
-                        profile.provider(&provider.shape, budget)?;
-                        profile.provider(&provider.child_context, budget)?;
-                        checked.validate_head_shape(shape, budget)?;
-                        same_kind(node, &shape.kind, registry)
-                            && node.fields.len() == shape.fields.len()
-                    }
-                    ShapeSelection::Recovery => {
-                        let entries = &recovery.ok_or(TreeError::Recovery)?.entries;
-                        budget.charge(Resource::Work, entries.len() as u64 + 1)?;
-                        let entry = entries
-                            .iter()
-                            .find(|r| r.node == selected.node)
-                            .ok_or(TreeError::Recovery)?;
-                        if node.schema.package != "nepl3.engine"
-                            || node.schema.revision != 1
-                            || !node.fields.is_empty()
-                        {
-                            return Err(TreeError::Recovery);
-                        }
-                        match &entry.kind {
-                            RecoveryKind::Missing { expected, anchor } => {
-                                profile.validate_entry(expected, budget)?;
-                                node.kind == "RecoveryMissing"
-                                    && expected == &selected.entry
-                                    && node.token.is_none()
-                                    && node.head.is_none()
-                                    && node.cover.as_ref() == Some(anchor)
-                                    && anchor.start() == anchor.end()
-                            }
-                            RecoveryKind::Unparsed { span, .. } => {
-                                node.kind == "RecoveryUnparsed"
-                                    && node.cover.as_ref() == Some(span)
-                                    && match node.token {
-                                        Some(_) => {
-                                            let token = token(bundle, node)?;
-                                            node.head.as_ref() == Some(&token.head)
-                                                && span.contains(&token.head)
-                                        }
-                                        None => node.head.is_none(),
-                                    }
-                            }
-                            RecoveryKind::Unexpected { token } => {
-                                let reference = *token;
-                                let token = usize::try_from(token.0)
-                                    .ok()
-                                    .and_then(|i| bundle.tokens.get(i))
-                                    .ok_or(TreeError::Recovery)?;
-                                node.kind == "RecoveryUnexpected"
-                                    && node.token == Some(reference)
-                                    && node.head.as_ref() == Some(&token.head)
-                                    && node.cover.as_ref() == Some(&token.head)
-                            }
-                        }
-                    }
-                };
-                if !valid {
-                    return Err(TreeError::Selection);
-                }
-                static_fields(bundle, context, &contexts, selected, profile, budget)?;
-                if !matches!(selected.shape, ShapeSelection::Recovery) && node.token.is_none() {
-                    return Err(TreeError::Selection);
-                }
-            }
-            if let Some(recovery) = recovery {
-                for (i, entry) in recovery.entries.iter().enumerate() {
-                    budget.charge(Resource::Work, (context.raw.nodes.len() + i) as u64 + 1)?;
-                    if recovery.entries[..i]
-                        .iter()
-                        .any(|prior| prior.node == entry.node)
-                    {
-                        return Err(TreeError::Duplicate);
-                    }
-                    if !context.raw.nodes.iter().any(|v| {
-                        v.node == entry.node && matches!(v.shape, ShapeSelection::Recovery)
-                    }) {
-                        return Err(TreeError::Recovery);
-                    }
-                }
-            }
-        }
+        validate_selections(
+            &self.bundle,
+            &self.contexts,
+            &self.recovery,
+            profile,
+            budget,
+        )?;
         Ok(ValidatedParseTree { tree: self, syntax })
     }
+}
+
+fn validate_selections(
+    root: &SyntaxBundle,
+    raw_contexts: &[BundleContext],
+    raw_recovery: &[BundleRecovery],
+    profile: &ResolvedParseProfile<'_>,
+    budget: &mut Budget,
+) -> Result<(), TreeError> {
+    let registry = profile.registry();
+    let mut contexts: Vec<(&SyntaxBundle, IndexedContext<'_>)> = Vec::new();
+    for context in raw_contexts {
+        let bundle = path(root, &context.path, registry, budget)?;
+        budget.charge(Resource::Work, contexts.len() as u64 + 1)?;
+        if contexts
+            .iter()
+            .any(|(prior, _)| core::ptr::eq(*prior, bundle))
+        {
+            return Err(TreeError::Duplicate);
+        }
+        let indexed = IndexedContext::new(context, bundle.nodes.len(), budget)?;
+        push(&mut contexts, (bundle, indexed), budget)?;
+    }
+    let mut recoveries = Vec::new();
+    for recovery in raw_recovery {
+        let bundle = path(root, &recovery.path, registry, budget)?;
+        budget.charge(Resource::Work, recoveries.len() as u64 + 1)?;
+        if recovery.entries.is_empty()
+            || recoveries
+                .iter()
+                .any(|(prior, _)| core::ptr::eq(*prior, bundle))
+        {
+            return Err(TreeError::Duplicate);
+        }
+        push(&mut recoveries, (bundle, recovery), budget)?;
+    }
+    let mut pending = Vec::new();
+    push(&mut pending, (root, 1u64), budget)?;
+    while let Some((bundle, depth)) = pending.pop() {
+        budget.observe_depth(depth)?;
+        budget.charge(
+            Resource::Work,
+            contexts.len() as u64 + recoveries.len() as u64 + 1,
+        )?;
+        let context = contexts
+            .iter()
+            .find(|(b, _)| core::ptr::eq(*b, bundle))
+            .map(|(_, c)| c)
+            .ok_or(TreeError::Selection)?;
+        let recovery = recoveries
+            .iter()
+            .find(|(b, _)| core::ptr::eq(*b, bundle))
+            .map(|(_, c)| c);
+        budget.charge(Resource::AllocationUnits, bundle.nodes.len() as u64)?;
+        let mut reached = alloc::vec![false;bundle.nodes.len()];
+        let mut nodes = Vec::new();
+        push(&mut nodes, bundle.root, budget)?;
+        while let Some(id) = nodes.pop() {
+            budget.charge(Resource::Work, 1)?;
+            let index = usize::try_from(id.0).map_err(|_| TreeError::Path)?;
+            let seen = reached.get_mut(index).ok_or(TreeError::Path)?;
+            if *seen {
+                continue;
+            }
+            *seen = true;
+            for field in &node(bundle, id)?.fields {
+                match field {
+                    FieldValue::Child(id) => push(&mut nodes, *id, budget)?,
+                    FieldValue::Children(ids) => {
+                        for id in ids {
+                            push(&mut nodes, *id, budget)?;
+                        }
+                    }
+                    FieldValue::Foreign(f) => push(
+                        &mut pending,
+                        (
+                            &f.bundle,
+                            depth.checked_add(1).ok_or(StopReason::DepthLimit)?,
+                        ),
+                        budget,
+                    )?,
+                    _ => {}
+                }
+            }
+        }
+        if reached.iter().any(|v| !*v) {
+            return Err(TreeError::Unreachable);
+        }
+        if context.raw.nodes.len() != bundle.nodes.len() {
+            return Err(TreeError::Selection);
+        }
+        // Every node was reached above. Reuse that checked node-indexed
+        // storage to consume each selection exactly once, in input order.
+        // Selection order itself remains unrestricted.
+        for selected in &context.raw.nodes {
+            budget.charge(Resource::Work, 1)?;
+            let index = usize::try_from(selected.node.0).map_err(|_| TreeError::Path)?;
+            let unselected = reached.get_mut(index).ok_or(TreeError::Path)?;
+            if !*unselected {
+                return Err(TreeError::Duplicate);
+            }
+            *unselected = false;
+            let node = node(bundle, selected.node)?;
+            let checked = profile.validate_entry(&selected.entry, budget)?;
+            if profile.execution_digest(&selected.entry.alias, budget)? != selected.execution_digest
+            {
+                return Err(TreeError::ExecutionIdentity);
+            }
+            let package = checked.package();
+            let valid = match &selected.shape {
+                ShapeSelection::Form { index } => usize::try_from(*index)
+                    .ok()
+                    .and_then(|i| package.forms.get(i))
+                    .is_some_and(|f| {
+                        f.category == selected.entry.category
+                            && same_kind(node, &f.kind, registry)
+                            && f.fields.len() == node.fields.len()
+                    }),
+                ShapeSelection::Leaf { index } => usize::try_from(*index)
+                    .ok()
+                    .and_then(|i| package.leaves.get(i))
+                    .is_some_and(|l| {
+                        l.category == selected.entry.category
+                            && same_kind(node, &l.kind, registry)
+                            && node.fields.is_empty()
+                    }),
+                ShapeSelection::Builtin { read } => {
+                    matches!(package.read(*read)?,ReadSpec::Builtin{kind,..} if same_kind(node,kind,registry)&&node.fields.is_empty())
+                }
+                ShapeSelection::List { read, cons } => {
+                    matches!(package.read(*read)?,ReadSpec::ListOf{cons:c,nil,..} if same_kind(node,if *cons{c}else{nil},registry)&&node.fields.len()==if *cons{2}else{0})
+                }
+                ShapeSelection::Dynamic {
+                    provider, shape, ..
+                } => {
+                    let registered = profile.head_provider(
+                        &selected.entry.alias,
+                        &selected.entry.category,
+                        budget,
+                    )?;
+                    budget.charge(
+                        Resource::Work,
+                        (provider.shape.schema.package.len()
+                            + provider.shape.name.len()
+                            + provider.child_context.schema.package.len()
+                            + provider.child_context.name.len()) as u64
+                            + 66,
+                    )?;
+                    if registered != Some(provider) {
+                        return Err(TreeError::UnvalidatedDynamic);
+                    }
+                    profile.provider(&provider.shape, budget)?;
+                    profile.provider(&provider.child_context, budget)?;
+                    checked.validate_head_shape(shape, budget)?;
+                    same_kind(node, &shape.kind, registry)
+                        && node.fields.len() == shape.fields.len()
+                }
+                ShapeSelection::Recovery => {
+                    let entries = &recovery.ok_or(TreeError::Recovery)?.entries;
+                    budget.charge(Resource::Work, entries.len() as u64 + 1)?;
+                    let entry = entries
+                        .iter()
+                        .find(|r| r.node == selected.node)
+                        .ok_or(TreeError::Recovery)?;
+                    if node.schema.package != "nepl3.engine"
+                        || node.schema.revision != 1
+                        || !node.fields.is_empty()
+                    {
+                        return Err(TreeError::Recovery);
+                    }
+                    match &entry.kind {
+                        RecoveryKind::Missing { expected, anchor } => {
+                            profile.validate_entry(expected, budget)?;
+                            node.kind == "RecoveryMissing"
+                                && expected == &selected.entry
+                                && node.token.is_none()
+                                && node.head.is_none()
+                                && node.cover.as_ref() == Some(anchor)
+                                && anchor.start() == anchor.end()
+                        }
+                        RecoveryKind::Unparsed { span, .. } => {
+                            node.kind == "RecoveryUnparsed"
+                                && node.cover.as_ref() == Some(span)
+                                && match node.token {
+                                    Some(_) => {
+                                        let token = token(bundle, node)?;
+                                        node.head.as_ref() == Some(&token.head)
+                                            && span.contains(&token.head)
+                                    }
+                                    None => node.head.is_none(),
+                                }
+                        }
+                        RecoveryKind::Unexpected { token } => {
+                            let reference = *token;
+                            let token = usize::try_from(token.0)
+                                .ok()
+                                .and_then(|i| bundle.tokens.get(i))
+                                .ok_or(TreeError::Recovery)?;
+                            node.kind == "RecoveryUnexpected"
+                                && node.token == Some(reference)
+                                && node.head.as_ref() == Some(&token.head)
+                                && node.cover.as_ref() == Some(&token.head)
+                        }
+                    }
+                }
+            };
+            if !valid {
+                return Err(TreeError::Selection);
+            }
+            static_fields(bundle, context, &contexts, selected, profile, budget)?;
+            if !matches!(selected.shape, ShapeSelection::Recovery) && node.token.is_none() {
+                return Err(TreeError::Selection);
+            }
+        }
+        if let Some(recovery) = recovery {
+            for (i, entry) in recovery.entries.iter().enumerate() {
+                budget.charge(Resource::Work, (context.raw.nodes.len() + i) as u64 + 1)?;
+                if recovery.entries[..i]
+                    .iter()
+                    .any(|prior| prior.node == entry.node)
+                {
+                    return Err(TreeError::Duplicate);
+                }
+                if !context
+                    .raw
+                    .nodes
+                    .iter()
+                    .any(|v| v.node == entry.node && matches!(v.shape, ShapeSelection::Recovery))
+                {
+                    return Err(TreeError::Recovery);
+                }
+            }
+        }
+    }
+    Ok(())
 }

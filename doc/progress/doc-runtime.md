@@ -516,6 +516,15 @@ Clippy、repository check、fmt、diff検査は成功した。
 このproofは参照・source geometryの構造保証であり、別操作のadmission、選択context、domain意味の保証を追加しない。
 parserのCompletedParseとDoc hostへの接続は未実装であり、第03章の通常予算への適合も残件である。
 
+engineにはOwnedValidatedParseTreeを追加した。構文proof、選択context、回復情報を所有し、
+検証に使用したProfileを不変借用する。借用APIと同じ選択検証を使用し、構造・選択の検証失敗時には
+元のParseTreeを返す。追加試験は正常入力と回復入力について検証費用の一致、配列の保持、
+不正root・context欠落・重複の拒否、構造検証と選択検証の資源停止を確認する。
+この段階ではparserの完了経路とDoc hostへ接続していないため、処理費用は従来どおりである。
+engineはnative・WASI各71試験に成功し、Profile不一致と取消・再試行を補強した追加試験も両targetで成功した。
+独立レビューはnative parse全25試験と補強後の追加1試験を実行し、指摘修正後の残件はなかった。
+Clippy、repository check、fmt、diff検査は成功した。正式受入と生成物の更新はこの段階に含めない。
+
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
