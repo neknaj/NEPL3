@@ -444,6 +444,17 @@ WASIが77,479,222である。既存export試験7件、Clippy、repository check�
 正式Markdown集合生成は第20章を通過し、第17章の旧構文で停止した。生成物の更新と、
 他章の通常予算への適合、旧local APIの撤去は継続する。
 
+第17章の正本を独立Sentence構文へ移行した。本文・Ruby・表のセル・文境界を保持し、外部リンク5件を
+Sentence、相対リンク1件をDocの所有境界へ接続した。正式reader/lowerとMarkdown解析によって、
+7節・27個の節内段落・3個のリスト項目内段落、2表の11データ行・30セル、InlineCode21件、
+リンクの順序とリスト項目への所属を検査する。通常予算のlowerは58,268,646 Workで成功した。
+projectionは通常Work100Mで停止し、同試験を有効のまま維持する。既存の文書集合予算による明示試験は
+native/WASI各1件と独立native1件が成功し、projectionのWorkは両targetとも199,142,087だった。
+独立レビューは引用値・Ruby・文境界とリンクの所有を確認し、通常予算の停止も再現した。
+累積AllocationUnitsはnativeが149,510,418、WASIが108,132,202である。Clippy、repository check、
+fmt、diff検査も成功した。正式Markdown集合生成は第17章を通過し、第11章の旧構文で停止した。
+生成物の更新、通常ページ予算への適合、文書集合全体の検証は継続する。
+
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

@@ -3,6 +3,8 @@ use super::*;
 mod editor_chapter;
 #[path = "html_chapter.rs"]
 mod html_chapter;
+#[path = "math_html_chapter.rs"]
+mod math_html_chapter;
 #[path = "model_invariants.rs"]
 mod model_invariants;
 #[path = "namespace_projection.rs"]
