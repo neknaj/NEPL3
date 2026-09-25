@@ -305,6 +305,12 @@ Clippy、thumb向けcheck、repository checkも成功した。
 第13章の投影は308,211,465 Work、164,738,513 AllocationUnits、native debugで約8.62秒となった。
 Workは28,200,092減少し、一時的な整数キーの保持によりAllocationUnitsは1,766,016増加した。
 通常Work100Mへの適合は継続課題である。
+さらに、不変借用した同一SnapshotIdの比較を1 Workで確定する。別storageのidentityは
+完全比較し、addressは交換順序・内容digestへ使用しない。停止・取消・異なるrevisionと
+別storageの同値をunit試験で確認した。wire全86試験、追加unitのWASI実行が成功し、
+独立レビューはunitと共有形式の計11試験を実行した。
+第13章の投影は300,237,833 Work、164,738,513 AllocationUnits、native debugで約8.88秒となった。
+Workは7,973,632減少した。単回測定の実時間は改善しておらず、通常Work100Mへの適合も未達である。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
