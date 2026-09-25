@@ -336,6 +336,14 @@ wire全88試験、WASIのpool試験3件と共有形式10件、Clippy、thumb向�
 第13章の投影は256,474,813 Work、159,712,398 AllocationUnits、native debug単回で約6.53秒となった。
 Workは29,572,086減少し、集約用索引によりAllocationUnitsは403,954増加した。
 通常Work100Mへの適合は未達であり、native検証・変換・digestの費用を継続して削減する。
+Doc encodingでは、直前の文書全体検証の結果とregistryを非公開EncodingInputへ保持し、
+owner表の生成へ渡す。owner・各closureの再検証を除き、最深出現位置・source・environmentの
+検査結果を同じ操作・Budget・admission内で再利用する。外部入力とFoundation codecの検査は維持する。
+不正なowner environment・guest root・置換ownerをportable入口からも拒否する試験を追加した。
+Doc core全48試験がnative/WASIで成功し、独立レビューはforeign・portable・prepareの22試験を実行した。
+hostのdoc_prepare24試験、Clippy、thumb向けcheck、repository checkも成功した。
+第13章の投影は236,514,055 Work、156,120,521 AllocationUnits、native debug単回で約6.51秒となった。
+encoding単独は80,153,878 Workである。投影全体の通常Work100Mへの適合は引き続き未達である。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

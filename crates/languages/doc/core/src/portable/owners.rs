@@ -191,11 +191,15 @@ pub(super) fn embed_value<C: FoundationValueCodec>(
 }
 
 pub(super) fn put<C: FoundationValueCodec>(
-    input: &DocValue,
-    r: &SchemaRegistry,
+    checked: &super::EncodingInput<'_, '_>,
     c: &mut C,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
+    // Constructed only by encode_with_structure in this operation, with the
+    // same budget/admission and immutable document/registry. Owner closure,
+    // environment, maximum occurrence depth and source checks already ran.
+    let input = &checked.structure.document().value;
+    let r = checked.registry;
     let s = schema(r)?;
     let mut closures = storage(input.embeds.len(), b)?;
     let mut references = storage(input.embeds.len(), b)?;
@@ -215,9 +219,6 @@ pub(super) fn put<C: FoundationValueCodec>(
     let mut at = 0;
     while at < closures.len() {
         let owner = &closures[at].1.provenance;
-        let checked = owner
-            .validate(r, b, c.source_admission())
-            .map_err(StructureError::from)?;
         let value = owner_value(owner, s, c, b)?;
         let digest = c
             .canonical_value_digest(OWNER_DOMAIN, &value, b)
@@ -229,9 +230,6 @@ pub(super) fn put<C: FoundationValueCodec>(
             if owner_key(&closure.provenance) != key {
                 break;
             }
-            checked
-                .validate_closure(closure, b, c.source_admission())
-                .map_err(StructureError::from)?;
             references[index] = Some(digest);
             at += 1;
         }

@@ -153,6 +153,11 @@ pub fn to_value<C: FoundationValueCodec>(
 // The caller must validate the generated NDF at its output boundary: either
 // DocumentSyntax in to_value, or the enclosing PageSet in pages::set_to_value.
 // This helper retains all native structure and foundation codec validation.
+struct EncodingInput<'d, 'r> {
+    structure: crate::check::ValidatedDocumentSyntax<'d>,
+    registry: &'r SchemaRegistry,
+}
+
 fn encode_with_structure<'a, C: FoundationValueCodec>(
     document: &'a DocumentSyntax,
     registry: &SchemaRegistry,
@@ -160,6 +165,10 @@ fn encode_with_structure<'a, C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<(NdfValue, crate::check::ValidatedDocumentSyntax<'a>), PortableError<C::Error>> {
     let structure = document.validate_structure(registry, b, c.source_admission())?;
+    let input = EncodingInput {
+        structure,
+        registry,
+    };
     let s = schema(registry)?;
     let sources = c.encode_sources(&document.sources, b).map_err(boundary)?;
     let mut store = SourceStore::default();
@@ -169,7 +178,7 @@ fn encode_with_structure<'a, C: FoundationValueCodec>(
             .map_err(StructureError::from)?;
     }
     let mut scoped = c.scoped_with_mappings(&store, &document.source_maps);
-    let value = owners::put(&document.value, registry, &mut scoped, b)?;
+    let value = owners::put(&input, &mut scoped, b)?;
     let origins = scoped
         .encode_origins(&document.origins, b)
         .map_err(boundary)?;
@@ -181,7 +190,7 @@ fn encode_with_structure<'a, C: FoundationValueCodec>(
         [value, sources, origins, views, maps],
         b,
     )?;
-    Ok((output, structure))
+    Ok((output, input.structure))
 }
 pub fn from_value<C: FoundationValueCodec>(
     input: &NdfValue,

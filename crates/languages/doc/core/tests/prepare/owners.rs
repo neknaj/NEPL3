@@ -114,6 +114,17 @@ fn structure_reuses_only_identical_owner_tables_and_checks_each_guest() -> Resul
             run(&bad, &mut b()),
             Err(StructureError::Syntax(_))
         ));
+        // Encoding consumes the proof from its own native validation. The
+        // private owner writer must never make these invalid inputs encodable.
+        let sources = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&r, &sources, &mut admission).map_err(err)?;
+        assert!(matches!(
+            portable::to_value(&bad, &r, &mut codec, &mut b()),
+            Err(portable::PortableError::Structure(StructureError::Syntax(
+                _
+            )))
+        ));
     }
     // A replacement owner cannot inherit the preceding proof.
     let mut bad = shared.clone();
@@ -128,6 +139,15 @@ fn structure_reuses_only_identical_owner_tables_and_checks_each_guest() -> Resul
     assert!(matches!(
         run(&bad, &mut b()),
         Err(StructureError::Syntax(SyntaxError::Origin(_)))
+    ));
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &sources, &mut admission).map_err(err)?;
+    assert!(matches!(
+        portable::to_value(&bad, &r, &mut codec, &mut b()),
+        Err(portable::PortableError::Structure(StructureError::Syntax(
+            SyntaxError::Origin(_)
+        )))
     ));
     let usage = shared_budget.usage();
     for (reason, amount) in [
