@@ -21,6 +21,8 @@ fn identity(a: &SnapshotId, z: &SnapshotId, b: &mut Budget) -> Result<Ordering, 
     Ok(a.cmp(z))
 }
 
+mod positions;
+pub(super) use positions::SourcePositions;
 #[cfg(test)]
 mod tests;
 
@@ -200,10 +202,7 @@ impl<T> Pool<'_, T> {
         Err(WireError::InvalidType)
     }
 }
-impl Pool<'_, SourceSnapshot> {
-    fn position(&self, wanted: &SnapshotId, b: &mut Budget) -> Result<usize, WireError> {
-        self.find(|source, b| identity(source.identity(), wanted, b), b)
-    }
+impl SourcePositions<'_, '_> {
     pub fn mapping<'m>(
         &self,
         mapping: &'m Mapping,

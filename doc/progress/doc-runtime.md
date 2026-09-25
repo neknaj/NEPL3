@@ -344,6 +344,16 @@ Doc core全48試験がnative/WASIで成功し、独立レビューはforeign・p
 hostのdoc_prepare24試験、Clippy、thumb向けcheck、repository checkも成功した。
 第13章の投影は236,514,055 Work、156,120,521 AllocationUnits、native debug単回で約6.51秒となった。
 encoding単独は80,153,878 Workである。投影全体の通常Work100Mへの適合は引き続き未達である。
+mapping端点のsource解決には、digest・revision・source名の順に完全identityを照合する
+副索引を追加した。固定長fieldから検索し、長いsource名の反復比較を減らす。
+元のsource pool位置・交換形式・memberごとの権限検査を維持し、同digestの別sourceと
+別revisionも完全照合する。索引構築・検索・確保は同じBudgetへ課金する。
+第13章の投影は230,025,005 Work、156,122,689 AllocationUnits、native debug単回で約6.36秒となった。
+直前の実装から6,489,050 Workを削減し、索引によりAllocationUnitsは2,168増加した。
+同storageのpointer索引も試験したが、同原稿ではWorkが増加したため撤回した。
+採用した内容索引ではwire全90試験がnative/WASIで成功し、独立レビューでもpool5件と
+共有形式10件が成功した。Clippy、thumb向けcheck、repository checkも成功した。
+通常Work100Mへの適合と全文書生成は未完了であり、この局所改善を正式受入へ昇格させない。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

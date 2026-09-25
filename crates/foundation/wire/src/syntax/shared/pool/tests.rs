@@ -2,6 +2,177 @@ use super::*;
 use nepl3_core::{budget::Limits, source::SourceId};
 
 #[test]
+fn source_position_index_matches_complete_independent_identities() -> Result<(), WireError> {
+    let limits = Limits {
+        source_bytes: 1024,
+        work: 100_000,
+        allocation_units: 100_000,
+        ..Limits::default()
+    };
+    let mut sources = Vec::new();
+    // Equal content digests still require both source name and revision.
+    for (name, revision, text) in [
+        ("a", 1, "same"),
+        ("a", 2, "same"),
+        ("b", 1, "same"),
+        ("c", 1, "other"),
+    ] {
+        sources.push(SourceSnapshot::new(
+            SourceId(name.into()),
+            revision,
+            "memory:test".into(),
+            text.as_bytes().to_vec(),
+            &mut Budget::new(limits),
+        )?);
+    }
+    let pool = Pool {
+        entries: sources.iter().map(|s| (s, Digest::of(b"test"))).collect(),
+        values: Vec::new(),
+    };
+    let mut measured = Budget::new(limits);
+    let positions = SourcePositions::new(&pool, &mut measured)?;
+    for (expected, source) in sources.iter().enumerate() {
+        let independent = source.identity().clone();
+        assert_eq!(
+            positions.position(&independent, &mut Budget::new(limits))?,
+            expected
+        );
+        for changed in [
+            SnapshotId {
+                source: SourceId("missing".into()),
+                ..independent.clone()
+            },
+            SnapshotId {
+                revision: 99,
+                ..independent.clone()
+            },
+            SnapshotId {
+                digest: Digest::of(b"missing"),
+                ..independent
+            },
+        ] {
+            assert_eq!(
+                positions.position(&changed, &mut Budget::new(limits)),
+                Err(WireError::InvalidType)
+            );
+        }
+    }
+    let exact = Limits {
+        work: measured.usage().work,
+        allocation_units: measured.usage().allocation_units,
+        ..limits
+    };
+    let _ = SourcePositions::new(&pool, &mut Budget::new(exact))?;
+    for (bounded, reason) in [
+        (
+            Limits {
+                work: exact.work - 1,
+                ..exact
+            },
+            StopReason::WorkLimit,
+        ),
+        (
+            Limits {
+                allocation_units: exact.allocation_units - 1,
+                ..exact
+            },
+            StopReason::AllocationLimit,
+        ),
+    ] {
+        let mut budget = Budget::new(bounded);
+        assert!(
+            matches!(SourcePositions::new(&pool, &mut budget), Err(WireError::Stopped(actual)) if actual == reason)
+        );
+        assert_eq!(budget.poll(), Err(reason));
+    }
+    let wanted = sources[2].identity().clone();
+    let mut measured = Budget::new(limits);
+    assert_eq!(positions.position(&wanted, &mut measured)?, 2);
+    assert_eq!(
+        positions.position(
+            &wanted,
+            &mut Budget::new(Limits {
+                work: measured.usage().work,
+                ..limits
+            })
+        )?,
+        2
+    );
+    let mut short = Budget::new(Limits {
+        work: measured.usage().work - 1,
+        ..limits
+    });
+    assert_eq!(
+        positions.position(&wanted, &mut short),
+        Err(WireError::Stopped(StopReason::WorkLimit))
+    );
+    let mut cancelled = Budget::new(limits);
+    cancelled.cancel();
+    assert_eq!(
+        positions.position(&wanted, &mut cancelled),
+        Err(WireError::Stopped(StopReason::Cancelled))
+    );
+    let empty = Pool {
+        entries: Vec::new(),
+        values: Vec::new(),
+    };
+    assert!(matches!(
+        SourcePositions::new(&empty, &mut cancelled),
+        Err(WireError::Stopped(StopReason::Cancelled))
+    ));
+    Ok(())
+}
+
+#[test]
+fn source_position_index_bounds_long_name_comparisons() -> Result<(), WireError> {
+    let limits = Limits {
+        source_bytes: 1_000_000,
+        work: 100_000_000,
+        allocation_units: 100_000_000,
+        ..Limits::default()
+    };
+    let mut prior = None;
+    for count in [128_usize, 256, 512] {
+        let mut sources = Vec::new();
+        for number in 0..count {
+            sources.push(SourceSnapshot::new(
+                SourceId(alloc::format!("{}:{number:04}", "prefix".repeat(256))),
+                1,
+                "memory:test".into(),
+                alloc::format!("text:{number}").into_bytes(),
+                &mut Budget::new(limits),
+            )?);
+        }
+        let pool = Pool {
+            entries: sources.iter().map(|s| (s, Digest::of(b"test"))).collect(),
+            values: Vec::new(),
+        };
+        let mut setup = Budget::new(limits);
+        let positions = SourcePositions::new(&pool, &mut setup)?;
+        let mut lookup = Budget::new(limits);
+        for (expected, source) in sources.iter().enumerate().rev() {
+            // Decoded identities have independent storage and use the same index.
+            assert_eq!(
+                positions.position(&source.identity().clone(), &mut lookup)?,
+                expected
+            );
+        }
+        // At most log2(count)+1 fixed-size comparisons and one full name
+        // comparison per hit. Long common prefixes are not revisited per level.
+        let per_hit = 33 * (usize::BITS - count.leading_zeros()) as u64
+            + sources[0].identity().source.0.len() as u64
+            + 1;
+        assert!(lookup.usage().work <= count as u64 * per_hit);
+        if let Some((setup_work, lookup_work)) = prior {
+            assert!(setup.usage().work < setup_work * 3);
+            assert!(lookup.usage().work < lookup_work * 3);
+        }
+        prior = Some((setup.usage().work, lookup.usage().work));
+    }
+    Ok(())
+}
+
+#[test]
 fn storage_deduplication_preserves_independent_values_and_exact_limits() -> Result<(), WireError> {
     let make = || {
         SourceSnapshot::new(
