@@ -7,6 +7,48 @@ use nepl3_core::{
 use nepl3_wire::{WireError, decode, encode, source::*};
 
 type TestResult = Result<(), Box<dyn std::error::Error>>;
+
+#[test]
+fn span_decode_stops_when_source_resolution_has_no_remaining_work() -> TestResult {
+    use nepl3_core::schema::{TypeDescriptor, TypeRef};
+    let (schema, registry) = setup()?;
+    let source = snapshot("declared", "memory:declared", "文")?;
+    let span = source.span(0, 3).map_err(|e| format!("{e:?}"))?;
+    let bytes =
+        encode_span(&span, &schema, &registry, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    let mut store = SourceStore::default();
+    store.insert(source).map_err(|e| format!("{e:?}"))?;
+    let mut decoded = budget();
+    nepl3_wire::decode_checked(
+        &bytes,
+        &TypeDescriptor::Named(TypeRef {
+            package: "nepl3.foundation".into(),
+            revision: 1,
+            name: "Span".into(),
+        }),
+        &registry,
+        &mut decoded,
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    // Structural decoding can finish. Resolving its SourceRef must consume
+    // additional Work; removing the metered lookup makes this negative pass.
+    let mut limited = Budget::new(Limits {
+        work: decoded.usage().work,
+        ..budget().limits()
+    });
+    assert!(matches!(
+        decode_span(&bytes, &schema, &registry, &store, &mut limited),
+        Err(WireError::Stopped(StopReason::WorkLimit))
+    ));
+    assert_eq!(limited.poll(), Err(StopReason::WorkLimit));
+    assert_eq!(store.snapshots().len(), 1);
+    assert_eq!(
+        decode_span(&bytes, &schema, &registry, &store, &mut budget())
+            .map_err(|e| format!("{e:?}"))?,
+        span
+    );
+    Ok(())
+}
 fn budget() -> Budget {
     Budget::new(Limits {
         source_bytes: 1_000_000,
