@@ -181,6 +181,16 @@ core・Doc・Sentence・suiteの全feature検査はnative・WASI各343件が成�
 追加した意味拒否・停止分類の試験も両targetで成功し、clippy、repository、fmt・diff検査と
 thumbv6m向けcompileが成功した。正式runtime受入と生成物の整合確認は未完了である。
 
+shared syntaxのsource参照解決は、操作内の不変snapshot storageを索引化し、同一storageの
+参照を元のpool位置へ直接対応させる。独立したidentityは完全照合へ進む。索引の構築と
+検索はaddress配置から独立したWorkを課金し、portable値・順序・宣言集合を保持する。
+第03章の内容検査が成功し、投影は286,953,341から245,494,007 Work、単独符号化は
+102,601,505から61,142,171 Workへ減少した。削減量は41,459,334 Workであり、digestの
+111,513,551 Workは不変だった。通常page予算への適合は継続課題である。
+wire全体はnative・WASI各97件成功し、非2冪件数・storage配置の補強後はpool各7件も成功した。
+独立レビューはpoolとsharedの19件、補強後の追加1件を実行した。clippy、repository、
+fmt・diff検査とthumbv6m向けcompileも成功した。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

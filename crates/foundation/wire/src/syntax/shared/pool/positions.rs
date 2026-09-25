@@ -5,6 +5,65 @@ use super::*;
 pub(in crate::syntax::shared) struct SourcePositions<'p, 's> {
     pool: &'p Pool<'s, SourceSnapshot>,
     index: Vec<usize>,
+    // Immutable storage addresses are local lookup keys only. Portable values
+    // and source membership always use the original content-indexed pool.
+    storage: Vec<(usize, usize)>,
+}
+
+fn storage_index(
+    pool: &Pool<'_, SourceSnapshot>,
+    b: &mut Budget,
+) -> Result<Vec<(usize, usize)>, WireError> {
+    let count = pool.entries.len();
+    if count < 2 {
+        return Ok(Vec::new());
+    }
+    let bytes = count
+        .checked_mul(2 * core::mem::size_of::<(usize, usize)>())
+        .filter(|bytes| *bytes <= isize::MAX as usize)
+        .ok_or_else(|| b.stop(StopReason::AllocationLimit))?;
+    b.charge(Resource::AllocationUnits, bytes as u64)?;
+    let mut order = Vec::new();
+    let mut scratch = Vec::new();
+    order
+        .try_reserve_exact(count)
+        .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+    scratch
+        .try_reserve_exact(count)
+        .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+    for (position, (source, _)) in pool.entries.iter().enumerate() {
+        b.charge(Resource::Work, 1)?;
+        order.push((core::ptr::from_ref(source.identity()).addr(), position));
+    }
+    let mut width = 1usize;
+    while width < count {
+        scratch.clear();
+        let mut start = 0usize;
+        while start < count {
+            let middle = start.saturating_add(width).min(count);
+            let end = middle.saturating_add(width).min(count);
+            let (mut left, mut right) = (start, middle);
+            while left < middle || right < end {
+                // Fixed charge per emitted slot makes Usage independent of
+                // allocator addresses, including exhausted merge runs.
+                b.charge(Resource::Work, 2)?;
+                let at = if left < middle && (right == end || order[left].0 <= order[right].0) {
+                    let at = left;
+                    left += 1;
+                    at
+                } else {
+                    let at = right;
+                    right += 1;
+                    at
+                };
+                scratch.push(order[at]);
+            }
+            start = end;
+        }
+        core::mem::swap(&mut order, &mut scratch);
+        width = width.saturating_mul(2);
+    }
+    Ok(order)
 }
 
 fn compare(a: &SnapshotId, z: &SnapshotId, b: &mut Budget) -> Result<Ordering, WireError> {
@@ -96,11 +155,33 @@ impl<'p, 's> SourcePositions<'p, 's> {
             index.swap(0, end);
             sift(&mut index[..end], pool, 0, b)?;
         }
-        Ok(Self { pool, index })
+        let storage = storage_index(pool, b)?;
+        Ok(Self {
+            pool,
+            index,
+            storage,
+        })
     }
 
     pub(super) fn position(&self, wanted: &SnapshotId, b: &mut Budget) -> Result<usize, WireError> {
         b.poll()?;
+        if !self.storage.is_empty() {
+            // Precharge the search bound and final equality test. Actual
+            // pointer order must affect neither Work nor stop boundaries.
+            b.charge(
+                Resource::Work,
+                (usize::BITS - self.storage.len().leading_zeros()) as u64 + 1,
+            )?;
+            let address = core::ptr::from_ref(wanted).addr();
+            let at = self
+                .storage
+                .partition_point(|(candidate, _)| *candidate < address);
+            if let Some(&(candidate, position)) = self.storage.get(at)
+                && candidate == address
+            {
+                return Ok(position);
+            }
+        }
         let (mut low, mut high) = (0, self.index.len());
         while low < high {
             let mid = low + (high - low) / 2;

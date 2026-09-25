@@ -2,6 +2,104 @@ use super::*;
 use nepl3_core::{budget::Limits, source::SourceId};
 
 #[test]
+fn repeated_source_storage_lookup_has_fixed_logarithmic_cost() -> Result<(), WireError> {
+    let limits = Limits {
+        source_bytes: 1_000_000,
+        work: 10_000_000,
+        allocation_units: 10_000_000,
+        ..Limits::default()
+    };
+    for count in [3usize, 16, 17, 128, 129, 512, 513] {
+        let mut sources = Vec::new();
+        for index in 0..count {
+            sources.push(SourceSnapshot::new(
+                SourceId(alloc::format!("source-{index:04}")),
+                1,
+                "memory:test".into(),
+                b"same".to_vec(),
+                &mut Budget::new(limits),
+            )?);
+        }
+        // Pool order is deliberately unrelated to address order. Every member
+        // has the same content digest, so identity fallback must also use names.
+        let pool = Pool {
+            entries: sources
+                .iter()
+                .rev()
+                .map(|source| (source, Digest::of(b"entry")))
+                .collect(),
+            values: Vec::new(),
+        };
+        let mut construction = Budget::new(limits);
+        let positions = SourcePositions::new(&pool, &mut construction)?;
+        // Allocate in the opposite logical order while preserving pool order.
+        // Search metadata must not change logical construction Usage.
+        let mut relocated = Vec::new();
+        for source in sources.iter().rev() {
+            relocated.push(SourceSnapshot::new(
+                source.identity().source.clone(),
+                source.identity().revision,
+                source.uri().into(),
+                source.text().as_bytes().to_vec(),
+                &mut Budget::new(limits),
+            )?);
+        }
+        let other_pool = Pool {
+            entries: relocated
+                .iter()
+                .map(|source| (source, Digest::of(b"entry")))
+                .collect(),
+            values: Vec::new(),
+        };
+        let mut other_construction = Budget::new(limits);
+        let other_positions = SourcePositions::new(&other_pool, &mut other_construction)?;
+        assert_eq!(construction.usage(), other_construction.usage());
+        let expected_work = count.ilog2() as u64 + 2;
+        for (index, source) in sources.iter().enumerate() {
+            let mut measured = Budget::new(limits);
+            assert_eq!(
+                positions.position(source.identity(), &mut measured)?,
+                count - index - 1
+            );
+            assert_eq!(measured.usage().work, expected_work);
+            let at = count - index - 1;
+            assert!(!core::ptr::eq(source.identity(), relocated[at].identity()));
+            let mut other_lookup = Budget::new(limits);
+            assert_eq!(
+                other_positions.position(relocated[at].identity(), &mut other_lookup)?,
+                at
+            );
+            assert_eq!(measured.usage(), other_lookup.usage());
+            let independent = source.identity().clone();
+            assert_eq!(
+                positions.position(&independent, &mut Budget::new(limits))?,
+                count - index - 1
+            );
+            assert_eq!(
+                positions.position(
+                    source.identity(),
+                    &mut Budget::new(Limits {
+                        work: expected_work,
+                        ..limits
+                    })
+                )?,
+                count - index - 1
+            );
+            let mut short = Budget::new(Limits {
+                work: expected_work - 1,
+                ..limits
+            });
+            assert_eq!(
+                positions.position(source.identity(), &mut short),
+                Err(WireError::Stopped(StopReason::WorkLimit))
+            );
+            assert_eq!(short.poll(), Err(StopReason::WorkLimit));
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn source_position_lookup_reuses_shared_identity_and_preserves_stop() -> Result<(), WireError> {
     let limits = Limits {
         source_bytes: 1024,
