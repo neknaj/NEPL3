@@ -43,6 +43,15 @@ portable変換、digest計算、namespaceとリンクの解決を含む。
 `measure_grammar_chapter_under_corpus_limits` の明示試験であり、
 通常試験の資源上限と内容検査を維持している。
 
+Sentence literalのdecoderは提示されたViewのdigestを検証し、そのViewを直接複製して
+返す。この契約を明示し、lower側に残っていたView全体の再比較を撤去した。
+payloadから復元したheadとtokenの照合、schema・provenance・出力構造の検証は維持する。
+構造的に妥当な空Viewへの置換をlower入口から拒否する負例を追加した。
+Sentence coreのnative・WASI各57試験と、独立実行したliteral・lowerの19試験が成功した。
+第03章のDiscoveryは132,779,660から127,522,196 Work、投影全体は379,349,041から
+374,091,577 Workへ減少し、他のUsage項目と内容検査は維持された。
+並行検査を含む実行のため実時間の改善率は評価しない。通常Work上限への適合は未達である。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

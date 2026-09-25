@@ -97,44 +97,16 @@ pub fn sentence<C: FoundationValueCodec>(
         let [view] = result.views.as_slice() else {
             return Err(Error::TokenMismatch(id));
         };
-        // Budget the comparison without cloning either graph. Its bounded
-        // strings and edges are also checked by the payload and token codecs.
-        for value in [&view.view, &token.views] {
-            b.charge(Resource::Work, value.roots.len() as u64 + 1)?;
-            for element in &value.elements {
-                b.charge(
-                    Resource::Work,
-                    (element.kind.schema.package.len() + element.span.snapshot_ref().source.0.len())
-                        as u64
-                        + 68,
-                )?;
-                for field in &element.fields {
-                    b.charge(
-                        Resource::Work,
-                        (field.name.len() + field.children.len()) as u64 + 1,
-                    )?;
-                }
-                for role in &element.roles {
-                    b.charge(
-                        Resource::Work,
-                        (role.schema.package.len() + role.name.len()) as u64 + 34,
-                    )?;
-                }
-                for relation in &element.relations {
-                    b.charge(
-                        Resource::Work,
-                        (relation.schema.package.len() + relation.kind.len()) as u64 + 34,
-                    )?;
-                }
-            }
-        }
+        // from_value validates the supplied presentation's canonical digest,
+        // then clones that exact immutable presentation into the result. The
+        // decoded head is independent input and still needs owner matching.
         b.charge(
             Resource::Work,
             (view.head.snapshot_ref().source.0.len() + token.head.snapshot_ref().source.0.len())
                 as u64
                 + 40,
         )?;
-        if view.head != token.head || view.view != token.views {
+        if view.head != token.head {
             return Err(Error::TokenMismatch(id));
         }
         b.poll()?;

@@ -134,6 +134,8 @@ pub fn to_value<C: FoundationValueCodec>(
 /// The owner and complete token presentation are explicit inputs. The scoped
 /// codec validates presentation and its canonical digest before reconstruction.
 /// The consuming lower operation also checks the enclosing token's head.
+/// On success the single returned view contains an exact owned clone of
+/// `presentation`; its head is decoded from the payload and validated locally.
 pub fn from_value<C: FoundationValueCodec>(
     input: &NdfValue,
     owner: &SourceSnapshot,

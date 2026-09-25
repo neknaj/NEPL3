@@ -330,6 +330,16 @@ fn literal_consumer_matches_owner_token_and_returns_typed_stops() -> Result<(), 
         );
         assert_eq!(budget.current_depth(), 0);
     }
+    // A structurally valid replacement presentation still has to match the
+    // payload digest at the literal decoder boundary used by this entry.
+    let mut changed_view = bundle.clone();
+    changed_view.tokens[0].views.roots.clear();
+    changed_view.tokens[0].views.elements.clear();
+    let changed = changed_view.validate(&r, &mut b()).map_err(err)?;
+    assert_eq!(
+        lower::literal::sentence(&changed, &surface, &r, &mut codec, &mut b()).err(),
+        Some(lower::literal::Error::TokenMismatch(NodeRef(0)))
+    );
     let mut wrong = surface.clone();
     wrong.revision += 1;
     assert!(matches!(
