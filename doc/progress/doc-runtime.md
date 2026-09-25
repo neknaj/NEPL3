@@ -132,9 +132,22 @@ Foundation codecの`encode_validated_syntax_set`は、このproofを既存の集
 渡す。environment digestの再計算と生成NDFのschema検査は維持する。関連試験では、
 通常経路との出力一致、受信操作のWork・Allocation・Source・Depth上限と1不足、
 異なるregistry、未接続guestのsource受理、偽造environment digestの拒否を確認した。
-Doc側で検証済みguestを保持する接続は継続作業であり、文書全体の費用削減は未測定である。
+Doc側で検証済みguestを保持する接続と測定結果を以下に記す。
 core・wire・engineのnative・WASI各333件、独立レビューのcore syntax・wire syntax
 計57件が成功した。clippyとthumbv6m向けcompileも成功した。
+
+Docの符号化入力は、構造検証中に得たguest proofを文書順に保持し、上記codecへ渡す。
+閉包のowner・environment・guest検証と、共有embedの最深出現での検証を完了してから
+proofを収集する。文書全体の検証に失敗した場合は収集済みproofも破棄する。
+通常の構造検証入口はproofを保存せず、符号化用Vecの追加確保と課金を必要な経路へ限定した。
+
+第03章の内容検査が成功し、投影は346,355,447から320,694,930 Workへ減少した。
+単独の符号化は128,262,022から102,601,505 Workとなり、削減量はともに25,660,517である。
+parse・lowerとdigestのWorkは維持した。通常のpage予算への適合は継続課題である。
+SyntaxとValueが混在するembedの順序・独立符号化との一致・roundtripを確認し、
+fresh admissionでWork・Allocation・Source・Depthの上限と1不足を検査した。
+Doc coreのnative・WASI各51件、独立レビューのportable・prepare・capture関連32件が
+成功した。clippy、thumbv6m向けcompileも成功した。
 
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、

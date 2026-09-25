@@ -30,7 +30,22 @@ pub struct ValidatedOwnerProvenance<'a> {
     depth: u64,
 }
 
-impl ValidatedOwnerProvenance<'_> {
+impl<'r> ValidatedOwnerProvenance<'r> {
+    /// Validate the complete closure and retain the immutable registry borrow
+    /// with its guest graph proof for subsequent portable encoding.
+    pub fn validate_closure_syntax<'s>(
+        &self,
+        closure: &'s ForeignClosure,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<RegistryValidatedSyntaxBundle<'s, 'r>, SyntaxError> {
+        let validated = self.validate_closure(closure, b, admission)?;
+        Ok(RegistryValidatedSyntaxBundle {
+            syntax: validated.syntax,
+            registry: self.registry,
+        })
+    }
+
     /// Whether this proof borrows the same immutable tables. This comparison
     /// grants no guest, depth or source-admission proof; use `validate_closure`
     /// for those checks in the receiving operation.

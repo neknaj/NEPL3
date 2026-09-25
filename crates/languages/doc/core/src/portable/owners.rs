@@ -254,14 +254,11 @@ pub(super) fn put<C: FoundationValueCodec>(
         }
     }
     // Keep the original embed order, independently of owner grouping above.
-    let mut bundles = storage(closures.len(), b)?;
-    for input in &input.embeds {
-        b.charge(Resource::Work, 1)?;
-        if let DocContent::Syntax { closure } = &input.content {
-            bundles.push(&closure.syntax.bundle);
-        }
-    }
-    let syntax = c.encode_syntax_set(&bundles, b).map_err(boundary)?;
+    // EncodingInput retains exactly the Syntax embeds, in document order,
+    // after the complete structure/environment validation succeeds.
+    let syntax = c
+        .encode_validated_syntax_set(&checked.syntax, b)
+        .map_err(boundary)?;
     let (syntax_sources, syntax_maps, members) = syntax_parts(syntax, c.foundation_schema())?;
     let mut members = members.into_iter();
     let mut embeds = storage(input.embeds.len(), b)?;

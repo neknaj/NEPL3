@@ -98,6 +98,19 @@ impl DocumentSyntax {
         b: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<ValidatedDocumentSyntax<'a>, StructureError> {
+        self.validate_structure_with_syntax(registry, b, admission, |_, _| Ok(()))
+    }
+
+    pub(crate) fn validate_structure_with_syntax<'a: 'r, 'r>(
+        &'a self,
+        registry: &'r SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+        mut guest: impl FnMut(
+            nepl3_core::syntax::RegistryValidatedSyntaxBundle<'a, 'r>,
+            &mut Budget,
+        ) -> Result<(), StructureError>,
+    ) -> Result<ValidatedDocumentSyntax<'a>, StructureError> {
         b.poll()?;
         if !registry.is_finalized() {
             return Err(SyntaxError::from(nepl3_core::schema::SchemaError::Unfinalized).into());
@@ -251,10 +264,11 @@ impl DocumentSyntax {
                         {
                             owner = Some(closure.provenance.validate(registry, b, admission)?);
                         }
-                        owner
+                        let syntax = owner
                             .as_ref()
                             .ok_or(SyntaxError::Reference)?
-                            .validate_closure(closure, b, admission)?;
+                            .validate_closure_syntax(closure, b, admission)?;
+                        guest(syntax, b)?;
                     }
                     DocContent::Value { value } => {
                         if !matches!(embed.kind, EmbedKind::Sentence | EmbedKind::SentenceInline) {

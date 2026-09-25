@@ -256,7 +256,41 @@ fn syntax_tables_preserve_mixed_embed_order_and_independent_identity() -> Result
     let sources = SourceStore::default();
     let mut admission = SourceAdmission::default();
     let mut c = FoundationCodec::new(&r, &sources, &mut admission).map_err(err)?;
-    let mut value = portable::to_value(&d, &r, &mut c, &mut b()).map_err(err)?;
+    let mut measured = b();
+    let mut value = portable::to_value(&d, &r, &mut c, &mut measured).map_err(err)?;
+    // Both syntax proofs must survive the intervening Value slot. Reuse still
+    // obeys the complete receiving operation's limits with fresh admission.
+    for (used, reason) in [
+        (measured.usage().work, StopReason::WorkLimit),
+        (
+            measured.usage().allocation_units,
+            StopReason::AllocationLimit,
+        ),
+        (measured.usage().source_bytes, StopReason::SourceLimit),
+        (measured.usage().depth, StopReason::DepthLimit),
+    ] {
+        for below in [false, true] {
+            let limit = used - u64::from(below);
+            let mut limits = b().limits();
+            match reason {
+                StopReason::WorkLimit => limits.work = limit,
+                StopReason::AllocationLimit => limits.allocation_units = limit,
+                StopReason::SourceLimit => limits.source_bytes = limit,
+                StopReason::DepthLimit => limits.depth = limit,
+                _ => return Err("enumerated resource".into()),
+            }
+            let mut current = Budget::new(limits);
+            let mut fresh = SourceAdmission::default();
+            let mut codec = FoundationCodec::new(&r, &sources, &mut fresh).map_err(err)?;
+            let result = portable::to_value(&d, &r, &mut codec, &mut current);
+            if below {
+                assert!(result.is_err());
+                assert_eq!(current.poll(), Err(reason));
+            } else {
+                assert_eq!(result.map_err(err)?, value);
+            }
+        }
+    }
     let fields = doc_fields(&mut value)?;
     assert_eq!(fields.len(), 6);
     let NdfValue::List(pool) = &fields[4] else {

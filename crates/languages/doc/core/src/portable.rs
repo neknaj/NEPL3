@@ -154,18 +154,35 @@ pub fn to_value<C: FoundationValueCodec>(
 pub(crate) struct EncodingInput<'d, 'r> {
     structure: crate::check::ValidatedDocumentSyntax<'d>,
     registry: &'r SchemaRegistry,
+    syntax: alloc::vec::Vec<nepl3_core::syntax::RegistryValidatedSyntaxBundle<'d, 'r>>,
 }
 
-impl<'d, 'r> EncodingInput<'d, 'r> {
+impl<'d: 'r, 'r> EncodingInput<'d, 'r> {
     pub(crate) fn new(
         document: &'d DocumentSyntax,
         registry: &'r SchemaRegistry,
         b: &mut Budget,
         admission: &mut nepl3_core::source::SourceAdmission,
     ) -> Result<Self, StructureError> {
+        let mut syntax = alloc::vec::Vec::new();
+        let structure =
+            document.validate_structure_with_syntax(registry, b, admission, |proof, b| {
+                b.charge(
+                    nepl3_core::budget::Resource::AllocationUnits,
+                    core::mem::size_of::<nepl3_core::syntax::RegistryValidatedSyntaxBundle<'_, '_>>(
+                    ) as u64,
+                )?;
+                syntax.try_reserve(1).map_err(|_| {
+                    StructureError::Stopped(b.stop(nepl3_core::budget::StopReason::AllocationLimit))
+                })?;
+                syntax.push(proof);
+                Ok(())
+            })?;
+        // Only a complete document validation publishes the collected proofs.
         Ok(Self {
-            structure: document.validate_structure(registry, b, admission)?,
+            structure,
             registry,
+            syntax,
         })
     }
     pub(crate) fn structure(&self) -> &crate::check::ValidatedDocumentSyntax<'d> {
