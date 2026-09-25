@@ -575,6 +575,17 @@ core・engineはnative・WASI各233試験に成功した。独立レビューは
 通常上限ではparse・lowerが成功し、projectionがWorkLimitとなる。canonical生成は第03章を通過し、
 未移行表記を含む第04章でRecoveredを検出して停止した。出力先は作成されず、生成物は更新していない。
 
+第04章のSentence 400件を独立言語への明示wrapperへ移行した。固定revision
+`b3bdd5c141c6aa192066e4d90dd9fffc6b4ffeb6`の正式parserを隔離worktreeで実行し、
+検証済みDoc schemaのSentence constructor・literalのhead Spanに対してSourceStore::applyを使用した。
+foreign syntaxとDoc Inlineを含む入力はこの編集処理で拒否する。本章には該当箇所がなかった。
+独立比較はquoted tokenの一致と、400件のwrapper挿入以外のtoken変更がないことを確認した。
+
+第04章のcorpus試験はparse 119,829,815 Work、lower 90,554,628 Work、projection 430,561,599 Workで成功した。
+14節の順序と親子関係、BindingPlanの12項目、compile拒否条件の6項目、Sentenceの所有、
+Letのrawcode全文、InlineCodeとリンクを検査する。独立レビューもcorpus試験1件に成功した。
+通常100M上限の試験はparseのWorkLimitを確認した。通常予算への適合とcanonical生成は継続課題である。
+
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

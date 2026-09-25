@@ -3,6 +3,8 @@ use super::*;
 mod conformance_chapter;
 #[path = "editor_chapter.rs"]
 mod editor_chapter;
+#[path = "grammar_chapter.rs"]
+mod grammar_chapter;
 #[path = "html_chapter.rs"]
 mod html_chapter;
 #[path = "math_chapter.rs"]
