@@ -48,7 +48,7 @@ impl Adapter<'_, '_> {
             ("Builtin:Text" | "Builtin:Name" | "Builtin:Lang" | "Builtin:Nat", 0) => return Ok(()),
             (name, 0 | 2) if name.starts_with("List:") => return Ok(()),
             ("Form:MathGuest" | "Form:CircuitGuest" | "Form:GrammarGuest" | "Form:DocGuest", 1) => {
-                let Some(FieldValue::Foreign(foreign)) = n.fields.first() else {
+                let Some(FieldValue::Foreign(_)) = n.fields.first() else {
                     return Err(LowerError::Operand { node: id, field: 0 });
                 };
                 if id != self.checked.bundle().root {
@@ -63,9 +63,10 @@ impl Adapter<'_, '_> {
                     "Form:DocGuest" => GuestLanguage::Doc,
                     _ => return Err(LowerError::Unsupported { node: id }),
                 };
-                let closure = ForeignClosure::capture(
-                    foreign,
+                let closure = ForeignClosure::capture_at(
                     self.checked,
+                    id,
+                    0,
                     self.registry,
                     self.b,
                     admission,

@@ -199,12 +199,13 @@ impl<'a> Adapter<'a, '_> {
                     .collect(),
             },
             ("Form:SentenceGuest", 1) => {
-                let Some(FieldValue::Foreign(foreign)) = n.fields.first() else {
+                let Some(FieldValue::Foreign(_)) = n.fields.first() else {
                     return Err(LowerError::Operand { node: id, field: 0 });
                 };
-                let closure = ForeignClosure::capture(
-                    foreign,
+                let closure = ForeignClosure::capture_at(
                     self.checked,
+                    id,
+                    0,
                     self.registry,
                     self.b,
                     admission,

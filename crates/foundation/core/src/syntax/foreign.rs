@@ -92,6 +92,32 @@ impl ForeignClosure {
         if !belongs {
             return Err(SyntaxError::Reference);
         }
+        Self::capture_selected(syntax, owner, registry, b, admission)
+    }
+    /// Capture a foreign field by its position in this checked owner. Selection
+    /// uses bounded lookups; owner provenance and guest validation are preserved.
+    pub fn capture_at(
+        owner: &ValidatedSyntaxBundle<'_>,
+        node: NodeRef,
+        field: usize,
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<Self, SyntaxError> {
+        b.charge(Resource::Work, 1)?;
+        let owner = owner.bundle();
+        let Some(FieldValue::Foreign(syntax)) = owner.node(node)?.fields.get(field) else {
+            return Err(SyntaxError::Reference);
+        };
+        Self::capture_selected(syntax, owner, registry, b, admission)
+    }
+    fn capture_selected(
+        syntax: &ForeignSyntax,
+        owner: &SyntaxBundle,
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<Self, SyntaxError> {
         b.charge(Resource::Work, owner.environments.len() as u64 + 1)?;
         let environment = owner
             .environments
