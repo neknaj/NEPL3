@@ -39,11 +39,23 @@ impl<'s> RegistryValidatedSyntaxBundle<'s, '_> {
         budget: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<(), SyntaxError> {
+        self.checked_for(registry, budget, admission).map(|_| ())
+    }
+
+    /// Obtain the structural proof for this receiving operation after applying
+    /// its registry, depth and source admission. A changed registry validates
+    /// afresh and returns that validation's own relative depth.
+    pub fn checked_for(
+        &self,
+        registry: &SchemaRegistry,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<ValidatedSyntaxBundle<'s>, SyntaxError> {
         budget.charge(Resource::Work, 1)?;
         if !core::ptr::eq(registry, self.registry) {
-            self.bundle()
-                .validate_with_sources(registry, budget, admission)?;
-            return Ok(());
+            return self
+                .bundle()
+                .validate_with_sources(registry, budget, admission);
         }
         budget.observe_depth(self.syntax.validation_depth)?;
         let mut pending = Vec::new();
@@ -66,7 +78,11 @@ impl<'s> RegistryValidatedSyntaxBundle<'s, '_> {
                 }
             }
         }
-        Ok(())
+        Ok(ValidatedSyntaxBundle {
+            bundle: self.syntax.bundle,
+            owner_depth: self.syntax.owner_depth,
+            validation_depth: self.syntax.validation_depth,
+        })
     }
 }
 

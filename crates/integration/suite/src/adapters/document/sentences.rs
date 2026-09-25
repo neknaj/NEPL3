@@ -9,7 +9,7 @@ use nepl3_core::{
 };
 use nepl3_doc_core::{
     check::{ForeignOccurrence, ShapeError, StructureError},
-    model::{DocumentSyntax, EmbedKind, EmbedRef},
+    model::{DocContent, DocumentSyntax, EmbedKind, EmbedRef},
 };
 use nepl3_sentence_core::{lower::ForeignInlineForm, syntax::SentenceSyntax};
 
@@ -72,8 +72,20 @@ pub fn collect<'a, C: FoundationValueCodec>(
 ) -> Result<Selection<'a>, Error<C::Error>> {
     b.poll()?;
     let result = (|| {
+        let mut syntax = Vec::new();
         let checked = document
-            .validate_structure(registry, b, codec.source_admission())
+            .validate_structure_with_syntax(registry, b, codec.source_admission(), |proof, b| {
+                b.charge(
+                    Resource::AllocationUnits,
+                    core::mem::size_of::<nepl3_core::syntax::RegistryValidatedSyntaxBundle<'_, '_>>(
+                    ) as u64,
+                )?;
+                syntax
+                    .try_reserve(1)
+                    .map_err(|_| StructureError::Stopped(b.stop(StopReason::AllocationLimit)))?;
+                syntax.push(proof);
+                Ok(())
+            })
             .map_err(Error::Document)?;
         let depths = checked.shape().foreign_depths(b).map_err(Error::Shape)?;
         let mut occurrences = checked
@@ -94,13 +106,20 @@ pub fn collect<'a, C: FoundationValueCodec>(
             .map_err(|_| b.stop(StopReason::AllocationLimit))?;
         let base = b.current_depth();
         let mut lowerer = sentence::Lowerer::new(registry);
+        let mut syntax = syntax.iter();
         for (index, slot) in document.value.embeds.iter().enumerate() {
             b.charge(Resource::Work, 1)?;
+            let proof = match slot.content {
+                DocContent::Syntax { .. } => Some(syntax.next().ok_or(Error::Document(
+                    StructureError::Syntax(nepl3_core::syntax::SyntaxError::Reference),
+                ))?),
+                DocContent::Value { .. } => None,
+            };
             let input = if matches!(slot.kind, EmbedKind::Sentence | EmbedKind::SentenceInline) {
                 Some(
                     b.with_depth_at_least(base.saturating_add(depths[index]), |b| {
                         lowerer
-                            .lower(slot, surface, forms, codec, b)
+                            .lower_checked(slot, proof, surface, forms, codec, b)
                             .map_err(|error| Error::Sentence {
                                 embed: EmbedRef(index as u64),
                                 error,

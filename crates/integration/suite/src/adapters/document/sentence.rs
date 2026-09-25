@@ -95,6 +95,18 @@ impl<'a> Lowerer<'a> {
         codec: &mut C,
         budget: &mut Budget,
     ) -> Result<SentenceSyntax, Error<C::Error>> {
+        self.lower_checked(input, None, surface, forms, codec, budget)
+    }
+
+    pub(super) fn lower_checked<C: FoundationValueCodec>(
+        &mut self,
+        input: &'a DocEmbed,
+        syntax: Option<&nepl3_core::syntax::RegistryValidatedSyntaxBundle<'_, '_>>,
+        surface: &SchemaRef,
+        forms: &[lower::ForeignInlineForm<'_>],
+        codec: &mut C,
+        budget: &mut Budget,
+    ) -> Result<SentenceSyntax, Error<C::Error>> {
         let registry = self.registry;
         budget.poll()?;
         let result = (|| {
@@ -129,13 +141,22 @@ impl<'a> Lowerer<'a> {
                     if closure.syntax.category != category {
                         return Err(Error::Category);
                     }
-                    self.closures
-                        .lower(closure, surface, forms, codec, budget)
-                        .map_err(|error| match error {
-                            lower::presentation::Error::Closure(error) => Error::Closure(error),
-                            lower::presentation::Error::Category => Error::Category,
-                            error => Error::Lower(error),
-                        })?
+                    let result = if let Some(proof) = syntax {
+                        budget.charge(Resource::Work, 1)?;
+                        if !core::ptr::eq(proof.bundle(), &closure.syntax.bundle) {
+                            return Err(Error::Closure(SyntaxError::Reference));
+                        }
+                        lower::presentation::sentence_in_registry(
+                            proof, surface, forms, registry, codec, budget,
+                        )
+                    } else {
+                        self.closures.lower(closure, surface, forms, codec, budget)
+                    };
+                    result.map_err(|error| match error {
+                        lower::presentation::Error::Closure(error) => Error::Closure(error),
+                        lower::presentation::Error::Category => Error::Category,
+                        error => Error::Lower(error),
+                    })?
                 }
             };
             if !matches!(

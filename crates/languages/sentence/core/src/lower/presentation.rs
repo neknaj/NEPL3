@@ -103,6 +103,56 @@ pub fn sentence_with_foreign<C: FoundationValueCodec>(
     finish_prefix(projected, bundle, registry, codec, b)
 }
 
+/// Lower immutable guest syntax already checked against a registry. Reapply
+/// the receiving operation's registry, source admission and relative depth;
+/// then perform Sentence selection, lowering and presentation checks. This
+/// entry establishes no foreign owner/environment or rendering authority.
+pub fn sentence_in_registry<C: FoundationValueCodec>(
+    input: &nepl3_core::syntax::RegistryValidatedSyntaxBundle<'_, '_>,
+    surface: &SchemaRef,
+    forms: &[ForeignInlineForm<'_>],
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<SentenceSyntax, Error<C::Error>> {
+    b.poll()?;
+    let result = (|| {
+        let checked = input
+            .checked_for(registry, b, codec.source_admission())
+            .map_err(Error::Closure)?;
+        checked_presentation(&checked, surface, forms, registry, codec, b)
+    })();
+    b.poll()?;
+    result
+}
+
+fn checked_presentation<C: FoundationValueCodec>(
+    checked: &ValidatedSyntaxBundle<'_>,
+    surface: &SchemaRef,
+    forms: &[ForeignInlineForm<'_>],
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<SentenceSyntax, Error<C::Error>> {
+    let bundle = checked.bundle();
+    let root = bundle.node(bundle.root).map_err(super::Error::from)?;
+    b.charge(Resource::Work, root.kind.len() as u64 + 1)?;
+    let output = if root.kind == "Leaf:SentenceLiteral" {
+        literal::sentence_checked(checked, surface, registry, codec, b)?
+    } else {
+        let projected = super::prefix_checked(
+            checked,
+            surface,
+            forms,
+            registry,
+            b,
+            codec.source_admission(),
+        )?;
+        finish_prefix(projected, bundle, registry, codec, b)?
+    };
+    Ok(output)
+}
+
 /// Lower selected closures against one immutable registry. Owner provenance
 /// may be reused; every guest is validated at the caller's current depth and
 /// source admission. The fresh guest proof is consumed by the private lowering
@@ -160,23 +210,8 @@ impl<'a> ClosureLowerer<'a> {
             {
                 return Err(Error::Selection);
             }
-            let input = checked.syntax();
-            let bundle = input.bundle();
-            let root = bundle.node(bundle.root).map_err(super::Error::from)?;
-            b.charge(Resource::Work, root.kind.len() as u64 + 1)?;
-            let output = if root.kind == "Leaf:SentenceLiteral" {
-                literal::sentence_checked(input, surface, self.registry, codec, b)?
-            } else {
-                let projected = super::prefix_checked(
-                    input,
-                    surface,
-                    forms,
-                    self.registry,
-                    b,
-                    codec.source_admission(),
-                )?;
-                finish_prefix(projected, bundle, self.registry, codec, b)?
-            };
+            let output =
+                checked_presentation(checked.syntax(), surface, forms, self.registry, codec, b)?;
             if !matches!(
                 (closure.syntax.category.as_str(), output.value.root),
                 ("Sentence", Root::Sentence(_)) | ("Inline", Root::Inline(_))

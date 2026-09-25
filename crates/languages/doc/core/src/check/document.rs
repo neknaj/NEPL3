@@ -101,7 +101,12 @@ impl DocumentSyntax {
         self.validate_structure_with_syntax(registry, b, admission, |_, _| Ok(()))
     }
 
-    pub(crate) fn validate_structure_with_syntax<'a: 'r, 'r>(
+    /// Validate the complete document while lending checked guest syntax in
+    /// Syntax-embed order. Each guest proof is valid independently; document
+    /// validity is established only when this call succeeds. Consumers that
+    /// assemble a selection must keep it private until the final success.
+    /// Receiving operations still apply their own source admission and depth.
+    pub fn validate_structure_with_syntax<'a: 'r, 'r>(
         &'a self,
         registry: &'r SchemaRegistry,
         b: &mut Budget,
@@ -268,7 +273,9 @@ impl DocumentSyntax {
                             .as_ref()
                             .ok_or(SyntaxError::Reference)?
                             .validate_closure_syntax(closure, b, admission)?;
-                        guest(syntax, b)?;
+                        let result = guest(syntax, b);
+                        b.poll()?;
+                        result?;
                     }
                     DocContent::Value { value } => {
                         if !matches!(embed.kind, EmbedKind::Sentence | EmbedKind::SentenceInline) {

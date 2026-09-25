@@ -75,6 +75,60 @@ fn check_closure_entry(
     };
     let (output, measured) = run(b().limits())?;
     assert_eq!(output.map_err(err)?, *expected);
+    let proof = bundle
+        .validate_in_registry(registry, &mut b(), &mut SourceAdmission::default())
+        .map_err(err)?;
+    let run_proof = |limits| {
+        let mut budget = Budget::new(limits);
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+        let output = lower::presentation::sentence_in_registry(
+            &proof,
+            surface,
+            forms,
+            registry,
+            &mut codec,
+            &mut budget,
+        );
+        Ok::<_, String>((output, budget))
+    };
+    let (output, proof_usage) = run_proof(b().limits())?;
+    assert_eq!(output.map_err(err)?, *expected);
+    for resource in [
+        StopReason::WorkLimit,
+        StopReason::AllocationLimit,
+        StopReason::DepthLimit,
+        StopReason::SourceLimit,
+    ] {
+        let used = match resource {
+            StopReason::WorkLimit => proof_usage.usage().work,
+            StopReason::AllocationLimit => proof_usage.usage().allocation_units,
+            StopReason::DepthLimit => proof_usage.usage().depth,
+            StopReason::SourceLimit => proof_usage.usage().source_bytes,
+            _ => return Err("resource".into()),
+        };
+        for short in [false, true] {
+            if short && used == 0 {
+                continue;
+            }
+            let limit = used - u64::from(short);
+            let mut limits = b().limits();
+            match resource {
+                StopReason::WorkLimit => limits.work = limit,
+                StopReason::AllocationLimit => limits.allocation_units = limit,
+                StopReason::DepthLimit => limits.depth = limit,
+                StopReason::SourceLimit => limits.source_bytes = limit,
+                _ => return Err("resource".into()),
+            }
+            let (output, budget) = run_proof(limits)?;
+            if short {
+                assert_eq!(output.err(), Some(Error::Stopped(resource)));
+                assert_eq!(budget.poll(), Err(resource));
+            } else {
+                assert_eq!(output.map_err(err)?, *expected);
+            }
+        }
+    }
     for reason in [
         StopReason::WorkLimit,
         StopReason::AllocationLimit,
@@ -404,6 +458,20 @@ fn structurally_valid_bundle_is_not_a_proof_of_sentence_operands() -> Result<(),
         )
         .err(),
         Some(lower::Error::Unsupported(NodeRef(1000)))
+    );
+    let proof = bundle
+        .validate_in_registry(&r, &mut b(), &mut SourceAdmission::default())
+        .map_err(err)?;
+    let sources = nepl3_core::source::SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec =
+        nepl3_wire::foundation::FoundationCodec::new(&r, &sources, &mut admission).map_err(err)?;
+    assert_eq!(
+        lower::presentation::sentence_in_registry(&proof, &surface, &[], &r, &mut codec, &mut b())
+            .err(),
+        Some(lower::presentation::Error::Prefix(
+            lower::Error::Unsupported(NodeRef(1000))
+        ))
     );
     Ok(())
 }

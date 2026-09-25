@@ -169,6 +169,18 @@ core・wireはnativeとWASI各262件、独立レビューのstructure試験27件
 既存の非課金検索も比較回数を削減するが、この計測から文書全体のWork削減を主張しない。
 通常page予算への適合と生成物の整合確認は継続課題である。
 
+DocのSentence収集は、文書の構造検証で得たguest構文のregistry-bound proofを保持し、
+文書全体の検証成功後にlowerへ渡す。受信操作のsource admissionと相対深度、選択schema・
+category・意味rootを確認し、異なるregistryでは構造を再検証する。typed valueと構文の
+混在順序を維持する。公開visitorの取消と、新しいlower入口の停止分類も検査した。
+第03章の内容検査が成功し、Discoveryは99,889,889から72,988,032 Work、投影全体は
+313,855,198から286,953,341 Workへ減少した。削減量は26,901,857 Workである。
+通常page予算への適合は継続課題である。独立レビューではcore scoped 3件、suite 6件、
+Sentence lower 4件が成功した。
+core・Doc・Sentence・suiteの全feature検査はnative・WASI各343件が成功した。
+追加した意味拒否・停止分類の試験も両targetで成功し、clippy、repository、fmt・diff検査と
+thumbv6m向けcompileが成功した。正式runtime受入と生成物の整合確認は未完了である。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

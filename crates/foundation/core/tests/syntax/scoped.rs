@@ -54,9 +54,11 @@ fn registry_proof_revalidates_a_different_registry() -> Result<(), SyntaxError> 
         input.validate_in_registry(&original, &mut budget(), &mut SourceAdmission::default())?;
     let (equivalent, _) = registry()?;
     let mut checked = budget();
-    proof.validate_for(&equivalent, &mut checked, &mut SourceAdmission::default())?;
+    let returned = proof.checked_for(&equivalent, &mut checked, &mut SourceAdmission::default())?;
     let mut full = budget();
-    input.validate(&equivalent, &mut full)?;
+    let expected = input.validate(&equivalent, &mut full)?;
+    assert!(core::ptr::eq(returned.bundle(), &input));
+    assert_eq!(returned.validation_depth(), expected.validation_depth());
     assert_eq!(checked.usage().nodes, full.usage().nodes);
     assert!(checked.usage().nodes > 0);
     let mut missing = SchemaRegistry::default();

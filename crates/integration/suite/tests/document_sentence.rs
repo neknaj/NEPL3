@@ -300,9 +300,9 @@ fn sentence_collection_reuses_owner_checks_without_skipping_guest_validation() -
             .map_err(err)?;
         let mut total = budget();
         outputs.push(run(doc, &mut total)?);
-        // Isolate collection after its common Doc validation. The comparison
-        // therefore detects removal of the lowerer's own reuse, independently
-        // of the Doc structure checker's owner proof reuse.
+        // After complete Doc validation, lowering uses the retained guest
+        // proofs. Independent owner storage therefore adds no second owner
+        // validation, while the common Doc check still validates both owners.
         costs.push(
             total
                 .usage()
@@ -312,9 +312,49 @@ fn sentence_collection_reuses_owner_checks_without_skipping_guest_validation() -
         );
     }
     assert_eq!(outputs[0], outputs[1]);
-    #[cfg(target_has_atomic = "ptr")]
-    assert!(costs[0] < costs[1], "{costs:?}");
+    assert_eq!(costs[0], costs[1]);
+    for callback_error in [false, true] {
+        let mut stopped = budget();
+        let mut visited = 0;
+        let result = shared.validate_structure_with_syntax(
+            &registry,
+            &mut stopped,
+            &mut SourceAdmission::default(),
+            |_, b| {
+                visited += 1;
+                if visited == 2 {
+                    b.cancel();
+                    if callback_error {
+                        return Err(nepl3_doc_core::check::StructureError::ViewOwner);
+                    }
+                }
+                Ok(())
+            },
+        );
+        assert_eq!(visited, 2);
+        assert!(matches!(
+            result,
+            Err(nepl3_doc_core::check::StructureError::Stopped(
+                StopReason::Cancelled
+            ))
+        ));
+        assert_eq!(stopped.current_depth(), 0);
+    }
     let parts = &outputs[0].0;
+    for (index, part) in parts.iter().enumerate() {
+        let mut mixed = shared.clone();
+        let sources = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&registry, &sources, &mut admission).map_err(err)?;
+        mixed.value.embeds[index] = sentence::embed(
+            part.as_ref().ok_or("sentence")?,
+            &registry,
+            &mut codec,
+            &mut budget(),
+        )
+        .map_err(err)?;
+        assert_eq!(run(&mixed, &mut budget())?, outputs[0]);
+    }
     for part in parts.iter().flatten() {
         assert_eq!(
             part.value.nodes,
