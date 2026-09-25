@@ -1534,9 +1534,8 @@ fn measure_page_encoding(
             value_nodes(field)
         );
     }
-    // Attribute each root SyntaxBundle's NDF nodes to its seven foundation
-    // fields. This is structural observation of the generated value; no source
-    // parsing, source pruning, or alternative encoding is performed here.
+    // Attribute member references and body fields separately. Shared content
+    // tables are reported above as DocValue fields 4 and 5.
     let mut bundle_fields = [0_usize; 7];
     let mut token_fields = [0_usize; 5];
     let mut bundles = 0;
@@ -1558,13 +1557,27 @@ fn measure_page_encoding(
             return Err("SyntaxBundle record".into());
         };
         assert_eq!(bundle.schema, *codec.foundation_schema());
-        assert_eq!(bundle.kind, "SyntaxBundle");
-        assert_eq!(bundle.fields.len(), bundle_fields.len());
+        assert_eq!(bundle.kind, "SharedSyntaxBundle");
+        assert_eq!(bundle.fields.len(), 3);
+        let NdfValue::Record(body) = &bundle.fields[2] else {
+            return Err("SyntaxBody".into());
+        };
+        assert_eq!(body.kind, "SyntaxBody");
+        assert_eq!(body.fields.len(), 5);
+        let fields = [
+            &bundle.fields[0],
+            &body.fields[0],
+            &body.fields[1],
+            &body.fields[2],
+            &body.fields[3],
+            &body.fields[4],
+            &bundle.fields[1],
+        ];
         bundles += 1;
-        for (total, field) in bundle_fields.iter_mut().zip(&bundle.fields) {
+        for (total, field) in bundle_fields.iter_mut().zip(fields) {
             *total += value_nodes(field);
         }
-        let NdfValue::List(tokens) = &bundle.fields[5] else {
+        let NdfValue::List(tokens) = &body.fields[4] else {
             return Err("tokens list".into());
         };
         for token in tokens {
@@ -1580,7 +1593,7 @@ fn measure_page_encoding(
         }
     }
     println!(
-        "{label} root_guest_bundle_fields bundles={bundles} sources={} nodes={} origins={} root={} environments={} tokens={} mappings={}",
+        "{label} root_guest_member_fields bundles={bundles} source_refs={} nodes={} origins={} root={} environments={} tokens={} mapping_refs={}",
         bundle_fields[0],
         bundle_fields[1],
         bundle_fields[2],

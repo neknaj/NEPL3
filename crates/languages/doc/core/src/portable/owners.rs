@@ -105,6 +105,7 @@ fn owner_value<C: FoundationValueCodec>(
 fn embed<C: FoundationValueCodec>(
     input: &DocEmbed,
     owner: Option<Digest>,
+    syntax: Option<NdfValue>,
     s: &SchemaRef,
     c: &mut C,
     b: &mut Budget,
@@ -115,9 +116,7 @@ fn embed<C: FoundationValueCodec>(
             let owner = owner.ok_or(PortableError::Shape)?.put(s, c, b)?;
             let identity = closure.syntax.schema.put(s, c, b)?;
             let category = closure.syntax.category.put(s, c, b)?;
-            let syntax = c
-                .encode_syntax(&closure.syntax.bundle, b)
-                .map_err(boundary)?;
+            let syntax = syntax.ok_or(PortableError::Shape)?;
             let environment = c
                 .encode_environment(&closure.owner_environment, b)
                 .map_err(boundary)?;
@@ -131,6 +130,23 @@ fn embed<C: FoundationValueCodec>(
         }
     };
     record(s, "DocEmbed", [input.kind.put(s, c, b)?, content], b)
+}
+
+fn syntax_parts<E>(
+    mut value: NdfValue,
+    schema: &SchemaRef,
+) -> Result<(NdfValue, NdfValue, Vec<NdfValue>), PortableError<E>> {
+    fields(&value, schema, "SyntaxBundleSet", 3)?;
+    let NdfValue::Record(value) = &mut value else {
+        return Err(PortableError::Shape);
+    };
+    let [sources, maps, mut members]: [NdfValue; 3] = core::mem::take(&mut value.fields)
+        .try_into()
+        .map_err(|_| PortableError::Shape)?;
+    let NdfValue::List(members) = &mut members else {
+        return Err(PortableError::Shape);
+    };
+    Ok((sources, maps, core::mem::take(members)))
 }
 
 /// Compact identity input. Syntax owners are bound by content digest; decoding
@@ -158,7 +174,20 @@ pub(super) fn embed_value<C: FoundationValueCodec>(
             None
         }
     };
-    embed(input, owner, s, c, b)
+    let syntax = match &input.content {
+        DocContent::Syntax { closure } => {
+            let value = c
+                .encode_syntax_set(&[&closure.syntax.bundle], b)
+                .map_err(boundary)?;
+            let (_, _, mut members) = syntax_parts(value, c.foundation_schema())?;
+            if members.len() != 1 {
+                return Err(PortableError::Shape);
+            }
+            members.pop()
+        }
+        DocContent::Value { .. } => None,
+    };
+    embed(input, owner, syntax, s, c, b)
 }
 
 pub(super) fn put<C: FoundationValueCodec>(
@@ -226,10 +255,28 @@ pub(super) fn put<C: FoundationValueCodec>(
             prior = Some(digest);
         }
     }
+    // Keep the original embed order, independently of owner grouping above.
+    let mut bundles = storage(closures.len(), b)?;
+    for input in &input.embeds {
+        b.charge(Resource::Work, 1)?;
+        if let DocContent::Syntax { closure } = &input.content {
+            bundles.push(&closure.syntax.bundle);
+        }
+    }
+    let syntax = c.encode_syntax_set(&bundles, b).map_err(boundary)?;
+    let (syntax_sources, syntax_maps, members) = syntax_parts(syntax, c.foundation_schema())?;
+    let mut members = members.into_iter();
     let mut embeds = storage(input.embeds.len(), b)?;
     for (input, owner) in input.embeds.iter().zip(references) {
         b.charge(Resource::Work, 1)?;
-        embeds.push(embed(input, owner, s, c, b)?);
+        let syntax = match &input.content {
+            DocContent::Syntax { .. } => Some(members.next().ok_or(PortableError::Shape)?),
+            DocContent::Value { .. } => None,
+        };
+        embeds.push(embed(input, owner, syntax, s, c, b)?);
+    }
+    if members.next().is_some() {
+        return Err(PortableError::Shape);
     }
     record(
         s,
@@ -239,6 +286,8 @@ pub(super) fn put<C: FoundationValueCodec>(
             input.nodes.put(s, c, b)?,
             NdfValue::List(embeds),
             NdfValue::List(owner_values),
+            syntax_sources,
+            syntax_maps,
         ],
         b,
     )
@@ -276,7 +325,35 @@ pub(super) fn read<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<DocValue, PortableError<C::Error>> {
     let s = schema(r)?;
-    let f = fields(input, s, "DocValue", 4)?;
+    let f = fields(input, s, "DocValue", 6)?;
+    let mut members = storage(list(&f[2])?.len(), b)?;
+    for embed in list(&f[2])? {
+        b.charge(Resource::Work, 1)?;
+        let fields = fields(embed, s, "DocEmbed", 2)?;
+        let (tag, parts) = case(&fields[1], s, "DocContent")?;
+        let [part] = parts else {
+            return Err(PortableError::Shape);
+        };
+        match tag {
+            "Syntax" => {
+                let fields = super::value::fields(part, s, "DocClosure", 5)?;
+                members.push(fields[3].clone_with_budget(b)?);
+            }
+            "Value" => (),
+            _ => return Err(PortableError::Shape),
+        }
+    }
+    let set = record(
+        c.foundation_schema(),
+        "SyntaxBundleSet",
+        [
+            f[4].clone_with_budget(b)?,
+            f[5].clone_with_budget(b)?,
+            NdfValue::List(members),
+        ],
+        b,
+    )?;
+    let mut bundles = c.decode_syntax_set(&set, b).map_err(boundary)?.into_iter();
     let values = list(&f[3])?;
     let mut owners: Vec<(Digest, OwnerProvenance)> = storage(values.len(), b)?;
     let mut used = storage(values.len(), b)?;
@@ -325,7 +402,7 @@ pub(super) fn read<C: FoundationValueCodec>(
                 let index = find(&owners, Digest::read(&f[0], s, c, b)?, b)?;
                 let schema = Value::read(&f[1], s, c, b)?;
                 let category = Value::read(&f[2], s, c, b)?;
-                let bundle = c.decode_syntax(&f[3], b).map_err(boundary)?;
+                let bundle = bundles.next().ok_or(PortableError::Shape)?;
                 let owner_environment = c.decode_environment(&f[4], b).map_err(boundary)?;
                 let syntax = ForeignSyntax {
                     schema,
@@ -359,6 +436,9 @@ pub(super) fn read<C: FoundationValueCodec>(
         if !used {
             return Err(PortableError::Shape);
         }
+    }
+    if bundles.next().is_some() {
+        return Err(PortableError::Shape);
     }
     Ok(DocValue {
         root: Value::read(&f[0], s, c, b)?,

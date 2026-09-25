@@ -76,7 +76,7 @@ fn source_preparation_retains_code_and_identifies_each_foreign_closure() -> Resu
             // The domain and CBOR digest are calculated independently of inspect.
             let value = portable::embed_value(embed, profile.registry(), &mut c, &mut budget())
                 .map_err(err)?;
-            let mut bytes = b"NEPL3.Doc.Prepare.Guest.v2\0".to_vec();
+            let mut bytes = b"NEPL3.Doc.Prepare.Guest.v3\0".to_vec();
             bytes.extend(nepl3_wire::encode(&value, &mut budget()).map_err(err)?);
             assert_eq!(
                 plan.requirements[index],
@@ -174,7 +174,7 @@ fn source_preparation_retains_code_and_identifies_each_foreign_closure() -> Resu
                     let value =
                         portable::embed_value(embed, profile.registry(), codec, &mut budget())
                             .map_err(err)?;
-                    let mut bytes = b"NEPL3.Doc.Prepare.Guest.v2\0".to_vec();
+                    let mut bytes = b"NEPL3.Doc.Prepare.Guest.v3\0".to_vec();
                     bytes.extend(nepl3_wire::encode(&value, &mut budget()).map_err(err)?);
                     assert_eq!(
                         *foreign[index],

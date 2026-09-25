@@ -168,6 +168,194 @@ fn owner_table(value: &mut NdfValue) -> Result<&mut Vec<NdfValue>, String> {
     };
     Ok(values)
 }
+
+#[test]
+fn syntax_tables_preserve_mixed_embed_order_and_independent_identity() -> Result<(), String> {
+    use nepl3_core::value::{Record, TypedValue};
+    let r = registry()?;
+    let mut d = pair(&r, false, false)?;
+    let DocContent::Syntax { closure } = &mut d.value.embeds[0].content else {
+        return Err("syntax".into());
+    };
+    let source = &closure.syntax.bundle.sources[0];
+    closure
+        .syntax
+        .bundle
+        .source_maps
+        .push(nepl3_core::origin::Mapping {
+            source: source.span(0, 1).map_err(err)?,
+            target: source.span(1, 2).map_err(err)?,
+            kind: nepl3_core::origin::MappingKind::Transformed,
+        });
+    let DocContent::Syntax { closure } = &mut d.value.embeds[1].content else {
+        return Err("syntax".into());
+    };
+    closure.syntax.bundle.sources.push(
+        SourceSnapshot::new(
+            SourceId("z-extra".into()),
+            1,
+            "memory:extra".into(),
+            b"unused declaration".to_vec(),
+            &mut b(),
+        )
+        .map_err(err)?,
+    );
+    // A shape-valid opaque typed value: semantic Sentence interpretation belongs
+    // to its selected consumer. It occupies a real slot between syntax members.
+    d.value.embeds.insert(
+        1,
+        DocEmbed {
+            kind: EmbedKind::Sentence,
+            content: DocContent::Value {
+                value: TypedValue::Record(Record {
+                    schema: r
+                        .selected("nepl3.foundation", 1)
+                        .ok_or("foundation")?
+                        .clone(),
+                    kind: "NodeRef".into(),
+                    fields: vec![NdfValue::U64(0)],
+                }),
+            },
+        },
+    );
+    d.value.nodes[5].kind = DocKind::Sentence {
+        syntax: EmbedRef(2),
+    };
+    d.value.nodes.push(DocNode {
+        kind: DocKind::Sentence {
+            syntax: EmbedRef(1),
+        },
+        locations: vec![],
+        origin: None,
+        span: None,
+    });
+    let DocKind::Image { alt, .. } = &mut d.value.nodes[3].kind else {
+        return Err("image".into());
+    };
+    *alt = SentenceRef(6);
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut c = FoundationCodec::new(&r, &sources, &mut admission).map_err(err)?;
+    let mut value = portable::to_value(&d, &r, &mut c, &mut b()).map_err(err)?;
+    let fields = doc_fields(&mut value)?;
+    assert_eq!(fields.len(), 6);
+    let NdfValue::List(pool) = &fields[4] else {
+        return Err("source pool".into());
+    };
+    assert_eq!(pool.len(), 2);
+    let NdfValue::List(maps) = &fields[5] else {
+        return Err("map pool".into());
+    };
+    assert_eq!(maps.len(), 1);
+    let NdfValue::List(embeds) = &fields[2] else {
+        return Err("embeds".into());
+    };
+    for (expected, input) in embeds.iter().zip(&d.value.embeds) {
+        assert_eq!(
+            *expected,
+            portable::embed_value(input, &r, &mut c, &mut b()).map_err(err)?
+        );
+    }
+    let wire = nepl3_wire::encode(&value, &mut b()).map_err(err)?;
+    let decoded = nepl3_wire::decode(&wire, &mut b()).map_err(err)?;
+    let mut incoming = SourceAdmission::default();
+    let mut receiver = FoundationCodec::new(&r, &sources, &mut incoming).map_err(err)?;
+    let restored = portable::from_value(&decoded, &r, &mut receiver, &mut b()).map_err(err)?;
+    assert_eq!(restored, d);
+    assert_eq!(
+        portable::to_value(&restored, &r, &mut receiver, &mut b()).map_err(err)?,
+        value
+    );
+    // A sibling still declares the source; the first member must reject its
+    // missing declaration even though the source remains in the shared table.
+    let mut corrupt = value.clone();
+    let NdfValue::Record(member) = &mut closure_fields(&mut corrupt)?[3] else {
+        return Err("member".into());
+    };
+    member.fields[0] = NdfValue::List(vec![]);
+    assert!(matches!(
+        portable::from_value(&corrupt, &r, &mut receiver, &mut b()),
+        Err(portable::PortableError::Foundation(
+            nepl3_wire::WireError::Source(nepl3_core::source::SourceError::MissingSnapshot)
+        ))
+    ));
+    let mut corrupt = value.clone();
+    let NdfValue::List(pool) = &mut doc_fields(&mut corrupt)?[4] else {
+        return Err("pool".into());
+    };
+    pool.push(pool[0].clone());
+    assert!(matches!(
+        portable::from_value(&corrupt, &r, &mut receiver, &mut b()),
+        Err(portable::PortableError::Foundation(
+            nepl3_wire::WireError::NonCanonical
+        ))
+    ));
+    let mut corrupt = value.clone();
+    let NdfValue::Record(member) = &mut closure_fields_at(&mut corrupt, 2)?[3] else {
+        return Err("member".into());
+    };
+    let NdfValue::List(refs) = &mut member.fields[0] else {
+        return Err("refs".into());
+    };
+    refs.pop().ok_or("extra declaration")?;
+    assert!(matches!(
+        portable::from_value(&corrupt, &r, &mut receiver, &mut b()),
+        Err(portable::PortableError::Foundation(
+            nepl3_wire::WireError::NonCanonical
+        ))
+    ));
+    let mut corrupt = value.clone();
+    doc_fields(&mut corrupt)?[4] = NdfValue::List(vec![]);
+    assert!(matches!(
+        portable::from_value(&corrupt, &r, &mut receiver, &mut b()),
+        Err(portable::PortableError::Foundation(
+            nepl3_wire::WireError::InvalidType
+        ))
+    ));
+    let mut corrupt = value.clone();
+    let NdfValue::List(pool) = &mut doc_fields(&mut corrupt)?[4] else {
+        return Err("pool".into());
+    };
+    let NdfValue::Record(source) = &mut pool[0] else {
+        return Err("source".into());
+    };
+    source.fields[1] = NdfValue::Text("memory:changed".into());
+    // Preserve canonical table order so this specifically tests the stale
+    // member digest, rather than failing the independent ordering check first.
+    let mut sorted = Vec::new();
+    for entry in pool.drain(..) {
+        let bytes = nepl3_wire::encode(&entry, &mut b()).map_err(err)?;
+        sorted.push((
+            Digest::domain(b"NEPL3.SyntaxBundleSet.Source.v1\0", &bytes),
+            entry,
+        ));
+    }
+    sorted.sort_by_key(|(digest, _)| *digest);
+    pool.extend(sorted.into_iter().map(|(_, entry)| entry));
+    assert!(matches!(
+        portable::from_value(&corrupt, &r, &mut receiver, &mut b()),
+        Err(portable::PortableError::Foundation(
+            nepl3_wire::WireError::InvalidType
+        ))
+    ));
+    let mut old_shape = value;
+    let mut no_maps = old_shape.clone();
+    doc_fields(&mut no_maps)?[5] = NdfValue::List(vec![]);
+    assert!(matches!(
+        portable::from_value(&no_maps, &r, &mut receiver, &mut b()),
+        Err(portable::PortableError::Foundation(
+            nepl3_wire::WireError::InvalidType
+        ))
+    ));
+    doc_fields(&mut old_shape)?.truncate(4);
+    assert!(matches!(
+        portable::from_value(&old_shape, &r, &mut receiver, &mut b()),
+        Err(portable::PortableError::Schema(
+            nepl3_core::schema::SchemaError::FieldCount
+        ))
+    ));
+    Ok(())
+}
 fn closure_fields(value: &mut NdfValue) -> Result<&mut Vec<NdfValue>, String> {
     closure_fields_at(value, 0)
 }

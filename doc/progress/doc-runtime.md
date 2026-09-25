@@ -282,6 +282,19 @@ memberの閉包検査は維持し、rootのsource/map中間NDF列を省いた。
 NDF節点数675,511は不変である。これは共有形式の構築部分の改善であり、現行Doc生成経路は未変更である。
 独立レビューは8試験を実行し、別storageと増大試験を追加した最終差分を静的確認した。
 最終版はwire全84試験とWASIの共有形式9試験、Clippy、thumb向けcheck、repository checkが成功した。
+
+Docのportable交換へ共有形式を接続した。DocValueはsyntaxSources/syntaxMapsを所有し、
+各DocClosureはSharedSyntaxBundleを保持する。nativeモデルには表を複製せず、
+既存のFoundationValueCodecを使用する。元EmbedRef順、owner scope、member scopeを保持し、
+復元後も従来のForeignClosure検査を行う。document/guest digest domainをv3へ変更した。
+Syntax/Value混在、別bundle、単独/集合embed値一致、初回受信と再符号化、非空mapping、
+欠落・余剰・改変した表、旧field数の拒否を追加試験で確認する。
+Doc core全48試験はnative・WASI、toolsのprepare24試験とfeature有効のsuite consumer6試験はnativeで成功した。
+独立レビューはprepare12試験を実行した。Clippy、thumb向けcheck、repository checkも成功した。
+第13章の投影は336,411,557 Work、162,972,497 AllocationUnits、native debugで約8.84秒となった。
+共有化前の319,330,279 Workに対してWorkは増加し、通常Work100Mへの適合は未達である。
+DocValueは1,195,011から691,029 NDF節点へ、独立した148件のdigest計算は153,194,743から
+75,756,838 Workへ縮小した。索引構築費用の削減、残る正本移行と生成Markdown更新を継続する。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

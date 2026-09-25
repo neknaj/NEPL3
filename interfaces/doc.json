@@ -1056,11 +1056,14 @@
               }
             }
           }
-        ]
+        ],
+        ["syntaxSources", {"list": {"named": {"package": "nepl3.foundation", "revision": 1, "name": "SourceContent"}}}],
+        ["syntaxMaps", {"list": {"named": {"package": "nepl3.foundation", "revision": 1, "name": "SourceMapping"}}}]
       ],
       "constraints": [
         "doc.category_graph",
-        "doc.canonical_owner_table"
+        "doc.canonical_owner_table",
+        "doc.scoped_syntax_tables"
       ]
     },
     "DocView": {
@@ -2376,7 +2379,7 @@
             "named": {
               "package": "nepl3.foundation",
               "revision": 1,
-              "name": "SyntaxBundle"
+              "name": "SharedSyntaxBundle"
             }
           }
         ],

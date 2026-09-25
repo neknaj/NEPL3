@@ -15,8 +15,10 @@ use nepl3_core::{
     value_codec::{FoundationCodecError, FoundationValueCodec},
 };
 use value::{Value, fields, record};
-/// Encode the explicit input variant for identity binding. Semantic consumption
-/// of a typed Sentence payload remains the selected language's responsibility.
+/// Encode the explicit input variant for identity binding. Syntax content uses
+/// owner/source/map digests and requires its enclosing DocValue tables for
+/// restoration. This standalone identity input is not a self-contained payload.
+/// Semantic consumption of typed Sentence remains the selected language's task.
 pub fn embed_value<C: FoundationValueCodec>(
     input: &crate::model::DocEmbed,
     registry: &SchemaRegistry,
@@ -35,7 +37,7 @@ pub(crate) fn embedded_values<'a, E>(
     budget.charge(Resource::Work, 1)?;
     let schema = schema(registry)?;
     let document = fields(value, schema, "DocumentSyntax", 5)?;
-    let value = fields(&document[0], schema, "DocValue", 4)?;
+    let value = fields(&document[0], schema, "DocValue", 6)?;
     match &value[2] {
         NdfValue::List(values) => Ok(values),
         _ => Err(PortableError::Shape),
