@@ -455,6 +455,16 @@ native/WASI各1件と独立native1件が成功し、projectionのWorkは両targe
 fmt、diff検査も成功した。正式Markdown集合生成は第17章を通過し、第11章の旧構文で停止した。
 生成物の更新、通常ページ予算への適合、文書集合全体の検証は継続する。
 
+第11章の正本を独立Sentence構文へ移行した。独立レビューは167箇所のsentence境界と1箇所のdoc境界の
+追加を確認し、引用値・Ruby・受入条件の保持を照合した。正式reader/lowerとMarkdown解析の試験で、
+6節・16個の節内段落、13リスト・66項目の文境界、57試験群とS06の9負例の順序、InlineCode24件、
+相対リンク1件を検査する。lowerは通常予算で39,071,131 Workだった。projectionは通常Work100Mで停止し、
+その試験を有効のまま維持する。既存の文書集合予算による明示試験はnative/WASI各1件と独立native1件が
+成功した。projectionは両targetで153,622,659 Work、累積AllocationUnitsはnativeが165,717,801、
+WASIが121,144,757である。Clippy、repository check、fmt、diff検査も成功した。
+正式Markdown集合生成は第11章を通過し、第06章の旧構文で停止した。集合生成物の更新と通常ページ予算への
+適合は継続する。この原稿試験は記述された57試験群の正式受入を実行するものではない。
+
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

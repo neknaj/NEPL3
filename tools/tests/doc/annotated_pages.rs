@@ -1,4 +1,6 @@
 use super::*;
+#[path = "conformance_chapter.rs"]
+mod conformance_chapter;
 #[path = "editor_chapter.rs"]
 mod editor_chapter;
 #[path = "html_chapter.rs"]
