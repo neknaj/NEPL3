@@ -745,7 +745,7 @@ fn contract_chapter_projects_independent_sentences_and_invariants() -> Result<()
 
 #[test]
 fn reproducibility_chapter_preserves_code_and_external_references() -> Result<(), String> {
-    reproducibility_projection(budget(), budget())
+    reproducibility_projection(budget(), budget(), false)
 }
 
 /// The ordinary test retains desktop limits. This opt-in measurement locates
@@ -759,12 +759,17 @@ fn measure_reproducibility_projection_under_corpus_limits() -> Result<(), String
     }
     let policy: Policy =
         serde_json::from_str(include_str!("../../../doc/canonical.json")).map_err(err)?;
-    reproducibility_projection(policy.output_limits.budget(), policy.output_limits.budget())
+    reproducibility_projection(
+        policy.output_limits.budget(),
+        policy.output_limits.budget(),
+        true,
+    )
 }
 
 fn reproducibility_projection(
     mut lower_budget: Budget,
     mut render_budget: Budget,
+    measure_encoding: bool,
 ) -> Result<(), String> {
     let c = compiled()?;
     let set = PageSet {
@@ -783,17 +788,25 @@ fn reproducibility_projection(
     let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
     eprintln!("reproducibility lower usage={:?}", lower_budget.usage());
     let started = std::time::Instant::now();
-    let artifact = render(
+    let mut prepared = None;
+    let artifact = render_observed(
         &set,
         &c.doc.registry,
         &mut codec,
         &mut render_budget,
         &[&[]],
+        &mut |usage| prepared = Some((started.elapsed(), usage)),
     )
     .map_err(err)?;
+    let finished = started.elapsed();
+    let (elapsed, usage) = prepared.ok_or("preparation observation")?;
+    eprintln!(
+        "reproducibility namespace elapsed_ns={} usage={usage:?}",
+        elapsed.as_nanos()
+    );
     eprintln!(
         "reproducibility projection elapsed_ns={} usage={:?}",
-        started.elapsed().as_nanos(),
+        finished.as_nanos(),
         render_budget.usage()
     );
     assert_eq!(artifact.pages.len(), 1);
@@ -861,6 +874,9 @@ fn reproducibility_projection(
         .collect();
     use pulldown_cmark::HeadingLevel::{H1, H2, H3};
     assert_eq!(headings, [H1, H2, H2, H3, H3, H2, H2, H2]);
+    if measure_encoding {
+        measure_page_encoding("reproducibility", &set, &c, render_budget.limits())?;
+    }
     Ok(())
 }
 
@@ -973,97 +989,106 @@ fn architecture_projection(
     // This is Markdown generation only: passive Markdown is never an HTML page.
     assert_eq!(artifact.pages.len(), 1);
     if measure_encoding {
-        let mut sources_in_single_node_guest = 0;
-        let mut maps_in_single_node_guest = 0;
-        for embed in &set.pages[0].document.value.embeds {
-            if let nepl3_doc_core::model::DocContent::Syntax { closure } = &embed.content {
-                let bundle = &closure.syntax.bundle;
-                if bundle.nodes.len() == 1 {
-                    sources_in_single_node_guest =
-                        sources_in_single_node_guest.max(bundle.sources.len());
-                    maps_in_single_node_guest =
-                        maps_in_single_node_guest.max(bundle.source_maps.len());
-                }
+        measure_page_encoding("architecture", &set, &c, render_budget.limits())?;
+    }
+    Ok(())
+}
+
+/// Encoding starts with cold source admission. Hashing uses that encoded NDF
+/// with an independent Budget. Neither run's usage is subtracted from the
+/// enclosing projection's cumulative usage.
+fn measure_page_encoding(
+    label: &str,
+    set: &PageSet,
+    c: &Compiled,
+    limits: nepl3_core::budget::Limits,
+) -> Result<(), String> {
+    assert_eq!(set.pages.len(), 1, "single-page measurement");
+    let mut sources_in_single_node_guest = 0;
+    let mut maps_in_single_node_guest = 0;
+    for embed in &set.pages[0].document.value.embeds {
+        if let nepl3_doc_core::model::DocContent::Syntax { closure } = &embed.content {
+            let bundle = &closure.syntax.bundle;
+            if bundle.nodes.len() == 1 {
+                sources_in_single_node_guest =
+                    sources_in_single_node_guest.max(bundle.sources.len());
+                maps_in_single_node_guest = maps_in_single_node_guest.max(bundle.source_maps.len());
             }
         }
-        println!(
-            "architecture single_node_guest max_sources={sources_in_single_node_guest} max_maps={maps_in_single_node_guest}"
-        );
-        // Isolated component run with fresh admission, not a subtraction from
-        // the enclosing projection. Keep the same immutable input and limits.
-        let mut b = Budget::new(render_budget.limits());
-        let mut admission = SourceAdmission::default();
-        let mut codec =
-            FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
-        let started = std::time::Instant::now();
-        let encoded = nepl3_doc_core::portable::pages::set_to_value(
-            &set,
-            &c.doc.registry,
-            &mut codec,
-            &mut b,
-        )
-        .map_err(err)?;
-        let elapsed = started.elapsed();
-        println!(
-            "architecture isolated_encoding elapsed_ns={} usage={:?}",
-            elapsed.as_nanos(),
-            b.usage()
-        );
-        use nepl3_core::value::NdfValue;
-        use nepl3_core::value_codec::{CanonicalDigestInput, FoundationValueCodec};
-        let NdfValue::Record(value) = &encoded else {
-            return Err("PageSet".into());
-        };
-        let Some(NdfValue::List(pages)) = value.fields.first() else {
-            return Err("pages".into());
-        };
-        let Some(NdfValue::Record(page)) = pages.first() else {
-            return Err("PageDocument".into());
-        };
-        let document = page.fields.get(1).ok_or("DocumentSyntax")?;
-        let NdfValue::Record(record) = document else {
-            return Err("DocumentSyntax record".into());
-        };
-        let Some(NdfValue::Record(value)) = record.fields.first() else {
-            return Err("DocValue".into());
-        };
-        let Some(NdfValue::List(embeds)) = value.fields.get(2) else {
-            return Err("embeds".into());
-        };
-        for (index, field) in record.fields.iter().enumerate() {
-            println!(
-                "architecture document_field={index} nodes={}",
-                value_nodes(field)
-            );
-        }
-        for (index, field) in value.fields.iter().enumerate() {
-            println!(
-                "architecture doc_value_field={index} nodes={}",
-                value_nodes(field)
-            );
-        }
-        let mut inputs = vec![CanonicalDigestInput {
-            domain: nepl3_doc_core::prepare::DOCUMENT_DOMAIN,
-            value: document,
-        }];
-        inputs.extend(embeds.iter().map(|value| CanonicalDigestInput {
-            domain: nepl3_doc_core::prepare::GUEST_DOMAIN,
-            value,
-        }));
-        let mut digest_budget = Budget::new(render_budget.limits());
-        let started = std::time::Instant::now();
-        let digests = codec
-            .canonical_value_digests(&inputs, &mut digest_budget)
-            .map_err(err)?;
-        let elapsed = started.elapsed();
-        println!(
-            "architecture isolated_digests elapsed_ns={} requests={} usage={:?}",
-            elapsed.as_nanos(),
-            inputs.len(),
-            digest_budget.usage()
-        );
-        assert_eq!(digests.len(), inputs.len());
     }
+    println!(
+        "{label} single_node_guest max_sources={sources_in_single_node_guest} max_maps={maps_in_single_node_guest}"
+    );
+    // Isolated component run with fresh admission, not a subtraction from
+    // the enclosing projection. Keep the same immutable input and limits.
+    let store = SourceStore::default();
+    let mut b = Budget::new(limits);
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let started = std::time::Instant::now();
+    let encoded =
+        nepl3_doc_core::portable::pages::set_to_value(set, &c.doc.registry, &mut codec, &mut b)
+            .map_err(err)?;
+    let elapsed = started.elapsed();
+    println!(
+        "{label} isolated_encoding elapsed_ns={} usage={:?}",
+        elapsed.as_nanos(),
+        b.usage()
+    );
+    use nepl3_core::value::NdfValue;
+    use nepl3_core::value_codec::{CanonicalDigestInput, FoundationValueCodec};
+    let NdfValue::Record(value) = &encoded else {
+        return Err("PageSet".into());
+    };
+    let Some(NdfValue::List(pages)) = value.fields.first() else {
+        return Err("pages".into());
+    };
+    let Some(NdfValue::Record(page)) = pages.first() else {
+        return Err("PageDocument".into());
+    };
+    let document = page.fields.get(1).ok_or("DocumentSyntax")?;
+    let NdfValue::Record(record) = document else {
+        return Err("DocumentSyntax record".into());
+    };
+    let Some(NdfValue::Record(value)) = record.fields.first() else {
+        return Err("DocValue".into());
+    };
+    let Some(NdfValue::List(embeds)) = value.fields.get(2) else {
+        return Err("embeds".into());
+    };
+    for (index, field) in record.fields.iter().enumerate() {
+        println!(
+            "{label} document_field={index} nodes={}",
+            value_nodes(field)
+        );
+    }
+    for (index, field) in value.fields.iter().enumerate() {
+        println!(
+            "{label} doc_value_field={index} nodes={}",
+            value_nodes(field)
+        );
+    }
+    let mut inputs = vec![CanonicalDigestInput {
+        domain: nepl3_doc_core::prepare::DOCUMENT_DOMAIN,
+        value: document,
+    }];
+    inputs.extend(embeds.iter().map(|value| CanonicalDigestInput {
+        domain: nepl3_doc_core::prepare::GUEST_DOMAIN,
+        value,
+    }));
+    let mut digest_budget = Budget::new(limits);
+    let started = std::time::Instant::now();
+    let digests = codec
+        .canonical_value_digests(&inputs, &mut digest_budget)
+        .map_err(err)?;
+    let elapsed = started.elapsed();
+    println!(
+        "{label} isolated_digests elapsed_ns={} requests={} usage={:?}",
+        elapsed.as_nanos(),
+        inputs.len(),
+        digest_budget.usage()
+    );
+    assert_eq!(digests.len(), inputs.len());
     Ok(())
 }
 

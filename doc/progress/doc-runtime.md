@@ -131,6 +131,21 @@ Doc・Sentence・Math coreのnative全144件と、4 coreのthumbv6m向けcompile
 文書集合用予算による内容検査はnativeで成功した。正式Markdown集合生成は
 次の旧構文の `doc/spec/22-external-extensions.nepld` で停止している。
 集合生成と生成Markdownの更新は未完了である。
+第13章の投影にnamespace準備完了時の観測を追加し、第01章と共通の計測関数で
+portable符号化とdocument・guestのdigest計算を個別に実行した。
+namespace準備までのWorkは314,892,522、投影完了までのWorkは314,974,072だった。
+独立したcold SourceAdmissionによる符号化は69,831,389 Work・215,101,509 AllocationUnits、
+そのNDFに対する148件のdigest計算は153,194,743 Work・19,383,984 AllocationUnitsだった。
+個別測定は各々のBudgetを持ち、投影全体の区間差分や加算可能な内訳として扱わない。
+符号化後のDocValueは1,195,011 NDF nodeを持ち、embeds fieldが1,181,844 nodeを占めた。
+native構文nodeが1件のguestにも最大271 source・279 source mapが含まれる。
+この測定はportable表現の埋め込み部分を次の調査対象とする根拠であり、
+source closureの縮小や通常予算への適合を確認した結果には含めない。
+Windows debugの逐次実行で、第01章・第13章の計測試験2件が成功した。
+第13章の参考時間は投影18.034秒、独立符号化4.428秒、独立digest計算10.548秒だった。
+これは各処理1回の観測値であり、速度改善率の根拠には使用しない。
+計測境界と記述の独立した静的レビュー、対象のclippy、fmt、diff検査を完了した。
+今回の計測変更についてWASIとworkspace全体の再実行は行っていない。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
