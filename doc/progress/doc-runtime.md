@@ -383,6 +383,13 @@ exact・不足・取消を確認した。native/WASI各241試験、独立レビ�
 thumb向けcheckが成功した。第13章のlowerは64,078,617 Work、投影は218,934,368 Workとなり、
 投影AllocationUnitsは153,021,007のままである。native debug単回は約6.27秒であった。
 通常Work100Mへの適合と全文書生成は引き続き未達である。
+source poolの二次索引でも同一の不変identityを1 Workで照合する。別storageには
+digest・revision・source名の比較を適用し、正準順序と宣言範囲を維持する。
+wireのnative/WASI各91試験、独立レビュー18試験、Clippy、thumb向けcheck、repository checkが成功した。
+第13章の投影は215,506,636 Workとなり、前段から3,427,732 Work減少した。
+AllocationUnitsは153,021,007、native debug単回は約6.32秒であり、実時間の改善は確認していない。
+captureはownerの由来とguestの明示宣言を保持する。任意payload内のsource参照を扱う契約を
+追加せずに宣言を削減する処理は採用していない。通常Work100Mへの適合は継続課題である。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

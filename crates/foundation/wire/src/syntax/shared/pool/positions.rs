@@ -8,6 +8,13 @@ pub(in crate::syntax::shared) struct SourcePositions<'p, 's> {
 }
 
 fn compare(a: &SnapshotId, z: &SnapshotId, b: &mut Budget) -> Result<Ordering, WireError> {
+    b.charge(Resource::Work, 1)?;
+    // The pool and lookup identity are immutably borrowed for this operation.
+    // Reuse exact storage equality; independent identities still compare every
+    // field. This does not change content ordering or declaration membership.
+    if core::ptr::eq(a, z) {
+        return Ok(Ordering::Equal);
+    }
     b.charge(Resource::Work, 33)?;
     let fixed = (a.digest, a.revision).cmp(&(z.digest, z.revision));
     if fixed != Ordering::Equal {

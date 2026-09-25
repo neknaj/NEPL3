@@ -2,6 +2,73 @@ use super::*;
 use nepl3_core::{budget::Limits, source::SourceId};
 
 #[test]
+fn source_position_lookup_reuses_shared_identity_and_preserves_stop() -> Result<(), WireError> {
+    let limits = Limits {
+        source_bytes: 1024,
+        work: 100_000,
+        allocation_units: 100_000,
+        ..Limits::default()
+    };
+    let source = SourceSnapshot::new(
+        SourceId("long-source-name".repeat(100)),
+        1,
+        "memory:test".into(),
+        b"text".to_vec(),
+        &mut Budget::new(limits),
+    )?;
+    let pool = Pool {
+        entries: alloc::vec![(&source, Digest::of(b"test"))],
+        values: Vec::new(),
+    };
+    let positions = SourcePositions::new(&pool, &mut Budget::new(limits))?;
+    let span = source.span(0, 4)?;
+    let independent = span.snapshot();
+    let mut shared_budget = Budget::new(limits);
+    let mut independent_budget = Budget::new(limits);
+    assert_eq!(
+        positions.position(span.snapshot_ref(), &mut shared_budget)?,
+        0
+    );
+    assert_eq!(
+        positions.position(&independent, &mut independent_budget)?,
+        0
+    );
+    assert_eq!(
+        independent_budget.usage().work,
+        35 + independent.source.0.len() as u64
+    );
+    #[cfg(target_has_atomic = "ptr")]
+    assert_eq!(shared_budget.usage().work, 1);
+    #[cfg(not(target_has_atomic = "ptr"))]
+    assert_eq!(shared_budget.usage().work, independent_budget.usage().work);
+    for (identity, work) in [
+        (span.snapshot_ref(), shared_budget.usage().work),
+        (&independent, independent_budget.usage().work),
+    ] {
+        assert_eq!(
+            positions.position(identity, &mut Budget::new(Limits { work, ..limits }))?,
+            0
+        );
+        let mut short = Budget::new(Limits {
+            work: work - 1,
+            ..limits
+        });
+        assert_eq!(
+            positions.position(identity, &mut short),
+            Err(WireError::Stopped(StopReason::WorkLimit))
+        );
+        assert_eq!(short.poll(), Err(StopReason::WorkLimit));
+        let mut cancelled = Budget::new(limits);
+        cancelled.cancel();
+        assert_eq!(
+            positions.position(identity, &mut cancelled),
+            Err(WireError::Stopped(StopReason::Cancelled))
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn source_position_index_matches_complete_independent_identities() -> Result<(), WireError> {
     let limits = Limits {
         source_bytes: 1024,
@@ -159,7 +226,7 @@ fn source_position_index_bounds_long_name_comparisons() -> Result<(), WireError>
         }
         // At most log2(count)+1 fixed-size comparisons and one full name
         // comparison per hit. Long common prefixes are not revisited per level.
-        let per_hit = 33 * (usize::BITS - count.leading_zeros()) as u64
+        let per_hit = 34 * (usize::BITS - count.leading_zeros()) as u64
             + sources[0].identity().source.0.len() as u64
             + 1;
         assert!(lookup.usage().work <= count as u64 * per_hit);
