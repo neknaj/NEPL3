@@ -294,7 +294,7 @@ pub fn prefix_with_foreign(
                     field: 0,
                 });
             }
-            let closure = ForeignClosure::capture(foreign, &checked, registry, b, admission)?;
+            let closure = ForeignClosure::capture_at(&checked, *id, 0, registry, b, admission)?;
             let embed = EmbedRef(embeds.len() as u64);
             push(&mut embeds, closure, b)?;
             let index = a.nodes.len() as u64;

@@ -204,14 +204,14 @@ impl Adapter<'_, '_> {
         if !accepted {
             return Err(LowerError::Operand { node: id, field: f });
         }
-        let [FieldValue::Foreign(foreign)] = node.fields.as_slice() else {
+        let [FieldValue::Foreign(_)] = node.fields.as_slice() else {
             return Err(LowerError::Operand {
                 node: child,
                 field: 0,
             });
         };
         let closure =
-            ForeignClosure::capture(foreign, self.checked, self.registry, self.b, admission)?;
+            ForeignClosure::capture_at(self.checked, child, 0, self.registry, self.b, admission)?;
         let index = EmbedRef(self.embeds.len() as u64);
         push(&mut self.embeds, DocEmbed { kind, closure }, self.b)?;
         Ok(index)
