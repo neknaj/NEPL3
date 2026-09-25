@@ -98,53 +98,7 @@ pub fn inspect<'c, 'd>(
             })?;
             push(&mut inspected, item, b)?;
         }
-        let mut occurrences = Vec::new();
-        let mut pending = Vec::new();
-        push(
-            &mut pending,
-            (
-                Occurrence {
-                    document: DocumentId(0),
-                    parent: None,
-                },
-                b.current_depth(),
-            ),
-            b,
-        )?;
-        while let Some((occurrence, depth)) = pending.pop() {
-            b.with_depth_at_least::<_, Error<'c>>(depth.saturating_add(1), |b| {
-                let parent = labels::MemberId(occurrences.len() as u64);
-                let document = &input.members[occurrence.document.index()];
-                push(&mut occurrences, occurrence, b)?;
-                for (sentence, slot) in document.occurrences.iter().enumerate().rev() {
-                    b.charge(Resource::Work, 1)?;
-                    let start = bound(&document.guests, slot.embed, false, b)?;
-                    let end = bound(&document.guests, slot.embed, true, b)?;
-                    for guest in (start..end).rev() {
-                        let item = &document.guests[guest];
-                        let next_depth = depth
-                            .saturating_add(slot.depth)
-                            .saturating_add(item.occurrence.depth);
-                        push(
-                            &mut pending,
-                            (
-                                Occurrence {
-                                    document: item.document,
-                                    parent: Some(Parent {
-                                        member: parent,
-                                        sentence,
-                                        guest,
-                                    }),
-                                },
-                                next_depth,
-                            ),
-                            b,
-                        )?;
-                    }
-                }
-                Ok(())
-            })?;
-        }
+        let occurrences = select_occurrences(input, b)?;
         Ok(Plan {
             input,
             inspected,
@@ -153,4 +107,61 @@ pub fn inspect<'c, 'd>(
     })();
     b.poll()?;
     result
+}
+
+/// Expand only the host-selected display occurrences. This grants no label or
+/// structural proof; the scoped page resolver validates every selected input.
+pub fn select_occurrences(
+    input: &Collected<'_>,
+    b: &mut Budget,
+) -> Result<Vec<Occurrence>, StopReason> {
+    b.poll()?;
+    let mut occurrences = Vec::new();
+    let mut pending = Vec::new();
+    push(
+        &mut pending,
+        (
+            Occurrence {
+                document: DocumentId(0),
+                parent: None,
+            },
+            b.current_depth(),
+        ),
+        b,
+    )?;
+    while let Some((occurrence, depth)) = pending.pop() {
+        b.with_depth_at_least::<_, StopReason>(depth.saturating_add(1), |b| {
+            let parent = labels::MemberId(occurrences.len() as u64);
+            let document = &input.members[occurrence.document.index()];
+            push(&mut occurrences, occurrence, b)?;
+            for (sentence, slot) in document.occurrences.iter().enumerate().rev() {
+                b.charge(Resource::Work, 1)?;
+                let start = bound(&document.guests, slot.embed, false, b)?;
+                let end = bound(&document.guests, slot.embed, true, b)?;
+                for guest in (start..end).rev() {
+                    let item = &document.guests[guest];
+                    let next_depth = depth
+                        .saturating_add(slot.depth)
+                        .saturating_add(item.occurrence.depth);
+                    push(
+                        &mut pending,
+                        (
+                            Occurrence {
+                                document: item.document,
+                                parent: Some(Parent {
+                                    member: parent,
+                                    sentence,
+                                    guest,
+                                }),
+                            },
+                            next_depth,
+                        ),
+                        b,
+                    )?;
+                }
+            }
+            Ok(())
+        })?;
+    }
+    Ok(occurrences)
 }

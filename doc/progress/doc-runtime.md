@@ -397,6 +397,23 @@ WorkとAllocationUnitsの削減、exact・不足境界、owner改変後の拒否
 Doc coreのnative/WASI各49試験、host準備24試験が成功した。独立レビューはprepare/portableの
 20試験と最終API整理の静的確認を行い、追加指摘はなかった。Clippy、thumb向けcheck、
 repository checkも成功した。この再利用は単独prepareを対象とし、ページ集合投影の削減値には含めない。
+
+ページ集合のMarkdown生成には、構造検査・ラベル収集・符号化・namespace解決を同じBudgetと
+source admission内で実行する `pages::namespace::with_resolved` を接続した。完成した検証値を
+callbackへ借用させ、操作内のmember表を保持する。各呼出しで検証を実行し、guestの相対深度、
+重複した表示上の出現、完全な出力schema検査を維持する。別Budgetへ検証結果を持ち越すAPIは設けない。
+従来経路とのportable plan全体の一致、Work・Allocation削減、各資源の不足境界、callbackの
+失敗と取消しを確認した。Doc coreはnative/WASI各51試験に成功し、独立レビューもnamespacesの
+8試験とhost差分を確認した。host試験で検出したnamespaceエラー表示の回帰を修正し、関連試験を再実行した。
+WASIのhost選択試験は19件成功・4件ignoreである。既知のWorkLimitとなる第13・19章の2件を除外し、
+4件のignoreは明示実行用の章別計測である。Clippy、thumb向けcheck、repository check、fmt、diff検査も成功した。
+
+第13章の投影はWorkが215,506,636から196,344,754、AllocationUnitsが153,021,007から
+149,323,420へ減少した。単独debug実行の投影時間は約5.97秒だった。計測stageのInspectionをSelectionへ
+変更し、構造検査をResolution内へ統合したため、旧stage単独の費用とは直接比較しない。
+通常上限100,000,000を維持したhost試験では第13・19章がWorkLimitとなる。この2件とcanonical生成物の
+更新は継続課題であり、今回の改善による通常ページ予算への到達は未完了である。
+
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

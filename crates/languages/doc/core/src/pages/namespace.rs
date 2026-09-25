@@ -3,6 +3,8 @@
 use super::*;
 use crate::labels::namespace::{CheckedNamespace, MemberId};
 use nepl3_core::value::NdfValue;
+mod scoped;
+pub use scoped::{NamespaceDocument, ScopedError, with_resolved};
 
 pub const DOMAIN: &[u8] = b"NEPL3.Doc.PageNamespaces.v2\0";
 
@@ -85,6 +87,10 @@ pub enum Error<'a, E> {
         page: u64,
         error: PreparationError<'a, E>,
     },
+    Namespace {
+        page: u64,
+        error: crate::labels::namespace::Error<'a>,
+    },
     Link {
         owner: Owner,
         error: PageError<'a, E>,
@@ -140,7 +146,6 @@ fn resolve_inner<'n, 'm, 'a, C: FoundationValueCodec>(
     let value = portable::pages::set_to_value(set, registry, codec, b)
         .map_err(|error| Error::Page(PageError::from(error)))?;
     let mut plans = Vec::new();
-    let mut page_values = Vec::new();
     // Complete boundary inspection for every member before resolving links.
     for (page, namespace) in namespaces.iter().enumerate() {
         let inspected = prepare::inspect_namespace_encoded_root(
@@ -158,8 +163,23 @@ fn resolve_inner<'n, 'm, 'a, C: FoundationValueCodec>(
             page: page as u64,
             error,
         })?;
+        push(&mut plans, inspected, b)?;
+    }
+    resolve_plans(set, namespaces, value, plans, codec, b)
+}
+
+fn resolve_plans<'n, 'm, 'a, C: FoundationValueCodec>(
+    set: &'a PageSet,
+    namespaces: &'n [&'n CheckedNamespace<'m, 'a>],
+    value: NdfValue,
+    plans: Vec<Vec<prepare::DocPreparationPlan>>,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<CheckedPageNamespaces<'n, 'm, 'a>, Error<'a, C::Error>> {
+    let mut page_values = Vec::new();
+    for inspected in &plans {
         let mut member_values = Vec::new();
-        for plan in &inspected {
+        for plan in inspected {
             b.charge(Resource::Work, 32)?;
             b.charge(Resource::AllocationUnits, 32)?;
             push(
@@ -169,7 +189,6 @@ fn resolve_inner<'n, 'm, 'a, C: FoundationValueCodec>(
             )?;
         }
         push(&mut page_values, NdfValue::List(member_values), b)?;
-        push(&mut plans, inspected, b)?;
     }
     let identity_value = portable::pages::namespace_identity_input(value, page_values, b)
         .map_err(|error| Error::Page(PageError::from(error)))?;

@@ -122,7 +122,7 @@ fn projection_profile_preserves_output_usage_and_completed_stage_order() -> Resu
         stages.iter().map(|(stage, _)| *stage).collect::<Vec<_>>(),
         [
             Stage::Discovery,
-            Stage::Inspection,
+            Stage::Selection,
             Stage::Resolution,
             Stage::Projection
         ]

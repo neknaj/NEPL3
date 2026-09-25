@@ -112,6 +112,14 @@ pub fn inspect<'a>(
     let checked = document
         .validate_structure(registry, b, admission)
         .map_err(LabelError::from)?;
+    inspect_structure(&checked, b)
+}
+pub(crate) fn inspect_structure<'a>(
+    checked: &crate::check::ValidatedDocumentSyntax<'a>,
+    b: &mut Budget,
+) -> Result<Member<'a>, Error<'a>> {
+    b.poll()?;
+    let document = checked.document();
     let (root, category) = edges::root(document.value.root);
     if !matches!(
         document.value.root,

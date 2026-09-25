@@ -2,11 +2,7 @@
 //! never inferred HTML routes. Passive files have bytes but no semantic labels.
 use super::*;
 use crate::doc::export::pages::discovery;
-use nepl3_core::source::SourceAdmission;
-use nepl3_doc_core::{
-    labels::namespace as labels,
-    pages::{PageDestination, PageSet, namespace as domain},
-};
+use nepl3_doc_core::pages::{PageDestination, PageSet, namespace as domain};
 use nepl3_sentence_core::lower::ForeignInlineForm;
 
 #[derive(Debug)]
@@ -85,7 +81,7 @@ where
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Stage {
     Discovery,
-    Inspection,
+    Selection,
     Resolution,
     Projection,
 }
@@ -153,41 +149,56 @@ where
         )?;
     }
     observe(Stage::Discovery, budget.usage());
-    let mut admission = SourceAdmission::default();
     let mut plans = Vec::new();
+    let mut selected = Vec::new();
     for page in &discovered {
-        let value = discovery::namespace::inspect(page, registry, budget, &mut admission);
-        budget.poll()?;
-        push(
-            &mut plans,
-            value.map_err(|e| Error::Invalid(format!("{e:?}")))?,
-            budget,
-        )?;
+        let occurrences = discovery::namespace::select_occurrences(page, budget)?;
+        let base = page.members()[0].depth();
+        let mut documents = Vec::new();
+        for occurrence in &occurrences {
+            let owner = &page.members()[occurrence.document.index()];
+            push(
+                &mut documents,
+                domain::NamespaceDocument {
+                    document: owner.document(),
+                    relative_depth: owner.depth().saturating_sub(base),
+                },
+                budget,
+            )?;
+        }
+        push(&mut plans, occurrences, budget)?;
+        push(&mut selected, documents, budget)?;
     }
-    observe(Stage::Inspection, budget.usage());
-    let mut members = Vec::new();
-    for plan in &plans {
-        let refs = plan.member_refs(budget)?;
-        push(&mut members, refs, budget)?;
-    }
-    let mut namespaces = Vec::new();
-    for members in &members {
-        let value = labels::resolve(members, budget);
-        budget.poll()?;
-        push(
-            &mut namespaces,
-            value.map_err(|e| Error::Invalid(format!("{e:?}")))?,
-            budget,
-        )?;
-    }
+    observe(Stage::Selection, budget.usage());
     let mut refs = Vec::new();
-    for namespace in &namespaces {
-        push(&mut refs, namespace, budget)?;
+    for documents in &selected {
+        push(&mut refs, documents.as_slice(), budget)?;
     }
-    let value = domain::resolve(set, &refs, registry, codec, budget);
+    let value = domain::with_resolved(set, &refs, registry, codec, budget, |checked, _, budget| {
+        observe(Stage::Resolution, budget.usage());
+        let artifact = render_checked(set, &discovered, &plans, checked, budget, aliases)?;
+        observe(Stage::Projection, budget.usage());
+        Ok(artifact)
+    });
     budget.poll()?;
-    let checked = value.map_err(|e| Error::Invalid(format!("{e:?}")))?;
-    observe(Stage::Resolution, budget.usage());
+    value.map_err(|error| match error {
+        domain::ScopedError::Stopped(reason) => Error::Stopped(reason),
+        domain::ScopedError::Output(error) => error,
+        domain::ScopedError::Preparation(domain::Error::Namespace { error, .. }) => {
+            Error::Invalid(format!("{error:?}"))
+        }
+        domain::ScopedError::Preparation(error) => Error::Invalid(format!("{error:?}")),
+    })
+}
+
+fn render_checked(
+    set: &PageSet,
+    discovered: &[discovery::Collected<'_>],
+    plans: &[Vec<discovery::namespace::Occurrence>],
+    checked: &domain::CheckedPageNamespaces<'_, '_, '_>,
+    budget: &mut Budget,
+    aliases: &[&[Alias]],
+) -> Result<PagesArtifact, Error> {
     let mut output = Vec::new();
     let mut dependencies = Vec::new();
     let mut pending = checked.members().iter().peekable();
@@ -206,7 +217,7 @@ where
                 break;
             }
             let member = plan.owner().member.0;
-            let owner = plans[page].occurrences()[member as usize].document.index();
+            let owner = plans[page][member as usize].document.index();
             if member == 0 {
                 document_digest = Some(plan.document_digest());
             }
@@ -289,7 +300,6 @@ where
     for (artifact, _) in output {
         push(&mut pages, artifact, budget)?;
     }
-    observe(Stage::Projection, budget.usage());
     Ok(PagesArtifact {
         identity: checked.identity(),
         pages,

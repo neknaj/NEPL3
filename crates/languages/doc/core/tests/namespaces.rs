@@ -19,6 +19,8 @@ use nepl3_doc_core::{
 use nepl3_wire::foundation::FoundationCodec;
 #[path = "namespaces/portable.rs"]
 mod packets;
+#[path = "namespaces/scoped.rs"]
+mod scoped;
 #[path = "support/closure.rs"]
 mod support;
 
