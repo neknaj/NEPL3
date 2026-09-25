@@ -95,6 +95,73 @@ fn fixture() -> Result<(SchemaRef, SchemaRegistry, SourceStore, Token), String> 
 }
 
 #[test]
+fn shared_views_validate_large_field_sets_and_preserve_error_order() -> TestResult {
+    let (schema, registry, sources, mut token) = fixture()?;
+    for length in [8, 128] {
+        for count in [128, 256, 512] {
+            token.views.elements[0].fields = (0..count)
+                .rev()
+                .map(|index| ViewField {
+                    name: format!("{}{:04}", "x".repeat(length), index),
+                    children: vec![],
+                })
+                .collect();
+            let bytes = shared::encode(
+                &token.views,
+                &schema,
+                &registry,
+                &sources,
+                &mut SourceAdmission::default(),
+                &mut budget(),
+            )
+            .map_err(|e| format!("{e:?}"))?;
+            let decoded = shared::decode(
+                &bytes,
+                &schema,
+                &registry,
+                &sources,
+                &mut SourceAdmission::default(),
+                &mut budget(),
+            )
+            .map_err(|e| format!("{e:?}"))?;
+            assert_eq!(decoded, token.views);
+            for duplicate in [1, count / 2, count - 1] {
+                let mut bad = token.views.clone();
+                bad.elements[0].fields[duplicate].name = bad.elements[0].fields[0].name.clone();
+                assert_eq!(
+                    bad.validate(&sources, &registry, &mut budget()),
+                    Err(ViewError::DuplicateField)
+                );
+            }
+        }
+    }
+    token.views.elements[0].fields = vec![
+        ViewField {
+            name: "z".into(),
+            children: vec![ViewRef(999)],
+        },
+        ViewField {
+            name: "z".into(),
+            children: vec![],
+        },
+    ];
+    // An invalid child in an earlier declaration precedes a later duplicate.
+    assert_eq!(
+        token.views.validate(&sources, &registry, &mut budget()),
+        Err(ViewError::Reference)
+    );
+    token.views.elements[0].fields[0].children.clear();
+    token.views.elements[0].fields[1]
+        .children
+        .push(ViewRef(999));
+    assert_eq!(
+        token.views.validate(&sources, &registry, &mut budget()),
+        Err(ViewError::DuplicateField)
+    );
+    Ok(())
+}
+
+#[test]
 fn shared_views_receive_independent_multi_identity_fixture() -> TestResult {
     use nepl3_core::{
         schema::SchemaDescriptor,
