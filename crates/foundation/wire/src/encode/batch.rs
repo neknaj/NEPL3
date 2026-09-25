@@ -55,11 +55,13 @@ fn kind_bit(value: &NdfValue) -> u16 {
 }
 
 impl Batch<'_, '_> {
-    fn flush(&mut self) -> Result<(), WireError> {
+    fn flush(&mut self, b: &mut Budget) -> Result<(), WireError> {
         if self.bytes.is_empty() {
             return Ok(());
         }
         for &request in &self.active {
+            b.charge(Resource::Work, 1)?;
+            b.charge(Resource::Work, self.bytes.len() as u64)?;
             self.states[request]
                 .hash
                 .as_mut()
@@ -167,7 +169,7 @@ impl Sink for Batch<'_, '_> {
                 return Err(WireError::InvalidType);
             }
             if count == 0 {
-                self.flush()?;
+                self.flush(b)?;
             }
             let domain = self.inputs[request].domain;
             b.charge(Resource::Work, domain.len() as u64)?;
@@ -185,7 +187,7 @@ impl Sink for Batch<'_, '_> {
     }
 
     fn leave(&mut self, b: &mut Budget) -> Result<(), WireError> {
-        self.flush()?;
+        self.flush(b)?;
         let count = self.scopes.pop().ok_or(WireError::InvalidType)?;
         for _ in 0..count {
             b.charge(Resource::Work, 1)?;
@@ -198,21 +200,18 @@ impl Sink for Batch<'_, '_> {
     }
 
     fn write(&mut self, bytes: &[u8], b: &mut Budget) -> Result<(), WireError> {
-        // Preserve the per-fragment encoding and hash charges before buffering.
-        // Each buffered byte is prepaid for exactly the current active set;
-        // enter/leave flush it before that set changes.
+        // Charge each encoded byte before copying it. Hash work is charged at
+        // flush, immediately before updating each active state. Enter/leave
+        // flush before changing that set; a stopped flush publishes no digest.
+        // Small encoder fragments therefore need no repeated active-state walk.
         b.charge(Resource::Work, bytes.len() as u64)?;
-        for _ in &self.active {
-            b.charge(Resource::Work, 1)?;
-            b.charge(Resource::Work, bytes.len() as u64)?;
-        }
         let mut remaining = bytes;
         while !remaining.is_empty() {
             let count = remaining.len().min(CHUNK - self.bytes.len());
             self.bytes.extend_from_slice(&remaining[..count]);
             remaining = &remaining[count..];
             if self.bytes.len() == CHUNK {
-                self.flush()?;
+                self.flush(b)?;
             }
         }
         Ok(())

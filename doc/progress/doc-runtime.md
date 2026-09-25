@@ -191,6 +191,16 @@ wire全体はnative・WASI各97件成功し、非2冪件数・storage配置の�
 独立レビューはpoolとsharedの19件、補強後の追加1件を実行した。clippy、repository、
 fmt・diff検査とthumbv6m向けcompileも成功した。
 
+batch digestはhash更新時に各active stateのWorkを課金する。符号化の小断片ごとに
+課金だけの走査を反復する処理を除去し、符号化byte・各hash入力byteへの課金を維持した。
+選択範囲の開始・終了ではbufferをflushし、canonical byte列とdigestを保持する。
+第03章の内容検査が成功し、投影は245,494,007から233,592,456 Work、単独digestは
+111,513,551から99,612,000 Workへ減少した。通常page予算への適合は継続課題である。
+選択位置によって生じる非空flush数の差、address配置から独立した検索費用、複数hashの
+更新途中で停止しても結果を公開しないことを検査した。wire全体はnative・WASI各100件、
+独立レビューはbatch 15件が成功した。clippy、repository、fmt・diff検査とthumbv6m向け
+compileも成功した。正式受入と生成物の整合確認は未完了である。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

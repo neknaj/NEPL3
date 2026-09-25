@@ -14,6 +14,47 @@ fn budget() -> Budget {
 }
 
 #[test]
+fn hash_work_depends_on_buffer_flushes_not_encoder_fragment_count() -> Result<(), WireError> {
+    for length in [0usize, 1, CHUNK - 1, CHUNK, CHUNK + 1, 2 * CHUNK + 7] {
+        let bytes = vec![37; length];
+        let expected = Digest::of(&bytes);
+        for fragment in [1usize, 7, CHUNK, 2 * CHUNK + 7] {
+            let mut batch = Batch {
+                inputs: &[],
+                index: Vec::new(),
+                requested_kinds: 0,
+                states: (0..2)
+                    .map(|_| State {
+                        hash: Some(Sha256::new()),
+                        digest: None,
+                    })
+                    .collect(),
+                active: vec![0, 1],
+                scopes: Vec::new(),
+                bytes: Vec::with_capacity(CHUNK),
+            };
+            let mut measured = budget();
+            for part in bytes.chunks(fragment) {
+                batch.write(part, &mut measured)?;
+            }
+            batch.flush(&mut measured)?;
+            // One encoding pass and two hash passes consume every byte. The
+            // only active-state iteration occurs once per nonempty flush.
+            assert_eq!(
+                measured.usage().work,
+                (3 * length + 2 * length.div_ceil(CHUNK)) as u64
+            );
+            for state in batch.states {
+                let hash = state.hash.ok_or(WireError::InvalidType)?;
+                assert_eq!(Digest(hash.finalize().into()), expected);
+                assert!(state.digest.is_none());
+            }
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn each_requested_kind_preserves_parent_and_selected_child_digest() -> Result<(), WireError> {
     use alloc::{boxed::Box, string::String};
     use nepl3_core::value::{Integer, Rational, Record, SchemaRef, Variant};
@@ -182,7 +223,7 @@ fn index_growth_and_layout_independent_resource_boundaries() -> Result<(), WireE
 }
 
 #[test]
-fn unrequested_nodes_keep_layout_independent_lookup_cost() -> Result<(), WireError> {
+fn logical_selection_positions_account_for_nonempty_flushes() -> Result<(), WireError> {
     let root = NdfValue::List((0..32).map(|_| NdfValue::Unit).collect());
     let NdfValue::List(children) = &root else {
         return Err(WireError::InvalidType);
@@ -207,20 +248,87 @@ fn unrequested_nodes_keep_layout_independent_lookup_cost() -> Result<(), WireErr
     let mut a = budget();
     let mut b = budget();
     assert_eq!(digests(&first, &mut a)?, digests(&last, &mut b)?);
-    assert_eq!(a.usage(), b.usage());
-    for below in [false, true] {
-        let mut limits = budget().limits();
-        limits.work = a.usage().work - u64::from(below);
-        let mut left = Budget::new(limits);
-        let mut right = Budget::new(limits);
-        let result = digests(&first, &mut left);
-        assert_eq!(result, digests(&last, &mut right));
-        assert_eq!(left.usage(), right.usage());
-        if below {
-            assert_eq!(result, Err(WireError::Stopped(StopReason::WorkLimit)));
-        } else {
-            result?;
+    // Selecting the first children leaves one final nonempty parent-only
+    // flush. Selecting the last children ends with an empty buffer. Encoding
+    // and hash bytes are equal; only this one actual state iteration differs.
+    let mut first_usage = a.usage();
+    assert_eq!(first_usage.work, b.usage().work + 1);
+    first_usage.work -= 1;
+    assert_eq!(first_usage, b.usage());
+    for (inputs, work) in [(&first, a.usage().work), (&last, b.usage().work)] {
+        for below in [false, true] {
+            let mut limits = budget().limits();
+            limits.work = work - u64::from(below);
+            let mut left = Budget::new(limits);
+            let result = digests(inputs, &mut left);
+            if below {
+                assert_eq!(result, Err(WireError::Stopped(StopReason::WorkLimit)));
+            } else {
+                result?;
+            }
         }
+    }
+    Ok(())
+}
+
+#[test]
+fn lookup_precharge_is_independent_of_address_position() -> Result<(), WireError> {
+    let index = [(10, 0), (20, 1), (30, 2), (40, 3), (50, 4)];
+    for address in [0usize, 10, 15, 30, 50, 99] {
+        let mut measured = budget();
+        let found = bound(&index, address, &mut measured)?;
+        assert_eq!(
+            found,
+            index.iter().take_while(|entry| entry.0 < address).count()
+        );
+        assert_eq!(measured.usage().work, 3);
+        let mut short = Budget::new(Limits {
+            work: 2,
+            ..budget().limits()
+        });
+        assert_eq!(
+            bound(&index, address, &mut short),
+            Err(WireError::Stopped(StopReason::WorkLimit))
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn flush_stop_between_active_states_keeps_results_unpublished() -> Result<(), WireError> {
+    let mut batch = Batch {
+        inputs: &[],
+        index: Vec::new(),
+        requested_kinds: 0,
+        states: (0..2)
+            .map(|_| State {
+                hash: Some(Sha256::new()),
+                digest: None,
+            })
+            .collect(),
+        active: vec![0, 1],
+        scopes: Vec::new(),
+        bytes: Vec::with_capacity(CHUNK),
+    };
+    // Copy three bytes, hash them into state zero, then stop before state one's
+    // bytes are hashed. No final result is exposed, and retry stays stopped.
+    let mut limited = Budget::new(Limits {
+        work: 8,
+        ..budget().limits()
+    });
+    batch.write(&[1, 2, 3], &mut limited)?;
+    assert_eq!(
+        batch.flush(&mut limited),
+        Err(WireError::Stopped(StopReason::WorkLimit))
+    );
+    assert_eq!(
+        batch.flush(&mut limited),
+        Err(WireError::Stopped(StopReason::WorkLimit))
+    );
+    for (state, bytes) in batch.states.iter().zip([&[1, 2, 3][..], &[][..]]) {
+        assert!(state.digest.is_none());
+        let hash = state.hash.as_ref().ok_or(WireError::InvalidType)?.clone();
+        assert_eq!(Digest(hash.finalize().into()), Digest::of(bytes));
     }
     Ok(())
 }
