@@ -249,6 +249,17 @@ core追加1件もWASIで成功した。独立レビューはcore1件・wire sour
 後から追加したwire回帰を静的確認した。core/wireのclippy、thumbv6m向けcompile、fmt、diff検査も成功した。
 第13章の明示計測はnative1件成功し、投影は319,330,279 Work、247,434,268 AllocationUnitsとなった。
 参照検索の追加課金でWorkは1,251,621増加した。通常Work100Mへの適合と共有表導入は継続する。
+
+Foundationの共有交換形式として `SyntaxBundleSet` を追加した。source/mapの内容表と、
+各root bundleの参照集合・構文本体を保持する。共有表をambient sourceへ登録せず、
+各memberが選択した宣言だけで既存decoderと構造検査を実行する。nested Foreignは
+従来の自己完結したbundleを維持する。schema・生成descriptor・第02章の契約を更新した。
+複数entryの整列・重複・未使用、31/32/33 byte参照、隣接memberのscope隔離、
+encode/decodeの資源上限一致と1不足、取消・depth復帰を含む追加6試験はnative・WASIで成功した。
+独立レビューも6試験を実行し、追加の阻害指摘はなかった。wire全81試験、Clippy、
+thumb向けcheck、repository checkが成功した。正式受入は未実行である。
+初期encoderは通常のNDF bundleを構築してから共有表へ集約するため、構築中の重複費用が残る。
+Doc生成への接続、通常予算での全章処理、生成Markdownの更新は継続作業である。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

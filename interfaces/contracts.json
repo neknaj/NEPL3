@@ -762,6 +762,29 @@
         ]
       ]
     },
+    "SyntaxBody": {
+      "fields": [
+        ["nodes", "List<SyntaxNode>"],
+        ["origins", "List<Origin>"],
+        ["root", "NodeRef"],
+        ["environments", "List<EnvironmentEntry>"],
+        ["tokens", "List<Token>"]
+      ]
+    },
+    "SharedSyntaxBundle": {
+      "fields": [
+        ["sources", "List<Bytes32>"],
+        ["sourceMaps", "List<Bytes32>"],
+        ["body", "SyntaxBody"]
+      ]
+    },
+    "SyntaxBundleSet": {
+      "fields": [
+        ["sources", "List<SourceContent>"],
+        ["sourceMaps", "List<SourceMapping>"],
+        ["bundles", "List<SharedSyntaxBundle>"]
+      ]
+    },
     "SyntaxNode": {
       "fields": [
         [

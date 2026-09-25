@@ -10,6 +10,8 @@ use nepl3_core::{
 use nepl3_wire::{WireError, decode, encode, environment::environment_digest, syntax::*};
 #[path = "syntax/foreign.rs"]
 mod foreign;
+#[path = "syntax/shared.rs"]
+mod shared_tests;
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 fn budget() -> Budget {
     Budget::new(Limits {

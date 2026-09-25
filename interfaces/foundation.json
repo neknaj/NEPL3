@@ -2488,6 +2488,33 @@
         "Warning": []
       }
     },
+    "SharedSyntaxBundle": {
+      "constraints": [],
+      "record": [
+        [
+          "sources",
+          {
+            "list": "Bytes32"
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": "Bytes32"
+          }
+        ],
+        [
+          "body",
+          {
+            "named": {
+              "name": "SyntaxBody",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
     "SourceBundle": {
       "constraints": [
         "source.bundle"
@@ -2703,6 +2730,69 @@
         "WorkLimit": []
       }
     },
+    "SyntaxBody": {
+      "constraints": [],
+      "record": [
+        [
+          "nodes",
+          {
+            "list": {
+              "named": {
+                "name": "SyntaxNode",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "origins",
+          {
+            "list": {
+              "named": {
+                "name": "Origin",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "root",
+          {
+            "named": {
+              "name": "NodeRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "environments",
+          {
+            "list": {
+              "named": {
+                "name": "EnvironmentEntry",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "tokens",
+          {
+            "list": {
+              "named": {
+                "name": "Token",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
     "SyntaxBundle": {
       "constraints": [
         "source.map",
@@ -2785,6 +2875,47 @@
             "list": {
               "named": {
                 "name": "SourceMapping",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "SyntaxBundleSet": {
+      "constraints": [],
+      "record": [
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "name": "SourceContent",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "name": "SourceMapping",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "bundles",
+          {
+            "list": {
+              "named": {
+                "name": "SharedSyntaxBundle",
                 "package": "nepl3.foundation",
                 "revision": 1
               }
