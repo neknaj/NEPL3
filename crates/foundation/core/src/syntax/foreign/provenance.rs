@@ -203,17 +203,26 @@ fn array<T>(count: usize, b: &mut Budget) -> Result<Vec<T>, StopReason> {
     Ok(values)
 }
 
-/// One immutable owner's captures share its complete provenance. The context
-/// cannot be rebound to another owner. Each closure still receives full validation.
+// Own the immutable tables and borrow the registry for the proof's lifetime.
+// Reconstructing a borrowed proof avoids self-referential storage.
+struct PreparedOwner<'a> {
+    provenance: OwnerProvenance,
+    registry: &'a SchemaRegistry,
+    depth: u64,
+}
+
+/// One immutable owner's captures share its complete provenance and owner
+/// validation. Registry changes revalidate the owner. Each capture validates
+/// guest and environment, current depth, and the explicit source admission.
 pub struct ForeignCapture<'a> {
     owner: &'a ValidatedSyntaxBundle<'a>,
-    provenance: Option<OwnerProvenance>,
+    prepared: Option<PreparedOwner<'a>>,
 }
 impl<'a> ForeignCapture<'a> {
     pub fn new(owner: &'a ValidatedSyntaxBundle<'a>) -> Self {
         Self {
             owner,
-            provenance: None,
+            prepared: None,
         }
     }
 
@@ -221,7 +230,7 @@ impl<'a> ForeignCapture<'a> {
         &mut self,
         node: NodeRef,
         field: usize,
-        registry: &SchemaRegistry,
+        registry: &'a SchemaRegistry,
         b: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<ForeignClosure, SyntaxError> {
@@ -230,17 +239,39 @@ impl<'a> ForeignCapture<'a> {
         let Some(FieldValue::Foreign(syntax)) = owner.node(node)?.fields.get(field) else {
             return Err(SyntaxError::Reference);
         };
-        if self.provenance.is_none() {
-            self.provenance = Some(OwnerProvenance::capture(owner, b)?);
+        if self.prepared.is_none() {
+            let provenance = OwnerProvenance::capture(owner, b)?;
+            let depth = provenance.validate(registry, b, admission)?.depth;
+            self.prepared = Some(PreparedOwner {
+                provenance,
+                registry,
+                depth,
+            });
         }
-        let provenance = self.provenance.as_ref().ok_or(SyntaxError::Reference)?;
-        ForeignClosure::capture_selected(
+        let prepared = self.prepared.as_mut().ok_or(SyntaxError::Reference)?;
+        if !core::ptr::eq(prepared.registry, registry) {
+            let depth = prepared.provenance.validate(registry, b, admission)?.depth;
+            prepared.registry = registry;
+            prepared.depth = depth;
+        }
+        let result = ForeignClosure::copy_selected(
             syntax,
             owner,
-            provenance.clone_with_budget(b)?,
-            registry,
+            prepared.provenance.clone_with_budget(b)?,
             b,
-            admission,
-        )
+        )?;
+        let proof = ValidatedOwnerProvenance {
+            owner: &prepared.provenance,
+            registry: prepared.registry,
+            depth: prepared.depth,
+        };
+        if proof.matches_owner(&result.provenance) {
+            proof.validate_closure(&result, b, admission)?;
+        } else {
+            // Non-atomic targets own deep copies; those copies establish their
+            // own proof under the receiving operation's budget and admission.
+            result.validate(registry, b, admission)?;
+        }
+        Ok(result)
     }
 }

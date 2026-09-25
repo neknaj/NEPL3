@@ -112,13 +112,24 @@ InlineCode10件、Rubyをbaseに持つAnno4件を独立期待値と照合した�
 第13章の正本も独立Sentence境界へ移行し、外部リンク2件をSentenceのlinkへ接続した。
 本文・Ruby・節の階層・順序を保持した。実原稿の投影試験にはInlineCode33件、
 外部URL2件、見出し階層を独立期待値として追加した。
-通常試験と正式Markdown集合生成は同章のlowerでWorkLimitとなる。
+移行直後の通常試験と正式Markdown集合生成は同章のlowerでWorkLimitとなった。
 既存の文書集合用予算を明示した測定試験はnative・WASIで各1件成功した。
 原稿と試験の独立レビューを完了し、独立native測定でも同じWork値と内容検査の成功を確認した。
 lowerは103,388,054 Work、投影は314,974,072 Workで、通常Work100Mへの適合は未達である。
 Windows debugの投影参考時間は14.832秒、WASIは23.044秒だった。
 AllocationUnitsはnativeでlower 98,149,695・投影266,947,844、WASIで73,985,695・203,120,488となった。
 この値は累積資源会計であり、ピーク物理メモリを表さない。
+続いてForeignCaptureが不変owner tableの検証結果を保持する構成へ変更した。
+registryを不変借用し、変更時はownerを再検証する。guest・environment・SourceAdmission・
+現在のDepthは各captureで検査し、非atomic targetの別storageは完全検証する。
+初回・warmのWork/Allocation境界、停止後の再試行、registry再検証途中の停止と復帰を確認した。
+coreのnative全146件に続き追加試験1件、capture関連10件のnative・WASI試験が成功した。
+Doc・Sentence・Math coreのnative全144件と、4 coreのthumbv6m向けcompileも成功した。
+独立レビューはcapture module7件と追加1件をnativeで実行し、追加指摘はなかった。
+第13章のlowerは69,274,361 Workへ減り、通常予算内で完了する。
+投影は314,974,072 Workのままで、通常の投影試験はWorkLimitを保持する。
+文書集合用予算による内容検査はnativeで成功した。正式Markdown集合生成は
+次の旧構文の `doc/spec/22-external-extensions.nepld` で停止している。
 集合生成と生成Markdownの更新は未完了である。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。

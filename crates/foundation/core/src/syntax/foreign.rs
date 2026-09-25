@@ -132,6 +132,18 @@ impl ForeignClosure {
         b: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<Self, SyntaxError> {
+        let result = Self::copy_selected(syntax, owner, provenance, b)?;
+        result.validate(registry, b, admission)?;
+        Ok(result)
+    }
+    // Private construction stage. Public capture paths validate the completed
+    // closure before returning it to the caller.
+    fn copy_selected(
+        syntax: &ForeignSyntax,
+        owner: &SyntaxBundle,
+        provenance: OwnerProvenance,
+        b: &mut Budget,
+    ) -> Result<Self, SyntaxError> {
         b.charge(Resource::Work, owner.environments.len() as u64 + 1)?;
         let environment = owner
             .environments
@@ -144,7 +156,7 @@ impl ForeignClosure {
             Resource::AllocationUnits,
             bytes + core::mem::size_of::<Self>() as u64,
         )?;
-        let result = Self {
+        Ok(Self {
             syntax: ForeignSyntax {
                 schema: syntax.schema.clone(),
                 category: syntax.category.clone(),
@@ -154,9 +166,7 @@ impl ForeignClosure {
             },
             owner_environment: environment.clone_with_budget(b)?,
             provenance,
-        };
-        result.validate(registry, b, admission)?;
-        Ok(result)
+        })
     }
 }
 pub(super) fn environment(

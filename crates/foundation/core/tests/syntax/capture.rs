@@ -261,11 +261,276 @@ fn captures_share_storage_but_revalidate_each_admission_and_registry() -> Result
             )
             .is_err()
     );
+    let unfinalized = SchemaRegistry::default();
+    assert_eq!(
+        captures.capture_at(NodeRef(0), 0, &unfinalized, &mut budget(), &mut admission),
+        Err(SyntaxError::Schema(SchemaError::Unfinalized))
+    );
+    // Failed registry replacement does not bless it or prevent returning to
+    // the original immutable registry.
+    assert_eq!(
+        captures.capture_at(NodeRef(0), 0, &registry, &mut budget(), &mut admission)?,
+        first
+    );
     // The captured value owns its tables after both context and owner expire.
     drop(captures);
     drop(input);
     first.validate(&registry, &mut budget(), &mut SourceAdmission::default())?;
     assert_eq!(first.provenance.origins().len(), 2);
+    Ok(())
+}
+
+#[test]
+fn repeated_capture_reuses_owner_validation_and_keeps_exact_stop_boundaries()
+-> Result<(), SyntaxError> {
+    let (registry, schema) = registry()?;
+    let mut input = owner(&schema)?;
+    for _ in 0..128 {
+        input.origins.push(Origin::Synthetic {
+            reason: "unused but validated owner entry".into(),
+            anchor: None,
+        });
+    }
+    let checked = input.validate(&registry, &mut budget())?;
+    let mut captures = ForeignCapture::new(&checked);
+    let expected = captures.capture_at(
+        NodeRef(0),
+        0,
+        &registry,
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    let mut full = budget();
+    let mut reused = budget();
+    let mut full_admission = SourceAdmission::default();
+    let mut reused_admission = SourceAdmission::default();
+    for _ in 0..8 {
+        assert_eq!(
+            ForeignClosure::capture_at(
+                &checked,
+                NodeRef(0),
+                0,
+                &registry,
+                &mut full,
+                &mut full_admission
+            )?,
+            expected
+        );
+        assert_eq!(
+            captures.capture_at(NodeRef(0), 0, &registry, &mut reused, &mut reused_admission)?,
+            expected
+        );
+    }
+    #[cfg(target_has_atomic = "ptr")]
+    {
+        assert!(reused.usage().work * 2 < full.usage().work);
+        assert!(reused.usage().allocation_units < full.usage().allocation_units);
+    }
+    // First preparation and warm capture both retain exact Work/Allocation
+    // stops. A source admission is local to every measured operation.
+    for warm in [false, true] {
+        let mut measured_capture = ForeignCapture::new(&checked);
+        if warm {
+            measured_capture.capture_at(
+                NodeRef(0),
+                0,
+                &registry,
+                &mut budget(),
+                &mut SourceAdmission::default(),
+            )?;
+        }
+        let mut measured = budget();
+        measured_capture.capture_at(
+            NodeRef(0),
+            0,
+            &registry,
+            &mut measured,
+            &mut SourceAdmission::default(),
+        )?;
+        for (resource, used, reason) in [
+            (Resource::Work, measured.usage().work, StopReason::WorkLimit),
+            (
+                Resource::AllocationUnits,
+                measured.usage().allocation_units,
+                StopReason::AllocationLimit,
+            ),
+        ] {
+            for shortage in [0, 1] {
+                let mut candidate = ForeignCapture::new(&checked);
+                if warm {
+                    candidate.capture_at(
+                        NodeRef(0),
+                        0,
+                        &registry,
+                        &mut budget(),
+                        &mut SourceAdmission::default(),
+                    )?;
+                }
+                let mut limits = budget().limits();
+                match resource {
+                    Resource::Work => limits.work = used - shortage,
+                    _ => limits.allocation_units = used - shortage,
+                }
+                let mut limited = Budget::new(limits);
+                let result = candidate.capture_at(
+                    NodeRef(0),
+                    0,
+                    &registry,
+                    &mut limited,
+                    &mut SourceAdmission::default(),
+                );
+                if shortage == 0 {
+                    assert_eq!(result?, expected);
+                } else {
+                    assert_eq!(result, Err(SyntaxError::Stopped(reason)));
+                    assert_eq!(limited.poll(), Err(reason));
+                    assert_eq!(
+                        candidate.capture_at(
+                            NodeRef(0),
+                            0,
+                            &registry,
+                            &mut budget(),
+                            &mut SourceAdmission::default()
+                        )?,
+                        expected
+                    );
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn capture_reuse_observes_current_depth_after_high_water_preparation() -> Result<(), SyntaxError> {
+    let (registry, schema) = registry()?;
+    let mut input = owner(&schema)?;
+    // The existing composite->direct chain has length 2. Eight parents extend
+    // it to 10, including entries unused by the selected foreign field.
+    let mut previous = OriginId(0);
+    for _ in 0..8 {
+        let next = OriginId(input.origins.len() as u64);
+        input.origins.push(Origin::Composite(vec![previous]));
+        previous = next;
+    }
+    let checked = input.validate(&registry, &mut budget())?;
+    let mut captures = ForeignCapture::new(&checked);
+    let mut preparation = budget();
+    preparation.observe_depth(99)?;
+    captures.capture_at(
+        NodeRef(0),
+        0,
+        &registry,
+        &mut preparation,
+        &mut SourceAdmission::default(),
+    )?;
+    for caller in [0, 3] {
+        for shortage in [0, 1] {
+            let mut limited = Budget::new(Limits {
+                depth: caller + 10 - shortage,
+                ..budget().limits()
+            });
+            let result = limited.with_depth_at_least(caller, |b| {
+                captures.capture_at(NodeRef(0), 1, &registry, b, &mut SourceAdmission::default())
+            });
+            if shortage == 0 {
+                result?;
+                assert_eq!(limited.usage().depth, caller + 10);
+            } else {
+                assert_eq!(result, Err(SyntaxError::Stopped(StopReason::DepthLimit)));
+                assert_eq!(limited.poll(), Err(StopReason::DepthLimit));
+            }
+            assert_eq!(limited.current_depth(), 0);
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn registry_revalidation_stop_preserves_the_previous_capture_proof() -> Result<(), SyntaxError> {
+    let (registry, schema) = registry()?;
+    let (other, _) = super::registry()?;
+    let mut input = owner(&schema)?;
+    for _ in 0..128 {
+        input.origins.push(Origin::Synthetic {
+            reason: "registry replacement validates this entry".into(),
+            anchor: None,
+        });
+    }
+    let checked = input.validate(&registry, &mut budget())?;
+    let mut captures = ForeignCapture::new(&checked);
+    let expected = captures.capture_at(
+        NodeRef(0),
+        0,
+        &registry,
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    let mut warm = budget();
+    captures.capture_at(
+        NodeRef(0),
+        0,
+        &registry,
+        &mut warm,
+        &mut SourceAdmission::default(),
+    )?;
+    let mut owner_cost = budget();
+    expected
+        .provenance
+        .validate(&other, &mut owner_cost, &mut SourceAdmission::default())?;
+    for (resource, used, reason) in [
+        (
+            Resource::Work,
+            owner_cost.usage().work,
+            StopReason::WorkLimit,
+        ),
+        (
+            Resource::AllocationUnits,
+            owner_cost.usage().allocation_units,
+            StopReason::AllocationLimit,
+        ),
+    ] {
+        let mut limits = budget().limits();
+        match resource {
+            Resource::Work => limits.work = used / 2,
+            _ => limits.allocation_units = used / 2,
+        }
+        let mut limited = Budget::new(limits);
+        assert_eq!(
+            captures.capture_at(
+                NodeRef(0),
+                0,
+                &other,
+                &mut limited,
+                &mut SourceAdmission::default()
+            ),
+            Err(SyntaxError::Stopped(reason))
+        );
+        assert_eq!(limited.poll(), Err(reason));
+        let mut restored = budget();
+        assert_eq!(
+            captures.capture_at(
+                NodeRef(0),
+                0,
+                &registry,
+                &mut restored,
+                &mut SourceAdmission::default()
+            )?,
+            expected
+        );
+        assert_eq!(restored.usage(), warm.usage());
+    }
+    // A different finalized registry can subsequently complete its own proof.
+    assert_eq!(
+        captures.capture_at(
+            NodeRef(0),
+            0,
+            &other,
+            &mut budget(),
+            &mut SourceAdmission::default()
+        )?,
+        expected
+    );
     Ok(())
 }
 
