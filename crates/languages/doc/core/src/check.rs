@@ -3,11 +3,13 @@ mod document;
 pub(crate) mod edges;
 mod graph;
 mod guests;
+mod scoped;
 use crate::model::DocValue;
 use alloc::vec::Vec;
 pub use document::{StructureError, ValidatedDocumentSyntax};
 pub use guests::ForeignOccurrence;
 use nepl3_core::budget::StopReason;
+pub use scoped::RegistryValidatedDocumentSyntax;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Category {

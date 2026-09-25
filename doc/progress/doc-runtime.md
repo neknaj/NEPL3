@@ -216,6 +216,17 @@ Windows nativeのrelease構成でdebug assertionとoverflow検査を有効にし
 通常予算への適合は継続課題である。独立レビューでは第01章の68 digestも照合し、生成済み
 試験binaryの直接実行で1件成功・exit 0を確認した。clippy、repository、fmt・diff検査も成功した。
 
+Doc構造とSyntax guestの検証結果を`RegistryValidatedDocumentSyntax`へ集約した。
+NDF encoderとSentence collectorは同じ型を構築し、独立していたproof収集処理を共通化する。
+再利用入口`collect_validated`と`to_value_validated`は、受信側のsource受入と相対深度を
+適用する。registryが異なる場合はDoc全体を検証する。文書の意味、environment digest、
+生成NDFのschemaは各責務で引き続き検査する。
+文書・owner・guestの独立source、未参照宣言、受信済みidentityとの内容競合、以前のDepth最大値、
+入れ子の受信位置を試験した。Sentence処理はfresh予算のWork・Allocation・Depth・Sourceの
+上限一致／1不足と取消しで型付き停止を確認した。core・Doc・suiteはnative・WASI各287件成功し、
+補強後の関連8件も両targetで成功した。独立レビューは補強後8件を実行した。
+ページ生成でこのproofをdiscoveryからnamespace準備へ保持する接続と、その全体費用の測定は残る。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

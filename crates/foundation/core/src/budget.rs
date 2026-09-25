@@ -289,10 +289,10 @@ impl Budget {
         self.observed_depth = self.observed_depth.max(depth);
         Ok(())
     }
-    /// Measure an internal operation's relative depth without resetting Usage.
+    /// Measure a validation operation's relative depth without resetting Usage.
     /// Nested measurements contribute to their enclosing measurement. Callers
     /// use pure validation operations which never replace the Budget itself.
-    pub(crate) fn measure_depth<T, E: From<StopReason>>(
+    pub fn measure_depth<T, E: From<StopReason>>(
         &mut self,
         operation: impl FnOnce(&mut Self) -> Result<T, E>,
     ) -> Result<(T, u64), E> {

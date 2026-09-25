@@ -8,7 +8,7 @@ use nepl3_core::{
     value_codec::FoundationValueCodec,
 };
 use nepl3_doc_core::{
-    check::{ForeignOccurrence, ShapeError, StructureError},
+    check::{ForeignOccurrence, RegistryValidatedDocumentSyntax, ShapeError, StructureError},
     model::{DocContent, DocumentSyntax, EmbedKind, EmbedRef},
 };
 use nepl3_sentence_core::{lower::ForeignInlineForm, syntax::SentenceSyntax};
@@ -72,23 +72,53 @@ pub fn collect<'a, C: FoundationValueCodec>(
 ) -> Result<Selection<'a>, Error<C::Error>> {
     b.poll()?;
     let result = (|| {
-        let mut syntax = Vec::new();
-        let checked = document
-            .validate_structure_with_syntax(registry, b, codec.source_admission(), |proof, b| {
-                b.charge(
-                    Resource::AllocationUnits,
-                    core::mem::size_of::<nepl3_core::syntax::RegistryValidatedSyntaxBundle<'_, '_>>(
-                    ) as u64,
-                )?;
-                syntax
-                    .try_reserve(1)
-                    .map_err(|_| StructureError::Stopped(b.stop(StopReason::AllocationLimit)))?;
-                syntax.push(proof);
-                Ok(())
-            })
+        let checked =
+            RegistryValidatedDocumentSyntax::new(document, registry, b, codec.source_admission())
+                .map_err(Error::Document)?;
+        collect_checked(&checked, surface, forms, registry, codec, b)
+    })();
+    b.poll()?;
+    result
+}
+
+/// Reuse a complete immutable Doc/guest proof after applying this operation's
+/// registry, source admission and depth. Language-specific lowering remains
+/// mandatory; this proof grants no Sentence semantics or guest selection.
+pub fn collect_validated<'a, C: FoundationValueCodec>(
+    checked: &RegistryValidatedDocumentSyntax<'a, '_>,
+    surface: &SchemaRef,
+    forms: &[ForeignInlineForm<'_>],
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<Selection<'a>, Error<C::Error>> {
+    let result = (|| {
+        checked
+            .validate_for(registry, b, codec.source_admission())
             .map_err(Error::Document)?;
-        let depths = checked.shape().foreign_depths(b).map_err(Error::Shape)?;
+        collect_checked(checked, surface, forms, registry, codec, b)
+    })();
+    b.poll()?;
+    result
+}
+
+fn collect_checked<'a, C: FoundationValueCodec>(
+    checked: &RegistryValidatedDocumentSyntax<'a, '_>,
+    surface: &SchemaRef,
+    forms: &[ForeignInlineForm<'_>],
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<Selection<'a>, Error<C::Error>> {
+    let document = checked.structure().document();
+    let result = (|| {
+        let depths = checked
+            .structure()
+            .shape()
+            .foreign_depths(b)
+            .map_err(Error::Shape)?;
         let mut occurrences = checked
+            .structure()
             .shape()
             .foreign_occurrences(b)
             .map_err(Error::Shape)?;
@@ -106,7 +136,7 @@ pub fn collect<'a, C: FoundationValueCodec>(
             .map_err(|_| b.stop(StopReason::AllocationLimit))?;
         let base = b.current_depth();
         let mut lowerer = sentence::Lowerer::new(registry);
-        let mut syntax = syntax.iter();
+        let mut syntax = checked.syntax().iter();
         for (index, slot) in document.value.embeds.iter().enumerate() {
             b.charge(Resource::Work, 1)?;
             let proof = match slot.content {

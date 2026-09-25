@@ -273,7 +273,16 @@ fn sentence_collection_reuses_owner_checks_without_skipping_guest_validation() -
                 .collect(),
             embeds: vec![input.clone(), input],
         },
-        sources: vec![],
+        sources: vec![
+            nepl3_core::source::SourceSnapshot::new(
+                nepl3_core::source::SourceId("doc-receiver".into()),
+                1,
+                "memory:doc-receiver".into(),
+                b"document admission".to_vec(),
+                &mut budget(),
+            )
+            .map_err(err)?,
+        ],
         origins: vec![],
         views: vec![],
         source_maps: vec![],
@@ -300,6 +309,77 @@ fn sentence_collection_reuses_owner_checks_without_skipping_guest_validation() -
             .map_err(err)?;
         let mut total = budget();
         outputs.push(run(doc, &mut total)?);
+        let checked = nepl3_doc_core::check::RegistryValidatedDocumentSyntax::new(
+            doc,
+            &registry,
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(err)?;
+        let sources = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&registry, &sources, &mut admission).map_err(err)?;
+        let mut retained = budget();
+        let selected = sentences::collect_validated(
+            &checked,
+            &surface,
+            &[],
+            &registry,
+            &mut codec,
+            &mut retained,
+        )
+        .map_err(err)?
+        .into_parts();
+        assert_eq!(Some(&selected), outputs.last());
+        assert!(retained.usage().work < total.usage().work);
+        for reason in [
+            StopReason::WorkLimit,
+            StopReason::AllocationLimit,
+            StopReason::DepthLimit,
+            StopReason::SourceLimit,
+            StopReason::Cancelled,
+        ] {
+            for below in [false, true] {
+                let mut limits = budget().limits();
+                let used = retained.usage();
+                let pair = match reason {
+                    StopReason::WorkLimit => Some((&mut limits.work, used.work)),
+                    StopReason::AllocationLimit => {
+                        Some((&mut limits.allocation_units, used.allocation_units))
+                    }
+                    StopReason::DepthLimit => Some((&mut limits.depth, used.depth)),
+                    StopReason::SourceLimit => Some((&mut limits.source_bytes, used.source_bytes)),
+                    StopReason::Cancelled => None,
+                    _ => unreachable!(),
+                };
+                if let Some((limit, used)) = pair {
+                    *limit = used.checked_sub(u64::from(below)).ok_or("nonzero limit")?;
+                }
+                let mut receiver = Budget::new(limits);
+                if reason == StopReason::Cancelled && below {
+                    receiver.cancel();
+                }
+                let mut admission = SourceAdmission::default();
+                let mut codec =
+                    FoundationCodec::new(&registry, &sources, &mut admission).map_err(err)?;
+                let result = sentences::collect_validated(
+                    &checked,
+                    &surface,
+                    &[],
+                    &registry,
+                    &mut codec,
+                    &mut receiver,
+                );
+                if below {
+                    assert!(
+                        matches!(result, Err(sentences::Error::Stopped(actual)) if actual == reason)
+                    );
+                    assert_eq!(receiver.poll(), Err(reason));
+                } else {
+                    assert_eq!(result.map_err(err)?.into_parts(), selected);
+                }
+            }
+        }
         // After complete Doc validation, lowering uses the retained guest
         // proofs. Independent owner storage therefore adds no second owner
         // validation, while the common Doc check still validates both owners.

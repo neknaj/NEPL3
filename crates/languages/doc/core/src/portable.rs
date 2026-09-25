@@ -147,47 +147,25 @@ pub fn to_value<C: FoundationValueCodec>(
     EncodingInput::new(document, registry, b, c.source_admission())?.into_value(c, b)
 }
 
+/// Encode a retained immutable document proof in its bound registry. This
+/// operation still admits the complete source closure, applies relative depth,
+/// validates environment digests and checks the generated NDF schema.
+pub fn to_value_validated<C: FoundationValueCodec>(
+    input: crate::check::RegistryValidatedDocumentSyntax<'_, '_>,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    input.validate_for(input.registry, b, c.source_admission())?;
+    input.into_value(c, b)
+}
+
 // Retain the native immutable proof for the same operation's label traversal.
 // The caller must validate the generated NDF at its output boundary: either
 // DocumentSyntax in to_value, or the enclosing PageSet in pages::set_to_value.
 // This helper retains all native structure and foundation codec validation.
-pub(crate) struct EncodingInput<'d, 'r> {
-    structure: crate::check::ValidatedDocumentSyntax<'d>,
-    registry: &'r SchemaRegistry,
-    syntax: alloc::vec::Vec<nepl3_core::syntax::RegistryValidatedSyntaxBundle<'d, 'r>>,
-}
+pub(crate) use crate::check::RegistryValidatedDocumentSyntax as EncodingInput;
 
 impl<'d: 'r, 'r> EncodingInput<'d, 'r> {
-    pub(crate) fn new(
-        document: &'d DocumentSyntax,
-        registry: &'r SchemaRegistry,
-        b: &mut Budget,
-        admission: &mut nepl3_core::source::SourceAdmission,
-    ) -> Result<Self, StructureError> {
-        let mut syntax = alloc::vec::Vec::new();
-        let structure =
-            document.validate_structure_with_syntax(registry, b, admission, |proof, b| {
-                b.charge(
-                    nepl3_core::budget::Resource::AllocationUnits,
-                    core::mem::size_of::<nepl3_core::syntax::RegistryValidatedSyntaxBundle<'_, '_>>(
-                    ) as u64,
-                )?;
-                syntax.try_reserve(1).map_err(|_| {
-                    StructureError::Stopped(b.stop(nepl3_core::budget::StopReason::AllocationLimit))
-                })?;
-                syntax.push(proof);
-                Ok(())
-            })?;
-        // Only a complete document validation publishes the collected proofs.
-        Ok(Self {
-            structure,
-            registry,
-            syntax,
-        })
-    }
-    pub(crate) fn structure(&self) -> &crate::check::ValidatedDocumentSyntax<'d> {
-        &self.structure
-    }
     /// Consume this operation's native proof and check the complete NDF output.
     /// No registry or document can be substituted between these two stages.
     pub(crate) fn into_value<C: FoundationValueCodec>(
