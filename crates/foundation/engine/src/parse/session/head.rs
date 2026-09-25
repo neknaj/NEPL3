@@ -16,81 +16,100 @@ struct HeadApplication<'a> {
     token: Option<Box<Token>>,
     outcome: HeadOutcome,
 }
-impl ParseSession<'_> {
+impl<'a, 'e> ParseSession<'a, 'e> {
     pub(super) fn service_head_host(
         &mut self,
-        mut reply: ParseReply,
+        mut reply: ParseReply<OwnedValidatedParseTree<'a>>,
         sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
         host: &mut impl super::super::ParseHost,
-    ) -> Result<super::super::ParseHostReply, ParseError> {
+    ) -> Result<super::super::ParseHostReply<OwnedValidatedParseTree<'a>>, ParseError> {
         loop {
-            let attempt = (|| -> Result<Option<ParseReply>, ParseError> {
-                match &reply.outcome {
-                    ParseOutcome::AwaitHead { call, continuation } => {
-                        let requirement =
-                            self.profile.provider(&call.identity.operation, budget)?;
-                        match budget.with_depth_at_least(call.depth_base, |budget| {
-                            host.head(call, requirement, budget, admission)
-                        }) {
-                            Ok(Some(value)) => self
-                                .resume_head(continuation, value, sources, budget, admission)
-                                .map(Some),
-                            Ok(None) => Ok(None),
-                            Err(error) => Err(error),
-                        }
-                    }
-                    // Nested reader operations use the existing owned validation
-                    // path once a head has required an externally reviewable slot.
-                    ParseOutcome::Await { call, continuation } => {
-                        use nepl3_reader::model::ProviderCall;
-                        let (operation, depth) = match call.as_ref() {
-                            ProviderCall::Read {
-                                operation,
-                                depth_base,
-                                ..
-                            }
-                            | ProviderCall::Transform {
-                                operation,
-                                depth_base,
-                                ..
-                            }
-                            | ProviderCall::Dependent {
-                                operation,
-                                depth_base,
-                                ..
-                            } => (operation, *depth_base),
-                        };
-                        let requirement = self.profile.provider(operation, budget)?;
-                        match budget.with_depth_at_least(depth, |budget| {
-                            host.provider(call, requirement, budget, admission)
-                        }) {
-                            Ok(Some(value)) => self
-                                .resume(continuation, value, sources, budget, admission)
-                                .map(Some),
-                            Ok(None) => Ok(None),
-                            Err(error) => Err(error),
-                        }
-                    }
-                    ParseOutcome::Reserve {
-                        request,
-                        continuation,
-                    } => {
-                        match budget
-                            .with_depth_at_least(continuation.tokenizer.depth_base, |budget| {
-                                host.reservation(request, budget, admission)
+            let attempt =
+                (|| -> Result<Option<ParseReply<OwnedValidatedParseTree<'a>>>, ParseError> {
+                    match &reply.outcome {
+                        ParseOutcome::AwaitHead { call, continuation } => {
+                            let requirement =
+                                self.profile.provider(&call.identity.operation, budget)?;
+                            match budget.with_depth_at_least(call.depth_base, |budget| {
+                                host.head(call, requirement, budget, admission)
                             }) {
-                            Ok(Some(value)) => self
-                                .reserve(continuation, &value, sources, budget, admission)
-                                .map(Some),
-                            Ok(None) => Ok(None),
-                            Err(error) => Err(error),
+                                Ok(Some(value)) => self
+                                    .resume_head_validated(
+                                        continuation,
+                                        value,
+                                        sources,
+                                        budget,
+                                        admission,
+                                    )
+                                    .map(Some),
+                                Ok(None) => Ok(None),
+                                Err(error) => Err(error),
+                            }
                         }
+                        // Nested reader operations use the existing owned validation
+                        // path once a head has required an externally reviewable slot.
+                        ParseOutcome::Await { call, continuation } => {
+                            use nepl3_reader::model::ProviderCall;
+                            let (operation, depth) = match call.as_ref() {
+                                ProviderCall::Read {
+                                    operation,
+                                    depth_base,
+                                    ..
+                                }
+                                | ProviderCall::Transform {
+                                    operation,
+                                    depth_base,
+                                    ..
+                                }
+                                | ProviderCall::Dependent {
+                                    operation,
+                                    depth_base,
+                                    ..
+                                } => (operation, *depth_base),
+                            };
+                            let requirement = self.profile.provider(operation, budget)?;
+                            match budget.with_depth_at_least(depth, |budget| {
+                                host.provider(call, requirement, budget, admission)
+                            }) {
+                                Ok(Some(value)) => self
+                                    .resume_validated(
+                                        continuation,
+                                        value,
+                                        sources,
+                                        budget,
+                                        admission,
+                                    )
+                                    .map(Some),
+                                Ok(None) => Ok(None),
+                                Err(error) => Err(error),
+                            }
+                        }
+                        ParseOutcome::Reserve {
+                            request,
+                            continuation,
+                        } => {
+                            match budget
+                                .with_depth_at_least(continuation.tokenizer.depth_base, |budget| {
+                                    host.reservation(request, budget, admission)
+                                }) {
+                                Ok(Some(value)) => self
+                                    .reserve_validated(
+                                        continuation,
+                                        &value,
+                                        sources,
+                                        budget,
+                                        admission,
+                                    )
+                                    .map(Some),
+                                Ok(None) => Ok(None),
+                                Err(error) => Err(error),
+                            }
+                        }
+                        _ => Ok(None),
                     }
-                    _ => Ok(None),
-                }
-            })();
+                })();
             match attempt {
                 Ok(Some(next)) => reply = next,
                 Ok(None) => {
@@ -214,7 +233,7 @@ impl ParseSession<'_> {
         _sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
-    ) -> Result<Option<Halt>, ParseError> {
+    ) -> Result<Option<Halt<'a>>, ParseError> {
         let frame = machine
             .progress
             .frames
@@ -280,7 +299,7 @@ impl ParseSession<'_> {
         token: Option<Box<Token>>,
         depth_base: u64,
         budget: &mut Budget,
-    ) -> Result<ParseReply, ParseError> {
+    ) -> Result<ParseReply<OwnedValidatedParseTree<'a>>, ParseError> {
         let prepared = (|| -> Result<_, ParseError> {
             let progress = machine.progress.clone_with_budget(budget)?;
             let inner = call.clone_with_budget(budget)?;
@@ -336,14 +355,15 @@ impl ParseSession<'_> {
     /// The caller keeps the primary parse input declared with identical digest
     /// and URI. Auxiliary context snapshots and generated artifacts may remain
     /// in the saved closure; they need no caller-store registration.
-    pub fn resume_head(
+    /// Resume a projected head reply and retain terminal structural validation.
+    pub fn resume_head_validated(
         &mut self,
         echo: &HeadContinuation,
         reply: HeadReply,
         sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
-    ) -> Result<ParseReply, ParseError> {
+    ) -> Result<ParseReply<OwnedValidatedParseTree<'a>>, ParseError> {
         if self.closed {
             return Err(ParseError::Closed);
         }
@@ -629,7 +649,7 @@ impl ParseSession<'_> {
         sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
-    ) -> Result<Option<Halt>, ParseError> {
+    ) -> Result<Option<Halt<'a>>, ParseError> {
         let HeadApplication {
             call,
             token,

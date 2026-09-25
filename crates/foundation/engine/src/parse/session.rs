@@ -26,6 +26,7 @@ use nepl3_core::{
 use nepl3_reader::{runtime::ProviderReply, tokenizer::*};
 mod head;
 mod host;
+use crate::tree::OwnedValidatedParseTree;
 use head::HeadPending;
 
 struct Imported {
@@ -54,8 +55,8 @@ struct Pending {
     limits: Limits,
     depth_base: u64,
 }
-enum Halt {
-    Done,
+enum Halt<'a> {
+    Done(OwnedValidatedParseTree<'a>),
     NeedMore(Vec<nepl3_reader::model::Expectation>),
     Await(
         Box<nepl3_reader::model::ProviderCall>,
@@ -64,10 +65,10 @@ enum Halt {
     Reserve(ReservationRequest, Box<TokenizationContinuation>),
     Head(Box<crate::head::HeadCall>, Option<Box<Token>>),
 }
-pub struct ParseSession<'a> {
+pub struct ParseSession<'a, 'e> {
     session_id: String,
     profile: &'a ResolvedParseProfile<'a>,
-    environments: &'a ParseEnvironmentSet<'a>,
+    environments: &'e ParseEnvironmentSet<'e>,
     tokenizers: Vec<TokenizationSession<'a>>,
     pending: Option<Pending>,
     head_pending: Option<HeadPending>,
@@ -76,11 +77,11 @@ pub struct ParseSession<'a> {
     next_head_call: u64,
     closed: bool,
 }
-impl<'a> ParseSession<'a> {
+impl<'a, 'e> ParseSession<'a, 'e> {
     pub fn new(
         session_id: String,
         profile: &'a ResolvedParseProfile<'a>,
-        environments: &'a ParseEnvironmentSet<'a>,
+        environments: &'e ParseEnvironmentSet<'e>,
         budget: &mut Budget,
     ) -> Result<Self, ParseError> {
         if session_id.is_empty() {
@@ -131,13 +132,16 @@ impl<'a> ParseSession<'a> {
             tokenizer.close();
         }
     }
-    pub fn read(
+    /// Retain structural and selection validation for complete and recovered
+    /// trees. Wait and stop states retain their ordinary progress and reports.
+    /// The proof borrows the Profile; a new operation must admit its own sources.
+    pub fn read_validated(
         &mut self,
         request: ParseRequest<'_>,
         sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
-    ) -> Result<ParseReply, ParseError> {
+    ) -> Result<ParseReply<OwnedValidatedParseTree<'a>>, ParseError> {
         if self.closed {
             return Err(ParseError::Closed);
         }
@@ -148,14 +152,14 @@ impl<'a> ParseSession<'a> {
     }
     /// Service synchronous reader callbacks without publishing copies of the
     /// growing prefix arenas. Unsupported calls retain the ordinary owned Await.
-    pub fn read_with_host(
+    pub fn read_with_host_validated(
         &mut self,
         request: ParseRequest<'_>,
         sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
         host: &mut impl super::ParseHost,
-    ) -> Result<super::ParseHostReply, ParseError> {
+    ) -> Result<super::ParseHostReply<OwnedValidatedParseTree<'a>>, ParseError> {
         if self.closed {
             return Err(ParseError::Closed);
         }
@@ -218,7 +222,7 @@ impl<'a> ParseSession<'a> {
         budget: &mut Budget,
         admission: &mut SourceAdmission,
         operation: Option<&str>,
-    ) -> Result<ParseReply, ParseError> {
+    ) -> Result<ParseReply<OwnedValidatedParseTree<'a>>, ParseError> {
         let prepared = self.begin(request, sources, budget, admission, operation);
         let mut machine = match prepared {
             Ok(v) => v,
@@ -429,7 +433,7 @@ impl<'a> ParseSession<'a> {
         sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
-    ) -> Result<Halt, ParseError> {
+    ) -> Result<Halt<'a>, ParseError> {
         self.drive_dispatch(machine, sources, budget, admission, None, &mut None)
     }
     fn drive_dispatch(
@@ -440,13 +444,13 @@ impl<'a> ParseSession<'a> {
         admission: &mut SourceAdmission,
         mut host: Option<&mut dyn super::ParseHost>,
         host_error: &mut Option<ParseError>,
-    ) -> Result<Halt, ParseError> {
+    ) -> Result<Halt<'a>, ParseError> {
         loop {
             budget.poll()?;
             budget.observe_depth(machine.progress.frames.len() as u64)?;
             let Some(frame) = machine.progress.frames.last() else {
-                self.validate_completed(machine, budget, admission)?;
-                return Ok(Halt::Done);
+                let tree = self.validate_completed(machine, budget, admission)?;
+                return Ok(Halt::Done(tree));
             };
             if frame.node.is_some() {
                 if frame.children.len() as u64 == frame.arity {
@@ -600,7 +604,7 @@ impl<'a> ParseSession<'a> {
         sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
-    ) -> Result<Option<Halt>, ParseError> {
+    ) -> Result<Option<Halt<'a>>, ParseError> {
         let AcceptedTokenizationReply {
             outcome,
             cursor,
@@ -668,7 +672,7 @@ impl<'a> ParseSession<'a> {
         sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
-    ) -> Result<Option<Halt>, ParseError> {
+    ) -> Result<Option<Halt<'a>>, ParseError> {
         let frame = machine
             .progress
             .frames
@@ -1144,45 +1148,32 @@ impl<'a> ParseSession<'a> {
         machine: &mut Machine,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
-    ) -> Result<(), ParseError> {
+    ) -> Result<OwnedValidatedParseTree<'a>, ParseError> {
         let progress = &mut machine.progress;
         let arena = progress.arenas.last_mut().ok_or(ParseError::Reference)?;
         let root = arena.root.ok_or(ParseError::Reference)?;
-        // Prepare the only new storage before moving any formal data. The tree
-        // validator borrows its input; after it returns every vector is moved
-        // back, including on a resource stop or validation error.
+        // Prepare storage before moving formal data. Validation retains the
+        // immutable graph on success and returns every vector on rejection.
         build::slot::<BundleContext>(budget)?;
         progress.contexts.reserve(1);
-        let context_index = progress.contexts.len();
         let mut owned = core::mem::take(arena);
         progress.contexts.push(BundleContext {
             path: core::mem::take(&mut owned.path),
             nodes: core::mem::take(&mut owned.selections),
         });
-        let mut tree = ParseTree {
+        let tree = ParseTree {
             profile_digest: self.profile.digest(),
             bundle: owned.finish(root),
             recovery: core::mem::take(&mut progress.recovery),
             contexts: core::mem::take(&mut progress.contexts),
         };
-        let result = tree.validate(self.profile, budget, admission).map(|_| ());
-        // This is the last element we just pushed. Immutable validation cannot
-        // remove it, so restoration has no fallible/allocating exit.
-        let context = tree.contexts.swap_remove(context_index);
-        *arena = ParseArena {
-            path: context.path,
-            selections: context.nodes,
-            root: Some(root),
-            sources: core::mem::take(&mut tree.bundle.sources),
-            nodes: core::mem::take(&mut tree.bundle.nodes),
-            origins: core::mem::take(&mut tree.bundle.origins),
-            tokens: core::mem::take(&mut tree.bundle.tokens),
-            source_maps: core::mem::take(&mut tree.bundle.source_maps),
-            environments: core::mem::take(&mut tree.bundle.environments),
-        };
-        progress.recovery = tree.recovery;
-        progress.contexts = tree.contexts;
-        result.map_err(ParseError::from)
+        match tree.try_into_validated(self.profile, budget, admission) {
+            Ok(tree) => Ok(tree),
+            Err(failure) => {
+                restore_completed(progress, failure.tree);
+                Err(failure.error.into())
+            }
+        }
     }
     fn discard_pending(&mut self) {
         for tokenizer in &mut self.tokenizers {
@@ -1194,7 +1185,7 @@ impl<'a> ParseSession<'a> {
         mut machine: Machine,
         reason: StopReason,
         budget: &Budget,
-    ) -> Result<ParseReply, ParseError> {
+    ) -> Result<ParseReply<OwnedValidatedParseTree<'a>>, ParseError> {
         self.discard_pending();
         let accepted = machine.accepted.take().ok_or(ParseError::Reference)?;
         let (mut report, sources, source_maps) = accepted.into_parts();
@@ -1212,10 +1203,10 @@ impl<'a> ParseSession<'a> {
     fn finish(
         &mut self,
         mut machine: Machine,
-        result: Result<Halt, ParseError>,
+        result: Result<Halt<'a>, ParseError>,
         depth_base: u64,
         budget: &mut Budget,
-    ) -> Result<ParseReply, ParseError> {
+    ) -> Result<ParseReply<OwnedValidatedParseTree<'a>>, ParseError> {
         // An incomplete collector cannot be published even if the same
         // operation also exhausted a resource budget.
         if let Err(error @ ParseError::BrokenCollector { .. }) = result {
@@ -1275,35 +1266,14 @@ impl<'a> ParseSession<'a> {
                     source_maps,
                 })
             }
-            Halt::Done => {
-                let prepared = (|| -> Result<(), ParseError> {
-                    let arena = machine
-                        .progress
-                        .arenas
-                        .last()
-                        .ok_or(ParseError::Reference)?;
-                    arena.root.ok_or(ParseError::Reference)?;
-                    build::slot::<BundleContext>(budget)?;
-                    Ok(())
-                })();
-                if let Err(error) = prepared {
-                    return self.finish(machine, Err(error), depth_base, budget);
+            Halt::Done(tree) => {
+                // Preserve the existing final publication charge. A stop still
+                // returns the complete formal progress, including validated data.
+                if let Err(error) = build::slot::<BundleContext>(budget) {
+                    restore_completed(&mut machine.progress, tree.into_inner());
+                    return self.finish(machine, Err(error.into()), depth_base, budget);
                 }
-                let mut arena = machine.progress.arenas.pop().ok_or(ParseError::Reference)?;
-                let root = arena.root.ok_or(ParseError::Reference)?;
-                let context = BundleContext {
-                    path: core::mem::take(&mut arena.path),
-                    nodes: core::mem::take(&mut arena.selections),
-                };
-                let bundle = arena.finish(root);
-                machine.progress.contexts.push(context);
-                let tree = ParseTree {
-                    profile_digest: self.profile.digest(),
-                    bundle,
-                    recovery: machine.progress.recovery,
-                    contexts: machine.progress.contexts,
-                };
-                let outcome = if tree.recovery.is_empty() {
+                let outcome = if tree.recovery().is_empty() {
                     ParseOutcome::Complete {
                         tree,
                         cursor: machine.progress.cursor,
@@ -1341,7 +1311,7 @@ impl<'a> ParseSession<'a> {
         tokenizer: Box<TokenizationContinuation>,
         depth_base: u64,
         budget: &mut Budget,
-    ) -> Result<ParseReply, ParseError> {
+    ) -> Result<ParseReply<OwnedValidatedParseTree<'a>>, ParseError> {
         let prepared = (|| -> Result<_, ParseError> {
             let progress = machine.progress.clone_with_budget(budget)?;
             build::slot::<TokenizationContinuation>(budget)?;
@@ -1394,14 +1364,14 @@ impl<'a> ParseSession<'a> {
     /// Retry an append-only nonfinal input from its original reader states.
     /// Previously accepted candidates are recomputed; logical usage and source admission
     /// remain cumulative. This is a full reparse, not an incremental performance claim.
-    pub fn continue_input(
+    pub fn continue_input_validated(
         &mut self,
         echo: &ParseProgress,
         request: ParseRequest<'_>,
         sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
-    ) -> Result<ParseReply, ParseError> {
+    ) -> Result<ParseReply<OwnedValidatedParseTree<'a>>, ParseError> {
         if self.closed {
             return Err(ParseError::Closed);
         }
@@ -1485,24 +1455,26 @@ impl<'a> ParseSession<'a> {
             )
         })
     }
-    pub fn reserve(
+    /// Resume a reservation while retaining the terminal tree's validation.
+    pub fn reserve_validated(
         &mut self,
         echo: &ParseContinuation,
         reservation: &SourceReservation,
         sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
-    ) -> Result<ParseReply, ParseError> {
+    ) -> Result<ParseReply<OwnedValidatedParseTree<'a>>, ParseError> {
         self.resume_with(echo, None, Some(reservation), sources, budget, admission)
     }
-    pub fn resume(
+    /// Resume a provider reply while retaining the terminal tree's validation.
+    pub fn resume_validated(
         &mut self,
         echo: &ParseContinuation,
         reply: ProviderReply,
         sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
-    ) -> Result<ParseReply, ParseError> {
+    ) -> Result<ParseReply<OwnedValidatedParseTree<'a>>, ParseError> {
         self.resume_with(echo, Some(reply), None, sources, budget, admission)
     }
     fn resume_with(
@@ -1513,7 +1485,7 @@ impl<'a> ParseSession<'a> {
         sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
-    ) -> Result<ParseReply, ParseError> {
+    ) -> Result<ParseReply<OwnedValidatedParseTree<'a>>, ParseError> {
         if self.closed {
             return Err(ParseError::Closed);
         }
@@ -1645,4 +1617,25 @@ fn limits_within(a: Limits, b: Limits) -> bool {
         && a.output_bytes <= b.output_bytes
         && a.diagnostics <= b.diagnostics
         && a.events <= b.events
+}
+
+// Validation moved the last arena and appended exactly one root context. Both
+// success and rejection preserve this shape; restoration allocates nothing.
+fn restore_completed(progress: &mut ParseProgress, mut tree: ParseTree) {
+    let context = tree.contexts.remove(tree.contexts.len() - 1);
+    let arena = ParseArena {
+        path: context.path,
+        selections: context.nodes,
+        root: Some(tree.bundle.root),
+        sources: core::mem::take(&mut tree.bundle.sources),
+        nodes: core::mem::take(&mut tree.bundle.nodes),
+        origins: core::mem::take(&mut tree.bundle.origins),
+        tokens: core::mem::take(&mut tree.bundle.tokens),
+        source_maps: core::mem::take(&mut tree.bundle.source_maps),
+        environments: core::mem::take(&mut tree.bundle.environments),
+    };
+    let last = progress.arenas.len() - 1;
+    progress.arenas[last] = arena;
+    progress.recovery = tree.recovery;
+    progress.contexts = tree.contexts;
 }

@@ -82,7 +82,7 @@ fn completed(reply: ParseReply) -> ParseCompletion {
         }),
     }
 }
-impl ParseSession<'_> {
+impl ParseSession<'_, '_> {
     pub fn read_completed(
         &mut self,
         request: ParseRequest<'_>,

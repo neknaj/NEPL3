@@ -42,6 +42,25 @@ pub fn parse(
     prefix: &str,
     host: &mut impl ParseHost,
 ) -> Result<nepl3_engine::recovery::ParseTree, String> {
+    parse_validated(
+        source, resolved, alias, category, b, a, native, session_id, prefix, host,
+    )
+    .map(nepl3_engine::tree::OwnedValidatedParseTree::into_inner)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn parse_validated<'p>(
+    source: &SourceSnapshot,
+    resolved: &'p ResolvedParseProfile<'p>,
+    alias: &str,
+    category: &str,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+    native: bool,
+    session_id: &str,
+    prefix: &str,
+    host: &mut impl ParseHost,
+) -> Result<nepl3_engine::tree::OwnedValidatedParseTree<'p>, String> {
     let r = resolved.registry();
     let foundation = r.selected("nepl3.foundation", 1).ok_or("foundation")?;
     let mut store = SourceStore::default();
@@ -106,7 +125,7 @@ pub fn parse(
     };
     let mut result = if native {
         let reply = parser
-            .read_with_host(request, &store, b, a, host)
+            .read_with_host_validated(request, &store, b, a, host)
             .map_err(err)?;
         if let Some(error) = reply.host_error {
             let cursor = match &reply.reply.outcome {
@@ -120,7 +139,7 @@ pub fn parse(
         }
         reply.reply
     } else {
-        parser.read(request, &store, b, a).map_err(err)?
+        parser.read_validated(request, &store, b, a).map_err(err)?
     };
     let mut reservations = 0;
     loop {
@@ -140,7 +159,7 @@ pub fn parse(
                     .map_err(err)?
                     .ok_or("unavailable reader provider")?;
                 result = parser
-                    .resume(&continuation, terminal, &store, b, a)
+                    .resume_validated(&continuation, terminal, &store, b, a)
                     .map_err(err)?;
             }
             ParseOutcome::Reserve { continuation, .. } => {
@@ -151,7 +170,7 @@ pub fn parse(
                     uri: format!("memory:{prefix}{reservations}"),
                 };
                 result = parser
-                    .reserve(&continuation, &reserved, &store, b, a)
+                    .reserve_validated(&continuation, &reserved, &store, b, a)
                     .map_err(err)?;
             }
             ParseOutcome::Complete { tree, cursor, .. } => {

@@ -9,6 +9,7 @@ mod error;
 mod host;
 mod model;
 pub mod print;
+mod raw;
 mod select;
 mod session;
 pub use environment::{EnvironmentError, EnvironmentInput, ParseEnvironmentSet};

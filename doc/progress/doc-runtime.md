@@ -514,16 +514,37 @@ Clippy、repository check、fmt、diff検査は成功した。
 検証失敗時は追加割当を伴わず元のbundleを返し、消費済みBudgetとSourceAdmissionを維持する。
 追加2試験は配列の保持、raw編集後の再検証、Work/Allocationの不足境界を検査した。
 このproofは参照・source geometryの構造保証であり、別操作のadmission、選択context、domain意味の保証を追加しない。
-parserのCompletedParseとDoc hostへの接続は未実装であり、第03章の通常予算への適合も残件である。
+この前段の追加時点ではparserとDoc hostへの接続が未実装であり、第03章の通常予算への適合も残件だった。
 
 engineにはOwnedValidatedParseTreeを追加した。構文proof、選択context、回復情報を所有し、
 検証に使用したProfileを不変借用する。借用APIと同じ選択検証を使用し、構造・選択の検証失敗時には
 元のParseTreeを返す。追加試験は正常入力と回復入力について検証費用の一致、配列の保持、
 不正root・context欠落・重複の拒否、構造検証と選択検証の資源停止を確認する。
-この段階ではparserの完了経路とDoc hostへ接続していないため、処理費用は従来どおりである。
+この型の追加時点ではparserの完了経路とDoc hostへ接続しておらず、処理費用は従来どおりだった。
 engineはnative・WASI各71試験に成功し、Profile不一致と取消・再試行を補強した追加試験も両targetで成功した。
 独立レビューはnative parse全25試験と補強後の追加1試験を実行し、指摘修正後の残件はなかった。
 Clippy、repository check、fmt、diff検査は成功した。正式受入と生成物の更新はこの段階に含めない。
+
+parserの完了処理を所有proofへ接続し、read・native host・resume・reserve・head再開・入力継続に
+validated APIを追加した。既存のraw APIは返却時にproofを消費する。CompletedParseは実行由来の
+所有値として維持する。Profileと一時的な環境の借用期間を分離し、結果はProfileの不変借用を保持する。
+最終publicationのAllocation停止では、検証済み構文を元のformal progressへ復元する。
+正常・回復入力について、全arena配列、context、回復情報、診断、sourceの保持を試験した。
+
+開発hostの新しい所有proof入口をcanonical Markdown生成と複数ページ出力へ接続した。
+旧借用callbackの入口はraw値の再検証を継続するため、残る利用箇所の移行が必要である。
+lower側の独立した資源計上とsource admissionは維持する。
+小規模Doc入力では両入口の構文が一致し、parser完了と同じWork上限で所有proof入口が成功、
+旧借用入口が再検証時にWorkLimitとなることを確認した。
+
+第03章のcorpus測定ではparse＋検証Workが127,080,117から98,080,963へ減少した。
+nativeのAllocationUnitsは267,251,785から257,393,382へ減少した。
+lowerのWorkは112,724,216、Markdown出力のWorkは379,349,041で従来と一致した。
+章の構造・本文・コード・リンクの検査は成功した。通常上限100,000,000ではparseが成功し、
+lowerがWorkLimitで停止する。通常上限への適合と生成物の更新は継続課題である。
+canonical Markdown生成も第03章のlowerで同じ停止に達した。部分生成物は正本へ反映していない。
+engineのnative・WASI各75試験、Doc export各8試験が成功した。独立レビューはengine43試験と
+Doc proof再利用1試験に成功し、追加指摘はなかった。Clippy、repository check、fmt、diff検査も成功した。
 
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。

@@ -160,7 +160,7 @@ fn grouped(
     for input in inputs {
         budget.poll().map_err(err)?;
         let page = &input.page;
-        let document = crate::doc::source::with_named_input_limits(
+        let document = crate::doc::source::with_named_validated_input_limits(
             true,
             compiled,
             &input.source,
@@ -174,7 +174,7 @@ fn grouped(
                     .map_err(err)?;
                 let mut lower_budget = crate::doc::source::budget();
                 lower::document(
-                    tree.syntax(),
+                    &tree.syntax(),
                     &compiled.doc.package.schema,
                     Category::Article,
                     profile.registry(),

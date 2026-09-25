@@ -19,6 +19,17 @@ pub struct OwnedValidatedParseTree<'p> {
     recovery: Vec<BundleRecovery>,
 }
 
+impl core::fmt::Debug for OwnedValidatedParseTree<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("OwnedValidatedParseTree")
+            .field("profile_digest", &self.profile_digest)
+            .field("bundle", self.syntax.bundle())
+            .field("contexts", &self.contexts)
+            .field("recovery", &self.recovery)
+            .finish()
+    }
+}
+
 /// A rejected conversion retains its complete input, including on resource stop.
 #[derive(Debug)]
 pub struct ParseTreeValidationFailure {

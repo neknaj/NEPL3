@@ -1,6 +1,74 @@
 use nepl3_tools::doc::{export, source::compiled};
 
 #[test]
+fn native_parse_proof_avoids_a_second_tree_validation() -> Result<(), String> {
+    use nepl3_tools::doc::source::{
+        budget, with_named_input_limits, with_named_validated_input_limits,
+    };
+    let compiled = compiled()?;
+    let source = r#"article ja sentence "[文書/ぶんしょ]" body cons paragraph cons sentence "{[本文/ほんぶん]/body}。" nil nil"#;
+    for native in [false, true] {
+        let (retained_tree, retained_usage) = with_named_validated_input_limits(
+            native,
+            &compiled,
+            source,
+            "proof-reuse",
+            "Article",
+            budget().limits(),
+            |tree, profile, b, _| {
+                assert!(std::ptr::eq(tree.profile(), profile));
+                assert!(!tree.syntax().bundle().nodes.is_empty());
+                Ok((tree.into_inner(), b.usage()))
+            },
+        )?;
+        let (raw_tree, raw_usage) = with_named_input_limits(
+            native,
+            &compiled,
+            source,
+            "proof-reuse",
+            "Article",
+            budget().limits(),
+            |tree, _, b, _| Ok((tree.tree().clone(), b.usage())),
+        )?;
+        assert_eq!(retained_tree, raw_tree);
+        assert!(retained_usage.work < raw_usage.work);
+        assert!(retained_usage.allocation_units < raw_usage.allocation_units);
+        // The completed parser fits exactly; repeating its tree validation must
+        // fail under this ceiling. This exercises the actual host route.
+        let limits = nepl3_core::budget::Limits {
+            work: retained_usage.work,
+            ..budget().limits()
+        };
+        with_named_validated_input_limits(
+            native,
+            &compiled,
+            source,
+            "proof-reuse",
+            "Article",
+            limits,
+            |tree, _, b, _| {
+                assert_eq!(b.usage().work, retained_usage.work);
+                assert_eq!(tree.syntax().bundle(), &retained_tree.bundle);
+                Ok(())
+            },
+        )?;
+        let rejected = with_named_input_limits(
+            native,
+            &compiled,
+            source,
+            "proof-reuse",
+            "Article",
+            limits,
+            |_, _, _, _| Err::<(), _>("unexpected callback".into()),
+        );
+        assert!(rejected.is_err_and(|error| {
+            error.starts_with("tree validation: Stopped(WorkLimit); parse_usage=")
+        }));
+    }
+    Ok(())
+}
+
+#[test]
 fn page_output_budget_is_explicit_shared_and_sticky() -> Result<(), String> {
     use nepl3_core::budget::{Budget, Resource, StopReason};
     use nepl3_tools::doc::{

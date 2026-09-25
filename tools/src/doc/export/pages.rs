@@ -144,7 +144,7 @@ pub fn generate_with_resources(
             return Err("SourceLimit".into());
         }
         let (document, profile, parse_usage, lower_usage) =
-            crate::doc::source::with_named_input_limits(
+            crate::doc::source::with_named_validated_input_limits(
                 true,
                 compiled,
                 input,
@@ -152,7 +152,7 @@ pub fn generate_with_resources(
                 "Article",
                 phases.parse,
                 |tree, profile, b, _a| {
-                    let checked = tree.syntax();
+                    let checked = &tree.syntax();
                     let empty = SourceStore::default();
                     let mut admission = SourceAdmission::default();
                     let mut c = FoundationCodec::new(profile.registry(), &empty, &mut admission)

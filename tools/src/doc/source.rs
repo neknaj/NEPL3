@@ -95,6 +95,44 @@ pub fn with_named_input_limits<T>(
         &mut SourceAdmission,
     ) -> Result<T, String>,
 ) -> Result<T, String> {
+    with_named_validated_input_limits(
+        native,
+        compiled,
+        input,
+        source_name,
+        category,
+        parse_limits,
+        |tree, profile, b, a| {
+            let tree = tree.into_inner();
+            let parse_usage = b.usage();
+            let checked = tree.validate(profile, b, a).map_err(|error| {
+                format!(
+                    "tree validation: {error:?}; parse_usage={parse_usage:?}; usage={:?}",
+                    b.usage()
+                )
+            })?;
+            finish(&checked, profile, b, a)
+        },
+    )
+}
+
+/// Retain the parser's structural and selection proof in its immutable Profile
+/// scope. Lowering uses its own budget and source admission ledger.
+#[allow(clippy::too_many_arguments)]
+pub fn with_named_validated_input_limits<T>(
+    native: bool,
+    compiled: &Compiled,
+    input: &str,
+    source_name: &str,
+    category: &str,
+    parse_limits: Limits,
+    finish: impl FnOnce(
+        nepl3_engine::tree::OwnedValidatedParseTree<'_>,
+        &ResolvedParseProfile<'_>,
+        &mut Budget,
+        &mut SourceAdmission,
+    ) -> Result<T, String>,
+) -> Result<T, String> {
     let r = &compiled.doc.registry;
     let packages: Vec<_> = std::iter::once(&compiled.doc.package)
         .chain(compiled.others.iter())
@@ -204,15 +242,9 @@ pub fn with_named_input_limits<T>(
         &mut b,
     )
     .map_err(err)?;
-    let tree = parse_source_route(&source, &resolved, "Doc", category, &mut b, &mut a, native)?;
-    let parse_usage = b.usage();
-    let checked = tree.validate(&resolved, &mut b, &mut a).map_err(|e| {
-        format!(
-            "tree validation: {e:?}; parse_usage={parse_usage:?}; usage={:?}",
-            b.usage()
-        )
-    })?;
-    finish(&checked, &resolved, &mut b, &mut a)
+    let tree =
+        parse_source_validated_route(&source, &resolved, "Doc", category, &mut b, &mut a, native)?;
+    finish(tree, &resolved, &mut b, &mut a)
 }
 
 pub fn parse_source_as(
@@ -235,13 +267,27 @@ pub fn parse_source_route(
     a: &mut SourceAdmission,
     native: bool,
 ) -> Result<nepl3_engine::recovery::ParseTree, String> {
+    parse_source_validated_route(source, resolved, alias, category, b, a, native)
+        .map(nepl3_engine::tree::OwnedValidatedParseTree::into_inner)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn parse_source_validated_route<'p>(
+    source: &SourceSnapshot,
+    resolved: &'p ResolvedParseProfile<'p>,
+    alias: &str,
+    category: &str,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+    native: bool,
+) -> Result<nepl3_engine::tree::OwnedValidatedParseTree<'p>, String> {
     let prefix = crate::source::driver::reservation_prefix(source, b)?;
     b.charge(Resource::AllocationUnits, prefix.len() as u64)
         .map_err(err)?;
     let mut host =
         crate::doc::host::native(resolved.registry(), host_identity(), prefix.clone(), b)
             .map_err(err)?;
-    crate::source::driver::parse(
+    crate::source::driver::parse_validated(
         source,
         resolved,
         alias,

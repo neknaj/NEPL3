@@ -49,6 +49,7 @@ struct Scenario {
     forms: Option<&'static [&'static str]>,
     sealed: bool,
     owned_validation: bool,
+    retain_validation: bool,
     work: Option<u64>,
     list: bool,
     cap: Option<u64>,
@@ -66,6 +67,7 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
         forms,
         sealed,
         owned_validation,
+        retain_validation,
         list,
         cap,
         work,
@@ -326,13 +328,27 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
                     calls: 0,
                     minimum_depth: caller_depth + 3,
                 };
-                let result = session.read_with_host(
-                    request,
-                    &sources,
-                    operation,
-                    &mut admission,
-                    &mut host,
-                )?;
+                let result = if retain_validation {
+                    let result = session.read_with_host_validated(
+                        request,
+                        &sources,
+                        operation,
+                        &mut admission,
+                        &mut host,
+                    )?;
+                    ParseHostReply {
+                        reply: inspect_validated(result.reply),
+                        host_error: result.host_error,
+                    }
+                } else {
+                    session.read_with_host(
+                        request,
+                        &sources,
+                        operation,
+                        &mut admission,
+                        &mut host,
+                    )?
+                };
                 if matches!(
                     action,
                     host::Action::FailSecond | host::Action::GeneratedFailSecond
@@ -343,7 +359,11 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
                 }
                 Ok(result.reply)
             } else {
-                if sealed {
+                if retain_validation {
+                    session
+                        .read_validated(request, &sources, operation, &mut admission)
+                        .map(inspect_validated)
+                } else if sealed {
                     session
                         .read_completed(request, &sources, operation, &mut admission)
                         .map(unseal)
@@ -455,15 +475,26 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
                 Err(ParseError::Continuation)
             ));
         }
-        let resumed = session
-            .continue_input(
+        let resumed = if retain_validation {
+            session
+                .continue_input_validated(
+                    progress,
+                    request(),
+                    &next_store,
+                    &mut operation,
+                    &mut admission,
+                )
+                .map(inspect_validated)
+        } else {
+            session.continue_input(
                 progress,
                 request(),
                 &next_store,
                 &mut operation,
                 &mut admission,
             )
-            .map_err(|e| format!("continue: {e:?}"))?;
+        }
+        .map_err(|e| format!("continue: {e:?}"))?;
         assert!(matches!(
             session.continue_input(
                 progress,
@@ -595,7 +626,17 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
                     .map_err(|e| format!("host: {e:?}"))?;
                 let resumed = operation
                     .with_depth_at_least(caller_depth, |b| {
-                        if sealed {
+                        if retain_validation {
+                            session
+                                .resume_validated(
+                                    continuation,
+                                    terminal,
+                                    &sources,
+                                    b,
+                                    &mut admission,
+                                )
+                                .map(inspect_validated)
+                        } else if sealed {
                             session
                                 .resume_completed(
                                     continuation,
@@ -652,7 +693,17 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
             ));
             let resumed = operation
                 .with_depth_at_least(caller_depth, |operation| {
-                    if sealed {
+                    if retain_validation {
+                        session
+                            .reserve_validated(
+                                continuation,
+                                &reservation,
+                                &sources,
+                                operation,
+                                &mut admission,
+                            )
+                            .map(inspect_validated)
+                    } else if sealed {
                         session
                             .reserve_completed(
                                 continuation,
@@ -1739,6 +1790,139 @@ fn owned_parse_validation_preserves_proofs_and_rejected_input() -> Result<(), St
                 ..Scenario::default()
             },
         )?;
+    }
+    Ok(())
+}
+
+fn inspect_validated(
+    reply: ParseReply<nepl3_engine::tree::OwnedValidatedParseTree<'_>>,
+) -> ParseReply {
+    if let ParseOutcome::Complete { tree, .. } | ParseOutcome::Recovered { tree, .. } =
+        &reply.outcome
+    {
+        assert!(!tree.syntax().bundle().nodes.is_empty());
+        assert!(!tree.contexts().is_empty());
+        assert_eq!(
+            tree.is_recovered(),
+            matches!(reply.outcome, ParseOutcome::Recovered { .. })
+        );
+    }
+    reply.into_raw()
+}
+
+#[test]
+fn validated_session_routes_preserve_raw_results_and_usage() -> TestResult {
+    for (input, final_input, text, provider, work) in [
+        ("let x x", true, false, false, None),
+        ("let x", true, false, false, None),
+        ("let x", false, false, false, None),
+        ("x", true, false, false, Some(0)),
+        ("let \"x\" \"x\"", true, true, false, None),
+        ("let x x", true, false, true, None),
+    ] {
+        for native in [None, Some(host::Action::Serve)] {
+            let raw = run_scenario(
+                input,
+                final_input,
+                Scenario {
+                    text,
+                    provider,
+                    work,
+                    native,
+                    ..Scenario::default()
+                },
+            )?;
+            let retained = run_scenario(
+                input,
+                final_input,
+                Scenario {
+                    text,
+                    provider,
+                    work,
+                    native,
+                    retain_validation: true,
+                    ..Scenario::default()
+                },
+            )?;
+            assert_eq!(raw, retained, "{input}");
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn validated_append_completion_preserves_raw_progress_and_usage() -> TestResult {
+    let raw = run_scenario(
+        "let x",
+        false,
+        Scenario {
+            restart: Some("let x x"),
+            ..Scenario::default()
+        },
+    )?;
+    let checked = run_scenario(
+        "let x",
+        false,
+        Scenario {
+            restart: Some("let x x"),
+            retain_validation: true,
+            ..Scenario::default()
+        },
+    )?;
+    assert_eq!(raw, checked);
+    Ok(())
+}
+
+#[test]
+fn final_publication_stop_restores_the_validated_graph() -> TestResult {
+    for input in ["let x x", "let x"] {
+        let full = run(input, true)?;
+        let tree = match &full.outcome {
+            ParseOutcome::Complete { tree, .. } | ParseOutcome::Recovered { tree, .. } => tree,
+            _ => return Err("complete or recovered fixture".into()),
+        };
+        for retain_validation in [false, true] {
+            let stopped = run_scenario(
+                input,
+                true,
+                Scenario {
+                    cap: Some(full.report.usage.allocation_units - 1),
+                    retain_validation,
+                    ..Scenario::default()
+                },
+            )?;
+            let ParseOutcome::Stopped {
+                reason: nepl3_core::budget::StopReason::AllocationLimit,
+                progress: Some(progress),
+            } = stopped.outcome
+            else {
+                return Err("expected final publication stop".into());
+            };
+            // The full validation ran before the last charged context slot.
+            assert_eq!(stopped.report.usage.work, full.report.usage.work);
+            assert_eq!(
+                stopped.report.usage.allocation_units
+                    + core::mem::size_of::<nepl3_engine::selection::BundleContext>() as u64,
+                full.report.usage.allocation_units
+            );
+            assert!(progress.frames.is_empty());
+            let arena = progress.arenas.last().ok_or("root arena")?;
+            assert_eq!(arena.root, Some(tree.bundle.root));
+            assert_eq!(arena.nodes, tree.bundle.nodes);
+            assert_eq!(arena.sources, tree.bundle.sources);
+            assert_eq!(arena.origins, tree.bundle.origins);
+            assert_eq!(arena.tokens, tree.bundle.tokens);
+            assert_eq!(arena.source_maps, tree.bundle.source_maps);
+            assert_eq!(arena.environments, tree.bundle.environments);
+            let root_context = tree.contexts.last().ok_or("root context")?;
+            assert_eq!(arena.selections, root_context.nodes);
+            assert_eq!(arena.path, root_context.path);
+            assert_eq!(progress.contexts, tree.contexts[..tree.contexts.len() - 1]);
+            assert_eq!(progress.recovery, tree.recovery);
+            assert_eq!(stopped.report.diagnostics, full.report.diagnostics);
+            assert_eq!(stopped.sources, full.sources);
+            assert_eq!(stopped.source_maps, full.source_maps);
+        }
     }
     Ok(())
 }

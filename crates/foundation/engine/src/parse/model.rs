@@ -118,16 +118,18 @@ pub struct HeadContinuation {
     pub call: crate::head::HeadCall,
     pub pending_token: Option<Token>,
 }
+/// Raw transport uses the default `ParseTree`. Native validated session methods
+/// retain an owned proof in the complete/recovered variants instead.
 #[derive(Debug, Eq, PartialEq)]
-pub enum ParseOutcome {
+pub enum ParseOutcome<T = ParseTree> {
     Complete {
-        tree: ParseTree,
+        tree: T,
         cursor: u64,
         states: Vec<LanguageReaderState>,
         facts: Vec<ReaderFactBatch>,
     },
     Recovered {
-        tree: ParseTree,
+        tree: T,
         cursor: u64,
         states: Vec<LanguageReaderState>,
         facts: Vec<ReaderFactBatch>,
@@ -155,9 +157,70 @@ pub enum ParseOutcome {
 }
 
 #[derive(Debug, Eq, PartialEq)]
-pub struct ParseReply {
-    pub outcome: ParseOutcome,
+pub struct ParseReply<T = ParseTree> {
+    pub outcome: ParseOutcome<T>,
     pub report: Report,
     pub sources: Vec<SourceSnapshot>,
     pub source_maps: Vec<Mapping>,
+}
+
+impl<T> ParseReply<T> {
+    pub(super) fn map_tree<U>(self, convert: impl FnOnce(T) -> U) -> ParseReply<U> {
+        let outcome = match self.outcome {
+            ParseOutcome::Complete {
+                tree,
+                cursor,
+                states,
+                facts,
+            } => ParseOutcome::Complete {
+                tree: convert(tree),
+                cursor,
+                states,
+                facts,
+            },
+            ParseOutcome::Recovered {
+                tree,
+                cursor,
+                states,
+                facts,
+            } => ParseOutcome::Recovered {
+                tree: convert(tree),
+                cursor,
+                states,
+                facts,
+            },
+            ParseOutcome::NeedMore { expected, progress } => {
+                ParseOutcome::NeedMore { expected, progress }
+            }
+            ParseOutcome::Stopped { reason, progress } => {
+                ParseOutcome::Stopped { reason, progress }
+            }
+            ParseOutcome::Await { call, continuation } => {
+                ParseOutcome::Await { call, continuation }
+            }
+            ParseOutcome::AwaitHead { call, continuation } => {
+                ParseOutcome::AwaitHead { call, continuation }
+            }
+            ParseOutcome::Reserve {
+                request,
+                continuation,
+            } => ParseOutcome::Reserve {
+                request,
+                continuation,
+            },
+        };
+        ParseReply {
+            outcome,
+            report: self.report,
+            sources: self.sources,
+            source_maps: self.source_maps,
+        }
+    }
+}
+
+impl ParseReply<crate::tree::OwnedValidatedParseTree<'_>> {
+    /// Consume native validation proofs to recover the ordinary transport reply.
+    pub fn into_raw(self) -> ParseReply {
+        self.map_tree(crate::tree::OwnedValidatedParseTree::into_inner)
+    }
 }

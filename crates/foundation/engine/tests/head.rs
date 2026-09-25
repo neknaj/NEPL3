@@ -75,6 +75,7 @@ fn dynamic_head_uses_compound_completed_child_and_restores_normal_child_context(
 enum Case {
     Owned,
     Sealed,
+    Validated,
     Portable,
     Native,
     NativeFallback,
@@ -448,6 +449,11 @@ fn run_case(input: &str, case: Case, exercise_rejections: bool) -> Result<ParseR
             assert_eq!(host.reader_calls, 1);
         }
         result.reply
+    } else if case == Case::Validated {
+        session
+            .read_validated(request, &sources, &mut b, &mut a)
+            .map(ParseReply::into_raw)
+            .map_err(|v| format!("validated read {v:?}"))?
     } else if case == Case::Sealed {
         session
             .read_completed(request, &sources, &mut b, &mut a)
@@ -800,7 +806,11 @@ fn run_case(input: &str, case: Case, exercise_rejections: bool) -> Result<ParseR
         } else {
             &sources
         };
-        reply = if case == Case::Sealed {
+        reply = if case == Case::Validated {
+            session
+                .resume_head_validated(continuation, provider_reply, caller_sources, &mut b, &mut a)
+                .map(ParseReply::into_raw)
+        } else if case == Case::Sealed {
             session
                 .resume_head_completed(continuation, provider_reply, caller_sources, &mut b, &mut a)
                 .map(unseal)
@@ -1255,6 +1265,16 @@ fn completed_head_wrapper_preserves_owned_execution_and_pending_boundaries() -> 
     assert_eq!(
         run_case(input, Case::Owned, true)?,
         run_case(input, Case::Sealed, true)?
+    );
+    Ok(())
+}
+
+#[test]
+fn validated_head_reply_preserves_owned_execution() -> TestResult {
+    let input = "choose alt @let z x tail";
+    assert_eq!(
+        run_case(input, Case::Owned, true)?,
+        run_case(input, Case::Validated, true)?
     );
     Ok(())
 }

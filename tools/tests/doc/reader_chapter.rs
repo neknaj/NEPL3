@@ -28,7 +28,7 @@ fn project(
     mut render_budget: Budget,
 ) -> Result<(), String> {
     let c = compiled()?;
-    let document = nepl3_tools::doc::source::with_named_input_limits(
+    let document = nepl3_tools::doc::source::with_named_validated_input_limits(
         true,
         &c,
         include_str!("../../../doc/spec/03-reader.nepld"),
@@ -42,7 +42,7 @@ fn project(
             let mut codec =
                 FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
             lower::document(
-                tree.syntax(),
+                &tree.syntax(),
                 &c.doc.package.schema,
                 Category::Article,
                 profile.registry(),

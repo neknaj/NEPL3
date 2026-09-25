@@ -44,7 +44,7 @@ pub trait ParseHost {
 /// host retry. If publishing that continuation stops, `reply` is Stopped and
 /// retains the accepted report/source closure instead. No callback error is
 /// disguised as a resource limit.
-pub struct ParseHostReply {
-    pub reply: ParseReply,
+pub struct ParseHostReply<T = crate::recovery::ParseTree> {
+    pub reply: ParseReply<T>,
     pub host_error: Option<ParseError>,
 }
