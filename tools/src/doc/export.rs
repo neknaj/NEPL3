@@ -45,6 +45,16 @@ pub fn generate(compiled: &Compiled, input: &str) -> Result<LocalDocument, Strin
     generate_observed(compiled, input, &mut |_| {})
 }
 
+/// Export one Article with explicit parallel-language presentation. Options
+/// are checked by the composed namespace preparation before serialization.
+pub fn generate_with_options(
+    compiled: &Compiled,
+    input: &str,
+    options: RenderOptions,
+) -> Result<LocalDocument, String> {
+    generate_options_observed(compiled, input, options, &mut |_| {})
+}
+
 /// Observe successful stage boundaries in the production export pipeline.
 /// Timing stays in the host callback and never enters generated artifacts.
 /// An error returns normally; no measurement claims completion of that stage.
@@ -53,6 +63,22 @@ pub fn generate(compiled: &Compiled, input: &str) -> Result<LocalDocument, Strin
 pub fn generate_observed(
     compiled: &Compiled,
     input: &str,
+    observe: &mut impl FnMut(StageMeasurement),
+) -> Result<LocalDocument, String> {
+    generate_options_observed(
+        compiled,
+        input,
+        RenderOptions {
+            parallel: ParallelMode::Rows,
+        },
+        observe,
+    )
+}
+
+fn generate_options_observed(
+    compiled: &Compiled,
+    input: &str,
+    options: RenderOptions,
     observe: &mut impl FnMut(StageMeasurement),
 ) -> Result<LocalDocument, String> {
     if input.len() as u64 > MAX_SOURCE_BYTES {
@@ -100,9 +126,7 @@ pub fn generate_observed(
                 }],
                 files: vec![],
             },
-            options: RenderOptions {
-                parallel: ParallelMode::Rows,
-            },
+            options,
         };
         let mut rendered =
             pages::render::render_observed(&request, compiled, &mut output_budget, observe)?;
@@ -130,7 +154,13 @@ pub fn generate_observed(
             "renderer":"nepl3-tools.doc-pages-composed/1",
             "identity_contract":"NEPL3.Doc.PageNamespaces.v2",
             "identity":digest_hex(rendered.identity),
-            "options":{"parallel":"Rows"},
+            "options":match &request.options.parallel {
+                ParallelMode::Rows => serde_json::json!({"parallel":"Rows"}),
+                ParallelMode::Columns => serde_json::json!({"parallel":"Columns"}),
+                ParallelMode::Single { language, fallbacks } => serde_json::json!({
+                    "parallel":"Single", "language":language, "fallbacks":fallbacks,
+                }),
+            },
             "files":[{"path":"document.html","mime":"text/html; charset=utf-8","sha256":digest(html.as_bytes())},
                      {"path":"assets/doc.css","mime":"text/css; charset=utf-8","license":"MIT","sha256":digest(CSS.as_bytes())}],
             "operations":{"parse_and_validate":usage(parse_usage),"lower":usage(lower_budget.usage()),

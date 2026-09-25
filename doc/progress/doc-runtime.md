@@ -293,6 +293,12 @@ Docの配置、Sentence本文、Doc Inlineの参照ラベルが持つ各spanを�
 段落全体の構造・本文順序・参照先・RubyとAnnoの内容を保持して検査する。
 native・WASI各2件とclippyは成功した。表示言語の選択やportable受信を扱うHTML試験は移行対象として残る。
 
+単一Articleのexportへ`generate_with_options`を追加し、Rows・Columns・Singleの指定を
+既存のnamespace準備へ渡す。manifestは実際の表示条件を記録し、従来の入口はRowsを維持する。
+独立Sentenceを含む対応文で、言語選択・明示fallback・Columns・既定Rowsとの出力同一性・
+不正な言語指定の拒否を確認した。native・WASI各1件と独立レビューのnative1件は成功した。
+portable受信とページ集合の残る試験は、引き続き移行対象である。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは

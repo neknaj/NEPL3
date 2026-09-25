@@ -307,25 +307,45 @@ fn article_html_preserves_ruby_notes_and_forward_label_reference() -> Result<(),
 }
 #[test]
 fn parallel_html_selects_only_explicit_language_or_fallback() -> Result<(), String> {
-    let source = r#"article ja "対応" body cons paragraph cons parallel cons variant ja "日本語" cons variant en "English" nil nil nil"#;
+    let compiled = compiled()?;
+    let source = r#"article ja sentence "対応" body cons paragraph cons parallel cons variant ja sentence "日本語" cons variant en sentence "English" nil nil nil"#;
     let options = |language: &str, fallbacks: Vec<String>| RenderOptions {
         parallel: ParallelMode::Single {
             language: language.into(),
             fallbacks,
         },
     };
-    let selected = html(source, options("EN", vec![]))?;
-    assert!(selected.contains("<span lang=\"en\"><span>English</span></span>"));
-    assert!(!selected.contains("日本語"));
-    assert!(html(source, options("fr", vec![])).is_err());
-    assert_eq!(selected, html(source, options("fr", vec!["en".into()]))?);
-    let all = html(
-        source,
-        RenderOptions {
-            parallel: ParallelMode::Columns,
-        },
-    )?;
-    assert!(all.contains("日本語") && all.contains("English"));
+    let generate =
+        |options| nepl3_tools::doc::export::generate_with_options(&compiled, source, options);
+    let selected = generate(options("EN", vec![]))?;
+    assert!(selected.html.contains("<span lang=\"en\"><span><span class=\"nepl-sentence\"><span>English</span></span></span></span>"), "{}", selected.html);
+    assert!(!selected.html.contains("日本語"));
+    assert!(generate(options("fr", vec![])).is_err());
+    let fallback = generate(options("fr", vec!["en".into()]))?;
+    assert_eq!(selected.html, fallback.html);
+    let manifest: serde_json::Value = serde_json::from_str(&fallback.manifest).map_err(err)?;
+    assert_eq!(
+        manifest["options"],
+        serde_json::json!({"parallel":"Single","language":"fr","fallbacks":["en"]})
+    );
+    let all = generate(RenderOptions {
+        parallel: ParallelMode::Columns,
+    })?;
+    assert!(all.html.contains("日本語") && all.html.contains("English"));
+    let manifest: serde_json::Value = serde_json::from_str(&all.manifest).map_err(err)?;
+    assert_eq!(
+        manifest["options"],
+        serde_json::json!({"parallel":"Columns"})
+    );
+    let rows = generate(RenderOptions {
+        parallel: ParallelMode::Rows,
+    })?;
+    let default = nepl3_tools::doc::export::generate(&compiled, source)?;
+    assert_eq!(rows.html, default.html);
+    assert_eq!(rows.manifest, default.manifest);
+    for invalid in [options("bad_tag", vec![]), options("en", vec!["EN".into()])] {
+        assert!(generate(invalid).is_err());
+    }
     Ok(())
 }
 
