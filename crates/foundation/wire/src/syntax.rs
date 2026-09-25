@@ -100,6 +100,27 @@ pub(crate) fn bundle_value(
     admission: &mut SourceAdmission,
     budget: &mut Budget,
 ) -> Result<NdfValue, WireError> {
+    bundle_encoding(bundle, schema, registry, admission, budget, false)
+}
+
+pub(crate) fn bundle_body_value(
+    bundle: &SyntaxBundle,
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    budget: &mut Budget,
+) -> Result<NdfValue, WireError> {
+    bundle_encoding(bundle, schema, registry, admission, budget, true)
+}
+
+fn bundle_encoding(
+    bundle: &SyntaxBundle,
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    budget: &mut Budget,
+    root_body: bool,
+) -> Result<NdfValue, WireError> {
     let mut pending = Vec::new();
     let mut results = Vec::new();
     push(&mut pending, Encode::Enter(bundle, 1), budget)?;
@@ -219,6 +240,28 @@ pub(crate) fn bundle_value(
                     return Err(WireError::InvalidType);
                 }
                 drop(guests);
+                if root_body && pending.is_empty() {
+                    let value = record(
+                        schema,
+                        "SyntaxBody",
+                        [
+                            nodes,
+                            sequence(&bundle.origins, budget, |origin, b| {
+                                origin_value(origin, schema, b)
+                            })?,
+                            id_value(0, "NodeRef", schema, budget)?,
+                            sequence(&bundle.environments, budget, |entry, b| {
+                                entry_value(entry, schema, registry, b)
+                            })?,
+                            sequence(&bundle.tokens, budget, |token, b| {
+                                token_value(token, schema, b)
+                            })?,
+                        ],
+                        budget,
+                    )?;
+                    push(&mut results, value, budget)?;
+                    continue;
+                }
                 let value = record(
                     schema,
                     "SyntaxBundle",

@@ -2,6 +2,7 @@
 //! own ordinary envelope. A pool is storage, never an ambient declaration scope.
 use super::*;
 use nepl3_core::source::Digest;
+mod pool;
 
 const SOURCE_DOMAIN: &[u8] = b"NEPL3.SyntaxBundleSet.Source.v1\0";
 const MAP_DOMAIN: &[u8] = b"NEPL3.SyntaxBundleSet.Mapping.v1\0";
@@ -28,34 +29,6 @@ fn locate(
         }
     }
     Ok(Err(low))
-}
-
-fn intern(
-    entries: &mut Vec<Entry>,
-    domain: &[u8],
-    mut values: NdfValue,
-    b: &mut Budget,
-) -> Result<NdfValue, WireError> {
-    let NdfValue::List(values) = &mut values else {
-        return Err(WireError::InvalidType);
-    };
-    let values = core::mem::take(values);
-    let mut refs = Vec::new();
-    for value in values {
-        b.charge(Resource::Work, 1)?;
-        let digest = crate::encode::digest(domain, &value, b)?;
-        push(
-            entries,
-            Entry {
-                digest,
-                value,
-                used: false,
-            },
-            b,
-        )?;
-        push(&mut refs, bytes(&digest.0, b)?, b)?;
-    }
-    Ok(NdfValue::List(refs))
 }
 
 fn table(mut entries: Vec<Entry>, b: &mut Budget) -> Result<NdfValue, WireError> {
@@ -101,8 +74,8 @@ fn table(mut entries: Vec<Entry>, b: &mut Budget) -> Result<NdfValue, WireError>
 }
 
 /// Encode a self-contained set. Pool addresses are hashes of canonical content;
-/// each root retains its exact source membership and mapping order. This first
-/// implementation materializes ordinary bundle values before pooling them.
+/// each root retains its exact source membership and mapping order. Native
+/// declarations are indexed before encoding each distinct table entry once.
 pub fn encode(
     bundles: &[SyntaxBundle],
     schema: &SchemaRef,
@@ -121,26 +94,25 @@ pub(crate) fn value<'a>(
     admission: &mut SourceAdmission,
     b: &mut Budget,
 ) -> Result<NdfValue, WireError> {
-    let (mut sources, mut maps, mut members) = (Vec::new(), Vec::new(), Vec::new());
+    let (mut sources, mut maps, mut inputs) = (Vec::new(), Vec::new(), Vec::new());
     for bundle in bundles {
         b.charge(Resource::Work, 1)?;
         bundle.validate_with_sources(registry, b, admission)?;
-        let mut encoded = bundle_value(bundle, schema, registry, admission, b)?;
-        let NdfValue::Record(value) = &mut encoded else {
-            return Err(WireError::InvalidType);
-        };
-        let [source, nodes, origins, root, environments, tokens, mapping]: [NdfValue; 7] =
-            core::mem::take(&mut value.fields)
-                .try_into()
-                .map_err(|_| WireError::InvalidType)?;
-        let source_refs = intern(&mut sources, SOURCE_DOMAIN, source, b)?;
-        let map_refs = intern(&mut maps, MAP_DOMAIN, mapping, b)?;
-        let body = record(
-            schema,
-            "SyntaxBody",
-            [nodes, origins, root, environments, tokens],
-            b,
-        )?;
+        for source in &bundle.sources {
+            push(&mut sources, source, b)?;
+        }
+        for mapping in &bundle.source_maps {
+            push(&mut maps, mapping, b)?;
+        }
+        push(&mut inputs, bundle, b)?;
+    }
+    let sources = pool::Pool::new(sources, SOURCE_DOMAIN, schema, admission, b)?;
+    let maps = pool::Pool::new(maps, MAP_DOMAIN, schema, admission, b)?;
+    let mut members = Vec::new();
+    for bundle in inputs {
+        let source_refs = sources.references(&bundle.sources, true, b)?;
+        let map_refs = maps.references(&bundle.source_maps, false, b)?;
+        let body = bundle_body_value(bundle, schema, registry, admission, b)?;
         let member = record(
             schema,
             "SharedSyntaxBundle",
@@ -152,7 +124,11 @@ pub(crate) fn value<'a>(
     record(
         schema,
         "SyntaxBundleSet",
-        [table(sources, b)?, table(maps, b)?, NdfValue::List(members)],
+        [
+            table(sources.values, b)?,
+            table(maps.values, b)?,
+            NdfValue::List(members),
+        ],
         b,
     )
 }

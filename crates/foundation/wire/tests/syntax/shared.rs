@@ -71,6 +71,140 @@ fn fixture_with_map() -> Result<(SchemaRef, SchemaRegistry, SyntaxBundle), Strin
     Ok((s, r, bundle))
 }
 
+// Independent format oracle: ordinary bundle encoding supplies complete tables;
+// test-owned maps deduplicate canonical content without production pool indexing.
+fn reference_set(
+    bundles: &[SyntaxBundle],
+    s: &SchemaRef,
+    r: &SchemaRegistry,
+) -> Result<Vec<u8>, String> {
+    use nepl3_core::{source::Digest, value::Record};
+    use std::collections::BTreeMap;
+    let record = |kind: &str, fields| {
+        NdfValue::Record(Record {
+            schema: s.clone(),
+            kind: kind.into(),
+            fields,
+        })
+    };
+    let mut pools = [BTreeMap::new(), BTreeMap::new()];
+    let mut members = Vec::new();
+    for bundle in bundles {
+        let bytes = encode_syntax(bundle, s, r, &mut SourceAdmission::default(), &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+        let value = decode(&bytes, &mut budget()).map_err(|e| format!("{e:?}"))?;
+        let NdfValue::Record(value) = &value else {
+            return Err("bundle".into());
+        };
+        let mut refs = Vec::new();
+        for (pool, field, domain) in [
+            (0, 0, b"NEPL3.SyntaxBundleSet.Source.v1\0".as_slice()),
+            (1, 6, b"NEPL3.SyntaxBundleSet.Mapping.v1\0".as_slice()),
+        ] {
+            let NdfValue::List(values) = &value.fields[field] else {
+                return Err("declarations".into());
+            };
+            let mut selected = Vec::new();
+            for value in values {
+                let bytes = encode(value, &mut budget()).map_err(|e| format!("{e:?}"))?;
+                let digest = Digest::domain(domain, &bytes);
+                pools[pool].insert(digest, value.clone());
+                selected.push(NdfValue::Bytes(digest.0.to_vec()));
+            }
+            refs.push(NdfValue::List(selected));
+        }
+        refs.push(record("SyntaxBody", value.fields[1..6].to_vec()));
+        members.push(record("SharedSyntaxBundle", refs));
+    }
+    let [sources, maps] = pools;
+    encode(
+        &record(
+            "SyntaxBundleSet",
+            vec![
+                NdfValue::List(sources.into_values().collect()),
+                NdfValue::List(maps.into_values().collect()),
+                NdfValue::List(members),
+            ],
+        ),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))
+}
+
+#[test]
+fn indexed_pool_preserves_independent_format_for_repeated_and_distinct_members() -> TestResult {
+    let (s, r, first) = multiple_entries()?;
+    let (_, _, second) = fixture_with_map()?;
+    let mut independent = first.clone();
+    for source in &mut independent.sources {
+        *source = SourceSnapshot::new(
+            source.identity().source.clone(),
+            source.identity().revision,
+            source.uri().into(),
+            source.text().as_bytes().to_vec(),
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+    }
+    for bundles in [
+        vec![],
+        vec![first.clone()],
+        vec![first.clone(), second.clone(), independent, first, second],
+    ] {
+        let actual = shared::encode(
+            &bundles,
+            &s,
+            &r,
+            &mut SourceAdmission::default(),
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        assert_eq!(actual, reference_set(&bundles, &s, &r)?);
+    }
+    Ok(())
+}
+
+#[test]
+fn shared_pool_work_scales_below_quadratic_for_distinct_declarations() -> TestResult {
+    let mut prior = None;
+    for count in [64, 128, 256] {
+        let (s, r, mut bundle) = fixture_with_map()?;
+        for index in (0..count).rev() {
+            let source = SourceSnapshot::new(
+                SourceId(format!("extra-{index:04}")),
+                1,
+                format!("memory:extra-{index}"),
+                b"ab".to_vec(),
+                &mut budget(),
+            )
+            .map_err(|e| format!("{e:?}"))?;
+            bundle.source_maps.push(Mapping {
+                source: source.span(0, 1).map_err(|e| format!("{e:?}"))?,
+                target: source.span(1, 2).map_err(|e| format!("{e:?}"))?,
+                kind: MappingKind::Transformed,
+            });
+            bundle.sources.push(source);
+        }
+        let mut b = budget();
+        let bytes = shared::encode(
+            &[bundle.clone(), bundle],
+            &s,
+            &r,
+            &mut SourceAdmission::default(),
+            &mut b,
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        assert!(!bytes.is_empty());
+        if let Some(prior) = prior {
+            // Doubling declarations permits n log n and fixed graph validation
+            // costs, while rejecting a dominant all-pairs comparison path.
+            assert!(b.usage().work < prior * 3);
+        }
+        prior = Some(b.usage().work);
+    }
+    Ok(())
+}
+
 fn edit_member(
     value: &mut NdfValue,
     member: usize,

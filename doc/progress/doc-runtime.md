@@ -272,6 +272,16 @@ ambient sourceをmemberの不足宣言へ補完しない。追加試験を含む
 両者は交換範囲が異なる。共有形式はroot bundleだけを扱い、Doc構造・owner等を含まない。
 それでも現行の全体構築より高い費用を要するため、出現ごとの内容ハッシュと通常bundleの
 中間構築を改善してからDoc portable表現へ採用する。今回の測定を全体性能の改善とは扱わない。
+
+共有表の構築をnative宣言の索引へ変更した。sourceは完全identityと内容、mappingは
+両端の完全spanとkindで同値性を確認し、異なるentryを一度だけ構築・ハッシュする。
+memberの閉包検査は維持し、rootのsource/map中間NDF列を省いた。nested Foreignは通常形式を保持する。
+従来の単独bundle codecと試験側の内容表から構築した独立期待値に対して、空集合・反復・
+異なるmember・同値の別storageでbyte一致を確認する。逆順64/128/256宣言の増大試験も追加した。
+第13章の同じnative debug計測は124,476,780 Work、117,349,413 AllocationUnits、約1.52秒となった。
+NDF節点数675,511は不変である。これは共有形式の構築部分の改善であり、現行Doc生成経路は未変更である。
+独立レビューは8試験を実行し、別storageと増大試験を追加した最終差分を静的確認した。
+最終版はwire全84試験とWASIの共有形式9試験、Clippy、thumb向けcheck、repository checkが成功した。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
