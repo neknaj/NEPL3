@@ -7,18 +7,7 @@ use nepl3_core::{
 };
 
 fn identity(a: &SnapshotId, z: &SnapshotId, b: &mut Budget) -> Result<Ordering, WireError> {
-    // Both identities are immutably borrowed for this operation. Identical
-    // storage establishes equality without comparing source-name bytes again.
-    // Addresses select work reuse only and never determine portable ordering.
-    b.charge(Resource::Work, 1)?;
-    if core::ptr::eq(a, z) {
-        return Ok(Ordering::Equal);
-    }
-    b.charge(
-        Resource::Work,
-        a.source.0.len().min(z.source.0.len()) as u64 + 34,
-    )?;
-    Ok(a.cmp(z))
+    a.compare_with_budget(z, b).map_err(Into::into)
 }
 
 mod positions;

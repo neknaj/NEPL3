@@ -5,6 +5,66 @@ use nepl3_core::{
 };
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 #[test]
+fn shared_endpoint_identities_preserve_independent_graphs_and_cycle_rejection() -> TestResult {
+    let name = "root".repeat(256);
+    let root = source(&name, "x")?;
+    let mut store = SourceStore::default();
+    store.insert(root.clone()).map_err(|e| format!("{e:?}"))?;
+    let mut shared = Vec::new();
+    let mut independent = Vec::new();
+    for index in 0..128 {
+        let leaf = source(&format!("leaf-{index:04}"), "x")?;
+        store.insert(leaf.clone()).map_err(|e| format!("{e:?}"))?;
+        shared.push(Mapping {
+            source: root.span(0, 1).map_err(|e| format!("{e:?}"))?,
+            target: leaf.span(0, 1).map_err(|e| format!("{e:?}"))?,
+            kind: MappingKind::Exact,
+        });
+        // Each endpoint comes from independently decoded storage. Equality and
+        // cycle checks must retain the same complete identity semantics.
+        independent.push(Mapping {
+            source: source(&name, "x")?
+                .span(0, 1)
+                .map_err(|e| format!("{e:?}"))?,
+            target: source(&format!("leaf-{index:04}"), "x")?
+                .span(0, 1)
+                .map_err(|e| format!("{e:?}"))?,
+            kind: MappingKind::Exact,
+        });
+    }
+    assert_eq!(shared, independent);
+    let mut shared_budget = budget();
+    let mut independent_budget = budget();
+    SourceMap::validate_mappings(&shared, &store, &mut shared_budget)
+        .map_err(|e| format!("{e:?}"))?;
+    SourceMap::validate_mappings(&independent, &store, &mut independent_budget)
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(shared_budget.usage().nodes, 129);
+    assert_eq!(
+        shared_budget.usage().nodes,
+        independent_budget.usage().nodes
+    );
+    assert_eq!(shared_budget.usage().depth, 2);
+    assert_eq!(
+        shared_budget.usage().depth,
+        independent_budget.usage().depth
+    );
+    #[cfg(target_has_atomic = "ptr")]
+    assert!(shared_budget.usage().work < independent_budget.usage().work);
+    for maps in [&mut shared, &mut independent] {
+        maps.push(Mapping {
+            source: maps[0].target.clone(),
+            target: maps[0].source.clone(),
+            kind: MappingKind::Exact,
+        });
+        assert!(matches!(
+            SourceMap::validate_mappings(maps, &store, &mut budget()),
+            Err(OriginError::Cycle)
+        ));
+    }
+    Ok(())
+}
+#[test]
 fn source_closure_proof_is_scoped_to_the_borrowed_store() -> TestResult {
     let a = source("proof-a", "abc")?;
     let b = source("proof-b", "abc")?;

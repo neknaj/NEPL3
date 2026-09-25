@@ -330,12 +330,12 @@ fn borrowed_identity_equality_is_metered_and_storage_independent() -> Result<(),
         identity(&a, &independent, &mut one),
         Err(WireError::Stopped(StopReason::WorkLimit))
     );
-    let mut enough = budget(a.source.0.len() as u64 + 35);
+    let mut enough = budget(a.source.0.len() as u64 + 41);
     assert_eq!(identity(&a, &independent, &mut enough)?, Ordering::Equal);
     let mut next = independent;
     next.revision += 1;
     assert_eq!(
-        identity(&a, &next, &mut budget(a.source.0.len() as u64 + 35))?,
+        identity(&a, &next, &mut budget(a.source.0.len() as u64 + 41))?,
         Ordering::Less
     );
     let mut cancelled = budget(1);

@@ -375,6 +375,14 @@ Spanの等値・範囲・寿命とportable形式は維持する。identityの追
 core・wire・Sentenceのnative/WASI各296試験、独立レビュー61試験、Clippy、thumb向けcheck、
 workspaceの`--all-targets` check、repository checkが成功した。reader・engine・Doc coreの
 native206試験も成功した。正式受入の状態は変更していない。
+SnapshotIdの完全比較を共通APIへ集約し、同じ不変参照は1 Workで照合する。
+独立storageにはsource名とrevision・digestの比較費用を課金する。mapping graphの
+直前位置・隣接位置・二分探索とwireのsource poolがこの比較を使用し、元の順序と権限境界を維持する。
+共有storageと独立storageから構成した同一graphの一致、cycle拒否、identity全field、
+exact・不足・取消を確認した。native/WASI各241試験、独立レビュー64試験、Clippy、
+thumb向けcheckが成功した。第13章のlowerは64,078,617 Work、投影は218,934,368 Workとなり、
+投影AllocationUnitsは153,021,007のままである。native debug単回は約6.27秒であった。
+通常Work100Mへの適合と全文書生成は引き続き未達である。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
