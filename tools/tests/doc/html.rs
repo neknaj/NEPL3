@@ -258,16 +258,20 @@ fn standalone_sentence_renders_annotation_without_fabricated_article() -> Result
 }
 #[test]
 fn article_html_preserves_nested_paragraph_order_without_nested_p() -> Result<(), String> {
-    let result = html(
-        r#"article ja "例" body cons paragraph cons "外A" cons paragraph cons "内" nil cons "外B" nil nil"#,
-        RenderOptions {
-            parallel: ParallelMode::Rows,
-        },
-    )?;
-    assert_eq!(
-        result,
-        "<article class=\"nepl-doc\" lang=\"ja\"><h1><span>例</span></h1><div class=\"nepl-paragraph\"><p><span>外A</span></p><div><div class=\"nepl-paragraph\"><p><span>内</span></p></div></div><p><span>外B</span></p></div></article>"
-    );
+    let result = nepl3_tools::doc::export::generate(
+        &compiled()?,
+        r#"article ja sentence "例" body cons paragraph cons sentence "外A" cons paragraph cons sentence "内" nil cons sentence "外B" nil nil"#,
+    )?.html;
+    // The complete subtree fixes the order and paragraph boundaries independently
+    // of the export shell. Doc owns the placement span; independent Sentence
+    // owns the inner phrasing wrapper and its literal content.
+    let sentence = |text: &str| {
+        format!("<span><span class=\"nepl-sentence\"><span>{text}</span></span></span>")
+    };
+    assert!(result.contains(&format!(
+        "<article class=\"nepl-doc\" lang=\"ja\"><h1>{}</h1><div class=\"nepl-paragraph\"><p>{}</p><div><div class=\"nepl-paragraph\"><p>{}</p></div></div><p>{}</p></div></article>",
+        sentence("例"), sentence("外A"), sentence("内"), sentence("外B")
+    )), "{result}");
     Ok(())
 }
 
@@ -291,14 +295,13 @@ fn explicit_break_renders_br_without_reinterpreting_text_line_feeds() -> Result<
 }
 #[test]
 fn article_html_preserves_ruby_notes_and_forward_label_reference() -> Result<(), String> {
-    let result = html(
-        r#"article ja "注記" body cons paragraph cons sentence cons ref 終 text "先へ" cons anno ruby text "字" text "じ" cons text "character" nil nil nil cons section 終 "末尾" body nil nil"#,
-        RenderOptions {
-            parallel: ParallelMode::Rows,
-        },
-    )?;
-    assert!(result.contains("<a href=\"#n-e7b582\">先へ</a>"));
-    assert!(result.contains("<section id=\"n-e7b582\"><h2><span>末尾</span></h2></section>"));
+    let result = nepl3_tools::doc::export::generate(
+        &compiled()?,
+        r#"article ja sentence "注記" body cons paragraph cons sentence sentence cons doc ref 終 text "先へ" cons anno ruby text "字" text "じ" cons text "character" nil nil nil cons section 終 sentence "末尾" body nil nil"#,
+    )?.html;
+    // The reference remains a Doc Inline; its label is independent Sentence.
+    assert!(result.contains("<a href=\"#n-e7b582\"><span class=\"nepl-sentence\">先へ</span></a>"));
+    assert!(result.contains("<section id=\"n-e7b582\"><h2><span><span class=\"nepl-sentence\"><span>末尾</span></span></span></h2></section>"));
     assert!(result.contains("<span class=\"nepl-anno\"><span class=\"nepl-base\"><span class=\"nepl-ruby\"><span class=\"nepl-base\">字</span><span class=\"nepl-reading\">じ</span></span></span><span class=\"nepl-notes\"><span class=\"nepl-note\">character</span></span></span>"));
     Ok(())
 }

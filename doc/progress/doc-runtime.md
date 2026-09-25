@@ -288,6 +288,11 @@ Text内のLFと明示breakの区別、native/owned解析木の一致も維持す
 最終ブラウザ実行ではChromium・Firefox・WebKitの計702条件が成功した。
 clippy・repository・fmt・diff検査も成功した。残るHTML試験や正式受入全体の完了は含まない。
 
+入れ子段落の順序と前方ラベル参照を確認するHTML試験2件を、独立Sentenceとproduction exportへ接続した。
+Docの配置、Sentence本文、Doc Inlineの参照ラベルが持つ各spanを期待値へ明示し、
+段落全体の構造・本文順序・参照先・RubyとAnnoの内容を保持して検査する。
+native・WASI各2件とclippyは成功した。表示言語の選択やportable受信を扱うHTML試験は移行対象として残る。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは
