@@ -351,26 +351,25 @@ fn parallel_html_selects_only_explicit_language_or_fallback() -> Result<(), Stri
 
 #[test]
 fn table_list_and_raw_code_keep_order_shape_and_original_characters() -> Result<(), String> {
-    let source = r#"article ja "構造" body
+    let source = r#"article ja sentence "構造" body
  cons table cons left cons right nil
-   some row cons "A" cons "B" nil
-   cons row cons "1" cons "2" nil
-   cons row cons "3" cons "4" nil nil
+   some row cons sentence "A" cons sentence "B" nil
+   cons row cons sentence "1" cons sentence "2" nil
+   cons row cons sentence "3" cons sentence "4" nil nil
  cons list ordered 7
-   cons item checked body cons paragraph cons "項目" nil nil
+   cons item checked body cons paragraph cons sentence "項目" nil nil
    cons item unchecked body cons list unordered cons item none body nil nil nil nil
  cons rawcode some "Rust" "\n\r\n<T> &  x"
  cons table nil none nil
  nil"#;
-    let out = html(
-        source,
-        RenderOptions {
-            parallel: ParallelMode::Rows,
-        },
-    )?;
-    assert!(out.contains("<table><thead><tr><th class=\"nepl-align-left\" scope=\"col\"><span>A</span></th><th class=\"nepl-align-right\" scope=\"col\"><span>B</span></th></tr></thead><tbody><tr><td class=\"nepl-align-left\"><span>1</span></td><td class=\"nepl-align-right\"><span>2</span></td></tr><tr><td class=\"nepl-align-left\"><span>3</span></td><td class=\"nepl-align-right\"><span>4</span></td></tr></tbody></table>"));
-    assert!(out.contains("<ol start=\"7\"><li><span aria-label=\"checked\" class=\"nepl-checkbox\" role=\"img\">☑ </span>"));
-    assert!(out.contains("<ul><li></li></ul>"));
+    let out = nepl3_tools::doc::export::generate(&compiled()?, source)?.html;
+    // Doc owns each cell placement; Sentence owns its phrasing subtree.
+    // Fix the complete table to verify cell ownership, alignment and row order.
+    let sentence = |text: &str| {
+        format!("<span><span class=\"nepl-sentence\"><span>{text}</span></span></span>")
+    };
+    assert!(out.contains(&format!("<table><thead><tr><th class=\"nepl-align-left\" scope=\"col\">{}</th><th class=\"nepl-align-right\" scope=\"col\">{}</th></tr></thead><tbody><tr><td class=\"nepl-align-left\">{}</td><td class=\"nepl-align-right\">{}</td></tr><tr><td class=\"nepl-align-left\">{}</td><td class=\"nepl-align-right\">{}</td></tr></tbody></table>", sentence("A"), sentence("B"), sentence("1"), sentence("2"), sentence("3"), sentence("4"))), "{out}");
+    assert!(out.contains(&format!("</table><ol start=\"7\"><li><span aria-label=\"checked\" class=\"nepl-checkbox\" role=\"img\">☑ </span><div class=\"nepl-paragraph\"><p>{}</p></div></li><li><span aria-label=\"unchecked\" class=\"nepl-checkbox\" role=\"img\">☐ </span><ul><li></li></ul></li></ol><figure>", sentence("項目"))), "{out}");
     assert!(out.contains("<figure><figcaption>Rust</figcaption><pre>\n<code>\n&#xD;\n&lt;T&gt; &amp;  x</code></pre></figure><table></table>"));
     Ok(())
 }

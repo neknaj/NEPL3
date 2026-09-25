@@ -329,6 +329,11 @@ Work不足・取消の拒否を維持した。native・WASI各4件と独立nativ
 Reader章のDiscovery Workは74,712,238から74,676,144、AllocationUnitsは131,806,978から131,512,898へ減少した。
 章全体は引き続きWorkLimitで停止する。今回の改善はguest不在時の追加走査に限定される。
 
+表・リスト・raw codeのHTML試験を独立Sentenceの入力と公開export入口へ移行した。
+表全体のcell所属・順序・alignment、リスト各項目の本文・checkbox状態・入れ子、
+表からリストとraw codeへの隣接順序を固定したHTML部分木で検査する。
+raw codeのCR/LF・特殊文字の保持条件を維持し、native・WASI各1件と独立native1件が成功した。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは
