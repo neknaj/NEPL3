@@ -3,7 +3,7 @@
 use crate::view::{Token, ViewError};
 use crate::{
     budget::{Budget, Resource, StopReason},
-    origin::{Mapping, Origin, OriginError, OriginGraph, OriginId, SourceMap},
+    origin::{Mapping, Origin, OriginError, OriginGraph, OriginId, SourceMap, ValidatedSourceMap},
     schema::{SchemaError, SchemaRegistry},
     source::{Digest, SourceAdmission, SourceError, SourceSnapshot, SourceStore, Span},
     value::{NdfScalar, SchemaRef, TypedValue},
@@ -225,6 +225,7 @@ impl SyntaxBundle {
         )?;
         let mut bundles = alloc::vec![(self, 1u64)];
         let mut owner_depth = 0;
+        let mut root_maps: Option<(ValidatedSourceMap<'_>, u64)> = None;
         while let Some((bundle, depth)) = bundles.pop() {
             budget.observe_depth(depth)?;
             bundle.node(bundle.root)?;
@@ -247,11 +248,25 @@ impl SyntaxBundle {
                 }
                 foreign::environment(&environment.value, bundle.origins.len(), registry, budget)?;
             }
-            let (maps, maps_depth) =
-                SourceMap::checked_mapping_parts(&bundle.source_maps, &[], &sources, budget)?;
+            let reused = match &root_maps {
+                Some((proof, depth)) => proof
+                    .matching_prefix(&bundle.source_maps, budget)?
+                    .map(|proof| (proof, *depth)),
+                None => None,
+            };
+            let (maps, maps_depth) = match reused {
+                Some(checked) => checked,
+                None => {
+                    SourceMap::checked_mapping_parts(&bundle.source_maps, &[], &sources, budget)?
+                }
+            };
             if core::ptr::eq(bundle, self) {
                 owner_depth = origins_depth.max(maps_depth);
+                root_maps = Some((maps.unbound(), maps_depth));
             }
+            // Every nested table is a subrelation of an already checked root
+            // only after exact prefix comparison. Its declaration scope remains
+            // local, and the root's depth bound was observed in this same call.
             let maps = maps.bind_sources(&sources, budget)?;
             for token in &bundle.tokens {
                 token.validate_with_maps(&sources, registry, &maps, budget)?;

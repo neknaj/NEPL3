@@ -28,6 +28,191 @@ fn snapshot(id: &str, revision: u64, text: &str) -> Result<SourceSnapshot, Sourc
 }
 
 #[test]
+fn nested_mapping_prefixes_reuse_graph_checks_with_local_source_scope() -> Result<(), SyntaxError> {
+    let (registry, schema) = registry()?;
+    for width in [16, 128, 512] {
+        let root = snapshot("prefix-root", 0, "xy")?;
+        let mut owner = bundle(&schema);
+        owner.sources.push(root.clone());
+        for index in 0..width {
+            let target = snapshot(&format!("prefix-{index:04}"), 0, "xy")?;
+            owner.source_maps.push(Mapping {
+                source: root.span(0, 2)?,
+                target: target.span(0, 2)?,
+                kind: MappingKind::Exact,
+            });
+            owner.sources.push(target);
+        }
+        owner.environments.push(environment());
+        let mut child = bundle(&schema);
+        child.sources = owner.sources.clone();
+        child.source_maps = owner.source_maps.clone();
+        owner.nodes[0].fields = vec![guest(&schema, child.clone()); 3];
+        let mut measured = budget();
+        owner.validate(&registry, &mut measured)?;
+        let mut control = owner.clone();
+        for field in &mut control.nodes[0].fields {
+            if let FieldValue::Foreign(child) = field {
+                child.bundle.source_maps.clear();
+            }
+        }
+        let mut control_budget = budget();
+        control.validate(&registry, &mut control_budget)?;
+        // Repeated identical prefixes must not revisit their mapping graphs.
+        // Further reductions in traversal cost also satisfy this upper bound.
+        assert!(measured.usage().nodes <= control_budget.usage().nodes);
+        assert_eq!(measured.usage().depth, control_budget.usage().depth);
+        for work in [measured.usage().work, measured.usage().work - 1] {
+            let mut limited = Budget::new(Limits {
+                work,
+                ..budget().limits()
+            });
+            let result = owner.validate(&registry, &mut limited);
+            if work == measured.usage().work {
+                result?;
+            } else {
+                assert!(matches!(
+                    result,
+                    Err(SyntaxError::Stopped(StopReason::WorkLimit))
+                ));
+                assert_eq!(limited.poll(), Err(StopReason::WorkLimit));
+            }
+        }
+        let mut missing = owner.clone();
+        let FieldValue::Foreign(guest) = &mut missing.nodes[0].fields[0] else {
+            return Err(SyntaxError::Reference);
+        };
+        guest.bundle.sources.clear();
+        assert!(matches!(
+            missing.validate(&registry, &mut budget()),
+            Err(SyntaxError::Origin(OriginError::Source(
+                SourceError::MissingSnapshot
+            )))
+        ));
+        let mut changed = owner.clone();
+        let FieldValue::Foreign(guest) = &mut changed.nodes[0].fields[0] else {
+            return Err(SyntaxError::Reference);
+        };
+        guest.bundle.source_maps[0].kind = MappingKind::Transformed;
+        changed.validate(&registry, &mut budget())?;
+        let mut self_cycle = owner.clone();
+        let FieldValue::Foreign(guest) = &mut self_cycle.nodes[0].fields[0] else {
+            return Err(SyntaxError::Reference);
+        };
+        guest.bundle.source_maps.truncate(1);
+        guest.bundle.source_maps[0].target = root.span(0, 2)?;
+        assert_eq!(
+            self_cycle.validate(&registry, &mut budget()).err(),
+            Some(SyntaxError::Origin(OriginError::Cycle))
+        );
+        let mut altered_range = owner.clone();
+        let FieldValue::Foreign(guest) = &mut altered_range.nodes[0].fields[0] else {
+            return Err(SyntaxError::Reference);
+        };
+        guest.bundle.source_maps[0].source = root.span(0, 1)?;
+        assert_eq!(
+            altered_range.validate(&registry, &mut budget()).err(),
+            Some(SyntaxError::Origin(OriginError::Irreversible))
+        );
+        let mut cyclic = owner.clone();
+        let FieldValue::Foreign(guest) = &mut cyclic.nodes[0].fields[0] else {
+            return Err(SyntaxError::Reference);
+        };
+        guest.bundle.source_maps.truncate(1);
+        let first = &guest.bundle.source_maps[0];
+        guest.bundle.source_maps.push(Mapping {
+            source: first.target.clone(),
+            target: first.source.clone(),
+            kind: MappingKind::Exact,
+        });
+        assert_eq!(
+            cyclic.validate(&registry, &mut budget()).err(),
+            Some(SyntaxError::Origin(OriginError::Cycle)),
+            "width={width}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn nested_mapping_prefixes_preserve_chain_depth_and_revision_checks() -> Result<(), SyntaxError> {
+    let (registry, schema) = registry()?;
+    let source = snapshot("chain", 0, "xxxxxxxxx")?;
+    let mut owner = bundle(&schema);
+    owner.sources.push(source.clone());
+    owner.environments.push(environment());
+    for index in 0..8 {
+        owner.source_maps.push(Mapping {
+            source: source.span(index, index + 1)?,
+            target: source.span(index + 1, index + 2)?,
+            kind: MappingKind::Exact,
+        });
+    }
+    for length in [4, 8] {
+        let mut child = bundle(&schema);
+        child.sources = owner.sources.clone();
+        child.source_maps = owner.source_maps[..length].to_vec();
+        owner.nodes[0].fields = vec![guest(&schema, child)];
+        for caller in [0, 3] {
+            let mut measured = budget();
+            measured.with_depth_at_least(caller, |b| owner.validate(&registry, b))?;
+            let required = measured.usage().depth;
+            for shortage in [0, 1] {
+                let mut limited = Budget::new(Limits {
+                    depth: required - shortage,
+                    ..budget().limits()
+                });
+                // A previous high-water mark cannot conceal current nesting.
+                limited.observe_depth(required - shortage)?;
+                let result = limited.with_depth_at_least(caller, |b| owner.validate(&registry, b));
+                if shortage == 0 {
+                    result?;
+                } else {
+                    assert!(result.is_err());
+                    assert_eq!(limited.poll(), Err(StopReason::DepthLimit));
+                }
+            }
+        }
+    }
+    let changed = snapshot("chain", 1, "zzzzzzzzz")?;
+    let FieldValue::Foreign(child) = &mut owner.nodes[0].fields[0] else {
+        return Err(SyntaxError::Reference);
+    };
+    child.bundle.sources.push(changed.clone());
+    child.bundle.source_maps[0].target = changed.span(1, 2)?;
+    assert_eq!(
+        owner.validate(&registry, &mut budget()).err(),
+        Some(SyntaxError::Origin(OriginError::Irreversible))
+    );
+    Ok(())
+}
+
+#[test]
+fn nested_mapping_kind_changes_require_exact_byte_validation() -> Result<(), SyntaxError> {
+    let (registry, schema) = registry()?;
+    let original = snapshot("kind-original", 0, "xy")?;
+    let changed = snapshot("kind-changed", 0, "zz")?;
+    let mut owner = bundle(&schema);
+    owner.source_maps.push(Mapping {
+        source: original.span(0, 2)?,
+        target: changed.span(0, 2)?,
+        kind: MappingKind::Transformed,
+    });
+    owner.sources = vec![original, changed];
+    owner.environments.push(environment());
+    let mut child = bundle(&schema);
+    child.sources = owner.sources.clone();
+    child.source_maps = owner.source_maps.clone();
+    child.source_maps[0].kind = MappingKind::Exact;
+    owner.nodes[0].fields = vec![guest(&schema, child)];
+    assert_eq!(
+        owner.validate(&registry, &mut budget()).err(),
+        Some(SyntaxError::Origin(OriginError::Irreversible))
+    );
+    Ok(())
+}
+
+#[test]
 fn positioned_capture_preserves_closure_and_rejects_invalid_positions() -> Result<(), SyntaxError> {
     let (registry, schema) = registry()?;
     let mut owner = bundle(&schema);

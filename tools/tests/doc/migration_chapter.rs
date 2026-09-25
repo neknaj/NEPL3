@@ -61,9 +61,20 @@ fn measure_migration_validation_components() -> Result<(), String> {
             let mut origins_budget = policy.output_limits.budget();
             let mut maps_budget = policy.output_limits.budget();
             let mut tokens_budget = policy.output_limits.budget();
+            let mut source_entries = 0usize;
+            let mut unique_sources = std::collections::BTreeSet::new();
+            let mut mapping_entries = 0usize;
+            let mut prefix_mapping_entries = 0usize;
+            let mut prefix_bundles = 0usize;
+            let mut exact_bytes = 0u64;
+            let mut maximum_map_work = 0u64;
+            let mut maximum_map_count = 0usize;
+            let mut source_elapsed = std::time::Duration::ZERO;
+            let mut map_elapsed = std::time::Duration::ZERO;
             let mut pending = vec![tree.syntax().bundle()];
             while let Some(bundle) = pending.pop() {
                 let mut sources = SourceStore::default();
+                let started = std::time::Instant::now();
                 for source in &bundle.sources {
                     admission
                         .admit_existing(source, &mut sources_budget)
@@ -72,12 +83,19 @@ fn measure_migration_validation_components() -> Result<(), String> {
                         .insert_ref_with_budget(source, &mut sources_budget)
                         .map_err(err)?;
                 }
+                source_elapsed += started.elapsed();
+                source_entries += bundle.sources.len();
+                for source in &bundle.sources {
+                    unique_sources.insert(source.identity());
+                }
                 nepl3_core::origin::OriginGraph::validate_origins(
                     &bundle.origins,
                     &sources,
                     &mut origins_budget,
                 )
                 .map_err(err)?;
+                let before = maps_budget.usage().work;
+                let started = std::time::Instant::now();
                 let maps = nepl3_core::origin::SourceMap::validate_mappings(
                     &bundle.source_maps,
                     &sources,
@@ -85,6 +103,31 @@ fn measure_migration_validation_components() -> Result<(), String> {
                 )
                 .and_then(|maps| maps.bind_sources(&sources, &mut maps_budget))
                 .map_err(err)?;
+                map_elapsed += started.elapsed();
+                let work = maps_budget.usage().work - before;
+                if work > maximum_map_work {
+                    maximum_map_work = work;
+                    maximum_map_count = bundle.source_maps.len();
+                }
+                mapping_entries += bundle.source_maps.len();
+                // Observe an equality condition only; the production validator
+                // above still validates every bundle independently.
+                if !core::ptr::eq(bundle, tree.syntax().bundle())
+                    && tree
+                        .syntax()
+                        .bundle()
+                        .source_maps
+                        .starts_with(&bundle.source_maps)
+                {
+                    prefix_bundles += 1;
+                    prefix_mapping_entries += bundle.source_maps.len();
+                }
+                for mapping in &bundle.source_maps {
+                    if mapping.kind == nepl3_core::origin::MappingKind::Exact {
+                        exact_bytes += (mapping.source.end() - mapping.source.start())
+                            .min(mapping.target.end() - mapping.target.start());
+                    }
+                }
                 for token in &bundle.tokens {
                     token
                         .validate_with_maps(&sources, profile.registry(), &maps, &mut tokens_budget)
@@ -104,6 +147,14 @@ fn measure_migration_validation_components() -> Result<(), String> {
                 origins_budget.usage().work,
                 maps_budget.usage().work,
                 tokens_budget.usage().work
+            );
+            eprintln!(
+                "Component sizes: source_entries={source_entries}, unique_sources={}, \
+                 mapping_entries={mapping_entries}, exact_bytes={exact_bytes}, \
+                 prefix_bundles={prefix_bundles}, prefix_mapping_entries={prefix_mapping_entries}, \
+                 maximum_map_work={maximum_map_work}, maximum_map_count={maximum_map_count}; \
+                 elapsed sources={source_elapsed:?}, maps={map_elapsed:?}",
+                unique_sources.len()
             );
             Ok(())
         },

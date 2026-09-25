@@ -322,6 +322,54 @@ impl SourceMap {
     }
 }
 impl<'a> ValidatedSourceMap<'a> {
+    pub(crate) fn unbound(&self) -> Self {
+        Self {
+            mappings: self.mappings,
+            additional: self.additional,
+            validated_sources: None,
+        }
+    }
+    /// Reuse an acyclic relation for an identical prefix within one validation.
+    /// The caller retains the already observed depth bound and must bind the
+    /// returned proof to the child's own declarations before validating tokens.
+    pub(crate) fn matching_prefix(
+        &self,
+        mappings: &'a [Mapping],
+        budget: &mut Budget,
+    ) -> Result<Option<Self>, OriginError> {
+        budget.charge(Resource::Work, 1)?;
+        if mappings.len() > self.mappings.len() {
+            return Ok(None);
+        }
+        for (mapping, original) in mappings.iter().zip(self.mappings) {
+            budget.charge(Resource::Work, 5)?;
+            if mapping.kind != original.kind
+                || mapping.source.start() != original.source.start()
+                || mapping.source.end() != original.source.end()
+                || mapping.target.start() != original.target.start()
+                || mapping.target.end() != original.target.end()
+            {
+                return Ok(None);
+            }
+            for (span, original) in [
+                (&mapping.source, &original.source),
+                (&mapping.target, &original.target),
+            ] {
+                if span
+                    .snapshot_ref()
+                    .compare_with_budget(original.snapshot_ref(), budget)?
+                    != core::cmp::Ordering::Equal
+                {
+                    return Ok(None);
+                }
+            }
+        }
+        Ok(Some(Self {
+            mappings,
+            additional: &[],
+            validated_sources: None,
+        }))
+    }
     /// Bind source closure validation to an immutable store borrow. The bound
     /// proof cannot outlive that store; unbound proofs retain revalidation.
     pub fn bind_sources(

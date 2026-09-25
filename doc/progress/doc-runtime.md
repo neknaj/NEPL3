@@ -1,5 +1,21 @@
 # Doc runtime の段階実装
 
+## SourceMap prefix の検証再利用（2026-09-25）
+
+SyntaxBundle の同一検証内で、root の検証済み mapping と完全一致する child prefix の
+graph 検査を再利用する。kind、両端の範囲、完全な snapshot identity を比較し、
+各 child の SourceStore へ常に再束縛する。不一致は通常の検査へ戻す。
+深い chain、短い prefix、caller depth、先行 high-water、Work／Depth 不足、
+source 宣言不足、revision・範囲・kind の変更、循環を試験した。
+独立レビューは native syntax 37件と追加1件を実行し、追加指摘なし。
+WASI の syntax 38件・maps 14件は成功した。
+
+Migration章の分解測定では syntax validation Work が19,855,646から7,734,741、
+full tree validation が21,860,711から9,739,806へ減少し、Depthは54を維持した。
+Reader章の通常予算試験では parse Work 81,498,136、lower Work 68,599,988となった。
+HTML projection は WorkLimit で停止しており、この試験全体は失敗である。
+通常予算と正式受入状態は変更していない。
+
 T07 は進行中。`doc/spec/05-document.md` と `design/forms.json` を最終契約とし、以下の native API ができたことを T07 全体の完了へ読み替えない。
 
 ## 現在状態を確認する入口
