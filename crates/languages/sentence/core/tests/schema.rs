@@ -31,6 +31,44 @@ fn registry() -> Result<(SchemaRegistry, SchemaRef), SchemaError> {
 }
 
 #[test]
+fn generated_identity_matches_runtime_descriptor_and_meters_comparison() -> Result<(), SchemaError>
+{
+    use nepl3_core::budget::StopReason;
+    use nepl3_sentence_core::schema::{descriptor, matches};
+    // Compute the oracle from the full runtime descriptor and canonical hash.
+    // The generated identity constants are not inputs to this computation.
+    let expected = descriptor(&mut budget())?.reference(&mut budget())?;
+    let mut measured = budget();
+    assert!(matches(&expected, &mut measured)?);
+    assert_eq!(measured.usage().allocation_units, 0);
+    for field in 0..3 {
+        let mut wrong = expected.clone();
+        match field {
+            0 => wrong.package.push('x'),
+            1 => wrong.revision += 1,
+            _ => wrong.digest.0[31] ^= 1,
+        }
+        assert!(!matches(&wrong, &mut budget())?);
+    }
+    let mut limits = budget().limits();
+    limits.work = measured.usage().work;
+    limits.allocation_units = 0;
+    assert!(matches(&expected, &mut Budget::new(limits))?);
+    limits.work -= 1;
+    assert_eq!(
+        matches(&expected, &mut Budget::new(limits)),
+        Err(SchemaError::Stopped(StopReason::WorkLimit))
+    );
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert_eq!(
+        matches(&expected, &mut cancelled),
+        Err(SchemaError::Stopped(StopReason::Cancelled))
+    );
+    Ok(())
+}
+
+#[test]
 fn sentence_wire_uses_its_own_identity_and_ordered_typed_fields() -> Result<(), SchemaError> {
     let (registry, identity) = registry()?;
     assert_eq!(identity.package, "nepl3.sentence");

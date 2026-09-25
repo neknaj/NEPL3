@@ -15,6 +15,10 @@ reader adapter、language package compile、各hostとの橋渡しは外側へ�
 この節の見出しは既存参照のため維持する。実装順の正本はT07であり、本文は所有境界を定める。
 Doc本文とannotationはそれぞれSentenceを使用し、Aの完成をD本文や公開の前提にしない。
 途中のモデル検査成功を独立言語の完成としない。schema digestは実descriptorから計算する。
+実装が期待するschema identityは、同じdescriptorのcanonical hashから生成できる。
+生成したidentityの利用時も、registryのfinalize、登録の存在、package・revision・digestの
+完全一致を確認する。生成物検査とruntime descriptorのhash照合によって更新漏れを検出する。
+入力値・位置・source閉包・意味構造の検査は、各操作の契約に従って実行する。
 
 ## 独立した文章モデル
 
