@@ -23,6 +23,9 @@ fn refs(values: &[ViewRef], b: &mut Budget) -> Result<NdfValue, WireError> {
 
 /// Encode local schema/source tables and preserve every ordered view field.
 /// The supplied store remains the sole authority for source resolution.
+/// This convenience entry point validates direct containment. For mapped
+/// containment use [`crate::foundation::FoundationCodec::encode_shared_views`]
+/// in an explicit mapping scope.
 pub fn encode(
     views: &ViewBundle,
     schema: &SchemaRef,
@@ -43,6 +46,8 @@ pub fn encode(
 
 /// Decode against the supplied declaration scope, then validate the complete
 /// native graph. Local tables cannot introduce snapshots into that scope.
+/// Mapped containment is available through
+/// [`crate::foundation::FoundationCodec::decode_shared_views`].
 pub fn decode(
     bytes: &[u8],
     schema: &SchemaRef,
@@ -58,7 +63,7 @@ pub fn decode(
     Ok(views)
 }
 
-fn admit_views(
+pub(crate) fn admit_views(
     views: &ViewBundle,
     sources: &SourceStore,
     admission: &mut SourceAdmission,

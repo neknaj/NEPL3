@@ -671,6 +671,37 @@ fn token_wire_rejects_invalid_local_view_and_trivia_references_and_source_limit(
 }
 
 #[test]
+fn shared_codec_direct_scope_preserves_standalone_bytes() -> TestResult {
+    use nepl3_wire::foundation::FoundationCodec;
+    let (schema, registry, sources, token) = fixture()?;
+    let expected = shared::encode(
+        &token.views,
+        &schema,
+        &registry,
+        &sources,
+        &mut SourceAdmission::default(),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let mut admission = SourceAdmission::default();
+    let mut codec =
+        FoundationCodec::new(&registry, &sources, &mut admission).map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        codec
+            .encode_shared_views(&token.views, &mut budget())
+            .map_err(|e| format!("{e:?}"))?,
+        expected
+    );
+    assert_eq!(
+        codec
+            .decode_shared_views(&expected, &mut budget())
+            .map_err(|e| format!("{e:?}"))?,
+        token.views
+    );
+    Ok(())
+}
+
+#[test]
 fn codec_mapping_scope_is_explicit_validated_and_cleared_on_rebind() -> TestResult {
     use nepl3_core::{
         origin::{Mapping, MappingKind},
@@ -727,8 +758,18 @@ fn codec_mapping_scope_is_explicit_validated_and_cleared_on_rebind() -> TestResu
     let mut codec =
         FoundationCodec::new(&registry, &sources, &mut admission).map_err(|e| format!("{e:?}"))?;
     assert!(codec.encode_views(&views, &mut budget()).is_err());
-    let raw = {
+    assert!(codec.encode_shared_views(&views, &mut budget()).is_err());
+    let (raw, compact) = {
         let mut scoped = codec.scoped_with_mappings(&sources, &maps);
+        let compact = scoped
+            .encode_shared_views(&views, &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+        assert_eq!(
+            scoped
+                .decode_shared_views(&compact, &mut budget())
+                .map_err(|e| format!("{e:?}"))?,
+            views
+        );
         let raw = scoped
             .encode_views(&views, &mut budget())
             .map_err(|e| format!("{e:?}"))?;
@@ -742,6 +783,7 @@ fn codec_mapping_scope_is_explicit_validated_and_cleared_on_rebind() -> TestResu
         let mut broken = views.clone();
         broken.elements[0].fields[0].children[0] = ViewRef(99);
         assert!(scoped.encode_views(&broken, &mut budget()).is_err());
+        assert!(scoped.encode_shared_views(&broken, &mut budget()).is_err());
         for cancelled in [false, true] {
             let mut limits = budget().limits();
             if !cancelled {
@@ -760,6 +802,15 @@ fn codec_mapping_scope_is_explicit_validated_and_cleared_on_rebind() -> TestResu
                 .ok_or("expected warm scope stop")?;
             assert_eq!(error.stop_reason(), Some(expected));
             assert_eq!(stopped.poll(), Err(expected));
+            let mut stopped = Budget::new(limits);
+            if cancelled {
+                stopped.cancel();
+            }
+            let error = scoped
+                .decode_shared_views(&compact, &mut stopped)
+                .err()
+                .ok_or("expected compact stop")?;
+            assert_eq!(error.stop_reason(), Some(expected));
         }
         // Replacing admission must invalidate even unused mapping endpoints.
         *scoped.source_admission() = SourceAdmission::default();
@@ -772,6 +823,13 @@ fn codec_mapping_scope_is_explicit_validated_and_cleared_on_rebind() -> TestResu
             .ok_or("expected mapping admission stop")?;
         assert_eq!(error.stop_reason(), Some(StopReason::SourceLimit));
         assert_eq!(stopped.poll(), Err(StopReason::SourceLimit));
+        *scoped.source_admission() = SourceAdmission::default();
+        let mut stopped = Budget::new(limits);
+        let error = scoped
+            .decode_shared_views(&compact, &mut stopped)
+            .err()
+            .ok_or("expected compact mapping admission stop")?;
+        assert_eq!(error.stop_reason(), Some(StopReason::SourceLimit));
         for mapped_child in [false, true] {
             scoped
                 .decode_views(&raw, &mut budget())
@@ -796,14 +854,55 @@ fn codec_mapping_scope_is_explicit_validated_and_cleared_on_rebind() -> TestResu
         let mut rebound = scoped.scoped(&sources);
         assert!(rebound.encode_views(&views, &mut budget()).is_err());
         assert!(rebound.decode_views(&raw, &mut budget()).is_err());
-        raw
+        assert!(rebound.encode_shared_views(&views, &mut budget()).is_err());
+        assert!(
+            rebound
+                .decode_shared_views(&compact, &mut budget())
+                .is_err()
+        );
+        (raw, compact)
     };
     assert!(codec.decode_views(&raw, &mut budget()).is_err());
+    assert!(codec.decode_shared_views(&compact, &mut budget()).is_err());
+    let absent = SourceStore::default();
+    {
+        let mut missing = codec.scoped_with_mappings(&absent, &maps);
+        assert!(missing.encode_shared_views(&views, &mut budget()).is_err());
+        assert!(
+            missing
+                .decode_shared_views(&compact, &mut budget())
+                .is_err()
+        );
+    }
     let mut forged = maps.clone();
     forged[0].source = token.head;
     let mut invalid = codec.scoped_with_mappings(&sources, &forged);
     assert!(invalid.encode_views(&views, &mut budget()).is_err());
     assert!(invalid.decode_views(&raw, &mut budget()).is_err());
+    assert!(invalid.encode_shared_views(&views, &mut budget()).is_err());
+    assert!(
+        invalid
+            .decode_shared_views(&compact, &mut budget())
+            .is_err()
+    );
+    // Different source/target bytes are valid with explicit transformation
+    // provenance, while the same pair above is invalid as an Exact mapping.
+    forged[0].kind = MappingKind::Transformed;
+    {
+        let mut transformed = codec.scoped_with_mappings(&sources, &forged);
+        assert_eq!(
+            transformed
+                .encode_shared_views(&views, &mut budget())
+                .map_err(|e| format!("{e:?}"))?,
+            compact
+        );
+        assert_eq!(
+            transformed
+                .decode_shared_views(&compact, &mut budget())
+                .map_err(|e| format!("{e:?}"))?,
+            views
+        );
+    }
     let mut admission = SourceAdmission::default();
     let mut codec =
         FoundationCodec::new(&registry, &sources, &mut admission).map_err(|e| format!("{e:?}"))?;
