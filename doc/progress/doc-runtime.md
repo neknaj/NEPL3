@@ -146,6 +146,16 @@ Windows debugの逐次実行で、第01章・第13章の計測試験2件が成�
 これは各処理1回の観測値であり、速度改善率の根拠には使用しない。
 計測境界と記述の独立した静的レビュー、対象のclippy、fmt、diff検査を完了した。
 今回の計測変更についてWASIとworkspace全体の再実行は行っていない。
+SyntaxBundleのportable符号化では、guestを処理する前に構築したcanonical順序と
+参照対応表をFinish frameへ保持し、同じbundleに対する二回目の構築を除去した。
+第13章の投影は314,972,126 Work・266,936,252 AllocationUnitsとなり、
+直前の測定から1,946 Work・11,592 AllocationUnits減少した。
+この局所変更の効果は小さく、source表現の大きさと通常予算の超過は引き続き残る。
+frameの拡大も資源計上し、祖先の対応表を保持する期間の延長を許容する。
+累積AllocationUnitsの減少をピーク物理メモリの減少へ読み替えない。
+wireのnative全69件とsyntax codecのWASI10件が成功した。独立レビューでもnative10件が成功した。
+128子とguestのarena順序変更、Work・Allocationのexact/不足境界、停止後の入力保持を確認した。
+wireのclippyとthumbv6m向けcompileも成功した。workspace全体と正式受入は今回再実行していない。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 

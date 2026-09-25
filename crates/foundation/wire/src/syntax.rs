@@ -85,7 +85,12 @@ fn environment_ref_from(value: &NdfValue, schema: &SchemaRef) -> Result<Environm
 
 enum Encode<'a> {
     Enter(&'a SyntaxBundle, u64),
-    Finish(&'a SyntaxBundle, usize),
+    Finish {
+        bundle: &'a SyntaxBundle,
+        guests: usize,
+        indices: Vec<usize>,
+        mapping: Vec<u64>,
+    },
 }
 pub(crate) fn bundle_value(
     bundle: &SyntaxBundle,
@@ -103,7 +108,8 @@ pub(crate) fn bundle_value(
             Encode::Enter(bundle, depth) => {
                 budget.observe_depth(depth)?;
                 let mut guests = Vec::new();
-                for index in order(bundle, budget)?.0 {
+                let (indices, mapping) = order(bundle, budget)?;
+                for &index in &indices {
                     let node = &bundle.nodes[index];
                     for field in &node.fields {
                         if let FieldValue::Foreign(guest) = field {
@@ -111,7 +117,18 @@ pub(crate) fn bundle_value(
                         }
                     }
                 }
-                push(&mut pending, Encode::Finish(bundle, guests.len()), budget)?;
+                // Keep the canonical node order across guest encoding. The
+                // immutable bundle cannot change while this frame is pending.
+                push(
+                    &mut pending,
+                    Encode::Finish {
+                        bundle,
+                        guests: guests.len(),
+                        indices,
+                        mapping,
+                    },
+                    budget,
+                )?;
                 for guest in guests.into_iter().rev() {
                     push(
                         &mut pending,
@@ -120,8 +137,12 @@ pub(crate) fn bundle_value(
                     )?;
                 }
             }
-            Encode::Finish(bundle, count) => {
-                let (indices, mapping) = order(bundle, budget)?;
+            Encode::Finish {
+                bundle,
+                guests: count,
+                indices,
+                mapping,
+            } => {
                 let start = results
                     .len()
                     .checked_sub(count)

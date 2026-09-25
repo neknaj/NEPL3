@@ -421,6 +421,101 @@ fn guest_arena_reordering_updates_foreign_root_and_guest_local_children() -> Tes
 }
 
 #[test]
+fn wide_host_with_guest_keeps_canonical_order_and_encoding_stop_boundaries() -> TestResult {
+    use nepl3_core::budget::{Resource, StopReason};
+    let (schema, registry, mut canonical) = fixture()?;
+    canonical.nodes[0].head = None;
+    canonical.nodes[0].cover = None;
+    canonical.nodes[0].token = None;
+    // The host mapping must survive encoding its guest. Distinct child values
+    // make an incorrect retained order visible independently of roundtrip.
+    for number in 1..=128 {
+        canonical.nodes.push(SyntaxNode {
+            schema: schema.clone(),
+            kind: "Token".into(),
+            fields: vec![FieldValue::Atom(NdfScalar::U64(number))],
+            head: None,
+            cover: None,
+            origin: OriginId(0),
+            token: None,
+        });
+        canonical.nodes[0]
+            .fields
+            .push(FieldValue::Child(NodeRef(number)));
+    }
+    let mut shuffled = canonical.clone();
+    shuffled.nodes.reverse();
+    shuffled.root = NodeRef(128);
+    for field in &mut shuffled.nodes[128].fields {
+        if let FieldValue::Child(child) = field {
+            child.0 = 128 - child.0;
+        }
+    }
+    let run = |input: &SyntaxBundle, b: &mut Budget| {
+        encode_syntax(
+            input,
+            &schema,
+            &registry,
+            &mut SourceAdmission::default(),
+            b,
+        )
+    };
+    let mut measured = budget();
+    let bytes = run(&shuffled, &mut measured).map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        bytes,
+        run(&canonical, &mut budget()).map_err(|e| format!("{e:?}"))?
+    );
+    let restored = decode_syntax(
+        &bytes,
+        &schema,
+        &registry,
+        &mut SourceAdmission::default(),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(restored, canonical);
+    for number in 1..=128 {
+        assert_eq!(
+            restored.nodes[number].fields,
+            [FieldValue::Atom(NdfScalar::U64(number as u64))]
+        );
+    }
+    let original = shuffled.clone();
+    for (resource, consumed, reason) in [
+        (Resource::Work, measured.usage().work, StopReason::WorkLimit),
+        (
+            Resource::AllocationUnits,
+            measured.usage().allocation_units,
+            StopReason::AllocationLimit,
+        ),
+    ] {
+        for allowance in [consumed / 2, consumed - 1, consumed] {
+            let mut limits = budget().limits();
+            match resource {
+                Resource::Work => limits.work = allowance,
+                Resource::AllocationUnits => limits.allocation_units = allowance,
+                _ => return Err("fixture resource".into()),
+            }
+            let mut limited = Budget::new(limits);
+            let result = run(&shuffled, &mut limited);
+            if allowance == consumed {
+                assert_eq!(result.map_err(|e| format!("{e:?}"))?, bytes);
+            } else {
+                assert!(matches!(result, Err(WireError::Stopped(actual)) if actual == reason));
+                let stopped = limited.usage();
+                assert!(
+                    matches!(run(&shuffled, &mut limited), Err(WireError::Stopped(actual)) if actual == reason)
+                );
+                assert_eq!(limited.usage(), stopped);
+            }
+            assert_eq!(shuffled, original);
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn mapped_views_and_maps_survive_host_and_guest_wire_boundaries() -> TestResult {
     use nepl3_core::origin::{Mapping, MappingKind};
     let (schema, registry, mut bundle) = fixture()?;
