@@ -815,3 +815,113 @@ fn rejected_deep_descriptor_is_safe_to_clone_compare_debug_and_drop() {
     ));
     drop(descriptor);
 }
+
+#[test]
+fn sorted_record_lookup_preserves_ids_errors_and_logarithmic_work() -> Result<(), SchemaError> {
+    for count in [16usize, 64, 256] {
+        let mut description = descriptor();
+        description.types = (0..count)
+            .rev()
+            .map(|i| NamedType {
+                name: format!("Kind{i:04}"),
+                constraints: vec![],
+                shape: TypeShape::Record { fields: vec![] },
+            })
+            .collect();
+        let reference = description.reference(&mut budget())?;
+        let mut registry = SchemaRegistry::default();
+        registry.register(reference.clone(), description, &mut budget())?;
+        registry.finalize(&mut budget())?;
+        for i in 0..count {
+            let name = format!("Kind{i:04}");
+            assert_eq!(registry.kind_id(&reference, &name)?, i as u64);
+            let mut measured = budget();
+            registry.validate_record_fields(&reference, &name, &[], &mut measured)?;
+            // One schema comparison, at most log2(count)+1 type comparisons,
+            // and one record charge. Fixed-width names isolate search growth.
+            assert!(measured.usage().work <= 56 + 17 * (count.ilog2() as u64 + 1));
+            let mut limits = budget().limits();
+            limits.work = measured.usage().work;
+            registry.validate_record_fields(&reference, &name, &[], &mut Budget::new(limits))?;
+            limits.work -= 1;
+            let mut stopped = Budget::new(limits);
+            assert_eq!(
+                registry.validate_record_fields(&reference, &name, &[], &mut stopped),
+                Err(SchemaError::Stopped(StopReason::WorkLimit))
+            );
+            assert_eq!(stopped.poll(), Err(StopReason::WorkLimit));
+        }
+        for missing in ["", "Kind0000a", "Z"] {
+            assert_eq!(
+                registry.kind_id(&reference, missing),
+                Err(SchemaError::UnknownType)
+            );
+            assert_eq!(
+                registry.validate_record_fields(&reference, missing, &[], &mut budget()),
+                Err(SchemaError::UnknownType)
+            );
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn sorted_variant_lookup_preserves_all_validation_entry_points() -> Result<(), SchemaError> {
+    let mut description = descriptor();
+    description.types[0].shape = TypeShape::Variant {
+        variants: ["Z", "A", "M"]
+            .into_iter()
+            .map(|name| VariantDescriptor {
+                name: name.into(),
+                fields: vec![FieldDescriptor {
+                    name: "value".into(),
+                    ty: TypeDescriptor::U64,
+                }],
+            })
+            .collect(),
+    };
+    let reference = description.reference(&mut budget())?;
+    let mut registry = SchemaRegistry::default();
+    registry.register(reference.clone(), description, &mut budget())?;
+    registry.finalize(&mut budget())?;
+    for name in ["A", "M", "Z", "", "B", "ZZ"] {
+        for fields in [vec![NdfValue::U64(7)], vec![], vec![NdfValue::Unit]] {
+            let expected = if !["A", "M", "Z"].contains(&name) {
+                Err(SchemaError::UnknownVariant)
+            } else if fields.is_empty() {
+                Err(SchemaError::FieldCount)
+            } else if fields[0] == NdfValue::Unit {
+                Err(SchemaError::WrongType)
+            } else {
+                Ok(())
+            };
+            let variant = Variant {
+                schema: reference.clone(),
+                type_name: "Pair".into(),
+                variant: name.into(),
+                fields,
+            };
+            assert_eq!(
+                registry.validate_typed(&TypedValue::Variant(variant.clone()), &mut budget()),
+                expected
+            );
+            let value = NdfValue::Variant(variant);
+            assert_eq!(
+                registry
+                    .validate(&TypeDescriptor::TypedValue, &value, &mut budget())
+                    .map(|_| ()),
+                expected
+            );
+            let named = TypeDescriptor::Named(TypeRef {
+                package: reference.package.clone(),
+                revision: reference.revision,
+                name: "Pair".into(),
+            });
+            assert_eq!(
+                registry.validate(&named, &value, &mut budget()).map(|_| ()),
+                expected
+            );
+        }
+    }
+    Ok(())
+}

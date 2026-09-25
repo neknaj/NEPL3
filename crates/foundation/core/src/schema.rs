@@ -478,6 +478,28 @@ pub struct SchemaRegistry {
     finalized: bool,
 }
 impl SchemaRegistry {
+    // Registration sorts these tables before storing the immutable descriptor.
+    // Keep lookups in that canonical order so kind IDs and error distinctions
+    // remain independent of the incoming descriptor's insertion order.
+    fn definition<'a>(
+        descriptor: &'a SchemaDescriptor,
+        name: &str,
+    ) -> Result<&'a NamedType, SchemaError> {
+        descriptor
+            .types
+            .binary_search_by(|ty| ty.name.as_str().cmp(name))
+            .map(|index| &descriptor.types[index])
+            .map_err(|_| SchemaError::UnknownType)
+    }
+    fn variant<'a>(
+        variants: &'a [VariantDescriptor],
+        name: &str,
+    ) -> Result<&'a VariantDescriptor, SchemaError> {
+        variants
+            .binary_search_by(|variant| variant.name.as_str().cmp(name))
+            .map(|index| &variants[index])
+            .map_err(|_| SchemaError::UnknownVariant)
+    }
     /// Validate a record assembled from immutable borrowed fields. This checks
     /// the complete registered schema identity, record kind, field count and
     /// every field. It establishes structure only; operation-specific type and
@@ -510,16 +532,24 @@ impl SchemaRegistry {
         }
         let descriptor = descriptor.ok_or(SchemaError::UnknownSchema)?;
         let mut definition = None;
-        for candidate in &descriptor.types {
+        let mut start = 0;
+        let mut end = descriptor.types.len();
+        while start < end {
+            let middle = start + (end - start) / 2;
+            let candidate = &descriptor.types[middle];
             budget.charge(
                 Resource::Work,
                 (candidate.name.len() as u64)
                     .saturating_add(kind.len() as u64)
                     .saturating_add(1),
             )?;
-            if candidate.name == kind {
-                definition = Some(candidate);
-                break;
+            match candidate.name.as_str().cmp(kind) {
+                core::cmp::Ordering::Less => start = middle + 1,
+                core::cmp::Ordering::Greater => end = middle,
+                core::cmp::Ordering::Equal => {
+                    definition = Some(candidate);
+                    break;
+                }
             }
         }
         let TypeShape::Record { fields } = &definition.ok_or(SchemaError::UnknownType)?.shape
@@ -594,23 +624,14 @@ impl SchemaRegistry {
             crate::value::TypedValue::Variant(v) => (&v.schema, &v.type_name),
         };
         let descriptor = self.descriptor(schema).ok_or(SchemaError::UnknownSchema)?;
-        let definition = descriptor
-            .types
-            .iter()
-            .find(|ty| &ty.name == name)
-            .ok_or(SchemaError::UnknownType)?;
+        let definition = Self::definition(descriptor, name)?;
         let (fields, values) = match (&definition.shape, value) {
             (TypeShape::Record { fields }, crate::value::TypedValue::Record(v)) => {
                 (fields, &v.fields)
             }
-            (TypeShape::Variant { variants }, crate::value::TypedValue::Variant(v)) => (
-                &variants
-                    .iter()
-                    .find(|variant| variant.name == v.variant)
-                    .ok_or(SchemaError::UnknownVariant)?
-                    .fields,
-                &v.fields,
-            ),
+            (TypeShape::Variant { variants }, crate::value::TypedValue::Variant(v)) => {
+                (&Self::variant(variants, &v.variant)?.fields, &v.fields)
+            }
             _ => return Err(SchemaError::WrongType),
         };
         if fields.len() != values.len() {
@@ -689,21 +710,12 @@ impl SchemaRegistry {
             _ => return Err(SchemaError::WrongType),
         };
         let descriptor = self.descriptor(schema).ok_or(SchemaError::UnknownSchema)?;
-        let definition = descriptor
-            .types
-            .iter()
-            .find(|t| &t.name == name)
-            .ok_or(SchemaError::UnknownType)?;
+        let definition = Self::definition(descriptor, name)?;
         match (&definition.shape, value) {
             (TypeShape::Record { fields }, NdfValue::Record(v)) => Ok((fields, &v.fields)),
-            (TypeShape::Variant { variants }, NdfValue::Variant(v)) => Ok((
-                &variants
-                    .iter()
-                    .find(|variant| variant.name == v.variant)
-                    .ok_or(SchemaError::UnknownVariant)?
-                    .fields,
-                &v.fields,
-            )),
+            (TypeShape::Variant { variants }, NdfValue::Variant(v)) => {
+                Ok((&Self::variant(variants, &v.variant)?.fields, &v.fields))
+            }
             _ => Err(SchemaError::WrongType),
         }
     }
@@ -802,10 +814,9 @@ impl SchemaRegistry {
         self.descriptor(schema)
             .ok_or(SchemaError::UnknownSchema)?
             .types
-            .iter()
-            .position(|ty| ty.name == name)
+            .binary_search_by(|ty| ty.name.as_str().cmp(name))
             .map(|i| i as u64)
-            .ok_or(SchemaError::UnknownType)
+            .map_err(|_| SchemaError::UnknownType)
     }
     pub fn kind_name(&self, schema: &SchemaRef, id: u64) -> Result<&str, SchemaError> {
         let descriptor = self.descriptor(schema).ok_or(SchemaError::UnknownSchema)?;
@@ -936,11 +947,7 @@ impl SchemaRegistry {
                         .iter()
                         .find(|(r, _)| r.package == name.package && r.revision == name.revision)
                         .ok_or(SchemaError::UnknownSchema)?;
-                    let definition = descriptor
-                        .types
-                        .iter()
-                        .find(|t| t.name == name.name)
-                        .ok_or(SchemaError::UnknownType)?;
+                    let definition = Self::definition(descriptor, &name.name)?;
                     let (fields, values) = match (&definition.shape, value) {
                         (TypeShape::Record { fields }, NdfValue::Record(record))
                             if &record.schema == reference && record.kind == name.name =>
@@ -951,11 +958,7 @@ impl SchemaRegistry {
                             if &variant.schema == reference && variant.type_name == name.name =>
                         {
                             (
-                                &variants
-                                    .iter()
-                                    .find(|v| v.name == variant.variant)
-                                    .ok_or(SchemaError::UnknownVariant)?
-                                    .fields,
+                                &Self::variant(variants, &variant.variant)?.fields,
                                 &variant.fields,
                             )
                         }

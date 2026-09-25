@@ -161,6 +161,14 @@ wire全体はnative・WASI各95件、増大入力試験の追加後はbatch各12
 独立レビューは初回11件と追加1件を実行した。clippy、repository、fmt、diff検査と
 thumbv6m向けcompileも成功した。
 
+schema registryは登録時に整列した型・variantを二分探索で参照する。型ID、入力順序からの
+独立性、未定義名・field不一致の判定を保持する。borrowed record検査では比較前のWork課金を
+維持し、型数16・64・256の全検索、対数的なWork上限、上限一致・1不足の停止を確認した。
+core・wireはnativeとWASI各262件、独立レビューのstructure試験27件が成功した。
+第03章の内容検査も成功し、投影313,855,198 Workと単独符号化102,601,505 Workは不変だった。
+既存の非課金検索も比較回数を削減するが、この計測から文書全体のWork削減を主張しない。
+通常page予算への適合と生成物の整合確認は継続課題である。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは
