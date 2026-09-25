@@ -172,12 +172,19 @@ fn project(
     let store = SourceStore::default();
     let mut admission = SourceAdmission::default();
     let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
-    let artifact = render(
+    let started = std::time::Instant::now();
+    let artifact = nepl3_tools::doc::projection::annotated::pages::render_profiled(
         &set,
         &c.doc.registry,
         &mut codec,
         &mut render_budget,
         &[&[]],
+        &mut |stage, usage| {
+            eprintln!(
+                "Grammar projection stage={stage:?} elapsed={:?} usage={usage:?}",
+                started.elapsed()
+            );
+        },
     )
     .map_err(|e| format!("Grammar projection: {e:?}; {:?}", render_budget.usage()))?;
     eprintln!("Grammar projection={:?}", render_budget.usage());

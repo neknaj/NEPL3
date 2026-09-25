@@ -25,6 +25,24 @@ Docのportable表現は共有provenanceをDocOwner表へ一度記録し、各Doc
 内容digestで参照する。同値の独立storageも同じportable byte列へ正規化する。
 Foundationの単独ForeignClosure交換形式は維持する。
 
+`31cdeaf2` の第03・04章に、既存の `render_profiled` を使うMarkdown段階測定を追加した。
+corpus用の有限予算で、両章の本文・節・コード・リンクの検査が成功した。
+通常予算への適合と生成物の更新は継続課題である。
+
+| 章 | Discovery Work | Selection Work | Resolution Work | Projection Work |
+| --- | ---: | ---: | ---: | ---: |
+| Reader | 132,779,660 | 338 | 246,375,048 | 193,995 |
+| Grammar | 152,956,175 | 405 | 277,358,190 | 246,829 |
+
+表は同一Budgetの累積値から求めた各段階の増分である。Resolutionには構造検査、
+portable変換、digest計算、namespaceとリンクの解決を含む。
+非最適化native実行1回の投影全体はReader 16.06秒、Grammar 19.16秒だった。
+経過時間は計測callbackのログ出力も含み、性能改善率の根拠には用いない。
+次の調査対象はDiscoveryとResolutionの内部費用である。
+実行入口は `measure_reader_chapter_under_corpus_limits` と
+`measure_grammar_chapter_under_corpus_limits` の明示試験であり、
+通常試験の資源上限と内容検査を維持している。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは
