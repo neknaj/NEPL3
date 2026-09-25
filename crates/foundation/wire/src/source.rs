@@ -1,5 +1,6 @@
 //! Typed foundation source adapters. Source digests and span geometry are checked
 //! after structural decoding; a record labelled SourceContent is never trusted.
+mod order;
 use crate::{WireError, decode_checked, encode_checked};
 use alloc::{string::String, vec::Vec};
 use nepl3_core::{
@@ -140,16 +141,7 @@ pub(crate) fn sources_value(
         )?;
         sorted.push((source.reference(), source));
     }
-    budget.charge(
-        Resource::Work,
-        (sorted.len() as u64).saturating_mul(sorted.len() as u64),
-    )?;
-    sorted.sort_by(|a, b| a.0.cmp(&b.0));
-    if sorted.windows(2).any(|pair| {
-        pair[0].0.source_id == pair[1].0.source_id && pair[0].0.revision == pair[1].0.revision
-    }) {
-        return Err(SourceError::IdentityConflict.into());
-    }
+    order::sort(&mut sorted, budget)?;
     let mut entries = Vec::new();
     for (reference, source) in sorted {
         budget.charge(

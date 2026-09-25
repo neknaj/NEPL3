@@ -210,6 +210,16 @@ thumbv6m向けcompile、wireのclippy、fmt、diff検査も成功した。
 第13章の文書集合用予算による計測試験はnativeで1件成功した。
 AllocationUnitsは論理的な累積量であり、今回ピーク物理メモリと速度改善率は測定していない。
 workspace全体、生成物の一致、正式受入の再実行は未完了である。
+source一覧のcanonical整列は、件数の二乗を一括課金する処理から、比較・交換前に課金する
+in-place heapsortへ変更した。IDの比較長も課金し、既整列入力は隣接検査で順序と一意性を確認する。
+ID・revision・digestの順序と、同じID/revisionの拒否を維持する。
+件数128・256・512、昇順・逆順・回転順、ID長、空・単一・奇数件のUnicode入力、
+Workの上限一致と1不足、停止状態の維持を検査した。native全74件、WASIの追加3件が成功した。
+第13章の投影は318,078,658 Workで、文字列比較の課金を含め直前から3,106,532増加した。
+累積AllocationUnitsは247,434,268で不変である。この変更は整列中の停止と資源計上を改善し、
+同原稿の通常Work上限超過は引き続き残る。source表現の重複とdigest計算の費用も継続課題である。
+wireのclippy、thumbv6m向けcompile、repository check、fmt、diff検査を完了した。
+独立レビューは最終の追加3件を実行し、通常予算の未達を含む記録を確認した。
 旧local描画・portable APIと利用試験、原稿・fixture・生成物の移行、portableページ描画、Mathを含む全体namespaceの接続を
 継続する。T07/T21と正式受入は引き続き未完了である。
 
