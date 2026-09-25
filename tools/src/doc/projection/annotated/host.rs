@@ -9,8 +9,13 @@ use std::{
     path::Path,
 };
 
-pub const RENDERER: &str = "nepl3-tools.markdown-annotated/4";
+pub const RENDERER: &str = "nepl3-tools.markdown-annotated/5";
+#[cfg(test)]
+mod tests;
 
+/// Project one Article through the complete Sentence/Doc Inline composition.
+/// The explicit local namespace is document/document.nepld/document.md. Other
+/// pages and passive files require the page-set API and supplied registrations.
 pub fn from_source(
     compiled: &Compiled,
     source: &str,
@@ -48,14 +53,34 @@ fn from_source_with_budget(
                 &mut codec,
             )
             .map_err(err)?;
-            render(
-                &document,
+            let set = nepl3_doc_core::pages::PageSet {
+                pages: vec![nepl3_doc_core::pages::PageDocument {
+                    registration: nepl3_doc_core::pages::PageRegistration {
+                        id: "document".into(),
+                        source: "document.nepld".into(),
+                        route: "document.md".into(),
+                    },
+                    document,
+                }],
+                files: vec![],
+            };
+            // Lowering and projection have separate budgets. Source admission
+            // belongs to the receiving operation and must charge its allowance.
+            let mut output_admission = SourceAdmission::default();
+            let mut codec = FoundationCodec::new(profile.registry(), &store, &mut output_admission)
+                .map_err(err)?;
+            let mut result = pages::render(
+                &set,
                 profile.registry(),
                 &mut codec,
                 output_budget,
-                aliases,
+                &[aliases],
             )
-            .map_err(err)
+            .map_err(err)?;
+            result
+                .pages
+                .pop()
+                .ok_or_else(|| "missing document projection".into())
         },
     )
 }

@@ -15,7 +15,7 @@
       "projection": "doc/tutorial/composition.md",
       "aliases": "doc/tutorial/composition.aliases.json",
       "route": "tutorial/composition.html",
-      "renderer": "nepl3-tools.markdown-annotated/4"
+      "renderer": "nepl3-tools.markdown-annotated/5"
     },
     {
       "id": "tutorial-hello",
@@ -31,7 +31,7 @@
       "projection": "doc/spec/00-contract.md",
       "aliases": "doc/migration/aliases/00-contract.json",
       "route": "docs/spec/00-contract.html",
-      "renderer": "nepl3-tools.markdown-annotated/4"
+      "renderer": "nepl3-tools.markdown-annotated/5"
     },
     {
       "id": "reproducibility",
@@ -39,7 +39,7 @@
       "projection": "doc/spec/13-reproducibility.md",
       "aliases": "doc/migration/aliases/13-reproducibility.json",
       "route": "docs/spec/13-reproducibility.html",
-      "renderer": "nepl3-tools.markdown-annotated/4"
+      "renderer": "nepl3-tools.markdown-annotated/5"
     },
     {
       "id": "external-extensions",
@@ -47,7 +47,7 @@
       "projection": "doc/spec/22-external-extensions.md",
       "aliases": "doc/migration/aliases/22-external-extensions.json",
       "route": "docs/spec/22-external-extensions.html",
-      "renderer": "nepl3-tools.markdown-annotated/4"
+      "renderer": "nepl3-tools.markdown-annotated/5"
     },
     {
       "id": "architecture",
@@ -63,7 +63,7 @@
       "projection": "doc/spec/18-html-delivery.md",
       "aliases": "doc/migration/aliases/18-html-delivery.json",
       "route": "docs/spec/18-html-delivery.html",
-      "renderer": "nepl3-tools.markdown-annotated/4"
+      "renderer": "nepl3-tools.markdown-annotated/5"
     },
     {
       "id": "circuit",
@@ -71,7 +71,7 @@
       "projection": "doc/spec/07-circuit.md",
       "aliases": "doc/migration/aliases/07-circuit.json",
       "route": "docs/spec/07-circuit.html",
-      "renderer": "nepl3-tools.markdown-annotated/4"
+      "renderer": "nepl3-tools.markdown-annotated/5"
     },
     {
       "id": "html-fragment",
@@ -79,7 +79,7 @@
       "projection": "doc/spec/19-html-fragment.md",
       "aliases": "doc/migration/aliases/19-html-fragment.json",
       "route": "docs/spec/19-html-fragment.html",
-      "renderer": "nepl3-tools.markdown-annotated/4"
+      "renderer": "nepl3-tools.markdown-annotated/5"
     },
     {
       "id": "model-invariants",
@@ -95,7 +95,7 @@
       "projection": "doc/spec/08-editor.md",
       "aliases": "doc/migration/aliases/08-editor.json",
       "route": "docs/spec/08-editor.html",
-      "renderer": "nepl3-tools.markdown-annotated/4"
+      "renderer": "nepl3-tools.markdown-annotated/5"
     },
     {
       "id": "doc-html",
@@ -103,7 +103,7 @@
       "projection": "doc/spec/20-doc-html.md",
       "aliases": "doc/migration/aliases/20-doc-html.json",
       "route": "docs/spec/20-doc-html.html",
-      "renderer": "nepl3-tools.markdown-annotated/4"
+      "renderer": "nepl3-tools.markdown-annotated/5"
     },
     {
       "id": "math-html",

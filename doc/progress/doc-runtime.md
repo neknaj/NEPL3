@@ -246,6 +246,17 @@ Work・Allocation・Nodes・Depth・Output・Sourceの上限一致／1不足を�
 prepareのWorkは39,562,172、描画・直列化までの累積Workは41,376,208、
 累積AllocationUnitsは86,495,493だった。この測定は第03章の通常予算適合を示すものには使用しない。
 
+単一文書のannotated Markdown hostもページ集合の合成経路を使用する。
+明示的な局所namespaceは`document/document.nepld/document.md`である。
+rendererを`nepl3-tools.markdown-annotated/5`へ更新し、canonical registryの該当9登録を対応させた。
+関連する試験入力は独立Sentenceの境界を明示する構文へ移行した。
+負例は正式reader・lowerに成功することを先に確認し、alias検査には正常対照を置く。
+新しいhost停止試験は、lowerのSourceAdmissionが別予算の出力へ持ち越される問題を検出した。
+出力専用のSourceAdmissionへ分離し、6資源の上限一致／1不足、既使用Work、停止後の再呼出し、
+取消しを検査する。生成物の一致確認は未完了であり、実行したcanonical検査は第04章のparseで
+WorkLimitへ到達した。全Doc試験の先行実行は59件成功・39件失敗・14件ignoreで、
+旧入力・残るprojection経路・大型ページ予算を継続して修正する。
+
 `16f6118` の128段落・512文・18,848 bytesの注釈付き入力は、既存の資源上限でHTML生成まで成功した。
 parse/lower/prepare/renderの段階測定を `tools/tests/doc_capacity.rs` で行い、
 本文とRubyの512件を確認する。prepareのWorkは90,419,873、描画までの累積Workは
