@@ -1,7 +1,8 @@
 """Verify actual local exports and a detached inline HTML in three browsers.
 
 Usage: python tools/audit/doc_html/export.py BINARY NEW_OUTPUT_DIRECTORY
-Missing engines or mismatched layout fail; no document JavaScript or network.
+Missing engines or mismatched layout fail. Layout uses no document JavaScript or network;
+a separate font smoke check verifies the explicitly configured Google Fonts delivery.
 """
 from pathlib import Path
 import json
@@ -11,22 +12,57 @@ import subprocess
 import sys
 
 from playwright.sync_api import Route, sync_playwright
+from fonts import wait_for_fonts
+
+
+GOOGLE_FONTS = "https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"
 
 SOURCE = '''article ja "[文書/ぶんしょ]" body
 cons section layout "[見出/みだ]し" body
 cons paragraph cons "{[本文/ほんぶん]/body} & <script>window.untrusted=1</script>" nil
 cons rawcode some "text" "example code"
-cons table cons left nil some row cons "Heading" nil cons row cons "Cell" nil nil
+cons rawcode none "long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_"
+cons table cons left cons center cons right nil some row cons "Left" cons "Center" cons "Right" nil cons row cons "A" cons "B" cons "C" nil nil
 nil nil'''
 
 MEASURE = """() => {
   const ruby = document.querySelector('.nepl-ruby');
-  const base = ruby.querySelector('.nepl-base').getBoundingClientRect();
-  const reading = ruby.querySelector('.nepl-reading').getBoundingClientRect();
-  if (reading.bottom > base.top + 1) throw Error('Ruby reading is not above base');
+  for (const node of document.querySelectorAll('.nepl-ruby,.nepl-anno')) {
+    const base = node.querySelector(':scope > .nepl-base').getBoundingClientRect();
+    const reading = node.querySelector(':scope > .nepl-reading');
+    const notes = node.querySelector(':scope > .nepl-notes');
+    if (reading && reading.getBoundingClientRect().bottom > base.top + 1) throw Error('Ruby reading overlaps base');
+    if (notes && notes.getBoundingClientRect().top < base.bottom - 1) throw Error('Annotation notes overlap base');
+  }
+  if (document.documentElement.scrollWidth > innerWidth) throw Error('Horizontal overflow');
+  const main = getComputedStyle(document.querySelector('.nepl-doc'));
+  const small = getComputedStyle(ruby.querySelector('.nepl-reading'));
+  const rootSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  if (Math.abs(parseFloat(main.fontSize) / rootSize - 1.2) > 0.01) throw Error('Wrong document scale');
+  if (!main.fontFamily.includes('Klee One')) throw Error('Missing font fallback stack');
+  if (Math.abs(parseFloat(small.fontSize) / parseFloat(getComputedStyle(ruby).fontSize) - 0.6) > 0.01) throw Error('Wrong annotation scale');
+  if (small.color !== 'rgb(122, 143, 166)') throw Error('Wrong annotation color');
+  for (const pre of document.querySelectorAll('pre')) {
+    const block = getComputedStyle(pre);
+    const code = getComputedStyle(pre.querySelector('code'));
+    const figure = getComputedStyle(pre.parentElement);
+    const parent = getComputedStyle(pre.parentElement.parentElement);
+    if (Math.abs(parseFloat(block.fontSize) / parseFloat(parent.fontSize) - 0.92) > 0.01) throw Error('Wrong code block scale');
+    if (code.fontSize !== block.fontSize || code.fontFamily !== block.fontFamily) throw Error('Nested code shrinks or changes font');
+    if (!code.fontFamily.includes('monospace')) throw Error('Code is not monospace');
+    if (parseFloat(figure.marginLeft) || parseFloat(figure.marginRight)) throw Error('Code figure has browser default inset');
+    const caption = pre.parentElement.querySelector('figcaption');
+    if (caption) {
+      const label = getComputedStyle(caption);
+      if (Math.abs(parseFloat(label.lineHeight) / parseFloat(label.fontSize) - 1.4) > 0.01) throw Error('Code caption inherits prose leading');
+    }
+    if (pre.getBoundingClientRect().right > innerWidth + 1) throw Error('Code block escapes viewport');
+  }
+  const alignments = [...document.querySelectorAll('td')].map(node => getComputedStyle(node).textAlign);
+  if (JSON.stringify(alignments) !== JSON.stringify(['left', 'center', 'right'])) throw Error('Column alignment changed');
   if (document.scripts.length) throw Error('Unexpected script');
   const selectors = ['.nepl-doc', 'h1', 'h2', '.nepl-paragraph', '.nepl-ruby',
-                     '.nepl-reading', '.nepl-anno', '.nepl-notes', 'pre', 'table', 'th', 'td'];
+                     '.nepl-reading', '.nepl-anno', '.nepl-notes', 'figure', 'figcaption', 'pre', 'pre>code', 'table', 'th', 'td'];
   return JSON.stringify(selectors.map(selector => {
     const node = document.querySelector(selector);
     if (!node) throw Error('Missing ' + selector);
@@ -66,33 +102,37 @@ def main() -> None:
     results: list[dict[str, str]] = []
     with sync_playwright() as playwright:
         for implementation in (playwright.chromium, playwright.firefox, playwright.webkit):
+            print(f"Checking {implementation.name}", file=sys.stderr, flush=True)
             with implementation.launch(headless=True) as browser:
-                with browser.new_context(java_script_enabled=False,
-                                         viewport={"width": 1000, "height": 900}) as context:
-                    # WebKit's emulated offline mode rejects file:// navigation.
-                    # Block network requests directly while preserving real file
-                    # loading, CSP and stylesheet resolution in all engines.
-                    _ = context.route(re.compile(r"^https?://"), block_network)
-                    measurements: list[str] = []
-                    for mode in ("external", "inline", "detached"):
+                for width in (375, 1280):
+                    with browser.new_context(java_script_enabled=False,
+                                             viewport={"width": width, "height": 900}) as context:
+                        # WebKit's emulated offline mode rejects file:// navigation.
+                        # Block network requests directly while preserving real file
+                        # loading, CSP and stylesheet resolution in all engines.
+                        _ = context.route(re.compile(r"^https?://"), block_network)
+                        measurements: list[str] = []
+                        for mode in ("external", "inline", "detached"):
+                            print(f"{implementation.name}: offline {width} {mode}", file=sys.stderr, flush=True)
+                            page = context.new_page()
+                            _ = page.goto((root / mode / "document.html").as_uri())
+                            value: object = page.evaluate(MEASURE)  # pyright: ignore[reportAny]
+                            if not isinstance(value, str):
+                                raise TypeError("Expected serialized layout")
+                            measurements.append(value)
+                            _ = page.screenshot(path=str(root / f"{implementation.name}-{width}-{mode}.png"), full_page=True, timeout=15000)
+                            page.close()
+                        if len(set(measurements)) != 1:
+                            raise AssertionError(f"CSS modes differ in {implementation.name}")
                         page = context.new_page()
-                        _ = page.goto((root / mode / "document.html").as_uri())
-                        value: object = page.evaluate(MEASURE)  # pyright: ignore[reportAny]
-                        if not isinstance(value, str):
-                            raise TypeError("Expected serialized layout")
-                        measurements.append(value)
+                        _ = page.goto((detached / "changed-style.html").as_uri())
+                        style_probe = "getComputedStyle(document.querySelector('.nepl-ruby')).display === 'inline'"
+                        style_blocked: object = page.evaluate(style_probe)  # pyright: ignore[reportAny]
+                        if style_blocked is not True:
+                            raise AssertionError("Changed CSS was not blocked by CSP")
                         page.close()
-                    if len(set(measurements)) != 1:
-                        raise AssertionError(f"CSS modes differ in {implementation.name}")
-                    page = context.new_page()
-                    _ = page.goto((detached / "changed-style.html").as_uri())
-                    style_probe = "getComputedStyle(document.querySelector('.nepl-ruby')).display === 'inline'"
-                    style_blocked: object = page.evaluate(style_probe)  # pyright: ignore[reportAny]
-                    if style_blocked is not True:
-                        raise AssertionError("Changed CSS was not blocked by CSP")
-                    page.close()
-                    results.append({"engine": implementation.name, "result": "passed",
-                                    "version": browser.version})
+                        results.append({"engine": implementation.name, "result": "passed",
+                                        "version": browser.version, "width": str(width)})
                 with browser.new_context(java_script_enabled=True) as scripts:
                     _ = scripts.route(re.compile(r"^https?://"), block_network)
                     page = scripts.new_page()
@@ -100,7 +140,21 @@ def main() -> None:
                     script_blocked: object = page.evaluate("globalThis.__neplProbe === undefined")  # pyright: ignore[reportAny]
                     if script_blocked is not True:
                         raise AssertionError("Injected script was not blocked by CSP")
-    print(json.dumps({"document_javascript": False, "script_csp_negative_control": True, "network": False, "results": results}, indent=2))
+                for width in (375, 1280):
+                    with browser.new_context(java_script_enabled=False,
+                                             viewport={"width": width, "height": 900}) as online:
+                        page = online.new_page()
+                        _ = page.goto((detached / "document.html").as_uri())
+                        print(f"{implementation.name}: online font {width}", file=sys.stderr, flush=True)
+                        wait_for_fonts(page)
+                        online_layout: object = page.evaluate(MEASURE)  # pyright: ignore[reportAny]
+                        if not isinstance(online_layout, str):
+                            raise TypeError("Expected online layout measurement")
+                        _ = page.screenshot(path=str(root / f"{implementation.name}-{width}-google-fonts.png"), full_page=True, timeout=15000)
+                        results.append({"engine": implementation.name, "font": "Klee One",
+                                        "font_source": GOOGLE_FONTS, "width": str(width),
+                                        "layout": online_layout, "result": "passed"})
+    print(json.dumps({"document_javascript": False, "script_csp_negative_control": True, "layout_network": False, "font_network": "Google Fonts", "results": results}, indent=2))
 
 
 if __name__ == "__main__":

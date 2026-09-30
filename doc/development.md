@@ -251,6 +251,11 @@ cargo run --locked -p nepl3-tools -- doc-html export --css inline examples/docum
 
 `--css external` は既定の方式を明示する。`--css inline` は固定CSS全体をHTMLへ内包し、CSPのハッシュで許可する。manifestは方式、実際のファイル一覧、CSSのハッシュとライセンスを記録する。閲覧時はHTML単体を配布できる。複数文書でCSSを共有する場合は外部CSS方式を使用する。
 
+Docの本文はKlee Oneの400・600をGoogle Fontsから読み込む。フォントファイルは出力へ同梱しない。ネットワークを使用できない場合は、システムの代替フォントで表示する。外部CSS・HTML内包の両方式で、CSPはfonts.googleapis.comのスタイルシートとfonts.gstatic.comのフォントだけを追加許可する。閲覧時にこれらの配信元への要求が発生する。
+
+ブラウザー検証は、375px・1280pxでの外部CSS・内包CSS・複製HTMLの表示比較、オフラインの代替フォント、Google Fontsの実際の読み込みを含む。画像は`dist/doc-browser/export-modes/`へ出力する。サイト全体の検証ではGoogle Fontsの応答を空のCSSへ置換し、代替フォントによる表示を検査する。
+
+
 数式・外部ページ・画像等の解決はまだこのlocal入口の対象外で、必要な場合は生成を拒否します。正式文書の正本切替とPages公開は、リンク・意味同等性・配布検査を含む別の工程です。契約は [20章](spec/20-doc-html.md) を参照してください。
 
 [CI workflow](../.github/workflows/ci.yml) はmainへのpush・pull request・手動実行で起動します。feature branchのpushとPR更新による全workflowの二重実行を避け、PRではGitHubのmerge refを検査します。PR未作成のcheckpointは自動CI検証済みとは扱わず、必要なら手動実行します。Rustのworkspace testとClippyはLinux・Windows・macOSで実行し、fmt・rustdoc・allocation regression・外部consumer全体・Doc移行とcanonical生成はLinuxで一度実行します。repository checkはrepository-contract jobへ集約します。

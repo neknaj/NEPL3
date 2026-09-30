@@ -161,6 +161,7 @@ pub fn generate_observed_with_css(
             "renderer":"nepl3-doc-html local/1",
             "options":{"parallel":"Rows","css":css.as_str()},
             "stylesheet":{"sha256":digest(CSS.as_bytes()),"license":"MIT"},
+            "font":{"family":"Klee One","weights":[400,600],"stylesheet":stylesheet::FONT_STYLESHEET,"bundled":false,"offline":"system fallback"},
             "files":files,
             "operations":{"parse_and_validate":usage(parse_usage),"lower":usage(lower_budget.usage()),
                 "prepare_render_serialize":usage(output_budget.usage())},

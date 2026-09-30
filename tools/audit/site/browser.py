@@ -9,7 +9,7 @@ import threading
 from typing import Literal, final, override
 from urllib.parse import urlsplit
 
-from playwright.sync_api import Request, Response, sync_playwright
+from playwright.sync_api import Request, Response, Route, sync_playwright
 from tools.serialization.json import JsonValue, decode, integer, object_value, string
 
 type Engine = Literal['chromium', 'firefox', 'webkit']
@@ -88,6 +88,12 @@ def observe(root: Path, base: str, pages: Sequence[str],
                         context = browser.new_context(java_script_enabled=False,
                                                       viewport={'width': width, 'height': 900})
                         try:
+                            # Keep site layout deterministic and verify fallback when the
+                            # optional remote font stylesheet supplies no font faces.
+                            def font_fallback(route: Route) -> None:
+                                route.fulfill(status=200, content_type='text/css', body='/* font unavailable */')
+
+                            _ = context.route('https://fonts.googleapis.com/css2?*', font_fallback)
                             page = context.new_page()
                             failures: list[str] = []
 
