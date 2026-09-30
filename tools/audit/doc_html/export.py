@@ -21,6 +21,7 @@ SOURCE = '''article ja "[文書/ぶんしょ]" body
 cons section layout "[見出/みだ]し" body
 cons paragraph cons "{[本文/ほんぶん]/body} & <script>window.untrusted=1</script>" nil
 cons rawcode some "text" "example code"
+cons rawcode none "long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_"
 cons table cons left cons center cons right nil some row cons "Left" cons "Center" cons "Right" nil cons row cons "A" cons "B" cons "C" nil nil
 nil nil'''
 
@@ -39,11 +40,27 @@ MEASURE = """() => {
   if (!main.fontFamily.includes('Klee One')) throw Error('Missing font fallback stack');
   if (Math.abs(parseFloat(small.fontSize) / parseFloat(getComputedStyle(ruby).fontSize) - 0.6) > 0.01) throw Error('Wrong annotation scale');
   if (small.color !== 'rgb(122, 143, 166)') throw Error('Wrong annotation color');
+  for (const pre of document.querySelectorAll('pre')) {
+    const block = getComputedStyle(pre);
+    const code = getComputedStyle(pre.querySelector('code'));
+    const figure = getComputedStyle(pre.parentElement);
+    const parent = getComputedStyle(pre.parentElement.parentElement);
+    if (Math.abs(parseFloat(block.fontSize) / parseFloat(parent.fontSize) - 0.92) > 0.01) throw Error('Wrong code block scale');
+    if (code.fontSize !== block.fontSize || code.fontFamily !== block.fontFamily) throw Error('Nested code shrinks or changes font');
+    if (!code.fontFamily.includes('monospace')) throw Error('Code is not monospace');
+    if (parseFloat(figure.marginLeft) || parseFloat(figure.marginRight)) throw Error('Code figure has browser default inset');
+    const caption = pre.parentElement.querySelector('figcaption');
+    if (caption) {
+      const label = getComputedStyle(caption);
+      if (Math.abs(parseFloat(label.lineHeight) / parseFloat(label.fontSize) - 1.4) > 0.01) throw Error('Code caption inherits prose leading');
+    }
+    if (pre.getBoundingClientRect().right > innerWidth + 1) throw Error('Code block escapes viewport');
+  }
   const alignments = [...document.querySelectorAll('td')].map(node => getComputedStyle(node).textAlign);
   if (JSON.stringify(alignments) !== JSON.stringify(['left', 'center', 'right'])) throw Error('Column alignment changed');
   if (document.scripts.length) throw Error('Unexpected script');
   const selectors = ['.nepl-doc', 'h1', 'h2', '.nepl-paragraph', '.nepl-ruby',
-                     '.nepl-reading', '.nepl-anno', '.nepl-notes', 'pre', 'table', 'th', 'td'];
+                     '.nepl-reading', '.nepl-anno', '.nepl-notes', 'figure', 'figcaption', 'pre', 'pre>code', 'table', 'th', 'td'];
   return JSON.stringify(selectors.map(selector => {
     const node = document.querySelector(selector);
     if (!node) throw Error('Missing ' + selector);

@@ -14,14 +14,17 @@ body:has(>.nepl-doc){margin:0;background:#0d1117;color-scheme:dark}
 .nepl-doc strong,.nepl-doc th,.nepl-doc h1,.nepl-doc h2,.nepl-doc h3,.nepl-doc h4,.nepl-doc h5,.nepl-doc h6{font-weight:600}
 .nepl-doc code{font-family:"Cascadia Code",Consolas,Menlo,monospace;font-size:.88em}
 .nepl-doc :not(pre)>code{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);border-radius:.36em;padding:.08em .42em}
-.nepl-doc pre{border-radius:.35rem;white-space:pre}
 .nepl-doc img{max-width:100%;height:auto}
 .nepl-doc blockquote{margin:.85em 0;padding:.45em 1em;border-inline-start:.2em solid var(--nepl-border2);color:var(--nepl-muted);background:rgba(255,255,255,.02);border-radius:0 .5em .5em 0}
 .nepl-doc table{border-collapse:collapse;width:100%;font-size:.94em;margin-block:1.15em}
 .nepl-doc th,.nepl-doc td{border:1px solid var(--nepl-border);padding:.45em .85em}
 .nepl-doc th{background:rgba(74,163,255,.07)}
 .nepl-doc :where(th,td){text-align:start}
-.nepl-doc pre{background:#0b1016;border:1px solid var(--nepl-border);border-radius:.72em;margin:1.25em 0;padding:1em 1.15em;overflow:auto;line-height:1.6}
+.nepl-doc pre{font-family:"Cascadia Code",Consolas,Menlo,monospace;font-size:.92em;white-space:pre;background:#0b1016;border:1px solid var(--nepl-border);border-radius:.72em;margin:1.25em 0;padding:1em 1.15em;overflow:auto;line-height:1.6}
+.nepl-doc pre>code{font:inherit}
+.nepl-doc figure:has(>pre){margin:1.25em 0;min-width:0}
+.nepl-doc figure>pre{margin:0}
+.nepl-doc figure:has(>pre)>figcaption{margin:0;padding:.35em .8em;font-size:.8em;line-height:1.4;overflow-wrap:anywhere}
 .nepl-doc figcaption{color:var(--nepl-muted)}
 .nepl-doc :is(ul,ol){margin:.6em 0 .6em 1.55em;padding:0}
 .nepl-doc li{margin-block:.22em}
