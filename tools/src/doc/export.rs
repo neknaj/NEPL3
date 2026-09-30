@@ -1,5 +1,6 @@
 //! Script-free local Doc export, using the same production pipeline as tests.
 pub mod pages;
+mod stylesheet;
 use super::source::{Compiled, budget, compiled, err, with_input_route};
 use nepl3_core::source::{Digest, SourceAdmission, SourceStore};
 use nepl3_doc_core::{check::Category, lower};
@@ -7,6 +8,7 @@ use nepl3_doc_html::{ParallelMode, RenderOptions, prepare_local, render};
 use nepl3_wire::foundation::FoundationCodec;
 use std::time::{Duration, Instant};
 use std::{fs, io::Read, path::Path};
+pub use stylesheet::CssMode;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Stage {
@@ -16,7 +18,7 @@ pub enum Stage {
     /// Includes creation of the codec and its source admission.
     Lower,
     Prepare,
-    /// Ends after HTML shell serialization; excludes manifest/hash generation
+    /// Ends after HTML shell serialization; includes the inline CSP hash; excludes manifest/file-hash generation
     /// and destruction of intermediate values.
     RenderAndSerialize,
 }
@@ -40,7 +42,16 @@ pub struct LocalDocument {
 }
 
 pub fn generate(compiled: &Compiled, input: &str) -> Result<LocalDocument, String> {
-    generate_observed(compiled, input, &mut |_| {})
+    generate_with_css(compiled, input, CssMode::External)
+}
+
+/// Generate a local document with an explicit stylesheet packaging mode.
+pub fn generate_with_css(
+    compiled: &Compiled,
+    input: &str,
+    css: CssMode,
+) -> Result<LocalDocument, String> {
+    generate_observed_with_css(compiled, input, css, &mut |_| {})
 }
 
 /// Observe successful stage boundaries in the production export pipeline.
@@ -51,6 +62,16 @@ pub fn generate(compiled: &Compiled, input: &str) -> Result<LocalDocument, Strin
 pub fn generate_observed(
     compiled: &Compiled,
     input: &str,
+    observe: &mut impl FnMut(StageMeasurement),
+) -> Result<LocalDocument, String> {
+    generate_observed_with_css(compiled, input, CssMode::External, observe)
+}
+
+/// Observe the same pipeline while selecting local stylesheet packaging.
+pub fn generate_observed_with_css(
+    compiled: &Compiled,
+    input: &str,
+    css: CssMode,
     observe: &mut impl FnMut(StageMeasurement),
 ) -> Result<LocalDocument, String> {
     if input.len() as u64 > MAX_SOURCE_BYTES {
@@ -105,7 +126,7 @@ pub fn generate_observed(
         });
         let render_start = Instant::now();
         let rendered = render(&prepared, &mut output_budget).map_err(err)?;
-        let html = shell(&rendered, &mut output_budget)?;
+        let html = shell_with_css(&rendered, css, &mut output_budget)?;
         observe(StageMeasurement {
             stage: Stage::RenderAndSerialize,
             elapsed: render_start.elapsed(),
@@ -125,6 +146,12 @@ pub fn generate_observed(
                 "diagnostics":u.diagnostics,"events":u.events
             })
         };
+        let mut files = vec![
+            serde_json::json!({"path":"document.html","mime":"text/html; charset=utf-8","sha256":digest(html.as_bytes())}),
+        ];
+        if css == CssMode::External {
+            files.push(serde_json::json!({"path":"assets/doc.css","mime":"text/css; charset=utf-8","license":"MIT","sha256":digest(CSS.as_bytes())}));
+        }
         let manifest = serde_json::to_string_pretty(&serde_json::json!({
             "format":"nepl3.local-doc-export/1",
             "scope":"local Doc only; external pages, assets and foreign rendering require resolution",
@@ -132,9 +159,9 @@ pub fn generate_observed(
             "profile_sha256":digest_hex(profile.digest()),
             "doc_schema_sha256":digest_hex(compiled.doc.package.schema.digest),
             "renderer":"nepl3-doc-html local/1",
-            "options":{"parallel":"Rows"},
-            "files":[{"path":"document.html","mime":"text/html; charset=utf-8","sha256":digest(html.as_bytes())},
-                     {"path":"assets/doc.css","mime":"text/css; charset=utf-8","license":"MIT","sha256":digest(CSS.as_bytes())}],
+            "options":{"parallel":"Rows","css":css.as_str()},
+            "stylesheet":{"sha256":digest(CSS.as_bytes()),"license":"MIT"},
+            "files":files,
             "operations":{"parse_and_validate":usage(parse_usage),"lower":usage(lower_budget.usage()),
                 "prepare_render_serialize":usage(output_budget.usage())},
             "budget_scope":"Separate bounded operations; not a single end-to-end budget",
@@ -216,14 +243,21 @@ fn read_source(input: &Path) -> crate::Result<String> {
 
 /// Write a new output directory. Existing output is never silently overwritten.
 pub fn write(input: &Path, output: &Path) -> crate::Result<()> {
+    write_with_css(input, output, CssMode::External)
+}
+
+/// Write the selected local export, preserving the no-overwrite contract.
+pub fn write_with_css(input: &Path, output: &Path, css: CssMode) -> crate::Result<()> {
     if output.exists() {
         return Err("output directory already exists".into());
     }
     let source = read_source(input)?;
-    let generated = generate(&compiled()?, &source)?;
+    let generated = generate_with_css(&compiled()?, &source, css)?;
     fs::create_dir(output)?;
-    fs::create_dir(output.join("assets"))?;
-    fs::write(output.join("assets/doc.css"), CSS.as_bytes())?;
+    if css == CssMode::External {
+        fs::create_dir(output.join("assets"))?;
+        fs::write(output.join("assets/doc.css"), CSS.as_bytes())?;
+    }
     fs::write(output.join("document.html"), generated.html.as_bytes())?;
     // This is written last. Missing manifest means the output is incomplete.
     fs::write(output.join("manifest.json"), generated.manifest.as_bytes())?;
@@ -232,6 +266,14 @@ pub fn write(input: &Path, output: &Path) -> crate::Result<()> {
 
 fn shell(
     rendered: &nepl3_doc_html::RenderedFragment,
+    output_budget: &mut nepl3_core::budget::Budget,
+) -> Result<String, String> {
+    shell_with_css(rendered, CssMode::External, output_budget)
+}
+
+fn shell_with_css(
+    rendered: &nepl3_doc_html::RenderedFragment,
+    css: CssMode,
     output_budget: &mut nepl3_core::budget::Budget,
 ) -> Result<String, String> {
     let m = &rendered.markup;
@@ -247,12 +289,18 @@ fn shell(
         .map_err(|e| format!("{e}; phase=HTML shell depth"))?;
     let fragment = nepl3_markup::html::serialize(&checked, output_budget)
         .map_err(|e| format!("HTML serialization: {e:?}"))?;
-    let head = "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'self'; base-uri 'none'; form-action 'none'\"><title>NEPL3 Doc</title><link rel=\"stylesheet\" href=\"assets/doc.css\"></head><body>\n";
+    let head = stylesheet::head(css, output_budget)?;
     let tail = "\n</body></html>\n";
     output_budget
         .charge(
             nepl3_core::budget::Resource::OutputBytes,
-            (head.len() + tail.len() + CSS.len()) as u64,
+            (head.len()
+                + tail.len()
+                + if css == CssMode::External {
+                    CSS.len()
+                } else {
+                    0
+                }) as u64,
         )
         .map_err(err)?;
     output_budget

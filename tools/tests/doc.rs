@@ -743,3 +743,7 @@ fn doc_sentence_provider_failures_have_typed_report_positions_and_stops() -> Res
     ));
     Ok(())
 }
+
+#[cfg(not(target_family = "wasm"))]
+#[path = "doc/export_cli.rs"]
+mod export_cli;
