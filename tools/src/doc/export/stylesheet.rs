@@ -36,9 +36,12 @@ impl FromStr for CssMode {
     }
 }
 
+pub(super) const FONT_STYLESHEET: &str =
+    "https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap";
+
 const PREFIX: &str = "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src ";
-const EXTERNAL: &str = "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'self'; base-uri 'none'; form-action 'none'\"><title>NEPL3 Doc</title><link rel=\"stylesheet\" href=\"assets/doc.css\"></head><body>\n";
-const MIDDLE: &str = "'; base-uri 'none'; form-action 'none'\"><title>NEPL3 Doc</title><style>";
+const EXTERNAL: &str = "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; base-uri 'none'; form-action 'none'\"><title>NEPL3 Doc</title><link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&amp;display=swap\"><link rel=\"stylesheet\" href=\"assets/doc.css\"></head><body>\n";
+const MIDDLE: &str = "' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; base-uri 'none'; form-action 'none'\"><title>NEPL3 Doc</title><link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&amp;display=swap\"><style>";
 const SUFFIX: &str = "</style></head><body>\n";
 
 pub(super) fn head(mode: CssMode, budget: &mut Budget) -> Result<Cow<'static, str>, String> {

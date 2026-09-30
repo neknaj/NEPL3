@@ -318,7 +318,11 @@ fn inline_export_binds_only_html_and_preserves_body() -> Result<(), String> {
             .html
             .contains(&format!("<style>{}</style>", export::CSS))
     );
-    assert!(!inline.html.contains("<link"));
+    assert!(!inline.html.contains("href=\"assets/doc.css\""));
+    assert!(inline.html.contains(
+        "https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&amp;display=swap"
+    ));
+    assert!(inline.html.contains("font-src https://fonts.gstatic.com"));
     assert!(!inline.html.contains("unsafe-inline"));
     assert!(inline.html.contains("style-src 'sha256-"));
     assert!(inline.html.contains("default-src 'none'"));
@@ -342,6 +346,8 @@ fn inline_export_binds_only_html_and_preserves_body() -> Result<(), String> {
         assert_eq!(files[0]["sha256"], digest);
         assert_eq!(manifest["stylesheet"]["license"], "MIT");
         assert_eq!(manifest["viewer_scripts"], false);
+        assert_eq!(manifest["font"]["family"], "Klee One");
+        assert_eq!(manifest["font"]["bundled"], false);
     }
     let external_manifest: serde_json::Value =
         serde_json::from_str(&external.manifest).map_err(super::err)?;
