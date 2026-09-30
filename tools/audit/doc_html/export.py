@@ -12,14 +12,8 @@ import subprocess
 import sys
 
 from playwright.sync_api import Route, sync_playwright
+from fonts import wait_for_fonts
 
-FONT_LOADED = """async () => {
-  const load = Promise.all([400, 600].map(async weight => {
-    const faces = await document.fonts.load(`${weight} 16px "Klee One"`, '文書');
-    return faces.length > 0 && faces.every(face => face.status === 'loaded' && face.weight === String(weight));
-  })).then(results => results.every(Boolean));
-  return Promise.race([load, new Promise(resolve => setTimeout(() => resolve(false), 30000))]);
-}"""
 
 GOOGLE_FONTS = "https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"
 
@@ -89,6 +83,7 @@ def main() -> None:
     results: list[dict[str, str]] = []
     with sync_playwright() as playwright:
         for implementation in (playwright.chromium, playwright.firefox, playwright.webkit):
+            print(f"Checking {implementation.name}", file=sys.stderr, flush=True)
             with implementation.launch(headless=True) as browser:
                 for width in (375, 1280):
                     with browser.new_context(java_script_enabled=False,
@@ -99,13 +94,14 @@ def main() -> None:
                         _ = context.route(re.compile(r"^https?://"), block_network)
                         measurements: list[str] = []
                         for mode in ("external", "inline", "detached"):
+                            print(f"{implementation.name}: offline {width} {mode}", file=sys.stderr, flush=True)
                             page = context.new_page()
                             _ = page.goto((root / mode / "document.html").as_uri())
                             value: object = page.evaluate(MEASURE)  # pyright: ignore[reportAny]
                             if not isinstance(value, str):
                                 raise TypeError("Expected serialized layout")
                             measurements.append(value)
-                            _ = page.screenshot(path=str(root / f"{implementation.name}-{width}-{mode}.png"), full_page=True)
+                            _ = page.screenshot(path=str(root / f"{implementation.name}-{width}-{mode}.png"), full_page=True, timeout=15000)
                             page.close()
                         if len(set(measurements)) != 1:
                             raise AssertionError(f"CSS modes differ in {implementation.name}")
@@ -130,13 +126,12 @@ def main() -> None:
                                              viewport={"width": width, "height": 900}) as online:
                         page = online.new_page()
                         _ = page.goto((detached / "document.html").as_uri())
-                        loaded: object = page.evaluate(FONT_LOADED)  # pyright: ignore[reportAny]
-                        if loaded is not True:
-                            raise AssertionError("Google Fonts Klee One 400/600 did not load")
+                        print(f"{implementation.name}: online font {width}", file=sys.stderr, flush=True)
+                        wait_for_fonts(page)
                         online_layout: object = page.evaluate(MEASURE)  # pyright: ignore[reportAny]
                         if not isinstance(online_layout, str):
                             raise TypeError("Expected online layout measurement")
-                        _ = page.screenshot(path=str(root / f"{implementation.name}-{width}-google-fonts.png"), full_page=True)
+                        _ = page.screenshot(path=str(root / f"{implementation.name}-{width}-google-fonts.png"), full_page=True, timeout=15000)
                         results.append({"engine": implementation.name, "font": "Klee One",
                                         "font_source": GOOGLE_FONTS, "width": str(width),
                                         "layout": online_layout, "result": "passed"})
