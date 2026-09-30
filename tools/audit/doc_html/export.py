@@ -5,11 +5,12 @@ Missing engines or mismatched layout fail; no document JavaScript or network.
 """
 from pathlib import Path
 import json
+import re
 import shutil
 import subprocess
 import sys
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import Route, sync_playwright
 
 SOURCE = '''article ja "[文書/ぶんしょ]" body
 cons section layout "[見出/みだ]し" body
@@ -38,6 +39,10 @@ MEASURE = """() => {
 }"""
 
 
+def block_network(route: Route) -> None:
+    route.abort()
+
+
 def main() -> None:
     if len(sys.argv) != 3:
         raise ValueError(__doc__)
@@ -62,8 +67,12 @@ def main() -> None:
     with sync_playwright() as playwright:
         for implementation in (playwright.chromium, playwright.firefox, playwright.webkit):
             with implementation.launch(headless=True) as browser:
-                with browser.new_context(java_script_enabled=False, offline=True,
+                with browser.new_context(java_script_enabled=False,
                                          viewport={"width": 1000, "height": 900}) as context:
+                    # WebKit's emulated offline mode rejects file:// navigation.
+                    # Block network requests directly while preserving real file
+                    # loading, CSP and stylesheet resolution in all engines.
+                    _ = context.route(re.compile(r"^https?://"), block_network)
                     measurements: list[str] = []
                     for mode in ("external", "inline", "detached"):
                         page = context.new_page()
@@ -84,7 +93,8 @@ def main() -> None:
                     page.close()
                     results.append({"engine": implementation.name, "result": "passed",
                                     "version": browser.version})
-                with browser.new_context(java_script_enabled=True, offline=True) as scripts:
+                with browser.new_context(java_script_enabled=True) as scripts:
+                    _ = scripts.route(re.compile(r"^https?://"), block_network)
                     page = scripts.new_page()
                     _ = page.goto((detached / "script.html").as_uri())
                     script_blocked: object = page.evaluate("globalThis.__neplProbe === undefined")  # pyright: ignore[reportAny]
