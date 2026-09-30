@@ -38,7 +38,7 @@ MEASURE = """() => {
   const main = getComputedStyle(document.querySelector('.nepl-doc'));
   const small = getComputedStyle(ruby.querySelector('.nepl-reading'));
   const rootSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  if (Math.abs(parseFloat(main.fontSize) / rootSize - 1.5) > 0.01) throw Error('Wrong document scale');
+  if (Math.abs(parseFloat(main.fontSize) / rootSize - 1.2) > 0.01) throw Error('Wrong document scale');
   if (!main.fontFamily.includes('Klee One')) throw Error('Missing font fallback stack');
   if (Math.abs(parseFloat(small.fontSize) / parseFloat(getComputedStyle(ruby).fontSize) - 0.6) > 0.01) throw Error('Wrong annotation scale');
   if (small.color !== 'rgb(122, 143, 166)') throw Error('Wrong annotation color');
