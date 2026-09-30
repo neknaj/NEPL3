@@ -157,6 +157,17 @@ body
         cons "I/O[途中/とちゅう]の[失敗/しっぱい]では[不完全/ふかんぜん]なディレクトリが[残/のこ]り[得/う]るため、manifestは[最後/さいご]に[書/か]き、[失敗/しっぱい]を[成功/せいこう]にしない。"
         nil
       cons paragraph
+        cons "CSSの[出力方式/しゅつりょくほうしき]は、--css externalまたは--css inlineで[選択/せんたく]する。"
+        cons "[省略時/しょうりゃくじ]はexternalとし、[既存/きそん]のHTMLとassets/doc.cssを[出力/しゅつりょく]する。"
+        cons "externalは、[複数文書/ふくすうぶんしょ]によるスタイルシートの[共有/きょうゆう]とキャッシュに[適/てき]する。"
+        cons "inlineは[共通/きょうつう]CSSの[全体/ぜんたい]をHTMLのstyle[要素/ようそ]へ[内包/ないほう]し、document.htmlとmanifest.jsonを[出力/しゅつりょく]する。"
+        cons "HTML[単体/たんたい]を[移動/いどう]した[場合/ばあい]も、Ruby、Anno、[見出/みだ]し、[本文/ほんぶん]、コード、[表/ひょう]のスタイルを[保持/ほじ]する。"
+        cons "[対象/たいしょう]はローカル[出力/しゅつりょく]の[固定/こてい]CSSである。"
+        cons "[画像/がぞう]、[外部/がいぶ]フォント、[別/べつ]ページの[単一/たんいつ]ファイル[化/か]は[別途/べっと]の[範囲/はんい]とする。"
+        cons "doc-html pagesと[既存/きそん]のAPIはexternalを[維持/いじ]する。"
+        cons "[明示/めいじ]するAPIではCssModeにより[方式/ほうしき]を[選択/せんたく]する。"
+        nil
+      cons paragraph
         cons "この[入口/いりぐち]は[開発用/かいはつよう]hostであり、[検査済/けんさず]みbootstrap fixtureをGrammar compilerへ[渡/わた]してpackageを[構成/こうせい]する。"
         cons "[正式/せいしき]CLI、[生成/せいせい]package[配布/はいふ]、suite、[全資源解決/ぜんしげんかいけつ]の[完成/かんせい]とは[区別/くべつ]する。"
         cons "source[読取/よみと]り/[検査/けんさ]、lower、prepare/render/serializeは、それぞれ[明示/めいじ]した[独立/どくりつ]Budgetを[持/も]つ。"
@@ -165,7 +176,13 @@ body
         nil
       cons paragraph
         cons "shellは[固定/こてい]HTMLと[検査済/けんさず]みfragmentだけから[作/つく]り、stylesheetはbackendの[同/おな]じ[固定/こてい]byte[列/れつ]を[配布/はいふ]する。"
-        cons "CSPは[既定/きてい]の[取得/しゅとく]・script・formを[禁止/きんし]し、[同/おな]じoriginのstylesheetだけを[許可/きょか]する。"
+        cons "CSPは[既定/きてい]の[取得/しゅとく]・script・formを[禁止/きんし]する。"
+        cons "externalでは[同/おな]じoriginのCSSを、inlineではstyle[要素/ようそ]のUTF-8[内容/ないよう]と[一致/いっち]するSHA-256ハッシュだけを[許可/きょか]する。"
+        cons "inlineの[固定/こてい]CSSは、HTMLのraw text[解析/かいせき]を[変化/へんか]させる[文字/もじ]を[検査/けんさ]し、[小/しょう]なり[記号/きごう]、NUL、CRを[含/ふく]む[場合/ばあい]は[生成/せいせい]を[拒否/きょひ]する。"
+        cons "manifestのoptions.cssはexternalまたはinlineを[記録/きろく]し、filesには[実際/じっさい]のHTML/CSS[出力/しゅつりょく]だけを[列挙/れっきょ]する。"
+        cons "stylesheetには[共通/きょうつう]CSSのSHA-256とMITライセンスを[記録/きろく]する。"
+        cons "[出力/しゅつりょく]Budgetは、[両方式/りょうほうしき]でCSSを[一度/いちど]だけ[計上/けいじょう]する。"
+        cons "[同/おな]じ[入力/にゅうりょく]と[方式/ほうしき]からは、[同一/どういつ]のHTMLとmanifestを[生成/せいせい]する。"
         cons "manifestは[入力/にゅうりょく]、Profile、Doc schema、[生成/せいせい]HTML/CSSのdigestと[表示/ひょうじ]optionsを[保持/ほじ]する。"
         cons "[現在/げんざい]の[形式/けいしき]はlocal export[用/よう]の[記録/きろく]であり、17[章/しょう]のKaTeX[資源/しげん]bundleや[汎用/はんよう]Artifactの[境界検査/きょうかいけんさ]を[代行/だいこう]しない。"
         cons "HTTPの[非/ひ]root pathとJavaScript[無効/むこう]の[実/じつ]browserで、[生成物/せいせいぶつ]を[検査/けんさ]する。"
