@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/20&#45;doc&#45;html.nepld; renderer nepl3-tools.markdown-annotated/4; source SHA-256 4e22088eeca495487d960f3d52ac199116f248c419451c0da37ce3c187371846; alias input SHA-256 a89d4b749408c5f6e9ccc8ed5749c8203bf1a66d788d81725b0d44b7af3c82d5. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/20&#45;doc&#45;html.nepld; renderer nepl3-tools.markdown-annotated/4; source SHA-256 61b46e5fb6c3fefbe544973139e6f7f02afe7185655752cf0cd0e7efda507976; alias input SHA-256 a89d4b749408c5f6e9ccc8ed5749c8203bf1a66d788d81725b0d44b7af3c82d5. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="20-docのhtml変換"></a>
 
@@ -73,3 +73,17 @@ Imageのfigureは左右の既定余白を除き、概要画像は固有寸法を
 SVG出力のstylesheetは固定CSSと検証済み有限数値・node番号から生成する規則を連結したものである。作者の任意CSSは受理しない。外部CSS・埋め込みCSS・CSP・manifestは同一の最終byte列を使用する。画像groupはinline\-size containerとなり、table等のintrinsic幅配分への影響は別途表示検証する。
 
 prepare\_localの未解決要求の拒否は維持する。試作用のnative helperは入力ごとに検証する。公開portable準備操作の完了やT22・T23・T24の全面受入を示さない。参照形式のCSPは同一originの画像、埋め込み形式はdata画像だけを許可する。フォントは既存の外部参照が残る。
+
+<a name="n-636f64655f686967686c69676874"></a>
+
+## 埋め込みコードの共有highlight
+
+Codeのnative host合成は、保持したguest closureをadapterへ渡し、検査済みphrasingをfigure・pre・code内へ挿入する。prepare\_localは従来どおり未解決要求を拒否する。これは公開portable準備操作の完了を意味しない。
+
+開発hostは同じparse・lower処理の元のParseTreeからengine regionsを取得し、共通no\_stdのbyte\-span正規化を使う。guestの再parse、意味lower、評価、LSP server呼び出しは行わない。現在の入力はSyntaxOnlyであり、reader factsは使用しない。RawCode・InlineCodeは文字列を保持する。
+
+表示範囲はguest rootのcoverと同一snapshotに限定する。重複spanを正規化し、空白・改行・非装飾範囲を元のbyte順で保持する。全内容を型付きTextとして出力する。source欠落、範囲不一致、Invalid、Stoppedは明示的な失敗とし、無装飾の成功へ変換しない。classのない正常な結果は元の文字列を表示する。
+
+安定したCSS分類キーはnepl\-code\-content・nepl\-code\-marker・nepl\-code\-delimiter・nepl\-code\-name・nepl\-code\-quantity・nepl\-code\-annotationである。schema package・revision・digest・class名は曖昧さのないhex形式のdata\-nepl\-idに保持する。任意のclass名をCSS識別子として扱わない。light・darkで分類キーを維持し、前景・背景の変数だけを切り替える。
+
+同じ単一文書にCodeとSVGを含め、CSSのexternal・inlineとSVGのexternal・embeddedを組み合わせられる。PagesのCode対応、reader\-fact統合、不完全なホスト文書のexportは後続の範囲である。Code guestの意味的な誤りは、表示のために意味解析を要求する根拠としない。

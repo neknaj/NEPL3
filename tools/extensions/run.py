@@ -17,6 +17,7 @@ from tools.extensions import cargo as cargo_input
 from tools.extensions.execution import Execution, Record, Scope
 
 from tools.extensions.distribution import export
+from tools.extensions import history
 
 FOUNDATION = ROOT / "crates" / "foundation"
 PACKAGES = {f"nepl3-{name}": FOUNDATION / name for name in ("core", "reader", "engine", "wire")}
@@ -32,6 +33,7 @@ def fingerprint() -> Mapping[str, str]:
 class Arguments(argparse.Namespace):
     output: Path = ROOT / "dist" / "external-extension"
     distribution: bool = False
+    consumer_revision: str | None = None
 
 
 def main() -> None:
@@ -39,6 +41,8 @@ def main() -> None:
     _ = parser.add_argument("--output", type=Path, default=ROOT / "dist" / "external-extension")
     _ = parser.add_argument("--distribution", action="store_true",
                         help="build a standalone foundation workspace and use only its crate paths")
+    _ = parser.add_argument("--consumer-revision", type=history.revision,
+                        help="freeze the Hello consumer at a complete Git commit; checks Rust source API compatibility only")
     args = parser.parse_args(namespace=Arguments())
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -56,14 +60,18 @@ def main() -> None:
             directory = Path(temporary).resolve()
             if directory.is_relative_to(ROOT):
                 raise RuntimeError("temporary workspace must be outside the repository")
+            temporary_root = directory
+            execution.target_directory = temporary_root / "build-target"
             packages = PACKAGES
             if args.distribution:
                 extracted = export(ROOT, directory / "foundation")
                 packages = {name: extracted / path.relative_to(ROOT) for name, path in PACKAGES.items()}
                 _ = execution.run(cargo + ["test", "--locked", "--workspace"], extracted, "foundation-test.log")
-                directory = directory / "consumer"
-                directory.mkdir()
+            directory = temporary_root / "consumer"
+            directory.mkdir()
             fixture = ROOT / "conformance/extensions/hello"
+            if args.consumer_revision is not None:
+                fixture = history.materialize(ROOT, temporary_root / "frozen-input", args.consumer_revision)
             _ = shutil.copytree(fixture / "src", directory / "src")
             _ = shutil.copytree(fixture / "examples", directory / "examples")
             _ = shutil.copytree(fixture / "tests", directory / "tests")
@@ -106,7 +114,7 @@ def main() -> None:
         completed = True
     finally:
         unchanged = before == fingerprint()
-        record = Record(scope, commit, before, tuple(execution.commands), completed, unchanged, consumer_files)
+        record = Record(scope, commit, before, tuple(execution.commands), completed, unchanged, consumer_files, args.consumer_revision)
         _ = (output / "result.json").write_text(json.dumps(record.representation(), indent=2) + "\n", encoding="utf-8", newline="\n")
         if not unchanged:
             raise RuntimeError("foundation sources changed during extension execution")

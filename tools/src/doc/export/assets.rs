@@ -109,7 +109,7 @@ pub fn write(
     }
     let mut report: serde_json::Value = serde_json::from_str(&generated.manifest)?;
     report["scope"] = serde_json::json!(
-        "single-document static SVG prototype; svg/g/path profile; pages and foreign requirements unsupported"
+        "single-document static SVG prototype; svg/g/path and bounded local path-glyph profile; pages and foreign requirements unsupported"
     );
     report["options"]["svg"] = serde_json::json!(mode_name(mode));
     report["resources"] = serde_json::json!(resources);
