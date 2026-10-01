@@ -48,7 +48,8 @@ MEASURE = """() => {
     if (base.scrollWidth > base.clientWidth + 1) throw Error('Annotation base clips nested contents');
   }
   for (const node of document.querySelectorAll('.nepl-ruby > .nepl-base')) {
-    if (getComputedStyle(node).borderTopWidth !== '1px') throw Error('Missing Ruby boundary');
+    const style = getComputedStyle(node);
+    if ([style.borderTopWidth, style.borderRightWidth, style.borderBottomWidth, style.borderLeftWidth].some(width => width !== '0px')) throw Error('Ruby base must remain borderless');
   }
   if (document.documentElement.scrollWidth > innerWidth) throw Error('Horizontal overflow');
   const main = getComputedStyle(document.querySelector('.nepl-doc'));
