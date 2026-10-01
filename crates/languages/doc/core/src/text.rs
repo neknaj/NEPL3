@@ -42,6 +42,19 @@ pub fn plain_text<C: FoundationValueCodec>(
         Err(error) => Err(error),
     }
 }
+/// Borrowed input projection. Admission, identity and projection share one Budget.
+pub fn plain_text_borrowed<C: FoundationValueCodec>(
+    document: &DocumentSyntax,
+    sentence: SentenceRef,
+    policy: AnnotationPolicy,
+    resolved: &[ResolvedInlineText],
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<PlainTextReply, PortableError<C::Error>> {
+    let prepared = prepare(document, registry, codec, b)?;
+    Ok(prepared.execute(sentence, policy, resolved, b))
+}
 /// Host-visible identities are data, not transferable validation or paid-work
 /// proofs. `plain_text` always validates and computes identities under its own
 /// operation Budget and SourceAdmission; this value cannot bypass that work.

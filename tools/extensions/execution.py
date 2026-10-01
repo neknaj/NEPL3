@@ -4,6 +4,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 import hashlib
+import os
 from pathlib import Path
 import subprocess
 
@@ -56,6 +57,7 @@ class Record:
     completed: bool
     unchanged: bool
     consumer: Mapping[str, str] | None
+    consumer_revision: str | None = None
 
     def representation(self) -> dict[str, JsonValue]:
         value: dict[str, JsonValue] = {
@@ -66,6 +68,9 @@ class Record:
         }
         if self.consumer is not None:
             value["consumer"] = dict(self.consumer)
+        if self.consumer_revision is not None:
+            value["consumer_revision"] = self.consumer_revision
+            value["compatibility_kind"] = "Rust source API only; wire compatibility and binary ABI are not established"
         value["foundation_unchanged"] = self.unchanged
         return value
 
@@ -80,6 +85,7 @@ class Execution:
     def __init__(self, output: Path) -> None:
         self.output: Path = output
         self.commands: list[Command] = []
+        self.target_directory: Path | None = None
 
     def record(self, arguments: Sequence[str], outcome: Exited | Interrupted, name: str,
                stdout: bytes, stderr: bytes) -> None:
@@ -90,9 +96,13 @@ class Execution:
                                      error_log, hashlib.sha256(stderr).hexdigest()))
 
     def run(self, command: Sequence[str], cwd: Path, name: str) -> bytes:
+        environment = dict(os.environ)
+        if self.target_directory is not None:
+            environment["CARGO_TARGET_DIR"] = str(self.target_directory)
+            environment["CARGO_BUILD_BUILD_DIR"] = str(self.target_directory / "intermediate")
         try:
             result = subprocess.run(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                    timeout=600, check=False)
+                                    timeout=600, check=False, env=environment)
         except (subprocess.TimeoutExpired, OSError) as failure:
             stdout = output_bytes(failure.stdout) if isinstance(failure, subprocess.TimeoutExpired) else b""
             stderr = output_bytes(failure.stderr) if isinstance(failure, subprocess.TimeoutExpired) else b""

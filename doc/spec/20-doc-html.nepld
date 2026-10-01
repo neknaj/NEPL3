@@ -157,6 +157,17 @@ body
         cons "I/O[途中/とちゅう]の[失敗/しっぱい]では[不完全/ふかんぜん]なディレクトリが[残/のこ]り[得/う]るため、manifestは[最後/さいご]に[書/か]き、[失敗/しっぱい]を[成功/せいこう]にしない。"
         nil
       cons paragraph
+        cons "CSSの[出力方式/しゅつりょくほうしき]は、--css externalまたは--css inlineで[選択/せんたく]する。"
+        cons "[省略時/しょうりゃくじ]はexternalとし、[既存/きそん]のHTMLとassets/doc.cssを[出力/しゅつりょく]する。"
+        cons "externalは、[複数文書/ふくすうぶんしょ]によるスタイルシートの[共有/きょうゆう]とキャッシュに[適/てき]する。"
+        cons "inlineは[共通/きょうつう]CSSの[全体/ぜんたい]をHTMLのstyle[要素/ようそ]へ[内包/ないほう]し、document.htmlとmanifest.jsonを[出力/しゅつりょく]する。"
+        cons "HTML[単体/たんたい]を[移動/いどう]した[場合/ばあい]も、Ruby、Anno、[見出/みだ]し、[本文/ほんぶん]、コード、[表/ひょう]のスタイルを[保持/ほじ]する。"
+        cons "[対象/たいしょう]はローカル[出力/しゅつりょく]の[固定/こてい]CSSである。"
+        cons "[画像/がぞう]、[外部/がいぶ]フォント、[別/べつ]ページの[単一/たんいつ]ファイル[化/か]は[別途/べっと]の[範囲/はんい]とする。"
+        cons "doc-html pagesと[既存/きそん]のAPIはexternalを[維持/いじ]する。"
+        cons "[明示/めいじ]するAPIではCssModeにより[方式/ほうしき]を[選択/せんたく]する。"
+        nil
+      cons paragraph
         cons "この[入口/いりぐち]は[開発用/かいはつよう]hostであり、[検査済/けんさず]みbootstrap fixtureをGrammar compilerへ[渡/わた]してpackageを[構成/こうせい]する。"
         cons "[正式/せいしき]CLI、[生成/せいせい]package[配布/はいふ]、suite、[全資源解決/ぜんしげんかいけつ]の[完成/かんせい]とは[区別/くべつ]する。"
         cons "source[読取/よみと]り/[検査/けんさ]、lower、prepare/render/serializeは、それぞれ[明示/めいじ]した[独立/どくりつ]Budgetを[持/も]つ。"
@@ -165,11 +176,32 @@ body
         nil
       cons paragraph
         cons "shellは[固定/こてい]HTMLと[検査済/けんさず]みfragmentだけから[作/つく]り、stylesheetはbackendの[同/おな]じ[固定/こてい]byte[列/れつ]を[配布/はいふ]する。"
-        cons "CSPは[既定/きてい]の[取得/しゅとく]・script・formを[禁止/きんし]し、[同/おな]じoriginのstylesheetだけを[許可/きょか]する。"
+        cons "CSPは[既定/きてい]の[取得/しゅとく]・script・formを[禁止/きんし]する。"
+        cons "externalでは[同/おな]じoriginのCSSを、inlineではstyle[要素/ようそ]のUTF-8[内容/ないよう]と[一致/いっち]するSHA-256ハッシュを[許可/きょか]する。"
+        cons "Google Fontsのスタイルシートはfonts.googleapis.com、Klee Oneのフォントはfonts.gstatic.comから[取得/しゅとく]する。"
+        cons "CSPは[両方式/りょうほうしき]でこの[配信元/はいしんもと]を[明示/めいじ]し、[文書/ぶんしょ]のスクリプト[実行/じっこう]を[禁止/きんし]する。"
+        cons "フォントファイルは[同梱/どうこん]せず、オフラインや[取得失敗時/しゅとくしっぱいじ]にはシステムの[代替/だいたい]フォントを[使用/しよう]する。"
+        cons "manifestのfontは[書体/しょたい]、[太/ふと]さ、スタイルシートのURL、[同梱/どうこん]の[有無/うむ]とオフライン[時/じ]の[方針/ほうしん]を[記録/きろく]する。"
+        cons "inlineの[固定/こてい]CSSは、HTMLのraw text[解析/かいせき]を[変化/へんか]させる[文字/もじ]を[検査/けんさ]し、[小/しょう]なり[記号/きごう]、NUL、CRを[含/ふく]む[場合/ばあい]は[生成/せいせい]を[拒否/きょひ]する。"
+        cons "manifestのoptions.cssはexternalまたはinlineを[記録/きろく]し、filesには[実際/じっさい]のHTML/CSS[出力/しゅつりょく]だけを[列挙/れっきょ]する。"
+        cons "stylesheetには[共通/きょうつう]CSSのSHA-256とMITライセンスを[記録/きろく]する。"
+        cons "[出力/しゅつりょく]Budgetは、[両方式/りょうほうしき]でCSSを[一度/いちど]だけ[計上/けいじょう]する。"
+        cons "[同/おな]じ[入力/にゅうりょく]と[方式/ほうしき]からは、[同一/どういつ]のHTMLとmanifestを[生成/せいせい]する。"
         cons "manifestは[入力/にゅうりょく]、Profile、Doc schema、[生成/せいせい]HTML/CSSのdigestと[表示/ひょうじ]optionsを[保持/ほじ]する。"
         cons "[現在/げんざい]の[形式/けいしき]はlocal export[用/よう]の[記録/きろく]であり、17[章/しょう]のKaTeX[資源/しげん]bundleや[汎用/はんよう]Artifactの[境界検査/きょうかいけんさ]を[代行/だいこう]しない。"
         cons "HTTPの[非/ひ]root pathとJavaScript[無効/むこう]の[実/じつ]browserで、[生成物/せいせいぶつ]を[検査/けんさ]する。"
         cons "[外部/がいぶ]page/asset/foreignが[必要/ひつよう]な[文書/ぶんしょ]はNeedsResolutionのまま[拒否/きょひ]し、リンクや[埋/う]め[込/こ]みを[落/お]としたHTMLを[書/か]き[出/だ]さない。"
+        nil
+      nil
+  cons section typography "[文字組/もじぐ]みと[書体/しょたい]"
+    body
+      cons paragraph
+        cons "[本文/ほんぶん]はKlee Oneの400、[見出/みだ]しや[強調/きょうちょう]は600を[使用/しよう]し、コードには[等幅/とうはば]フォントを[維持/いじ]する。"
+        cons "[本文/ほんぶん]の[行高/ぎょうこう]は2.8、Rubyの[読/よ]みとAnnoの[注釈/ちゅうしゃく]は0.6em、[行高/ぎょうこう]1、[基底文字/きていもじ]は[行高/ぎょうこう]1.3とする。"
+        cons "[読/よ]みと[注釈/ちゅうしゃく]には[共通/きょうつう]の[灰青色/かいせいしょく]を[使用/しよう]し、[中央/ちゅうおう]へ[配置/はいち]する。"
+        cons "[節/せつ]には[左境界線/ひだりきょうかいせん]と[余白/よはく]を[設/もう]け、[段落/だんらく]、リスト、コード、[表/ひょう]の[間隔/かんかく]を[調整/ちょうせい]する。"
+        cons "[参照先/さんしょうさき]の[寸法/すんぽう]と[配色/はいしょく]を[適用/てきよう]し、NEPL3の[入/い]れ[子/こ][注釈/ちゅうしゃく]とbaselineの[契約/けいやく]を[維持/いじ]する。"
+        cons "オンラインの[検証/けんしょう]ではGoogle Fontsの[実際/じっさい]の[読/よ]み[込/こ]みを、オフラインの[検証/けんしょう]では[代替/だいたい]フォントと[固定/こてい]CSSによる[表示/ひょうじ]を[確認/かくにん]する。"
         nil
       nil
   cons section baseline "[固定/こてい]CSSのbaselineと[対応範囲/たいおうはんい]"
@@ -269,4 +301,21 @@ body
         cons "この[静的文書/せいてきぶんしょ]の[検査/けんさ]はWasm・Playground・[支援技術/しえんぎじゅつ]による[実操作/じつそうさ]の[受入/うけいれ]を[代行/だいこう]しない。"
         nil
       nil
+  cons section svg_prototype "単一文書のSVG出力試作"
+    body
+    cons paragraph cons "doc-html svgは、明示したasset一覧とImage・InlineImageを用いる単一文書の試作である。外部参照はdigestに基づくassets内のSVGへimgで参照し、embeddedは同じ検証済みbyte列をimgのdata URLへ格納する。CSSのexternal・inlineとは独立した設定である。pages、ネットワーク取得、RawHtmlは対象外である。" nil
+    cons paragraph cons "明示入力を文書の全variantから列挙したAssetRefへ対応させ、未指定・重複・未使用の登録、digest不一致、未対応SVGを拒否する。原文を変更して危険要素を除去する処理は行わない。代替テキストはBaseOnlyで投影し、captionはSentenceとして描画する。" nil
+    cons paragraph cons "Imageのfigureは左右の既定余白を除き、概要画像は固有寸法を超えて拡大せず、本文幅と高さ360pxを上限に縦横比を維持する。共通のgroup内でfigureの後にdetails・summaryによる原寸表示を併設し、原寸画像は幅・高さの縮小制限を解除したスクロール領域に表示する。原寸領域には高さ上限を設けず、縦方向は文書全体のスクロールを用いる。details内だけwhite-spaceをnormalとし、captionの空白保持規則は維持する。width・heightがないSVGは固有寸法が未定義であり、展開後の寸法はブラウザの置換要素規則に従う。InlineImageにはこの操作を追加しない。埋め込みでは概要と原寸に同じ検証済みSVGを出力し、両出現の出力予算を計上する。" nil
+    cons paragraph cons "明示されたSVGのwidth・heightからCSS pxの固有寸法を取得し、固有高が360px以下でgroup幅が固有幅以上の場合だけ、container queryで原寸表示の折り畳みを非表示にする。幅・高さが不明なSVGとcontainer query未対応環境では操作を保持する。文書を狭くすると、必要な原寸表示操作が再び表示される。" nil
+    cons paragraph cons "SVG出力のstylesheetは固定CSSと検証済み有限数値・node番号から生成する規則を連結したものである。作者の任意CSSは受理しない。外部CSS・埋め込みCSS・CSP・manifestは同一の最終byte列を使用する。画像groupはinline-size containerとなり、table等のintrinsic幅配分への影響は別途表示検証する。" nil
+    cons paragraph cons "prepare_localの未解決要求の拒否は維持する。試作用のnative helperは入力ごとに検証する。公開portable準備操作の完了やT22・T23・T24の全面受入を示さない。参照形式のCSPは同一originの画像、埋め込み形式はdata画像だけを許可する。フォントは既存の外部参照が残る。" nil
+    nil
+  cons section code_highlight "埋め込みコードの共有highlight"
+    body
+    cons paragraph cons "Codeのnative host合成は、保持したguest closureをadapterへ渡し、検査済みphrasingをfigure・pre・code内へ挿入する。prepare_localは従来どおり未解決要求を拒否する。これは公開portable準備操作の完了を意味しない。" nil
+    cons paragraph cons "開発hostは同じparse・lower処理の元のParseTreeからengine regionsを取得し、共通no_stdのbyte-span正規化を使う。guestの再parse、意味lower、評価、LSP server呼び出しは行わない。現在の入力はSyntaxOnlyであり、reader factsは使用しない。RawCode・InlineCodeは文字列を保持する。" nil
+    cons paragraph cons "表示範囲はguest rootのcoverと同一snapshotに限定する。重複spanを正規化し、空白・改行・非装飾範囲を元のbyte順で保持する。全内容を型付きTextとして出力する。source欠落、範囲不一致、Invalid、Stoppedは明示的な失敗とし、無装飾の成功へ変換しない。classのない正常な結果は元の文字列を表示する。" nil
+    cons paragraph cons "安定したCSS分類キーはnepl-code-content・nepl-code-marker・nepl-code-delimiter・nepl-code-name・nepl-code-quantity・nepl-code-annotationである。schema package・revision・digest・class名は曖昧さのないhex形式のdata-nepl-idに保持する。任意のclass名をCSS識別子として扱わない。light・darkで分類キーを維持し、前景・背景の変数だけを切り替える。" nil
+    cons paragraph cons "同じ単一文書にCodeとSVGを含め、CSSのexternal・inlineとSVGのexternal・embeddedを組み合わせられる。PagesのCode対応、reader-fact統合、不完全なホスト文書のexportは後続の範囲である。Code guestの意味的な誤りは、表示のために意味解析を要求する根拠としない。" nil
+    nil
   nil

@@ -14,6 +14,21 @@ fn budget() -> Budget {
     })
 }
 #[test]
+fn already_stopped_validation_precedes_an_unfinalized_registry() -> Result<(), SyntaxError> {
+    let (_, schema) = registry()?;
+    let input = bundle(&schema);
+    let unfinalized = SchemaRegistry::default();
+    let mut b = budget();
+    b.cancel();
+    assert!(matches!(
+        input.validate(&unfinalized, &mut b),
+        Err(SyntaxError::Stopped(StopReason::Cancelled))
+    ));
+    assert_eq!(b.usage(), Usage::default());
+    assert_eq!(b.poll(), Err(StopReason::Cancelled));
+    Ok(())
+}
+#[test]
 fn syntax_preserves_nested_stop_causes_and_does_not_reclassify_semantic_errors() {
     for reason in [
         StopReason::Cancelled,

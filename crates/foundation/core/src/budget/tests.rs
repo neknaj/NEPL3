@@ -65,3 +65,26 @@ fn failed_nested_measurement_preserves_charges_and_sticky_stops() -> Result<(), 
     assert!(!called);
     Ok(())
 }
+
+#[test]
+fn measurement_cannot_hide_prior_usage_from_a_lower_ceiling() -> Result<(), StopReason> {
+    let mut b = budget();
+    b.observe_depth(90)?;
+    let outer = b.limits();
+    let mut called = false;
+    let result: Result<((), u64), StopReason> = b.measure_depth(|b| {
+        b.with_depth_at_least(7, |b| {
+            b.with_ceiling(Limits { depth: 16, ..outer }, |_| {
+                called = true;
+                Ok(())
+            })
+        })
+    });
+    assert_eq!(result, Err(StopReason::DepthLimit));
+    assert!(!called);
+    assert_eq!(b.usage().depth, 90);
+    assert_eq!(b.current_depth(), 0);
+    assert_eq!(b.limits(), outer);
+    assert_eq!(b.poll(), Err(StopReason::DepthLimit));
+    Ok(())
+}

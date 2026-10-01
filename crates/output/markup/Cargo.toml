@@ -9,6 +9,7 @@ repository.workspace = true
 publish.workspace = true
 
 [dependencies]
+xmlparser.workspace = true
 nepl3-core.workspace = true
 
 [dev-dependencies]

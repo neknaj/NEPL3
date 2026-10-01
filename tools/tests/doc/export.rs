@@ -297,3 +297,94 @@ fn page_export_shares_script_free_shell_and_verifies_every_file() -> Result<(), 
     assert!(pages::generate(&compiled, &[]).is_err());
     Ok(())
 }
+
+#[test]
+fn inline_export_binds_only_html_and_preserves_body() -> Result<(), String> {
+    use export::CssMode;
+    let compiled = compiled()?;
+    let source = r#"article ja "[文書/ぶんしょ]" body cons paragraph cons "{[本文/ほんぶん]/body} </style><script>bad</script>" nil nil"#;
+    let default = export::generate(&compiled, source)?;
+    let external = export::generate_with_css(&compiled, source, CssMode::External)?;
+    let inline = export::generate_with_css(&compiled, source, CssMode::Inline)?;
+    let again = export::generate_with_css(&compiled, source, CssMode::Inline)?;
+    assert_eq!(default.html, external.html);
+    assert_eq!(default.manifest, external.manifest);
+    assert_eq!(inline.html, again.html);
+    assert_eq!(inline.manifest, again.manifest);
+    let body = |html: &str| html.split_once("<body>").map(|(_, body)| body.to_owned());
+    assert_eq!(body(&inline.html), body(&external.html));
+    assert!(
+        inline
+            .html
+            .contains(&format!("<style>{}</style>", export::CSS))
+    );
+    assert!(!inline.html.contains("href=\"assets/doc.css\""));
+    assert!(inline.html.contains(
+        "https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&amp;display=swap"
+    ));
+    assert!(inline.html.contains("font-src https://fonts.gstatic.com"));
+    assert!(!inline.html.contains("unsafe-inline"));
+    assert!(inline.html.contains("style-src 'sha256-"));
+    assert!(inline.html.contains("default-src 'none'"));
+    assert!(
+        inline
+            .html
+            .contains("&lt;/style&gt;&lt;script&gt;bad&lt;/script&gt;")
+    );
+    for (output, mode, count) in [(&external, "external", 2), (&inline, "inline", 1)] {
+        let manifest: serde_json::Value =
+            serde_json::from_str(&output.manifest).map_err(super::err)?;
+        assert_eq!(manifest["options"]["css"], mode);
+        let files = manifest["files"].as_array().ok_or("files")?;
+        assert_eq!(files.len(), count);
+        assert_eq!(files[0]["path"], "document.html");
+        let digest = nepl3_core::source::Digest::of(output.html.as_bytes())
+            .0
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>();
+        assert_eq!(files[0]["sha256"], digest);
+        assert_eq!(manifest["stylesheet"]["license"], "MIT");
+        assert_eq!(manifest["viewer_scripts"], false);
+        assert_eq!(manifest["font"]["family"], "Klee One");
+        assert_eq!(manifest["font"]["bundled"], false);
+    }
+    let external_manifest: serde_json::Value =
+        serde_json::from_str(&external.manifest).map_err(super::err)?;
+    let inline_manifest: serde_json::Value =
+        serde_json::from_str(&inline.manifest).map_err(super::err)?;
+    // Earlier render stages are identical. Packaging charges CSS once: as an
+    // external file or as bytes already contained in the inline HTML head.
+    let usage = |m: &serde_json::Value| {
+        m["operations"]["prepare_render_serialize"]["output_bytes"]
+            .as_u64()
+            .ok_or("output usage")
+    };
+    assert_eq!(
+        usage(&inline_manifest)? as i128 - usage(&external_manifest)? as i128,
+        inline.html.len() as i128 - external.html.len() as i128 - export::CSS.len() as i128
+    );
+    Ok(())
+}
+
+#[test]
+fn parsed_code_reuses_shared_regions_without_lowering_the_guest() -> Result<(), String> {
+    let compiled = compiled()?;
+    let input = r#"article en "Host" body cons paragraph cons code Doc article en sentence nil body cons paragraph cons sentence cons ruby text "" text "r" nil nil nil cons "host-tail" nil nil"#;
+    let result = export::generate_with_css(&compiled, input, export::CssMode::Inline)?;
+    assert!(result.html.contains("<code>"), "{}", result.html);
+    assert!(result.html.contains("nepl-code-"), "{}", result.html);
+    assert!(result.html.contains("host-tail"));
+    let block = result
+        .html
+        .split("<code>")
+        .nth(1)
+        .ok_or("missing code")?
+        .split("</code></pre>")
+        .next()
+        .ok_or("end")?;
+    assert!(!block.contains("host-tail"), "{block}");
+    assert!(!block.contains("Host"), "{block}");
+    assert!(block.contains("article"), "{block}");
+    Ok(())
+}

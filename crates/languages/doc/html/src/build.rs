@@ -23,6 +23,12 @@ const CLASSES: &[&str] = &[
     "nepl-align-center",
     "nepl-align-right",
     "nepl-checkbox",
+    "nepl-image",
+    "nepl-image-group",
+    "nepl-image-figure",
+    "nepl-image-preview",
+    "nepl-image-details",
+    "nepl-image-original",
 ];
 pub(super) fn copy(s: &str, b: &mut Budget) -> Result<String, StopReason> {
     b.charge(Resource::Work, s.len() as u64)?;
@@ -72,6 +78,31 @@ struct Builder<'a, 'b> {
     foreign: Vec<ForeignPlacement>,
 }
 impl Builder<'_, '_> {
+    fn image(&mut self, node: u64, parent: u64) -> Result<(), RenderError> {
+        let mut resolved = None;
+        for (owner, source, alt) in &self.prepared.images {
+            self.b.charge(Resource::Work, 1)?;
+            if *owner == node {
+                let source = match source {
+                    HtmlAttribute::Src { path } => HtmlAttribute::Src {
+                        path: copy(path, self.b)?,
+                    },
+                    HtmlAttribute::EmbeddedSvg { svg } => HtmlAttribute::EmbeddedSvg {
+                        svg: copy(svg, self.b)?,
+                    },
+                    _ => return Err(RenderError::InternalShape),
+                };
+                resolved = Some((source, copy(alt, self.b)?));
+                break;
+            }
+        }
+        let (source, alt) = resolved.ok_or(RenderError::InternalShape)?;
+        let e = self.element(Some(parent), node, HtmlTag::Img)?;
+        self.class(e, "nepl-image")?;
+        self.attr(e, source)?;
+        self.attr(e, HtmlAttribute::Alt { value: alt })
+    }
+
     fn guest(&mut self, job: Job, embed: EmbedRef, markup: HtmlRequest) -> Result<(), RenderError> {
         let depth = self
             .b
@@ -356,7 +387,7 @@ pub(super) fn namespace_member_with_foreign<E>(
     render_prepared_with_foreign(prepared, &[], adapter, budget, false)
 }
 
-fn render_prepared_with_foreign<E>(
+pub(crate) fn render_prepared_with_foreign<E>(
     prepared: &crate::prepare::PreparedRendering<'_>,
     links: &[(u64, HtmlHref)],
     adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
@@ -411,7 +442,7 @@ fn render_prepared_with_foreign<E>(
     while let Some(job) = w.jobs.pop() {
         w.b.charge(Resource::Work, 1)?;
         let kind = &prepared.document.value.nodes[job.node as usize].kind;
-        if let DocKind::InlineMath { syntax } = kind {
+        if let DocKind::InlineMath { syntax } | DocKind::Code { syntax } = kind {
             let embed = prepared
                 .document
                 .value
@@ -426,7 +457,18 @@ fn render_prepared_with_foreign<E>(
                 .with_depth_at_least(depth, |b| Ok::<_, RenderError>(adapter(embed, *syntax, b)))?;
             w.b.poll()?;
             let markup = result.map_err(ForeignRenderError::Foreign)?;
-            w.guest(job, *syntax, markup)?;
+            let target = if matches!(kind, DocKind::Code { .. }) {
+                let figure = w.element(Some(job.parent), job.node, HtmlTag::Figure)?;
+                let pre = w.element(Some(figure), job.node, HtmlTag::Pre)?;
+                let code = w.element(Some(pre), job.node, HtmlTag::Code)?;
+                Job {
+                    parent: code,
+                    ..job
+                }
+            } else {
+                job
+            };
+            w.guest(target, *syntax, markup)?;
             continue;
         }
         if !w.block(job, kind)? {

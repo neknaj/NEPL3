@@ -81,7 +81,7 @@
         "nepl3-core"
       ],
       "no_std": true,
-      "responsibility": "検査済みHTML/MathML/SVG treeと安全なserializer; dev-only nepl3-wire tests actual CBOR first receiver"
+      "responsibility": "検査済みHTML/MathML/SVG treeと安全なserializer; dev-only nepl3-wire tests actual CBOR first receiver; SVG prototype uses pinned no_std zero-allocation xmlparser 0.13.6; bounded static path-only profile rejects DTD/entities and external resources"
     },
     {
       "name": "nepl3-doc-html",
@@ -172,10 +172,10 @@
       "path": "apps/lsp",
       "dependencies": [
         "nepl3-core",
-        "nepl3-suite"
+        "nepl3-engine"
       ],
       "no_std": false,
-      "responsibility": "汎用NEPL3 LSP server"
+      "responsibility": "汎用NEPL3 LSP serverの段階実装。現在はregionの表示用正規化のみ。transport・legend交渉は後続"
     },
     {
       "name": "nepl3-web",
@@ -216,7 +216,8 @@
         "nepl3-doc-html",
         "nepl3-math-mathml",
         "nepl3-math-tex",
-        "nepl3-markup"
+        "nepl3-markup",
+        "nepl3-lsp"
       ],
       "no_std": false,
       "responsibility": "Generation, conformance, dependency checks and local Doc artifact host; host-only pulldown-cmark HTML feature renders remaining Markdown canonical overview; host-only syn full/parsing checks Rust declarations before compilation; no domain-core dependency"

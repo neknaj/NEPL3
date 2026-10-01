@@ -9,7 +9,7 @@ import threading
 from typing import Literal, final, override
 from urllib.parse import urlsplit
 
-from playwright.sync_api import Request, Response, sync_playwright
+from playwright.sync_api import Request, Response, Route, sync_playwright
 from tools.serialization.json import JsonValue, decode, integer, object_value, string
 
 type Engine = Literal['chromium', 'firefox', 'webkit']
@@ -88,6 +88,12 @@ def observe(root: Path, base: str, pages: Sequence[str],
                         context = browser.new_context(java_script_enabled=False,
                                                       viewport={'width': width, 'height': 900})
                         try:
+                            # Keep site layout deterministic and verify fallback when the
+                            # optional remote font stylesheet supplies no font faces.
+                            def font_fallback(route: Route) -> None:
+                                route.fulfill(status=200, content_type='text/css', body='/* font unavailable */')
+
+                            _ = context.route('https://fonts.googleapis.com/css2?*', font_fallback)
                             page = context.new_page()
                             failures: list[str] = []
 
@@ -105,9 +111,9 @@ def observe(root: Path, base: str, pages: Sequence[str],
                                                      wait_until='networkidle')
                                 raw: object = page.evaluate(MEASURE)  # pyright: ignore[reportAny]
                                 state = measurement(raw)
-                                assert response is not None and response.status == 200 and not failures \
-                                    and state.scripts == 0 and state.styles > 0 and not state.overflow, \
-                                    (name, state, failures)
+                                if response is None or response.status != 200 or failures or state.scripts != 0 or state.styles <= 0 or state.overflow:
+                                    overflow_nodes: object = page.evaluate('''() => JSON.stringify([...document.querySelectorAll('body *')].map(node => { const b = node.getBoundingClientRect(); return {tag:node.tagName, cls:node.className, text:node.textContent.slice(0,120), x:b.x, right:b.right, width:b.width}; }).filter(node => node.right > innerWidth + 1).slice(0,30))''')  # pyright: ignore[reportAny]
+                                    raise AssertionError((engine, width, name, state, failures, overflow_nodes))
                                 if name == 'examples/index.html':
                                     assert page.locator('pre > code').all_text_contents() == list(example_sources), \
                                         'example display differs from source'

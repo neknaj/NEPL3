@@ -1,3 +1,5 @@
+#[path = "parse/expected.rs"]
+mod expected;
 #[path = "parse/foreign.rs"]
 mod foreign;
 #[path = "parse/host.rs"]
@@ -44,6 +46,7 @@ fn run_options(
 }
 #[derive(Default)]
 struct Scenario {
+    share_missing: bool,
     forms: Option<&'static [&'static str]>,
     sealed: bool,
     work: Option<u64>,
@@ -60,6 +63,7 @@ struct Scenario {
 }
 fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<ParseReply, String> {
     let Scenario {
+        share_missing,
         forms,
         sealed,
         list,
@@ -689,6 +693,13 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
             continue;
         }
         break;
+    }
+
+    if share_missing {
+        let ParseOutcome::Recovered { tree, .. } = &mut reply.outcome else {
+            return Err("expected recovered fixture".into());
+        };
+        expected::share_missing(tree)?;
     }
 
     if let ParseOutcome::Complete { tree, .. } | ParseOutcome::Recovered { tree, .. } =

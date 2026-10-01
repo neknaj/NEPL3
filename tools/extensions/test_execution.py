@@ -1,6 +1,7 @@
 """Command failures retain binary output and explicit terminal outcomes."""
 
 import hashlib
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -11,6 +12,20 @@ from tools.extensions.execution import Execution, Exited, Interrupted, Record, S
 
 
 class ExecutionTests(unittest.TestCase):
+    def test_temporary_target_overrides_shared_cache_without_mutating_parent(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            execution = Execution(directory)
+            execution.target_directory = directory / "isolated-target"
+            def command(_arguments: object, *, env: dict[str, str], **_kwargs: object) -> subprocess.CompletedProcess[bytes]:
+                self.assertEqual(env["CARGO_TARGET_DIR"], str(execution.target_directory))
+                self.assertEqual(env["CARGO_BUILD_BUILD_DIR"], str(directory / "isolated-target/intermediate"))
+                return subprocess.CompletedProcess(["cargo"], 0, b"ok", b"")
+            with patch.dict(os.environ, {"CARGO_TARGET_DIR": "/shared-cache", "CARGO_BUILD_BUILD_DIR": "/shared-intermediate"}), patch.object(subprocess, "run", side_effect=command):
+                _ = execution.run(["cargo", "check"], directory, "check.log")
+                self.assertEqual(os.environ["CARGO_TARGET_DIR"], "/shared-cache")
+                self.assertEqual(os.environ["CARGO_BUILD_BUILD_DIR"], "/shared-intermediate")
+
     def test_nonzero_exit_keeps_both_output_streams(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
