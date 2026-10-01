@@ -4,6 +4,7 @@ pub(crate) mod check;
 mod identity;
 mod ruby;
 pub(crate) mod serialize;
+pub mod svg;
 mod uri;
 use alloc::{string::String, vec::Vec};
 pub use check::{CheckedHtmlPart, HtmlError, ValidatedHtml, check_part, validate};
@@ -36,7 +37,7 @@ tags!(Article=>"article",Section=>"section",Div=>"div",P=>"p",Span=>"span",
     Ruby=>"ruby",Rt=>"rt",Rp=>"rp",Em=>"em",Strong=>"strong",Br=>"br",
     Pre=>"pre",Code=>"code",Figure=>"figure",Figcaption=>"figcaption",A=>"a",
     Ul=>"ul",Ol=>"ol",Li=>"li",Table=>"table",Caption=>"caption",Thead=>"thead",
-    Tbody=>"tbody",Tr=>"tr",Th=>"th",Td=>"td",Img=>"img");
+    Tbody=>"tbody",Tr=>"tr",Th=>"th",Td=>"td",Img=>"img",Details=>"details",Summary=>"summary");
 impl HtmlTag {
     pub fn is_void(self) -> bool {
         matches!(self, Self::Br | Self::Img)
@@ -70,6 +71,7 @@ impl HtmlTag {
                     | Self::H6
                     | Self::Pre
                     | Self::Figure
+                    | Self::Details
                     | Self::Ul
                     | Self::Ol
                     | Self::Table
@@ -127,6 +129,7 @@ pub enum HtmlAttribute {
     DataGroup { value: String },
     Href { value: HtmlHref },
     Src { path: String },
+    EmbeddedSvg { svg: String },
     Alt { value: String },
     Width { value: u64 },
     Height { value: u64 },
@@ -145,7 +148,7 @@ impl HtmlAttribute {
             Self::DataId { .. } => "data-nepl-id",
             Self::DataGroup { .. } => "data-nepl-group",
             Self::Href { .. } => "href",
-            Self::Src { .. } => "src",
+            Self::Src { .. } | Self::EmbeddedSvg { .. } => "src",
             Self::Alt { .. } => "alt",
             Self::Width { .. } => "width",
             Self::Height { .. } => "height",

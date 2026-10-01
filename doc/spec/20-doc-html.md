@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/20&#45;doc&#45;html.nepld; renderer nepl3-tools.markdown-annotated/4; source SHA-256 d04ce8ea3a860d4b48577107e6e3f58fa55730c14049370f00e694cd0bc069a0; alias input SHA-256 a89d4b749408c5f6e9ccc8ed5749c8203bf1a66d788d81725b0d44b7af3c82d5. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/20&#45;doc&#45;html.nepld; renderer nepl3-tools.markdown-annotated/4; source SHA-256 4e22088eeca495487d960f3d52ac199116f248c419451c0da37ce3c187371846; alias input SHA-256 a89d4b749408c5f6e9ccc8ed5749c8203bf1a66d788d81725b0d44b7af3c82d5. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="20-docのhtml変換"></a>
 
@@ -57,3 +57,19 @@ Rubyはreadingを<ruby>第<rt>だい</rt></ruby>1<ruby>行<rt>ぎょう</rt></ru
 `baseline-source:first/last`の<ruby>両方<rt>りょうほう</rt></ruby>を<ruby>利用<rt>りよう</rt></ruby>できないbrowserでは、<ruby>同<rt>おな</rt></ruby>じspan<ruby>構造<rt>こうぞう</rt></ruby>にinline\-tableの<ruby>固定<rt>こてい</rt></ruby>CSSを<ruby>適用<rt>てきよう</rt></ruby>する。readingは<ruby>上側<rt>うえがわ</rt></ruby>、notesは<ruby>下側<rt>したがわ</rt></ruby>のtable\-captionとし、baseを<ruby>持<rt>も</rt></ruby>つ<ruby>唯一<rt>ゆいいつ</rt></ruby>の<ruby>行<rt>ぎょう</rt></ruby>からbaselineを<ruby>公開<rt>こうかい</rt></ruby>する。Rubyのbaseはinline\-blockとして<ruby>最終行<rt>さいしゅうぎょう</rt></ruby>のbaselineを、Annoのbaseはtable\-cellとして<ruby>最初<rt>さいしょ</rt></ruby>の<ruby>行<rt>ぎょう</rt></ruby>のbaselineを<ruby>公開<rt>こうかい</rt></ruby>する。DOMの<ruby>順序<rt>じゅんじょ</rt></ruby>や<ruby>注釈内容<rt>ちゅうしゃくないよう</rt></ruby>を<ruby>変更<rt>へんこう</rt></ruby>せず、HTMLの<ruby>表要素<rt>ひょうようそ</rt></ruby>やJavaScriptを<ruby>追加<rt>ついか</rt></ruby>しない。この<ruby>代替<rt>だいたい</rt></ruby>はWebKitで<ruby>基底文字<rt>きていもじ</rt></ruby>が<ruby>本文<rt>ほんぶん</rt></ruby>より<ruby>下<rt>さ</rt></ruby>がる<ruby>不具合<rt>ふぐあい</rt></ruby>への<ruby>対応<rt>たいおう</rt></ruby>であり、<ruby>型付<rt>かたつ</rt></ruby>きmarkup・<ruby>意味正規形<rt>いみせいきけい</rt></ruby>は<ruby>変更<rt>へんこう</rt></ruby>しない。
 
 <ruby>代替<rt>だいたい</rt></ruby>の<ruby>根拠<rt>こんきょ</rt></ruby>は [CSS2のinline\-block baseline](<https\:\/\/www\.w3\.org\/TR\/CSS2\/visudet\.html\#leading>) と [tableのbaseline<ruby>規則<rt>きそく</rt></ruby>](<https\:\/\/www\.w3\.org\/TR\/CSS2\/tables\.html\#height\-layout>) である。<ruby>対応<rt>たいおう</rt></ruby>propertyの<ruby>有無<rt>うむ</rt></ruby>だけで<ruby>合否<rt>ごうひ</rt></ruby>を<ruby>決<rt>き</rt></ruby>めず、<ruby>実際<rt>じっさい</rt></ruby>のproduction HTMLとCSSをChromium・Firefox・WebKitで<ruby>表示<rt>ひょうじ</rt></ruby>し、<ruby>本文<rt>ほんぶん</rt></ruby>とのbaseline、<ruby>読<rt>よ</rt></ruby>み・<ruby>注釈<rt>ちゅうしゃく</rt></ruby>の<ruby>上下配置<rt>じょうげはいち</rt></ruby>、<ruby>複数行<rt>ふくすうぎょう</rt></ruby>の<ruby>基準<rt>きじゅん</rt></ruby>、<ruby>入<rt>い</rt></ruby>れ<ruby>子<rt>こ</rt></ruby>と<ruby>前後行<rt>ぜんごぎょう</rt></ruby>の<ruby>高<rt>たか</rt></ruby>さ<ruby>予約<rt>よやく</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。<ruby>文書内<rt>ぶんしょない</rt></ruby>のJavaScriptは<ruby>無効<rt>むこう</rt></ruby>とする。この<ruby>静的文書<rt>せいてきぶんしょ</rt></ruby>の<ruby>検査<rt>けんさ</rt></ruby>はWasm・Playground・<ruby>支援技術<rt>しえんぎじゅつ</rt></ruby>による<ruby>実操作<rt>じつそうさ</rt></ruby>の<ruby>受入<rt>うけいれ</rt></ruby>を<ruby>代行<rt>だいこう</rt></ruby>しない。
+
+<a name="n-7376675f70726f746f74797065"></a>
+
+## 単一文書のSVG出力試作
+
+doc\-html svgは、明示したasset一覧とImage・InlineImageを用いる単一文書の試作である。外部参照はdigestに基づくassets内のSVGへimgで参照し、embeddedは同じ検証済みbyte列をimgのdata URLへ格納する。CSSのexternal・inlineとは独立した設定である。pages、ネットワーク取得、RawHtmlは対象外である。
+
+明示入力を文書の全variantから列挙したAssetRefへ対応させ、未指定・重複・未使用の登録、digest不一致、未対応SVGを拒否する。原文を変更して危険要素を除去する処理は行わない。代替テキストはBaseOnlyで投影し、captionはSentenceとして描画する。
+
+Imageのfigureは左右の既定余白を除き、概要画像は固有寸法を超えて拡大せず、本文幅と高さ360pxを上限に縦横比を維持する。共通のgroup内でfigureの後にdetails・summaryによる原寸表示を併設し、原寸画像は幅・高さの縮小制限を解除したスクロール領域に表示する。原寸領域には高さ上限を設けず、縦方向は文書全体のスクロールを用いる。details内だけwhite\-spaceをnormalとし、captionの空白保持規則は維持する。width・heightがないSVGは固有寸法が未定義であり、展開後の寸法はブラウザの置換要素規則に従う。InlineImageにはこの操作を追加しない。埋め込みでは概要と原寸に同じ検証済みSVGを出力し、両出現の出力予算を計上する。
+
+明示されたSVGのwidth・heightからCSS pxの固有寸法を取得し、固有高が360px以下でgroup幅が固有幅以上の場合だけ、container queryで原寸表示の折り畳みを非表示にする。幅・高さが不明なSVGとcontainer query未対応環境では操作を保持する。文書を狭くすると、必要な原寸表示操作が再び表示される。
+
+SVG出力のstylesheetは固定CSSと検証済み有限数値・node番号から生成する規則を連結したものである。作者の任意CSSは受理しない。外部CSS・埋め込みCSS・CSP・manifestは同一の最終byte列を使用する。画像groupはinline\-size containerとなり、table等のintrinsic幅配分への影響は別途表示検証する。
+
+prepare\_localの未解決要求の拒否は維持する。試作用のnative helperは入力ごとに検証する。公開portable準備操作の完了やT22・T23・T24の全面受入を示さない。参照形式のCSPは同一originの画像、埋め込み形式はdata画像だけを許可する。フォントは既存の外部参照が残る。

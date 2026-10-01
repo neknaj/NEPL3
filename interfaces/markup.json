@@ -36,7 +36,9 @@
         "Tr": [],
         "Th": [],
         "Td": [],
-        "Img": []
+        "Img": [],
+        "Details": [],
+        "Summary": []
       },
       "constraints": []
     },
@@ -185,6 +187,7 @@
             }
           ]
         ],
+        "EmbeddedSvg": [["svg", "Text"]],
         "Src": [
           [
             "path",

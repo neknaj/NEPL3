@@ -69,6 +69,7 @@ fn value(a: &HtmlAttribute, b: &mut Budget) -> Result<String, HtmlError> {
         return Ok(s.into());
     }
     match a {
+        EmbeddedSvg { svg } => Ok(super::svg::data_url(svg, b)?),
         Href {
             value:
                 HtmlHref::BetweenArtifacts {

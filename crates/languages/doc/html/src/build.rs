@@ -23,6 +23,12 @@ const CLASSES: &[&str] = &[
     "nepl-align-center",
     "nepl-align-right",
     "nepl-checkbox",
+    "nepl-image",
+    "nepl-image-group",
+    "nepl-image-figure",
+    "nepl-image-preview",
+    "nepl-image-details",
+    "nepl-image-original",
 ];
 pub(super) fn copy(s: &str, b: &mut Budget) -> Result<String, StopReason> {
     b.charge(Resource::Work, s.len() as u64)?;
@@ -72,6 +78,31 @@ struct Builder<'a, 'b> {
     foreign: Vec<ForeignPlacement>,
 }
 impl Builder<'_, '_> {
+    fn image(&mut self, node: u64, parent: u64) -> Result<(), RenderError> {
+        let mut resolved = None;
+        for (owner, source, alt) in &self.prepared.images {
+            self.b.charge(Resource::Work, 1)?;
+            if *owner == node {
+                let source = match source {
+                    HtmlAttribute::Src { path } => HtmlAttribute::Src {
+                        path: copy(path, self.b)?,
+                    },
+                    HtmlAttribute::EmbeddedSvg { svg } => HtmlAttribute::EmbeddedSvg {
+                        svg: copy(svg, self.b)?,
+                    },
+                    _ => return Err(RenderError::InternalShape),
+                };
+                resolved = Some((source, copy(alt, self.b)?));
+                break;
+            }
+        }
+        let (source, alt) = resolved.ok_or(RenderError::InternalShape)?;
+        let e = self.element(Some(parent), node, HtmlTag::Img)?;
+        self.class(e, "nepl-image")?;
+        self.attr(e, source)?;
+        self.attr(e, HtmlAttribute::Alt { value: alt })
+    }
+
     fn guest(&mut self, job: Job, embed: EmbedRef, markup: HtmlRequest) -> Result<(), RenderError> {
         let depth = self
             .b

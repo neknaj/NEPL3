@@ -1,4 +1,5 @@
 //! Script-free local Doc export, using the same production pipeline as tests.
+pub mod assets;
 pub mod pages;
 mod stylesheet;
 use super::source::{Compiled, budget, compiled, err, with_input_route};
@@ -39,6 +40,7 @@ pub const MAX_SOURCE_BYTES: u64 = 10_000_000;
 pub struct LocalDocument {
     pub html: String,
     pub manifest: String,
+    pub stylesheet: String,
 }
 
 pub fn generate(compiled: &Compiled, input: &str) -> Result<LocalDocument, String> {
@@ -74,6 +76,18 @@ pub fn generate_observed_with_css(
     css: CssMode,
     observe: &mut impl FnMut(StageMeasurement),
 ) -> Result<LocalDocument, String> {
+    generate_impl(compiled, input, css, None, observe)
+}
+fn generate_impl(
+    compiled: &Compiled,
+    input: &str,
+    css: CssMode,
+    assets: Option<(
+        &[nepl3_doc_html::assets::SvgInput<'_>],
+        nepl3_doc_html::assets::SvgMode,
+    )>,
+    observe: &mut impl FnMut(StageMeasurement),
+) -> Result<LocalDocument, String> {
     if input.len() as u64 > MAX_SOURCE_BYTES {
         return Err("SourceLimit".into());
     }
@@ -107,26 +121,88 @@ pub fn generate_observed_with_css(
             usage: lower_budget.usage(),
         });
         let mut output_budget = budget();
+        if let Some((inputs, nepl3_doc_html::assets::SvgMode::External)) = assets {
+            for (index, asset) in inputs.iter().enumerate() {
+                let mut duplicate = false;
+                for prior in &inputs[..index] {
+                    output_budget
+                        .charge(
+                            nepl3_core::budget::Resource::Work,
+                            asset.svg.len().min(prior.svg.len()) as u64 + 1,
+                        )
+                        .map_err(err)?;
+                    duplicate |= asset.svg == prior.svg;
+                }
+                if !duplicate {
+                    output_budget
+                        .charge(
+                            nepl3_core::budget::Resource::OutputBytes,
+                            asset.svg.len() as u64,
+                        )
+                        .map_err(err)?;
+                    output_budget
+                        .charge(
+                            nepl3_core::budget::Resource::AllocationUnits,
+                            asset.svg.len() as u64,
+                        )
+                        .map_err(err)?;
+                }
+            }
+        }
         let prepare_start = Instant::now();
         let options = RenderOptions {
             parallel: ParallelMode::Rows,
         };
-        let prepared = prepare_local(
-            &doc,
-            &options,
-            profile.registry(),
-            &mut codec,
-            &mut output_budget,
-        )
-        .map_err(err)?;
+        enum Prepared<'a> {
+            Local(nepl3_doc_html::PreparedLocalArticle<'a>),
+            Svg(nepl3_doc_html::assets::PreparedSvgArticle<'a>),
+        }
+        let prepared = if let Some((inputs, mode)) = assets {
+            Prepared::Svg(
+                nepl3_doc_html::assets::prepare_svg(
+                    &doc,
+                    &options,
+                    inputs,
+                    mode,
+                    profile.registry(),
+                    &mut codec,
+                    &mut output_budget,
+                )
+                .map_err(err)?,
+            )
+        } else {
+            Prepared::Local(
+                prepare_local(
+                    &doc,
+                    &options,
+                    profile.registry(),
+                    &mut codec,
+                    &mut output_budget,
+                )
+                .map_err(err)?,
+            )
+        };
         observe(StageMeasurement {
             stage: Stage::Prepare,
             elapsed: prepare_start.elapsed(),
             usage: output_budget.usage(),
         });
         let render_start = Instant::now();
-        let rendered = render(&prepared, &mut output_budget).map_err(err)?;
-        let html = shell_with_css(&rendered, css, &mut output_budget)?;
+        let rendered = match &prepared {
+            Prepared::Local(p) => render(p, &mut output_budget).map_err(err)?,
+            Prepared::Svg(p) => {
+                nepl3_doc_html::assets::render_svg(p, &mut output_budget).map_err(err)?
+            }
+        };
+        let document_css =
+            assets::document_css(&doc, assets.map(|(inputs, _)| inputs), &mut output_budget)?;
+        let html = shell_with_assets(
+            &rendered,
+            css,
+            assets.map(|(_, mode)| mode),
+            &document_css,
+            &mut output_budget,
+        )?;
         observe(StageMeasurement {
             stage: Stage::RenderAndSerialize,
             elapsed: render_start.elapsed(),
@@ -150,7 +226,7 @@ pub fn generate_observed_with_css(
             serde_json::json!({"path":"document.html","mime":"text/html; charset=utf-8","sha256":digest(html.as_bytes())}),
         ];
         if css == CssMode::External {
-            files.push(serde_json::json!({"path":"assets/doc.css","mime":"text/css; charset=utf-8","license":"MIT","sha256":digest(CSS.as_bytes())}));
+            files.push(serde_json::json!({"path":"assets/doc.css","mime":"text/css; charset=utf-8","license":"MIT","sha256":digest(document_css.as_bytes())}));
         }
         let manifest = serde_json::to_string_pretty(&serde_json::json!({
             "format":"nepl3.local-doc-export/1",
@@ -160,7 +236,7 @@ pub fn generate_observed_with_css(
             "doc_schema_sha256":digest_hex(compiled.doc.package.schema.digest),
             "renderer":"nepl3-doc-html local/1",
             "options":{"parallel":"Rows","css":css.as_str()},
-            "stylesheet":{"sha256":digest(CSS.as_bytes()),"license":"MIT"},
+            "stylesheet":{"sha256":digest(document_css.as_bytes()),"license":"MIT"},
             "font":{"family":"Klee One","weights":[400,600],"stylesheet":stylesheet::FONT_STYLESHEET,"bundled":false,"offline":"system fallback"},
             "files":files,
             "operations":{"parse_and_validate":usage(parse_usage),"lower":usage(lower_budget.usage()),
@@ -169,7 +245,11 @@ pub fn generate_observed_with_css(
             "packages":"compiled checked bootstrap fixtures",
             "viewer_scripts":false
         })).map_err(err)? + "\n";
-        Ok(LocalDocument { html, manifest })
+        Ok(LocalDocument {
+            html,
+            manifest,
+            stylesheet: document_css,
+        })
     })
 }
 
@@ -257,7 +337,10 @@ pub fn write_with_css(input: &Path, output: &Path, css: CssMode) -> crate::Resul
     fs::create_dir(output)?;
     if css == CssMode::External {
         fs::create_dir(output.join("assets"))?;
-        fs::write(output.join("assets/doc.css"), CSS.as_bytes())?;
+        fs::write(
+            output.join("assets/doc.css"),
+            generated.stylesheet.as_bytes(),
+        )?;
     }
     fs::write(output.join("document.html"), generated.html.as_bytes())?;
     // This is written last. Missing manifest means the output is incomplete.
@@ -277,6 +360,15 @@ fn shell_with_css(
     css: CssMode,
     output_budget: &mut nepl3_core::budget::Budget,
 ) -> Result<String, String> {
+    shell_with_assets(rendered, css, None, CSS, output_budget)
+}
+fn shell_with_assets(
+    rendered: &nepl3_doc_html::RenderedFragment,
+    css: CssMode,
+    assets: Option<nepl3_doc_html::assets::SvgMode>,
+    document_css: &str,
+    output_budget: &mut nepl3_core::budget::Budget,
+) -> Result<String, String> {
     let m = &rendered.markup;
     let validation_start = output_budget.usage();
     let checked = nepl3_markup::html::validate(&m.fragment, m.slot, &m.policy, output_budget)
@@ -290,7 +382,27 @@ fn shell_with_css(
         .map_err(|e| format!("{e}; phase=HTML shell depth"))?;
     let fragment = nepl3_markup::html::serialize(&checked, output_budget)
         .map_err(|e| format!("HTML serialization: {e:?}"))?;
-    let head = stylesheet::head(css, output_budget)?;
+    let head = stylesheet::head_with_css(css, document_css, output_budget)?;
+    let head = if let Some(mode) = assets {
+        use nepl3_doc_html::assets::SvgMode;
+        let rule = match mode {
+            SvgMode::External => "img-src 'self'; ",
+            SvgMode::Embedded => "img-src data:; ",
+        };
+        output_budget
+            .charge(
+                nepl3_core::budget::Resource::AllocationUnits,
+                (head.len() + rule.len()) as u64,
+            )
+            .map_err(err)?;
+        std::borrow::Cow::Owned(head.replacen(
+            "default-src 'none'; ",
+            &format!("default-src 'none'; {rule}"),
+            1,
+        ))
+    } else {
+        head
+    };
     let tail = "\n</body></html>\n";
     output_budget
         .charge(
@@ -298,7 +410,7 @@ fn shell_with_css(
             (head.len()
                 + tail.len()
                 + if css == CssMode::External {
-                    CSS.len()
+                    document_css.len()
                 } else {
                     0
                 }) as u64,

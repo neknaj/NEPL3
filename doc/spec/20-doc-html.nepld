@@ -301,4 +301,13 @@ body
         cons "この[静的文書/せいてきぶんしょ]の[検査/けんさ]はWasm・Playground・[支援技術/しえんぎじゅつ]による[実操作/じつそうさ]の[受入/うけいれ]を[代行/だいこう]しない。"
         nil
       nil
+  cons section svg_prototype "単一文書のSVG出力試作"
+    body
+    cons paragraph cons "doc-html svgは、明示したasset一覧とImage・InlineImageを用いる単一文書の試作である。外部参照はdigestに基づくassets内のSVGへimgで参照し、embeddedは同じ検証済みbyte列をimgのdata URLへ格納する。CSSのexternal・inlineとは独立した設定である。pages、ネットワーク取得、RawHtmlは対象外である。" nil
+    cons paragraph cons "明示入力を文書の全variantから列挙したAssetRefへ対応させ、未指定・重複・未使用の登録、digest不一致、未対応SVGを拒否する。原文を変更して危険要素を除去する処理は行わない。代替テキストはBaseOnlyで投影し、captionはSentenceとして描画する。" nil
+    cons paragraph cons "Imageのfigureは左右の既定余白を除き、概要画像は固有寸法を超えて拡大せず、本文幅と高さ360pxを上限に縦横比を維持する。共通のgroup内でfigureの後にdetails・summaryによる原寸表示を併設し、原寸画像は幅・高さの縮小制限を解除したスクロール領域に表示する。原寸領域には高さ上限を設けず、縦方向は文書全体のスクロールを用いる。details内だけwhite-spaceをnormalとし、captionの空白保持規則は維持する。width・heightがないSVGは固有寸法が未定義であり、展開後の寸法はブラウザの置換要素規則に従う。InlineImageにはこの操作を追加しない。埋め込みでは概要と原寸に同じ検証済みSVGを出力し、両出現の出力予算を計上する。" nil
+    cons paragraph cons "明示されたSVGのwidth・heightからCSS pxの固有寸法を取得し、固有高が360px以下でgroup幅が固有幅以上の場合だけ、container queryで原寸表示の折り畳みを非表示にする。幅・高さが不明なSVGとcontainer query未対応環境では操作を保持する。文書を狭くすると、必要な原寸表示操作が再び表示される。" nil
+    cons paragraph cons "SVG出力のstylesheetは固定CSSと検証済み有限数値・node番号から生成する規則を連結したものである。作者の任意CSSは受理しない。外部CSS・埋め込みCSS・CSP・manifestは同一の最終byte列を使用する。画像groupはinline-size containerとなり、table等のintrinsic幅配分への影響は別途表示検証する。" nil
+    cons paragraph cons "prepare_localの未解決要求の拒否は維持する。試作用のnative helperは入力ごとに検証する。公開portable準備操作の完了やT22・T23・T24の全面受入を示さない。参照形式のCSPは同一originの画像、埋め込み形式はdata画像だけを許可する。フォントは既存の外部参照が残る。" nil
+    nil
   nil
