@@ -1,5 +1,6 @@
 //! Explicit prepared binding requests and keyed access to completed analysis.
 //! Portable data alone never creates a completed name-resolution proof.
+pub mod expected;
 pub mod query;
 pub mod region;
 pub mod rename;
