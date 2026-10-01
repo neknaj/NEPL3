@@ -448,6 +448,11 @@ impl LineIndex {
             start,
             end: bytes.len(),
         });
+        // LineIndex owns its SnapshotId even on pointer-atomic targets.
+        // Prepay the SourceId string copy before cloning the identity.
+        let identity_bytes = source.identity().source.0.len() as u64;
+        budget.charge(Resource::Work, identity_bytes)?;
+        budget.charge(Resource::AllocationUnits, identity_bytes)?;
         Ok(Self {
             snapshot: source.identity().clone(),
             lines,
@@ -463,7 +468,7 @@ impl LineIndex {
         encoding: PositionEncoding,
     ) -> Result<Position, SourceError> {
         self.verify(source)?;
-        source.span(offset, offset)?;
+        source.check_range(offset, offset)?;
         let offset = offset as usize;
         let index = self
             .lines
