@@ -76,6 +76,13 @@ body
       cons "[抽出前/ちゅうしゅつまえ]に、[固定旧版/こていきゅうはん]consumerのcompile[試験/しけん]、[変更/へんこう]したschema/signatureの[拒否試験/きょひしけん]、[互換更新/ごかんこうしん]の[正例/せいれい]を[用意/ようい]する。"
       cons "path[依存/いぞん]や[固定/こてい]Git commitでの[成功/せいこう]を、[独立/どくりつ]SemVerリリースの[互換性検証/ごかんせいけんしょう]に[読/よ]み[替/か]えない。"
       nil
+    cons paragraph
+      cons "tools/extensions/run.pyのconsumer-revisionは、[完全/かんぜん]な40[桁/けた]のGit commitを[受/う]け、[固定/こてい]consumerのsource・manifest・lockをGit objectから[取得/しゅとく]する。"
+      cons "[現在/げんざい]のconsumerへの[切替/きりかえ]は[行/おこな]わない。"
+      cons "Foundationとtoolchainは[現在/げんざい]のcheckoutを[使/つか]い、Cargo targetは[実行/じっこう]ごとの[一時領域/いちじりょういき]へ[隔離/かくり]する。"
+      cons "[結果/けっか]にはconsumer revisionを[成功/せいこう]・[失敗/しっぱい]ともに[保持/ほじ]する。"
+      cons "この[段階/だんかい]はRust source APIのcompile・testを[検査/けんさ]し、wire・schema・signature・binary ABIの[互換性/ごかんせい]は[別/べつ]に[検査/けんさ]する。"
+      cons "[公開/こうかい]module pathだけを[変更/へんこう]した[抽出済/ちゅうしゅつず]みFoundationで、[固定/こてい]consumerの[失敗/しっぱい]と[追従済/ついじゅうず]みconsumerの[成功/せいこう]を[比較/ひかく]する。" nil
     nil
   cons section stages "4. [段階/だんかい]と[分離/ぶんり]の[判定/はんてい]"
   body
