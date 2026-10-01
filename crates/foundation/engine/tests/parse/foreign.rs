@@ -34,6 +34,13 @@ fn mode(package: &mut LanguagePackage, name: &str, marker: &str) {
     });
 }
 fn run_foreign(input: &str, accept_names: bool) -> Result<ParseReply, Box<dyn std::error::Error>> {
+    run_foreign_inspect(input, accept_names, |_, _, _| Ok(()))
+}
+fn run_foreign_inspect(
+    input: &str,
+    accept_names: bool,
+    inspect: impl FnOnce(&ParseReply, &ResolvedParseProfile<'_>, &SourceSnapshot) -> TestResult,
+) -> Result<ParseReply, Box<dyn std::error::Error>> {
     let (mut host, registry) = fixture()?;
     let mut guest = host.clone();
     let kind = |name: &str| -> Result<KindRef, String> {
@@ -244,6 +251,7 @@ fn run_foreign(input: &str, accept_names: bool) -> Result<ParseReply, Box<dyn st
             &mut admission,
         )
         .map_err(|e| format!("{e:?}"))?;
+    inspect(&reply, &resolved, &source)?;
     Ok(reply)
 }
 
@@ -305,5 +313,68 @@ fn foreign_root_recovery_preserves_actual_schema_and_expected_guest() -> TestRes
         assert_ne!(context.nodes[0].entry.package.schema, root.schema);
         assert!(!reply.report.diagnostics.is_empty());
     }
+    Ok(())
+}
+
+#[test]
+fn expected_read_enters_guest_before_host_and_retains_with_mode_declaration() -> TestResult {
+    use nepl3_engine::{
+        analysis::{BindingOptions, expected::*},
+        portable::analysis,
+    };
+    run_foreign_inspect("pair", false, |reply, profile, source| {
+        let ParseOutcome::Recovered { tree, .. } = &reply.outcome else {
+            return Err("recovered".into());
+        };
+        let empty = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut c = FoundationCodec::new(profile.registry(), &empty, &mut admission)
+            .map_err(|e| format!("{e:?}"))?;
+        let input = analysis::prepare(
+            "expected-foreign",
+            tree,
+            BindingOptions,
+            budget().limits(),
+            profile,
+            &mut c,
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        let query = ExpectedReadRequest {
+            key: input.key(),
+            source: source.reference(),
+            offset: 4,
+        };
+        let result = expected_read(
+            &input,
+            &query,
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        );
+        let ExpectedReadOutcome::Complete(Some(value)) = result.outcome else {
+            return Err(format!("{result:?}").into());
+        };
+        assert_eq!(value.path, vec![ExpectedReadStep::Foreign { field: 0 }]);
+        assert_eq!(value.expected.alias, "Guest");
+        assert_eq!(value.expected.mode, "Alt");
+        let ExpectedReadOrigin::Field {
+            parent_bundle,
+            parent_node,
+            field,
+            owner,
+            declared,
+            resolved_read,
+            foreign,
+        } = value.origin
+        else {
+            return Err("outer field".into());
+        };
+        assert_eq!((parent_bundle, parent_node, field), (0, 0, 0));
+        assert_eq!(declared, ReadSpecId(3)); // Preserve WithMode, not inner Foreign ReadSpecId(2).
+        assert_eq!(resolved_read, None);
+        assert!(foreign);
+        assert_ne!(owner, value.expected.package);
+        Ok(())
+    })?;
     Ok(())
 }

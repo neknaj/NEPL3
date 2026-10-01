@@ -326,5 +326,7 @@ mod reader;
 
 #[path = "grammar/binding.rs"]
 mod binding;
+#[path = "grammar/expected.rs"]
+mod expected;
 #[path = "grammar/region.rs"]
 mod region;

@@ -2,6 +2,7 @@
 //! production engine and wire never depend on one another.
 pub mod analysis;
 pub mod binding;
+pub mod expected;
 pub mod facts;
 pub mod head;
 pub mod package;
@@ -32,6 +33,7 @@ pub enum PortableError<E> {
     Facts(crate::facts::FactsError),
     Head(crate::head::HeadError),
     Region(crate::analysis::region::RegionError),
+    Expected(crate::analysis::expected::ExpectedReadError),
     Profile(crate::profile::ProfileError),
 }
 impl<E> From<crate::profile::ProfileError> for PortableError<E> {

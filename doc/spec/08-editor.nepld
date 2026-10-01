@@ -63,6 +63,31 @@ body
       cons "token[内部/ないぶ]の[精密/せいみつ]な[支援/しえん]は、readerが[提供/ていきょう]する[内部/ないぶ]viewとfactsの[範囲/はんい]で[行/おこな]う。"
       cons "[内部/ないぶ]viewがない[場合/ばあい]は、token[全体/ぜんたい]を[対象/たいしょう]とするfallbackのみを[提供/ていきょう]する。" nil
     nil
+  cons section expectedDirect "2.1 [直接位置/ちょくせついち]のexpected read" body
+    cons paragraph
+      cons "analysis::expected::expected_readはPreparedBindingRequestとExpectedReadRequestを[受/う]け、[保存/ほぞん]sourceの[指定位置/していいち]にある[最初/さいしょ]のMissingを[照会/しょうかい]する。"
+      cons "[要求/ようきゅう]のAnalysisKeyとSourceRefは[完全一致/かんぜんいっち]を[要求/ようきゅう]し、[該当/がいとう]Missingの[有無/うむ]にかかわらずsourceの[存在/そんざい]とUTF-8 scalar[境界/きょうかい]を[検査/けんさ]する。"
+      cons "Budgetの[有効/ゆうこう]Limitsがprepared[入力/にゅうりょく]と[異/こと]なる[場合/ばあい]は、[深度入場/しんどにゅうじょう]や[費用計上/ひようけいじょう]より[前/まえ]にLimitsMismatchを[返/かえ]す。" nil
+    cons paragraph
+      cons "[対象/たいしょう]はSourceRefと[幅/はば]0のanchorが[指定位置/していいち]に[一致/いっち]するMissingだけとし、Unparsed・Unexpected・[周辺/しゅうへん]の[空白/くうはく]は[選択/せんたく]しない。"
+      cons "Complete(None)は[直接一致/ちょくせついっち]するMissingの[不在/ふざい]を[表/あらわ]す。source mapによる[位置変換/いちへんかん]、[候補/こうほ]の[列挙/れっきょ]、TextEditの[生成/せいせい]は[個別/こべつ]の[操作/そうさ]とする。" nil
+    cons paragraph
+      cons "[探索/たんさく]はfieldの[宣言順/せんげんじゅん]のDFSとし、Foreignにはそのfieldで[直/ただ]ちに[入/はい]る。"
+      cons "[共有/きょうゆう]nodeも[入力辺/にゅうりょくへん]ごとに[訪問/ほうもん]し、Child・Foreignのfield[位置/いち]を[並/なら]べた[経路/けいろ]を[結果/けっか]へ[保持/ほじ]する。"
+      cons "bundleとnodeの[識別/しきべつ]には[正準/せいじゅん]DFS[番号/ばんごう]を[用/もち]い、arenaの[格納順/かくのうじゅん]を[探索/たんさく]の[優先順位/ゆうせんじゅんい]に[使用/しよう]しない。" nil
+    cons paragraph
+      cons "[全体/ぜんたい]rootのMissingはRoot originとし、Foreign rootは[外側/そとがわ]の[入力/にゅうりょく]fieldを[保持/ほじ]する。"
+      cons "Field originは[親/おや]packageが[所有/しょゆう]する[元/もと]のReadSpecIdと、[解決後/かいけつご]のentry/readを[区別/くべつ]する。"
+      cons "WithMode、List tailのspine mode、Dynamicの[保存済/ほぞんず]みchild contextは、tree validatorと[同/おな]じ[解決規則/かいけつきそく]に[従/したが]う。" nil
+    cons paragraph
+      cons "Completeは[不一致/ふいっち]の[場合/ばあい]も[含/ふく]めて、tree[全体/ぜんたい]の[明示/めいじ]source[閉包/へいほう]をidentity[順/じゅん]で[返/かえ]す。"
+      cons "Invalid・Stoppedは[結果/けっか]とsource[列/れつ]を[公開/こうかい]せず、[消費済/しょうひず]みUsageと[停止理由/ていしりゆう]を[保持/ほじ]する。"
+      cons "[訪問/ほうもん]・[経路複製/けいろふくせい]・[結果複製/けっかふくせい]をBudgetへ[計上/けいじょう]し、[呼出元/よびだしもと]の[深度/しんど]へ[合成/ごうせい]する。" nil
+    cons paragraph
+      cons "portable[受信/じゅしん]では[明示/めいじ]BindingRequestを[復元/ふくげん]・[検証/けんしょう]し、Completeの[選択結果/せんたくけっか]とsource[閉包/へいほう]の[全体/ぜんたい]を[再計算/さいけいさん]して[照合/しょうごう]する。"
+      cons "Invalid・Stoppedは[形式検査済/けいしきけんさず]みの[失敗報告/しっぱいほうこく]として[扱/あつか]い、[送信側/そうしんがわ]の[実行/じっこう]を[証明/しょうめい]する[値/あたい]として[使用/しよう]しない。"
+      cons "Completeの[再計算/さいけいさん]もparserやproviderの[実行認証/じっこうにんしょう]を[与/あた]えない。grammarとbindingに[基/もと]づく[補完/ほかん]の[全体/ぜんたい]は[引/ひ]き[続/つづ]きT06の[受入対象/うけいれたいしょう]である。" nil
+    nil
   cons section region "3. regionの[選択/せんたく]" body
     cons paragraph
       cons "region[選択/せんたく]は、[指定/してい]されたsource positionを[包含/ほうがん]するfield・elementのうち、[同一/どういつ]snapshot[上/じょう]で[最小/さいしょう]の[範囲/はんい]を[選択/せんたく]する[操作/そうさ]である。"

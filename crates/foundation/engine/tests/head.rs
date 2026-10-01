@@ -1,3 +1,5 @@
+#[path = "head/expected.rs"]
+mod expected;
 #[path = "head/portable.rs"]
 mod portable;
 #[path = "parse/support.rs"]
@@ -71,6 +73,70 @@ fn dynamic_head_uses_compound_completed_child_and_restores_normal_child_context(
     Ok(())
 }
 
+#[test]
+fn expected_read_uses_dynamic_saved_category_and_mode_after_completed_selector() -> TestResult {
+    use nepl3_engine::{
+        analysis::{BindingOptions, expected::*},
+        portable::analysis,
+    };
+    for case in [Case::Portable, Case::Foreign] {
+        run_case_inspect("choose alt", case, false, |reply, profile, source| {
+            let ParseOutcome::Recovered { tree, .. } = &reply.outcome else {
+                return Err(format!("{reply:?}"));
+            };
+            let empty = SourceStore::default();
+            let mut admission = SourceAdmission::default();
+            let mut c = FoundationCodec::new(profile.registry(), &empty, &mut admission)
+                .map_err(|e| format!("{e:?}"))?;
+            let input = analysis::prepare(
+                "expected-dynamic",
+                tree,
+                BindingOptions,
+                budget().limits(),
+                profile,
+                &mut c,
+                &mut budget(),
+            )
+            .map_err(|e| format!("{e:?}"))?;
+            let query = ExpectedReadRequest {
+                key: input.key(),
+                source: source.reference(),
+                offset: 10,
+            };
+            let result = expected_read(
+                &input,
+                &query,
+                &mut budget(),
+                &mut SourceAdmission::default(),
+            );
+            let ExpectedReadOutcome::Complete(Some(value)) = result.outcome else {
+                return Err(format!("{result:?}"));
+            };
+            assert_eq!(value.path, vec![ExpectedReadStep::Child { field: 1 }]);
+            assert_eq!(value.expected.alias, "Host");
+            assert_eq!(value.expected.category, "Body");
+            assert_eq!(value.expected.mode, "Alt");
+            let ExpectedReadOrigin::Field {
+                declared,
+                resolved_read,
+                ..
+            } = value.origin
+            else {
+                return Err("field".into());
+            };
+            let package = profile
+                .language("Host", &mut budget())
+                .map_err(|e| format!("{e:?}"))?;
+            assert!(
+                matches!(package.read(declared), Ok(ReadSpec::Local { category }) if category == "Expr")
+            );
+            assert_eq!(resolved_read, None);
+            Ok(())
+        })?;
+    }
+    Ok(())
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Case {
     Owned,
@@ -96,6 +162,14 @@ fn run(input: &str, exercise_rejections: bool) -> Result<ParseReply, String> {
     run_case(input, Case::Owned, exercise_rejections)
 }
 fn run_case(input: &str, case: Case, exercise_rejections: bool) -> Result<ParseReply, String> {
+    run_case_inspect(input, case, exercise_rejections, |_, _, _| Ok(()))
+}
+fn run_case_inspect(
+    input: &str,
+    case: Case,
+    exercise_rejections: bool,
+    inspect: impl FnOnce(&ParseReply, &ResolvedParseProfile<'_>, &SourceSnapshot) -> Result<(), String>,
+) -> Result<ParseReply, String> {
     let (mut package, registry) = fixture()?;
     let mut setup = budget();
     let kind = |name| -> Result<KindRef, String> {
@@ -824,6 +898,7 @@ fn run_case(input: &str, case: Case, exercise_rejections: bool) -> Result<ParseR
     if case == Case::Owned {
         assert_eq!(calls, 4);
     } // choose shape, two contexts, and ordinary x's explicit None.
+    inspect(&reply, &resolved, &source)?;
     Ok(reply)
 }
 
