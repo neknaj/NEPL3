@@ -88,6 +88,24 @@ body
       cons "Invalid・Stoppedは[形式検査済/けいしきけんさず]みの[失敗報告/しっぱいほうこく]として[扱/あつか]い、[送信側/そうしんがわ]の[実行/じっこう]を[証明/しょうめい]する[値/あたい]として[使用/しよう]しない。"
       cons "Completeの[再計算/さいけいさん]もparserやproviderの[実行認証/じっこうにんしょう]を[与/あた]えない。grammarとbindingに[基/もと]づく[補完/ほかん]の[全体/ぜんたい]は[引/ひ]き[続/つづ]きT06の[受入対象/うけいれたいしょう]である。" nil
     nil
+  cons section declaredAlternatives "2.2 [宣言済/せんげんず]みの[表記候補/ひょうきこうほ]" body
+    cons paragraph
+      cons "analysis::alternatives::declared_alternativesは[直接位置/ちょくせついち]のexpected readを[再照会/さいしょうかい]し、そのreadが[選択/せんたく]する[宣言情報/せんげんじょうほう]を[返/かえ]す。"
+      cons "category readでは、[該当/がいとう]categoryのFormをpackageの[宣言順/せんげんじゅん]に[列挙/れっきょ]し、[元/もと]のindexとspellingを[保持/ほじ]する。"
+      cons "[有効/ゆうこう]なmodeでその[文字列/もじれつ]をreaderが[認識/にんしき]できることは、[個別/こべつ]の[検証対象/けんしょうたいしょう]である。" nil
+    cons paragraph
+      cons "Builtin readではreaderの[種類/しゅるい]を[返/かえ]し、[同/おな]じEntryContextを[持/も]つcategoryのFormを[混入/こんにゅう]させない。"
+      cons "Listは[処理系/しょりけい]が[定義/ていぎ]するcons・nilの[構造的/こうぞうてき]な[選択肢/せんたくし]を[表/あらわ]す。"
+      cons "indexとspellingは、[結果/けっか]に[含/ふく]むExpectedReadとAnalysisKeyのpackage・[実行/じっこう]identityに[結/むす]び[付/つ]けて[解釈/かいしゃく]する。" nil
+    cons paragraph
+      cons "Leafは[該当/がいとう]categoryの[宣言数/せんげんすう]、Dynamicはalias/categoryに[対応/たいおう]するhead providerの[登録/とうろく]の[有無/うむ]を[示/しめ]す。"
+      cons "この[情報/じょうほう]から、Leafの[受理/じゅり]する[文字列/もじれつ]やDynamicのheadを[列挙/れっきょ]したとは[判断/はんだん]しない。"
+      cons "[補完候補/ほかんこうほ]の[完全性/かんぜんせい]、binding[上/じょう]の[参照/さんしょう]の[役割/やくわり]、[挿入/そうにゅう]の[成立/せいりつ]を[証明/しょうめい]する[結果/けっか]として[使用/しよう]しない。" nil
+    cons paragraph
+      cons "[受信側/じゅしんがわ]はprepared[入力/にゅうりょく]からCompleteの[全宣言情報/ぜんせんげんじょうほう]とsource[閉包/へいほう]を[再計算/さいけいさん]する。"
+      cons "[停止時/ていしじ]の[原子性/げんしせい]、[有効/ゆうこう]Limitsの[一致/いっち]、[費用計上/ひようけいじょう]はexpected readと[同/おな]じ[境界/きょうかい]に[従/したが]う。"
+      cons "[結果/けっか]にTextEditは[含/ふく]めない。[字句適合性/じくてきごうせい]、Missingでのscope、[名前候補/なまえこうほ]、[編集生成/へんしゅうせいせい]は[後続/こうぞく]の[操作/そうさ]として[実装/じっそう]する。" nil
+    nil
   cons section region "3. regionの[選択/せんたく]" body
     cons paragraph
       cons "region[選択/せんたく]は、[指定/してい]されたsource positionを[包含/ほうがん]するfield・elementのうち、[同一/どういつ]snapshot[上/じょう]で[最小/さいしょう]の[範囲/はんい]を[選択/せんたく]する[操作/そうさ]である。"

@@ -6271,6 +6271,174 @@
           }
         ]
       ]
+    },
+    "DeclaredFormAlternative": {
+      "constraints": [],
+      "record": [
+        [
+          "index",
+          "U64"
+        ],
+        [
+          "spelling",
+          "Text"
+        ]
+      ]
+    },
+    "DeclaredReadAlternatives": {
+      "constraints": [],
+      "variant": {
+        "Category": [
+          [
+            "forms",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.engine",
+                  "revision": 1,
+                  "name": "DeclaredFormAlternative"
+                }
+              }
+            }
+          ],
+          [
+            "leaf_declarations",
+            "U64"
+          ],
+          [
+            "dynamic_fallback_registered",
+            "Bool"
+          ]
+        ],
+        "Builtin": [
+          [
+            "reader",
+            {
+              "named": {
+                "package": "nepl3.reader",
+                "revision": 1,
+                "name": "BuiltinReader"
+              }
+            }
+          ]
+        ],
+        "List": []
+      }
+    },
+    "DeclaredAlternativeSet": {
+      "constraints": [],
+      "record": [
+        [
+          "read",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "ExpectedRead"
+            }
+          }
+        ],
+        [
+          "alternatives",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "DeclaredReadAlternatives"
+            }
+          }
+        ]
+      ]
+    },
+    "DeclaredAlternativesOutcome": {
+      "constraints": [],
+      "variant": {
+        "Complete": [
+          [
+            "alternatives",
+            {
+              "option": {
+                "named": {
+                  "package": "nepl3.engine",
+                  "revision": 1,
+                  "name": "DeclaredAlternativeSet"
+                }
+              }
+            }
+          ]
+        ],
+        "Invalid": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "ExpectedReadError"
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "DeclaredAlternativesReply": {
+      "constraints": [],
+      "record": [
+        [
+          "key",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "AnalysisKey"
+            }
+          }
+        ],
+        [
+          "outcome",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "DeclaredAlternativesOutcome"
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Report"
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceContent"
+              }
+            }
+          }
+        ]
+      ]
     }
   }
 }

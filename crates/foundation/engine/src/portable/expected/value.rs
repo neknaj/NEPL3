@@ -115,7 +115,7 @@ impl Value for ExpectedReadOrigin {
         })
     }
 }
-fn error_value<C: FoundationValueCodec>(
+pub(in crate::portable) fn error_value<C: FoundationValueCodec>(
     error: &ExpectedReadError,
     r: &SchemaRegistry,
     s: &Schemas<'_>,
@@ -140,7 +140,7 @@ fn error_value<C: FoundationValueCodec>(
         ),
     }
 }
-fn error_read<C: FoundationValueCodec>(
+pub(in crate::portable) fn error_read<C: FoundationValueCodec>(
     v: &NdfValue,
     r: &SchemaRegistry,
     s: &Schemas<'_>,
