@@ -163,10 +163,16 @@ impl From<SchemaError> for SyntaxError {
 #[derive(Debug)]
 pub struct ValidatedSyntaxBundle<'a> {
     bundle: &'a SyntaxBundle,
+    validation_depth: u64,
 }
 impl<'a> ValidatedSyntaxBundle<'a> {
     pub fn bundle(&self) -> &'a SyntaxBundle {
         self.bundle
+    }
+    /// Relative depth observed by structural validation, including token
+    /// payloads and nested guests. This grants no source or schema authority.
+    pub fn validation_depth(&self) -> u64 {
+        self.validation_depth
     }
 }
 
@@ -186,6 +192,19 @@ impl SyntaxBundle {
         budget: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<ValidatedSyntaxBundle<'a>, SyntaxError> {
+        let ((), validation_depth) =
+            budget.measure_depth(|budget| self.validate_contents(registry, budget, admission))?;
+        Ok(ValidatedSyntaxBundle {
+            bundle: self,
+            validation_depth,
+        })
+    }
+    fn validate_contents(
+        &self,
+        registry: &SchemaRegistry,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<(), SyntaxError> {
         if !registry.is_finalized() {
             return Err(SchemaError::Unfinalized.into());
         }
@@ -309,7 +328,7 @@ impl SyntaxBundle {
                 }
             }
         }
-        Ok(ValidatedSyntaxBundle { bundle: self })
+        Ok(())
     }
     pub fn node(&self, reference: NodeRef) -> Result<&SyntaxNode, SyntaxError> {
         usize::try_from(reference.0)

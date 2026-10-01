@@ -59,6 +59,7 @@ pub struct Budget {
     usage: Usage,
     depth: u64,
     stopped: Option<StopReason>,
+    observed_depth: u64,
 }
 
 impl Budget {
@@ -80,6 +81,7 @@ impl Budget {
         }
         self.depth = target;
         self.usage.depth = self.usage.depth.max(target);
+        self.observed_depth = self.observed_depth.max(target);
         let result = operation(self);
         self.depth = previous;
         result
@@ -90,6 +92,7 @@ impl Budget {
             usage: Usage::default(),
             depth: 0,
             stopped: None,
+            observed_depth: 0,
         }
     }
     pub fn usage(&self) -> Usage {
@@ -203,6 +206,7 @@ impl Budget {
         match next {
             Ok(next) => {
                 self.usage = next;
+                self.observed_depth = self.observed_depth.max(observed.depth);
                 self.poll()
             }
             Err(reason) => Err(self.stop(reason)),
@@ -282,7 +286,26 @@ impl Budget {
             return Err(StopReason::DepthLimit);
         };
         self.usage.depth = self.usage.depth.max(depth);
+        self.observed_depth = self.observed_depth.max(depth);
         Ok(())
+    }
+    /// Measure a validation operation's relative depth without resetting Usage.
+    /// Nested measurements contribute to their enclosing measurement. Callers
+    /// use pure validation operations which never replace the Budget itself.
+    pub fn measure_depth<T, E: From<StopReason>>(
+        &mut self,
+        operation: impl FnOnce(&mut Self) -> Result<T, E>,
+    ) -> Result<(T, u64), E> {
+        self.poll()?;
+        let base = self.depth;
+        let previous = self.observed_depth;
+        self.observed_depth = base;
+        let result = operation(self);
+        let measured = self.observed_depth;
+        self.observed_depth = previous.max(measured);
+        let value = result?;
+        self.poll()?;
+        Ok((value, measured.saturating_sub(base)))
     }
     /// Restores current depth on either normal success or failure; cumulative work remains charged.
     pub fn with_depth<T, E: From<StopReason>>(
@@ -302,3 +325,6 @@ impl Budget {
         result
     }
 }
+
+#[cfg(test)]
+mod tests;
