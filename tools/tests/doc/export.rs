@@ -366,3 +366,25 @@ fn inline_export_binds_only_html_and_preserves_body() -> Result<(), String> {
     );
     Ok(())
 }
+
+#[test]
+fn parsed_code_reuses_shared_regions_without_lowering_the_guest() -> Result<(), String> {
+    let compiled = compiled()?;
+    let input = r#"article en "Host" body cons paragraph cons code Doc article en sentence nil body cons paragraph cons sentence cons ruby text "" text "r" nil nil nil cons "host-tail" nil nil"#;
+    let result = export::generate_with_css(&compiled, input, export::CssMode::Inline)?;
+    assert!(result.html.contains("<code>"), "{}", result.html);
+    assert!(result.html.contains("nepl-code-"), "{}", result.html);
+    assert!(result.html.contains("host-tail"));
+    let block = result
+        .html
+        .split("<code>")
+        .nth(1)
+        .ok_or("missing code")?
+        .split("</code></pre>")
+        .next()
+        .ok_or("end")?;
+    assert!(!block.contains("host-tail"), "{block}");
+    assert!(!block.contains("Host"), "{block}");
+    assert!(block.contains("article"), "{block}");
+    Ok(())
+}

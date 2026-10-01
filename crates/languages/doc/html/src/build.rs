@@ -387,7 +387,7 @@ pub(super) fn namespace_member_with_foreign<E>(
     render_prepared_with_foreign(prepared, &[], adapter, budget, false)
 }
 
-fn render_prepared_with_foreign<E>(
+pub(crate) fn render_prepared_with_foreign<E>(
     prepared: &crate::prepare::PreparedRendering<'_>,
     links: &[(u64, HtmlHref)],
     adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
@@ -442,7 +442,7 @@ fn render_prepared_with_foreign<E>(
     while let Some(job) = w.jobs.pop() {
         w.b.charge(Resource::Work, 1)?;
         let kind = &prepared.document.value.nodes[job.node as usize].kind;
-        if let DocKind::InlineMath { syntax } = kind {
+        if let DocKind::InlineMath { syntax } | DocKind::Code { syntax } = kind {
             let embed = prepared
                 .document
                 .value
@@ -457,7 +457,18 @@ fn render_prepared_with_foreign<E>(
                 .with_depth_at_least(depth, |b| Ok::<_, RenderError>(adapter(embed, *syntax, b)))?;
             w.b.poll()?;
             let markup = result.map_err(ForeignRenderError::Foreign)?;
-            w.guest(job, *syntax, markup)?;
+            let target = if matches!(kind, DocKind::Code { .. }) {
+                let figure = w.element(Some(job.parent), job.node, HtmlTag::Figure)?;
+                let pre = w.element(Some(figure), job.node, HtmlTag::Pre)?;
+                let code = w.element(Some(pre), job.node, HtmlTag::Code)?;
+                Job {
+                    parent: code,
+                    ..job
+                }
+            } else {
+                job
+            };
+            w.guest(target, *syntax, markup)?;
             continue;
         }
         if !w.block(job, kind)? {

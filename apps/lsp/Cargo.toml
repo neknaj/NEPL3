@@ -1,0 +1,16 @@
+[package]
+name = "nepl3-lsp"
+description = "Pure presentation adapters for the staged NEPL3 LSP host"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+nepl3-core.workspace = true
+nepl3-engine.workspace = true
+
+[lints]
+workspace = true

@@ -11,7 +11,7 @@
     "data-nepl-group": "GeneratedId"
   },
   "attribute_types": {
-    "EmbeddedSvg": "bounded svg/g/path XML profile; no DTD/entities/scripts/styles/references; typed original UTF-8 serialized to image/svg+xml Base64 data URL; mutually exclusive with Src",
+    "EmbeddedSvg": "bounded svg/g/path with root defs and local leaf-path use references; translation-only g matrices; 4096 uses and 8MiB instantiated element bytes; no DTD/entities/scripts/styles/external or recursive references; typed original UTF-8 serialized to image/svg+xml Base64 data URL; mutually exclusive with Src",
     "GeneratedId": "ASCII [a-z][a-z0-9-]*; allocated by renderer; author names encoded as n- plus UTF-8 lowercase hex",
     "RegisteredClassList": "space-separated names registered in the backend stylesheet; not arbitrary source Text",
     "LanguageTag": "well-formed RFC 5646 tag",

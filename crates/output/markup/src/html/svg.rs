@@ -1,9 +1,42 @@
-//! Bounded static SVG prototype: svg/g/path only, no references or active content.
+//! Bounded static SVG with path glyph definitions and local, non-recursive uses.
 //! This is deliberately narrower than SVG; unsupported input is rejected intact.
-use alloc::string::String;
+use alloc::{string::String, vec::Vec};
 use nepl3_core::budget::{Budget, Resource, StopReason};
 use xmlparser::{ElementEnd, Token, Tokenizer};
 pub const MAX_BYTES: usize = 1_048_576;
+
+pub const MAX_USES: usize = 4096;
+pub const MAX_EXPANDED_BYTES: usize = 8 * MAX_BYTES;
+
+struct Id<'a> {
+    name: &'a str,
+    // Only a self-closing path directly inside defs can be instantiated.
+    target_bytes: Option<usize>,
+}
+struct Use<'a> {
+    target: &'a str,
+    depth: usize,
+}
+fn push<T>(values: &mut Vec<T>, value: T, budget: &mut Budget) -> Result<(), StopReason> {
+    budget.charge(Resource::Work, 1)?;
+    if values.len() == values.capacity() {
+        let capacity = values
+            .capacity()
+            .checked_mul(2)
+            .map(|n| n.max(4))
+            .ok_or_else(|| budget.stop(StopReason::AllocationLimit))?;
+        let bytes = (capacity - values.capacity())
+            .checked_mul(core::mem::size_of::<T>())
+            .ok_or_else(|| budget.stop(StopReason::AllocationLimit))?;
+        budget.charge(Resource::AllocationUnits, bytes as u64)?;
+        budget.charge(Resource::Work, values.len() as u64)?;
+        values
+            .try_reserve_exact(capacity - values.len())
+            .map_err(|_| budget.stop(StopReason::AllocationLimit))?;
+    }
+    values.push(value);
+    Ok(())
+}
 
 pub fn validate(source: &str, budget: &mut Budget) -> Result<bool, StopReason> {
     budget.charge(Resource::Work, source.len() as u64)?;
@@ -15,12 +48,17 @@ pub fn validate(source: &str, budget: &mut Budget) -> Result<bool, StopReason> {
     let mut current = "";
     let mut attrs = [""; 32];
     let mut count = 0;
-    let mut ids = [""; 1024];
-    let mut id_count = 0;
+    let mut ids: Vec<Id<'_>> = Vec::new();
+    let mut uses: Vec<Use<'_>> = Vec::new();
+    let mut current_id = None;
+    let mut current_start = 0;
+    let mut current_ref = None;
+    let mut has_path = false;
     let mut pending = false;
     let mut closed = false;
     let mut root = false;
     let mut namespace = false;
+    let mut xlink_namespace = false;
     let mut viewbox = false;
     for token in Tokenizer::from(source) {
         budget.charge(Resource::Work, 1)?;
@@ -37,24 +75,37 @@ pub fn validate(source: &str, budget: &mut Budget) -> Result<bool, StopReason> {
                 }
             }
             Token::Comment { .. } => {}
-            Token::ElementStart { prefix, local, .. } => {
+            Token::ElementStart {
+                prefix,
+                local,
+                span,
+            } => {
                 budget.observe_depth(depth as u64 + 1)?;
                 budget.charge(Resource::Nodes, 1)?;
-                if !prefix.is_empty() || depth == stack.len() {
-                    return Ok(false);
-                }
-                if pending || closed {
+                if !prefix.is_empty() || depth == stack.len() || pending || closed {
                     return Ok(false);
                 }
                 pending = true;
                 current = local.as_str();
+                current_start = span.start();
+                current_id = None;
+                current_ref = None;
+                has_path = false;
                 if depth == 0 {
                     if root || current != "svg" {
                         return Ok(false);
                     }
                     root = true;
-                } else if !matches!(current, "g" | "path") || stack[depth - 1] == "path" {
-                    return Ok(false);
+                } else {
+                    let admitted = match stack[depth - 1] {
+                        "svg" => matches!(current, "g" | "path" | "use" | "defs"),
+                        "g" => matches!(current, "g" | "path" | "use"),
+                        "defs" => current == "path",
+                        _ => false,
+                    };
+                    if !admitted {
+                        return Ok(false);
+                    }
                 }
                 count = 0;
             }
@@ -67,6 +118,7 @@ pub fn validate(source: &str, budget: &mut Budget) -> Result<bool, StopReason> {
                 let key = local.as_str();
                 let value = value.as_str();
                 budget.charge(Resource::Work, (value.len() + count) as u64)?;
+                // Local-name equality also forbids supplying both href and xlink:href.
                 if count == attrs.len() || attrs[..count].contains(&key) {
                     return Ok(false);
                 }
@@ -77,9 +129,15 @@ pub fn validate(source: &str, budget: &mut Budget) -> Result<bool, StopReason> {
                     && current == "svg"
                     && value == "http://www.w3.org/1999/xlink"
                 {
+                    xlink_namespace = true;
                     continue;
                 }
-                if !prefix.is_empty() {
+                if !prefix.is_empty()
+                    && !(prefix.as_str() == "xlink"
+                        && xlink_namespace
+                        && current == "use"
+                        && key == "href")
+                {
                     return Ok(false);
                 }
                 let ok = match key {
@@ -94,18 +152,34 @@ pub fn validate(source: &str, budget: &mut Budget) -> Result<bool, StopReason> {
                     }
                     "width" | "height" if current == "svg" => length(value),
                     "id" => {
-                        budget.charge(Resource::Work, (id_count * value.len()) as u64)?;
-                        if id_count == ids.len() || ids[..id_count].contains(&value) {
+                        budget.charge(Resource::Work, (ids.len() * value.len()) as u64)?;
+                        if ids.len() == 1024
+                            || !identifier(value)
+                            || ids.iter().any(|id| id.name == value)
+                        {
                             return Ok(false);
                         }
-                        ids[id_count] = value;
-                        id_count += 1;
-                        !value.is_empty()
-                            && value
-                                .bytes()
-                                .all(|c| c.is_ascii_alphanumeric() || b"_-".contains(&c))
+                        current_id = Some(ids.len());
+                        push(
+                            &mut ids,
+                            Id {
+                                name: value,
+                                target_bytes: None,
+                            },
+                            budget,
+                        )?;
+                        true
                     }
-                    "d" if current == "path" => crate::katex::path_data(value, budget)?,
+                    "d" if current == "path" => {
+                        has_path = crate::katex::path_data(value, budget)?;
+                        has_path
+                    }
+                    "href" if current == "use" => {
+                        current_ref = value.strip_prefix('#').filter(|id| identifier(id));
+                        current_ref.is_some()
+                    }
+                    "x" | "y" if current == "use" => decimal(value).is_some(),
+                    "transform" if current == "g" => translation(value),
                     "fill" | "stroke" => {
                         value == "none"
                             || (matches!(value.len(), 4 | 7)
@@ -125,13 +199,43 @@ pub fn validate(source: &str, budget: &mut Budget) -> Result<bool, StopReason> {
                     return Ok(false);
                 }
             }
-            Token::ElementEnd { end, .. } => match end {
+            Token::ElementEnd { end, span } => match end {
                 ElementEnd::Open => {
+                    if current == "use"
+                        || (current == "path" && depth > 0 && stack[depth - 1] == "defs")
+                    {
+                        return Ok(false);
+                    }
                     pending = false;
                     stack[depth] = current;
                     depth += 1;
                 }
                 ElementEnd::Empty => {
+                    if current == "use" {
+                        let Some(target) = current_ref else {
+                            return Ok(false);
+                        };
+                        if uses.len() == MAX_USES {
+                            return Ok(false);
+                        }
+                        push(
+                            &mut uses,
+                            Use {
+                                target,
+                                depth: depth + 1,
+                            },
+                            budget,
+                        )?;
+                    }
+                    if current == "path"
+                        && depth > 0
+                        && stack[depth - 1] == "defs"
+                        && has_path
+                        && let Some(index) = current_id
+                    {
+                        // Includes every attribute and whitespace, not just the d attribute.
+                        ids[index].target_bytes = Some(span.end() - current_start);
+                    }
                     pending = false;
                     if depth == 0 {
                         closed = true;
@@ -151,8 +255,63 @@ pub fn validate(source: &str, budget: &mut Budget) -> Result<bool, StopReason> {
             _ => return Ok(false),
         }
     }
-    Ok(root && namespace && viewbox && depth == 0 && closed && !pending)
+    if !(root && namespace && viewbox && depth == 0 && closed && !pending) {
+        return Ok(false);
+    }
+    let mut expanded = 0usize;
+    for instance in uses {
+        budget.charge(Resource::Work, (ids.len() * instance.target.len()) as u64)?;
+        let Some(bytes) = ids
+            .iter()
+            .find(|id| id.name == instance.target)
+            .and_then(|id| id.target_bytes)
+        else {
+            return Ok(false);
+        };
+        expanded += bytes; // Previous total <=8MiB; each addition <=1MiB, within 32-bit usize.
+        if expanded > MAX_EXPANDED_BYTES {
+            return Ok(false);
+        }
+        budget.charge(Resource::Work, bytes as u64)?;
+        budget.charge(Resource::Nodes, 1)?;
+        budget.observe_depth(instance.depth as u64 + 1)?;
+    }
+    Ok(true)
 }
+fn identifier(value: &str) -> bool {
+    !value.is_empty()
+        && value
+            .bytes()
+            .all(|c| c.is_ascii_alphanumeric() || b"_-".contains(&c))
+}
+fn decimal(value: &str) -> Option<f64> {
+    let body = value.strip_prefix(['+', '-']).unwrap_or(value);
+    if body.is_empty()
+        || !body.bytes().any(|c| c.is_ascii_digit())
+        || !body.bytes().all(|c| c.is_ascii_digit() || c == b'.')
+    {
+        return None;
+    }
+    number(value)
+}
+fn translation(value: &str) -> bool {
+    let Some(body) = value
+        .strip_prefix("matrix(")
+        .and_then(|v| v.strip_suffix(')'))
+    else {
+        return false;
+    };
+    let mut values = body.split_ascii_whitespace();
+    for expected in [1.0, 0.0, 0.0, 1.0] {
+        if values.next().and_then(decimal) != Some(expected) {
+            return false;
+        }
+    }
+    values.next().and_then(decimal).is_some()
+        && values.next().and_then(decimal).is_some()
+        && values.next().is_none()
+}
+
 fn number(value: &str) -> Option<f64> {
     if value.len() > 64 {
         return None;
