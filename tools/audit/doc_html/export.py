@@ -20,6 +20,8 @@ GOOGLE_FONTS = "https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&d
 SOURCE = '''article ja "[文書/ぶんしょ]" body
 cons section layout "[見出/みだ]し" body
 cons paragraph cons "{[本文/ほんぶん]/body} & <script>window.untrusted=1</script>" nil
+cons paragraph cons "{Please/依頼標識} {{create/V} {{an/Det} {issue/N}/NP O}/VP} {{on/P} {GitHub/N}/PP}" nil
+cons paragraph cons "{{{long_annotation_scope/N}/NP}/VP}" nil
 cons rawcode some "text" "example code"
 cons rawcode none "long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_"
 cons table cons left cons center cons right nil some row cons "Left" cons "Center" cons "Right" nil cons row cons "A" cons "B" cons "C" nil nil
@@ -33,6 +35,19 @@ MEASURE = """() => {
     const notes = node.querySelector(':scope > .nepl-notes');
     if (reading && reading.getBoundingClientRect().bottom > base.top + 1) throw Error('Ruby reading overlaps base');
     if (notes && notes.getBoundingClientRect().top < base.bottom - 1) throw Error('Annotation notes overlap base');
+  }
+  for (const node of document.querySelectorAll('.nepl-anno')) {
+    const base = node.querySelector(':scope > .nepl-base');
+    const style = getComputedStyle(base);
+    const edge = getComputedStyle(base, '::after');
+    if (edge.position !== 'absolute' || edge.bottom !== '0px' || edge.left !== '0px' || edge.right !== '0px') throw Error('Annotation bracket does not follow its scope');
+    if (edge.borderBottomWidth !== '1px' || edge.borderLeftWidth !== '1px' || edge.borderRightWidth !== '1px') throw Error('Missing annotation endpoints');
+    if (parseFloat(edge.borderBottomLeftRadius) <= 0 || parseFloat(edge.borderBottomRightRadius) <= 0) throw Error('Annotation bracket is not rounded');
+    if (style.backgroundColor === 'rgba(0, 0, 0, 0)') throw Error('Missing scope background');
+    if (base.scrollWidth > base.clientWidth + 1) throw Error('Annotation base clips nested contents');
+  }
+  for (const node of document.querySelectorAll('.nepl-ruby > .nepl-base')) {
+    if (getComputedStyle(node).borderTopWidth !== '1px') throw Error('Missing Ruby boundary');
   }
   if (document.documentElement.scrollWidth > innerWidth) throw Error('Horizontal overflow');
   const main = getComputedStyle(document.querySelector('.nepl-doc'));
@@ -104,7 +119,7 @@ def main() -> None:
         for implementation in (playwright.chromium, playwright.firefox, playwright.webkit):
             print(f"Checking {implementation.name}", file=sys.stderr, flush=True)
             with implementation.launch(headless=True) as browser:
-                for width in (375, 1280):
+                for width in (320, 375, 1280):
                     with browser.new_context(java_script_enabled=False,
                                              viewport={"width": width, "height": 900}) as context:
                         # WebKit's emulated offline mode rejects file:// navigation.
@@ -140,7 +155,7 @@ def main() -> None:
                     script_blocked: object = page.evaluate("globalThis.__neplProbe === undefined")  # pyright: ignore[reportAny]
                     if script_blocked is not True:
                         raise AssertionError("Injected script was not blocked by CSP")
-                for width in (375, 1280):
+                for width in (320, 375, 1280):
                     with browser.new_context(java_script_enabled=False,
                                              viewport={"width": width, "height": 900}) as online:
                         page = online.new_page()
