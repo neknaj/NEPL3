@@ -748,5 +748,8 @@ fn doc_sentence_provider_failures_have_typed_report_positions_and_stops() -> Res
 #[path = "doc/export_cli.rs"]
 mod export_cli;
 
+// These tests launch the native CLI and require host temporary directories.
+// Pure SVG validation/rendering tests remain in markup and doc-html on WASI.
+#[cfg(not(target_family = "wasm"))]
 #[path = "doc/svg.rs"]
 mod svg;

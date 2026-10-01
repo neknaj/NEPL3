@@ -631,3 +631,34 @@ fn details_requires_one_leading_summary_and_flow_context() -> Result<(), HtmlErr
     assert!(matches!(render(&f), Err(HtmlError::Content(1))));
     Ok(())
 }
+
+#[test]
+fn svg_intrinsic_dimensions_are_profile_checked_and_metered()
+-> Result<(), nepl3_core::budget::StopReason> {
+    let input = "<svg xmlns='http://www.w3.org/2000/svg' width='96pt' height='270pt' viewBox='0 0 10 10'><path d='M0 0L10 10'/></svg>";
+    assert_eq!(
+        svg::intrinsic_size(input, &mut budget())?,
+        Some((128.0, 360.0))
+    );
+    assert_eq!(
+        svg::intrinsic_size(
+            "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'/>",
+            &mut budget()
+        )?,
+        None
+    );
+    assert_eq!(
+        svg::intrinsic_size(
+            "<svg xmlns='http://www.w3.org/2000/svg' width='-1' height='2' viewBox='0 0 10 10'/>",
+            &mut budget()
+        )?,
+        None
+    );
+    let mut stopped = budget();
+    stopped.cancel();
+    assert_eq!(
+        svg::intrinsic_size(input, &mut stopped),
+        Err(StopReason::Cancelled)
+    );
+    Ok(())
+}
