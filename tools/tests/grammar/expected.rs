@@ -15,7 +15,7 @@ mod shared;
 fn err(value: impl std::fmt::Debug) -> String {
     format!("{value:?}")
 }
-fn with_input<T>(
+pub(super) fn with_input<T>(
     text: &str,
     mutate: impl FnOnce(&mut ParseTree) -> Result<(), String>,
     finish: impl FnOnce(
@@ -26,7 +26,7 @@ fn with_input<T>(
 ) -> Result<T, String> {
     with_configured_input(text, |_| Ok(()), mutate, finish)
 }
-fn with_configured_input<T>(
+pub(super) fn with_configured_input<T>(
     text: &str,
     configure: impl FnOnce(&mut CompiledLanguage) -> Result<(), String>,
     mutate: impl FnOnce(&mut ParseTree) -> Result<(), String>,

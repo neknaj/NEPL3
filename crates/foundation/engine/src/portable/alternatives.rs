@@ -1,6 +1,6 @@
-//! Expected-read transport is checked against explicit immutable prepared input.
+//! Declaration metadata is recomputed on the receiver; no edit viability is inferred.
 use super::{PortableError, boundary, value::*};
-use crate::analysis::{AnalysisKey, PreparedBindingRequest, expected::*};
+use crate::analysis::{PreparedBindingRequest, alternatives::*, expected::ExpectedReadRequest};
 use nepl3_core::{
     budget::{Budget, Resource},
     schema::SchemaRegistry,
@@ -8,29 +8,11 @@ use nepl3_core::{
     value::NdfValue,
     value_codec::FoundationValueCodec,
 };
-pub(super) mod value;
+mod value;
 
-pub fn request_to_value<C: FoundationValueCodec>(
-    request: &ExpectedReadRequest,
-    registry: &SchemaRegistry,
-    c: &mut C,
-    b: &mut Budget,
-) -> Result<NdfValue, PortableError<C::Error>> {
-    let value = request.value(&Schemas::new(registry)?, c, b)?;
-    registry.validate(&expected("ExpectedReadRequest", b)?, &value, b)?;
-    Ok(value)
-}
-pub fn request_decode<C: FoundationValueCodec>(
-    value: &NdfValue,
-    registry: &SchemaRegistry,
-    c: &mut C,
-    b: &mut Budget,
-) -> Result<ExpectedReadRequest, PortableError<C::Error>> {
-    registry.validate(&expected("ExpectedReadRequest", b)?, value, b)?;
-    ExpectedReadRequest::read(value, &Schemas::new(registry)?, c, b)
-}
+pub use super::expected::{request_decode, request_to_value};
 pub fn reply_to_value<C: FoundationValueCodec>(
-    reply: &ExpectedReadReply,
+    reply: &DeclaredAlternativesReply,
     request: &ExpectedReadRequest,
     input: &PreparedBindingRequest<'_, '_>,
     c: &mut C,
@@ -44,7 +26,7 @@ pub fn reply_to_value<C: FoundationValueCodec>(
     validate_reply(reply, request, input, &store, &mut local, b)?;
     let value = record(
         s.engine,
-        "ExpectedReadReply",
+        "DeclaredAlternativesReply",
         [
             reply.key.value(&s, &mut local, b)?,
             value::outcome_value(&reply.outcome, r, &s, &mut local, b)?,
@@ -53,7 +35,7 @@ pub fn reply_to_value<C: FoundationValueCodec>(
         ],
         b,
     )?;
-    r.validate(&expected("ExpectedReadReply", b)?, &value, b)?;
+    r.validate(&expected("DeclaredAlternativesReply", b)?, &value, b)?;
     Ok(value)
 }
 pub fn reply_decode<C: FoundationValueCodec>(
@@ -62,16 +44,16 @@ pub fn reply_decode<C: FoundationValueCodec>(
     input: &PreparedBindingRequest<'_, '_>,
     c: &mut C,
     b: &mut Budget,
-) -> Result<ExpectedReadReply, PortableError<C::Error>> {
+) -> Result<DeclaredAlternativesReply, PortableError<C::Error>> {
     let r = input.profile.registry();
-    r.validate(&expected("ExpectedReadReply", b)?, value, b)?;
+    r.validate(&expected("DeclaredAlternativesReply", b)?, value, b)?;
     let s = Schemas::new(r)?;
-    let f = fields(value, s.engine, "ExpectedReadReply", 4)?;
+    let f = fields(value, s.engine, "DeclaredAlternativesReply", 4)?;
     let sources = c.decode_sources(&f[3], b).map_err(boundary)?;
     let mut store = SourceStore::default();
     super::binding::check::add(&mut store, &sources, b, c.source_admission())?;
     let mut local = c.scoped(&store);
-    let reply = ExpectedReadReply {
+    let reply = DeclaredAlternativesReply {
         key: Value::read(&f[0], &s, &mut local, b)?,
         outcome: value::outcome_read(&f[1], r, &s, &mut local, b)?,
         report: local.decode_report(&f[2], b).map_err(boundary)?,
@@ -81,7 +63,7 @@ pub fn reply_decode<C: FoundationValueCodec>(
     Ok(reply)
 }
 fn validate_reply<C: FoundationValueCodec>(
-    reply: &ExpectedReadReply,
+    reply: &DeclaredAlternativesReply,
     request: &ExpectedReadRequest,
     input: &PreparedBindingRequest<'_, '_>,
     store: &SourceStore,
@@ -103,26 +85,26 @@ fn validate_reply<C: FoundationValueCodec>(
         return Err(PortableError::Shape);
     }
     match &reply.outcome {
-        ExpectedReadOutcome::Invalid(error) => {
+        DeclaredAlternativesOutcome::Invalid(error) => {
             if error.stop_reason().is_some() || !reply.sources.is_empty() {
                 return Err(PortableError::Shape);
             }
             return Ok(());
         }
-        ExpectedReadOutcome::Stopped(_) => {
+        DeclaredAlternativesOutcome::Stopped(_) => {
             if !reply.sources.is_empty() {
                 return Err(PortableError::Shape);
             }
             return Ok(());
         }
-        ExpectedReadOutcome::Complete(_) => {}
+        DeclaredAlternativesOutcome::Complete(_) => {}
     }
     // Recompute with exactly the prepared effective limits; the receiving
     // codec budget must match these limits and pays the full recomputation.
-    let result = expected_read(input, request, b, c.source_admission());
+    let result = declared_alternatives(input, request, b, c.source_admission());
     match result.outcome {
-        ExpectedReadOutcome::Stopped(reason) => return Err(reason.into()),
-        ExpectedReadOutcome::Invalid(error) => return Err(PortableError::Expected(error)),
+        DeclaredAlternativesOutcome::Stopped(reason) => return Err(reason.into()),
+        DeclaredAlternativesOutcome::Invalid(error) => return Err(PortableError::Expected(error)),
         _ => {}
     }
     let s = Schemas::new(input.profile.registry())?;

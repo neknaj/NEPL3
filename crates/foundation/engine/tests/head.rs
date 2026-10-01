@@ -1,3 +1,5 @@
+#[path = "head/alternatives.rs"]
+mod alternatives;
 #[path = "head/expected.rs"]
 mod expected;
 #[path = "head/portable.rs"]

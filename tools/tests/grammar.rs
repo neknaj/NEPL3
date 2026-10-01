@@ -324,6 +324,8 @@ mod diagnostic;
 #[path = "grammar/reader.rs"]
 mod reader;
 
+#[path = "grammar/alternatives.rs"]
+mod alternatives;
 #[path = "grammar/binding.rs"]
 mod binding;
 #[path = "grammar/expected.rs"]

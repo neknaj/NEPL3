@@ -378,3 +378,64 @@ fn expected_read_enters_guest_before_host_and_retains_with_mode_declaration() ->
     })?;
     Ok(())
 }
+
+#[test]
+fn declared_alternatives_use_guest_package_after_with_mode_resolution() -> TestResult {
+    use nepl3_engine::{
+        analysis::{BindingOptions, alternatives::*, expected::ExpectedReadRequest},
+        portable::analysis,
+    };
+    run_foreign_inspect("pair", false, |reply, profile, source| {
+        let ParseOutcome::Recovered { tree, .. } = &reply.outcome else {
+            return Err("recovered".into());
+        };
+        let empty = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut c = FoundationCodec::new(profile.registry(), &empty, &mut admission)
+            .map_err(|e| format!("{e:?}"))?;
+        let input = analysis::prepare(
+            "alternatives-foreign",
+            tree,
+            BindingOptions,
+            budget().limits(),
+            profile,
+            &mut c,
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        let result = declared_alternatives(
+            &input,
+            &ExpectedReadRequest {
+                key: input.key(),
+                source: source.reference(),
+                offset: 4,
+            },
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        );
+        let DeclaredAlternativesOutcome::Complete(Some(value)) = result.outcome else {
+            return Err(format!("{result:?}").into());
+        };
+        assert_eq!(value.read.expected.alias, "Guest");
+        assert_eq!(value.read.expected.mode, "Alt");
+        let DeclaredReadAlternatives::Category {
+            forms,
+            leaf_declarations,
+            dynamic_fallback_registered,
+        } = value.alternatives
+        else {
+            return Err("category".into());
+        };
+        assert_eq!(
+            forms,
+            vec![DeclaredFormAlternative {
+                index: 0,
+                spelling: "wrap".into()
+            }]
+        );
+        assert_eq!(leaf_declarations, 0);
+        assert!(!dynamic_fallback_registered);
+        Ok(())
+    })?;
+    Ok(())
+}
