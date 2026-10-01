@@ -123,7 +123,7 @@ def main() -> None:
             print(f"Checking {implementation.name}", file=sys.stderr, flush=True)
             with implementation.launch(headless=True) as browser:
                 for width in (320, 375, 1280):
-                    with browser.new_context(java_script_enabled=False,
+                    with browser.new_context(java_script_enabled=False, color_scheme="dark",
                                              viewport={"width": width, "height": 900}) as context:
                         # WebKit's emulated offline mode rejects file:// navigation.
                         # Block network requests directly while preserving real file
@@ -159,7 +159,7 @@ def main() -> None:
                     if script_blocked is not True:
                         raise AssertionError("Injected script was not blocked by CSP")
                 for width in (320, 375, 1280):
-                    with browser.new_context(java_script_enabled=False,
+                    with browser.new_context(java_script_enabled=False, color_scheme="dark",
                                              viewport={"width": width, "height": 900}) as online:
                         page = online.new_page()
                         _ = page.goto((detached / "document.html").as_uri())

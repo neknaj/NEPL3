@@ -1,11 +1,12 @@
 //! Script-free local Doc export, using the same production pipeline as tests.
 pub mod assets;
+mod code;
 pub mod pages;
 mod stylesheet;
 use super::source::{Compiled, budget, compiled, err, with_input_route};
 use nepl3_core::source::{Digest, SourceAdmission, SourceStore};
 use nepl3_doc_core::{check::Category, lower};
-use nepl3_doc_html::{ParallelMode, RenderOptions, prepare_local, render};
+use nepl3_doc_html::{ParallelMode, RenderOptions};
 use nepl3_wire::foundation::FoundationCodec;
 use std::time::{Duration, Instant};
 use std::{fs, io::Read, path::Path};
@@ -154,12 +155,12 @@ fn generate_impl(
             parallel: ParallelMode::Rows,
         };
         enum Prepared<'a> {
-            Local(nepl3_doc_html::PreparedLocalArticle<'a>),
-            Svg(nepl3_doc_html::assets::PreparedSvgArticle<'a>),
+            Local(nepl3_doc_html::code::PreparedCodeArticle<'a>),
+            Svg(nepl3_doc_html::assets::PreparedSvgCodeArticle<'a>),
         }
         let prepared = if let Some((inputs, mode)) = assets {
             Prepared::Svg(
-                nepl3_doc_html::assets::prepare_svg(
+                nepl3_doc_html::assets::prepare_svg_code(
                     &doc,
                     &options,
                     inputs,
@@ -172,7 +173,7 @@ fn generate_impl(
             )
         } else {
             Prepared::Local(
-                prepare_local(
+                nepl3_doc_html::code::prepare_code(
                     &doc,
                     &options,
                     profile.registry(),
@@ -189,9 +190,23 @@ fn generate_impl(
         });
         let render_start = Instant::now();
         let rendered = match &prepared {
-            Prepared::Local(p) => render(p, &mut output_budget).map_err(err)?,
+            Prepared::Local(p) => {
+                nepl3_doc_html::code::render_code(
+                    p,
+                    &mut |embed, _, b| code::render(embed, tree, profile, b),
+                    &mut output_budget,
+                )
+                .map_err(err)?
+                .fragment
+            }
             Prepared::Svg(p) => {
-                nepl3_doc_html::assets::render_svg(p, &mut output_budget).map_err(err)?
+                nepl3_doc_html::assets::render_svg_code(
+                    p,
+                    &mut |embed, _, b| code::render(embed, tree, profile, b),
+                    &mut output_budget,
+                )
+                .map_err(err)?
+                .fragment
             }
         };
         let document_css =
