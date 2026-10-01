@@ -1,0 +1,6 @@
+article ja "SVG画像の試作"
+body
+cons paragraph cons "同じ原稿から、SVGの外部参照と埋め込みを切り替える。" nil
+cons image asset "triangle" none "白地に黒線の{三角形/triangle}" some "TikZで生成した三角形" 
+cons paragraph cons sentence cons text "文中の図：" cons image asset "triangle" none "三角形" nil nil
+nil

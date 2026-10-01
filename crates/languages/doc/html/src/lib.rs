@@ -1,6 +1,7 @@
 #![no_std]
 extern crate alloc;
 
+pub mod assets;
 mod build;
 pub mod namespace;
 pub mod pages;

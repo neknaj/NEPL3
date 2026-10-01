@@ -164,6 +164,10 @@ fn attr(
             text(path, r, b)?;
             t == HtmlTag::Img && uri::path(path)
         }
+        EmbeddedSvg { svg } => {
+            text(svg, r, b)?;
+            t == HtmlTag::Img && super::svg::validate(svg, b)?
+        }
         Alt { value } => {
             text(value, r, b)?;
             t == HtmlTag::Img
@@ -186,9 +190,10 @@ fn accepts(parent: HtmlTag, child: &HtmlNode) -> bool {
     {
         return *tag == crate::mathml::Tag::Math
             && match parent {
-                Article | Section | Div | Figcaption | Li | Caption | Th | Td | Figure => true,
+                Article | Section | Div | Figcaption | Li | Caption | Th | Td | Figure
+                | Details => true,
                 P | Span | H1 | H2 | H3 | H4 | H5 | H6 | Rt | Em | Strong | Pre | Code | A
-                | Ruby => !attributes.iter().any(|a| {
+                | Ruby | Summary => !attributes.iter().any(|a| {
                     matches!(
                         a,
                         crate::mathml::Attribute::Display(crate::mathml::Display::Block)
@@ -209,10 +214,11 @@ fn accepts(parent: HtmlTag, child: &HtmlNode) -> bool {
         Tr => matches!(tag, Some(Th | Td)),
         Ul | Ol => tag == Some(Li),
         Rp => tag.is_none(),
-        P | Span | H1 | H2 | H3 | H4 | H5 | H6 | Rt | Em | Strong | Pre | Code | A => {
+        P | Span | H1 | H2 | H3 | H4 | H5 | H6 | Rt | Em | Strong | Pre | Code | A | Summary => {
             tag.is_none_or(HtmlTag::is_phrasing)
         }
         Ruby => tag.is_none_or(|t| t.is_phrasing() || matches!(t, Rt | Rp)),
+        Details => tag.is_none_or(|t| t.is_flow() || t == Summary),
         Figure => tag.is_none_or(|t| t.is_flow() || t == Figcaption),
         Article | Section | Div | Figcaption | Li | Caption | Th | Td => {
             tag.is_none_or(HtmlTag::is_flow)
@@ -229,6 +235,19 @@ fn sequence(
     if t == HtmlTag::Ruby {
         ruby::sequence(f, r, children, b)?;
     }
+    if t == HtmlTag::Details
+        && !matches!(
+            children
+                .first()
+                .and_then(|index| f.nodes.get(*index as usize)),
+            Some(HtmlNode::Element {
+                tag: HtmlTag::Summary,
+                ..
+            })
+        )
+    {
+        return Err(HtmlError::Content(r));
+    }
     let mut stage = 0;
     let mut captions = 0;
     let mut width = None;
@@ -242,6 +261,9 @@ fn sequence(
             return Err(HtmlError::Content(r));
         }
         if let HtmlNode::Element { tag, .. } = n {
+            if t == HtmlTag::Details && *tag == HtmlTag::Summary && i != 0 {
+                return Err(HtmlError::Content(r));
+            }
             if t == HtmlTag::Table {
                 let next = match tag {
                     HtmlTag::Caption => 1,
@@ -463,12 +485,14 @@ fn validate_content<'a>(
                     }
                 }
                 if *tag == HtmlTag::Img
-                    && (!attributes
+                    && (!attributes.iter().any(|a| {
+                        matches!(
+                            a,
+                            HtmlAttribute::Src { .. } | HtmlAttribute::EmbeddedSvg { .. }
+                        )
+                    }) || !attributes
                         .iter()
-                        .any(|a| matches!(a, HtmlAttribute::Src { .. }))
-                        || !attributes
-                            .iter()
-                            .any(|a| matches!(a, HtmlAttribute::Alt { .. })))
+                        .any(|a| matches!(a, HtmlAttribute::Alt { .. })))
                 {
                     return Err(HtmlError::Content(r));
                 }

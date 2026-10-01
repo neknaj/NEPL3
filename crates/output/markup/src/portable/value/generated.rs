@@ -39,6 +39,8 @@ Self::Tr => variant(s,"HtmlTag","Tr",[],b),
 Self::Th => variant(s,"HtmlTag","Th",[],b),
 Self::Td => variant(s,"HtmlTag","Td",[],b),
 Self::Img => variant(s,"HtmlTag","Img",[],b),
+Self::Details => variant(s,"HtmlTag","Details",[],b),
+Self::Summary => variant(s,"HtmlTag","Summary",[],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -78,6 +80,8 @@ match (tag,f.len()) {
 ("Th",0)=>Ok(Self::Th),
 ("Td",0)=>Ok(Self::Td),
 ("Img",0)=>Ok(Self::Img),
+("Details",0)=>Ok(Self::Details),
+("Summary",0)=>Ok(Self::Summary),
 _=>Err(PortableError::Shape),}
 }
 }
@@ -181,6 +185,7 @@ Self::Alt {value} => variant(s,"HtmlAttribute","Alt",[value.put(s,c,b)?],b),
 Self::Class {values} => variant(s,"HtmlAttribute","Class",[values.put(s,c,b)?],b),
 Self::Role {value} => variant(s,"HtmlAttribute","Role",[value.put(s,c,b)?],b),
 Self::Href {value} => variant(s,"HtmlAttribute","Href",[value.put(s,c,b)?],b),
+Self::EmbeddedSvg {svg} => variant(s,"HtmlAttribute","EmbeddedSvg",[svg.put(s,c,b)?],b),
 Self::Src {path} => variant(s,"HtmlAttribute","Src",[path.put(s,c,b)?],b),
 Self::AriaLevel {value} => variant(s,"HtmlAttribute","AriaLevel",[value.put(s,c,b)?],b),
 Self::Width {value} => variant(s,"HtmlAttribute","Width",[value.put(s,c,b)?],b),
@@ -202,6 +207,7 @@ match (tag,f.len()) {
 ("Class",1)=>Ok(Self::Class {values:Value::read(&f[0],s,c,b)?}),
 ("Role",1)=>Ok(Self::Role {value:Value::read(&f[0],s,c,b)?}),
 ("Href",1)=>Ok(Self::Href {value:Value::read(&f[0],s,c,b)?}),
+("EmbeddedSvg",1)=>Ok(Self::EmbeddedSvg {svg:Value::read(&f[0],s,c,b)?}),
 ("Src",1)=>Ok(Self::Src {path:Value::read(&f[0],s,c,b)?}),
 ("AriaLevel",1)=>Ok(Self::AriaLevel {value:Value::read(&f[0],s,c,b)?}),
 ("Width",1)=>Ok(Self::Width {value:Value::read(&f[0],s,c,b)?}),

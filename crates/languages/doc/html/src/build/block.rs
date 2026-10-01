@@ -8,6 +8,34 @@ impl Builder<'_, '_> {
             level,
         } = j;
         match k {
+            Image { caption, .. } => {
+                let group = self.element(Some(parent), node, HtmlTag::Div)?;
+                self.class(group, "nepl-image-group")?;
+                self.b.charge(Resource::AllocationUnits, 32)?;
+                self.attr(
+                    group,
+                    HtmlAttribute::DataId {
+                        value: alloc::format!("image-{node}"),
+                    },
+                )?;
+                let figure = self.element(Some(group), node, HtmlTag::Figure)?;
+                self.class(figure, "nepl-image-figure")?;
+                let preview = self.element(Some(figure), node, HtmlTag::Div)?;
+                self.class(preview, "nepl-image-preview")?;
+                self.image(node, preview)?;
+                let details = self.element(Some(group), node, HtmlTag::Details)?;
+                self.class(details, "nepl-image-details")?;
+                let summary = self.element(Some(details), node, HtmlTag::Summary)?;
+                self.text(summary, node, "Full size / 縮小制限を解除")?;
+                let original = self.element(Some(details), node, HtmlTag::Div)?;
+                self.class(original, "nepl-image-original")?;
+                self.image(node, original)?;
+                if let Some(caption) = caption {
+                    let e = self.element(Some(figure), node, HtmlTag::Figcaption)?;
+                    self.job(caption.0, e, level)?;
+                }
+            }
+
             Body { blocks } => {
                 for child in blocks.iter().rev() {
                     self.job(child.0, parent, level)?;

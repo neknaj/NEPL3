@@ -1,5 +1,5 @@
 //! Host-only packaging of the fixed production stylesheet.
-use super::{CSS, err};
+use super::err;
 use nepl3_core::{
     budget::{Budget, Resource},
     source::Digest,
@@ -44,23 +44,27 @@ const EXTERNAL: &str = "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><me
 const MIDDLE: &str = "' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; base-uri 'none'; form-action 'none'\"><title>NEPL3 Doc</title><link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&amp;display=swap\"><style>";
 const SUFFIX: &str = "</style></head><body>\n";
 
-pub(super) fn head(mode: CssMode, budget: &mut Budget) -> Result<Cow<'static, str>, String> {
+pub(super) fn head_with_css(
+    mode: CssMode,
+    css: &str,
+    budget: &mut Budget,
+) -> Result<Cow<'static, str>, String> {
     if mode == CssMode::External {
         return Ok(Cow::Borrowed(EXTERNAL));
     }
-    // The stylesheet is a fixed backend asset, never document-controlled CSS.
+    // CSS is backend-owned, including numeric rules derived from validated SVG.
     // Reject raw-text delimiters rather than silently changing CSS/hash semantics.
-    check_inline_css(CSS)?;
-    let size = PREFIX.len() + "'sha256-".len() + 44 + MIDDLE.len() + CSS.len() + SUFFIX.len();
+    check_inline_css(css)?;
+    let size = PREFIX.len() + "'sha256-".len() + 44 + MIDDLE.len() + css.len() + SUFFIX.len();
     budget
-        .charge(Resource::Work, CSS.len() as u64)
+        .charge(Resource::Work, css.len() as u64)
         .map_err(err)?;
     budget
         .charge(Resource::AllocationUnits, (size + 44) as u64)
         .map_err(err)?;
-    let hash = csp_digest(Digest::of(CSS.as_bytes()));
+    let hash = csp_digest(Digest::of(css.as_bytes()));
     Ok(Cow::Owned(format!(
-        "{PREFIX}'sha256-{hash}{MIDDLE}{CSS}{SUFFIX}"
+        "{PREFIX}'sha256-{hash}{MIDDLE}{css}{SUFFIX}"
     )))
 }
 
@@ -104,6 +108,19 @@ fn csp_digest(digest: Digest) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::doc::export::CSS;
+    #[test]
+    fn custom_backend_stylesheet_uses_its_own_csp_hash() -> Result<(), String> {
+        let mut b = Budget::new(nepl3_core::budget::Limits {
+            work: 100000,
+            allocation_units: 100000,
+            ..nepl3_core::budget::Limits::default()
+        });
+        let head = head_with_css(CssMode::Inline, "abc", &mut b)?;
+        assert!(head.contains("sha256-ungWv48Bz+pBQUDeXa4iI7ADYaOWF3qctBD/YfIAFa0="));
+        assert!(head.contains("<style>abc</style>"));
+        Ok(())
+    }
     #[test]
     fn known_sha256_csp_hash_and_raw_text_boundaries() {
         // Published SHA-256 of 'abc', base64-encoded independently of the exporter.
@@ -127,6 +144,9 @@ mod tests {
     fn inline_header_respects_sticky_budget_failures() {
         let mut budget = super::super::budget();
         budget.cancel();
-        assert_eq!(head(CssMode::Inline, &mut budget), Err("Cancelled".into()));
+        assert_eq!(
+            head_with_css(CssMode::Inline, CSS, &mut budget),
+            Err("Cancelled".into())
+        );
     }
 }

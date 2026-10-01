@@ -584,3 +584,197 @@ fn inline_fragment_rejects_wrong_root_labels_dependencies_and_stops() -> Result<
     }
     Ok(())
 }
+
+#[test]
+fn svg_assets_are_explicit_and_checked_against_each_document() -> Result<(), String> {
+    use nepl3_doc_html::assets::*;
+    let r = registry()?;
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &store, &mut admission).map_err(err)?;
+    let mut req = request();
+    req.document.value.nodes[3].kind = DocKind::Body {
+        blocks: vec![BlockRef(4), BlockRef(4)],
+    };
+    req.document.value.nodes.push(DocNode {
+        kind: DocKind::Image {
+            asset: AssetRef {
+                id: "triangle".into(),
+                digest: None,
+            },
+            alt: SentenceRef(1),
+            caption: Some(SentenceRef(1)),
+        },
+        locations: vec![],
+        origin: None,
+        span: None,
+    });
+    let svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M0 0L10 0L5 10Z'/></svg>";
+    let inputs = [SvgInput {
+        id: "triangle",
+        svg,
+    }];
+    assert!(matches!(
+        prepare_local(&req.document, &req.options, &r, &mut codec, &mut b()),
+        Err(LocalPreparationError::NeedsResolution(_))
+    ));
+    for mode in [SvgMode::External, SvgMode::Embedded] {
+        let prepared = prepare_svg(
+            &req.document,
+            &req.options,
+            &inputs,
+            mode,
+            &r,
+            &mut codec,
+            &mut b(),
+        )
+        .map_err(err)?;
+        let fragment = render_svg(&prepared, &mut b()).map_err(err)?;
+        let imgs = fragment
+            .markup
+            .fragment
+            .nodes
+            .iter()
+            .filter(|n| {
+                matches!(
+                    n,
+                    nepl3_markup::html::HtmlNode::Element {
+                        tag: nepl3_markup::html::HtmlTag::Img,
+                        ..
+                    }
+                )
+            })
+            .count();
+        assert_eq!(imgs, 4);
+    }
+    assert!(matches!(
+        prepare_svg(
+            &req.document,
+            &req.options,
+            &[],
+            SvgMode::Embedded,
+            &r,
+            &mut codec,
+            &mut b()
+        ),
+        Err(AssetError::Missing)
+    ));
+    assert!(matches!(
+        prepare_svg(
+            &req.document,
+            &req.options,
+            &[
+                SvgInput {
+                    id: "triangle",
+                    svg
+                },
+                SvgInput {
+                    id: "triangle",
+                    svg
+                }
+            ],
+            SvgMode::Embedded,
+            &r,
+            &mut codec,
+            &mut b()
+        ),
+        Err(AssetError::Duplicate)
+    ));
+    assert!(matches!(
+        prepare_svg(
+            &req.document,
+            &req.options,
+            &[SvgInput { id: "other", svg }],
+            SvgMode::Embedded,
+            &r,
+            &mut codec,
+            &mut b()
+        ),
+        Err(AssetError::Unused)
+    ));
+    if let DocKind::Image { asset, .. } = &mut req.document.value.nodes[4].kind {
+        asset.digest = Some(nepl3_core::source::Digest::of(b"wrong"));
+    }
+    assert!(matches!(
+        prepare_svg(
+            &req.document,
+            &req.options,
+            &inputs,
+            SvgMode::Embedded,
+            &r,
+            &mut codec,
+            &mut b()
+        ),
+        Err(AssetError::Digest)
+    ));
+    Ok(())
+}
+
+#[test]
+fn unselected_parallel_still_requires_image_asset() -> Result<(), String> {
+    use nepl3_doc_html::assets::*;
+    let r = registry()?;
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &store, &mut admission).map_err(err)?;
+    let mut req = request();
+    req.options.parallel = ParallelMode::Single {
+        language: "en".into(),
+        fallbacks: vec![],
+    };
+    req.document.value.nodes[3].kind = DocKind::Body {
+        blocks: vec![BlockRef(4)],
+    };
+    for kind in [
+        DocKind::Paragraph {
+            items: vec![FlowRef(5)],
+        },
+        DocKind::Parallel {
+            variants: vec![VariantRef(6), VariantRef(9)],
+        },
+        DocKind::Variant {
+            language: "ja".into(),
+            sentence: SentenceRef(7),
+        },
+        DocKind::Sentence {
+            inlines: vec![InlineRef(8)],
+        },
+        DocKind::InlineImage {
+            asset: AssetRef {
+                id: "hidden".into(),
+                digest: None,
+            },
+            alt: SentenceRef(1),
+        },
+        DocKind::Variant {
+            language: "en".into(),
+            sentence: SentenceRef(10),
+        },
+        DocKind::Sentence {
+            inlines: vec![InlineRef(11)],
+        },
+        DocKind::Text {
+            text: "Selected".into(),
+        },
+    ] {
+        req.document.value.nodes.push(DocNode {
+            kind,
+            locations: vec![],
+            origin: None,
+            span: None,
+        });
+    }
+    assert!(matches!(
+        prepare_svg(
+            &req.document,
+            &req.options,
+            &[],
+            SvgMode::External,
+            &r,
+            &mut codec,
+            &mut b()
+        ),
+        Err(AssetError::Missing)
+    ));
+    Ok(())
+}
