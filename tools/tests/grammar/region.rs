@@ -96,6 +96,31 @@ fn actual_parser_region_selects_field_priority_before_inner_depth() -> Result<()
         let decoded = region::reply_decode(&value, &request, &received, &mut codec, &mut budget())
             .map_err(|e| format!("{e:?}"))?;
         assert_eq!(reply, decoded);
+        let source = &parsed.tree().bundle.sources[0];
+        let native = nepl3_lsp::highlight::normalize(
+            &reply,
+            &request.key,
+            source,
+            nepl3_core::source::PositionEncoding::Utf16,
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        let portable = nepl3_lsp::highlight::normalize(
+            &decoded,
+            &request.key,
+            source,
+            nepl3_core::source::PositionEncoding::Utf16,
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        assert!(!native.is_empty());
+        assert_eq!(native, portable);
+        assert!(
+            native
+                .windows(2)
+                .all(|pair| pair[0].byte_end <= pair[1].byte_start)
+        );
+
         Ok(())
     })
 }

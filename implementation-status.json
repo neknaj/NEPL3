@@ -91,7 +91,7 @@
     },
     {
       "id": "T14",
-      "status": "not-implemented",
+      "status": "in-progress",
       "evidence": []
     },
     {
@@ -455,6 +455,7 @@
     }
   ],
   "implemented_crates": [
+    "nepl3-lsp",
     "nepl3-provider",
     "nepl3-suite",
     "nepl3-core",
@@ -471,5 +472,5 @@
     "nepl3-math-tex",
     "nepl3-sentence-core"
   ],
-  "note": "Foundation runtime implementation is in progress. Implemented crate membership does not imply task or acceptance completion; required acceptance remains evidence-bound."
+  "note": "Foundation runtime implementation is in progress. Implemented crate membership does not imply task or acceptance completion; required acceptance remains evidence-bound. T14 currently exposes only the pure highlight span normalizer; LSP transport, legend negotiation and the full editor service remain unimplemented."
 }
