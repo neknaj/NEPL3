@@ -4,10 +4,15 @@
 toolchain、license、workspace設定、依存するpackageのlock記録を保持する。
 出力先には、存在しないディレクトリを指定する。
 
+抽出前にrepository rootで`cargo fetch --locked`を実行し、Cargo.lockで固定した全targetの依存を取得する。
+抽出時のCargo metadataはofflineで解決するため、hostのbuildだけで取得される依存に加えて、他targetの依存も必要である。
+lock記録を保持した取得と、抽出後のversion変更の検査を併用する。
+
 ## Foundation
 
 ```sh
 python -m pip install -r tools/extensions/requirements.txt
+cargo fetch --locked
 python tools/extensions/distribution.py /tmp/nepl3-foundation
 cargo test --locked --manifest-path /tmp/nepl3-foundation/Cargo.toml --workspace
 ```

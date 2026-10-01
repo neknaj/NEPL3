@@ -127,6 +127,7 @@ jobs:
         run: |
           python -m pip install -r tools/extensions/requirements.txt
           git fetch --no-tags --depth=1 origin 57ce1a006cd5017a340af0f4eea804308885a63d
+          cargo fetch --locked
           python -m unittest tools.extensions.test_run tools.extensions.test_distribution tools.extensions.test_history tools.extensions.test_compatibility
           python tools/extensions/run.py
           python tools/extensions/run.py --distribution --output dist/foundation-extension
