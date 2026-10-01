@@ -306,3 +306,39 @@ fn long_identity_cost_is_prepaid() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(got.len(), 1);
     Ok(())
 }
+
+#[test]
+fn source_identity_allocation_is_paid_once_by_core_index() -> Result<(), Box<dyn std::error::Error>>
+{
+    let mut usages = Vec::new();
+    for name in ["a".to_owned(), "字".repeat(1024)] {
+        let source = SourceSnapshot::new(
+            SourceId(name),
+            1,
+            "file:///same".into(),
+            b"word".to_vec(),
+            &mut b(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        let reply = reply(&source, vec![region(&source, 0, 4, 1, 0, 0)?]);
+        let mut budget = b();
+        let spans = normalize(
+            &reply,
+            &key(),
+            &source,
+            PositionEncoding::Utf16,
+            &mut budget,
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        assert_eq!(spans.len(), 1);
+        usages.push(budget.usage());
+    }
+    // Same text, line table and output vectors: only one owned SourceId copy
+    // varies with its UTF-8 byte length. position() allocates no temporary Span.
+    assert_eq!(
+        usages[1].allocation_units - usages[0].allocation_units,
+        3072 - 1
+    );
+    assert_eq!(usages[1].work - usages[0].work, 7 * (3072 - 1));
+    Ok(())
+}

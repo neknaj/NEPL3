@@ -86,8 +86,8 @@ pub fn normalize(
         return Ok(Vec::new());
     }
     let identity_bytes = source.identity().source.0.len() as u64;
-    b.charge(Resource::Work, identity_bytes.saturating_add(64))?;
-    b.charge(Resource::AllocationUnits, identity_bytes.saturating_add(64))?;
+    // Core LineIndex prepays its own SnapshotId copy. Position conversion
+    // only compares the identity and scans text; it creates no temporary Span.
     let index = LineIndex::new(source, b)?;
     let mut output = Vec::new();
     for span in spans {
@@ -95,12 +95,8 @@ pub fn normalize(
             Resource::Work,
             (source.text().len() as u64)
                 .saturating_mul(2)
-                .saturating_add(identity_bytes.saturating_mul(4))
+                .saturating_add(identity_bytes.saturating_mul(2))
                 .saturating_add(128),
-        )?;
-        b.charge(
-            Resource::AllocationUnits,
-            identity_bytes.saturating_mul(2).saturating_add(128),
         )?;
         let first = index.position(source, span.byte_start, encoding)?;
         let last = index.position(source, span.byte_end, encoding)?;
