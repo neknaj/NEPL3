@@ -39,6 +39,11 @@ body:has(>.nepl-doc){margin:0;background:#0d1117;color-scheme:dark}
 .nepl-reading{grid-row:1;grid-column:1;font-size:.6em;line-height:1;text-align:center;color:var(--nepl-muted)}
 .nepl-notes{grid-row:2;grid-column:1;font-size:.6em;line-height:1;text-align:center;color:var(--nepl-muted)}
 .nepl-note{display:block}
+.nepl-ruby,.nepl-anno{margin-inline:.09em}
+.nepl-anno>.nepl-base,.nepl-ruby>.nepl-base{--nepl-scope-edge:#91aabd;position:relative;background:rgba(117,170,205,.055);padding:.02em .16em .04em;border-radius:.16em}
+.nepl-anno .nepl-anno>.nepl-base{--nepl-scope-edge:#bab0cc}
+.nepl-anno>.nepl-base::after{content:"";position:absolute;left:0;right:0;bottom:0;height:.18em;border:solid var(--nepl-scope-edge);border-width:0 1px 1px;border-radius:0 0 .16em .16em;opacity:.5;pointer-events:none}
+.nepl-notes{padding-top:.06em}
 @supports not ((baseline-source:first) and (baseline-source:last)){
   .nepl-ruby,.nepl-anno{display:inline-table;width:max-content;white-space:pre;border-collapse:collapse;border-spacing:0}
   .nepl-ruby>.nepl-base{display:inline-block}
@@ -53,3 +58,6 @@ body:has(>.nepl-doc){margin:0;background:#0d1117;color-scheme:dark}
 .nepl-align-center{text-align:center}
 .nepl-align-right{text-align:right}
 .nepl-checkbox{white-space:pre}
+@media(max-width:40rem){
+  .nepl-doc th,.nepl-doc td{padding-inline:.45em}
+}
