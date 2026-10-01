@@ -132,6 +132,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "nepl3-lsp"
+version = "0.1.0"
+dependencies = [
+ "nepl3-core",
+ "nepl3-engine",
+]
+
+[[package]]
 name = "nepl3-markup"
 version = "0.1.0"
 dependencies = [
@@ -212,6 +220,7 @@ dependencies = [
  "nepl3-doc-html",
  "nepl3-engine",
  "nepl3-grammar-core",
+ "nepl3-lsp",
  "nepl3-markup",
  "nepl3-math-core",
  "nepl3-math-mathml",
