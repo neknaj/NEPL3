@@ -662,3 +662,146 @@ fn svg_intrinsic_dimensions_are_profile_checked_and_metered()
     );
     Ok(())
 }
+
+#[test]
+fn svg_path_glyphs_admit_only_local_leaf_instances() -> Result<(), StopReason> {
+    let input = "<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' viewBox='0 0 10 10'><defs><path id='glyph' d='M0 0L2 3Z'/></defs><g transform='matrix(1 0 0 1 -2.5 .3)'><use xlink:href='#glyph' x='1.25' y='-.5'/></g></svg>";
+    assert!(svg::validate(input, &mut budget())?);
+    assert!(svg::validate(
+        &input.replace("xlink:href", "href"),
+        &mut budget()
+    )?);
+    let forward = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><use href='#g'/><defs><path id='g' d='M0 0L1 1'/></defs></svg>";
+    assert!(svg::validate(forward, &mut budget())?);
+    for bad in [
+        input.replace("#glyph", "other.svg#glyph"),
+        input.replace("#glyph", "https://example.org/a.svg#glyph"),
+        input.replace("#glyph", "data:image/svg+xml,abc"),
+        input.replace("#glyph", "#missing"),
+        input.replace("#glyph", "#%67lyph"),
+        input.replace("#glyph", "#glyph&#32;"),
+        input.replace("xmlns:xlink='http://www.w3.org/1999/xlink'", ""),
+        input.replace("xlink:href='#glyph'", "href='#glyph' xlink:href='#glyph'"),
+        input.replace("x='1.25'", "x='1e2'"),
+        input.replace("x='1.25'", "x='1px'"),
+        input.replace("matrix(1 0 0 1 -2.5 .3)", "matrix(2 0 0 1 0 0)"),
+        input.replace("matrix(1 0 0 1 -2.5 .3)", "matrix(1 0 0 1 1e2 0)"),
+        input.replace("matrix(1 0 0 1 -2.5 .3)", "translate(2 3)"),
+        input.replace(
+            "matrix(1 0 0 1 -2.5 .3)",
+            "matrix(1 0 0 1 0 0) matrix(1 0 0 1 0 0)",
+        ),
+        input.replace("y='-.5'/>", "y='-.5'><path d='M0 0'/></use>"),
+        input.replace(
+            "<path id='glyph' d='M0 0L2 3Z'/>",
+            "<path id='glyph' d='M0 0L2 3Z'></path>",
+        ),
+        input.replace(
+            "<path id='glyph' d='M0 0L2 3Z'/>",
+            "<use id='glyph' href='#glyph'/>",
+        ),
+        input.replace(
+            "<path id='glyph' d='M0 0L2 3Z'/>",
+            "<g id='glyph'><path d='M0 0'/></g>",
+        ),
+        input.replace("<defs>", "<g>").replace("</defs>", "</g>"),
+        input
+            .replace("<defs>", "<g><defs>")
+            .replace("</defs>", "</defs></g>"),
+        input.replace("<g transform", "<g id='glyph' transform"),
+    ] {
+        assert!(!svg::validate(&bad, &mut budget())?, "accepted {bad}");
+    }
+    Ok(())
+}
+
+#[test]
+fn svg_glyph_expansion_caps_whole_elements_and_meters_instances() -> Result<(), StopReason> {
+    let wrap = |body: &str| {
+        format!("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'>{body}</svg>")
+    };
+    let definition = "<defs><path id='g' d='M0 0'/></defs>";
+    let source = wrap(&format!(
+        "{definition}{}",
+        "<use href='#g'/>".repeat(svg::MAX_USES)
+    ));
+    assert!(svg::validate(&source, &mut budget())?);
+    let too_many = source.replace("</svg>", "<use href='#g'/></svg>");
+    assert!(!svg::validate(&too_many, &mut budget())?);
+    // Large whitespace is part of the instantiated element cost, even with tiny d.
+    let huge = wrap(&format!(
+        "<defs><path {}id='g' d='M0 0'/></defs>{}",
+        " ".repeat(65_536),
+        "<use href='#g'/>".repeat(128)
+    ));
+    assert!(huge.len() < svg::MAX_BYTES);
+    assert!(!svg::validate(&huge, &mut budget())?);
+    let simple = wrap(&format!("{definition}<use href='#g'/>"));
+    let mut usage = budget();
+    assert!(svg::validate(&simple, &mut usage)?);
+    // svg, defs, path and use plus the instantiated path.
+    assert_eq!(usage.usage().nodes, 5);
+    for limits in [
+        Limits {
+            nodes: 4,
+            ..budget().limits()
+        },
+        Limits {
+            allocation_units: 0,
+            ..budget().limits()
+        },
+        Limits {
+            work: usage.usage().work - 1,
+            ..budget().limits()
+        },
+    ] {
+        assert!(svg::validate(&simple, &mut Budget::new(limits)).is_err());
+    }
+    Ok(())
+}
+
+#[test]
+fn svg_glyph_exact_expansion_and_nested_budget_boundaries() -> Result<(), StopReason> {
+    let path = |id: &str, bytes: usize| {
+        let empty = format!("<path id='{id}' d='M0 0'/>");
+        format!(
+            "<path {}id='{id}' d='M0 0'/>",
+            " ".repeat(bytes - empty.len())
+        )
+    };
+    for (extra, expected) in [(0, true), (1, false)] {
+        let input = format!(
+            "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><defs>{}{}</defs>{}<use href='#g1'/></svg>",
+            path("g0", 65_536),
+            path("g1", 65_536 + extra),
+            "<use href='#g0'/>".repeat(127)
+        );
+        assert_eq!(svg::validate(&input, &mut budget())?, expected);
+    }
+    let input = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><defs><path id='g' d='M0 0'/></defs><g><use href='#g'/></g></svg>";
+    for base in [0, 5] {
+        let mut exact = Budget::new(Limits {
+            depth: base + 4,
+            ..budget().limits()
+        });
+        assert!(exact.with_depth_at_least(base, |b| svg::validate(input, b))?);
+        assert_eq!(exact.usage().depth, base + 4);
+        let mut limited = Budget::new(Limits {
+            depth: base + 3,
+            ..budget().limits()
+        });
+        assert_eq!(
+            limited.with_depth_at_least(base, |b| svg::validate(input, b)),
+            Err(StopReason::DepthLimit)
+        );
+        assert_eq!(limited.poll(), Err(StopReason::DepthLimit));
+    }
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert_eq!(
+        svg::validate(input, &mut cancelled),
+        Err(StopReason::Cancelled)
+    );
+    assert_eq!(cancelled.poll(), Err(StopReason::Cancelled));
+    Ok(())
+}
