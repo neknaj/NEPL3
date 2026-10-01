@@ -1176,3 +1176,86 @@ fn admission_usage_does_not_depend_on_snapshot_allocation_order() -> Result<(), 
     assert_eq!(run(false)?, run(true)?);
     Ok(())
 }
+
+#[test]
+fn line_index_prepays_owned_source_identity() -> Result<(), SourceError> {
+    let short = source("a", 0, "x")?;
+    let long = source(&"a".repeat(4096), 0, "x")?;
+    let mut short_budget = budget();
+    let _ = LineIndex::new(&short, &mut short_budget)?;
+    let mut full = budget();
+    let index = LineIndex::new(&long, &mut full)?;
+    assert_eq!(
+        full.usage().allocation_units - short_budget.usage().allocation_units,
+        4095
+    );
+    assert_eq!(full.usage().work - short_budget.usage().work, 4095);
+    assert_eq!(
+        index.position(&long, 1, PositionEncoding::Utf16)?,
+        Position {
+            line: 0,
+            character: 1
+        }
+    );
+    for limit in [0, 64, full.usage().allocation_units - 1] {
+        let mut limited = Budget::new(Limits {
+            allocation_units: limit,
+            ..budget().limits()
+        });
+        assert!(matches!(
+            LineIndex::new(&long, &mut limited),
+            Err(SourceError::Stopped(StopReason::AllocationLimit))
+        ));
+        assert_eq!(limited.poll(), Err(StopReason::AllocationLimit));
+    }
+    let mut limited = Budget::new(Limits {
+        work: full.usage().work - 1,
+        ..budget().limits()
+    });
+    assert!(matches!(
+        LineIndex::new(&long, &mut limited),
+        Err(SourceError::Stopped(StopReason::WorkLimit))
+    ));
+    assert_eq!(limited.poll(), Err(StopReason::WorkLimit));
+    Ok(())
+}
+
+#[test]
+fn line_index_identity_uses_bytes_and_exact_remaining_limits() -> Result<(), SourceError> {
+    let snapshot = source(&"日".repeat(1000), 0, "")?;
+    let mut measured = budget();
+    let _ = LineIndex::new(&snapshot, &mut measured)?;
+    assert_eq!(measured.usage().work, 3000);
+    let mut short = budget();
+    let _ = LineIndex::new(&source("a", 0, "")?, &mut short)?;
+    assert_eq!(
+        measured.usage().allocation_units - short.usage().allocation_units,
+        2999
+    );
+    let limits = Limits {
+        work: measured.usage().work + 7,
+        allocation_units: measured.usage().allocation_units + 11,
+        ..budget().limits()
+    };
+    let mut exact = Budget::new(limits);
+    exact.charge(Resource::Work, 7)?;
+    exact.charge(Resource::AllocationUnits, 11)?;
+    let index = LineIndex::new(&snapshot, &mut exact)?;
+    assert_eq!(index.line_count(), 1);
+    assert_eq!(exact.usage().work, limits.work);
+    assert_eq!(exact.usage().allocation_units, limits.allocation_units);
+    assert_eq!(
+        index.position(&snapshot, 0, PositionEncoding::Utf32)?,
+        Position {
+            line: 0,
+            character: 0
+        }
+    );
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert!(matches!(
+        LineIndex::new(&snapshot, &mut cancelled),
+        Err(SourceError::Stopped(StopReason::Cancelled))
+    ));
+    Ok(())
+}

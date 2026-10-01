@@ -458,6 +458,8 @@ jobs:
           python tools/audit/doc_html/export.py target/debug/nepl3-tools dist/doc-browser/export-modes > dist/doc-browser/export-modes.json
       - name: Check SVG sizing and disclosures in three browsers
         run: python tools/audit/doc_html/svg.py target/debug/nepl3-tools dist/doc-browser/svg > dist/doc-browser/svg.json
+      - name: Shared code highlighting and themes
+        run: python tools/audit/doc_html/code.py target/debug/nepl3-tools dist/doc-browser/code > dist/doc-browser/code.json
       - name: Check recursive Math and Sentence annotations in three browsers
         run: |
           cargo test --locked -p nepl3-tools --lib doc::source::tests::math_sentence_math_printing_preserves_recursive_source -- --exact --nocapture > dist/doc-browser/math-annotations.log
