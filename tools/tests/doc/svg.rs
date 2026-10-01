@@ -207,3 +207,83 @@ fn conditional_disclosure_uses_intrinsic_dimensions_in_both_css_modes()
     fs::remove_dir_all(root)?;
     Ok(())
 }
+
+#[test]
+fn local_path_glyphs_export_in_every_asset_mode() -> Result<(), Box<dyn std::error::Error>> {
+    let root = std::env::temp_dir().join(format!(
+        "nepl3-glyphs-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)?
+            .as_nanos()
+    ));
+    fs::create_dir(&root)?;
+    let glyphs = "<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='100' height='60' viewBox='0 0 100 60'><defs><path id='g' d='M0 0L10 0L10 20Z'/></defs><g transform='matrix(1 0 0 1 10 10)'><use href='#g' x='5' y='7'/><use xlink:href='#g' x='40' y='7'/></g></svg>";
+    fs::write(
+        root.join("input.nepld"),
+        "article ja \"SVG\" body cons image asset \"glyphs\" none \"文字\" none nil",
+    )?;
+    fs::write(root.join("figure.svg"), glyphs)?;
+    fs::write(
+        root.join("assets.json"),
+        r#"{"version":1,"assets":[{"id":"glyphs","source":"figure.svg","mime":"image/svg+xml"}]}"#,
+    )?;
+    for css in ["external", "inline"] {
+        for mode in ["external", "embedded"] {
+            let dir = format!("{css}-{mode}");
+            let result = run(&root, css, mode, &dir)?;
+            assert!(
+                result.status.success(),
+                "{}",
+                String::from_utf8_lossy(&result.stderr)
+            );
+            let html = fs::read_to_string(root.join(&dir).join("document.html"))?;
+            assert_eq!(html.matches("<img ").count(), 2);
+            let manifest: serde_json::Value =
+                serde_json::from_slice(&fs::read(root.join(&dir).join("manifest.json"))?)?;
+            assert_eq!(manifest["resources"][0]["mode"], mode);
+            if mode == "external" {
+                let digest = manifest["resources"][0]["sha256"]
+                    .as_str()
+                    .ok_or("digest")?;
+                assert_eq!(
+                    fs::read_to_string(root.join(&dir).join(format!("assets/{digest}.svg")))?,
+                    glyphs
+                );
+            } else {
+                let encoded = html
+                    .split("src=\"data:image/svg+xml;base64,")
+                    .nth(1)
+                    .and_then(|rest| rest.split('"').next())
+                    .ok_or("embedded SVG")?;
+                let alphabet = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+                let mut decoded = Vec::new();
+                let mut buffer = 0u32;
+                let mut bits = 0u32;
+                for byte in encoded.bytes().take_while(|byte| *byte != b'=') {
+                    let value = alphabet
+                        .iter()
+                        .position(|candidate| *candidate == byte)
+                        .ok_or("base64 digit")?;
+                    buffer = (buffer << 6) | value as u32;
+                    bits += 6;
+                    if bits >= 8 {
+                        bits -= 8;
+                        decoded.push((buffer >> bits) as u8);
+                        buffer &= (1 << bits) - 1;
+                    }
+                }
+                assert_eq!(decoded, glyphs.as_bytes());
+            }
+        }
+    }
+    fs::write(root.join("figure.svg"), glyphs.replace("#g", "other.svg#g"))?;
+    assert!(
+        !run(&root, "inline", "embedded", "invalid")?
+            .status
+            .success()
+    );
+    assert!(!root.join("invalid").exists());
+    fs::remove_dir_all(root)?;
+    Ok(())
+}

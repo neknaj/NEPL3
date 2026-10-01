@@ -523,7 +523,7 @@ fn embedded_svg_roundtrip_is_revalidated() -> Result<(), String> {
                 tag: HtmlTag::Img,
                 attributes: vec![
                     HtmlAttribute::EmbeddedSvg {
-                        svg: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/>".into(),
+                        svg: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><defs><path id='g' d='M0 0L1 1'/></defs><use href='#g'/></svg>".into(),
                     },
                     HtmlAttribute::Alt {
                         value: "図".into()
@@ -548,7 +548,7 @@ fn embedded_svg_roundtrip_is_revalidated() -> Result<(), String> {
     fn corrupt_svg(value: &mut NdfValue) -> bool {
         match value {
             NdfValue::Text(s) if s.starts_with("<svg") => {
-                *s = "<svg><script/></svg>".into();
+                *s = s.replace("href='#g'", "href='#missing'");
                 true
             }
             NdfValue::Record(r) => r.fields.iter_mut().any(corrupt_svg),
