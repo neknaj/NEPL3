@@ -1,4 +1,5 @@
 //! Validate persistent selections and recovery indices against their concrete owners.
+pub(crate) mod read;
 use crate::{
     package::{LanguagePackage, PackageError, ReadSpec},
     profile::{ProfileError, ResolvedParseProfile, ResolvedRead},
@@ -331,8 +332,8 @@ fn static_fields(
                 .get(usize::try_from(index).map_err(|_| TreeError::Selection)?)
                 .ok_or(TreeError::Selection)?;
             spelling(bundle, node, &form.spelling, budget)?;
-            for (spec, value) in form.fields.iter().zip(&node.fields) {
-                let expected = profile.read_entry(&selected.entry, spec.read, budget)?;
+            for (index, value) in node.fields.iter().enumerate() {
+                let expected = read::child(selected, index, profile, budget)?;
                 field(value, &expected, bundle, context, contexts, package, budget)?;
             }
         }
@@ -385,45 +386,18 @@ fn static_fields(
             }
         }
         ShapeSelection::List { read, cons } => {
-            let ReadSpec::ListOf { element, .. } = package.read(read)? else {
+            let ReadSpec::ListOf { .. } = package.read(read)? else {
                 return Err(TreeError::Selection);
             };
             spelling(bundle, node, if cons { "cons" } else { "nil" }, budget)?;
             if cons {
-                let expected = profile.read_entry(&selected.entry, *element, budget)?;
-                field(
-                    &node.fields[0],
-                    &expected,
-                    bundle,
-                    context,
-                    contexts,
-                    package,
-                    budget,
-                )?;
-                // The tail keeps the resolved spine entry; it does not reapply category defaults.
-                budget.charge(
-                    Resource::AllocationUnits,
-                    (selected.entry.alias.len()
-                        + selected.entry.category.len()
-                        + selected.entry.mode.len()
-                        + selected.entry.package.schema.package.len()) as u64,
-                )?;
-                let expected = ResolvedRead {
-                    entry: selected.entry.clone(),
-                    read: Some(read),
-                    foreign: false,
-                };
-                field(
-                    &node.fields[1],
-                    &expected,
-                    bundle,
-                    context,
-                    contexts,
-                    package,
-                    budget,
-                )?;
+                for (index, value) in node.fields.iter().enumerate() {
+                    let expected = read::child(selected, index, profile, budget)?;
+                    field(value, &expected, bundle, context, contexts, package, budget)?;
+                }
             }
         }
+
         ShapeSelection::Dynamic {
             ref shape,
             ref child_contexts,
@@ -442,28 +416,8 @@ fn static_fields(
             if child_contexts.len() != shape.fields.len() {
                 return Err(TreeError::Selection);
             }
-            for ((spec, value), actual) in shape.fields.iter().zip(&node.fields).zip(child_contexts)
-            {
-                profile.validate_entry(actual, budget)?;
-                let mut expected = profile.read_entry(&selected.entry, spec.read, budget)?;
-                // A fixed builtin/list slot still names a concrete local shape. A
-                // category slot can retarget its category/mode, and a Foreign slot
-                // can select a different registered guest without changing the slot.
-                if expected.read.is_some() {
-                    if actual != &expected.entry {
-                        return Err(TreeError::Selection);
-                    }
-                } else if !expected.foreign && actual.alias != selected.entry.alias {
-                    return Err(TreeError::Selection);
-                }
-                budget.charge(
-                    Resource::AllocationUnits,
-                    (actual.alias.len()
-                        + actual.category.len()
-                        + actual.mode.len()
-                        + actual.package.schema.package.len()) as u64,
-                )?;
-                expected.entry = actual.clone();
+            for (index, value) in node.fields.iter().enumerate() {
+                let expected = read::child(selected, index, profile, budget)?;
                 field(value, &expected, bundle, context, contexts, package, budget)?;
             }
         }
