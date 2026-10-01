@@ -40,6 +40,7 @@ MEASURE = """() => {
     const base = node.querySelector(':scope > .nepl-base');
     const style = getComputedStyle(base);
     const edge = getComputedStyle(base, '::after');
+    if (style.position !== 'relative' || edge.content === 'none' || edge.content === 'normal' || edge.pointerEvents !== 'none') throw Error('Annotation bracket is missing or intercepts input');
     if (edge.position !== 'absolute' || edge.bottom !== '0px' || edge.left !== '0px' || edge.right !== '0px') throw Error('Annotation bracket does not follow its scope');
     if (edge.borderBottomWidth !== '1px' || edge.borderLeftWidth !== '1px' || edge.borderRightWidth !== '1px') throw Error('Missing annotation endpoints');
     if (parseFloat(edge.borderBottomLeftRadius) <= 0 || parseFloat(edge.borderBottomRightRadius) <= 0) throw Error('Annotation bracket is not rounded');
