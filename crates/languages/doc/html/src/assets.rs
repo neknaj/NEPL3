@@ -46,6 +46,42 @@ pub fn prepare_svg<'a, C: FoundationValueCodec>(
     codec: &mut C,
     budget: &mut Budget,
 ) -> Result<PreparedSvgArticle<'a>, AssetError<'a, C::Error>> {
+    prepare_svg_impl(
+        document, options, inputs, mode, registry, codec, budget, false,
+    )
+    .map(PreparedSvgArticle)
+}
+
+/// Local composition with retained Code guests. Code output remains an explicit
+/// host callback at render time; other foreign requirements stay unresolved.
+pub struct PreparedSvgCodeArticle<'a>(pub(crate) crate::prepare::PreparedRendering<'a>);
+
+pub fn prepare_svg_code<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    options: &'a RenderOptions,
+    inputs: &[SvgInput<'_>],
+    mode: SvgMode,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<PreparedSvgCodeArticle<'a>, AssetError<'a, C::Error>> {
+    prepare_svg_impl(
+        document, options, inputs, mode, registry, codec, budget, true,
+    )
+    .map(PreparedSvgCodeArticle)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn prepare_svg_impl<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    options: &'a RenderOptions,
+    inputs: &[SvgInput<'_>],
+    mode: SvgMode,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+    code: bool,
+) -> Result<crate::prepare::PreparedRendering<'a>, AssetError<'a, C::Error>> {
     let plan = prepare::inspect(document, registry, codec, budget)
         .map_err(|e| AssetError::Preparation(LocalPreparationError::Input(e)))?;
     for (i, input) in inputs.iter().enumerate() {
@@ -72,6 +108,18 @@ pub fn prepare_svg<'a, C: FoundationValueCodec>(
     }
     let mut images = Vec::new();
     for req in &plan.requirements {
+        budget.charge(Resource::Work, 1)?;
+        if code
+            && matches!(
+                req,
+                prepare::DocRequirement::Foreign {
+                    kind: EmbedKind::Code,
+                    ..
+                }
+            )
+        {
+            continue;
+        }
         let prepare::DocRequirement::Asset { node, asset } = req else {
             return Err(AssetError::Unsupported);
         };
@@ -130,11 +178,19 @@ pub fn prepare_svg<'a, C: FoundationValueCodec>(
         crate::prepare::prepare_rendering(document, options, plan.document_digest, budget)
             .map_err(AssetError::Preparation)?;
     prepared.images = images;
-    Ok(PreparedSvgArticle(prepared))
+    Ok(prepared)
 }
 pub fn render_svg(
     prepared: &PreparedSvgArticle<'_>,
     budget: &mut Budget,
 ) -> Result<RenderedFragment, RenderError> {
     crate::build::render_prepared(&prepared.0, &[], budget)
+}
+
+pub fn render_svg_code<E>(
+    prepared: &PreparedSvgCodeArticle<'_>,
+    adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
+    budget: &mut Budget,
+) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
+    crate::build::render_prepared_with_foreign(&prepared.0, &[], adapter, budget, true)
 }

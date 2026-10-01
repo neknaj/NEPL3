@@ -10,6 +10,7 @@ use nepl3_core::{
     view::PresentationClass,
 };
 pub(crate) mod check;
+pub mod highlight;
 mod mapping;
 pub mod query;
 mod run;
@@ -137,7 +138,8 @@ pub struct RegionReply {
     pub sources: Vec<SourceSnapshot>,
 }
 /// Returns source regions with original overlaps/classes plus a position
-/// selection. LSP line splitting and overlap normalization belong to its adapter.
+/// selection. Display clients may apply highlight::normalize; LSP position
+/// encoding and legend negotiation remain adapter responsibilities.
 pub fn regions(
     input: &PreparedRegionInput<'_, '_, '_>,
     request: &RegionRequest,
