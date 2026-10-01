@@ -126,9 +126,13 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           python -m pip install -r tools/extensions/requirements.txt
-          python -m unittest tools.extensions.test_run tools.extensions.test_distribution
+          git fetch --no-tags --depth=1 origin 57ce1a006cd5017a340af0f4eea804308885a63d
+          cargo fetch --locked
+          python -m unittest tools.extensions.test_run tools.extensions.test_distribution tools.extensions.test_history tools.extensions.test_compatibility
           python tools/extensions/run.py
           python tools/extensions/run.py --distribution --output dist/foundation-extension
+          python tools/extensions/run.py --consumer-revision 57ce1a006cd5017a340af0f4eea804308885a63d --output dist/fixed-consumer
+          python tools/extensions/run.py --distribution --consumer-revision 57ce1a006cd5017a340af0f4eea804308885a63d --output dist/fixed-distribution
       - name: Extract Doc against standalone Foundation
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -142,7 +146,9 @@ jobs:
           name: external-consumer-${{ matrix.os }}
           path: |
             dist/external-extension/
-            dist/foundation-extension/
+            dist/foundation-extension
+            dist/fixed-consumer
+            dist/fixed-distribution/
           if-no-files-found: error
           retention-days: 14
       - name: Export the real Doc example
