@@ -49,6 +49,7 @@ struct Scenario {
     share_missing: bool,
     forms: Option<&'static [&'static str]>,
     sealed: bool,
+    executed: bool,
     work: Option<u64>,
     list: bool,
     cap: Option<u64>,
@@ -66,6 +67,7 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
         share_missing,
         forms,
         sealed,
+        executed,
         list,
         cap,
         work,
@@ -326,13 +328,27 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
                     calls: 0,
                     minimum_depth: caller_depth + 3,
                 };
-                let result = session.read_with_host(
-                    request,
-                    &sources,
-                    operation,
-                    &mut admission,
-                    &mut host,
-                )?;
+                let result = if executed {
+                    let value = session.read_executed_with_host(
+                        request,
+                        &sources,
+                        operation,
+                        &mut admission,
+                        &mut host,
+                    )?;
+                    ParseHostReply {
+                        reply: unseal_execution(value.execution),
+                        host_error: value.host_error,
+                    }
+                } else {
+                    session.read_with_host(
+                        request,
+                        &sources,
+                        operation,
+                        &mut admission,
+                        &mut host,
+                    )?
+                };
                 if matches!(
                     action,
                     host::Action::FailSecond | host::Action::GeneratedFailSecond
@@ -343,7 +359,11 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
                 }
                 Ok(result.reply)
             } else {
-                if sealed {
+                if executed {
+                    session
+                        .read_executed(request, &sources, operation, &mut admission)
+                        .map(unseal_execution)
+                } else if sealed {
                     session
                         .read_completed(request, &sources, operation, &mut admission)
                         .map(unseal)
@@ -455,15 +475,26 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
                 Err(ParseError::Continuation)
             ));
         }
-        let resumed = session
-            .continue_input(
+        let resumed = if executed {
+            session
+                .continue_input_executed(
+                    progress,
+                    request(),
+                    &next_store,
+                    &mut operation,
+                    &mut admission,
+                )
+                .map(unseal_execution)
+        } else {
+            session.continue_input(
                 progress,
                 request(),
                 &next_store,
                 &mut operation,
                 &mut admission,
             )
-            .map_err(|e| format!("continue: {e:?}"))?;
+        }
+        .map_err(|e| format!("continue: {e:?}"))?;
         assert!(matches!(
             session.continue_input(
                 progress,
@@ -595,7 +626,17 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
                     .map_err(|e| format!("host: {e:?}"))?;
                 let resumed = operation
                     .with_depth_at_least(caller_depth, |b| {
-                        if sealed {
+                        if executed {
+                            session
+                                .resume_executed(
+                                    continuation,
+                                    terminal,
+                                    &sources,
+                                    b,
+                                    &mut admission,
+                                )
+                                .map(unseal_execution)
+                        } else if sealed {
                             session
                                 .resume_completed(
                                     continuation,
@@ -652,7 +693,17 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
             ));
             let resumed = operation
                 .with_depth_at_least(caller_depth, |operation| {
-                    if sealed {
+                    if executed {
+                        session
+                            .reserve_executed(
+                                continuation,
+                                &reservation,
+                                &sources,
+                                operation,
+                                &mut admission,
+                            )
+                            .map(unseal_execution)
+                    } else if sealed {
                         session
                             .reserve_completed(
                                 continuation,
@@ -1723,5 +1774,120 @@ fn native_host_nested_stop_is_sticky_without_host_mutating_budget() -> TestResul
         }
     ));
     assert_eq!(reply.report.diagnostics.len(), 1);
+    Ok(())
+}
+
+fn unseal_execution(value: ParseExecution) -> ParseReply {
+    match value {
+        ParseExecution::Continue(proof) => {
+            let kind = proof.kind();
+            let cursor = proof.cursor();
+            let raw = proof.into_reply();
+            let actual = match &raw.outcome {
+                ParseOutcome::Complete { cursor, .. } => Some((ExecutionKind::Complete, *cursor)),
+                ParseOutcome::Recovered { cursor, .. } => Some((ExecutionKind::Recovered, *cursor)),
+                _ => None,
+            };
+            assert_eq!(actual, Some((kind, cursor)));
+            raw
+        }
+        ParseExecution::Break(raw) => {
+            assert!(!matches!(
+                raw.outcome,
+                ParseOutcome::Complete { .. } | ParseOutcome::Recovered { .. }
+            ));
+            raw
+        }
+    }
+}
+#[test]
+fn executed_parse_preserves_recovery_reports_continuations_and_costs() -> TestResult {
+    for (input, final_input, text, provider, work) in [
+        ("let x x", true, false, false, None),
+        ("let x", true, false, false, None),
+        ("let x", false, false, false, None),
+        ("x", true, false, false, Some(0)),
+        ("let \"x\" \"x\"", true, true, false, None),
+        ("let x x", true, false, true, None),
+        ("let x", true, false, true, None),
+    ] {
+        let raw = run_scenario(
+            input,
+            final_input,
+            Scenario {
+                text,
+                provider,
+                work,
+                ..Scenario::default()
+            },
+        )?;
+        let proof = run_scenario(
+            input,
+            final_input,
+            Scenario {
+                executed: true,
+                text,
+                provider,
+                work,
+                ..Scenario::default()
+            },
+        )?;
+        assert_eq!(raw, proof, "{input}");
+    }
+    Ok(())
+}
+
+#[test]
+fn executed_parse_preserves_append_and_native_host_failure_boundaries() -> TestResult {
+    for action in [
+        host::Action::Serve,
+        host::Action::DeclineSecond,
+        host::Action::FailSecond,
+        host::Action::CancelSecond,
+        host::Action::NestedStopSecond,
+        host::Action::GeneratedFailSecond,
+        host::Action::GeneratedCancelSecond,
+    ] {
+        let raw = run_scenario(
+            "let x y",
+            true,
+            Scenario {
+                provider: true,
+                native: Some(action),
+                ..Scenario::default()
+            },
+        )?;
+        let proof = run_scenario(
+            "let x y",
+            true,
+            Scenario {
+                executed: true,
+                provider: true,
+                native: Some(action),
+                ..Scenario::default()
+            },
+        )?;
+        assert_eq!(raw, proof, "{action:?}");
+    }
+    for next in ["let x x", "let x"] {
+        let raw = run_scenario(
+            "let",
+            false,
+            Scenario {
+                restart: Some(next),
+                ..Scenario::default()
+            },
+        )?;
+        let proof = run_scenario(
+            "let",
+            false,
+            Scenario {
+                executed: true,
+                restart: Some(next),
+                ..Scenario::default()
+            },
+        )?;
+        assert_eq!(raw, proof, "{next}");
+    }
     Ok(())
 }

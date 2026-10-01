@@ -1,6 +1,8 @@
 //! Prefix execution and operation-local continuation ownership.
 mod build;
 mod completed;
+mod executed;
+pub use executed::{ExecutedParse, ExecutionKind, ParseExecution, ParseHostExecution};
 mod copy;
 pub use completed::{CompletedParse, ParseCompletion};
 mod diagnostic;
