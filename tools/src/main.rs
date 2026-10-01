@@ -53,6 +53,23 @@ fn run() -> nepl3_tools::Result<()> {
                 css,
             )
         }
+        [
+            "doc-html",
+            "svg",
+            "--css",
+            css,
+            "--svg",
+            mode,
+            input,
+            assets,
+            output,
+        ] => nepl3_tools::doc::export::assets::write(
+            std::path::Path::new(input),
+            std::path::Path::new(assets),
+            std::path::Path::new(output),
+            css.parse()?,
+            mode,
+        ),
         ["doc-html", "pages", manifest, output] => nepl3_tools::doc::export::pages::write(
             std::path::Path::new(manifest),
             std::path::Path::new(output),
@@ -87,7 +104,7 @@ fn run() -> nepl3_tools::Result<()> {
                 "nepl3-tools doc-markdown annotated <input.nepld> <aliases.json> <new-output.md>"
             );
             println!(
-                "nepl3-tools check | tasks --check | tasks --write | evidence identity\n  foundation --write | reader --write | engine --write | grammar --write | doc --write | math --write | sentence --write | markup --write | doc-html --write\n  doc-html export [--css external|inline] <input.nepld> <new-output-directory>\n  doc-html pages <manifest.json> <new-output-directory>\n  doc-inventory --write --commit <40-hex-commit> | doc-inventory --check | doc-inventory --check-current\nRepository checks do not establish runtime conformance."
+                "nepl3-tools check | tasks --check | tasks --write | evidence identity\n  foundation --write | reader --write | engine --write | grammar --write | doc --write | math --write | sentence --write | markup --write | doc-html --write\n  doc-html export [--css external|inline] <input.nepld> <new-output-directory>\n  doc-html svg --css external|inline --svg external|embedded <input.nepld> <assets.json> <new-output-directory>\n  doc-html pages <manifest.json> <new-output-directory>\n  doc-inventory --write --commit <40-hex-commit> | doc-inventory --check | doc-inventory --check-current\nRepository checks do not establish runtime conformance."
             );
             Ok(())
         }

@@ -61,3 +61,16 @@ body:has(>.nepl-doc){margin:0;background:#0d1117;color-scheme:dark}
 @media(max-width:40rem){
   .nepl-doc th,.nepl-doc td{padding-inline:.45em}
 }
+
+.nepl-image{max-width:100%;height:auto;background:#fff;vertical-align:middle}
+
+.nepl-image-group{container-type:inline-size;container-name:nepl-image;margin:1.25em 0;min-width:0}
+.nepl-doc .nepl-image-group>.nepl-image-figure{margin:0;min-width:0}
+.nepl-image-preview{line-height:1.5}
+.nepl-image-preview>.nepl-image{display:block;width:auto;max-width:100%;max-height:360px;height:auto;object-fit:contain}
+.nepl-image-details{white-space:normal;font-size:.85em;line-height:1.5;margin-block:.5em}
+.nepl-image-details>summary{cursor:pointer;color:var(--nepl-accent2);padding:.25em 0}
+.nepl-image-details>summary:focus-visible{outline:2px solid var(--nepl-accent2);outline-offset:3px}
+.nepl-image-original{overflow:auto;margin-block:.5em;line-height:1.5}
+.nepl-doc .nepl-image-original>.nepl-image{display:inline;vertical-align:middle;max-width:none;max-height:none;width:auto;height:auto}
+.nepl-image-figure>figcaption{font-size:.85em;line-height:1.5;margin-block:.5em}

@@ -747,3 +747,6 @@ fn doc_sentence_provider_failures_have_typed_report_positions_and_stops() -> Res
 #[cfg(not(target_family = "wasm"))]
 #[path = "doc/export_cli.rs"]
 mod export_cli;
+
+#[path = "doc/svg.rs"]
+mod svg;

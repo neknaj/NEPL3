@@ -8,6 +8,7 @@ impl Builder<'_, '_> {
             level,
         } = j;
         match k {
+            InlineImage { .. } => self.image(node, parent)?,
             Text { text } => self.text(parent, node, text)?,
             Sentence { inlines } | Concat { inlines } => {
                 let e = self.element(Some(parent), node, HtmlTag::Span)?;

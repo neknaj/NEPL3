@@ -36,6 +36,7 @@ pub(crate) struct PreparedRendering<'a> {
     pub(crate) options: &'a RenderOptions,
     pub(crate) selections: Vec<Option<VariantRef>>,
     pub(crate) identity: Digest,
+    pub(crate) images: Vec<(u64, nepl3_markup::html::HtmlAttribute, String)>,
 }
 /// Prepare the local-only subset. Any external requirement is returned intact,
 /// never resolved by a placeholder. This is not the full suite prepare API.
@@ -187,5 +188,6 @@ pub(crate) fn prepare_rendering<'a, E>(
         options,
         selections,
         identity,
+        images: Vec::new(),
     })
 }

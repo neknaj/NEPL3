@@ -529,3 +529,105 @@ fn sticky_stops_apply_to_validation_and_serialization_with_caller_depth() -> Res
     assert_eq!(exact.usage().output_bytes, output.len() as u64);
     Ok(())
 }
+
+#[test]
+fn static_svg_profile_and_embedded_src() -> Result<(), HtmlError> {
+    let svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><g id='x'><path d='M0 0L10 0L5 10Z' stroke='#000' fill='none'/></g></svg>";
+    assert!(svg::validate(svg, &mut budget())?);
+    for bad in [
+        svg.replace("<g id='x'>", "<g onclick='x()'>"),
+        svg.replace("<g id='x'>", "<g style='fill:url(https://example.org)'>"),
+        svg.replace("<g id='x'>", "<foreignObject>"),
+        svg.replace("</g>", "</path>"),
+        svg.replace("M0 0L10 0L5 10Z", "M1e999 0"),
+        svg.replace("M0 0L10 0L5 10Z", "L0 0"),
+        svg.replace("<g id='x'>", "<g id='x' id='y'>"),
+        svg.replace("http://www.w3.org/2000/svg", "https://evil.example"),
+        format!("<!DOCTYPE svg [<!ENTITY x 'x'>]>{svg}"),
+        format!("{svg}<svg/>"),
+        format!("{svg}trailing"),
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'".into(),
+        svg.replace("0 0 10 10", "0,,0,10,10"),
+        svg.replace("0 0 10 10", ",0 0 10 10,"),
+    ] {
+        assert!(!svg::validate(&bad, &mut budget())?, "accepted {bad}");
+    }
+    let attrs = vec![
+        HtmlAttribute::EmbeddedSvg { svg: svg.into() },
+        HtmlAttribute::Alt {
+            value: "triangle".into(),
+        },
+    ];
+    let fragment = HtmlFragment {
+        root: 0,
+        nodes: vec![HtmlNode::Element {
+            tag: HtmlTag::Img,
+            attributes: attrs.clone(),
+            children: vec![],
+        }],
+    };
+    let checked = validate(&fragment, HtmlSlot::Phrasing, &policy(), &mut budget())?;
+    assert!(serialize(&checked, &mut budget())?.contains("src=\"data:image/svg+xml;base64,"));
+    let mut duplicate = fragment.clone();
+    attr(
+        &mut duplicate.nodes[0],
+        HtmlAttribute::Src {
+            path: "a.svg".into(),
+        },
+    );
+    assert!(validate(&duplicate, HtmlSlot::Phrasing, &policy(), &mut budget()).is_err());
+    let mut no_alt = fragment;
+    if let HtmlNode::Element { attributes, .. } = &mut no_alt.nodes[0] {
+        attributes.pop();
+    }
+    assert!(validate(&no_alt, HtmlSlot::Phrasing, &policy(), &mut budget()).is_err());
+    let shallow = budget();
+    // Full validation is embedded in the caller's current depth envelope.
+    let limited = Budget::new(Limits {
+        depth: 1,
+        ..shallow.limits()
+    });
+    let mut limited = limited;
+    assert!(matches!(
+        svg::validate(svg, &mut limited),
+        Err(StopReason::DepthLimit)
+    ));
+    let mut zero = Budget::new(Limits::default());
+    assert!(svg::validate(svg, &mut zero).is_err());
+    Ok(())
+}
+
+#[test]
+fn details_requires_one_leading_summary_and_flow_context() -> Result<(), HtmlError> {
+    let mut f = HtmlFragment {
+        root: 0,
+        nodes: vec![
+            element(HtmlTag::Details, &[1, 2]),
+            element(HtmlTag::Summary, &[3]),
+            element(HtmlTag::Div, &[]),
+            txt("Full size"),
+        ],
+    };
+    assert_eq!(
+        render(&f)?,
+        "<details><summary>Full size</summary><div></div></details>"
+    );
+    assert!(validate(&f, HtmlSlot::Phrasing, &policy(), &mut budget()).is_err());
+    for children in [&[2, 1][..], &[1, 1, 2][..]] {
+        let mut invalid = f.clone();
+        invalid.nodes[0] = element(HtmlTag::Details, children);
+        assert!(render(&invalid).is_err());
+    }
+    let empty = HtmlFragment {
+        root: 0,
+        nodes: vec![element(HtmlTag::Details, &[])],
+    };
+    assert!(matches!(render(&empty), Err(HtmlError::Content(0))));
+    f.nodes[0] = element(HtmlTag::Div, &[1, 2]);
+    assert!(render(&f).is_err());
+    f.nodes[0] = element(HtmlTag::Details, &[1]);
+    f.nodes[1] = element(HtmlTag::Summary, &[2]);
+    f.nodes[2] = element(HtmlTag::Div, &[3]);
+    assert!(matches!(render(&f), Err(HtmlError::Content(1))));
+    Ok(())
+}

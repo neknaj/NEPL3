@@ -507,3 +507,129 @@ fn schema_valid_invalid_markup_and_unknown_tags_are_rejected_after_cbor() -> Res
     }
     Ok(())
 }
+
+#[test]
+fn embedded_svg_roundtrip_is_revalidated() -> Result<(), String> {
+    let r = registry()?;
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &store, &mut admission).map_err(err)?;
+    let input = HtmlRequest {
+        slot: HtmlSlot::Phrasing,
+        policy: HtmlPolicy { classes: vec![] },
+        fragment: HtmlFragment {
+            root: 0,
+            nodes: vec![HtmlNode::Element {
+                tag: HtmlTag::Img,
+                attributes: vec![
+                    HtmlAttribute::EmbeddedSvg {
+                        svg: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/>".into(),
+                    },
+                    HtmlAttribute::Alt {
+                        value: "図".into()
+                    },
+                ],
+                children: vec![],
+            }],
+        },
+    };
+    let value = portable::to_value(&input, &r, &mut codec, &mut b()).map_err(err)?;
+    let bytes = nepl3_wire::encode(&value, &mut b()).map_err(err)?;
+    let mut fresh = SourceAdmission::default();
+    let mut receiver = FoundationCodec::new(&r, &store, &mut fresh).map_err(err)?;
+    let received = portable::from_value(
+        &nepl3_wire::decode(&bytes, &mut b()).map_err(err)?,
+        &r,
+        &mut receiver,
+        &mut b(),
+    )
+    .map_err(err)?;
+    assert_eq!(input, received);
+    fn corrupt_svg(value: &mut NdfValue) -> bool {
+        match value {
+            NdfValue::Text(s) if s.starts_with("<svg") => {
+                *s = "<svg><script/></svg>".into();
+                true
+            }
+            NdfValue::Record(r) => r.fields.iter_mut().any(corrupt_svg),
+            NdfValue::Variant(v) => v.fields.iter_mut().any(corrupt_svg),
+            NdfValue::List(xs) => xs.iter_mut().any(corrupt_svg),
+            _ => false,
+        }
+    }
+    let mut forged = value;
+    assert!(corrupt_svg(&mut forged));
+    assert!(portable::from_value(&forged, &r, &mut receiver, &mut b()).is_err());
+    let mut bad = input;
+    if let HtmlNode::Element { attributes, .. } = &mut bad.fragment.nodes[0] {
+        attributes[0] = HtmlAttribute::EmbeddedSvg {
+            svg: "<svg><script/></svg>".into(),
+        };
+    }
+    assert!(portable::to_value(&bad, &r, &mut codec, &mut b()).is_err());
+    Ok(())
+}
+
+#[test]
+fn details_tags_roundtrip_and_structure_is_rechecked() -> Result<(), String> {
+    let r = registry()?;
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &store, &mut admission).map_err(err)?;
+    let mut input = HtmlRequest {
+        slot: HtmlSlot::Block,
+        policy: HtmlPolicy { classes: vec![] },
+        fragment: HtmlFragment {
+            root: 0,
+            nodes: vec![
+                HtmlNode::Element {
+                    tag: HtmlTag::Details,
+                    attributes: vec![],
+                    children: vec![1],
+                },
+                HtmlNode::Element {
+                    tag: HtmlTag::Summary,
+                    attributes: vec![],
+                    children: vec![2],
+                },
+                HtmlNode::Text {
+                    text: "Full size".into(),
+                },
+            ],
+        },
+    };
+    let value = portable::to_value(&input, &r, &mut codec, &mut b()).map_err(err)?;
+    let bytes = nepl3_wire::encode(&value, &mut b()).map_err(err)?;
+    let value = nepl3_wire::decode(&bytes, &mut b()).map_err(err)?;
+    let received = portable::from_value(&value, &r, &mut codec, &mut b()).map_err(err)?;
+    assert_eq!(received, input);
+    validate(
+        &received.fragment,
+        received.slot,
+        &received.policy,
+        &mut b(),
+    )
+    .map_err(err)?;
+    // A hostile sender can replace a schema-valid tag after encoding.
+    let mut corrupt = value;
+    let NdfValue::Record(request) = &mut corrupt else {
+        return Err("request".into());
+    };
+    let NdfValue::Record(fragment) = &mut request.fields[0] else {
+        return Err("fragment".into());
+    };
+    let NdfValue::List(nodes) = &mut fragment.fields[1] else {
+        return Err("nodes".into());
+    };
+    let NdfValue::Variant(node) = &mut nodes[0] else {
+        return Err("node".into());
+    };
+    let NdfValue::Variant(tag) = &mut node.fields[0] else {
+        return Err("tag".into());
+    };
+    tag.variant = "Div".into();
+    assert!(portable::from_value(&corrupt, &r, &mut codec, &mut b()).is_err());
+    input.slot = HtmlSlot::Phrasing;
+    assert!(portable::to_value(&input, &r, &mut codec, &mut b()).is_err());
+    Ok(())
+}
