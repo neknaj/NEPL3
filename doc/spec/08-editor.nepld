@@ -164,6 +164,22 @@ body
       cons "[対象/たいしょう]は[明示/めいじ]されたFormとListの[宣言/せんげん]である。Builtin・Leaf・Dynamicの[任意/にんい]の[表記列挙/ひょうきれっきょ]、Bindingの[検証/けんしょう]、[入力全体/にゅうりょくぜんたい]の[消費/しょうひ]、workspaceへの[適用/てきよう]は[後続/こうぞく]の[実装範囲/じっそうはんい]である。" nil
     nil
 
+  cons section insertionBinding "2.7 [挿入候補/そうにゅうこうほ]のBinding[実行/じっこう]" body
+    cons paragraph
+      cons "insertion::binding::executeは、CheckedInsertionが[保持/ほじ]する[実際/じっさい]の[候補/こうほ]treeとprofileからBindingのprepared requestを[構築/こうちく]し、[検査時/けんさじ]の[候補/こうほ]AnalysisKeyとの[一致/いっち]を[確認/かくにん]して[実行/じっこう]する。"
+      cons "[呼出側/よびだしがわ]はcheckと[同/おな]じ[候補/こうほ]analysis IDを[指定/してい]する。"
+      cons "[有効/ゆうこう]Limitsを[準備前/じゅんびまえ]に[照合/しょうごう]し、[累積/るいせき]BudgetとcodecのSourceAdmissionを[継続/けいぞく]する。"
+      cons "[不一致/ふいっち]や[停止/ていし]では、その[段階/だんかい]の[型付/かたつ]き[結果/けっか]を[返/かえ]す。"
+      cons "execute_with_hostは[呼出側/よびだしがわ]が[明示/めいじ]したBindingHostを[使用/しよう]し、Customの[認可/にんか]・dispatchを[既存/きそん]の[検証経路/けんしょうけいろ]へ[渡/わた]す。" nil
+    cons paragraph
+      cons "[実行/じっこう]の[結果/けっか]は[候補/こうほ]keyを[持/も]つBoundBindingReplyであり、Complete・Invalid・Stoppedと[部分結果/ぶぶんけっか]・Reportを[保持/ほじ]する。"
+      cons "[準備/じゅんび]やkeyの[検査/けんさ]での[失敗/しっぱい]と、Binding[実行中/じっこうちゅう]の[結果/けっか]を[区別/くべつ]する。"
+      cons "CompleteはBindingPlanの[実行完了/じっこうかんりょう]を[示/しめ]し、[未解決参照/みかいけつさんしょう]を[含/ふく]み[得/う]る。"
+      cons "Recoveredの[構文木/こうぶんき]には[既存/きそん]のRecoveredTree[拒否/きょひ]を[適用/てきよう]する。"
+      cons "[挿入/そうにゅう]の[意味的/いみてき]な[受理条件/じゅりじょうけん]は、[呼出側/よびだしがわ]が[結果/けっか]の[参照解決/さんしょうかいけつ]と[診断/しんだん]を[確認/かくにん]して[判断/はんだん]する。" nil
+    nil
+
+
   cons section region "3. regionの[選択/せんたく]" body
     cons paragraph
       cons "region[選択/せんたく]は、[指定/してい]されたsource positionを[包含/ほうがん]するfield・elementのうち、[同一/どういつ]snapshot[上/じょう]で[最小/さいしょう]の[範囲/はんい]を[選択/せんたく]する[操作/そうさ]である。"

@@ -26,7 +26,7 @@ pub(super) fn with_options(
         &EntryContext,
     ) -> TestResult,
 ) -> TestResult {
-    with_options_state(input, provided, text, None, false, f)
+    with_options_state(input, provided, text, None, false, false, f)
 }
 
 pub(super) fn with_state_context(
@@ -40,7 +40,7 @@ pub(super) fn with_state_context(
         &EntryContext,
     ) -> TestResult,
 ) -> TestResult {
-    with_options_state(input, false, false, Some(state), false, f)
+    with_options_state(input, false, false, Some(state), false, false, f)
 }
 
 pub(super) fn with_list_context(
@@ -53,15 +53,11 @@ pub(super) fn with_list_context(
         &EntryContext,
     ) -> TestResult,
 ) -> TestResult {
-    with_options_state(input, false, false, None, true, f)
+    with_options_state(input, false, false, None, true, false, f)
 }
 
-fn with_options_state(
+pub(super) fn with_custom_binding(
     input: &str,
-    provided: bool,
-    text: bool,
-    state: Option<nepl3_core::schema::TypeDescriptor>,
-    list: bool,
     f: impl FnOnce(
         &ResolvedParseProfile<'_>,
         &ParseEnvironmentSet<'_>,
@@ -70,7 +66,42 @@ fn with_options_state(
         &EntryContext,
     ) -> TestResult,
 ) -> TestResult {
-    let (mut package, registry) = fixture()?;
+    with_options_state(input, false, false, None, false, true, f)
+}
+
+fn with_options_state(
+    input: &str,
+    provided: bool,
+    text: bool,
+    state: Option<nepl3_core::schema::TypeDescriptor>,
+    list: bool,
+    custom: bool,
+    f: impl FnOnce(
+        &ResolvedParseProfile<'_>,
+        &ParseEnvironmentSet<'_>,
+        &SourceStore,
+        &SourceSnapshot,
+        &EntryContext,
+    ) -> TestResult,
+) -> TestResult {
+    let (mut package, registry) = fixture_with_facts(custom)?;
+    if custom {
+        use nepl3_engine::package::{Binding, ExtensionRequirement};
+        let operation = nepl3_core::value::OperationRef {
+            schema: package.schema.clone(),
+            name: "facts".into(),
+        };
+        package.bindings[2] = Binding::Custom(operation.clone());
+        package.extensions.push(ExtensionRequirement {
+            alias: "facts".into(),
+            provider: "facts-provider".into(),
+            signature: "facts/v1".into(),
+            operation,
+            input: facts_type("FactsRequest"),
+            output: facts_type("FactsReply"),
+            pure: true,
+        });
+    }
     if let Some(state) = state {
         package.reader.state_type = state;
     }
@@ -174,6 +205,29 @@ fn with_options_state(
         profile.allowlist.push(operation.clone());
         providers.push(ProviderImplementation {
             provider: "test-provider".into(),
+            revision: 1,
+            implementation_digest: digest,
+            operations: vec![operation],
+        });
+    }
+    if custom {
+        profile.schemas.push(
+            registry
+                .selected("nepl3.engine", 1)
+                .ok_or("engine schema")?
+                .clone(),
+        );
+        let operation = package.extensions[0].operation.clone();
+        let digest = nepl3_core::source::Digest::of(b"test facts provider");
+        profile.providers.push(ProviderRequirement {
+            provider: "facts-provider".into(),
+            revision: 1,
+            implementation_digest: digest,
+            operation: operation.clone(),
+        });
+        profile.allowlist.push(operation.clone());
+        providers.push(ProviderImplementation {
+            provider: "facts-provider".into(),
             revision: 1,
             implementation_digest: digest,
             operations: vec![operation],

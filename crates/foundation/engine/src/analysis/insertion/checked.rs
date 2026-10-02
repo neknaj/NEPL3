@@ -24,6 +24,7 @@ pub struct CheckedInsertion<'a, 'p> {
     keys: (AnalysisKey, AnalysisKey),
     shape: InsertedShape,
     head: Option<Span>,
+    limits: nepl3_core::budget::Limits,
     report: Report,
 }
 impl<'a, 'p> CheckedInsertion<'a, 'p> {
@@ -44,6 +45,9 @@ impl<'a, 'p> CheckedInsertion<'a, 'p> {
     }
     pub fn head(&self) -> Option<&Span> {
         self.head.as_ref()
+    }
+    pub fn limits(&self) -> nepl3_core::budget::Limits {
+        self.limits
     }
     pub fn report(&self) -> &Report {
         &self.report
@@ -145,6 +149,7 @@ pub fn check<'a, 'tree, 'p, C: FoundationValueCodec>(
         keys,
         shape,
         head,
+        limits: b.limits(),
         report: Report {
             usage: b.usage(),
             ..Report::default()
