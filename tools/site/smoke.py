@@ -79,10 +79,10 @@ def observe(root: Path, identity: str, url: str, local: bool, deadline: float) -
         with response:
             status = response.status
             if expected is None:
-                checked(status == 404, 'unknown route did not return 404')
+                checked(status == 404, f'HTTP {status} for {route}; expected 404 for unknown route')
                 rows.append(Missing(route, request_url))
                 return
-            checked(status == 200, 'non-200 response for ' + route)
+            checked(status == 200, f'HTTP {status} for {route}; expected 200')
             checked(response.headers.get('Content-Encoding', 'identity') == 'identity', 'unexpected content encoding')
             data = response.read(len(expected) + 1)
             checked(data == expected, 'published byte mismatch for ' + route)
