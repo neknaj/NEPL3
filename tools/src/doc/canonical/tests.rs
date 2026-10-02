@@ -14,7 +14,7 @@ fn canonical_document_preparation_work_breakdown() -> Result<()> {
         .parent()
         .ok_or("repository")?;
     let compiled = super::super::source::compiled()?;
-    for name in ["05-document", "08-editor"] {
+    for name in ["05-document", "08-editor", "08-completion"] {
         let text = fs::read_to_string(root.join(format!("doc/spec/{name}.nepld")))?;
         super::super::source::with_named_input(
             true,
@@ -953,6 +953,61 @@ fn real_architecture_draft_links_to_canonical_extensions_with_legacy_bytes_intac
         })
         .collect();
     assert!(links.iter().any(|l| l == "22-external-extensions.md"));
+    // The real editor chapter retains old fragment entry points while its
+    // completion details live in a separately budgeted, mutually linked page.
+    let page = |path: &str| {
+        result
+            .files
+            .iter()
+            .find(|(p, _)| p == path)
+            .map(|(_, text)| text)
+            .ok_or("missing editor projection")
+    };
+    let editor = page("doc/spec/08-editor.md")?;
+    let completion = page("doc/spec/08-completion.md")?;
+    let destinations = |text: &str| {
+        pulldown_cmark::Parser::new(text)
+            .filter_map(|event| {
+                if let pulldown_cmark::Event::Start(pulldown_cmark::Tag::Link {
+                    dest_url, ..
+                }) = event
+                {
+                    Some(dest_url.into_string())
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>()
+    };
+    let editor_links = destinations(editor);
+    for id in [
+        "expectedDirect",
+        "declaredAlternatives",
+        "insertionObservation",
+        "insertionDraft",
+        "checkedInsertion",
+        "declaredInsertion",
+        "insertionBinding",
+        "bindingStatus",
+        "scopeCandidates",
+    ] {
+        let hex: String = id.bytes().map(|byte| format!("{byte:02x}")).collect();
+        let anchor = format!("n-{hex}");
+        let markup = format!("<a name=\"{anchor}\"></a>");
+        assert!(editor.contains(&markup), "old editor fragment {id}");
+        assert!(completion.contains(&markup), "completion fragment {id}");
+        assert!(
+            editor_links
+                .iter()
+                .any(|link| link == &format!("08-completion.md#{anchor}")),
+            "forwarding link {id}"
+        );
+    }
+    assert!(
+        destinations(completion)
+            .iter()
+            .any(|link| link == "08-editor.md")
+    );
     Ok(())
 }
 

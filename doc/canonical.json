@@ -95,7 +95,15 @@
       "projection": "doc/spec/08-editor.md",
       "aliases": "doc/migration/aliases/08-editor.json",
       "route": "docs/spec/08-editor.html",
-      "renderer": "nepl3-tools.markdown-annotated/4"
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "editor-completion",
+      "source": "doc/spec/08-completion.nepld",
+      "projection": "doc/spec/08-completion.md",
+      "aliases": "doc/migration/aliases/08-completion.json",
+      "route": "docs/spec/08-completion.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     },
     {
       "id": "doc-html",
