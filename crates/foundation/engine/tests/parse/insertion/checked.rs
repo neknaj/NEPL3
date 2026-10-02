@@ -143,6 +143,10 @@ fn caller_owned_provider_continuations_can_produce_a_checked_edit() -> TestResul
             assert_eq!(checked.edit().replacement, "let x x");
             assert!(core::ptr::eq(checked.candidate(), &candidate));
             assert_eq!(checked.report().usage, b.usage());
+            let whole = nepl3_engine::analysis::insertion::whole::check(&checked, &mut b)
+                .map_err(|e| format!("{e:?}"))?;
+            assert!(core::ptr::eq(whole.input().parsed(), &candidate));
+            assert_eq!(whole.report().usage, b.usage());
             assert_eq!(sources.snapshots().len(), 1);
             assert_eq!(source.text(), "");
             Ok(())

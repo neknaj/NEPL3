@@ -525,3 +525,6 @@ mod declared;
 
 #[path = "insertion/binding.rs"]
 mod binding;
+
+#[path = "insertion/whole.rs"]
+mod whole;
