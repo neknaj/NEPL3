@@ -143,6 +143,8 @@ fn expected_read_uses_dynamic_saved_category_and_mode_after_completed_selector()
 enum Case {
     Owned,
     Sealed,
+    Executed,
+    ExecutionBaseline,
     Portable,
     Native,
     NativeFallback,
@@ -524,6 +526,11 @@ fn run_case_inspect(
             assert_eq!(host.reader_calls, 1);
         }
         result.reply
+    } else if case == Case::Executed {
+        session
+            .read_executed(request, &sources, &mut b, &mut a)
+            .map(unseal_execution)
+            .map_err(|v| format!("executed read {v:?}"))?
     } else if case == Case::Sealed {
         session
             .read_completed(request, &sources, &mut b, &mut a)
@@ -876,7 +883,11 @@ fn run_case_inspect(
         } else {
             &sources
         };
-        reply = if case == Case::Sealed {
+        reply = if case == Case::Executed {
+            session
+                .resume_head_executed(continuation, provider_reply, caller_sources, &mut b, &mut a)
+                .map(unseal_execution)
+        } else if case == Case::Sealed {
             session
                 .resume_head_completed(continuation, provider_reply, caller_sources, &mut b, &mut a)
                 .map(unseal)
@@ -1333,5 +1344,34 @@ fn completed_head_wrapper_preserves_owned_execution_and_pending_boundaries() -> 
         run_case(input, Case::Owned, true)?,
         run_case(input, Case::Sealed, true)?
     );
+    Ok(())
+}
+
+fn unseal_execution(value: ParseExecution) -> ParseReply {
+    match value {
+        ParseExecution::Continue(proof) => proof.into_reply(),
+        ParseExecution::Break(raw) => {
+            assert!(!matches!(
+                raw.outcome,
+                ParseOutcome::Complete { .. } | ParseOutcome::Recovered { .. }
+            ));
+            raw
+        }
+    }
+}
+#[test]
+fn executed_head_wrapper_preserves_complete_and_recovered_provenance() -> TestResult {
+    for (input, recovered) in [("choose alt @let z x tail", false), ("choose alt", true)] {
+        let raw = run_case(input, Case::ExecutionBaseline, true)?;
+        assert_eq!(
+            matches!(raw.outcome, ParseOutcome::Recovered { .. }),
+            recovered
+        );
+        assert!(matches!(
+            raw.outcome,
+            ParseOutcome::Complete { .. } | ParseOutcome::Recovered { .. }
+        ));
+        assert_eq!(raw, run_case(input, Case::Executed, true)?);
+    }
     Ok(())
 }
