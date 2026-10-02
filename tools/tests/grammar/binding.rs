@@ -1061,3 +1061,6 @@ mod custom;
 
 #[path = "binding/status.rs"]
 mod status;
+
+#[path = "binding/completion.rs"]
+mod completion;

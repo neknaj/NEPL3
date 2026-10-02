@@ -194,6 +194,23 @@ body
       cons "このadapterの[対象/たいしょう]は[解析単位/かいせきたんい]の[状態表示/じょうたいひょうじ]であり、LSPの[通信/つうしん]、[文書/ぶんしょ]ごとの[位置変換/いちへんかん]、workspaceへの[編集適用/へんしゅうてきよう]はhostの[後続実装/こうぞくじっそう]である。" nil
     nil
 
+  cons section scopeCandidates "2.9 [捕捉/ほそく]したscopeの[名前候補/なまえこうほ]" body
+    cons paragraph
+      cons "analysis::completion::namesは、CompleteのBoundBindingReply、[現在/げんざい]のAnalysisKey、[既存/きそん]Reference occurrence ID、[明示/めいじ]prefixを[受/う]ける。"
+      cons "[参照時/さんしょうじ]のnamespace_stageと[名前空間/なまえくうかん]identityに[基/もと]づき、GlobalとForeignを[含/ふく]む[宣言/せんげん]の[可視性/かしせい]を[固定/こてい]する。"
+      cons "Missing、Reference[以外/いがい]の[役割/やくわり]、[未完了/みかんりょう]Bindingは[型付/かたつ]き[原因/げんいん]で[拒否/きょひ]する。" nil
+    cons paragraph
+      cons "BindingPlanと[共有/きょうゆう]するlookupにより、[最内/さいない]scopeのshadowingと[同一/どういつ]scopeの[曖昧性/あいまいせい]を[保持/ほじ]する。"
+      cons "prefixはUTF-8[文字列/もじれつ]の[先頭一致/せんとういっち]で[比較/ひかく]し、[空/から]prefixは[全候補/ぜんこうほ]に[一致/いっち]する。"
+      cons "[候補/こうほ]はstageからpreviousを[辿/たど]る[走査/そうさ]の[初出順/しょしゅつじゅん]とし、[同名候補/どうめいこうほ]をまとめる。"
+      cons "[返/かえ]す[値/あたい]は[宣言名/せんげんめい]と、その[名前/なまえ]を[捕捉/ほそく]stageで[照会/しょうかい]したResolvedまたはAmbiguousのEntity IDである。"
+      cons "Customによる[後続/こうぞく]の[参照解決/さんしょうかいけつ]の[更新/こうしん]と、[捕捉/ほそく]した[宣言/せんげん]の[可視性/かしせい]を[区別/くべつ]する。" nil
+    cons paragraph
+      cons "[走査/そうさ]と[複製/ふくせい]は[有限/ゆうげん]Budgetへ[計上/けいじょう]し、[失敗/しっぱい]・[停止/ていし]では[途中/とちゅう]の[候補列/こうほれつ]を[公開/こうかい]しない。"
+      cons "[元/もと]の[解析結果/かいせきけっか]を[保持/ほじ]し、[追加/ついか]sourceへアクセスしない。"
+      cons "[綴/つづ]りへの[変換/へんかん]・[挿入/そうにゅう]の[再解析/さいかいせき]と[受理/じゅり]・provider[固有/こゆう]の[候補生成/こうほせいせい]は[後続処理/こうぞくしょり]である。" nil
+    nil
+
   cons section region "3. regionの[選択/せんたく]" body
     cons paragraph
       cons "region[選択/せんたく]は、[指定/してい]されたsource positionを[包含/ほうがん]するfield・elementのうち、[同一/どういつ]snapshot[上/じょう]で[最小/さいしょう]の[範囲/はんい]を[選択/せんたく]する[操作/そうさ]である。"
