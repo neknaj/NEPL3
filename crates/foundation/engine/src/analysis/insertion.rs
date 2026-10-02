@@ -8,6 +8,7 @@ use nepl3_core::{
     diagnostic::Report,
     source::{SourceAdmission, SourceError, Span, TextEdit},
 };
+pub mod draft;
 mod identity;
 mod occurrence;
 

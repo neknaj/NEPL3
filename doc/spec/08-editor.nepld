@@ -128,6 +128,18 @@ body
       cons "raw[結果/けっか]やdecodeからこのnative[証明/しょうめい]を[生成/せいせい]する[経路/けいろ]を[設/もう]けない。" nil
     nil
 
+  cons section insertionDraft "2.4 [挿入候補/そうにゅうこうほ]の[非公開/ひこうかい]snapshot" body
+    cons paragraph
+      cons "InsertionDraftは、[呼出側/よびだしがわ]が[明示/めいじ]した[非空/ひくう]の[文字列/もじれつ]を[直接位置/ちょくせついち]のMissingへ[挿入/そうにゅう]するための[非公開/ひこうかい]の[候補/こうほ]である。prepareはRetainedParseとprepared[入力/にゅうりょく]の[同一性/どういつせい]、AnalysisKey、[主入力/しゅにゅうりょく]source、[解析範囲/かいせきはんい]、UTF-8[境界/きょうかい]を[検査/けんさ]する。"
+      cons "[保持/ほじ]したSourceStoreの[全/すべ]てのsnapshotをBudget[付/つ]きで[複製/ふくせい]し、その[非公開/ひこうかい]storeへ[一/ひと]つのTextEditを[適用/てきよう]する。[同/おな]じsourceの[新/あたら]しいrevisionがstoreに[存在/そんざい]する[場合/ばあい]は[拒否/きょひ]する。[元/もと]のstoreを[変更/へんこう]せず、[解析範囲外/かいせきはんいがい]のバイト[列/れつ]と[他/ほか]のsourceを[保持/ほじ]する。" nil
+    cons paragraph
+      cons "[返/かえ]すsnapshot・sources・edit・limitを[用/もち]い、[元/もと]のseedと[同/おな]じprofile・[環境/かんきょう]・[初期/しょき]state・entry・start・final_inputで[再解析/さいかいせき]する。その[結果/けっか]をobserveへ[渡/わた]して[構文位置/こうぶんいち]の[成立/せいりつ]を[検証/けんしょう]する。[空白/くうはく]、[字句/じく]の[区切/くぎ]り、[表記/ひょうき]、[名前候補/なまえこうほ]は[呼出側/よびだしがわ]が[明示/めいじ]する。"
+      cons "draftの[生成/せいせい]だけで[文法/ぶんぽう]・Bindingの[成立/せいりつ]や[編集権限/へんしゅうけんげん]を[確定/かくてい]しない。workspaceへの[編集適用/へんしゅうてきよう]はhostの[別操作/べつそうさ]である。" nil
+    cons paragraph
+      cons "[失敗/しっぱい]・[停止/ていし]では[非公開/ひこうかい]のdraftを[破棄/はき]し、Budgetの[消費/しょうひ]とSourceAdmissionへの[登録/とうろく]を[保持/ほじ]する。[終盤/しゅうばん]の[停止/ていし]では[生成/せいせい]snapshotのidentityが[登録済/とうろくず]みの[場合/ばあい]もある。"
+      cons "[複数/ふくすう]の[候補/こうほ]は[同/おな]じ[次/つぎ]revisionに[異/こと]なるdigestを[持/も]ち[得/う]るため、[各候補/かくこうほ]に[新/あたら]しいSourceAdmissionを[用意/ようい]し、[累積/るいせき]Budgetを[共有/きょうゆう]する。[一/ひと]つの[候補/こうほ]の[準備/じゅんび]・[再解析/さいかいせき]・[観測/かんそく]では[同/おな]じSourceAdmissionを[継続/けいぞく]して[使用/しよう]する。" nil
+    nil
+
   cons section region "3. regionの[選択/せんたく]" body
     cons paragraph
       cons "region[選択/せんたく]は、[指定/してい]されたsource positionを[包含/ほうがん]するfield・elementのうち、[同一/どういつ]snapshot[上/じょう]で[最小/さいしょう]の[範囲/はんい]を[選択/せんたく]する[操作/そうさ]である。"
