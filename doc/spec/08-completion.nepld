@@ -191,4 +191,13 @@ body
       cons "[失敗結果/しっぱいけっか]の[通信/つうしん]と[編集/へんしゅう]の[生成/せいせい]・[採用/さいよう]は[後続範囲/こうぞくはんい]である。" nil
     nil
 
+  cons section candidateErrorCodec "2.13 [候補照会/こうほしょうかい]の[失敗原因/しっぱいげんいん]" body
+    cons paragraph
+      cons "portable::completion::errorはCandidateErrorの[各原因/かくげんいん]を[型付/かたつ]きNDFで[符号化/ふごうか]・[復号/ふくごう]する。"
+      cons "[参照/さんしょう]occurrenceの[不在/ふざい]、[役割/やくわり]の[不一致/ふいっち]、stageの[不在/ふざい]、BindingAccessError、BindingFailure、StopReasonを[保持/ほじ]する。"
+      cons "[送信側/そうしんがわ]の[停止原因/ていしげんいん]は[入/い]れ[子/こ]を[含/ふく]めてmetadataとして[復元/ふくげん]し、[受信側/じゅしんがわ]のBudgetを[停止/ていし]させない。"
+      cons "codec[自身/じしん]の[資源不足/しげんぶそく]と[取消/とりけし]はPortableError::Stoppedで[返/かえ]す。"
+      cons "このcodecは[原因/げんいん]だけを[表現/ひょうげん]する。[要求/ようきゅう]との[対応/たいおう]、Report、[結果/けっか]の[分類/ぶんるい]を[含/ふく]む[失敗応答/しっぱいおうとう]の[通信/つうしん]は[後続範囲/こうぞくはんい]である。" nil
+    nil
+
 nil

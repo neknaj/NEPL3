@@ -15,6 +15,8 @@ use nepl3_core::{
     value_codec::FoundationValueCodec,
 };
 
+pub mod error;
+
 /// Owned request data. Borrowing it grants no permission or execution proof.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DecodedScopeCandidateRequest {

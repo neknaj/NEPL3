@@ -6616,6 +6616,50 @@
           }
         ]
       ]
+    },
+    "CandidateError": {
+      "constraints": [],
+      "variant": {
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ],
+        "Access": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingAccessError"
+              }
+            }
+          ]
+        ],
+        "Binding": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingFailure"
+              }
+            }
+          ]
+        ],
+        "NoOccurrence": [],
+        "NotReference": [],
+        "NoStage": []
+      }
     }
   }
 }
