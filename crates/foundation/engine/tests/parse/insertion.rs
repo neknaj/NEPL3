@@ -516,3 +516,6 @@ fn insertion_before_unexpected_suffix_requires_an_actual_missing_occurrence() ->
 
 #[path = "insertion/draft.rs"]
 mod draft;
+
+#[path = "insertion/checked.rs"]
+mod checked;

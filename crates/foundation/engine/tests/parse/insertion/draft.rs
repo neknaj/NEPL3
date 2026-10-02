@@ -347,6 +347,275 @@ fn run_draft(
             } else {
                 observed.map_err(|e| format!("{e:?}"))?;
             }
+            use nepl3_engine::analysis::insertion::checked::{self, CheckError};
+            let equivalent = draft::prepare(
+                InsertionInput {
+                    parsed: &parsed,
+                    prepared: &prepared,
+                },
+                &query,
+                text,
+                &mut operation,
+                &mut SourceAdmission::default(),
+            )
+            .map_err(|e| format!("{e:?}"))?;
+            assert_eq!(
+                equivalent.snapshot().identity(),
+                proposal.snapshot().identity()
+            );
+            let mut codec = FoundationCodec::new(profile.registry(), &empty, &mut ledger)
+                .map_err(|e| format!("{e:?}"))?;
+            let wrong_store = checked::check(
+                InsertionInput {
+                    parsed: &parsed,
+                    prepared: &prepared,
+                },
+                &candidate,
+                &equivalent,
+                &query,
+                "checked",
+                &mut codec,
+                &mut operation,
+            );
+            assert!(matches!(wrong_store, Err(CheckError::DraftMismatch)));
+            let result = checked::check(
+                InsertionInput {
+                    parsed: &parsed,
+                    prepared: &prepared,
+                },
+                &candidate,
+                &proposal,
+                &query,
+                "checked",
+                &mut codec,
+                &mut operation,
+            );
+            if text == "@" {
+                assert!(matches!(
+                    result,
+                    Err(CheckError::Insertion(InsertionError::RecoveryTarget))
+                ));
+            } else {
+                let checked = result.map_err(|e| format!("{e:?}"))?;
+                assert!(core::ptr::eq(checked.original(), &parsed));
+                assert!(core::ptr::eq(checked.candidate(), &candidate));
+                assert!(core::ptr::eq(checked.edit(), proposal.edit()));
+                assert_eq!(checked.keys().0, prepared.key());
+                assert_eq!(checked.report().usage, operation.usage());
+                // Measure this verification operation separately, then retain
+                // the same effective Limits while leaving exactly one unit too
+                // little for the end of preparation or the end of observation.
+                use nepl3_core::budget::Resource;
+                let mut measured = Budget::new(limits);
+                let mut measured_ledger = SourceAdmission::default();
+                let mut measured_codec =
+                    FoundationCodec::new(profile.registry(), &empty, &mut measured_ledger)
+                        .map_err(|e| format!("{e:?}"))?;
+                checked::check(
+                    InsertionInput {
+                        parsed: &parsed,
+                        prepared: &prepared,
+                    },
+                    &candidate,
+                    &proposal,
+                    &query,
+                    "checked",
+                    &mut measured_codec,
+                    &mut measured,
+                )
+                .map_err(|e| format!("{e:?}"))?;
+                let whole_work = measured.usage().work;
+                let mut preparation = Budget::new(limits);
+                preparation
+                    .charge(Resource::Work, 1)
+                    .map_err(|e| format!("{e:?}"))?;
+                candidate
+                    .seed()
+                    .request()
+                    .snapshot
+                    .identity()
+                    .compare_with_budget(proposal.snapshot().identity(), &mut preparation)
+                    .map_err(|e| format!("{e:?}"))?;
+                preparation
+                    .charge(
+                        Resource::Work,
+                        (candidate.seed().request().snapshot.uri().len()
+                            + proposal.snapshot().uri().len()) as u64
+                            + 1,
+                    )
+                    .map_err(|e| format!("{e:?}"))?;
+                let mut preparation_ledger = SourceAdmission::default();
+                let mut preparation_codec =
+                    FoundationCodec::new(profile.registry(), &empty, &mut preparation_ledger)
+                        .map_err(|e| format!("{e:?}"))?;
+                analysis::prepare(
+                    "checked",
+                    candidate.execution().tree(),
+                    BindingOptions,
+                    limits,
+                    profile,
+                    &mut preparation_codec,
+                    &mut preparation,
+                )
+                .map_err(|e| format!("{e:?}"))?;
+                for (available, in_preparation) in [
+                    (preparation.usage().work - 1, true),
+                    (whole_work - 1, false),
+                ] {
+                    let mut stopped = Budget::new(limits);
+                    stopped
+                        .charge(Resource::Work, limits.work - available)
+                        .map_err(|e| format!("{e:?}"))?;
+                    let mut stopped_ledger = SourceAdmission::default();
+                    let mut stopped_codec =
+                        FoundationCodec::new(profile.registry(), &empty, &mut stopped_ledger)
+                            .map_err(|e| format!("{e:?}"))?;
+                    let result = checked::check(
+                        InsertionInput {
+                            parsed: &parsed,
+                            prepared: &prepared,
+                        },
+                        &candidate,
+                        &proposal,
+                        &query,
+                        "checked",
+                        &mut stopped_codec,
+                        &mut stopped,
+                    );
+                    if in_preparation {
+                        assert!(matches!(
+                            result,
+                            Err(CheckError::Preparation(
+                                nepl3_engine::portable::PortableError::Stopped(
+                                    StopReason::WorkLimit
+                                )
+                            ))
+                        ));
+                    } else {
+                        assert!(matches!(
+                            result,
+                            Err(CheckError::Insertion(InsertionError::Stopped(
+                                StopReason::WorkLimit
+                            )))
+                        ));
+                    }
+                    assert_eq!(sources.snapshots().len(), source_count);
+                    assert_eq!(source.text(), old_text);
+                }
+            }
+            let mut stopped = Budget::new(limits);
+            stopped.cancel();
+            let result = checked::check(
+                InsertionInput {
+                    parsed: &parsed,
+                    prepared: &prepared,
+                },
+                &candidate,
+                &proposal,
+                &query,
+                "checked",
+                &mut codec,
+                &mut stopped,
+            );
+            assert!(matches!(
+                result,
+                Err(CheckError::Stopped(StopReason::Cancelled))
+            ));
+            let result = checked::check(
+                InsertionInput {
+                    parsed: &parsed,
+                    prepared: &prepared,
+                },
+                &candidate,
+                &proposal,
+                &query,
+                "",
+                &mut codec,
+                &mut operation,
+            );
+            assert!(matches!(
+                result,
+                Err(CheckError::Preparation(
+                    nepl3_engine::portable::PortableError::Shape
+                ))
+            ));
+            let mut stale = query.clone();
+            stale.key.request_digest = Digest::of(b"wrong checked key");
+            let result = checked::check(
+                InsertionInput {
+                    parsed: &parsed,
+                    prepared: &prepared,
+                },
+                &candidate,
+                &proposal,
+                &stale,
+                "checked",
+                &mut codec,
+                &mut operation,
+            );
+            assert!(matches!(
+                result,
+                Err(CheckError::Insertion(InsertionError::Access(
+                    nepl3_engine::analysis::BindingAccessError::StaleAnalysis
+                )))
+            ));
+            let result = checked::check(
+                InsertionInput {
+                    parsed: &parsed,
+                    prepared: &candidate_prepared,
+                },
+                &candidate,
+                &proposal,
+                &query,
+                "checked",
+                &mut codec,
+                &mut operation,
+            );
+            assert!(matches!(
+                result,
+                Err(CheckError::Insertion(InsertionError::ProofMismatch))
+            ));
+            let mut wrong_limits = limits;
+            wrong_limits.work -= 1;
+            let mut wrong_budget = Budget::new(wrong_limits);
+            let result = checked::check(
+                InsertionInput {
+                    parsed: &parsed,
+                    prepared: &prepared,
+                },
+                &candidate,
+                &proposal,
+                &query,
+                "checked",
+                &mut codec,
+                &mut wrong_budget,
+            );
+            assert!(matches!(
+                result,
+                Err(CheckError::Insertion(InsertionError::Access(
+                    nepl3_engine::analysis::BindingAccessError::LimitsMismatch
+                )))
+            ));
+            assert_eq!(wrong_budget.usage().work, 0);
+            assert_eq!(wrong_budget.usage().source_bytes, 0);
+            let mut wrong_offset = query.clone();
+            wrong_offset.offset += 1;
+            let result = checked::check(
+                InsertionInput {
+                    parsed: &parsed,
+                    prepared: &prepared,
+                },
+                &candidate,
+                &proposal,
+                &wrong_offset,
+                "checked",
+                &mut codec,
+                &mut operation,
+            );
+            assert!(matches!(
+                result,
+                Err(CheckError::Insertion(InsertionError::EditMismatch))
+            ));
             Ok(())
         },
     )
