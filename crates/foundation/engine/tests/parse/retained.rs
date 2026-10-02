@@ -424,6 +424,12 @@ fn retained_append_replaces_seed_only_after_real_execution() -> TestResult {
         };
         assert_eq!(proof.execution().kind(), ExecutionKind::Complete);
         assert!(core::ptr::eq(proof.seed().request().snapshot, &next));
+        let whole =
+            nepl3_engine::parse::whole::check(&proof, &mut b).map_err(|e| format!("{e:?}"))?;
+        assert!(core::ptr::eq(
+            whole.parsed().seed().request().snapshot,
+            &next
+        ));
         assert!(core::ptr::eq(proof.seed().sources(), &next_sources));
         assert_eq!(proof.seed().request().states, states);
         Ok(())
@@ -1104,3 +1110,6 @@ fn retained_provider_reported_stop_preserves_accepted_diagnostic() -> TestResult
         },
     )
 }
+
+#[path = "retained/whole.rs"]
+mod whole;
