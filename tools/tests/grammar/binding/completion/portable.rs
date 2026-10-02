@@ -571,3 +571,6 @@ fn scope_candidate_transport_rejects_incomplete_prefix_changes_and_budget_exhaus
 
 #[path = "portable/error.rs"]
 mod error;
+
+#[path = "portable/failure.rs"]
+mod failure;

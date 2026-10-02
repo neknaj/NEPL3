@@ -16,6 +16,7 @@ use nepl3_core::{
 };
 
 pub mod error;
+pub mod failure;
 
 /// Owned request data. Borrowing it grants no permission or execution proof.
 #[derive(Clone, Debug, Eq, PartialEq)]

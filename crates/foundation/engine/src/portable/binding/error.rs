@@ -69,14 +69,14 @@ impl<'a> ErrorSchemas<'a> {
         }
     }
 }
-pub(super) fn encode<E>(
+pub(in crate::portable) fn encode<E>(
     value: &BindingError,
     registry: &SchemaRegistry,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<E>> {
     binding(value, &ErrorSchemas::new(registry)?, b)
 }
-pub(super) fn decode<E>(
+pub(in crate::portable) fn decode<E>(
     value: &NdfValue,
     registry: &SchemaRegistry,
     b: &mut Budget,

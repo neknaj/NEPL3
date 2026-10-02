@@ -6660,6 +6660,41 @@
         "NotReference": [],
         "NoStage": []
       }
+    },
+    "ScopeCandidateFailureReply": {
+      "constraints": [],
+      "record": [
+        [
+          "request",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "ScopeCandidateRequest"
+            }
+          }
+        ],
+        [
+          "error",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "CandidateError"
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Report"
+            }
+          }
+        ]
+      ]
     }
   }
 }
