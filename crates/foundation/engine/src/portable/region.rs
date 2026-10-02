@@ -13,6 +13,7 @@ use nepl3_core::{
     value::NdfValue,
     value_codec::FoundationValueCodec,
 };
+pub mod completion;
 pub mod query;
 mod sidecar;
 mod value;

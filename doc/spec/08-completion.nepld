@@ -160,7 +160,7 @@ body
       cons "[領域/りょういき]の[選択後/せんたくご]、occurrenceとの[対応/たいおう]を[求/もと]めるsource mapを[辿/たど]る[前/まえ]に、Binding[結果/けっか]の[全/すべ]てのsnapshotを[同/おな]じSourceAdmissionへ[計上/けいじょう]する。"
       cons "Customが[生成/せいせい]した[中間/ちゅうかん]sourceも[対象/たいしょう]とし、[新/あたら]しいledgerでは[再検査/さいけんさ]する。"
       cons "[停止/ていし]・[不一致/ふいっち]では[途中/とちゅう]のgroupとsource[集合/しゅうごう]を[公開/こうかい]せず、[累積/るいせき]Usageを[保持/ほじ]する。"
-      cons "[結果/けっか]は[宣言候補/せんげんこうほ]のnative[照会/しょうかい]であり、prefixの[推定/すいてい]、[編集/へんしゅう]の[生成/せいせい]・[受理/じゅり]、LSP transportとportable codecは[後続処理/こうぞくしょり]である。" nil
+      cons "[結果/けっか]は[宣言候補/せんげんこうほ]のnative[照会/しょうかい]であり、prefixの[推定/すいてい]、[編集/へんしゅう]の[生成/せいせい]・[受理/じゅり]、LSP transportは[後続処理/こうぞくしょり]である。" nil
     nil
 
   cons section scopeCandidateCodec "2.11 [宣言名候補/せんげんめいこうほ]のportable[表現/ひょうげん]" body
@@ -174,7 +174,21 @@ body
       cons "source[集合/しゅうごう]が[空/から]のcodecを[使用/しよう]し、hostが[保持/ほじ]する[無関係/むかんけい]なsnapshotを[計上/けいじょう]しない。"
       cons "[診断/しんだん]・event・trace overflowを[含/ふく]む[候補/こうほ]Reportを[拒否/きょひ]する。"
       cons "[復号/ふくごう]は[実行証拠/じっこうしょうこ]や[編集権限/へんしゅうけんげん]を[生成/せいせい]せず、[不一致/ふいっち]・[未完了/みかんりょう]・[資源停止/しげんていし]は[型付/かたつ]き[失敗/しっぱい]として[返/かえ]す。"
-      cons "[失敗結果/しっぱいけっか]の[通信/つうしん]とRegionCompletionReplyのcodecは[後続範囲/こうぞくはんい]である。" nil
+      cons "[失敗結果/しっぱいけっか]の[通信/つうしん]は[後続範囲/こうぞくはんい]である。" nil
+    nil
+
+  cons section regionCandidateCodec "2.12 [構造領域/こうぞうりょういき]の[候補/こうほ]のportable[表現/ひょうげん]" body
+    cons paragraph
+      cons "portable::region::completionはRegionCompletionRequestと[成功結果/せいこうけっか]RegionCandidatesを[型付/かたつ]きNDFで[表現/ひょうげん]する。"
+      cons "[受信側/じゅしんがわ]のPreparedRegionInputと[実際/じっさい]のBoundBindingReplyを[用/もち]いて[構造選択/こうぞうせんたく]を[再実行/さいじっこう]し、RegionKey、capability、[選択領域/せんたくりょういき]、[候補群/こうほぐん]の[個数/こすう]・occurrence・[順序/じゅんじょ]、[返却/へんきゃく]source[集合/しゅうごう]を[照合/しょうごう]する。"
+      cons "[各候補群/かくこうほぐん]の[名前/なまえ]・namespace・[参照解決/さんしょうかいけつ]はScopeCandidatesのcodecで[検証/けんしょう]する。" nil
+    cons paragraph
+      cons "[領域/りょういき]がない[結果/けっか]、[領域/りょういき]に[参照/さんしょう]がない[結果/けっか]、[宣言名/せんげんめい]がない[候補群/こうほぐん]を[区別/くべつ]する。"
+      cons "source[集合/しゅうごう]は[構造選択/こうぞうせんたく]と[対応/たいおう]する[参照/さんしょう]のsnapshotから[構成/こうせい]し、[候補/こうほ]の[宣言位置/せんげんいち]を[追加/ついか]しない。"
+      cons "[写像/しゃぞう]の[検査/けんさ]にはnative[処理/しょり]と[同/おな]じBindingのsource[集合/しゅうごう]を[入場/にゅうじょう]させる。"
+      cons "[全体/ぜんたい]と[各候補群/かくこうほぐん]のUsageは[送信側/そうしんがわ]の[申告/しんこく]metadataとして[保持/ほじ]し、[受信側/じゅしんがわ]のBudgetとSourceAdmissionで[検証費用/けんしょうひよう]を[計上/けいじょう]する。"
+      cons "[診断/しんだん]・event・trace overflowを[含/ふく]むReportを[拒否/きょひ]する。"
+      cons "[失敗結果/しっぱいけっか]の[通信/つうしん]と[編集/へんしゅう]の[生成/せいせい]・[採用/さいよう]は[後続範囲/こうぞくはんい]である。" nil
     nil
 
 nil
