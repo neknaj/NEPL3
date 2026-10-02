@@ -4,6 +4,8 @@ mod expected;
 mod foreign;
 #[path = "parse/host.rs"]
 mod host;
+#[path = "parse/insertion.rs"]
+mod insertion;
 #[path = "parse/retained.rs"]
 mod retained;
 #[path = "parse/support.rs"]

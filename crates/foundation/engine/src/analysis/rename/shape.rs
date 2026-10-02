@@ -1,8 +1,5 @@
 use super::*;
-use crate::{
-    recovery::ParseTree,
-    selection::{BundleContext, ShapeSelection},
-};
+use crate::{recovery::ParseTree, selection::BundleContext};
 use nepl3_core::{
     syntax::{FieldValue, SyntaxBundle, canonical::BundleMappings},
     value::{NdfScalar, NdfValue},
@@ -89,7 +86,7 @@ pub(super) fn check(
             )?;
             if av.entry != cv.entry
                 || av.execution_digest != cv.execution_digest
-                || !selection(&av.shape, &cv.shape, d.budget)?
+                || !av.shape.same_resolved_with_budget(&cv.shape, d.budget)?
             {
                 return Err(RenameError::ShapeChanged);
             }
@@ -195,70 +192,6 @@ fn context<'a>(
         }
     }
     Err(RenameError::ShapeChanged)
-}
-fn selection(a: &ShapeSelection, c: &ShapeSelection, b: &mut Budget) -> Result<bool, RenameError> {
-    b.charge(Resource::Work, 1)?;
-    Ok(match (a, c) {
-        (ShapeSelection::Form { index: a }, ShapeSelection::Form { index: c })
-        | (ShapeSelection::Leaf { index: a }, ShapeSelection::Leaf { index: c }) => a == c,
-        (ShapeSelection::Builtin { read: a }, ShapeSelection::Builtin { read: c }) => a == c,
-        (ShapeSelection::List { read: a, cons: x }, ShapeSelection::List { read: c, cons: y }) => {
-            a == c && x == y
-        }
-        (
-            ShapeSelection::Dynamic {
-                provider: a,
-                shape: x,
-                child_contexts: u,
-            },
-            ShapeSelection::Dynamic {
-                provider: c,
-                shape: y,
-                child_contexts: v,
-            },
-        ) => {
-            for operation in [&a.shape, &a.child_context, &c.shape, &c.child_context] {
-                b.charge(
-                    Resource::Work,
-                    (operation.schema.package.len() + operation.name.len()) as u64 + 42,
-                )?;
-            }
-            for shape in [x, y] {
-                b.charge(Resource::Work, shape.kind.schema.package.len() as u64 + 42)?;
-                for field in &shape.fields {
-                    b.charge(Resource::Work, field.name.len() as u64 + 9)?;
-                }
-                for rule in &shape.selection_rules {
-                    let size = match &rule.selector {
-                        crate::package::StyleSelector::Field(v)
-                        | crate::package::StyleSelector::Capture(v) => v.len(),
-                        _ => 0,
-                    };
-                    b.charge(Resource::Work, size as u64 + 9)?;
-                }
-                for style in &shape.styles {
-                    use crate::package::StyleSelector;
-                    let size = match &style.selector {
-                        StyleSelector::Field(v) | StyleSelector::Capture(v) => v.len(),
-                        _ => 0,
-                    };
-                    b.charge(
-                        Resource::Work,
-                        (size + style.class.schema.package.len() + style.class.name.len()) as u64
-                            + 43,
-                    )?;
-                }
-            }
-            for entry in u.iter().chain(v) {
-                b.charge(
-                    Resource::Work,
-                    (entry.alias.len() + entry.category.len() + entry.mode.len()) as u64 + 1,
-                )?;
-            }
-            a == c && x == y && u == v
-        }
-        _ => false,
-    })
 }
 fn is_edit(d: &mut RenameDraft<'_, '_, '_, '_>, span: &Span) -> Result<bool, RenameError> {
     for edit in &d.candidate_edits {
