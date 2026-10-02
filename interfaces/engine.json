@@ -6439,6 +6439,93 @@
           }
         ]
       ]
+    },
+    "ScopeCandidateRequest": {
+      "constraints": [],
+      "record": [
+        [
+          "key",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "AnalysisKey"
+            }
+          }
+        ],
+        [
+          "occurrence",
+          "U64"
+        ],
+        [
+          "prefix",
+          "Text"
+        ]
+      ]
+    },
+    "ScopeNameCandidate": {
+      "constraints": [],
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "resolution",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "ReferenceResolution"
+            }
+          }
+        ]
+      ]
+    },
+    "ScopeCandidates": {
+      "constraints": [],
+      "record": [
+        [
+          "key",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "AnalysisKey"
+            }
+          }
+        ],
+        [
+          "occurrence",
+          "U64"
+        ],
+        [
+          "namespace",
+          "U64"
+        ],
+        [
+          "candidates",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "ScopeNameCandidate"
+              }
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Report"
+            }
+          }
+        ]
+      ]
     }
   }
 }

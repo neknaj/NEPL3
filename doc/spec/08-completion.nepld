@@ -163,4 +163,18 @@ body
       cons "[結果/けっか]は[宣言候補/せんげんこうほ]のnative[照会/しょうかい]であり、prefixの[推定/すいてい]、[編集/へんしゅう]の[生成/せいせい]・[受理/じゅり]、LSP transportとportable codecは[後続処理/こうぞくしょり]である。" nil
     nil
 
+  cons section scopeCandidateCodec "2.11 [宣言名候補/せんげんめいこうほ]のportable[表現/ひょうげん]" body
+    cons paragraph
+      cons "portable::completionは、ScopeCandidateRequestと[成功/せいこう]したScopeCandidatesを[型付/かたつ]きNDFで[表現/ひょうげん]する。"
+      cons "[復号/ふくごう]したrequestはprefixを[所有/しょゆう]し、native[照会/しょうかい]へ[借用/しゃくよう]できる。"
+      cons "[結果/けっか]の[符号化/ふごうか]・[復号/ふくごう]では、[実際/じっさい]のBoundBindingReplyから[候補/こうほ]を[再計算/さいけいさん]し、AnalysisKey、occurrence、namespace、[名前/なまえ]・[順序/じゅんじょ]・[参照解決/さんしょうかいけつ]を[照合/しょうごう]する。" nil
+    cons paragraph
+      cons "[処理/しょり]は[受信側/じゅしんがわ]の[同/おな]じBudgetへ[計上/けいじょう]する。"
+      cons "[送信側/そうしんがわ]のUsageは[申告/しんこく]metadataとして[保持/ほじ]し、[受信側/じゅしんがわ]の[資源計上/しげんけいじょう]を[代替/だいたい]しない。"
+      cons "source[集合/しゅうごう]が[空/から]のcodecを[使用/しよう]し、hostが[保持/ほじ]する[無関係/むかんけい]なsnapshotを[計上/けいじょう]しない。"
+      cons "[診断/しんだん]・event・trace overflowを[含/ふく]む[候補/こうほ]Reportを[拒否/きょひ]する。"
+      cons "[復号/ふくごう]は[実行証拠/じっこうしょうこ]や[編集権限/へんしゅうけんげん]を[生成/せいせい]せず、[不一致/ふいっち]・[未完了/みかんりょう]・[資源停止/しげんていし]は[型付/かたつ]き[失敗/しっぱい]として[返/かえ]す。"
+      cons "[失敗結果/しっぱいけっか]の[通信/つうしん]とRegionCompletionReplyのcodecは[後続範囲/こうぞくはんい]である。" nil
+    nil
+
 nil
