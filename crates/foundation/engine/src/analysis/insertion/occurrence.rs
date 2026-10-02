@@ -54,7 +54,7 @@ pub(super) fn check(
     parsed: &RetainedParse<'_>,
     edit: &TextEdit,
     b: &mut Budget,
-) -> Result<Span, InsertionError> {
+) -> Result<(Span, InsertedShape, Option<Span>), InsertionError> {
     let (mut a_bundle, mut c_bundle) =
         (&original.tree.tree().bundle, &candidate.tree.tree().bundle);
     let (mut a_id, mut c_id) = (a_bundle.root, c_bundle.root);
@@ -137,13 +137,30 @@ pub(super) fn check(
     b.charge(Resource::Nodes, 1)?;
     b.observe_depth((wanted.path.len() as u64).saturating_add(1))?;
     let choice = selected(candidate, c_bundle, c_id, b)?;
-    if matches!(choice.shape, ShapeSelection::Recovery) {
-        return Err(InsertionError::RecoveryTarget);
-    }
+    b.charge(Resource::Work, 1)?;
+    let shape = match &choice.shape {
+        ShapeSelection::Form { index } => InsertedShape::Form(*index),
+        ShapeSelection::Leaf { index } => InsertedShape::Leaf(*index),
+        ShapeSelection::Builtin { read } => InsertedShape::Builtin(*read),
+        ShapeSelection::List { read, cons } => InsertedShape::List {
+            read: *read,
+            cons: *cons,
+        },
+        ShapeSelection::Dynamic { .. } => InsertedShape::Dynamic,
+        ShapeSelection::Recovery => return Err(InsertionError::RecoveryTarget),
+    };
     if !crate::selection::entry_equal(&wanted.expected, &choice.entry, b)? {
         return Err(InsertionError::OccurrenceMismatch);
     }
-    direct_cover(c_bundle, c_id, parsed.seed().request().snapshot, edit, b)
+    let cover = direct_cover(c_bundle, c_id, parsed.seed().request().snapshot, edit, b)?;
+    b.charge(Resource::Work, 1)?;
+    let head = node(c_bundle, c_id)?
+        .head
+        .as_ref()
+        .map(|span| span.clone_with_budget(b))
+        .transpose()
+        .map_err(InsertionError::Stopped)?;
+    Ok((cover, shape, head))
 }
 fn direct_cover(
     bundle: &SyntaxBundle,

@@ -26,7 +26,7 @@ pub(super) fn with_options(
         &EntryContext,
     ) -> TestResult,
 ) -> TestResult {
-    with_options_state(input, provided, text, None, f)
+    with_options_state(input, provided, text, None, false, f)
 }
 
 pub(super) fn with_state_context(
@@ -40,7 +40,20 @@ pub(super) fn with_state_context(
         &EntryContext,
     ) -> TestResult,
 ) -> TestResult {
-    with_options_state(input, false, false, Some(state), f)
+    with_options_state(input, false, false, Some(state), false, f)
+}
+
+pub(super) fn with_list_context(
+    input: &str,
+    f: impl FnOnce(
+        &ResolvedParseProfile<'_>,
+        &ParseEnvironmentSet<'_>,
+        &SourceStore,
+        &SourceSnapshot,
+        &EntryContext,
+    ) -> TestResult,
+) -> TestResult {
+    with_options_state(input, false, false, None, true, f)
 }
 
 fn with_options_state(
@@ -48,6 +61,7 @@ fn with_options_state(
     provided: bool,
     text: bool,
     state: Option<nepl3_core::schema::TypeDescriptor>,
+    list: bool,
     f: impl FnOnce(
         &ResolvedParseProfile<'_>,
         &ParseEnvironmentSet<'_>,
@@ -59,6 +73,22 @@ fn with_options_state(
     let (mut package, registry) = fixture()?;
     if let Some(state) = state {
         package.reader.state_type = state;
+    }
+    if list {
+        let kind = |name: &str| -> Result<nepl3_core::value::KindRef, String> {
+            Ok(nepl3_core::value::KindRef {
+                schema: package.schema.clone(),
+                local_kind: registry
+                    .kind_id(&package.schema, name)
+                    .map_err(|e| format!("{e:?}"))?,
+            })
+        };
+        package.reads.push(nepl3_engine::package::ReadSpec::ListOf {
+            element: nepl3_engine::package::ReadSpecId(1),
+            cons: kind("List:LocalCons")?,
+            nil: kind("List:Nil")?,
+        });
+        package.forms[0].fields[1].read = nepl3_engine::package::ReadSpecId(2);
     }
     if provided {
         use nepl3_core::schema::{TypeDescriptor, TypeRef};

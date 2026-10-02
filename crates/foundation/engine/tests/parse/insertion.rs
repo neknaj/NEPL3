@@ -519,3 +519,6 @@ mod draft;
 
 #[path = "insertion/checked.rs"]
 mod checked;
+
+#[path = "insertion/declared.rs"]
+mod declared;
