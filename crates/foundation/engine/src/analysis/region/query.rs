@@ -97,18 +97,30 @@ pub fn query(
         sources,
     }
 }
-fn run(
+pub(super) struct SelectedOccurrence {
+    pub id: nepl3_core::facts::OccurrenceId,
+    pub source: SourceRef,
+    pub offset: u64,
+    pub role: nepl3_core::facts::OccurrenceRole,
+}
+pub(super) struct SelectedOccurrences {
+    pub region: Option<Box<SourceRegion>>,
+    pub occurrences: Vec<SelectedOccurrence>,
+}
+// Shared structural selection retains Foreign ownership and all source-map
+// correspondences; presentation operations must not substitute raw span lookup.
+pub(super) fn select_occurrences(
     input: &PreparedRegionInput<'_, '_, '_>,
     binding: &BoundBindingReply,
-    request: &RegionQueryRequest,
+    request: &RegionRequest,
     sources: &mut Vec<SourceSnapshot>,
     b: &mut Budget,
     admission: &mut SourceAdmission,
-) -> Result<RegionQueryOutcome, RegionQueryError> {
+) -> Result<SelectedOccurrences, RegionQueryError> {
     let analysis = binding
-        .for_source(&request.region.key.analysis, &request.region.source, b)
+        .for_source(&request.key.analysis, &request.source, b)
         .map_err(QueryError::from)?;
-    let reply = regions(input, &request.region, b, admission);
+    let reply = regions(input, request, b, admission);
     let selected = match reply.outcome {
         RegionOutcome::Complete {
             selection,
@@ -119,11 +131,17 @@ fn run(
     };
     *sources = reply.sources;
     let Some(region) = selected else {
-        return Ok(RegionQueryOutcome::Complete {
+        return Ok(SelectedOccurrences {
             region: None,
-            queries: Vec::new(),
+            occurrences: Vec::new(),
         });
     };
+    // Mapping traversal may inspect boundary bytes in any snapshot from the
+    // native analysis closure. Admit that closure into this operation before
+    // following Custom or transitive mappings; prior execution is no admission.
+    for source in binding.reply().sources() {
+        admission.admit_existing(source, b)?;
+    }
     let maps = BundleMappings::new(&input.binding.tree.tree().bundle, b).map_err(|e| match e {
         CanonicalError::Stopped(v) => RegionError::from(v),
         _ => RegionError::Owner,
@@ -156,20 +174,17 @@ fn run(
             .ok_or(QueryError::Facts)?;
         push(&mut declared, map.clone_with_budget(b)?, b)?;
     }
-    let request_source = find_source(sources, &request.region.source, b)?;
-    let offset = usize::try_from(request.region.offset).map_err(|_| RegionError::Mapping)?;
+    let request_source = find_source(sources, &request.source, b)?;
+    let offset = usize::try_from(request.offset).map_err(|_| RegionError::Mapping)?;
     let width = request_source
         .text()
         .get(offset..)
         .and_then(|s| s.chars().next())
         .map(char::len_utf8)
         .ok_or(RegionError::Mapping)?;
-    let point = request_source.span_with_budget(
-        request.region.offset,
-        request.region.offset + width as u64,
-        b,
-    )?;
-    let mut queries = Vec::new();
+    let point =
+        request_source.span_with_budget(request.offset, request.offset + width as u64, b)?;
+    let mut occurrences = Vec::new();
     for occurrence in &analysis.facts().occurrences {
         b.charge(Resource::Nodes, 1)?;
         b.charge(Resource::Work, 1)?;
@@ -203,10 +218,53 @@ fn run(
         if !matches {
             continue;
         }
+        push(
+            &mut occurrences,
+            SelectedOccurrence {
+                id: occurrence.id,
+                source: reference,
+                offset: occurrence.span.start(),
+                role: occurrence.role,
+            },
+            b,
+        )?;
+    }
+    b.charge(
+        Resource::AllocationUnits,
+        core::mem::size_of::<SourceRegion>() as u64,
+    )?;
+    Ok(SelectedOccurrences {
+        region: Some(Box::new(region)),
+        occurrences,
+    })
+}
+pub(super) fn admit_occurrence_source(
+    binding: &BoundBindingReply,
+    occurrence: &SelectedOccurrence,
+    sources: &mut Vec<SourceSnapshot>,
+    b: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<(), RegionQueryError> {
+    let source = find_source(binding.reply().sources(), &occurrence.source, b)?;
+    admission.admit_existing(source, b)?;
+    add_source(sources, source.clone_with_budget(b)?, b)?;
+    Ok(())
+}
+fn run(
+    input: &PreparedRegionInput<'_, '_, '_>,
+    binding: &BoundBindingReply,
+    request: &RegionQueryRequest,
+    sources: &mut Vec<SourceSnapshot>,
+    b: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<RegionQueryOutcome, RegionQueryError> {
+    let selected = select_occurrences(input, binding, &request.region, sources, b, admission)?;
+    let mut queries = Vec::new();
+    for occurrence in selected.occurrences {
         let subrequest = QueryRequest {
             key: request.region.key.analysis,
-            source: reference,
-            offset: occurrence.span.start(),
+            source: occurrence.source,
+            offset: occurrence.offset,
             kind: request.kind,
         };
         let answer =
@@ -221,12 +279,8 @@ fn run(
         }
     }
     sort_sources(sources, b)?;
-    b.charge(
-        Resource::AllocationUnits,
-        core::mem::size_of::<SourceRegion>() as u64,
-    )?;
     Ok(RegionQueryOutcome::Complete {
-        region: Some(Box::new(region)),
+        region: selected.region,
         queries,
     })
 }
@@ -336,7 +390,7 @@ fn add_source(
     }
     push(out, source, b)
 }
-fn sort_sources(out: &mut [SourceSnapshot], b: &mut Budget) -> Result<(), RegionError> {
+pub(super) fn sort_sources(out: &mut [SourceSnapshot], b: &mut Budget) -> Result<(), RegionError> {
     for i in 1..out.len() {
         let mut j = i;
         while j > 0 {

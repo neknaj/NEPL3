@@ -397,3 +397,6 @@ fn custom_final_resolution_does_not_rewrite_captured_candidate_visibility() -> R
         Ok(())
     })
 }
+
+#[path = "completion/region.rs"]
+mod region;

@@ -150,4 +150,17 @@ body
       cons "[綴/つづ]りへの[変換/へんかん]・[挿入/そうにゅう]の[再解析/さいかいせき]と[受理/じゅり]・provider[固有/こゆう]の[候補生成/こうほせいせい]は[後続処理/こうぞくしょり]である。" nil
     nil
 
+  cons section regionCandidates "2.10 [構造領域/こうぞうりょういき]からの[名前候補/なまえこうほ]" body
+    cons paragraph
+      cons "region::completion::namesは、nativeのPreparedRegionInputとBoundBindingReply、RegionKey、sourceの[版/はん]、UTF-8 byte[位置/いち]、[明示/めいじ]したprefixを[受/う]け[取/と]る。"
+      cons "[定義/ていぎ]・[参照/さんしょう]のqueryと[共有/きょうゆう]する[選択処理/せんたくしょり]により、[構造上/こうぞうじょう]のowner、Foreignのscope、Customのsource mapを[保持/ほじ]する。"
+      cons "[一致/いっち]したReference occurrenceごとに[捕捉/ほそく]stageの[名前候補/なまえこうほ]を[返/かえ]し、[複数/ふくすう]の[対応/たいおう]を[発行順/はっこうじゅん]の[別/べつ]groupとして[保持/ほじ]する。"
+      cons "[領域/りょういき]の[不在/ふざい]、Referenceの[不在/ふざい]、[宣言候補/せんげんこうほ]が[空/から]のgroupを[区別/くべつ]する。" nil
+    cons paragraph
+      cons "[領域/りょういき]の[選択後/せんたくご]、occurrenceとの[対応/たいおう]を[求/もと]めるsource mapを[辿/たど]る[前/まえ]に、Binding[結果/けっか]の[全/すべ]てのsnapshotを[同/おな]じSourceAdmissionへ[計上/けいじょう]する。"
+      cons "Customが[生成/せいせい]した[中間/ちゅうかん]sourceも[対象/たいしょう]とし、[新/あたら]しいledgerでは[再検査/さいけんさ]する。"
+      cons "[停止/ていし]・[不一致/ふいっち]では[途中/とちゅう]のgroupとsource[集合/しゅうごう]を[公開/こうかい]せず、[累積/るいせき]Usageを[保持/ほじ]する。"
+      cons "[結果/けっか]は[宣言候補/せんげんこうほ]のnative[照会/しょうかい]であり、prefixの[推定/すいてい]、[編集/へんしゅう]の[生成/せいせい]・[受理/じゅり]、LSP transportとportable codecは[後続処理/こうぞくしょり]である。" nil
+    nil
+
 nil

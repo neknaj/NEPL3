@@ -9,6 +9,7 @@ pub(super) fn implementation_digest() -> Digest {
             include_bytes!("custom/recursive.rs").as_slice(),
             // The presentation regression wraps this provider with a deferred reference.
             include_bytes!("status.rs").as_slice(),
+            include_bytes!("completion/region.rs").as_slice(),
         ]
         .concat(),
     )
