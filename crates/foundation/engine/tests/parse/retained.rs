@@ -14,7 +14,7 @@ pub(super) fn with_context(
     with_options(input, false, false, f)
 }
 
-fn with_options(
+pub(super) fn with_options(
     input: &str,
     provided: bool,
     text: bool,
@@ -522,8 +522,8 @@ fn retained_host_start_and_failed_start_are_single_use() -> TestResult {
     )
 }
 
-struct StatefulHost {
-    inner: host::Host,
+pub(super) struct StatefulHost {
+    pub(super) inner: host::Host,
 }
 impl ParseHost for StatefulHost {
     fn provider(

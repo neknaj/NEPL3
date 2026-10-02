@@ -140,6 +140,17 @@ body
       cons "[複数/ふくすう]の[候補/こうほ]は[同/おな]じ[次/つぎ]revisionに[異/こと]なるdigestを[持/も]ち[得/う]るため、[各候補/かくこうほ]に[新/あたら]しいSourceAdmissionを[用意/ようい]し、[累積/るいせき]Budgetを[共有/きょうゆう]する。[一/ひと]つの[候補/こうほ]の[準備/じゅんび]・[再解析/さいかいせき]・[観測/かんそく]では[同/おな]じSourceAdmissionを[継続/けいぞく]して[使用/しよう]する。" nil
     nil
 
+  cons section checkedInsertion "2.5 [検査済/けんさず]み[挿入候補/そうにゅうこうほ]" body
+    cons paragraph
+      cons "CheckedInsertionは、[実際/じっさい]の[候補/こうほ][解析/かいせき]をcheckで[検証/けんしょう]した[場合/ばあい]に[生成/せいせい]するnativeの[型/かた]である。[元/もと]のRetainedParse、[候補/こうほ]のRetainedParse、InsertionDraftを[不変借用/ふへんしゃくよう]し、[検証/けんしょう]したTextEditと[両/りょう]AnalysisKeyを[参照/さんしょう]できる。"
+      cons "[解析/かいせき]に[使用/しよう]したSourceStoreとdraftのstoreを、オブジェクトの[同一性/どういつせい]で[照合/しょうごう]する。snapshotのidentity・URI・limit、[元/もと]の[実行結果/じっこうけっか]とprepared[入力/にゅうりょく]、profile・[環境/かんきょう]・[要求/ようきゅう]keyも[検査/けんさ]する。" nil
+    cons paragraph
+      cons "[呼出側/よびだしがわ]は[既存/きそん]のRetainedParseSessionを[保持/ほじ]し、Awaitへの[応答/おうとう]や[再開/さいかい]を[制御/せいぎょ]する。CompleteまたはRecoveredから[得/え]た[実行結果/じっこうけっか]をcheckへ[渡/わた]す。checkはFoundationValueCodecを[用/もち]いて[候補側/こうほがわ]の[解析入力/かいせきにゅうりょく]を[準備/じゅんび]し、observeで[挿入/そうにゅう]の[構文位置/こうぶんいち]を[検証/けんしょう]する。"
+      cons "[呼出側/よびだしがわ]は[準備/じゅんび]・[解析/かいせき]・checkで[累積/るいせき]Budgetと[同/おな]じSourceAdmissionを[継続/けいぞく]する。checkのReportは、[渡/わた]されたBudgetの[現在/げんざい]のUsageを[記録/きろく]する。PreparationとInsertionは、[内側/うちがわ]の[処理/しょり]が[返/かえ]した[停止理由/ていしりゆう]も[保持/ほじ]する。[失敗/しっぱい]はStopped・Preparation・Insertion・DraftMismatchの[型付/かたつ]き[結果/けっか]で[返/かえ]し、[検査済/けんさず]み[候補/こうほ]を[生成/せいせい]しない。" nil
+    cons paragraph
+      cons "[保証範囲/ほしょうはんい]はInsertionObservationと[同/おな]じ[一/ひと]つの[構文位置/こうぶんいち]である。Binding、[入力全体/にゅうりょくぜんたい]の[消費/しょうひ]、workspaceの[最新状態/さいしんじょうたい]と[編集権限/へんしゅうけんげん]は[後続/こうぞく]の[検証対象/けんしょうたいしょう]である。TextEditを[転送/てんそう]する[場合/ばあい]も、[受信側/じゅしんがわ]が[必要/ひつよう]な[検証/けんしょう]を[行/おこな]う。" nil
+    nil
+
   cons section region "3. regionの[選択/せんたく]" body
     cons paragraph
       cons "region[選択/せんたく]は、[指定/してい]されたsource positionを[包含/ほうがん]するfield・elementのうち、[同一/どういつ]snapshot[上/じょう]で[最小/さいしょう]の[範囲/はんい]を[選択/せんたく]する[操作/そうさ]である。"
