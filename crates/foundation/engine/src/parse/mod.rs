@@ -3,6 +3,7 @@ mod build;
 mod completed;
 mod executed;
 mod retained;
+pub mod whole;
 pub use executed::{ExecutedParse, ExecutionKind, ParseExecution, ParseHostExecution};
 pub use retained::{
     RetainedParse, RetainedParseExecution, RetainedParseHostReply, RetainedParseSeed,
