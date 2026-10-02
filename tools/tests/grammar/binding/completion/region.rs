@@ -541,3 +541,6 @@ fn region_candidates_follow_foreign_field_priority_and_restore_caller_depth() ->
 
 #[path = "region/portable.rs"]
 mod portable;
+
+#[path = "region/failure.rs"]
+mod failure;

@@ -6695,6 +6695,80 @@
           }
         ]
       ]
+    },
+    "RegionCompletionError": {
+      "constraints": [],
+      "variant": {
+        "Selection": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "RegionQueryError"
+              }
+            }
+          ]
+        ],
+        "Candidates": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "CandidateError"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "RegionCompletionFailureReply": {
+      "constraints": [],
+      "record": [
+        [
+          "request",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "RegionCompletionRequest"
+            }
+          }
+        ],
+        [
+          "capability",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "RegionCapability"
+            }
+          }
+        ],
+        [
+          "error",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "RegionCompletionError"
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Report"
+            }
+          }
+        ]
+      ]
     }
   }
 }

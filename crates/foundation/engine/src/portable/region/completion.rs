@@ -1,6 +1,7 @@
 //! Successful structural-region candidates are checked against native selection
 //! and binding. Decoding does not construct execution or edit authority.
 use super::*;
+pub mod failure;
 use crate::analysis::{
     BoundBindingReply,
     completion::ScopeCandidateRequest,
@@ -41,8 +42,8 @@ pub fn request_decode<C: FoundationValueCodec>(
         prefix: Value::read(&f[1], &s, c, b)?,
     })
 }
-/// Only Complete metadata has a transport schema at this stage. Native failures
-/// remain failures; they are never converted into an empty successful reply.
+/// Complete metadata is checked against native results. Failure cause metadata
+/// uses the separate request-correlated `failure` envelope.
 pub fn reply_to_value<C: FoundationValueCodec>(
     reply: &RegionCompletionReply,
     request: &RegionCompletionRequest,

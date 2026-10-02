@@ -3,7 +3,7 @@
 use super::*;
 use crate::analysis::{BoundBindingReply, region::query::*};
 use nepl3_core::schema::SchemaRegistry;
-mod value;
+pub(super) mod value;
 pub fn request_to_value<C: FoundationValueCodec>(
     request: &RegionQueryRequest,
     r: &SchemaRegistry,
