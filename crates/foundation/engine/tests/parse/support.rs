@@ -43,6 +43,9 @@ fn record(name: &str, fields: Vec<FieldDescriptor>) -> NamedType {
     }
 }
 pub fn fixture() -> Result<(LanguagePackage, SchemaRegistry), String> {
+    fixture_with_facts(false)
+}
+pub fn fixture_with_facts(custom: bool) -> Result<(LanguagePackage, SchemaRegistry), String> {
     let mut budget = budget();
     let mut registry = SchemaRegistry::default();
     for descriptor in [
@@ -78,8 +81,16 @@ pub fn fixture() -> Result<(LanguagePackage, SchemaRegistry), String> {
             },
             OperationDescriptor {
                 name: "facts".into(),
-                input: TypeDescriptor::Text,
-                output: TypeDescriptor::Unit,
+                input: if custom {
+                    facts_type("FactsRequest")
+                } else {
+                    TypeDescriptor::Text
+                },
+                output: if custom {
+                    facts_type("FactsReply")
+                } else {
+                    TypeDescriptor::Unit
+                },
                 pure: true,
             },
         ],
@@ -243,4 +254,12 @@ pub fn fixture() -> Result<(LanguagePackage, SchemaRegistry), String> {
         },
     };
     Ok((package, registry))
+}
+
+pub fn facts_type(name: &str) -> TypeDescriptor {
+    TypeDescriptor::Named(TypeRef {
+        package: "nepl3.engine".into(),
+        revision: 1,
+        name: name.into(),
+    })
 }

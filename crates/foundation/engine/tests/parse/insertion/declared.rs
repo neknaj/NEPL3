@@ -21,6 +21,9 @@ struct Case<'a> {
     expected: Expected,
 }
 fn run(case: Case<'_>) -> TestResult {
+    run_context(case, false)
+}
+fn run_context(case: Case<'_>, custom: bool) -> TestResult {
     let exercise = |profile: &ResolvedParseProfile<'_>,
                     environments: &ParseEnvironmentSet<'_>,
                     sources: &SourceStore,
@@ -173,6 +176,12 @@ fn run(case: Case<'_>) -> TestResult {
                 let head = result.checked().head().ok_or("head")?;
                 assert_eq!((head.start(), head.end()), selected.head_range());
                 assert_eq!(result.report().usage, b.usage());
+                if custom {
+                    super::binding::check_custom(result.checked(), &mut codec, &mut b)?;
+                } else {
+                    super::binding::check_binding(result.checked(), &mut codec, &mut b)?;
+                }
+
                 // Keep the effective limits unchanged and measure with fresh
                 // admissions, so the stop occurs after generic checking.
                 use nepl3_core::budget::{Budget, Resource, StopReason};
@@ -256,7 +265,9 @@ fn run(case: Case<'_>) -> TestResult {
         assert_eq!(source.text(), case.old);
         Ok(())
     };
-    if case.list {
+    if custom {
+        super::super::retained::with_custom_binding(case.old, exercise)
+    } else if case.list {
         super::super::retained::with_list_context(case.old, exercise)
     } else {
         super::super::retained::with_context(case.old, exercise)
@@ -335,4 +346,34 @@ fn declared_list_choices_and_wrong_read_classes_are_separate() -> TestResult {
         })?;
     }
     Ok(())
+}
+
+#[test]
+fn candidate_binding_preserves_unresolved_and_recovered_outcomes() -> TestResult {
+    for after in [" x x", " x y", ""] {
+        run(Case {
+            old: "",
+            list: false,
+            choice: DeclaredChoice::Form(0),
+            before: "",
+            after,
+            expected: Expected::Accepted,
+        })?;
+    }
+    Ok(())
+}
+
+#[test]
+fn checked_candidate_custom_binding_keeps_host_dispatch_explicit() -> TestResult {
+    run_context(
+        Case {
+            old: "",
+            list: false,
+            choice: DeclaredChoice::Form(0),
+            before: "",
+            after: " x x",
+            expected: Expected::Accepted,
+        },
+        true,
+    )
 }

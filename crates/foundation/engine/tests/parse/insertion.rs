@@ -522,3 +522,6 @@ mod checked;
 
 #[path = "insertion/declared.rs"]
 mod declared;
+
+#[path = "insertion/binding.rs"]
+mod binding;
