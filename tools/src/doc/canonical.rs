@@ -128,8 +128,17 @@ fn parse_registry(raw: &[u8]) -> Result<Registry> {
     if registry.version != 1 || registry.pages.is_empty() || registry.pages.len() > 1000 {
         return Err("unsupported or empty canonical registry".into());
     }
+    if !registry.files.is_empty()
+        && registry
+            .pages
+            .iter()
+            .any(|p| p.renderer == projection::FOOTNOTES_RENDERER)
+    {
+        return Err("footnote page sets cannot depend on unexported passive files".into());
+    }
     let mut ids = BTreeSet::new();
     let mut paths = BTreeSet::new();
+    let mut shared_aliases = BTreeSet::new();
     let mut routes = BTreeSet::new();
     for page in &registry.pages {
         if page.id.is_empty()
@@ -138,26 +147,47 @@ fn parse_registry(raw: &[u8]) -> Result<Registry> {
                 .bytes()
                 .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'-')
             || !ids.insert(&page.id)
-            || !matches!(page.renderer.as_str(), RENDERER | projection::RENDERER)
+            || !matches!(
+                page.renderer.as_str(),
+                RENDERER | projection::RENDERER | projection::FOOTNOTES_RENDERER
+            )
         {
             return Err("invalid canonical page identity or renderer".into());
         }
+        let footnotes = page.renderer == projection::FOOTNOTES_RENDERER;
         for (name, suffix) in [
             (&page.source, ".nepld"),
             (&page.projection, ".md"),
             (&page.aliases, ".json"),
         ] {
+            let reused_alias = footnotes && suffix == ".json" && shared_aliases.contains(name);
             if !portable_path(name)
-                || !name.starts_with("doc/")
+                || (!footnotes && !name.starts_with("doc/"))
                 || !name.ends_with(suffix)
-                || !paths.insert(name.to_ascii_lowercase())
+                || (!reused_alias && !paths.insert(name.to_ascii_lowercase()))
             {
                 return Err(format!("invalid or repeated canonical file path: {name}").into());
             }
+            if footnotes && suffix == ".json" {
+                shared_aliases.insert(name.clone());
+            }
+        }
+        if footnotes
+            && page
+                .projection
+                .split('/')
+                .next()
+                .is_some_and(|part| part.eq_ignore_ascii_case("manifest.json"))
+        {
+            return Err("projection overlaps the reserved manifest.json receipt".into());
         }
         // Routes are portable URL paths, not host filesystem paths.
         if !portable_path(&page.route)
-            || !page.route.ends_with(".html")
+            || if footnotes {
+                page.route != page.projection
+            } else {
+                !page.route.ends_with(".html")
+            }
             || !routes.insert(page.route.to_ascii_lowercase())
         {
             return Err("invalid or repeated canonical page route".into());
@@ -317,6 +347,13 @@ pub(crate) fn generate_html_with_projections(
     projections: &[references::Projection],
 ) -> Result<super::export::pages::GeneratedPages> {
     let registry = load(root, manifest)?;
+    if registry
+        .pages
+        .iter()
+        .any(|p| p.renderer == projection::FOOTNOTES_RENDERER)
+    {
+        return Err("footnote-only registry requires Markdown export".into());
+    }
     let mut output_budget = registry.html_output_limits.budget();
     let mut resources = reference_inputs(root, registry.files)?;
     references::apply(&mut resources, projections)?;
@@ -348,4 +385,25 @@ pub(crate) fn generate_html_with_projections(
     )?;
     references::record(&mut generated, projections)?;
     Ok(generated)
+}
+
+/// Export a separately owned registry using the explicit footnote viewing profile.
+pub fn footnotes_manifest(manifest: &Path, output: &Path) -> Result<()> {
+    let parent = manifest
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    let name = manifest
+        .file_name()
+        .and_then(|v| v.to_str())
+        .ok_or("invalid registry filename")?;
+    let registry = load(parent, name)?;
+    if registry
+        .pages
+        .iter()
+        .any(|p| p.renderer != projection::FOOTNOTES_RENDERER)
+    {
+        return Err("footnotes-pages requires the footnote renderer on every page".into());
+    }
+    markdown(parent, name, output)
 }

@@ -1214,3 +1214,83 @@ fn check_context_drafts(
     }
     Ok(())
 }
+
+#[test]
+fn footnotes_registry_preserves_relative_links_and_no_partial_publication() -> Result<()> {
+    let f = Fixture::new()?;
+    f.write("index.nepld", r#"article en "Index" body cons paragraph cons sentence cons anno text "topic" cons link page "day" some "detail" text "daily note" nil nil nil nil"#)?;
+    f.write("journal/day.nepld", r#"article en "Day" body cons section detail "Detail" body cons paragraph cons "Body." nil nil nil"#)?;
+    f.write("aliases.json", "[]")?;
+    let page = |id: &str, source: &str, projection: &str| json!({"id":id,"source":source,"projection":projection,"aliases":"aliases.json","route":projection,"renderer":"nepl3-tools.markdown-footnotes-pages/1"});
+    let mut registry = json!({"version":1,"pages":[page("index","index.nepld","README.md"),page("day","journal/day.nepld","journal/day.md")]});
+    f.json("pages.json", &registry)?;
+    let output = f.root().join("output");
+    footnotes_manifest(&f.root().join("pages.json"), &output)?;
+    let readme = fs::read_to_string(output.join("README.md"))?;
+    assert!(readme.contains("[^nepl3-anno-1]"));
+    assert!(pulldown_cmark::Parser::new_ext(&readme, pulldown_cmark::Options::ENABLE_FOOTNOTES).any(|event| matches!(event, pulldown_cmark::Event::Start(pulldown_cmark::Tag::Link { dest_url, .. }) if dest_url.as_ref() == "journal/day.md#n-64657461696c")), "{readme}");
+    assert!(!readme.contains("正本（NEPL3d）"));
+    assert!(!output.join("index.nepld").exists());
+    assert!(output.join("journal/day.md").exists());
+    assert!(html(f.root(), "pages.json", &f.root().join("html")).is_err());
+    assert!(!f.root().join("html").exists());
+    // All inputs must resolve before the new output directory is published.
+    f.write("journal/day.nepld", r#"article en "Day" body nil"#)?;
+    assert!(footnotes_manifest(&f.root().join("pages.json"), &f.root().join("bad")).is_err());
+    assert!(!f.root().join("bad").exists());
+    f.write("journal/day.nepld", r#"article en "Day" body cons section detail "Detail" body cons paragraph cons "Body." nil nil nil"#)?;
+    f.write("ALIASES.json", r#"[{"section":null,"name":"upper"}]"#)?;
+    registry["pages"][1]["aliases"] = json!("ALIASES.json");
+    f.json("pages.json", &registry)?;
+    assert!(
+        footnotes_manifest(
+            &f.root().join("pages.json"),
+            &f.root().join("case-collision")
+        )
+        .err()
+        .ok_or("invalid registry unexpectedly accepted")?
+        .to_string()
+        .contains("invalid or repeated canonical file path")
+    );
+    assert!(!f.root().join("case-collision").exists());
+    registry["pages"][1]["aliases"] = json!("aliases.json");
+    registry["pages"][1]["source"] = json!("aliases.json/day.nepld");
+    f.json("pages.json", &registry)?;
+    assert!(
+        load(f.root(), "pages.json")
+            .err()
+            .ok_or("invalid registry unexpectedly accepted")?
+            .to_string()
+            .contains("file path used as directory")
+    );
+    registry["pages"][1]["source"] = json!("journal/day.nepld");
+    f.write("doc/reference.md", "reference")?;
+    registry["files"] =
+        json!([{"id":"reference","source":"doc/reference.md","route":"sources/reference.md"}]);
+    f.json("pages.json", &registry)?;
+    assert!(
+        footnotes_manifest(&f.root().join("pages.json"), &f.root().join("passive"))
+            .err()
+            .ok_or("passive file accepted")?
+            .to_string()
+            .contains("unexported passive files")
+    );
+    assert!(!f.root().join("passive").exists());
+    registry["files"] = json!([]);
+    for path in ["manifest.json/README.md", "MANIFEST.JSON/README.md"] {
+        registry["pages"][0]["projection"] = json!(path);
+        registry["pages"][0]["route"] = json!(path);
+        f.json("pages.json", &registry)?;
+        assert!(
+            footnotes_manifest(&f.root().join("pages.json"), &f.root().join("reserved")).is_err()
+        );
+        assert!(!f.root().join("reserved").exists());
+    }
+    registry["pages"][0]["projection"] = json!("README.md");
+    registry["pages"][0]["route"] = json!("README.md");
+    registry["pages"][0]["source"] = json!("../outside.nepld");
+    f.json("pages.json", &registry)?;
+    assert!(footnotes_manifest(&f.root().join("pages.json"), &f.root().join("unsafe")).is_err());
+    assert!(!f.root().join("unsafe").exists());
+    Ok(())
+}

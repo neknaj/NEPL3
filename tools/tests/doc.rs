@@ -12,6 +12,8 @@ mod context;
 mod export;
 #[path = "doc/external.rs"]
 mod external;
+#[path = "doc/footnotes.rs"]
+mod footnotes;
 #[path = "doc/html.rs"]
 mod html;
 #[path = "doc/input.rs"]
