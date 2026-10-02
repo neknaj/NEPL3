@@ -9,6 +9,7 @@ use nepl3_core::{
     source::{SourceAdmission, SourceError, Span, TextEdit},
 };
 pub mod checked;
+pub mod declared;
 pub mod draft;
 mod identity;
 mod occurrence;
@@ -44,6 +45,18 @@ impl From<SourceError> for InsertionError {
         }
     }
 }
+/// Compact actual parser choice. Indices belong to the checked entry's package.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum InsertedShape {
+    Form(u64),
+    Leaf(u64),
+    Builtin(crate::package::ReadSpecId),
+    List {
+        read: crate::package::ReadSpecId,
+        cons: bool,
+    },
+    Dynamic,
+}
 pub struct InsertionObservation<'a, 'p> {
     original: &'a RetainedParse<'p>,
     candidate: &'a RetainedParse<'p>,
@@ -51,6 +64,8 @@ pub struct InsertionObservation<'a, 'p> {
     candidate_key: AnalysisKey,
     path: Vec<ExpectedReadStep>,
     cover: Span,
+    shape: InsertedShape,
+    head: Option<Span>,
     report: Report,
 }
 impl<'a, 'p> InsertionObservation<'a, 'p> {
@@ -69,6 +84,12 @@ impl<'a, 'p> InsertionObservation<'a, 'p> {
     pub fn cover(&self) -> &Span {
         &self.cover
     }
+    pub fn shape(&self) -> InsertedShape {
+        self.shape
+    }
+    pub fn head(&self) -> Option<&Span> {
+        self.head.as_ref()
+    }
     pub fn report(&self) -> &Report {
         &self.report
     }
@@ -86,7 +107,7 @@ pub fn observe<'a, 'tree, 'p>(
     if b.limits() != original.prepared.limits || b.limits() != candidate.prepared.limits {
         return Err(InsertionError::Access(BindingAccessError::LimitsMismatch));
     }
-    let (path, cover) = b.with_depth(|b| {
+    let (path, cover, shape, head) = b.with_depth(|b| {
         identity::check(&original, &candidate, request, edit, b, admission)?;
         let expected = expected_read(original.prepared, request, b, admission);
         let wanted = match expected.outcome {
@@ -95,7 +116,7 @@ pub fn observe<'a, 'tree, 'p>(
             ExpectedReadOutcome::Invalid(error) => return Err(InsertionError::Expected(error)),
             ExpectedReadOutcome::Stopped(reason) => return Err(InsertionError::Stopped(reason)),
         };
-        let cover = occurrence::check(
+        let (cover, shape, head) = occurrence::check(
             original.prepared,
             candidate.prepared,
             &wanted,
@@ -103,7 +124,7 @@ pub fn observe<'a, 'tree, 'p>(
             edit,
             b,
         )?;
-        Ok((wanted.path, cover))
+        Ok((wanted.path, cover, shape, head))
     })?;
     Ok(InsertionObservation {
         original: original.parsed,
@@ -112,6 +133,8 @@ pub fn observe<'a, 'tree, 'p>(
         candidate_key: candidate.prepared.key(),
         path,
         cover,
+        shape,
+        head,
         report: Report {
             usage: b.usage(),
             ..Report::default()

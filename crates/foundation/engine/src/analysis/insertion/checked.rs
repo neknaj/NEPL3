@@ -22,6 +22,8 @@ pub struct CheckedInsertion<'a, 'p> {
     candidate: &'a RetainedParse<'p>,
     draft: &'a draft::InsertionDraft,
     keys: (AnalysisKey, AnalysisKey),
+    shape: InsertedShape,
+    head: Option<Span>,
     report: Report,
 }
 impl<'a, 'p> CheckedInsertion<'a, 'p> {
@@ -36,6 +38,12 @@ impl<'a, 'p> CheckedInsertion<'a, 'p> {
     }
     pub fn keys(&self) -> (AnalysisKey, AnalysisKey) {
         self.keys
+    }
+    pub fn shape(&self) -> InsertedShape {
+        self.shape
+    }
+    pub fn head(&self) -> Option<&Span> {
+        self.head.as_ref()
     }
     pub fn report(&self) -> &Report {
         &self.report
@@ -59,7 +67,7 @@ pub fn check<'a, 'tree, 'p, C: FoundationValueCodec>(
             BindingAccessError::LimitsMismatch,
         )));
     }
-    let keys = b.with_depth(|b| {
+    let (keys, shape, head) = b.with_depth(|b| {
         b.charge(Resource::Work, 1)?;
         if !core::ptr::eq(
             original.parsed.execution().tree(),
@@ -128,13 +136,15 @@ pub fn check<'a, 'tree, 'p, C: FoundationValueCodec>(
             codec.source_admission(),
         )
         .map_err(CheckError::Insertion)?;
-        Ok(observed.keys())
+        Ok((observed.keys(), observed.shape, observed.head))
     })?;
     Ok(CheckedInsertion {
         original: original.parsed,
         candidate,
         draft,
         keys,
+        shape,
+        head,
         report: Report {
             usage: b.usage(),
             ..Report::default()
