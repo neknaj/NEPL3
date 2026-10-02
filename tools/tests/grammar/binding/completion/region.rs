@@ -538,3 +538,6 @@ fn region_candidates_follow_foreign_field_priority_and_restore_caller_depth() ->
         Ok(())
     })
 }
+
+#[path = "region/portable.rs"]
+mod portable;

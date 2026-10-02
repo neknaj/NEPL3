@@ -6526,6 +6526,96 @@
           }
         ]
       ]
+    },
+    "RegionCompletionRequest": {
+      "constraints": [],
+      "record": [
+        [
+          "region",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "RegionRequest"
+            }
+          }
+        ],
+        [
+          "prefix",
+          "Text"
+        ]
+      ]
+    },
+    "RegionCandidates": {
+      "constraints": [],
+      "record": [
+        [
+          "key",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "RegionKey"
+            }
+          }
+        ],
+        [
+          "capability",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "RegionCapability"
+            }
+          }
+        ],
+        [
+          "region",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "SourceRegion"
+              }
+            }
+          }
+        ],
+        [
+          "groups",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "ScopeCandidates"
+              }
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Report"
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceContent"
+              }
+            }
+          }
+        ]
+      ]
     }
   }
 }
