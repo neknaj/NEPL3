@@ -14,6 +14,7 @@ pub mod declared;
 pub mod draft;
 mod identity;
 mod occurrence;
+pub mod whole;
 
 pub struct InsertionInput<'a, 'tree, 'p> {
     pub parsed: &'a RetainedParse<'p>,

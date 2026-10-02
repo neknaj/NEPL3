@@ -237,4 +237,14 @@ body
       cons "[保証/ほしょう]は[保持/ほじ]したsnapshot[全体/ぜんたい]の[構文解析/こうぶんかいせき]と[消費/しょうひ]である。Bindingの[成立/せいりつ]、workspaceの[最新状態/さいしんじょうたい]、[編集権限/へんしゅうけんげん]は[個別/こべつ]に[検証/けんしょう]する。" nil
     nil
 
+  cons section wholeInsertion "2.17 [挿入候補/そうにゅうこうほ]と[入力全体/にゅうりょくぜんたい]の[検証/けんしょう]" body
+    cons paragraph
+      cons "analysis::insertion::whole::checkはCheckedInsertionを[受/う]け、そのcandidateへparse::whole::checkを[適用/てきよう]する。"
+      cons "WholeCheckedInsertionは[元/もと]のCheckedInsertionと[同/おな]じRetainedParseを[参照/さんしょう]するWholeInputを[保持/ほじ]する。[別/べつ]の[実行/じっこう]の[証明/しょうめい]を[渡/わた]して[結合/けつごう]する[操作/そうさ]は[提供/ていきょう]しない。"
+      cons "[有効/ゆうこう]Limitsの[一致/いっち]を[要求/ようきゅう]し、[呼出側/よびだしがわ]の[累積/るいせき]Budgetを[継続/けいぞく]する。Reportは[検証後/けんしょうご]のUsageを[保持/ほじ]し、sourceの[再入場/さいにゅうじょう]や[再解析/さいかいせき]を[行/おこな]わない。" nil
+    cons paragraph
+      cons "[保証/ほしょう]は[指定/してい]した[挿入/そうにゅう]と[構文/こうぶん]の[入力全体/にゅうりょくぜんたい]の[消費/しょうひ]である。Bindingの[参照解決/さんしょうかいけつ]、[診断/しんだん]の[採用条件/さいようじょうけん]、workspaceの[最新状態/さいしんじょうたい]と[編集権限/へんしゅうけんげん]は[個別/こべつ]に[検証/けんしょう]する。"
+      cons "Recoveredや[未消費/みしょうひ]の[末尾/まつび]を[許/ゆる]す[既存/きそん]のCheckedInsertionとCheckedDeclaredInsertionは[維持/いじ]する。" nil
+    nil
+
 nil
