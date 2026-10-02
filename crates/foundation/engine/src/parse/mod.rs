@@ -2,7 +2,12 @@
 mod build;
 mod completed;
 mod executed;
+mod retained;
 pub use executed::{ExecutedParse, ExecutionKind, ParseExecution, ParseHostExecution};
+pub use retained::{
+    RetainedParse, RetainedParseExecution, RetainedParseHostReply, RetainedParseSeed,
+    RetainedParseSession,
+};
 mod copy;
 pub use completed::{CompletedParse, ParseCompletion};
 mod diagnostic;

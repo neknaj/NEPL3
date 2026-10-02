@@ -145,6 +145,8 @@ enum Case {
     Sealed,
     Executed,
     ExecutionBaseline,
+    Retained,
+    RetainedStop,
     Portable,
     Native,
     NativeFallback,
@@ -514,6 +516,7 @@ fn run_case_inspect(
         calls: 0,
         reader_calls: 0,
     };
+    let mut retained_session = None;
     let mut reply = if matches!(
         case,
         Case::Native | Case::NativeFallback | Case::NativeError | Case::MixedNative
@@ -526,6 +529,22 @@ fn run_case_inspect(
             assert_eq!(host.reader_calls, 1);
         }
         result.reply
+    } else if matches!(case, Case::Retained | Case::RetainedStop) {
+        let mut owner = RetainedParseSession::new(
+            "dynamic-retained".into(),
+            &resolved,
+            &environments,
+            request,
+            &sources,
+            &mut b,
+        )
+        .map_err(|v| format!("retained new {v:?}"))?;
+        let result = owner
+            .read(&mut b, &mut a)
+            .map(unseal_retained)
+            .map_err(|v| format!("retained read {v:?}"))?;
+        retained_session = Some(owner);
+        result
     } else if case == Case::Executed {
         session
             .read_executed(request, &sources, &mut b, &mut a)
@@ -883,7 +902,26 @@ fn run_case_inspect(
         } else {
             &sources
         };
-        reply = if case == Case::Executed {
+        if case == Case::RetainedStop {
+            b.cancel();
+            let owner = retained_session.as_mut().ok_or("retained session")?;
+            let stopped = owner
+                .resume_head(continuation, provider_reply.clone(), &mut b, &mut a)
+                .map(unseal_retained)
+                .map_err(|e| format!("retained head stop {e:?}"))?;
+            assert!(matches!(stopped.outcome, ParseOutcome::Stopped { .. }));
+            assert_eq!(stopped.report.usage, b.usage());
+            assert!(matches!(
+                owner.resume_head(continuation, provider_reply, &mut b, &mut a),
+                Err(ParseError::Closed)
+            ));
+            return Ok(stopped);
+        }
+        reply = if let Some(owner) = retained_session.as_mut() {
+            owner
+                .resume_head(continuation, provider_reply, &mut b, &mut a)
+                .map(unseal_retained)
+        } else if case == Case::Executed {
             session
                 .resume_head_executed(continuation, provider_reply, caller_sources, &mut b, &mut a)
                 .map(unseal_execution)
@@ -1373,5 +1411,47 @@ fn executed_head_wrapper_preserves_complete_and_recovered_provenance() -> TestRe
         ));
         assert_eq!(raw, run_case(input, Case::Executed, true)?);
     }
+    Ok(())
+}
+
+fn unseal_retained(value: RetainedParseExecution<'_>) -> ParseReply {
+    match value {
+        RetainedParseExecution::Continue(proof) => {
+            assert_eq!(
+                proof.execution().tree().profile_digest,
+                proof.seed().profile().digest()
+            );
+            assert_eq!(
+                proof.seed().request().states,
+                &[LanguageReaderState {
+                    alias: "Host".into(),
+                    state: NdfValue::Unit
+                }]
+            );
+            proof.into_reply()
+        }
+        RetainedParseExecution::Break(reply) => reply,
+    }
+}
+#[test]
+fn retained_head_continuations_preserve_seed_for_complete_and_recovered_parse() -> TestResult {
+    for (input, recovered) in [("choose alt @let z x tail", false), ("choose alt", true)] {
+        let reply = run_case(input, Case::Retained, false)?;
+        assert_eq!(
+            matches!(reply.outcome, ParseOutcome::Recovered { .. }),
+            recovered
+        );
+        assert!(matches!(
+            reply.outcome,
+            ParseOutcome::Complete { .. } | ParseOutcome::Recovered { .. }
+        ));
+    }
+    Ok(())
+}
+
+#[test]
+fn retained_head_stop_closes_the_private_session() -> TestResult {
+    let reply = run_case("choose alt", Case::RetainedStop, false)?;
+    assert!(matches!(reply.outcome, ParseOutcome::Stopped { .. }));
     Ok(())
 }
