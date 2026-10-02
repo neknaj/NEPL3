@@ -17,6 +17,7 @@ use nepl3_core::{
     value::NdfValue,
 };
 mod host;
+pub(crate) mod lookup;
 mod model;
 pub use host::*;
 mod prepare;
@@ -191,20 +192,7 @@ fn analyze_inner(
 
 impl Machine<'_, '_> {
     fn entity(&self, id: EntityId, budget: &mut Budget) -> Result<&Entity, BindingError> {
-        let values = &self.facts()?.entities;
-        budget.charge(Resource::Work, 1)?;
-        if let Some(value) = usize::try_from(id.0)
-            .ok()
-            .and_then(|i| values.get(i))
-            .filter(|v| v.id == id)
-        {
-            return Ok(value);
-        }
-        budget.charge(Resource::Work, values.len() as u64)?;
-        values
-            .iter()
-            .find(|v| v.id == id)
-            .ok_or(BindingError::Target)
+        lookup::entity(self.facts()?, id, budget)
     }
 
     fn facts(&self) -> Result<&FactSet, BindingError> {
