@@ -1,0 +1,153 @@
+article ja "08A. [補完候補/ほかんこうほ]とBinding[検証/けんしょう]"
+body
+  cons paragraph
+    cons sentence cons link page "editor" none concat cons ruby text "共通" text "きょうつう" cons text "editor service" cons ruby text "仕様" text "しよう" nil nil nil
+  cons section expectedDirect "2.1 [直接位置/ちょくせついち]のexpected read" body
+    cons paragraph
+      cons "analysis::expected::expected_readはPreparedBindingRequestとExpectedReadRequestを[受/う]け、[保存/ほぞん]sourceの[指定位置/していいち]にある[最初/さいしょ]のMissingを[照会/しょうかい]する。"
+      cons "[要求/ようきゅう]のAnalysisKeyとSourceRefは[完全一致/かんぜんいっち]を[要求/ようきゅう]し、[該当/がいとう]Missingの[有無/うむ]にかかわらずsourceの[存在/そんざい]とUTF-8 scalar[境界/きょうかい]を[検査/けんさ]する。"
+      cons "Budgetの[有効/ゆうこう]Limitsがprepared[入力/にゅうりょく]と[異/こと]なる[場合/ばあい]は、[深度入場/しんどにゅうじょう]や[費用計上/ひようけいじょう]より[前/まえ]にLimitsMismatchを[返/かえ]す。" nil
+    cons paragraph
+      cons "[対象/たいしょう]はSourceRefと[幅/はば]0のanchorが[指定位置/していいち]に[一致/いっち]するMissingだけとし、Unparsed・Unexpected・[周辺/しゅうへん]の[空白/くうはく]は[選択/せんたく]しない。"
+      cons "Complete(None)は[直接一致/ちょくせついっち]するMissingの[不在/ふざい]を[表/あらわ]す。source mapによる[位置変換/いちへんかん]、[候補/こうほ]の[列挙/れっきょ]、TextEditの[生成/せいせい]は[個別/こべつ]の[操作/そうさ]とする。" nil
+    cons paragraph
+      cons "[探索/たんさく]はfieldの[宣言順/せんげんじゅん]のDFSとし、Foreignにはそのfieldで[直/ただ]ちに[入/はい]る。"
+      cons "[共有/きょうゆう]nodeも[入力辺/にゅうりょくへん]ごとに[訪問/ほうもん]し、Child・Foreignのfield[位置/いち]を[並/なら]べた[経路/けいろ]を[結果/けっか]へ[保持/ほじ]する。"
+      cons "bundleとnodeの[識別/しきべつ]には[正準/せいじゅん]DFS[番号/ばんごう]を[用/もち]い、arenaの[格納順/かくのうじゅん]を[探索/たんさく]の[優先順位/ゆうせんじゅんい]に[使用/しよう]しない。" nil
+    cons paragraph
+      cons "[全体/ぜんたい]rootのMissingはRoot originとし、Foreign rootは[外側/そとがわ]の[入力/にゅうりょく]fieldを[保持/ほじ]する。"
+      cons "Field originは[親/おや]packageが[所有/しょゆう]する[元/もと]のReadSpecIdと、[解決後/かいけつご]のentry/readを[区別/くべつ]する。"
+      cons "WithMode、List tailのspine mode、Dynamicの[保存済/ほぞんず]みchild contextは、tree validatorと[同/おな]じ[解決規則/かいけつきそく]に[従/したが]う。" nil
+    cons paragraph
+      cons "Completeは[不一致/ふいっち]の[場合/ばあい]も[含/ふく]めて、tree[全体/ぜんたい]の[明示/めいじ]source[閉包/へいほう]をidentity[順/じゅん]で[返/かえ]す。"
+      cons "Invalid・Stoppedは[結果/けっか]とsource[列/れつ]を[公開/こうかい]せず、[消費済/しょうひず]みUsageと[停止理由/ていしりゆう]を[保持/ほじ]する。"
+      cons "[訪問/ほうもん]・[経路複製/けいろふくせい]・[結果複製/けっかふくせい]をBudgetへ[計上/けいじょう]し、[呼出元/よびだしもと]の[深度/しんど]へ[合成/ごうせい]する。" nil
+    cons paragraph
+      cons "portable[受信/じゅしん]では[明示/めいじ]BindingRequestを[復元/ふくげん]・[検証/けんしょう]し、Completeの[選択結果/せんたくけっか]とsource[閉包/へいほう]の[全体/ぜんたい]を[再計算/さいけいさん]して[照合/しょうごう]する。"
+      cons "Invalid・Stoppedは[形式検査済/けいしきけんさず]みの[失敗報告/しっぱいほうこく]として[扱/あつか]い、[送信側/そうしんがわ]の[実行/じっこう]を[証明/しょうめい]する[値/あたい]として[使用/しよう]しない。"
+      cons "Completeの[再計算/さいけいさん]もparserやproviderの[実行認証/じっこうにんしょう]を[与/あた]えない。grammarとbindingに[基/もと]づく[補完/ほかん]の[全体/ぜんたい]は[引/ひ]き[続/つづ]きT06の[受入対象/うけいれたいしょう]である。" nil
+    nil
+  cons section declaredAlternatives "2.2 [宣言済/せんげんず]みの[表記候補/ひょうきこうほ]" body
+    cons paragraph
+      cons "analysis::alternatives::declared_alternativesは[直接位置/ちょくせついち]のexpected readを[再照会/さいしょうかい]し、そのreadが[選択/せんたく]する[宣言情報/せんげんじょうほう]を[返/かえ]す。"
+      cons "category readでは、[該当/がいとう]categoryのFormをpackageの[宣言順/せんげんじゅん]に[列挙/れっきょ]し、[元/もと]のindexとspellingを[保持/ほじ]する。"
+      cons "[有効/ゆうこう]なmodeでその[文字列/もじれつ]をreaderが[認識/にんしき]できることは、[個別/こべつ]の[検証対象/けんしょうたいしょう]である。" nil
+    cons paragraph
+      cons "Builtin readではreaderの[種類/しゅるい]を[返/かえ]し、[同/おな]じEntryContextを[持/も]つcategoryのFormを[混入/こんにゅう]させない。"
+      cons "Listは[処理系/しょりけい]が[定義/ていぎ]するcons・nilの[構造的/こうぞうてき]な[選択肢/せんたくし]を[表/あらわ]す。"
+      cons "indexとspellingは、[結果/けっか]に[含/ふく]むExpectedReadとAnalysisKeyのpackage・[実行/じっこう]identityに[結/むす]び[付/つ]けて[解釈/かいしゃく]する。" nil
+    cons paragraph
+      cons "Leafは[該当/がいとう]categoryの[宣言数/せんげんすう]、Dynamicはalias/categoryに[対応/たいおう]するhead providerの[登録/とうろく]の[有無/うむ]を[示/しめ]す。"
+      cons "この[情報/じょうほう]から、Leafの[受理/じゅり]する[文字列/もじれつ]やDynamicのheadを[列挙/れっきょ]したとは[判断/はんだん]しない。"
+      cons "[補完候補/ほかんこうほ]の[完全性/かんぜんせい]、binding[上/じょう]の[参照/さんしょう]の[役割/やくわり]、[挿入/そうにゅう]の[成立/せいりつ]を[証明/しょうめい]する[結果/けっか]として[使用/しよう]しない。" nil
+    cons paragraph
+      cons "[受信側/じゅしんがわ]はprepared[入力/にゅうりょく]からCompleteの[全宣言情報/ぜんせんげんじょうほう]とsource[閉包/へいほう]を[再計算/さいけいさん]する。"
+      cons "[停止時/ていしじ]の[原子性/げんしせい]、[有効/ゆうこう]Limitsの[一致/いっち]、[費用計上/ひようけいじょう]はexpected readと[同/おな]じ[境界/きょうかい]に[従/したが]う。"
+      cons "[結果/けっか]にTextEditは[含/ふく]めない。[字句適合性/じくてきごうせい]、Missingでのscope、[名前候補/なまえこうほ]、[編集生成/へんしゅうせいせい]は[後続/こうぞく]の[操作/そうさ]として[実装/じっそう]する。" nil
+    nil
+  cons section insertionObservation "2.3 [直接挿入/ちょくせつそうにゅう]による[構文位置/こうぶんいち]の[観測/かんそく]" body
+    cons paragraph
+      cons "Rust APIのInsertionObservationは、[編集前後/へんしゅうぜんご]の[解析/かいせき]から[得/え]たRetainedParseと、[各/かく]ParseTreeを[借用/しゃくよう]するPreparedBindingRequestから[生成/せいせい]する。"
+      cons "[元/もと]のAnalysisKeyと[要求/ようきゅう]を[照合/しょうごう]し、[実行結果/じっこうけっか]と[同一/どういつ]のParseTreeを[借用/しゃくよう]していることを[検査/けんさ]する。"
+      cons "[両/りょう][実行/じっこう]は[同/おな]じprofile・[検査済/けんさず]み[環境/かんきょう]を[保持/ほじ]し、[初期/しょき]state[列/れつ]の[順序/じゅんじょ]、alias、[値/あたい]、entry、start、final_inputを[一致/いっち]させる。" nil
+    cons paragraph
+      cons "[対象/たいしょう]は[元/もと]の[主入力/しゅにゅうりょく]snapshotにあるMissingである。[呼出側/よびだしがわ]が[明示/めいじ]した[非空/ひくう]の[文字列/もじれつ]を、[一/ひと]つの[零幅範囲/れいはばはんい]へ[挿入/そうにゅう]する。"
+      cons "[空/から]の[置換範囲/ちかんはんい]のdigest、UTF-8[境界/きょうかい]、source ID、[次/つぎ]のリビジョン、URIを[照合/しょうごう]する。"
+      cons "[候補/こうほ]snapshotの[全体/ぜんたい]が[元/もと]のバイト[列/れつ]と[指定/してい]した[挿入/そうにゅう]に[一致/いっち]することを[検査/けんさ]し、parse limit[外/がい]のバイト[列/れつ]も[保持/ほじ]する。limitは[挿入/そうにゅう]バイト[数/すう]だけ[増加/ぞうか]する。" nil
+    cons paragraph
+      cons "ExpectedReadのChild・Foreign[経路/けいろ]を[両/りょう]treeで[辿/たど]り、[祖先/そせん]のentry・execution digest・[保存済/ほぞんず]みshape・[入力/にゅうりょく]read[種別/しゅべつ]を[比較/ひかく]する。"
+      cons "node IDの[数値/すうち]は[各/かく]tree[内部/ないぶ]の[参照/さんしょう]であり、[編集前後/へんしゅうぜんご]の[対応/たいおう]には[使用/しよう]しない。"
+      cons "Foreignは[実/じつ]rootのschemaを[保持/ほじ]する。[検証済/けんしょうず]みの[回復/かいふく]rootから[通常/つうじょう]のguest rootへの[移行/いこう]を[許容/きょよう]する。"
+      cons "[候補/こうほ]の[対象/たいしょう]はRecovery[以外/いがい]の[選択/せんたく]であり、[正/せい]の[長/なが]さを[持/も]つ[直接/ちょくせつ]cover[全体/ぜんたい]が[挿入範囲/そうにゅうはんい]に[含/ふく]まれることを[要求/ようきゅう]する。"
+      cons "[生成/せいせい]origin、anchorだけの[対応/たいおう]、[範囲/はんい]の[一部/いちぶ][重複/じゅうふく]は[成立根拠/せいりつこんきょ]に[使用/しよう]しない。" nil
+    cons paragraph
+      cons "[比較/ひかく]の[費用/ひよう]は[呼出側/よびだしがわ]の[有限/ゆうげん]Budgetへ[計上/けいじょう]し、[停止/ていし]で[消費済/しょうひず]み[費用/ひよう]を[返却/へんきゃく]しない。"
+      cons "[初期/しょき]stateのNDF[比較/ひかく]は[既存/きそん]のbudget[付/つ]き[比較/ひかく]を[使用/しよう]する。[永続選択/えいぞくせんたく]の[比較/ひかく]はrenameと[共有/きょうゆう]し、[可変長/かへんちょう]metadataを[比較前/ひかくまえ]に[計上/けいじょう]する。[不一致/ふいっち]が[確定/かくてい]した[段階/だんかい]で[終了/しゅうりょう]する。"
+      cons "[観測/かんそく]の[保証範囲/ほしょうはんい]は[指定/してい]snapshotの[一/ひと]つの[構文位置/こうぶんいち]である。[他/ほか]の[回復状態/かいふくじょうたい]、[入力全体/にゅうりょくぜんたい]の[消費/しょうひ]、Bindingの[成立/せいりつ]、workspaceの[最新状態/さいしんじょうたい]と[編集権限/へんしゅうけんげん]は[後続処理/こうぞくしょり]とhostで[確認/かくにん]する。"
+      cons "raw[結果/けっか]やdecodeからこのnative[証明/しょうめい]を[生成/せいせい]する[経路/けいろ]を[設/もう]けない。" nil
+    nil
+
+  cons section insertionDraft "2.4 [挿入候補/そうにゅうこうほ]の[非公開/ひこうかい]snapshot" body
+    cons paragraph
+      cons "InsertionDraftは、[呼出側/よびだしがわ]が[明示/めいじ]した[非空/ひくう]の[文字列/もじれつ]を[直接位置/ちょくせついち]のMissingへ[挿入/そうにゅう]するための[非公開/ひこうかい]の[候補/こうほ]である。prepareはRetainedParseとprepared[入力/にゅうりょく]の[同一性/どういつせい]、AnalysisKey、[主入力/しゅにゅうりょく]source、[解析範囲/かいせきはんい]、UTF-8[境界/きょうかい]を[検査/けんさ]する。"
+      cons "[保持/ほじ]したSourceStoreの[全/すべ]てのsnapshotをBudget[付/つ]きで[複製/ふくせい]し、その[非公開/ひこうかい]storeへ[一/ひと]つのTextEditを[適用/てきよう]する。[同/おな]じsourceの[新/あたら]しいrevisionがstoreに[存在/そんざい]する[場合/ばあい]は[拒否/きょひ]する。[元/もと]のstoreを[変更/へんこう]せず、[解析範囲外/かいせきはんいがい]のバイト[列/れつ]と[他/ほか]のsourceを[保持/ほじ]する。" nil
+    cons paragraph
+      cons "[返/かえ]すsnapshot・sources・edit・limitを[用/もち]い、[元/もと]のseedと[同/おな]じprofile・[環境/かんきょう]・[初期/しょき]state・entry・start・final_inputで[再解析/さいかいせき]する。その[結果/けっか]をobserveへ[渡/わた]して[構文位置/こうぶんいち]の[成立/せいりつ]を[検証/けんしょう]する。[空白/くうはく]、[字句/じく]の[区切/くぎ]り、[表記/ひょうき]、[名前候補/なまえこうほ]は[呼出側/よびだしがわ]が[明示/めいじ]する。"
+      cons "draftの[生成/せいせい]だけで[文法/ぶんぽう]・Bindingの[成立/せいりつ]や[編集権限/へんしゅうけんげん]を[確定/かくてい]しない。workspaceへの[編集適用/へんしゅうてきよう]はhostの[別操作/べつそうさ]である。" nil
+    cons paragraph
+      cons "[失敗/しっぱい]・[停止/ていし]では[非公開/ひこうかい]のdraftを[破棄/はき]し、Budgetの[消費/しょうひ]とSourceAdmissionへの[登録/とうろく]を[保持/ほじ]する。[終盤/しゅうばん]の[停止/ていし]では[生成/せいせい]snapshotのidentityが[登録済/とうろくず]みの[場合/ばあい]もある。"
+      cons "[複数/ふくすう]の[候補/こうほ]は[同/おな]じ[次/つぎ]revisionに[異/こと]なるdigestを[持/も]ち[得/う]るため、[各候補/かくこうほ]に[新/あたら]しいSourceAdmissionを[用意/ようい]し、[累積/るいせき]Budgetを[共有/きょうゆう]する。[一/ひと]つの[候補/こうほ]の[準備/じゅんび]・[再解析/さいかいせき]・[観測/かんそく]では[同/おな]じSourceAdmissionを[継続/けいぞく]して[使用/しよう]する。" nil
+    nil
+
+  cons section checkedInsertion "2.5 [検査済/けんさず]み[挿入候補/そうにゅうこうほ]" body
+    cons paragraph
+      cons "CheckedInsertionは、[実際/じっさい]の[候補/こうほ][解析/かいせき]をcheckで[検証/けんしょう]した[場合/ばあい]に[生成/せいせい]するnativeの[型/かた]である。[元/もと]のRetainedParse、[候補/こうほ]のRetainedParse、InsertionDraftを[不変借用/ふへんしゃくよう]し、[検証/けんしょう]したTextEditと[両/りょう]AnalysisKeyを[参照/さんしょう]できる。"
+      cons "[解析/かいせき]に[使用/しよう]したSourceStoreとdraftのstoreを、オブジェクトの[同一性/どういつせい]で[照合/しょうごう]する。snapshotのidentity・URI・limit、[元/もと]の[実行結果/じっこうけっか]とprepared[入力/にゅうりょく]、profile・[環境/かんきょう]・[要求/ようきゅう]keyも[検査/けんさ]する。" nil
+    cons paragraph
+      cons "[呼出側/よびだしがわ]は[既存/きそん]のRetainedParseSessionを[保持/ほじ]し、Awaitへの[応答/おうとう]や[再開/さいかい]を[制御/せいぎょ]する。CompleteまたはRecoveredから[得/え]た[実行結果/じっこうけっか]をcheckへ[渡/わた]す。checkはFoundationValueCodecを[用/もち]いて[候補側/こうほがわ]の[解析入力/かいせきにゅうりょく]を[準備/じゅんび]し、observeで[挿入/そうにゅう]の[構文位置/こうぶんいち]を[検証/けんしょう]する。"
+      cons "[呼出側/よびだしがわ]は[準備/じゅんび]・[解析/かいせき]・checkで[累積/るいせき]Budgetと[同/おな]じSourceAdmissionを[継続/けいぞく]する。checkのReportは、[渡/わた]されたBudgetの[現在/げんざい]のUsageを[記録/きろく]する。PreparationとInsertionは、[内側/うちがわ]の[処理/しょり]が[返/かえ]した[停止理由/ていしりゆう]も[保持/ほじ]する。[失敗/しっぱい]はStopped・Preparation・Insertion・DraftMismatchの[型付/かたつ]き[結果/けっか]で[返/かえ]し、[検査済/けんさず]み[候補/こうほ]を[生成/せいせい]しない。" nil
+    cons paragraph
+      cons "[保証範囲/ほしょうはんい]はInsertionObservationと[同/おな]じ[一/ひと]つの[構文位置/こうぶんいち]である。Binding、[入力全体/にゅうりょくぜんたい]の[消費/しょうひ]、workspaceの[最新状態/さいしんじょうたい]と[編集権限/へんしゅうけんげん]は[後続/こうぞく]の[検証対象/けんしょうたいしょう]である。TextEditを[転送/てんそう]する[場合/ばあい]も、[受信側/じゅしんがわ]が[必要/ひつよう]な[検証/けんしょう]を[行/おこな]う。" nil
+    nil
+
+  cons section declaredInsertion "2.6 [宣言候補/せんげんこうほ]と[実際/じっさい]のheadの[照合/しょうごう]" body
+    cons paragraph
+      cons "DeclaredChoiceは、[現在/げんざい]のreadで[選択可能/せんたくかのう]なFormのindex、ListCons、ListNilを[指定/してい]する。declared::prepareは[元/もと]の[解析/かいせき]から[宣言候補/せんげんこうほ]を[取得/しゅとく]し、[指定/してい]された[候補/こうほ]の[所属/しょぞく]を[検査/けんさ]する。"
+      cons "DeclaredDraftは、[宣言/せんげん]の[綴/つづ]りと[明示/めいじ]された[前後/ぜんご]の[文字列/もじれつ]からInsertionDraftを[生成/せいせい]し、[選択/せんたく]した[綴/つづ]りのUTF-8バイト[範囲/はんい]を[保持/ほじ]する。[空白/くうはく]や[子/こ]の[入力/にゅうりょく]は[呼出側/よびだしがわ]が[指定/してい]し、[有効性/ゆうこうせい]は[実際/じっさい]のreaderで[判定/はんてい]する。" nil
+    cons paragraph
+      cons "declared::checkはCheckedInsertionの[検証/けんしょう]に[続/つづ]き、[実際/じっさい]の[対象/たいしょう]nodeのForm indexまたはListの[種別/しゅべつ]と、headのsnapshot identity・[開始/かいし]・[終了/しゅうりょう]バイト[位置/いち]を[照合/しょうごう]する。"
+      cons "InsertedShapeのindexは、[検証済/けんしょうず]みentryのpackageに[属/ぞく]する。[前置/ぜんち]した[別/べつ]の[構文/こうぶん]や[同/おな]じ[綴/つづ]りが[受理/じゅり]された[場合/ばあい]も、[選択/せんたく]したheadの[範囲/はんい]と[一致/いっち]する[必要/ひつよう]がある。"
+      cons "CheckedDeclaredInsertionは、この[追加検証/ついかけんしょう]まで[成功/せいこう]した[場合/ばあい]に[生成/せいせい]する。ShapeMismatch・HeadMismatch・Stoppedと、[内側/うちがわ]のcheckの[型付/かたつ]き[失敗/しっぱい]を[区別/くべつ]して[返/かえ]す。" nil
+    cons paragraph
+      cons "[前後/ぜんご]の[文字列/もじれつ]の[構築/こうちく]とheadの[比較/ひかく]も[累積/るいせき]Budgetへ[計上/けいじょう]する。[停止/ていし]では[検査済/けんさず]み[宣言候補/せんげんこうほ]を[生成/せいせい]せず、[消費/しょうひ]とSourceAdmissionの[登録/とうろく]を[保持/ほじ]する。"
+      cons "[対象/たいしょう]は[明示/めいじ]されたFormとListの[宣言/せんげん]である。Builtin・Leaf・Dynamicの[任意/にんい]の[表記列挙/ひょうきれっきょ]、Bindingの[検証/けんしょう]、[入力全体/にゅうりょくぜんたい]の[消費/しょうひ]、workspaceへの[適用/てきよう]は[後続/こうぞく]の[実装範囲/じっそうはんい]である。" nil
+    nil
+
+  cons section insertionBinding "2.7 [挿入候補/そうにゅうこうほ]のBinding[実行/じっこう]" body
+    cons paragraph
+      cons "insertion::binding::executeは、CheckedInsertionが[保持/ほじ]する[実際/じっさい]の[候補/こうほ]treeとprofileからBindingのprepared requestを[構築/こうちく]し、[検査時/けんさじ]の[候補/こうほ]AnalysisKeyとの[一致/いっち]を[確認/かくにん]して[実行/じっこう]する。"
+      cons "[呼出側/よびだしがわ]はcheckと[同/おな]じ[候補/こうほ]analysis IDを[指定/してい]する。"
+      cons "[有効/ゆうこう]Limitsを[準備前/じゅんびまえ]に[照合/しょうごう]し、[累積/るいせき]BudgetとcodecのSourceAdmissionを[継続/けいぞく]する。"
+      cons "[不一致/ふいっち]や[停止/ていし]では、その[段階/だんかい]の[型付/かたつ]き[結果/けっか]を[返/かえ]す。"
+      cons "execute_with_hostは[呼出側/よびだしがわ]が[明示/めいじ]したBindingHostを[使用/しよう]し、Customの[認可/にんか]・dispatchを[既存/きそん]の[検証経路/けんしょうけいろ]へ[渡/わた]す。" nil
+    cons paragraph
+      cons "[実行/じっこう]の[結果/けっか]は[候補/こうほ]keyを[持/も]つBoundBindingReplyであり、Complete・Invalid・Stoppedと[部分結果/ぶぶんけっか]・Reportを[保持/ほじ]する。"
+      cons "[準備/じゅんび]やkeyの[検査/けんさ]での[失敗/しっぱい]と、Binding[実行中/じっこうちゅう]の[結果/けっか]を[区別/くべつ]する。"
+      cons "CompleteはBindingPlanの[実行完了/じっこうかんりょう]を[示/しめ]し、[未解決参照/みかいけつさんしょう]を[含/ふく]み[得/う]る。"
+      cons "Recoveredの[構文木/こうぶんき]には[既存/きそん]のRecoveredTree[拒否/きょひ]を[適用/てきよう]する。"
+      cons "[挿入/そうにゅう]の[意味的/いみてき]な[受理条件/じゅりじょうけん]は、[呼出側/よびだしがわ]が[結果/けっか]の[参照解決/さんしょうかいけつ]と[診断/しんだん]を[確認/かくにん]して[判断/はんだん]する。" nil
+    nil
+
+
+  cons section bindingStatus "2.8 Binding[状態/じょうたい]の[表示/ひょうじ]" body
+    cons paragraph
+      cons "nepl3-lspのbinding::inspectは、nativeのBoundBindingReplyとhostが[現在要求/げんざいようきゅう]しているAnalysisKeyを[照合/しょうごう]し、[表示用/ひょうじよう]のBindingStatusを[返/かえ]す。"
+      cons "Completeでは[元/もと]のBindingAnalysisを[借用/しゃくよう]し、Reference[役割/やくわり]のoccurrenceをResolved・Unresolved・Ambiguous・Deferredごとに[集計/しゅうけい]する。"
+      cons "[集計/しゅうけい]は[解析/かいせき]した[全/すべ]てのbundleとsourceを[対象/たいしょう]とする。"
+      cons "Definition・Import・Exportの[各役割/かくやくわり]は[元/もと]のfactsで[参照/さんしょう]できる。"
+      cons "Completeは[未解決/みかいけつ]・[曖昧/あいまい]・[保留中/ほりゅうちゅう]の[参照/さんしょう]を[含/ふく]み[得/う]るため、[実行完了/じっこうかんりょう]と[候補/こうほ]の[受理条件/じゅりじょうけん]を[区別/くべつ]して[表示/ひょうじ]する。" nil
+    cons paragraph
+      cons "InvalidとStoppedは[元/もと]の[型付/かたつ]き[原因/げんいん]・[部分結果/ぶぶんけっか]・Reportを[保持/ほじ]し、[完了/かんりょう]した[解析/かいせき]の[集計/しゅうけい]として[提示/ていじ]しない。"
+      cons "[表示変換/ひょうじへんかん]の[走査/そうさ]は[呼出側/よびだしがわ]のBudgetへ[計上/けいじょう]し、[停止/ていし]ではBindingStatusを[返/かえ]さない。"
+      cons "[元/もと]のBindingReplyの[結果/けっか]とReportは[変更/へんこう]しない。"
+      cons "このadapterの[対象/たいしょう]は[解析単位/かいせきたんい]の[状態表示/じょうたいひょうじ]であり、LSPの[通信/つうしん]、[文書/ぶんしょ]ごとの[位置変換/いちへんかん]、workspaceへの[編集適用/へんしゅうてきよう]はhostの[後続実装/こうぞくじっそう]である。" nil
+    nil
+
+  cons section scopeCandidates "2.9 [捕捉/ほそく]したscopeの[名前候補/なまえこうほ]" body
+    cons paragraph
+      cons "analysis::completion::namesは、CompleteのBoundBindingReply、[現在/げんざい]のAnalysisKey、[既存/きそん]Reference occurrence ID、[明示/めいじ]prefixを[受/う]ける。"
+      cons "[参照時/さんしょうじ]のnamespace_stageと[名前空間/なまえくうかん]identityに[基/もと]づき、GlobalとForeignを[含/ふく]む[宣言/せんげん]の[可視性/かしせい]を[固定/こてい]する。"
+      cons "Missing、Reference[以外/いがい]の[役割/やくわり]、[未完了/みかんりょう]Bindingは[型付/かたつ]き[原因/げんいん]で[拒否/きょひ]する。" nil
+    cons paragraph
+      cons "BindingPlanと[共有/きょうゆう]するlookupにより、[最内/さいない]scopeのshadowingと[同一/どういつ]scopeの[曖昧性/あいまいせい]を[保持/ほじ]する。"
+      cons "prefixはUTF-8[文字列/もじれつ]の[先頭一致/せんとういっち]で[比較/ひかく]し、[空/から]prefixは[全候補/ぜんこうほ]に[一致/いっち]する。"
+      cons "[候補/こうほ]はstageからpreviousを[辿/たど]る[走査/そうさ]の[初出順/しょしゅつじゅん]とし、[同名候補/どうめいこうほ]をまとめる。"
+      cons "[返/かえ]す[値/あたい]は[宣言名/せんげんめい]と、その[名前/なまえ]を[捕捉/ほそく]stageで[照会/しょうかい]したResolvedまたはAmbiguousのEntity IDである。"
+      cons "Customによる[後続/こうぞく]の[参照解決/さんしょうかいけつ]の[更新/こうしん]と、[捕捉/ほそく]した[宣言/せんげん]の[可視性/かしせい]を[区別/くべつ]する。" nil
+    cons paragraph
+      cons "[走査/そうさ]と[複製/ふくせい]は[有限/ゆうげん]Budgetへ[計上/けいじょう]し、[失敗/しっぱい]・[停止/ていし]では[途中/とちゅう]の[候補列/こうほれつ]を[公開/こうかい]しない。"
+      cons "[元/もと]の[解析結果/かいせきけっか]を[保持/ほじ]し、[追加/ついか]sourceへアクセスしない。"
+      cons "[綴/つづ]りへの[変換/へんかん]・[挿入/そうにゅう]の[再解析/さいかいせき]と[受理/じゅり]・provider[固有/こゆう]の[候補生成/こうほせいせい]は[後続処理/こうぞくしょり]である。" nil
+    nil
+
+nil
