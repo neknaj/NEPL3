@@ -4,6 +4,8 @@ mod expected;
 mod foreign;
 #[path = "parse/host.rs"]
 mod host;
+#[path = "parse/retained.rs"]
+mod retained;
 #[path = "parse/support.rs"]
 mod support;
 use nepl3_core::{
