@@ -8,12 +8,13 @@ use crate::analysis::{
 use alloc::{boxed::Box, string::String};
 use nepl3_core::facts::OccurrenceRole;
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RegionCompletionRequest {
     pub region: RegionRequest,
     /// Literal prefix supplied by the host; no token-boundary inference.
     pub prefix: String,
 }
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum RegionCompletionError {
     Selection(query::RegionQueryError),
     Candidates(CandidateError),

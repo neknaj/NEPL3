@@ -3,7 +3,7 @@
 use super::*;
 use core::convert::Infallible;
 
-pub(super) fn value<E>(
+pub(in crate::portable) fn value<E>(
     error: &CandidateError,
     r: &SchemaRegistry,
     b: &mut Budget,
@@ -38,7 +38,7 @@ pub(super) fn value<E>(
     r.validate(&expected("CandidateError", b)?, &value, b)?;
     Ok(value)
 }
-pub(super) fn read<E>(
+pub(in crate::portable) fn read<E>(
     value: &NdfValue,
     r: &SchemaRegistry,
     b: &mut Budget,

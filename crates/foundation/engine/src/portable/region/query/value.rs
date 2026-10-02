@@ -50,22 +50,7 @@ pub(super) fn outcome_value<C: FoundationValueCodec>(
             )?
         }
         RegionQueryOutcome::Invalid(error) => {
-            let error = match error {
-                RegionQueryError::Region(v) => variant(
-                    s.engine,
-                    "RegionQueryError",
-                    "Region",
-                    [super::super::value::error_value(v, r, s, c, b)?],
-                    b,
-                )?,
-                RegionQueryError::Query(v) => variant(
-                    s.engine,
-                    "RegionQueryError",
-                    "Query",
-                    [crate::portable::query::value::error_value(v, r, s, c, b)?],
-                    b,
-                )?,
-            };
+            let error = error_value(error, r, s, c, b)?;
             variant(s.engine, "RegionQueryOutcome", "Invalid", [error], b)?
         }
         RegionQueryOutcome::Stopped(reason) => variant(
@@ -103,19 +88,50 @@ pub(super) fn outcome_read<C: FoundationValueCodec>(
                 queries: out,
             }
         }
-        ("Invalid", [error]) => {
-            let (case, f) = parts(error, s.engine, "RegionQueryError")?;
-            RegionQueryOutcome::Invalid(match (case, f) {
-                ("Region", [v]) => {
-                    RegionQueryError::Region(super::super::value::error_read(v, r, s, c, b)?)
-                }
-                ("Query", [v]) => RegionQueryError::Query(
-                    crate::portable::query::value::error_read(v, r, s, c, b)?,
-                ),
-                _ => return Err(PortableError::Shape),
-            })
-        }
+        ("Invalid", [error]) => RegionQueryOutcome::Invalid(error_read(error, r, s, c, b)?),
         ("Stopped", [reason]) => RegionQueryOutcome::Stopped(Value::read(reason, s, c, b)?),
+        _ => return Err(PortableError::Shape),
+    })
+}
+
+pub(in crate::portable::region) fn error_value<C: FoundationValueCodec>(
+    error: &RegionQueryError,
+    r: &SchemaRegistry,
+    s: &Schemas<'_>,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    Ok(match error {
+        RegionQueryError::Region(v) => variant(
+            s.engine,
+            "RegionQueryError",
+            "Region",
+            [super::super::value::error_value(v, r, s, c, b)?],
+            b,
+        )?,
+        RegionQueryError::Query(v) => variant(
+            s.engine,
+            "RegionQueryError",
+            "Query",
+            [crate::portable::query::value::error_value(v, r, s, c, b)?],
+            b,
+        )?,
+    })
+}
+pub(in crate::portable::region) fn error_read<C: FoundationValueCodec>(
+    error: &NdfValue,
+    r: &SchemaRegistry,
+    s: &Schemas<'_>,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<RegionQueryError, PortableError<C::Error>> {
+    Ok(match parts(error, s.engine, "RegionQueryError")? {
+        ("Region", [v]) => {
+            RegionQueryError::Region(super::super::value::error_read(v, r, s, c, b)?)
+        }
+        ("Query", [v]) => {
+            RegionQueryError::Query(crate::portable::query::value::error_read(v, r, s, c, b)?)
+        }
         _ => return Err(PortableError::Shape),
     })
 }

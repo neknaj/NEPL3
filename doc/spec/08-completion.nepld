@@ -188,7 +188,7 @@ body
       cons "[写像/しゃぞう]の[検査/けんさ]にはnative[処理/しょり]と[同/おな]じBindingのsource[集合/しゅうごう]を[入場/にゅうじょう]させる。"
       cons "[全体/ぜんたい]と[各候補群/かくこうほぐん]のUsageは[送信側/そうしんがわ]の[申告/しんこく]metadataとして[保持/ほじ]し、[受信側/じゅしんがわ]のBudgetとSourceAdmissionで[検証費用/けんしょうひよう]を[計上/けいじょう]する。"
       cons "[診断/しんだん]・event・trace overflowを[含/ふく]むReportを[拒否/きょひ]する。"
-      cons "[失敗結果/しっぱいけっか]の[通信/つうしん]と[編集/へんしゅう]の[生成/せいせい]・[採用/さいよう]は[後続範囲/こうぞくはんい]である。" nil
+      cons "[失敗原因/しっぱいげんいん]のmetadataは[専用/せんよう]の[失敗応答/しっぱいおうとう]で[通信/つうしん]する。[編集/へんしゅう]の[生成/せいせい]・[採用/さいよう]は[後続範囲/こうぞくはんい]である。" nil
     nil
 
   cons section candidateErrorCodec "2.13 [候補照会/こうほしょうかい]の[失敗原因/しっぱいげんいん]" body
@@ -210,7 +210,20 @@ body
       cons "[失敗原因/しっぱいげんいん]とUsageは[送信側/そうしんがわ]の[申告/しんこく]metadataとして[保持/ほじ]する。"
       cons "[要求/ようきゅう]との[一致/いっち]は[実行/じっこう]の[証明/しょうめい]を[生成/せいせい]しない。"
       cons "[受信側/じゅしんがわ]のBudgetへcodecの[費用/ひよう]を[計上/けいじょう]し、[送信側/そうしんがわ]の[停止原因/ていしげんいん]と[受信側/じゅしんがわ]の[資源停止/しげんていし]を[区別/くべつ]する。"
-      cons "Regionの[失敗応答/しっぱいおうとう]とLSP transportは[後続範囲/こうぞくはんい]である。" nil
+      cons "LSP transportは[後続範囲/こうぞくはんい]である。" nil
+    nil
+
+  cons section regionFailureReply "2.15 [構造領域/こうぞうりょういき]の[失敗応答/しっぱいおうとう]" body
+    cons paragraph
+      cons "portable::region::completion::failureはRegionCompletionFailureReplyを[型付/かたつ]きNDFで[表現/ひょうげん]する。"
+      cons "[要求/ようきゅう]、RegionCapability、RegionCompletionError、Usageだけを[含/ふく]むReportを[保持/ほじ]する。"
+      cons "[符号化/ふごうか]と[復号/ふくごう]でRegionKeyの[全/ぜん]digest、SourceRef、offset、prefixと[呼出側/よびだしがわ]の[指定/してい]したcapabilityを[照合/しょうごう]する。"
+      cons "[失敗/しっぱい]した[要求/ようきゅう]のsource[実体/じったい]や[実行結果/じっこうけっか]を[要求/ようきゅう]せず、[空/から]のsource[集合/しゅうごう]を[用/もち]いる。" nil
+    cons paragraph
+      cons "SelectionとCandidatesの[型付/かたつ]き[原因/げんいん]を[保持/ほじ]し、[入/い]れ[子/こ]の[停止原因/ていしげんいん]も[送信側/そうしんがわ]のmetadataとして[扱/あつか]う。"
+      cons "[診断/しんだん]・event・trace overflowを[拒否/きょひ]し、Usageを[受信側/じゅしんがわ]のBudgetへ[加算/かさん]しない。"
+      cons "codec[自身/じしん]の[資源不足/しげんぶそく]と[取消/とりけし]はPortableError::Stoppedで[返/かえ]す。"
+      cons "この[応答/おうとう]は[実行/じっこう]・capabilityの[認証/にんしょう]や[編集権限/へんしゅうけんげん]を[生成/せいせい]しない。" nil
     nil
 
 nil
