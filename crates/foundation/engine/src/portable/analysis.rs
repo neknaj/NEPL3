@@ -248,6 +248,13 @@ pub fn access_error_to_value(
     registry: &nepl3_core::schema::SchemaRegistry,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<core::convert::Infallible>> {
+    access_error_value(error, registry, b)
+}
+pub(in crate::portable) fn access_error_value<E>(
+    error: BindingAccessError,
+    registry: &nepl3_core::schema::SchemaRegistry,
+    b: &mut Budget,
+) -> Result<NdfValue, PortableError<E>> {
     let s = Schemas::new(registry)?;
     let value = match error {
         BindingAccessError::Stopped(reason) => variant(
@@ -278,6 +285,13 @@ pub fn access_error_from_value(
     registry: &nepl3_core::schema::SchemaRegistry,
     b: &mut Budget,
 ) -> Result<BindingAccessError, PortableError<core::convert::Infallible>> {
+    access_error_read(value, registry, b)
+}
+pub(in crate::portable) fn access_error_read<E>(
+    value: &NdfValue,
+    registry: &nepl3_core::schema::SchemaRegistry,
+    b: &mut Budget,
+) -> Result<BindingAccessError, PortableError<E>> {
     registry.validate(&expected("BindingAccessError", b)?, value, b)?;
     let s = Schemas::new(registry)?;
     let (name, fields) = parts(value, s.engine, "BindingAccessError")?;

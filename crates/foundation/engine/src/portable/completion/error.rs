@@ -3,11 +3,11 @@
 use super::*;
 use core::convert::Infallible;
 
-pub fn to_value(
+pub(super) fn value<E>(
     error: &CandidateError,
     r: &SchemaRegistry,
     b: &mut Budget,
-) -> Result<NdfValue, PortableError<Infallible>> {
+) -> Result<NdfValue, PortableError<E>> {
     let s = Schemas::new(r)?;
     let value = match error {
         CandidateError::Stopped(reason) => variant(
@@ -21,16 +21,14 @@ pub fn to_value(
             s.engine,
             "CandidateError",
             "Access",
-            [crate::portable::analysis::access_error_to_value(
-                *error, r, b,
-            )?],
+            [crate::portable::analysis::access_error_value(*error, r, b)?],
             b,
         )?,
         CandidateError::Binding(error) => variant(
             s.engine,
             "CandidateError",
             "Binding",
-            [crate::portable::binding::failure_to_value(error, r, b)?],
+            [crate::portable::binding::error::encode(error, r, b)?],
             b,
         )?,
         CandidateError::NoOccurrence => variant(s.engine, "CandidateError", "NoOccurrence", [], b)?,
@@ -40,26 +38,42 @@ pub fn to_value(
     r.validate(&expected("CandidateError", b)?, &value, b)?;
     Ok(value)
 }
-pub fn from_value(
+pub(super) fn read<E>(
     value: &NdfValue,
     r: &SchemaRegistry,
     b: &mut Budget,
-) -> Result<CandidateError, PortableError<Infallible>> {
+) -> Result<CandidateError, PortableError<E>> {
     r.validate(&expected("CandidateError", b)?, value, b)?;
     let s = Schemas::new(r)?;
     Ok(match parts(value, s.engine, "CandidateError")? {
         ("Stopped", [reason]) => {
             CandidateError::Stopped(crate::portable::facts::stop_from(reason, &s)?)
         }
-        ("Access", [error]) => CandidateError::Access(
-            crate::portable::analysis::access_error_from_value(error, r, b)?,
-        ),
+        ("Access", [error]) => {
+            CandidateError::Access(crate::portable::analysis::access_error_read(error, r, b)?)
+        }
         ("Binding", [error]) => {
-            CandidateError::Binding(crate::portable::binding::failure_from_value(error, r, b)?)
+            CandidateError::Binding(crate::portable::binding::error::decode(error, r, b)?)
         }
         ("NoOccurrence", []) => CandidateError::NoOccurrence,
         ("NotReference", []) => CandidateError::NotReference,
         ("NoStage", []) => CandidateError::NoStage,
         _ => return Err(PortableError::Shape),
     })
+}
+
+/// Standalone typed cause metadata; this grants no execution authority.
+pub fn to_value(
+    error: &CandidateError,
+    r: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<NdfValue, PortableError<Infallible>> {
+    value(error, r, b)
+}
+pub fn from_value(
+    input: &NdfValue,
+    r: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<CandidateError, PortableError<Infallible>> {
+    read(input, r, b)
 }
