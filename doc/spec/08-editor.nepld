@@ -180,6 +180,20 @@ body
     nil
 
 
+  cons section bindingStatus "2.8 Binding[状態/じょうたい]の[表示/ひょうじ]" body
+    cons paragraph
+      cons "nepl3-lspのbinding::inspectは、nativeのBoundBindingReplyとhostが[現在要求/げんざいようきゅう]しているAnalysisKeyを[照合/しょうごう]し、[表示用/ひょうじよう]のBindingStatusを[返/かえ]す。"
+      cons "Completeでは[元/もと]のBindingAnalysisを[借用/しゃくよう]し、Reference[役割/やくわり]のoccurrenceをResolved・Unresolved・Ambiguous・Deferredごとに[集計/しゅうけい]する。"
+      cons "[集計/しゅうけい]は[解析/かいせき]した[全/すべ]てのbundleとsourceを[対象/たいしょう]とする。"
+      cons "Definition・Import・Exportの[各役割/かくやくわり]は[元/もと]のfactsで[参照/さんしょう]できる。"
+      cons "Completeは[未解決/みかいけつ]・[曖昧/あいまい]・[保留中/ほりゅうちゅう]の[参照/さんしょう]を[含/ふく]み[得/う]るため、[実行完了/じっこうかんりょう]と[候補/こうほ]の[受理条件/じゅりじょうけん]を[区別/くべつ]して[表示/ひょうじ]する。" nil
+    cons paragraph
+      cons "InvalidとStoppedは[元/もと]の[型付/かたつ]き[原因/げんいん]・[部分結果/ぶぶんけっか]・Reportを[保持/ほじ]し、[完了/かんりょう]した[解析/かいせき]の[集計/しゅうけい]として[提示/ていじ]しない。"
+      cons "[表示変換/ひょうじへんかん]の[走査/そうさ]は[呼出側/よびだしがわ]のBudgetへ[計上/けいじょう]し、[停止/ていし]ではBindingStatusを[返/かえ]さない。"
+      cons "[元/もと]のBindingReplyの[結果/けっか]とReportは[変更/へんこう]しない。"
+      cons "このadapterの[対象/たいしょう]は[解析単位/かいせきたんい]の[状態表示/じょうたいひょうじ]であり、LSPの[通信/つうしん]、[文書/ぶんしょ]ごとの[位置変換/いちへんかん]、workspaceへの[編集適用/へんしゅうてきよう]はhostの[後続実装/こうぞくじっそう]である。" nil
+    nil
+
   cons section region "3. regionの[選択/せんたく]" body
     cons paragraph
       cons "region[選択/せんたく]は、[指定/してい]されたsource positionを[包含/ほうがん]するfield・elementのうち、[同一/どういつ]snapshot[上/じょう]で[最小/さいしょう]の[範囲/はんい]を[選択/せんたく]する[操作/そうさ]である。"

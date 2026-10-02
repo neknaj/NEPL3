@@ -1058,3 +1058,6 @@ mod global;
 
 #[path = "binding/custom.rs"]
 mod custom;
+
+#[path = "binding/status.rs"]
+mod status;
