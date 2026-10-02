@@ -16,6 +16,7 @@ use nepl3_doc_core::{
 use nepl3_wire::foundation::FoundationCodec;
 
 pub(super) const RENDERER: &str = "nepl3-tools.markdown-annotated-pages/4";
+pub(super) const FOOTNOTES_RENDERER: &str = "nepl3-tools.markdown-footnotes-pages/1";
 const CONTEXT: &[u8] = b"nepl3.canonical-input-context/1\0";
 const MAX_ALIASES: u64 = 1_048_576;
 const MAX_OUTPUT: u64 = 2_097_152;
@@ -111,7 +112,10 @@ type ReferenceInputs = Vec<(super::super::export::pages::Entry, Vec<u8>)>;
 
 fn capture(root: &Path, raw: Vec<u8>) -> Result<(Vec<u8>, Vec<Input>, ReferenceInputs, bool)> {
     let registry = parse_registry(&raw)?;
-    let grouped = registry.pages.iter().any(|p| p.renderer == RENDERER);
+    let grouped = registry
+        .pages
+        .iter()
+        .any(|p| matches!(p.renderer.as_str(), RENDERER | FOOTNOTES_RENDERER));
     let references = reference_inputs(root, registry.files)?;
     if registry.pages.len() > 128 {
         return Err("PageCountLimit".into());
@@ -235,10 +239,37 @@ fn grouped(
         aliases.len() * core::mem::size_of::<&[annotated::Alias]>(),
     )?;
     let refs: Vec<_> = aliases.iter().map(Vec::as_slice).collect();
-    Ok(
-        annotated::pages::render(&set, &compiled.doc.registry, &mut codec, budget, &refs)
-            .map_err(|e| format!("Markdown page set: {e:?}; usage={:?}", budget.usage()))?,
+    let styles = if inputs.iter().any(|v| v.page.renderer == FOOTNOTES_RENDERER) {
+        charge(budget, Resource::Work, inputs.len())?;
+        charge(
+            budget,
+            Resource::AllocationUnits,
+            inputs.len() * core::mem::size_of::<annotated::NotesMode>(),
+        )?;
+        Some(
+            inputs
+                .iter()
+                .map(|v| {
+                    if v.page.renderer == FOOTNOTES_RENDERER {
+                        annotated::NotesMode::Footnotes
+                    } else {
+                        annotated::NotesMode::Inline
+                    }
+                })
+                .collect::<Vec<_>>(),
+        )
+    } else {
+        None
+    };
+    Ok(annotated::pages::render_styles(
+        &set,
+        &compiled.doc.registry,
+        &mut codec,
+        budget,
+        &refs,
+        styles.as_deref(),
     )
+    .map_err(|e| format!("Markdown page set: {e:?}; usage={:?}", budget.usage()))?)
 }
 
 #[cfg(test)]
@@ -286,6 +317,9 @@ fn generate_batch(
     };
     if let Some(group) = &mut group {
         for (artifact, input) in group.pages.iter_mut().zip(&inputs) {
+            if input.page.renderer == FOOTNOTES_RENDERER {
+                continue;
+            }
             let href = annotated::pages::relative(
                 &input.page.projection,
                 &input.page.source,
@@ -380,8 +414,9 @@ fn generate_batch(
             charge(budget, Resource::AllocationUnits, reserve)?;
             (
                 format!(
-                    "<!-- Generated from {}; renderer {RENDERER}; page {}; source SHA-256 {}; alias input SHA-256 {}; page input SHA-256 {}. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->\n\n{}\n",
+                    "<!-- Generated from {}; renderer {}; page {}; source SHA-256 {}; alias input SHA-256 {}; page input SHA-256 {}. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->\n\n{}\n",
                     page.source.replace('-', "&#45;"),
+                    page.renderer,
                     page.id.replace('-', "&#45;"),
                     hex(Digest::of(input.source.as_bytes())),
                     hex(Digest::of(&input.aliases)),

@@ -10,6 +10,7 @@ use std::{
 };
 
 pub const RENDERER: &str = "nepl3-tools.markdown-annotated/4";
+pub const FOOTNOTES_RENDERER: &str = "nepl3-tools.markdown-footnotes/1";
 
 pub fn from_source(
     compiled: &Compiled,
@@ -24,6 +25,28 @@ fn from_source_with_budget(
     source: &str,
     aliases: &[Alias],
     output_budget: &mut Budget,
+) -> Result<Artifact, String> {
+    from_source_profile(compiled, source, aliases, output_budget, NotesMode::Inline)
+}
+pub fn from_source_footnotes(
+    compiled: &Compiled,
+    source: &str,
+    aliases: &[Alias],
+) -> Result<Artifact, String> {
+    from_source_profile(
+        compiled,
+        source,
+        aliases,
+        &mut budget(),
+        NotesMode::Footnotes,
+    )
+}
+fn from_source_profile(
+    compiled: &Compiled,
+    source: &str,
+    aliases: &[Alias],
+    output_budget: &mut Budget,
+    mode: NotesMode,
 ) -> Result<Artifact, String> {
     output_budget.poll().map_err(err)?;
     if source.len() as u64 > crate::doc::export::MAX_SOURCE_BYTES {
@@ -48,12 +71,13 @@ fn from_source_with_budget(
                 &mut codec,
             )
             .map_err(err)?;
-            render(
+            render_profile(
                 &document,
                 profile.registry(),
                 &mut codec,
                 output_budget,
                 aliases,
+                mode,
             )
             .map_err(err)
         },
@@ -62,6 +86,17 @@ fn from_source_with_budget(
 
 /// Explicit all-notes view; aliases is a JSON array of {section, name} values.
 pub fn write(input: &Path, aliases: &Path, output: &Path) -> crate::Result<()> {
+    write_profile(input, aliases, output, NotesMode::Inline)
+}
+pub fn write_footnotes(input: &Path, aliases: &Path, output: &Path) -> crate::Result<()> {
+    write_profile(input, aliases, output, NotesMode::Footnotes)
+}
+fn write_profile(
+    input: &Path,
+    aliases: &Path,
+    output: &Path,
+    mode: NotesMode,
+) -> crate::Result<()> {
     if output.exists() {
         return Err("output already exists".into());
     }
@@ -74,11 +109,14 @@ pub fn write(input: &Path, aliases: &Path, output: &Path) -> crate::Result<()> {
     std::fs::File::open(aliases)?
         .take(1_048_577)
         .read_to_end(&mut alias_bytes)?;
-    let text = generate(
+    let (text, _) = generate_receipt_profile(
         &crate::doc::source::compiled()?,
         path,
         &source,
         &alias_bytes,
+        None,
+        &mut budget(),
+        mode,
     )?;
     let mut file = std::fs::OpenOptions::new()
         .write(true)
@@ -130,6 +168,25 @@ pub(crate) fn generate_with_receipt(
     source_href: Option<&str>,
     output_budget: &mut Budget,
 ) -> crate::Result<(String, Digest)> {
+    generate_receipt_profile(
+        compiled,
+        path,
+        source,
+        alias_bytes,
+        source_href,
+        output_budget,
+        NotesMode::Inline,
+    )
+}
+fn generate_receipt_profile(
+    compiled: &Compiled,
+    path: &str,
+    source: &str,
+    alias_bytes: &[u8],
+    source_href: Option<&str>,
+    output_budget: &mut Budget,
+    mode: NotesMode,
+) -> crate::Result<(String, Digest)> {
     output_budget.poll().map_err(err)?;
     if path.len() > 4096 || path.chars().any(char::is_control) {
         return Err("input path is not representable in projection metadata".into());
@@ -144,7 +201,7 @@ pub(crate) fn generate_with_receipt(
         .charge(Resource::AllocationUnits, alias_bytes.len() as u64 * 32)
         .map_err(err)?;
     let options: Vec<Alias> = serde_json::from_slice(alias_bytes)?;
-    let mut artifact = from_source_with_budget(compiled, source, &options, output_budget)?;
+    let mut artifact = from_source_profile(compiled, source, &options, output_budget, mode)?;
     if let Some(href) = source_href {
         artifact.source_link(href, output_budget).map_err(err)?;
     }
@@ -165,8 +222,13 @@ pub(crate) fn generate_with_receipt(
         .replace('<', "&lt;")
         .replace('>', "&gt;")
         .replace('-', "&#45;");
+    let renderer = if mode == NotesMode::Footnotes {
+        FOOTNOTES_RENDERER
+    } else {
+        RENDERER
+    };
     let metadata = format!(
-        "<!-- Generated from {path}; renderer {RENDERER}; source SHA-256 {source_digest}; alias input SHA-256 {options_digest}. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->\n\n"
+        "<!-- Generated from {path}; renderer {renderer}; source SHA-256 {source_digest}; alias input SHA-256 {options_digest}. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->\n\n"
     );
     // Block separators belong between blocks; a file ends with one LF.
     let text = metadata + artifact.markdown.trim_end_matches('\n') + "\n";

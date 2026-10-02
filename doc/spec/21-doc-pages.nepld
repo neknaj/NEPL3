@@ -1203,4 +1203,18 @@ body
         nil
       nil
     nil
+  cons section markdownFootnotes "GitHub[向/む]け[脚注表示/きゃくちゅうひょうじ]" body
+    cons paragraph
+      cons "[明示的/めいじてき]なfootnotes profileはAnnoの[本文/ほんぶん]へ[脚注参照/きゃくちゅうさんしょう]を[付/つ]け、[注釈/ちゅうしゃく]を[文末/ぶんまつ]の[脚注定義/きゃくちゅうていぎ]へ[出力/しゅつりょく]する。"
+      cons "[複数/ふくすう]の[注釈/ちゅうしゃく]は[一/ひと]つの[脚注内/きゃくちゅうない]の[順序付/じゅんじょつ]きlistとし、[入/い]れ[子/こ]のAnnoは[独立/どくりつ]した[脚注/きゃくちゅう]へ[対応付/たいおうづ]ける。"
+      cons "Rubyは[従来/じゅうらい]のruby・rt[要素/ようそ]を[維持/いじ]する。link label[内部/ないぶ]の[脚注参照/きゃくちゅうさんしょう]は[未対応/みたいおう]として[拒否/きょひ]する。"
+      cons "[注釈/ちゅうしゃく]はDocの[構造/こうぞう]から[取得/しゅとく]し、[平坦/へいたん]な[文字列/もじれつ]の[置換/ちかん]で[復元/ふくげん]しない。[遅延/ちえん]した[脚注生成/きゃくちゅうせいせい]にも[元/もと]の[深度/しんど]と[累積/るいせき]Budgetを[適用/てきよう]する。" nil
+    cons paragraph
+      cons "[単独/たんどく]fileはdoc-markdown footnotes input aliases output、[集合/しゅうごう]はdoc-markdown footnotes-pages manifest output-directoryで[生成/せいせい]する。"
+      cons "[集合/しゅうごう]のrendererはnepl3-tools.markdown-footnotes-pages/1とし、[各/かく]pageのsource・projection・aliasesをregistry[基準/きじゅん]のportable ASCII pathで[指定/してい]する。routeはprojectionのMarkdown pathと[一致/いっち]させる。"
+      cons "[同一表記/どういつひょうき]のaliases pathは[共有/きょうゆう]できる。[大文字小文字/おおもじこもじ]だけが[異/こと]なるpath、fileとdirectoryの[衝突/しょうとつ]、manifest.jsonの[予約領域/よやくりょういき]を[拒否/きょひ]する。"
+      cons "[出力/しゅつりょく]に[含/ふく]まれない[受動/じゅどう]fileを[参照/さんしょう]するregistryとHTML[書出/かきだ]しは[拒否/きょひ]する。page[間/かん]の[参照/さんしょう]は[実際/じっさい]の[生成先/せいせいさき]へ[解決/かいけつ]し、[全入力/ぜんにゅうりょく]の[生成/せいせい]と[検査/けんさ]が[成功/せいこう]してから[出力/しゅつりょく]する。"
+      cons "このprofileは[相対/そうたい]nepld[正本/せいほん]linkを[追加/ついか]しない。[原稿/げんこう]を[別/べつ]branchに[置/お]くhostは、[生成元/せいせいもと]commitへの[参照/さんしょう]を[付加/ふか]する。[既存/きそん]のannotated profileの[出力/しゅつりょく]は[維持/いじ]する。" nil
+    nil
+
   nil

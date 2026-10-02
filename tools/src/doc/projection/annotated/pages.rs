@@ -42,6 +42,22 @@ pub fn render<C: FoundationValueCodec>(
 where
     C::Error: core::fmt::Debug,
 {
+    render_styles(set, registry, codec, budget, aliases, None)
+}
+pub(crate) fn render_styles<C: FoundationValueCodec>(
+    set: &PageSet,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+    aliases: &[&[Alias]],
+    styles: Option<&[NotesMode]>,
+) -> Result<PagesArtifact, Error>
+where
+    C::Error: core::fmt::Debug,
+{
+    if styles.is_some_and(|v| v.len() != set.pages.len()) {
+        return Err(Error::Invalid("page style count mismatch".into()));
+    }
     budget.poll()?;
     if aliases.len() != set.pages.len() {
         return Err(Error::Invalid("page alias count mismatch".into()));
@@ -106,12 +122,13 @@ where
             push(&mut links, (link.node, href), budget)?;
             page_links = rest;
         }
-        let rendered = render_resolved(
+        let rendered = render_resolved_profile(
             &input.document,
             budget,
             aliases[page],
             &links,
             document_digest,
+            styles.map_or(NotesMode::Inline, |v| v[page]),
         )?;
         push(&mut output, rendered, budget)?;
         push(&mut dependencies, used, budget)?;

@@ -4,6 +4,14 @@ use super::*;
 use nepl3_core::source::Digest;
 use serde::Deserialize;
 mod blocks;
+mod footnotes;
+use footnotes::PendingFootnote;
+
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub(crate) enum NotesMode {
+    Inline,
+    Footnotes,
+}
 pub mod host;
 pub mod pages;
 
@@ -100,6 +108,48 @@ pub fn render<C: FoundationValueCodec>(
 where
     C::Error: core::fmt::Debug,
 {
+    render_profile(
+        document,
+        registry,
+        codec,
+        budget,
+        aliases,
+        NotesMode::Inline,
+    )
+}
+
+/// GitHub-compatible footnote view; each Anno retains its ordered notes.
+pub fn render_footnotes<C: FoundationValueCodec>(
+    document: &DocumentSyntax,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+    aliases: &[Alias],
+) -> Result<Artifact, Error>
+where
+    C::Error: core::fmt::Debug,
+{
+    render_profile(
+        document,
+        registry,
+        codec,
+        budget,
+        aliases,
+        NotesMode::Footnotes,
+    )
+}
+
+fn render_profile<C: FoundationValueCodec>(
+    document: &DocumentSyntax,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+    aliases: &[Alias],
+    mode: NotesMode,
+) -> Result<Artifact, Error>
+where
+    C::Error: core::fmt::Debug,
+{
     let plan = prepare::inspect(document, registry, codec, budget).map_err(|e| match e {
         prepare::PreparationError::Stopped(s) => Error::Stopped(s),
         e => Error::Invalid(format!("{e:?}")),
@@ -107,7 +157,7 @@ where
     for requirement in &plan.requirements {
         check_pending(requirement, budget)?;
     }
-    Ok(render_resolved(document, budget, aliases, &[], plan.document_digest)?.0)
+    Ok(render_resolved_profile(document, budget, aliases, &[], plan.document_digest, mode)?.0)
 }
 
 fn check_pending(requirement: &prepare::DocRequirement, budget: &mut Budget) -> Result<(), Error> {
@@ -128,12 +178,13 @@ fn check_pending(requirement: &prepare::DocRequirement, budget: &mut Budget) -> 
 
 // Private: callers have either inspected this document or resolved its exact
 // borrowed PageSet. A decoded plan/digest is never an admission proof.
-fn render_resolved(
+fn render_resolved_profile(
     document: &DocumentSyntax,
     budget: &mut Budget,
     aliases: &[Alias],
     links: &[(u64, String)],
     document_digest: Digest,
+    mode: NotesMode,
 ) -> Result<(Artifact, Vec<String>), Error> {
     budget.poll()?;
     let DocRoot::Article(root) = document.value.root else {
@@ -177,6 +228,8 @@ fn render_resolved(
         aliases,
         links,
         emitted: Vec::new(),
+        mode,
+        footnotes: Vec::new(),
     };
     let DocKind::Article { title, body, .. } = writer.plain.kind(root.0) else {
         return Err(Error::Unsupported { node: root.0 });
@@ -187,6 +240,7 @@ fn render_resolved(
     writer.plain.emit("\n\n")?;
     let title_end = writer.plain.output.len();
     writer.body(body.0, 1)?;
+    writer.finish_footnotes()?;
     // An alias for an unreachable section must not silently disappear.
     for alias in aliases {
         writer
@@ -223,6 +277,8 @@ struct Annotated<'a, 'b> {
     aliases: &'a [Alias],
     links: &'a [(u64, String)],
     emitted: Vec<String>,
+    mode: NotesMode,
+    footnotes: Vec<PendingFootnote<'a>>,
 }
 #[derive(Clone, Copy)]
 enum Piece<'a> {
@@ -232,12 +288,14 @@ enum Piece<'a> {
     Tag(&'static str),
     /// Ruby base/reading boundaries separate adjacent code spans.
     RubyTag(&'static str),
+    Footnote(u64),
     LinkStart(u64),
     LinkEnd(u64, &'a str),
 }
 enum Task<'a> {
     Node(u64, u64),
     Piece(Piece<'a>),
+    Footnote(&'a [InlineRef], u64),
 }
 fn push<T>(items: &mut Vec<T>, item: T, budget: &mut Budget) -> Result<(), Error> {
     budget.charge(Resource::Work, 1)?;
@@ -312,13 +370,31 @@ impl<'a> Annotated<'a, '_> {
         continuation: Option<&str>,
         table_cell: bool,
     ) -> Result<(), Error> {
+        self.inline_at(sentences, continuation, table_cell, 1)
+    }
+    fn inline_at(
+        &mut self,
+        sentences: &[u64],
+        continuation: Option<&str>,
+        table_cell: bool,
+        depth: u64,
+    ) -> Result<(), Error> {
         let mut pieces = Vec::new();
         let mut stack = Vec::new();
         for &sentence in sentences.iter().rev() {
-            push(&mut stack, Task::Node(sentence, 1), self.plain.budget)?;
+            push(&mut stack, Task::Node(sentence, depth), self.plain.budget)?;
         }
         while let Some(task) = stack.pop() {
             match task {
+                Task::Footnote(notes, depth) => {
+                    let number = self.footnotes.len() as u64 + 1;
+                    push(
+                        &mut self.footnotes,
+                        PendingFootnote { notes, depth },
+                        self.plain.budget,
+                    )?;
+                    push(&mut pieces, Piece::Footnote(number), self.plain.budget)?;
+                }
                 Task::Piece(piece) => push(&mut pieces, piece, self.plain.budget)?,
                 Task::Node(node, depth) => {
                     self.plain.budget.observe_depth(depth)?;
@@ -350,6 +426,10 @@ impl<'a> Annotated<'a, '_> {
                             ] {
                                 push(&mut stack, task, self.plain.budget)?;
                             }
+                        }
+                        DocKind::Anno { base, notes } if self.mode == NotesMode::Footnotes => {
+                            push(&mut stack, Task::Footnote(notes, next), self.plain.budget)?;
+                            push(&mut stack, Task::Node(base.0, next), self.plain.budget)?;
                         }
                         DocKind::Anno { base, notes } => {
                             push(
@@ -488,6 +568,16 @@ impl<'a> Annotated<'a, '_> {
                 }
                 Piece::Tag(tag) | Piece::RubyTag(tag) => {
                     self.plain.emit(tag)?;
+                    previous_code = false;
+                }
+                Piece::Footnote(number) => {
+                    // Footnote references are links; nesting them inside another
+                    // link would not preserve the authored target on GitHub.
+                    if let Some(node) = link {
+                        return Err(Error::Unsupported { node });
+                    }
+                    let marker = self.footnote_marker(number)?;
+                    self.plain.emit(&marker)?;
                     previous_code = false;
                 }
                 Piece::LinkStart(node) => {

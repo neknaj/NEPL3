@@ -78,6 +78,19 @@ fn run() -> nepl3_tools::Result<()> {
             std::path::Path::new(input),
             std::path::Path::new(output),
         ),
+        ["doc-markdown", "footnotes", input, aliases, output] => {
+            nepl3_tools::doc::projection::annotated::host::write_footnotes(
+                std::path::Path::new(input),
+                std::path::Path::new(aliases),
+                std::path::Path::new(output),
+            )
+        }
+        ["doc-markdown", "footnotes-pages", manifest, output] => {
+            nepl3_tools::doc::canonical::footnotes_manifest(
+                std::path::Path::new(manifest),
+                std::path::Path::new(output),
+            )
+        }
         ["doc-markdown", "annotated", input, aliases, output] => {
             nepl3_tools::doc::projection::annotated::host::write(
                 std::path::Path::new(input),
@@ -100,6 +113,12 @@ fn run() -> nepl3_tools::Result<()> {
             println!("nepl3-tools doc-canonical markdown <new-output-directory>");
             println!("nepl3-tools doc-canonical html <new-output-directory>");
             println!("nepl3-tools doc-markdown <input.nepld> <new-output.md>");
+            println!(
+                "nepl3-tools doc-markdown footnotes <input.nepld> <aliases.json> <new-output.md>"
+            );
+            println!(
+                "nepl3-tools doc-markdown footnotes-pages <manifest.json> <new-output-directory>"
+            );
             println!(
                 "nepl3-tools doc-markdown annotated <input.nepld> <aliases.json> <new-output.md>"
             );
