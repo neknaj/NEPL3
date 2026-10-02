@@ -10,6 +10,7 @@ use nepl3_core::{
     view::PresentationClass,
 };
 pub(crate) mod check;
+pub mod completion;
 pub mod highlight;
 mod mapping;
 pub mod query;
