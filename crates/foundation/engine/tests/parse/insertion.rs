@@ -513,3 +513,6 @@ fn insertion_before_unexpected_suffix_requires_an_actual_missing_occurrence() ->
         expected: Err(InsertionError::NoMissing),
     })
 }
+
+#[path = "insertion/draft.rs"]
+mod draft;
