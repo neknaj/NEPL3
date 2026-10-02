@@ -3,6 +3,7 @@
 pub mod alternatives;
 pub mod analysis;
 pub mod binding;
+pub mod completion;
 pub mod expected;
 pub mod facts;
 pub mod head;
@@ -35,6 +36,7 @@ pub enum PortableError<E> {
     Head(crate::head::HeadError),
     Region(crate::analysis::region::RegionError),
     Expected(crate::analysis::expected::ExpectedReadError),
+    Candidate(crate::analysis::completion::CandidateError),
     Profile(crate::profile::ProfileError),
 }
 impl<E> From<crate::profile::ProfileError> for PortableError<E> {

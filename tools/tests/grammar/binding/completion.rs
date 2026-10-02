@@ -400,3 +400,6 @@ fn custom_final_resolution_does_not_rewrite_captured_candidate_visibility() -> R
 
 #[path = "completion/region.rs"]
 mod region;
+
+#[path = "completion/portable.rs"]
+mod portable;
