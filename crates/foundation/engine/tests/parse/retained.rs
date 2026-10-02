@@ -1,7 +1,7 @@
 use super::*;
 use nepl3_engine::package::EntryContext;
 
-fn with_context(
+pub(super) fn with_context(
     input: &str,
     f: impl FnOnce(
         &ResolvedParseProfile<'_>,
@@ -26,7 +26,40 @@ fn with_options(
         &EntryContext,
     ) -> TestResult,
 ) -> TestResult {
+    with_options_state(input, provided, text, None, f)
+}
+
+pub(super) fn with_state_context(
+    input: &str,
+    state: nepl3_core::schema::TypeDescriptor,
+    f: impl FnOnce(
+        &ResolvedParseProfile<'_>,
+        &ParseEnvironmentSet<'_>,
+        &SourceStore,
+        &SourceSnapshot,
+        &EntryContext,
+    ) -> TestResult,
+) -> TestResult {
+    with_options_state(input, false, false, Some(state), f)
+}
+
+fn with_options_state(
+    input: &str,
+    provided: bool,
+    text: bool,
+    state: Option<nepl3_core::schema::TypeDescriptor>,
+    f: impl FnOnce(
+        &ResolvedParseProfile<'_>,
+        &ParseEnvironmentSet<'_>,
+        &SourceStore,
+        &SourceSnapshot,
+        &EntryContext,
+    ) -> TestResult,
+) -> TestResult {
     let (mut package, registry) = fixture()?;
+    if let Some(state) = state {
+        package.reader.state_type = state;
+    }
     if provided {
         use nepl3_core::schema::{TypeDescriptor, TypeRef};
         use nepl3_reader::plan::*;

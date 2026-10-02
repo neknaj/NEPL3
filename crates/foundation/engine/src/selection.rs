@@ -1,4 +1,7 @@
 //! Persistent parser choices, including dynamic heads, owned by the engine result.
+mod compare;
+pub(crate) use compare::entry_equal;
+
 use crate::{
     package::{BindingId, EntryContext, FieldSpec, ReadSpecId, SelectionRule, StyleRule},
     recovery::ForeignStep,

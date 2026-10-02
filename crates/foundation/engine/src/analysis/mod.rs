@@ -2,6 +2,7 @@
 //! Portable data alone never creates a completed name-resolution proof.
 pub mod alternatives;
 pub mod expected;
+pub mod insertion;
 pub mod query;
 pub mod region;
 pub mod rename;

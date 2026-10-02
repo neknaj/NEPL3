@@ -41,6 +41,57 @@ fn run_foreign_inspect(
     accept_names: bool,
     inspect: impl FnOnce(&ParseReply, &ResolvedParseProfile<'_>, &SourceSnapshot) -> TestResult,
 ) -> Result<ParseReply, Box<dyn std::error::Error>> {
+    with_foreign_context(
+        input,
+        accept_names,
+        |resolved, environments, sources, source, entry, setup| {
+            let mut session =
+                ParseSession::new("foreign-session".into(), resolved, environments, setup)
+                    .map_err(|e| format!("{e:?}"))?;
+            let mut operation = budget();
+            let mut admission = SourceAdmission::default();
+            let reply = session
+                .read(
+                    ParseRequest {
+                        snapshot: source,
+                        start: 0,
+                        limit: input.len() as u64,
+                        final_input: true,
+                        entry,
+                        states: &[
+                            LanguageReaderState {
+                                alias: "Host".into(),
+                                state: NdfValue::Unit,
+                            },
+                            LanguageReaderState {
+                                alias: "Guest".into(),
+                                state: NdfValue::Unit,
+                            },
+                        ],
+                    },
+                    sources,
+                    &mut operation,
+                    &mut admission,
+                )
+                .map_err(|e| format!("{e:?}"))?;
+            inspect(&reply, resolved, source)?;
+            Ok(reply)
+        },
+    )
+}
+
+fn with_foreign_context<T>(
+    input: &str,
+    accept_names: bool,
+    f: impl FnOnce(
+        &ResolvedParseProfile<'_>,
+        &ParseEnvironmentSet<'_>,
+        &SourceStore,
+        &SourceSnapshot,
+        &EntryContext,
+        &mut nepl3_core::budget::Budget,
+    ) -> Result<T, Box<dyn std::error::Error>>,
+) -> Result<T, Box<dyn std::error::Error>> {
     let (mut host, registry) = fixture()?;
     let mut guest = host.clone();
     let kind = |name: &str| -> Result<KindRef, String> {
@@ -218,41 +269,14 @@ fn run_foreign_inspect(
     let entry = resolved
         .entry("Host", None, &mut setup)
         .map_err(|e| format!("{e:?}"))?;
-    let mut session = ParseSession::new(
-        "foreign-session".into(),
+    f(
         &resolved,
         &environments,
+        &sources,
+        &source,
+        &entry,
         &mut setup,
     )
-    .map_err(|e| format!("{e:?}"))?;
-    let mut operation = budget();
-    let mut admission = SourceAdmission::default();
-    let reply = session
-        .read(
-            ParseRequest {
-                snapshot: &source,
-                start: 0,
-                limit: input.len() as u64,
-                final_input: true,
-                entry: &entry,
-                states: &[
-                    LanguageReaderState {
-                        alias: "Host".into(),
-                        state: NdfValue::Unit,
-                    },
-                    LanguageReaderState {
-                        alias: "Guest".into(),
-                        state: NdfValue::Unit,
-                    },
-                ],
-            },
-            &sources,
-            &mut operation,
-            &mut admission,
-        )
-        .map_err(|e| format!("{e:?}"))?;
-    inspect(&reply, &resolved, &source)?;
-    Ok(reply)
 }
 
 #[test]
@@ -438,4 +462,149 @@ fn declared_alternatives_use_guest_package_after_with_mode_resolution() -> TestR
         Ok(())
     })?;
     Ok(())
+}
+
+#[test]
+fn insertion_observation_accepts_engine_recovery_to_guest_schema_transition() -> TestResult {
+    use nepl3_core::source::{Digest, TextEdit};
+    use nepl3_engine::{
+        analysis::{
+            BindingOptions,
+            expected::{ExpectedReadRequest, ExpectedReadStep},
+            insertion::*,
+        },
+        portable::analysis,
+    };
+    with_foreign_context(
+        "pair",
+        true,
+        |profile, environments, sources, source, entry, _| {
+            let states = [
+                LanguageReaderState {
+                    alias: "Host".into(),
+                    state: NdfValue::Unit,
+                },
+                LanguageReaderState {
+                    alias: "Guest".into(),
+                    state: NdfValue::Unit,
+                },
+            ];
+            let text = "pair :wrap @x";
+            let next = SourceSnapshot::new(
+                source.identity().source.clone(),
+                1,
+                source.uri().into(),
+                text.as_bytes().to_vec(),
+                &mut budget(),
+            )
+            .map_err(|e| format!("{e:?}"))?;
+            let mut next_sources = SourceStore::default();
+            next_sources
+                .insert(next.clone())
+                .map_err(|e| format!("{e:?}"))?;
+            let mut old_session = RetainedParseSession::new(
+                "foreign-old".into(),
+                profile,
+                environments,
+                ParseRequest {
+                    snapshot: source,
+                    start: 0,
+                    limit: 4,
+                    final_input: true,
+                    entry,
+                    states: &states,
+                },
+                sources,
+                &mut budget(),
+            )
+            .map_err(|e| format!("{e:?}"))?;
+            let RetainedParseExecution::Continue(old) = old_session
+                .read(&mut budget(), &mut SourceAdmission::default())
+                .map_err(|e| format!("{e:?}"))?
+            else {
+                return Err("old execution".into());
+            };
+            let mut new_session = RetainedParseSession::new(
+                "foreign-new".into(),
+                profile,
+                environments,
+                ParseRequest {
+                    snapshot: &next,
+                    start: 0,
+                    limit: text.len() as u64,
+                    final_input: true,
+                    entry,
+                    states: &states,
+                },
+                &next_sources,
+                &mut budget(),
+            )
+            .map_err(|e| format!("{e:?}"))?;
+            let RetainedParseExecution::Continue(new) = new_session
+                .read(&mut budget(), &mut SourceAdmission::default())
+                .map_err(|e| format!("{e:?}"))?
+            else {
+                return Err("new execution".into());
+            };
+            let first = |tree: &nepl3_engine::recovery::ParseTree| -> Result<nepl3_core::value::SchemaRef, String> {
+            let root = &tree.bundle.nodes[tree.bundle.root.0 as usize];
+            let FieldValue::Foreign(value) = &root.fields[0] else { return Err("foreign first child".into()); };
+            Ok(value.schema.clone())
+        };
+            assert_ne!(
+                first(old.execution().tree())?,
+                first(new.execution().tree())?
+            );
+            let empty = SourceStore::default();
+            let mut admission = SourceAdmission::default();
+            let mut codec = FoundationCodec::new(profile.registry(), &empty, &mut admission)
+                .map_err(|e| format!("{e:?}"))?;
+            let old_prepared = analysis::prepare(
+                "foreign-old",
+                old.execution().tree(),
+                BindingOptions,
+                budget().limits(),
+                profile,
+                &mut codec,
+                &mut budget(),
+            )
+            .map_err(|e| format!("{e:?}"))?;
+            let new_prepared = analysis::prepare(
+                "foreign-new",
+                new.execution().tree(),
+                BindingOptions,
+                budget().limits(),
+                profile,
+                &mut codec,
+                &mut budget(),
+            )
+            .map_err(|e| format!("{e:?}"))?;
+            let result = observe(
+                InsertionInput {
+                    parsed: &old,
+                    prepared: &old_prepared,
+                },
+                InsertionInput {
+                    parsed: &new,
+                    prepared: &new_prepared,
+                },
+                &ExpectedReadRequest {
+                    key: old_prepared.key(),
+                    source: source.reference(),
+                    offset: 4,
+                },
+                &TextEdit {
+                    span: source.span(4, 4).map_err(|e| format!("{e:?}"))?,
+                    expected_digest: Digest::of(b""),
+                    replacement: " :wrap @x".into(),
+                },
+                &mut budget(),
+                &mut SourceAdmission::default(),
+            )
+            .map_err(|e| format!("observation: {e:?}"))?;
+            assert_eq!(result.path(), &[ExpectedReadStep::Foreign { field: 0 }]);
+            assert_eq!((result.cover().start(), result.cover().end()), (6, 13));
+            Ok(())
+        },
+    )
 }
