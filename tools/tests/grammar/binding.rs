@@ -76,7 +76,13 @@ fn with_source_profile<T>(
         .and_then(|v| v.semantic_identity(&mut budget()))
         .map_err(err)?;
     // This fixture registers the exact source of its host adapter implementation.
-    let implementation = Digest::of(include_bytes!("binding.rs"));
+    let implementation = Digest::of(
+        &[
+            include_bytes!("binding.rs").as_slice(),
+            include_bytes!("binding/name_spelling/reader.rs").as_slice(),
+        ]
+        .concat(),
+    );
     let implementation_for = |operation: &nepl3_core::value::OperationRef| {
         if operation.name == "bindingFacts" {
             custom::implementation_digest()
