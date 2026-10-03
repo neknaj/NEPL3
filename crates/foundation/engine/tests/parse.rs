@@ -1901,3 +1901,6 @@ mod missing_probe;
 
 #[path = "parse/keyed_probe.rs"]
 mod keyed_probe;
+
+#[path = "parse/probe_read.rs"]
+mod probe_read;

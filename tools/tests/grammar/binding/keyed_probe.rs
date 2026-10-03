@@ -164,7 +164,7 @@ fn keyed_probe_preserves_foreign_and_canonical_identity_and_unused_source_closur
                 }
             }
             reverse_sources(&mut reordered.bundle);
-            let equivalent = keyed::prepare(
+            let equivalent_prepared = keyed::prepare(
                 "keyed-foreign",
                 &reordered,
                 BindingOptions,
@@ -174,8 +174,8 @@ fn keyed_probe_preserves_foreign_and_canonical_identity_and_unused_source_closur
                 &mut budget(),
             )
             .map_err(err)?;
-            assert_eq!(equivalent.key(), key);
-            let equivalent = equivalent
+            assert_eq!(equivalent_prepared.key(), key);
+            let equivalent = equivalent_prepared
                 .probe_missing_reference(&mut Budget::new(limits), &mut SourceAdmission::default())
                 .map_err(err)?;
             let ProbeOutcome::Hit(equivalent_hit) = &equivalent.reply().outcome else {
@@ -197,10 +197,11 @@ fn keyed_probe_preserves_foreign_and_canonical_identity_and_unused_source_closur
                     .map_err(err)?;
             let raw = keyed::request_decode(&packet, profile, &mut receiver, &mut transport)
                 .map_err(err)?;
-            let received = keyed::prepare_received(&raw, profile, &mut receiver, &mut transport)
-                .map_err(err)?;
-            assert_eq!(received.key(), key);
-            let received = received
+            let received_prepared =
+                keyed::prepare_received(&raw, profile, &mut receiver, &mut transport)
+                    .map_err(err)?;
+            assert_eq!(received_prepared.key(), key);
+            let received = received_prepared
                 .probe_missing_reference(&mut Budget::new(limits), &mut SourceAdmission::default())
                 .map_err(err)?;
             let ProbePosition::HitAtPosition(received_hit) = received
@@ -216,6 +217,36 @@ fn keyed_probe_preserves_foreign_and_canonical_identity_and_unused_source_closur
                 return Err("received position".into());
             };
             same_site(received_hit.site(), expected_site);
+            use nepl3_engine::analysis::{
+                expected::ExpectedReadRequest,
+                probe::read::{ReadOutcome, correlate},
+            };
+            let read_request = ExpectedReadRequest {
+                key,
+                source: position_source.clone(),
+                offset: input.len() as u64,
+            };
+            for (reply, prepared) in [
+                (&bound, &prepared),
+                (&equivalent, &equivalent_prepared),
+                (&received, &received_prepared),
+            ] {
+                let read = correlate(
+                    reply,
+                    prepared,
+                    &read_request,
+                    &mut Budget::new(limits),
+                    &mut SourceAdmission::default(),
+                )
+                .map_err(err)?;
+                let ReadOutcome::Hit(proof) = read.outcome() else {
+                    return Err("read correspondence".into());
+                };
+                assert_eq!(proof.reply().key(), key);
+                same_site(proof.hit().site(), expected_site);
+                assert!(!proof.expected().path.is_empty());
+            }
+
             use nepl3_engine::analysis::probe::candidates::{
                 ProbeCandidateOutcome, ProbeCandidateRequest, names,
             };
