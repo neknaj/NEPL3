@@ -1,5 +1,6 @@
 use super::*;
 mod custom;
+mod probe;
 use crate::facts::{FactsHeader, FactsPhase};
 use alloc::boxed::Box;
 struct CustomHeader {
@@ -429,6 +430,29 @@ impl<'a, 'p> Machine<'a, 'p> {
         budget: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<(), BindingError> {
+        match self.run_inner(root, tree, host, false, budget, admission)? {
+            None => Ok(()),
+            Some(_) => Err(BindingError::Target),
+        }
+    }
+    pub(super) fn run_probe(
+        &mut self,
+        root: usize,
+        tree: &'a crate::recovery::ParseTree,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<Option<super::probe::MissingReferenceSite>, BindingError> {
+        self.run_inner(root, tree, &mut None, true, budget, admission)
+    }
+    fn run_inner(
+        &mut self,
+        root: usize,
+        tree: &'a crate::recovery::ParseTree,
+        host: &mut Option<&mut dyn BindingHost>,
+        probing: bool,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<Option<super::probe::MissingReferenceSite>, BindingError> {
         let local = self.bundles.get(root).ok_or(BindingError::Target)?;
         let frame = self.frame(
             Target {
@@ -445,7 +469,14 @@ impl<'a, 'p> Machine<'a, 'p> {
         let mut frames = Vec::new();
         push(&mut frames, frame, budget)?;
         let depth_base = budget.current_depth();
+        let mut execution_step = 0_u64;
         while let Some(mut frame) = frames.pop() {
+            let mut captured = None;
+            if probing {
+                execution_step = execution_step
+                    .checked_add(1)
+                    .ok_or_else(|| BindingError::Stopped(budget.stop(StopReason::WorkLimit)))?;
+            }
             let action = frame.actions.pop();
             let plan_depth = match &action {
                 Some(Action::Plan { depth, .. }) => *depth,
@@ -555,6 +586,19 @@ impl<'a, 'p> Machine<'a, 'p> {
                             .bindings
                             .get(id.0 as usize)
                             .ok_or(BindingError::Target)?;
+                        if probing {
+                            captured = self.probe_action(
+                                &frame,
+                                &layout,
+                                binding,
+                                (id, execution_step),
+                                tree,
+                                budget,
+                            )?;
+                            if captured.is_some() {
+                                return Ok(());
+                            }
+                        }
                         match binding {
                             Binding::None => {}
                             Binding::Group(children) | Binding::Scope(children) => {
@@ -797,7 +841,10 @@ impl<'a, 'p> Machine<'a, 'p> {
                 push(&mut frames, frame, budget)?;
                 Ok(())
             })?;
+            if captured.is_some() {
+                return Ok(captured);
+            }
         }
-        Ok(())
+        Ok(None)
     }
 }

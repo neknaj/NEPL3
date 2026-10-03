@@ -84,6 +84,83 @@ fn with_options_state(
         &EntryContext,
     ) -> TestResult,
 ) -> TestResult {
+    with_package_options(
+        input,
+        FixtureOptions {
+            provided,
+            text,
+            state,
+            list,
+            custom,
+        },
+        |_| {},
+        f,
+    )
+}
+
+pub(super) fn with_edited_package(
+    input: &str,
+    edit: impl FnOnce(&mut nepl3_engine::package::LanguagePackage),
+    f: impl FnOnce(
+        &ResolvedParseProfile<'_>,
+        &ParseEnvironmentSet<'_>,
+        &SourceStore,
+        &SourceSnapshot,
+        &EntryContext,
+    ) -> TestResult,
+) -> TestResult {
+    with_package_options(input, FixtureOptions::default(), edit, f)
+}
+
+pub(super) fn with_custom_edited_package(
+    input: &str,
+    edit: impl FnOnce(&mut nepl3_engine::package::LanguagePackage),
+    f: impl FnOnce(
+        &ResolvedParseProfile<'_>,
+        &ParseEnvironmentSet<'_>,
+        &SourceStore,
+        &SourceSnapshot,
+        &EntryContext,
+    ) -> TestResult,
+) -> TestResult {
+    with_package_options(
+        input,
+        FixtureOptions {
+            custom: true,
+            ..FixtureOptions::default()
+        },
+        edit,
+        f,
+    )
+}
+
+#[derive(Default)]
+struct FixtureOptions {
+    provided: bool,
+    text: bool,
+    state: Option<nepl3_core::schema::TypeDescriptor>,
+    list: bool,
+    custom: bool,
+}
+fn with_package_options(
+    input: &str,
+    options: FixtureOptions,
+    edit: impl FnOnce(&mut nepl3_engine::package::LanguagePackage),
+    f: impl FnOnce(
+        &ResolvedParseProfile<'_>,
+        &ParseEnvironmentSet<'_>,
+        &SourceStore,
+        &SourceSnapshot,
+        &EntryContext,
+    ) -> TestResult,
+) -> TestResult {
+    let FixtureOptions {
+        provided,
+        text,
+        state,
+        list,
+        custom,
+    } = options;
     let (mut package, registry) = fixture_with_facts(custom)?;
     if custom {
         use nepl3_engine::package::{Binding, ExtensionRequirement};
@@ -160,6 +237,7 @@ fn with_options_state(
         };
         *reader = nepl3_reader::builtin::BuiltinReader::Text;
     }
+    edit(&mut package);
     let mut setup = budget();
     let identity = package
         .check(&registry, &mut setup)

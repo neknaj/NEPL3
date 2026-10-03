@@ -247,4 +247,25 @@ body
       cons "Recoveredや[未消費/みしょうひ]の[末尾/まつび]を[許/ゆる]す[既存/きそん]のCheckedInsertionとCheckedDeclaredInsertionは[維持/いじ]する。" nil
     nil
 
+  cons section missingReferenceProbe "2.18 [実行順/じっこうじゅん]で[最初/さいしょ]の[欠落参照名/けつらくさんしょうめい]" body
+    cons paragraph
+      cons "binding::probe::first_missing_referenceは、[検証済/けんしょうず]みの[構文木/こうぶんき]に[対/たい]してhostを[使/つか]わずにBindingの[処理/しょり]を[進/すす]める。"
+      cons "[選択済/せんたくず]みのReferenceのNameSelectorがRecoveryKind::Missingへ[到達/とうたつ]した[最初/さいしょ]の[時点/じてん]をHitとして[返/かえ]す。"
+      cons "[欠落/けつらく]したrootやleafの[予定/よてい]のBindingPlanをexpected categoryから[推測/すいそく]しない。[既存/きそん]の[通常/つうじょう]planが[名前/なまえ]fieldを[直接参照/ちょくせつさんしょう]する[場合/ばあい]を[扱/あつか]う。" nil
+    cons paragraph
+      cons "HitのMissingReferenceは[元/もと]の[構文木/こうぶんき]を[不変借用/ふへんしゃくよう]し、[必要/ひつよう]な[途中状態/とちゅうじょうたい]を[内部/ないぶ]に[保持/ほじ]する。"
+      cons "[所有者/しょゆうしゃ]と[名前/なまえ]targetのcanonical[座標/ざひょう]、BindingId、[入力同一性/にゅうりょくどういつせい]を[含/ふく]むanchor、namespace、stage、namespace_stageを[保持/ほじ]する。"
+      cons "execution_stepは[当該実行/とうがいじっこう]のframe dispatchの[序数/じょすう]で、Restoreやframeの[完了/かんりょう]も[数/かぞ]える。portableな[意味上/いみじょう]の[識別子/しきべつし]として[扱/あつか]わない。" nil
+    cons paragraph
+      cons "[通常/つうじょう]の[構造/こうぞう]DFSとBindingの[実行順/じっこうじゅん]は[異/こと]なる。[共有/きょうゆう]nodeや[反復/はんぷく]planをanchorだけで[同一視/どういつし]せず、expected_readとの[対応/たいおう]もanchorだけから[推定/すいてい]しない。"
+      cons "Sequentialは[先行/せんこう]export、Recursiveは[完了済/かんりょうず]みheader、Globalは[実際/じっさい]のnamespace_stageを[使/つか]う。Foreignのnamespaceは[元/もと]の[分離/ぶんり]を[維持/いじ]する。" nil
+    cons paragraph
+      cons "[実行/じっこう]された[先行/せんこう]recovery、[欠落/けつらく]したBind・Exportの[名前/なまえ]、[未成立/みせいりつ]のheader、CustomはBlockedとなる。Custom providerを[呼/よ]び[出/だ]さない。"
+      cons "Unexpected・UnparsedがText tokenを[持/も]っていても[通常/つうじょう]の[名前/なまえ]として[解釈/かいしゃく]しない。[先行/せんこう]するUndefinedName[診断/しんだん]は[通常/つうじょう]の[途中/とちゅう]metadataとして[保持/ほじ]する。"
+      cons "NoHitは[実行/じっこう]した[処理/しょり]で[対象/たいしょう]に[到達/とうたつ]しなかったことを[示/しめ]す。[実行/じっこう]されないrecoveryが[残/のこ]る[場合/ばあい]もある。[資源不足/しげんぶそく]と[取消/とりけし]はStoppedで[返/かえ]す。" nil
+    cons paragraph
+      cons "[結果/けっか]はCompleteBindingを[生成/せいせい]しない。[全位置/ぜんいち]の[補完/ほかん]、[候補/こうほ]の[生成/せいせい]、source mapの[対応/たいおう]、[編集権限/へんしゅうけんげん]は[保証/ほしょう]に[含/ふく]めない。"
+      cons "[入力/にゅうりょく]とsource[閉包/へいほう]を[検証/けんしょう]し、Hitの[公開前/こうかいまえ]にもFactSetの[閉包/へいほう]を[検査/けんさ]する。[全/すべ]ての[費用/ひよう]は[呼出側/よびだしがわ]の[累積/るいせき]Budgetへ[計上/けいじょう]する。" nil
+    nil
+
 nil
