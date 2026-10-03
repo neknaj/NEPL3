@@ -410,7 +410,7 @@ fn explicit_name_spelling_checks_actual_text_payload_and_excludes_affixes() -> T
                                         Err(error) => error,
                                         Ok(_) => {
                                             return Err(
-                                                "matching scan must finish before Multiple".into()
+                                                "matching scan must finish before Multiple".into(),
                                             );
                                         }
                                     };
