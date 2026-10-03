@@ -1085,3 +1085,6 @@ mod missing_probe;
 
 #[path = "binding/keyed_probe.rs"]
 mod keyed_probe;
+
+#[path = "binding/probe_candidates.rs"]
+mod probe_candidates;

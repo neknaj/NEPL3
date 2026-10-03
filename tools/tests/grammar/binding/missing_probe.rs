@@ -5,7 +5,11 @@ use nepl3_engine::{
 };
 
 pub(super) fn named_lambda() -> Result<CompiledLanguage, String> {
-    let mut compiled = execution()?;
+    named_lambda_from(execution()?)
+}
+pub(super) fn named_lambda_from(
+    mut compiled: CompiledLanguage,
+) -> Result<CompiledLanguage, String> {
     let lambda = compiled
         .package
         .forms

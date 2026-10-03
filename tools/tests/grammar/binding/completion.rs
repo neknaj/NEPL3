@@ -77,6 +77,27 @@ fn captured_scope_name_candidates_preserve_visibility_and_shadowing() -> Result<
                 "{input}"
             );
             assert_eq!(result.report.usage, operation.usage());
+            // Captured before extracting collect_names, on parent PR343.
+            // Allocation formula retains the original per-name and EntityId costs
+            // across pointer widths; all other baseline counters are literal.
+            if input == "lambda a lambda b probe" {
+                assert_eq!(
+                    operation.usage(),
+                    nepl3_core::budget::Usage {
+                        source_bytes: 0,
+                        work: 168,
+                        depth: 1,
+                        nodes: 5,
+                        allocation_units: 2
+                            * (1 + 2 * core::mem::size_of::<NameCandidate>() as u64
+                                + core::mem::size_of::<EntityId>() as u64),
+                        output_bytes: 0,
+                        diagnostics: 0,
+                        events: 0,
+                    }
+                );
+            }
+
             for candidate in &result.candidates {
                 let ids = match &candidate.resolution {
                     ReferenceResolution::Resolved(id) => vec![*id],

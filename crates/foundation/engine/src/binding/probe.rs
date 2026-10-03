@@ -25,6 +25,9 @@ pub struct MissingReference<'a> {
     progress: BindingProgress,
 }
 impl MissingReference<'_> {
+    pub(crate) fn facts(&self) -> Result<&FactSet, BindingError> {
+        self.progress.facts.as_ref().ok_or(BindingError::Target)
+    }
     pub fn tree(&self) -> &crate::recovery::ParseTree {
         self.tree
     }

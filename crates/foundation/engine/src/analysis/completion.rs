@@ -89,56 +89,14 @@ pub fn names(
             }
         }
         let point = point.ok_or(CandidateError::NoStage)?;
-        let mut stage = point;
-        let mut candidates: Vec<NameCandidate> = Vec::new();
-        loop {
-            b.charge(Resource::Work, 1)?;
-            b.charge(Resource::Nodes, 1)?;
-            let current = lookup::stage_at(&result.stages, stage)?;
-            for id in &current.introduced {
-                let entity = lookup::entity(&result.facts, *id, b)?;
-                b.charge(Resource::Work, request.prefix.len() as u64 + 1)?;
-                if entity.namespace != occurrence.namespace
-                    || !entity.name.starts_with(request.prefix)
-                {
-                    continue;
-                }
-                let mut seen = false;
-                for prior in &candidates {
-                    b.charge(Resource::Work, entity.name.len() as u64 + 1)?;
-                    if prior.name == entity.name {
-                        seen = true;
-                        break;
-                    }
-                }
-                if seen {
-                    continue;
-                }
-                // Reuse the same lookup as BindingPlan execution, preserving
-                // nearest-scope shadowing and same-scope ambiguity.
-                let resolution = lookup::resolve(
-                    &result.stages,
-                    &result.facts,
-                    point,
-                    occurrence.namespace,
-                    &entity.name,
-                    b,
-                )?;
-                b.charge(Resource::Work, entity.name.len() as u64 + 1)?;
-                b.charge(
-                    Resource::AllocationUnits,
-                    entity.name.len() as u64 + (2 * core::mem::size_of::<NameCandidate>()) as u64,
-                )?;
-                candidates.push(NameCandidate {
-                    name: entity.name.clone(),
-                    resolution,
-                });
-            }
-            match current.previous {
-                Some(previous) => stage = previous,
-                None => break,
-            }
-        }
+        let candidates = collect_names(
+            &result.stages,
+            &result.facts,
+            point,
+            occurrence.namespace,
+            request.prefix,
+            b,
+        )?;
         Ok((occurrence.namespace, candidates))
     })?;
     Ok(ScopeCandidates {
@@ -151,4 +109,57 @@ pub fn names(
             ..Report::default()
         },
     })
+}
+
+/// Internal enumeration over validated captured-stage data; callers own depth.
+pub(super) fn collect_names(
+    stages: &[crate::binding::BindingStage],
+    facts: &nepl3_core::facts::FactSet,
+    point: crate::binding::StageId,
+    namespace: NamespaceRef,
+    prefix: &str,
+    b: &mut Budget,
+) -> Result<Vec<NameCandidate>, CandidateError> {
+    let mut stage = point;
+    let mut candidates: Vec<NameCandidate> = Vec::new();
+    loop {
+        b.charge(Resource::Work, 1)?;
+        b.charge(Resource::Nodes, 1)?;
+        let current = lookup::stage_at(stages, stage)?;
+        for id in &current.introduced {
+            let entity = lookup::entity(facts, *id, b)?;
+            b.charge(Resource::Work, prefix.len() as u64 + 1)?;
+            if entity.namespace != namespace || !entity.name.starts_with(prefix) {
+                continue;
+            }
+            let mut seen = false;
+            for prior in &candidates {
+                b.charge(Resource::Work, entity.name.len() as u64 + 1)?;
+                if prior.name == entity.name {
+                    seen = true;
+                    break;
+                }
+            }
+            if seen {
+                continue;
+            }
+            // Reuse the same lookup as BindingPlan execution, preserving
+            // nearest-scope shadowing and same-scope ambiguity.
+            let resolution = lookup::resolve(stages, facts, point, namespace, &entity.name, b)?;
+            b.charge(Resource::Work, entity.name.len() as u64 + 1)?;
+            b.charge(
+                Resource::AllocationUnits,
+                entity.name.len() as u64 + (2 * core::mem::size_of::<NameCandidate>()) as u64,
+            )?;
+            candidates.push(NameCandidate {
+                name: entity.name.clone(),
+                resolution,
+            });
+        }
+        match current.previous {
+            Some(previous) => stage = previous,
+            None => break,
+        }
+    }
+    Ok(candidates)
 }
