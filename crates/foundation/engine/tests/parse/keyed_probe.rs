@@ -167,6 +167,135 @@ fn keyed_probe_checks_identity_limits_and_positions_for_every_native_outcome() -
                         )
                 ));
                 assert_eq!(fresh.usage().source_bytes, input.len() as u64);
+                use nepl3_engine::analysis::{
+                    expected::ExpectedReadRequest,
+                    probe::read::{ReadOutcome, correlate},
+                };
+                let read_request = ExpectedReadRequest {
+                    key,
+                    source: source_ref.clone(),
+                    offset: end,
+                };
+                let mut read_budget = Budget::new(limits);
+                let read = correlate(
+                    &bound,
+                    &prepared,
+                    &read_request,
+                    &mut read_budget,
+                    &mut SourceAdmission::default(),
+                )
+                .map_err(|e| format!("{e:?}"))?;
+                assert!(matches!(
+                    (expected, read.outcome()),
+                    (Outcome::Hit, ReadOutcome::Hit(_))
+                        | (Outcome::NoHit, ReadOutcome::NoHit)
+                        | (Outcome::Blocked, ReadOutcome::Blocked(_))
+                        | (
+                            Outcome::Stopped,
+                            ReadOutcome::Stopped(StopReason::Cancelled)
+                        )
+                ));
+                if matches!(expected, Outcome::Hit) {
+                    let measured = read_budget.usage();
+                    let mut depth_exact = Budget::new(limits);
+                    depth_exact
+                        .with_depth_at_least(limits.depth - measured.depth, |b| {
+                            correlate(
+                                &bound,
+                                &prepared,
+                                &read_request,
+                                b,
+                                &mut SourceAdmission::default(),
+                            )
+                        })
+                        .map_err(|e| format!("{e:?}"))?;
+                    let mut depth_short = Budget::new(limits);
+                    let depth_error = depth_short
+                        .with_depth_at_least(limits.depth - measured.depth + 1, |b| {
+                            correlate(
+                                &bound,
+                                &prepared,
+                                &read_request,
+                                b,
+                                &mut SourceAdmission::default(),
+                            )
+                        })
+                        .err()
+                        .ok_or("read depth stop")?;
+                    assert_eq!(depth_error.stop_reason(), Some(StopReason::DepthLimit));
+
+                    for (resource, total, used, reason) in [
+                        (
+                            Resource::Work,
+                            limits.work,
+                            measured.work,
+                            StopReason::WorkLimit,
+                        ),
+                        (
+                            Resource::Nodes,
+                            limits.nodes,
+                            measured.nodes,
+                            StopReason::NodeLimit,
+                        ),
+                        (
+                            Resource::AllocationUnits,
+                            limits.allocation_units,
+                            measured.allocation_units,
+                            StopReason::AllocationLimit,
+                        ),
+                        (
+                            Resource::SourceBytes,
+                            limits.source_bytes,
+                            measured.source_bytes,
+                            StopReason::SourceLimit,
+                        ),
+                    ] {
+                        let mut limited = Budget::new(limits);
+                        limited
+                            .charge(resource, total - used + 1)
+                            .map_err(|e| format!("{e:?}"))?;
+                        let error = correlate(
+                            &bound,
+                            &prepared,
+                            &read_request,
+                            &mut limited,
+                            &mut SourceAdmission::default(),
+                        )
+                        .err()
+                        .ok_or("expected local read stop")?;
+                        assert_eq!(error.stop_reason(), Some(reason));
+                        assert_eq!(bound.reply().report, original_report);
+                    }
+                    let other_read = ExpectedReadRequest {
+                        offset: 0,
+                        ..read_request.clone()
+                    };
+                    let other = correlate(
+                        &bound,
+                        &prepared,
+                        &other_read,
+                        &mut Budget::new(limits),
+                        &mut SourceAdmission::default(),
+                    )
+                    .map_err(|e| format!("{e:?}"))?;
+                    assert!(matches!(other.outcome(), ReadOutcome::OtherHit(_)));
+                }
+                let mut cancelled_read = Budget::new(limits);
+                cancelled_read.cancel();
+                assert_eq!(
+                    correlate(
+                        &bound,
+                        &prepared,
+                        &read_request,
+                        &mut cancelled_read,
+                        &mut SourceAdmission::default()
+                    )
+                    .err()
+                    .ok_or("read cancellation")?
+                    .stop_reason(),
+                    Some(StopReason::Cancelled)
+                );
+
                 use nepl3_engine::analysis::probe::candidates::{
                     ProbeCandidateOutcome, ProbeCandidateRequest, names,
                 };
@@ -320,6 +449,25 @@ fn keyed_probe_checks_identity_limits_and_positions_for_every_native_outcome() -
                     ));
                 }
                 for at in [5, end + 1] {
+                    let invalid_read = ExpectedReadRequest {
+                        offset: at,
+                        ..read_request.clone()
+                    };
+                    assert!(matches!(
+                        correlate(
+                            &bound,
+                            &prepared,
+                            &invalid_read,
+                            &mut Budget::new(limits),
+                            &mut SourceAdmission::default()
+                        ),
+                        Err(nepl3_engine::analysis::probe::read::ReadError::Access(
+                            ProbeAccessError::Source(
+                                SourceError::ScalarBoundary | SourceError::Bounds
+                            )
+                        ))
+                    ));
+
                     let error = bound
                         .for_position(
                             &key,
@@ -350,6 +498,47 @@ fn keyed_probe_checks_identity_limits_and_positions_for_every_native_outcome() -
                     Err(ProbeAccessError::Access(BindingAccessError::LimitsMismatch))
                 ));
                 assert_eq!(wrong.usage().work, 0);
+                let mut wrong_read = Budget::new(mismatched);
+                assert!(matches!(
+                    correlate(
+                        &bound,
+                        &prepared,
+                        &read_request,
+                        &mut wrong_read,
+                        &mut SourceAdmission::default()
+                    ),
+                    Err(nepl3_engine::analysis::probe::read::ReadError::Access(
+                        ProbeAccessError::Access(BindingAccessError::LimitsMismatch)
+                    ))
+                ));
+                assert_eq!(wrong_read.usage().work, 0);
+                assert!(matches!(
+                    correlate(
+                        &bound,
+                        &other,
+                        &read_request,
+                        &mut Budget::new(limits),
+                        &mut SourceAdmission::default()
+                    ),
+                    Err(nepl3_engine::analysis::probe::read::ReadError::Access(
+                        ProbeAccessError::Access(BindingAccessError::StaleAnalysis)
+                    ))
+                ));
+                let mut prepared_limits_mismatch = Budget::new(limits);
+                assert!(matches!(
+                    correlate(
+                        &bound,
+                        &changed_limits,
+                        &read_request,
+                        &mut prepared_limits_mismatch,
+                        &mut SourceAdmission::default()
+                    ),
+                    Err(nepl3_engine::analysis::probe::read::ReadError::Access(
+                        ProbeAccessError::Access(BindingAccessError::LimitsMismatch)
+                    ))
+                ));
+                assert_eq!(prepared_limits_mismatch.usage().work, 0);
+
                 let mut keys = vec![other.key(), changed_limits.key()];
                 for index in 0..4 {
                     let mut changed = key;
@@ -395,6 +584,23 @@ fn keyed_probe_checks_identity_limits_and_positions_for_every_native_outcome() -
                     assert_eq!(bound.reply().report, original_report);
                 }
                 for changed in keys {
+                    let stale_read = ExpectedReadRequest {
+                        key: changed,
+                        ..read_request.clone()
+                    };
+                    assert!(matches!(
+                        correlate(
+                            &bound,
+                            &prepared,
+                            &stale_read,
+                            &mut Budget::new(limits),
+                            &mut SourceAdmission::default()
+                        ),
+                        Err(nepl3_engine::analysis::probe::read::ReadError::Access(
+                            ProbeAccessError::Access(BindingAccessError::StaleAnalysis)
+                        ))
+                    ));
+
                     assert!(matches!(
                         bound.for_position(
                             &changed,
@@ -413,6 +619,22 @@ fn keyed_probe_checks_identity_limits_and_positions_for_every_native_outcome() -
                         1 => changed.revision += 1,
                         _ => changed.digest.0[0] ^= 1,
                     }
+                    let stale_read = ExpectedReadRequest {
+                        source: changed.clone(),
+                        ..read_request.clone()
+                    };
+                    assert!(matches!(
+                        correlate(
+                            &bound,
+                            &prepared,
+                            &stale_read,
+                            &mut Budget::new(limits),
+                            &mut SourceAdmission::default()
+                        ),
+                        Err(nepl3_engine::analysis::probe::read::ReadError::Access(
+                            ProbeAccessError::Access(BindingAccessError::MissingSource)
+                        ))
+                    ));
                     assert!(matches!(
                         bound.for_position(
                             &key,

@@ -70,6 +70,24 @@ fn missing_reference_candidates_preserve_visibility_and_late_stops() -> Result<(
                 return Err(format!("hit {input}: {:?}", bound.reply().outcome));
             };
             let original = bound.reply().report.clone();
+            let read_request = nepl3_engine::analysis::expected::ExpectedReadRequest {
+                key: bound.key(),
+                source: source.reference(),
+                offset: input.len() as u64,
+            };
+            let read = nepl3_engine::analysis::probe::read::correlate(
+                &bound,
+                &prepared,
+                &read_request,
+                &mut Budget::new(limits),
+                &mut SourceAdmission::default(),
+            )
+            .map_err(err)?;
+            assert!(matches!(
+                read.outcome(),
+                nepl3_engine::analysis::probe::read::ReadOutcome::Hit(_)
+            ));
+
             if input.starts_with("sequence") {
                 assert!(!original.diagnostics.is_empty());
             }

@@ -1088,3 +1088,6 @@ mod keyed_probe;
 
 #[path = "binding/probe_candidates.rs"]
 mod probe_candidates;
+
+#[path = "binding/probe_read.rs"]
+mod probe_read;
