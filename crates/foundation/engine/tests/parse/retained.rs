@@ -1191,3 +1191,6 @@ fn retained_provider_reported_stop_preserves_accepted_diagnostic() -> TestResult
 
 #[path = "retained/whole.rs"]
 mod whole;
+
+#[path = "retained/closure.rs"]
+mod closure;
