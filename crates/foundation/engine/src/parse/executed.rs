@@ -45,6 +45,18 @@ impl ExecutedParse {
     pub fn reader_facts(&self) -> &[ReaderFactBatch] {
         &self.facts
     }
+    /// Sources retained by the actual parse reply, including provider output.
+    /// This is the reply closure, not the seed store, the recursive syntax-bundle
+    /// closure, a host-current snapshot set, or evidence of editing authority.
+    /// Borrowing does not allocate or consume the execution proof.
+    pub fn sources(&self) -> &[SourceSnapshot] {
+        &self.sources
+    }
+    /// Source mappings retained by the same actual parse reply. These remain
+    /// unchanged when the proof is consumed with `into_reply`.
+    pub fn source_maps(&self) -> &[Mapping] {
+        &self.source_maps
+    }
     /// Taking raw data consumes the execution proof. There is intentionally no
     /// inverse constructor from ParseReply, ParseTree or a decoded wire value.
     pub fn into_reply(self) -> ParseReply {
