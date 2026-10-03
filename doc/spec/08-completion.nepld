@@ -389,4 +389,19 @@ body
       cons "Uniqueは[候補内/こうほない]の[実行/じっこう]との[対応/たいおう]を[示/しめ]す。[元/もと]の[意図/いと]した[宣言/せんげん]との[新旧同一性/しんきゅうどういつせい]、[全文消費/ぜんぶんしょうひ]、[診断/しんだん]を[含/ふく]む[採用条件/さいようじょうけん]と[編集権限/へんしゅうけんげん]は[個別/こべつ]に[検証/けんしょう]する。" nil
     nil
 
+  cons section entityBirthTrace "2.26 Bind・ExportによるEntity[生成記録/せいせいきろく]" body
+    cons paragraph
+      cons "PreparedBindingRequestのnative[操作/そうさ]trace_namedとtrace_named_with_hostは、[同/おな]じ[実行/じっこう]のReferenceTraceとEntityBirthを[保持/ほじ]する。[生成記録/せいせいきろく]を[別実行/べつじっこう]の[結果/けっか]へ[後付/あとづ]けする[公開操作/こうかいそうさ]は[提供/ていきょう]しない。"
+      cons "referencesは[包含/ほうがん]するBoundReferenceTraceを[借用/しゃくよう]する。probe_missing_reference_with_birthsは[同/おな]じ[接頭実行/せっとうじっこう]のBoundProbeReplyとEntityBirthを[保持/ほじ]し、probeの[借用/しゃくよう]を[既存/きそん]の[候補列挙/こうほれっきょ]とNameChoiceへ[渡/わた]せる。" nil
+    cons paragraph
+      cons "EntityBirthはBind・ExportによるEntity[生成/せいせい]を[記録/きろく]する。owner・[名前対象/なまえたいしょう]のcanonical[座標/ざひょう]、package・execution digest・BindingId、[実際/じっさい]のEntityId、scope・namespaceと[導入前/どうにゅうまえ]のnamespace stageを[保持/ほじ]する。"
+      cons "[実行順序/じっこうじゅんじょ]とphaseのgroup IDは[同一実行内/どういつじっこうない]の[識別子/しきべつし]である。Exportのmemo[再利用/さいりよう]は[新/あたら]しいEntityを[生成/せいせい]せず、[別/べつ]の[再帰/さいき]groupや[通常/つうじょう]actionの[反復/はんぷく]による[生成/せいせい]を[統合/とうごう]しない。" nil
+    cons paragraph
+      cons "Entityと[生成記録/せいせいきろく]は[両方/りょうほう]の[格納費用/かくのうひよう]を[計上/けいじょう]してから[同時/どうじ]に[発行/はっこう]する。[可視性/かしせい]への[導入/どうにゅう]、Definition・Export occurrence、header memoの[生成/せいせい]は[後続/こうぞく]の[別/べつ]の[段階/だんかい]である。"
+      cons "birthsは[途中停止/とちゅうていし]した[実行/じっこう]の[生成記録/せいせいきろく]も[参照/さんしょう]できる。entity_birthはCompleteの[解析/かいせき]または[成功/せいこう]したHitを[要求/ようきゅう]し、Born・[存在/そんざい]するEntityのUntraced・MissingEntity・Incompleteを[区別/くべつ]する。NoHitはCompleteの[証拠/しょうこ]としない。" nil
+    cons paragraph
+      cons "entity_birthはLimitsと[照会予算/しょうかいよさん]を[検査/けんさ]し、keyed[版/ばん]はkeyも[確認/かくにん]する。[元/もと]の[実行結果/じっこうけっか]とReportを[保持/ほじ]する。Customによる[後続/こうぞく]のoccurrence[解決先/かいけつさき]の[変更/へんこう]も、[生成済/せいせいず]みEntityの[記録/きろく]を[書/か]き[換/か]えない。"
+      cons "[通常解析/つうじょうかいせき]・Reference[単独/たんどく]trace・[既存/きそん]probeの[費用/ひよう]を[維持/いじ]する。[後続/こうぞく]の[結合処理/けつごうしょり]では、HitやReferenceが[同/おな]じ[包含結果/ほうがんけっか]への[参照/さんしょう]であることを[検査/けんさ]する。[宣言/せんげん]の[新旧同一性/しんきゅうどういつせい]と[編集採用/へんしゅうさいよう]の[判定/はんてい]は[後続/こうぞく]の[対象/たいしょう]である。" nil
+    nil
+
 nil

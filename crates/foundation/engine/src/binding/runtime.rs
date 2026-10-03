@@ -270,7 +270,7 @@ impl<'a, 'p> Machine<'a, 'p> {
         &mut self,
         stage: StageId,
         value: NamedOccurrence,
-        capture: Option<trace::PendingReference>,
+        capture: Option<trace::PendingNamedSite>,
         budget: &mut Budget,
     ) -> Result<OccurrenceId, BindingError> {
         let NamedOccurrence {
@@ -328,7 +328,7 @@ impl<'a, 'p> Machine<'a, 'p> {
         layout: &Layout<'_>,
         namespace: &str,
         selector: &NameSelector,
-        action: (OccurrenceRole, Option<trace::PendingReference>),
+        action: (OccurrenceRole, Option<trace::PendingNamedSite>),
         budget: &mut Budget,
     ) -> Result<(), BindingError> {
         let (role, capture) = action;
@@ -381,7 +381,33 @@ impl<'a, 'p> Machine<'a, 'p> {
                 origin: Some(origin),
             };
             budget.charge(Resource::Nodes, 1)?;
-            push(&mut self.facts_mut()?.entities, entity, budget)?;
+            if self.birth_trace.is_some() {
+                use crate::binding::trace::birth::{BirthKind, EntityBirth};
+                let kind = match role {
+                    OccurrenceRole::Definition => BirthKind::Bind,
+                    OccurrenceRole::Export => BirthKind::Export,
+                    _ => return Err(BindingError::Target),
+                };
+                let birth = capture.ok_or(BindingError::Target)?.born(
+                    id,
+                    scope,
+                    namespace_stage,
+                    namespace,
+                    kind,
+                )?;
+                budget.charge(
+                    Resource::AllocationUnits,
+                    (core::mem::size_of::<Entity>() + core::mem::size_of::<EntityBirth>()) as u64,
+                )?;
+                let (Some(facts), Some(rows)) = (&mut self.progress.facts, &mut self.birth_trace)
+                else {
+                    return Err(BindingError::Target);
+                };
+                facts.entities.push(entity);
+                rows.push(birth);
+            } else {
+                push(&mut self.facts_mut()?.entities, entity, budget)?;
+            }
             if role == OccurrenceRole::Definition {
                 let next = self.introduce(namespace_stage, id, budget)?;
                 if global {
@@ -494,7 +520,7 @@ impl<'a, 'p> Machine<'a, 'p> {
         let mut execution_step = 0_u64;
         while let Some(mut frame) = frames.pop() {
             let mut captured = None;
-            if probing || self.reference_trace.is_some() {
+            if probing || self.reference_trace.is_some() || self.birth_trace.is_some() {
                 execution_step = execution_step
                     .checked_add(1)
                     .ok_or_else(|| BindingError::Stopped(budget.stop(StopReason::WorkLimit)))?;
@@ -649,17 +675,31 @@ impl<'a, 'p> Machine<'a, 'p> {
                             }
                             Binding::Bind { .. } | Binding::Reference { .. }
                                 if frame.phase.header => {}
-                            Binding::Bind { namespace, name } => self.named(
-                                &mut frame,
-                                &layout,
-                                namespace,
-                                name,
-                                (OccurrenceRole::Definition, None),
-                                budget,
-                            )?,
+                            Binding::Bind { namespace, name } => {
+                                let capture = if self.birth_trace.is_some() {
+                                    Some(self.prepare_named_trace(
+                                        &frame,
+                                        &layout,
+                                        name,
+                                        (id, execution_step),
+                                        tree,
+                                        budget,
+                                    )?)
+                                } else {
+                                    None
+                                };
+                                self.named(
+                                    &mut frame,
+                                    &layout,
+                                    namespace,
+                                    name,
+                                    (OccurrenceRole::Definition, capture),
+                                    budget,
+                                )?;
+                            }
                             Binding::Reference { namespace, name } => {
                                 let capture = if self.reference_trace.is_some() {
-                                    Some(self.prepare_reference_trace(
+                                    Some(self.prepare_named_trace(
                                         &frame,
                                         &layout,
                                         name,
@@ -694,12 +734,24 @@ impl<'a, 'p> Machine<'a, 'p> {
                                 if let Some(entity) = saved {
                                     push(&mut frame.exports, entity, budget)?;
                                 } else {
+                                    let capture = if self.birth_trace.is_some() {
+                                        Some(self.prepare_named_trace(
+                                            &frame,
+                                            &layout,
+                                            name,
+                                            (id, execution_step),
+                                            tree,
+                                            budget,
+                                        )?)
+                                    } else {
+                                        None
+                                    };
                                     self.named(
                                         &mut frame,
                                         &layout,
                                         namespace,
                                         name,
-                                        (OccurrenceRole::Export, None),
+                                        (OccurrenceRole::Export, capture),
                                         budget,
                                     )?;
                                     if frame.phase.header {

@@ -1,6 +1,7 @@
 //! Host-free prefix execution up to the first missing Reference name field.
 //! This operation never constructs complete Binding or editing authority.
 use super::*;
+pub mod named;
 use alloc::boxed::Box;
 
 #[derive(Debug)]
@@ -79,6 +80,16 @@ pub fn first_missing_reference<'a>(
     budget: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> ProbeReply<'a> {
+    first_missing_reference_inner(analysis_id, tree, profile, false, budget, admission).0
+}
+fn first_missing_reference_inner<'a>(
+    analysis_id: &str,
+    tree: &'a ValidatedParseTree<'_>,
+    profile: &ResolvedParseProfile<'_>,
+    capture_births: bool,
+    budget: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> (ProbeReply<'a>, Vec<super::trace::birth::EntityBirth>) {
     let mut machine = Machine {
         profile,
         registry: profile.registry(),
@@ -86,6 +97,7 @@ pub fn first_missing_reference<'a>(
         progress: BindingProgress::empty(),
         report: Report::default(),
         reference_trace: None,
+        birth_trace: capture_births.then(Vec::new),
     };
     let result = budget.with_depth(|budget| {
         budget.charge(Resource::Work, analysis_id.len() as u64 + 1)?;
@@ -118,9 +130,12 @@ pub fn first_missing_reference<'a>(
         Err(error) => ProbeOutcome::Blocked(error),
     };
     machine.report.usage = budget.usage();
-    ProbeReply {
-        outcome,
-        report: machine.report,
-        progress: machine.progress,
-    }
+    (
+        ProbeReply {
+            outcome,
+            report: machine.report,
+            progress: machine.progress,
+        },
+        machine.birth_trace.take().unwrap_or_default(),
+    )
 }

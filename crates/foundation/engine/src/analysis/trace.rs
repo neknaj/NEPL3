@@ -98,3 +98,5 @@ impl<'a, 'p> BoundReferenceTrace<'a, 'p> {
             .map_err(ReferenceTraceAccessError::Trace)
     }
 }
+
+pub mod named;

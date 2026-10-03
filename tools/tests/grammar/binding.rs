@@ -1100,3 +1100,6 @@ mod reference_trace;
 
 #[path = "binding/keyed_reference_trace.rs"]
 mod keyed_reference_trace;
+
+#[path = "binding/named_trace.rs"]
+mod named_trace;
