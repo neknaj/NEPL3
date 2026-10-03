@@ -16,6 +16,7 @@ pub mod draft;
 mod identity;
 pub mod name;
 mod occurrence;
+pub mod quality;
 pub mod reference;
 pub mod whole;
 

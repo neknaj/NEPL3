@@ -420,4 +420,13 @@ body
     nil
 
 
+  cons section strictNameQuality "2.28 [名前挿入候補/なまえそうにゅうこうほ]の[厳格検査/げんかくけんさ]" body
+    cons paragraph
+      cons "native[操作/そうさ]quality::checkはSameDeclarationが[保持/ほじ]する[候補/こうほ]からWholeInputを[生成/せいせい]し、[条件/じょうけん]を[満/み]たす[場合/ばあい]に[非公開/ひこうかい]constructorからStrictNameInsertionを[発行/はっこう]する。[条件/じょうけん]はComplete・final_input・snapshot[全域/ぜんいき]の[消費/しょうひ]、[候補/こうほ]のparse ReportとSameDeclarationに[結/むす]び[付/つ]くBinding ReportにError[診断/しんだん]がないこと、open_inputsが[空/から]であること、Custom[由来/ゆらい]も[含/ふく]む[全/ぜん]Referenceの[最終解決/さいしゅうかいけつ]がResolvedであることである。"
+      cons "Warning・Information・Hintは[許容/きょよう]し、[元/もと]の[実行/じっこう]Reportへ[保持/ほじ]する。[不成立/ふせいりつ]は[実際/じっさい]の[診断/しんだん]・Occurrenceへの[借用/しゃくよう]などを[持/も]つRejected、[全文条件/ぜんぶんじょうけん]の[失敗/しっぱい]や[停止/ていし]は[型付/かたつ]きerrorとして[返/かえ]す。" nil
+    cons paragraph
+      cons "Limitsの[一致/いっち]を[最初/さいしょ]に[検査/けんさ]する。[累積/るいせき]Budgetの[継続/けいぞく]は[呼出側/よびだしがわ]の[契約/けいやく]である。[走査/そうさ]のWork・Nodesを[計上/けいじょう]し、[成功/せいこう]までに[必要/ひつよう]な[全記録/ぜんきろく]を[確認/かくにん]する。[不成立/ふせいりつ]が[確定/かくてい]した[時点/じてん]で[終了/しゅうりょう]できる。[既存/きそん]のDiagnostics・Eventsは[再計上/さいけいじょう]せず、[照会/しょうかい]のReportはUsageだけを[記録/きろく]する。"
+      cons "この[結果/けっか]は[不変/ふへん]な[候補/こうほ]の[限定的/げんていてき]な[検査証拠/けんさしょうこ]である。[型検査/かたけんさ]・[意味同値性/いみどうちせい]、workspaceの[最新状態/さいしんじょうたい]と[編集権限/へんしゅうけんげん]は[個別/こべつ]に[検証/けんしょう]し、[編集適用/へんしゅうてきよう]はhostの[別操作/べつそうさ]とする。" nil
+    nil
+
 nil
