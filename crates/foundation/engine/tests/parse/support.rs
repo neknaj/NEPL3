@@ -119,6 +119,10 @@ pub fn fixture_with_facts(custom: bool) -> Result<(LanguagePackage, SchemaRegist
             record("Leaf:Compound", vec![]),
             record("Token:Word", vec![field("payload", TypeDescriptor::Text)]),
             record(
+                "Token:Integer",
+                vec![field("payload", TypeDescriptor::Integer)],
+            ),
+            record(
                 "Token:Compound",
                 vec![field(
                     "payload",

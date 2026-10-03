@@ -1091,3 +1091,6 @@ mod probe_candidates;
 
 #[path = "binding/probe_read.rs"]
 mod probe_read;
+
+#[path = "binding/name_spelling.rs"]
+mod name_spelling;
