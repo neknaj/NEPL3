@@ -167,6 +167,152 @@ fn keyed_probe_checks_identity_limits_and_positions_for_every_native_outcome() -
                         )
                 ));
                 assert_eq!(fresh.usage().source_bytes, input.len() as u64);
+                use nepl3_engine::analysis::probe::candidates::{
+                    ProbeCandidateOutcome, ProbeCandidateRequest, names,
+                };
+                let request = ProbeCandidateRequest {
+                    key,
+                    source: &source_ref,
+                    offset: end,
+                    prefix: "absent",
+                };
+                let mut candidate_budget = Budget::new(limits);
+                let candidates = names(
+                    &bound,
+                    &request,
+                    &mut candidate_budget,
+                    &mut SourceAdmission::default(),
+                )
+                .map_err(|e| format!("{e:?}"))?;
+                assert!(
+                    matches!((expected, candidates.outcome()),
+                        (Outcome::Hit, ProbeCandidateOutcome::Hit { candidates, .. }) if candidates.is_empty()
+                    ) || matches!(
+                        (expected, candidates.outcome()),
+                        (Outcome::NoHit, ProbeCandidateOutcome::NoHit)
+                            | (Outcome::Blocked, ProbeCandidateOutcome::Blocked(_))
+                            | (
+                                Outcome::Stopped,
+                                ProbeCandidateOutcome::Stopped(StopReason::Cancelled)
+                            )
+                    )
+                );
+                if !matches!(expected, Outcome::Hit) {
+                    assert_eq!(candidate_budget.usage(), fresh.usage());
+                }
+                use nepl3_engine::analysis::probe::candidates::ProbeCandidateError;
+                let mut stale_key = key;
+                stale_key.tree_digest.0[0] ^= 1;
+                let stale_request = ProbeCandidateRequest {
+                    key: stale_key,
+                    ..request
+                };
+                assert!(matches!(
+                    names(
+                        &bound,
+                        &stale_request,
+                        &mut Budget::new(limits),
+                        &mut SourceAdmission::default()
+                    ),
+                    Err(ProbeCandidateError::Access(ProbeAccessError::Access(
+                        BindingAccessError::StaleAnalysis
+                    )))
+                ));
+                let mut stale_source = source_ref.clone();
+                stale_source.revision += 1;
+                let stale_request = ProbeCandidateRequest {
+                    source: &stale_source,
+                    ..request
+                };
+                assert!(matches!(
+                    names(
+                        &bound,
+                        &stale_request,
+                        &mut Budget::new(limits),
+                        &mut SourceAdmission::default()
+                    ),
+                    Err(ProbeCandidateError::Access(ProbeAccessError::Access(
+                        BindingAccessError::MissingSource
+                    )))
+                ));
+                for offset in [5, end + 1] {
+                    let invalid = ProbeCandidateRequest { offset, ..request };
+                    assert!(matches!(
+                        names(
+                            &bound,
+                            &invalid,
+                            &mut Budget::new(limits),
+                            &mut SourceAdmission::default()
+                        ),
+                        Err(ProbeCandidateError::Access(ProbeAccessError::Source(
+                            SourceError::ScalarBoundary | SourceError::Bounds
+                        )))
+                    ));
+                }
+                let mut mismatch = Budget::new(mismatched);
+                assert!(matches!(
+                    names(
+                        &bound,
+                        &request,
+                        &mut mismatch,
+                        &mut SourceAdmission::default()
+                    ),
+                    Err(ProbeCandidateError::Access(ProbeAccessError::Access(
+                        BindingAccessError::LimitsMismatch
+                    )))
+                ));
+                assert_eq!(mismatch.usage().work, 0);
+                let mut stopped_query = Budget::new(limits);
+                stopped_query.cancel();
+                assert!(matches!(
+                    names(
+                        &bound,
+                        &request,
+                        &mut stopped_query,
+                        &mut SourceAdmission::default()
+                    ),
+                    Err(ProbeCandidateError::Access(ProbeAccessError::Access(
+                        BindingAccessError::Stopped(StopReason::Cancelled)
+                    )))
+                ));
+                if matches!(expected, Outcome::Stopped) {
+                    assert!(matches!(
+                        names(&bound, &request, &mut execution, &mut execution_admission),
+                        Err(ProbeCandidateError::Access(ProbeAccessError::Access(
+                            BindingAccessError::Stopped(StopReason::Cancelled)
+                        )))
+                    ));
+                }
+                let mut other_budget = Budget::new(limits);
+                let mut gate_budget = Budget::new(limits);
+                let other_request = ProbeCandidateRequest {
+                    offset: 0,
+                    ..request
+                };
+                let other_candidates = names(
+                    &bound,
+                    &other_request,
+                    &mut other_budget,
+                    &mut SourceAdmission::default(),
+                )
+                .map_err(|e| format!("{e:?}"))?;
+                bound
+                    .for_position(
+                        &key,
+                        &source_ref,
+                        0,
+                        &mut gate_budget,
+                        &mut SourceAdmission::default(),
+                    )
+                    .map_err(|e| format!("{e:?}"))?;
+                assert_eq!(other_budget.usage(), gate_budget.usage());
+                if matches!(expected, Outcome::Hit) {
+                    assert!(matches!(
+                        other_candidates.outcome(),
+                        ProbeCandidateOutcome::OtherHit(_)
+                    ));
+                }
+
                 if matches!(expected, Outcome::Hit) {
                     assert!(matches!(
                         bound.for_position(&key, &source_ref, 0, &mut fresh, &mut fresh_admission),

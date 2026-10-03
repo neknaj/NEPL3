@@ -216,6 +216,62 @@ fn keyed_probe_preserves_foreign_and_canonical_identity_and_unused_source_closur
                 return Err("received position".into());
             };
             same_site(received_hit.site(), expected_site);
+            use nepl3_engine::analysis::probe::candidates::{
+                ProbeCandidateOutcome, ProbeCandidateRequest, names,
+            };
+            let request = ProbeCandidateRequest {
+                key,
+                source: &position_source,
+                offset: input.len() as u64,
+                prefix: "",
+            };
+            let original_candidates = names(
+                &bound,
+                &request,
+                &mut Budget::new(limits),
+                &mut SourceAdmission::default(),
+            )
+            .map_err(err)?;
+            let received_candidates = names(
+                &received,
+                &request,
+                &mut Budget::new(limits),
+                &mut SourceAdmission::default(),
+            )
+            .map_err(err)?;
+            let ProbeCandidateOutcome::Hit {
+                candidates: original_names,
+                ..
+            } = original_candidates.outcome()
+            else {
+                return Err("original names".into());
+            };
+            let ProbeCandidateOutcome::Hit {
+                candidates: received_names,
+                ..
+            } = received_candidates.outcome()
+            else {
+                return Err("received names".into());
+            };
+            assert_eq!(
+                original_names
+                    .iter()
+                    .map(|c| (&c.name, &c.resolution))
+                    .collect::<Vec<_>>(),
+                received_names
+                    .iter()
+                    .map(|c| (&c.name, &c.resolution))
+                    .collect::<Vec<_>>()
+            );
+            assert!(matches!(
+                names(&bound, &request, &mut query, &mut ledger),
+                Err(
+                    nepl3_engine::analysis::probe::candidates::ProbeCandidateError::Access(
+                        ProbeAccessError::Source(SourceError::IdentityConflict)
+                    )
+                )
+            ));
+
             assert_eq!(received_hit.stages(), hit.stages());
             Ok(())
         })?;
