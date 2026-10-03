@@ -8,6 +8,7 @@ pub mod probe;
 pub mod query;
 pub mod region;
 pub mod rename;
+pub mod trace;
 use crate::{
     binding::{BindingAnalysis, BindingOutcome, BindingReply},
     profile::ResolvedParseProfile,

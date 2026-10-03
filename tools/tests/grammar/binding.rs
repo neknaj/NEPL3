@@ -1097,3 +1097,6 @@ mod name_spelling;
 
 #[path = "binding/reference_trace.rs"]
 mod reference_trace;
+
+#[path = "binding/keyed_reference_trace.rs"]
+mod keyed_reference_trace;
