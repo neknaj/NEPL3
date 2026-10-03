@@ -173,7 +173,7 @@ fn local<'a>(
         .ok_or(ReadError::Structure)?;
     Ok((map.bundle(), NodeRef(local as u64)))
 }
-fn context<'a>(
+pub(crate) fn context<'a>(
     prepared: &'a PreparedBindingRequest<'_, '_>,
     bundle: &SyntaxBundle,
     node: NodeRef,
@@ -313,7 +313,7 @@ fn check_target(
     }
     unique_path(&tree.bundle, target_bundle, target_node, b)
 }
-fn unique_path(
+pub(crate) fn unique_path(
     root: &SyntaxBundle,
     target_bundle: &SyntaxBundle,
     target: NodeRef,
@@ -388,7 +388,7 @@ fn unique_path(
     }
 }
 
-fn target_equal(
+pub(crate) fn target_equal(
     a: &crate::binding::CanonicalBindingTarget,
     c: &crate::binding::CanonicalBindingTarget,
     b: &mut Budget,
@@ -475,6 +475,37 @@ mod traversal_tests {
             cover: None,
             origin: nepl3_core::origin::OriginId(0),
             token: None,
+        }
+    }
+    #[test]
+    fn structural_counter_rejects_shared_owners_ancestors_and_name_targets() {
+        // Algorithm fixtures deliberately isolate reachability from actual action count.
+        // Owner 2, its ancestor 1, or just target 3 can be shared independently.
+        for nodes in [
+            alloc::vec![node(&[1, 1]), node(&[2]), node(&[3]), node(&[])],
+            alloc::vec![node(&[1, 2]), node(&[3]), node(&[3]), node(&[])],
+            alloc::vec![node(&[1, 2]), node(&[2]), node(&[3]), node(&[])],
+        ] {
+            let bundle = SyntaxBundle {
+                sources: Vec::new(),
+                nodes,
+                origins: Vec::new(),
+                root: NodeRef(0),
+                environments: Vec::new(),
+                tokens: Vec::new(),
+                source_maps: Vec::new(),
+            };
+            let limits = nepl3_core::budget::Limits {
+                work: 100_000,
+                nodes: 100_000,
+                allocation_units: 100_000,
+                depth: 64,
+                ..Default::default()
+            };
+            assert!(matches!(
+                unique_path(&bundle, &bundle, NodeRef(3), &mut Budget::new(limits)),
+                Err(ReadError::AmbiguousTarget)
+            ));
         }
     }
     #[test]

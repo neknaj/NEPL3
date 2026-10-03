@@ -376,4 +376,17 @@ body
       cons "[同/おな]じAnalysisKeyを[持/も]つ[別/べつ]の[実行/じっこう]も[存在/そんざい]する。[記録/きろく]と[最終/さいしゅう]factsは[必/かなら]ず[同/おな]じtraceの[内部/ないぶ]で[対応付/たいおうづ]け、[別実行/べつじっこう]の[記録/きろく]を[混合/こんごう]しない。" nil
     nil
 
+  cons section candidateReference "2.25 [挿入後/そうにゅうご]のField[参照/さんしょう]との[対応/たいおう]" body
+    cons paragraph
+      cons "insertion.reference.correlateはCheckedNameInsertionと[候補/こうほ]のPreparedBindingRequest、BoundReferenceTraceを[照合/しょうごう]する。Limits、[候補/こうほ]のAnalysisKey、[正確/せいかく]なParseTreeとprofileの[参照/さんしょう]を[検査/けんさ]し、[別/べつ]に[再解析/さいかいせき]した[同一内容/どういつないよう]のtreeを[拒否/きょひ]する。" nil
+    cons paragraph
+      cons "[検証済/けんしょうず]みのChild・Foreign[経路/けいろ]を[候補/こうほ]のtreeで[再追跡/さいついせき]し、Fieldのownerと[名前対象/なまえたいしょう]をcanonical[座標/ざひょう]へ[変換/へんかん]する。[名前対象/なまえたいしょう]への[構造経路/こうぞうけいろ]は[一/ひと]つに[限定/げんてい]する。[異/こと]なるownerが[同/おな]じtokenを[共有/きょうゆう]する[場合/ばあい]も[拒否/きょひ]する[保守的/ほしゅてき]な[条件/じょうけん]である。"
+      cons "[現在/げんざい]のField[名前/なまえ]readerはBuiltinのName・TextまたはTextのleaf[専用/せんよう]Localを[許可/きょか]する。Foreign[祖先/そせん]は[扱/あつか]うが、[名前/なまえ]field[自体/じたい]のForeignはpackage[検証/けんしょう]で[拒否/きょひ]する。" nil
+    cons paragraph
+      cons "owner・[名前対象/なまえたいしょう]・package・execution digest・BindingIdが[一致/いっち]する[実行記録/じっこうきろく]を[全件検査/ぜんけんけんさ]する。NoMatch・Unique・Multipleを[区別/くべつ]し、[同/おな]じactionの[反復実行/はんぷくじっこう]を[統合/とうごう]しない。Uniqueは[同/おな]じComplete traceの[最終/さいしゅう]Referenceと[結合/けつごう]し、Customによる[更新/こうしん]を[保持/ほじ]する。" nil
+    cons paragraph
+      cons "nativeのInvalid・Stoppedと[照会自体/しょうかいじたい]の[失敗/しっぱい]を[区別/くべつ]する。[構造探索/こうぞうたんさく]・[記録照合/きろくしょうごう]・[最終検索/さいしゅうけんさく]の[途中/とちゅう]で[停止/ていし]した[場合/ばあい]はUniqueを[発行/はっこう]せず、[元/もと]のReportを[保持/ほじ]する。"
+      cons "Uniqueは[候補内/こうほない]の[実行/じっこう]との[対応/たいおう]を[示/しめ]す。[元/もと]の[意図/いと]した[宣言/せんげん]との[新旧同一性/しんきゅうどういつせい]、[全文消費/ぜんぶんしょうひ]、[診断/しんだん]を[含/ふく]む[採用条件/さいようじょうけん]と[編集権限/へんしゅうけんげん]は[個別/こべつ]に[検証/けんしょう]する。" nil
+    nil
+
 nil

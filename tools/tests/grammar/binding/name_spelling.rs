@@ -18,18 +18,52 @@ use nepl3_engine::{
 #[test]
 fn name_spelling_preserves_ambiguity_and_supports_same_source_foreign_paths() -> Result<(), String>
 {
-    let compiled = super::missing_probe::named_lambda()?;
-    for (input, spelling, index, ambiguous, foreign) in [
-        ("let outer 1 guest lambda inner", "inner", 0, false, true),
+    for (input, spelling, index, ambiguous, foreign, custom_update) in [
+        ("guest guest lambda inner", "inner", 0, false, true, false),
+        (
+            "let outer 1 guest lambda inner",
+            "inner",
+            0,
+            false,
+            true,
+            false,
+        ),
         (
             "recursive cons define a 1 cons define a 2 nil lambda x",
             "a",
             1,
             true,
             false,
+            false,
         ),
-        ("apply lambda x", "x", 0, false, false),
+        ("apply lambda x", "x", 0, false, false, false),
+        ("lambda x", "x", 0, false, false, true),
     ] {
+        let mut compiled = if custom_update {
+            super::missing_probe::named_lambda_from(super::custom::compiled()?)?
+        } else {
+            super::missing_probe::named_lambda()?
+        };
+        if custom_update {
+            use nepl3_engine::package::Binding;
+            let custom_id = compiled
+                .package
+                .bindings
+                .iter()
+                .position(|v| matches!(v, Binding::Custom(_)))
+                .ok_or("custom action")?;
+            let lambda = compiled
+                .package
+                .forms
+                .iter()
+                .find(|f| f.spelling == "lambda")
+                .ok_or("lambda")?;
+            let Binding::Scope(actions) = &mut compiled.package.bindings[lambda.binding.0 as usize]
+            else {
+                return Err("scope".into());
+            };
+            actions.push(nepl3_engine::package::BindingId(custom_id as u64));
+        }
         with_source_profile(&compiled, None, input, |source, profile, b, ledger| {
             let registry = profile.registry();
             let package = profile.language("B", b).map_err(err)?;
@@ -188,6 +222,84 @@ fn name_spelling_preserves_ambiguity_and_supports_same_source_foreign_paths() ->
                 )
                 .map_err(err)?;
                 assert_eq!(checked.choice().candidate().resolution, original_resolution);
+                {
+                    use nepl3_core::value_codec::FoundationValueCodec;
+                    use nepl3_engine::analysis::insertion::reference::{self, ReferenceOutcome};
+                    let fresh = keyed::prepare(
+                        "name-foreign-new",
+                        candidate.execution().tree(),
+                        BindingOptions,
+                        b.limits(),
+                        profile,
+                        &mut codec,
+                        b,
+                    )
+                    .map_err(err)?;
+                    let trace = fresh
+                        .trace_references(b, codec.source_admission())
+                        .map_err(err)?;
+                    match reference::correlate(&checked, &fresh, &trace, b).map_err(err)? {
+                        ReferenceOutcome::Unique(matched) => {
+                            assert_eq!(matched.final_reference().occurrence.name, spelling);
+                            assert_eq!(
+                                matches!(
+                                    matched.final_reference().occurrence.resolution,
+                                    ReferenceResolution::Ambiguous(_)
+                                ),
+                                ambiguous
+                            );
+                            assert_eq!(matched.issuance().owner.path.is_empty(), !foreign);
+                            if input == "guest guest lambda inner" {
+                                assert_eq!(matched.issuance().owner.path.len(), 2);
+                                assert_eq!(
+                                    matched.issuance().name_target.path,
+                                    matched.issuance().owner.path
+                                );
+                            }
+                            assert!(core::ptr::eq(matched.trace(), &trace));
+                        }
+                        ReferenceOutcome::Invalid(_)
+                            if input == "apply lambda x" || custom_update => {}
+                        _ => return Err("candidate Reference correspondence".into()),
+                    }
+                    if custom_update {
+                        assert_eq!(trace.trace().rows().len(), 1);
+                        assert!(matches!(
+                            reference::correlate(&checked, &fresh, &trace, b).map_err(err)?,
+                            ReferenceOutcome::Invalid(
+                                nepl3_engine::binding::BindingError::MissingProvider
+                            )
+                        ));
+                        let mut a = super::custom::query_host(false, false);
+                        let mut c = super::custom::query_host(true, false);
+                        let first = fresh
+                            .trace_references_with_host(&mut a, b, codec.source_admission())
+                            .map_err(err)?;
+                        let second = fresh
+                            .trace_references_with_host(&mut c, b, codec.source_admission())
+                            .map_err(err)?;
+                        assert_eq!(first.key(), second.key());
+                        for (bound, updated) in [(&first, false), (&second, true)] {
+                            let ReferenceOutcome::Unique(matched) =
+                                reference::correlate(&checked, &fresh, bound, b).map_err(err)?
+                            else {
+                                return Err("custom correspondence".into());
+                            };
+                            assert!(core::ptr::eq(matched.trace(), bound));
+                            assert_eq!(
+                                matched.final_reference().occurrence.resolution
+                                    == ReferenceResolution::Resolved(EntityId(100)),
+                                updated
+                            );
+                        }
+                        let first_again = first.final_reference(&first.key(), 0, b).map_err(err)?;
+                        assert_ne!(
+                            first_again.occurrence.resolution,
+                            ReferenceResolution::Resolved(EntityId(100))
+                        );
+                    }
+                }
+
                 if input == "apply lambda x" {
                     assert!(matches!(
                         nepl3_engine::analysis::insertion::whole::check(checked.checked(), b),
@@ -329,4 +441,26 @@ fn drive<'a>(
             RetainedParseExecution::Break(reply) => return Err(err(reply)),
         }
     }
+}
+
+#[test]
+fn terminal_foreign_name_fields_remain_rejected_by_package_contract() -> Result<(), String> {
+    let mut compiled = execution()?;
+    let guest = compiled
+        .package
+        .forms
+        .iter()
+        .find(|v| v.spelling == "guest")
+        .ok_or("guest")?;
+    compiled.package.bindings[guest.binding.0 as usize] =
+        nepl3_engine::package::Binding::Reference {
+            namespace: "Value".into(),
+            name: nepl3_engine::package::NameSelector::Field("value".into()),
+        };
+    // The existing Guest schema already accepts Foreign. Failure is the name-read contract.
+    assert!(matches!(
+        compiled.package.check(&compiled.registry, &mut budget()),
+        Err(nepl3_engine::package::PackageError::InvalidBinding)
+    ));
+    Ok(())
 }

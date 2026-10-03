@@ -15,6 +15,7 @@ pub mod draft;
 mod identity;
 pub mod name;
 mod occurrence;
+pub mod reference;
 pub mod whole;
 
 pub struct InsertionInput<'a, 'tree, 'p> {
