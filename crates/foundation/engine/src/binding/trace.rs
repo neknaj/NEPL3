@@ -1,6 +1,8 @@
 //! Native same-execution provenance for built-in Reference issuance.
 //! This does not establish correspondence with a different analysis or accept edits.
 use super::*;
+pub mod birth;
+pub mod named;
 use nepl3_core::{budget::Limits, source::Digest};
 
 #[derive(Debug)]
@@ -118,13 +120,20 @@ pub fn analyze<'a, 'p>(
     budget: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> ReferenceTrace<'a, 'p> {
-    let (reply, rows) =
-        super::analyze_inner(analysis_id, tree, profile, host, true, budget, admission);
+    let (reply, rows) = super::analyze_inner(
+        analysis_id,
+        tree,
+        profile,
+        host,
+        super::CaptureMode::References,
+        budget,
+        admission,
+    );
     ReferenceTrace {
         tree: tree.tree(),
         profile,
         reply,
-        rows,
+        rows: rows.references,
         limits: budget.limits(),
     }
 }

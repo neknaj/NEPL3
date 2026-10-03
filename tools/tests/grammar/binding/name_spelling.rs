@@ -238,6 +238,19 @@ fn name_spelling_preserves_ambiguity_and_supports_same_source_foreign_paths() ->
                     let trace = fresh
                         .trace_references(b, codec.source_admission())
                         .map_err(err)?;
+                    let named = fresh
+                        .trace_named(b, codec.source_admission())
+                        .map_err(err)?;
+                    match reference::correlate(&checked, &fresh, named.references(), b)
+                        .map_err(err)?
+                    {
+                        ReferenceOutcome::Unique(matched) => {
+                            assert!(core::ptr::eq(matched.trace(), named.references()))
+                        }
+                        ReferenceOutcome::Invalid(_)
+                            if input == "apply lambda x" || custom_update => {}
+                        _ => return Err("named trace borrowed Reference correspondence".into()),
+                    }
                     match reference::correlate(&checked, &fresh, &trace, b).map_err(err)? {
                         ReferenceOutcome::Unique(matched) => {
                             assert_eq!(matched.final_reference().occurrence.name, spelling);

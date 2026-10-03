@@ -100,6 +100,17 @@ struct Machine<'a, 'p> {
     progress: BindingProgress,
     report: Report,
     reference_trace: Option<Vec<trace::ReferenceIssuance>>,
+    birth_trace: Option<Vec<trace::birth::EntityBirth>>,
+}
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum CaptureMode {
+    None,
+    References,
+    Named,
+}
+struct CapturedTrace {
+    references: Vec<trace::ReferenceIssuance>,
+    births: Vec<trace::birth::EntityBirth>,
 }
 /// Analyze one checked tree in a new analysis identity and the caller's shared
 /// budget/admission operation. Concrete package selections are revalidated against
@@ -111,7 +122,16 @@ pub fn analyze(
     budget: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> BindingReply {
-    analyze_inner(analysis_id, tree, profile, None, false, budget, admission).0
+    analyze_inner(
+        analysis_id,
+        tree,
+        profile,
+        None,
+        CaptureMode::None,
+        budget,
+        admission,
+    )
+    .0
 }
 /// Execute Custom plans with a host-selected provider and checked authority.
 /// Ordinary analyze leaves unregistered Custom plans as MissingProvider.
@@ -128,7 +148,7 @@ pub fn analyze_with_host(
         tree,
         profile,
         Some(host),
-        false,
+        CaptureMode::None,
         budget,
         admission,
     )
@@ -139,17 +159,18 @@ fn analyze_inner(
     tree: &ValidatedParseTree<'_>,
     profile: &ResolvedParseProfile<'_>,
     mut host: Option<&mut dyn BindingHost>,
-    capture_references: bool,
+    capture: CaptureMode,
     budget: &mut Budget,
     admission: &mut SourceAdmission,
-) -> (BindingReply, Vec<trace::ReferenceIssuance>) {
+) -> (BindingReply, CapturedTrace) {
     let mut machine = Machine {
         profile,
         registry: profile.registry(),
         bundles: Vec::new(),
         progress: BindingProgress::empty(),
         report: Report::default(),
-        reference_trace: capture_references.then(Vec::new),
+        reference_trace: (capture != CaptureMode::None).then(Vec::new),
+        birth_trace: (capture == CaptureMode::Named).then(Vec::new),
     };
     let result = budget.with_depth(|budget| -> Result<(), BindingError> {
         budget.charge(Resource::Work, analysis_id.len() as u64 + 1)?;
@@ -169,7 +190,10 @@ fn analyze_inner(
         Ok(())
     });
     machine.report.usage = budget.usage();
-    let trace = machine.reference_trace.take().unwrap_or_default();
+    let trace = CapturedTrace {
+        references: machine.reference_trace.take().unwrap_or_default(),
+        births: machine.birth_trace.take().unwrap_or_default(),
+    };
     let outcome = match result {
         Ok(()) => match machine.progress.facts.take() {
             Some(facts) => BindingOutcome::Complete(BindingAnalysis {
