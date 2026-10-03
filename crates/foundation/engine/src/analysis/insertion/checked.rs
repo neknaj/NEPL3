@@ -23,6 +23,7 @@ pub struct CheckedInsertion<'a, 'p> {
     draft: &'a draft::InsertionDraft,
     keys: (AnalysisKey, AnalysisKey),
     shape: InsertedShape,
+    path: Vec<ExpectedReadStep>,
     head: Option<Span>,
     limits: nepl3_core::budget::Limits,
     report: Report,
@@ -39,6 +40,9 @@ impl<'a, 'p> CheckedInsertion<'a, 'p> {
     }
     pub fn keys(&self) -> (AnalysisKey, AnalysisKey) {
         self.keys
+    }
+    pub fn path(&self) -> &[ExpectedReadStep] {
+        &self.path
     }
     pub fn shape(&self) -> InsertedShape {
         self.shape
@@ -71,7 +75,7 @@ pub fn check<'a, 'tree, 'p, C: FoundationValueCodec>(
             BindingAccessError::LimitsMismatch,
         )));
     }
-    let (keys, shape, head) = b.with_depth(|b| {
+    let (keys, shape, head, path) = b.with_depth(|b| {
         b.charge(Resource::Work, 1)?;
         if !core::ptr::eq(
             original.parsed.execution().tree(),
@@ -140,7 +144,12 @@ pub fn check<'a, 'tree, 'p, C: FoundationValueCodec>(
             codec.source_admission(),
         )
         .map_err(CheckError::Insertion)?;
-        Ok((observed.keys(), observed.shape, observed.head))
+        Ok((
+            observed.keys(),
+            observed.shape,
+            observed.head,
+            observed.path,
+        ))
     })?;
     Ok(CheckedInsertion {
         original: original.parsed,
@@ -148,6 +157,7 @@ pub fn check<'a, 'tree, 'p, C: FoundationValueCodec>(
         draft,
         keys,
         shape,
+        path,
         head,
         limits: b.limits(),
         report: Report {

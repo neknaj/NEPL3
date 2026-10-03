@@ -13,6 +13,7 @@ pub mod checked;
 pub mod declared;
 pub mod draft;
 mod identity;
+pub mod name;
 mod occurrence;
 pub mod whole;
 
