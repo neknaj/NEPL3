@@ -1,5 +1,6 @@
 use super::*;
 use nepl3_core::budget::{Budget, Resource, StopReason};
+use nepl3_core::value_codec::FoundationValueCodec;
 use nepl3_engine::{
     analysis::{
         insertion::name::{self, NameSpelling},
@@ -15,6 +16,7 @@ enum ResultKind {
     Good,
     LocalOnly,
     Unresolved,
+    Repeated,
     Head,
     Payload,
     Spelling,
@@ -24,6 +26,7 @@ enum ResultKind {
 fn explicit_name_spelling_checks_actual_text_payload_and_excludes_affixes() -> TestResult {
     for (old_text, text, before, spelling, after, expected) in [
         ("let x", false, " ", "x", "", ResultKind::Good),
+        ("let x", false, " ", "x", "", ResultKind::Repeated),
         ("let x", false, "y ", "x", "", ResultKind::Unresolved),
         ("let あ", false, " ", "あ", "", ResultKind::Good),
         ("let x", false, " ", "x", " tail", ResultKind::LocalOnly),
@@ -58,6 +61,14 @@ fn explicit_name_spelling_checks_actual_text_payload_and_excludes_affixes() -> T
                     namespace: "Value".into(),
                     name: NameSelector::Field("body".into()),
                 };
+                if matches!(expected, ResultKind::Repeated) {
+                    p.bindings[2] = Binding::Group(vec![
+                        nepl3_engine::package::BindingId(0),
+                        nepl3_engine::package::BindingId(1),
+                        nepl3_engine::package::BindingId(1),
+                        nepl3_engine::package::BindingId(1),
+                    ]);
+                }
                 if text && let ReadSpec::Builtin { reader, .. } = &mut p.reads[0] {
                     *reader = nepl3_reader::builtin::BuiltinReader::Text;
                 }
@@ -348,10 +359,336 @@ fn explicit_name_spelling_checks_actual_text_payload_and_excludes_affixes() -> T
                     &mut b,
                 );
                 match expected {
-                    ResultKind::Good | ResultKind::LocalOnly | ResultKind::Unresolved => {
+                    ResultKind::Good
+                    | ResultKind::LocalOnly
+                    | ResultKind::Unresolved
+                    | ResultKind::Repeated => {
                         let checked = result.map_err(|e| format!("{e:?}"))?;
                         assert_eq!(checked.checked().path(), read.expected().path);
                         assert_eq!(checked.report().usage, b.usage());
+                        {
+                            use nepl3_engine::analysis::BindingAccessError;
+                            use nepl3_engine::analysis::insertion::reference::{
+                                self, ReferenceError, ReferenceOutcome,
+                            };
+                            let fresh = analysis::prepare(
+                                "name-new",
+                                candidate.execution().tree(),
+                                BindingOptions,
+                                limits,
+                                profile,
+                                &mut codec,
+                                &mut b,
+                            )
+                            .map_err(|e| format!("{e:?}"))?;
+                            let trace = fresh
+                                .trace_references(&mut b, codec.source_admission())
+                                .map_err(|e| format!("{e:?}"))?;
+                            let report = trace.trace().reply().report.clone();
+                            let mut measured = Budget::new(limits);
+                            let outcome =
+                                reference::correlate(&checked, &fresh, &trace, &mut measured)
+                                    .map_err(|e| format!("{e:?}"))?;
+                            if matches!(expected, ResultKind::Repeated) {
+                                assert!(matches!(outcome, ReferenceOutcome::Multiple));
+                                assert_eq!(trace.trace().rows().len(), 3);
+                                for pair in trace.trace().rows().windows(2) {
+                                    assert_eq!(pair[0].owner, pair[1].owner);
+                                    assert_eq!(pair[0].name_target, pair[1].name_target);
+                                    assert_eq!(pair[0].binding, pair[1].binding);
+                                    assert_ne!(pair[0].occurrence, pair[1].occurrence);
+                                }
+                                let mut late = Budget::new(limits);
+                                late.charge(
+                                    Resource::Work,
+                                    limits.work - measured.usage().work + 1,
+                                )
+                                .map_err(|e| format!("{e:?}"))?;
+                                let error =
+                                    match reference::correlate(&checked, &fresh, &trace, &mut late)
+                                    {
+                                        Err(error) => error,
+                                        Ok(_) => {
+                                            return Err(
+                                                "matching scan must finish before Multiple".into()
+                                            );
+                                        }
+                                    };
+                                assert_eq!(error.stop_reason(), Some(StopReason::WorkLimit));
+                                return Ok(());
+                            }
+                            let ReferenceOutcome::Unique(matched) = outcome else {
+                                return Err("unique candidate Reference".into());
+                            };
+                            assert!(core::ptr::eq(matched.insertion(), &checked));
+                            assert!(core::ptr::eq(matched.trace(), &trace));
+                            assert_eq!(
+                                matched.issuance().occurrence,
+                                matched.final_reference().occurrence.id
+                            );
+                            assert_eq!(
+                                Some(&matched.final_reference().occurrence.span),
+                                checked.checked().head()
+                            );
+                            assert_eq!(
+                                matched.final_reference().occurrence.name,
+                                checked.choice().candidate().name
+                            );
+                            if matches!(expected, ResultKind::Unresolved) {
+                                assert_eq!(
+                                    matched.final_reference().occurrence.resolution,
+                                    nepl3_core::facts::ReferenceResolution::Unresolved("x".into())
+                                );
+                            }
+                            let mut wrong_limits = limits;
+                            wrong_limits.work += 1;
+                            let mut wrong = Budget::new(wrong_limits);
+                            assert!(matches!(
+                                reference::correlate(&checked, &fresh, &trace, &mut wrong),
+                                Err(ReferenceError::Access(BindingAccessError::LimitsMismatch))
+                            ));
+                            assert_eq!(wrong.usage().work, 0);
+                            let mut cancelled = Budget::new(limits);
+                            cancelled.cancel();
+                            assert!(matches!(
+                                reference::correlate(&checked, &fresh, &trace, &mut cancelled),
+                                Err(ReferenceError::Access(BindingAccessError::Stopped(
+                                    StopReason::Cancelled
+                                )))
+                            ));
+                            let mut late = Budget::new(limits);
+                            late.charge(Resource::Work, limits.work - measured.usage().work + 1)
+                                .map_err(|e| format!("{e:?}"))?;
+                            assert!(
+                                reference::correlate(&checked, &fresh, &trace, &mut late).is_err()
+                            );
+                            for (resource, total, used, reason) in [
+                                (
+                                    Resource::Work,
+                                    limits.work,
+                                    measured.usage().work,
+                                    StopReason::WorkLimit,
+                                ),
+                                (
+                                    Resource::Nodes,
+                                    limits.nodes,
+                                    measured.usage().nodes,
+                                    StopReason::NodeLimit,
+                                ),
+                                (
+                                    Resource::AllocationUnits,
+                                    limits.allocation_units,
+                                    measured.usage().allocation_units,
+                                    StopReason::AllocationLimit,
+                                ),
+                            ] {
+                                assert!(used > 0);
+                                let mut limited = Budget::new(limits);
+                                limited
+                                    .charge(resource, total - used + 1)
+                                    .map_err(|e| format!("{e:?}"))?;
+                                let error = match reference::correlate(
+                                    &checked,
+                                    &fresh,
+                                    &trace,
+                                    &mut limited,
+                                ) {
+                                    Err(error) => error,
+                                    Ok(_) => return Err("expected resource stop".into()),
+                                };
+                                assert_eq!(error.stop_reason(), Some(reason));
+                            }
+                            for extra in [0, 1] {
+                                let mut limited = Budget::new(limits);
+                                let result = limited.with_depth_at_least(
+                                    limits.depth - measured.usage().depth + extra,
+                                    |b| reference::correlate(&checked, &fresh, &trace, b),
+                                );
+                                if extra == 0 {
+                                    assert!(result.is_ok());
+                                } else {
+                                    assert!(result.is_err());
+                                    assert_eq!(limited.poll(), Err(StopReason::DepthLimit));
+                                }
+                            }
+                            let mut duplicate_parser = RetainedParseSession::new(
+                                "name-new".into(),
+                                profile,
+                                environments,
+                                ParseRequest {
+                                    snapshot: draft.snapshot(),
+                                    start: 0,
+                                    limit: draft.limit(),
+                                    final_input: true,
+                                    entry,
+                                    states: &states,
+                                },
+                                draft.sources(),
+                                &mut b,
+                            )
+                            .map_err(|e| format!("{e:?}"))?;
+                            let duplicate = drive(
+                                &mut duplicate_parser,
+                                "new",
+                                &mut b,
+                                codec.source_admission(),
+                            )?;
+                            let duplicate_prepared = analysis::prepare(
+                                "name-new",
+                                duplicate.execution().tree(),
+                                BindingOptions,
+                                limits,
+                                profile,
+                                &mut codec,
+                                &mut b,
+                            )
+                            .map_err(|e| format!("{e:?}"))?;
+                            assert_eq!(duplicate_prepared.key(), fresh.key());
+                            let duplicate_trace = duplicate_prepared
+                                .trace_references(&mut b, codec.source_admission())
+                                .map_err(|e| format!("{e:?}"))?;
+                            assert!(matches!(
+                                reference::correlate(
+                                    &checked,
+                                    &fresh,
+                                    &duplicate_trace,
+                                    &mut Budget::new(limits)
+                                ),
+                                Err(ReferenceError::ProofMismatch)
+                            ));
+                            assert!(matches!(
+                                reference::correlate(
+                                    &checked,
+                                    &duplicate_prepared,
+                                    &trace,
+                                    &mut Budget::new(limits)
+                                ),
+                                Err(ReferenceError::ProofMismatch)
+                            ));
+                            let catalog_packages = [profile
+                                .language("Host", &mut b)
+                                .map_err(|e| format!("{e:?}"))?];
+                            let second_profile = profile
+                                .profile()
+                                .resolve(
+                                    &RuntimeCatalog {
+                                        packages: &catalog_packages,
+                                        providers: &[],
+                                        resources: &[],
+                                    },
+                                    profile.registry(),
+                                    &mut b,
+                                )
+                                .map_err(|e| format!("{e:?}"))?;
+                            assert_eq!(second_profile.digest(), profile.digest());
+                            let other_profile_prepared = analysis::prepare(
+                                "name-new",
+                                candidate.execution().tree(),
+                                BindingOptions,
+                                limits,
+                                &second_profile,
+                                &mut codec,
+                                &mut b,
+                            )
+                            .map_err(|e| format!("{e:?}"))?;
+                            assert_eq!(other_profile_prepared.key(), fresh.key());
+                            let other_profile_trace = other_profile_prepared
+                                .trace_references(&mut b, codec.source_admission())
+                                .map_err(|e| format!("{e:?}"))?;
+                            assert!(matches!(
+                                reference::correlate(
+                                    &checked,
+                                    &fresh,
+                                    &other_profile_trace,
+                                    &mut Budget::new(limits)
+                                ),
+                                Err(ReferenceError::ProofMismatch)
+                            ));
+                            assert!(matches!(
+                                reference::correlate(
+                                    &checked,
+                                    &other_profile_prepared,
+                                    &trace,
+                                    &mut Budget::new(limits)
+                                ),
+                                Err(ReferenceError::ProofMismatch)
+                            ));
+                            assert_eq!(trace.trace().reply().report, report);
+                            let stale = analysis::prepare(
+                                "name-other",
+                                candidate.execution().tree(),
+                                BindingOptions,
+                                limits,
+                                profile,
+                                &mut codec,
+                                &mut b,
+                            )
+                            .map_err(|e| format!("{e:?}"))?;
+                            assert!(matches!(
+                                reference::correlate(
+                                    &checked,
+                                    &stale,
+                                    &trace,
+                                    &mut Budget::new(limits)
+                                ),
+                                Err(ReferenceError::Access(BindingAccessError::StaleAnalysis))
+                            ));
+                            let stale_trace = stale
+                                .trace_references(&mut b, codec.source_admission())
+                                .map_err(|e| format!("{e:?}"))?;
+                            assert!(matches!(
+                                reference::correlate(
+                                    &checked,
+                                    &fresh,
+                                    &stale_trace,
+                                    &mut Budget::new(limits)
+                                ),
+                                Err(ReferenceError::Access(BindingAccessError::StaleAnalysis))
+                            ));
+                            let mut native_budget = Budget::new(limits);
+                            let native_full = fresh
+                                .trace_references(
+                                    &mut native_budget,
+                                    &mut SourceAdmission::default(),
+                                )
+                                .map_err(|e| format!("{e:?}"))?;
+                            assert!(native_full.trace().complete().is_some());
+                            let mut partial_budget = Budget::new(limits);
+                            partial_budget
+                                .charge(
+                                    Resource::Work,
+                                    limits.work - native_budget.usage().work + 1,
+                                )
+                                .map_err(|e| format!("{e:?}"))?;
+                            let partial = fresh
+                                .trace_references(
+                                    &mut partial_budget,
+                                    &mut SourceAdmission::default(),
+                                )
+                                .map_err(|e| format!("{e:?}"))?;
+                            assert!(!partial.trace().rows().is_empty());
+                            assert!(matches!(
+                                reference::correlate(
+                                    &checked,
+                                    &fresh,
+                                    &partial,
+                                    &mut Budget::new(limits)
+                                ),
+                                Ok(ReferenceOutcome::Stopped(StopReason::WorkLimit))
+                            ));
+                            let stopped = fresh
+                                .trace_references(&mut cancelled, codec.source_admission())
+                                .map_err(|e| format!("{e:?}"))?;
+                            assert!(matches!(
+                                reference::correlate(
+                                    &checked,
+                                    &fresh,
+                                    &stopped,
+                                    &mut Budget::new(limits)
+                                ),
+                                Ok(ReferenceOutcome::Stopped(StopReason::Cancelled))
+                            ));
+                        }
                         // The before-affix extends the existing declaration x to xy.
                         // Correct spelling and complete parsing do not prove name resolution.
                         if matches!(expected, ResultKind::Unresolved) {
