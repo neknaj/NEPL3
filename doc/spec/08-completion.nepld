@@ -361,4 +361,19 @@ body
       cons "[保証/ほしょう]は[同/おな]じ[実行内/じっこうない]の[生成元/せいせいもと]との[対応/たいおう]である。[元/もと]のMissingReferenceと[再解析後/さいかいせきご]の[実行/じっこう]の[対応/たいおう]、[新旧/しんきゅう]の[宣言同一性/せんげんどういつせい]、[補完/ほかん]の[採用条件/さいようじょうけん]と[編集権限/へんしゅうけんげん]は[後続/こうぞく]の[個別検証/こべつけんしょう]とする。" nil
     nil
 
+  cons section keyedReferenceTrace "2.24 [参照生成記録/さんしょうせいせいきろく]と[解析要求/かいせきようきゅう]の[対応/たいおう]" body
+    cons paragraph
+      cons "PreparedBindingRequestのtrace_referencesは[保持/ほじ]した[正確/せいかく]な[解析要求/かいせきようきゅう]からReferenceTraceを[実行/じっこう]し、AnalysisKeyとLimitsをBoundReferenceTraceに[結合/けつごう]する。"
+      cons "Customを[実行/じっこう]する[場合/ばあい]はtrace_references_with_hostへhostを[明示/めいじ]する。[外部/がいぶ]のraw traceへ[申告/しんこく]されたkeyを[付与/ふよ]する[操作/そうさ]は[提供/ていきょう]しない。" nil
+    cons paragraph
+      cons "for_keyはLimitsを[予算消費前/よさんしょうひまえ]に[検査/けんさ]し、[比較費用/ひかくひよう]を[計上/けいじょう]してからAnalysisKeyの[四/よっ]つのdigestを[比較/ひかく]する。Limitsが[一致/いっち]する[場合/ばあい]は、[取消/とりけし]や[資源制限/しげんせいげん]がStaleAnalysisの[判定/はんてい]に[先行/せんこう]し[得/う]る。"
+      cons "Complete・Invalid・Stoppedのnative[結果/けっか]を[保持/ほじ]する。[照会/しょうかい]の[失敗/しっぱい]は[元/もと]のReportを[変更/へんこう]しない。" nil
+    cons paragraph
+      cons "final_referenceは[同/おな]じkey[検査/けんさ]を[行/おこな]い、[同/おな]じnative traceのfinal_referenceへ[記録/きろく]indexを[渡/わた]す。Incomplete、[記録/きろく]の[不在/ふざい]、key[検査/けんさ]とnative[検索/けんさく]それぞれの[停止/ていし]を[区別/くべつ]する。"
+      cons "[照会/しょうかい]は[記録/きろく]indexと[最終/さいしゅう]factsを[対象/たいしょう]とする。source[位置/いち]の[対応/たいおう]や[新旧/しんきゅう]の[構文対象/こうぶんたいしょう]の[同一性/どういつせい]は[後続/こうぞく]で[検証/けんしょう]する。" nil
+    cons paragraph
+      cons "traceはnative[結果/けっか]を[直接参照/ちょくせつさんしょう]し、[期待/きたい]keyの[検査/けんさ]を[行/おこな]わない。into_traceは[要求/ようきゅう]とのkey[対応/たいおう]を[破棄/はき]し、nativeの[証拠/しょうこ]を[返/かえ]す。"
+      cons "[同/おな]じAnalysisKeyを[持/も]つ[別/べつ]の[実行/じっこう]も[存在/そんざい]する。[記録/きろく]と[最終/さいしゅう]factsは[必/かなら]ず[同/おな]じtraceの[内部/ないぶ]で[対応付/たいおうづ]け、[別実行/べつじっこう]の[記録/きろく]を[混合/こんごう]しない。" nil
+    nil
+
 nil
