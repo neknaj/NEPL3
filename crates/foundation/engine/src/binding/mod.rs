@@ -24,6 +24,7 @@ mod prepare;
 pub mod probe;
 mod runtime;
 mod scope;
+pub mod trace;
 pub use model::*;
 #[derive(Debug, Eq, PartialEq)]
 pub enum BindingError {
@@ -98,6 +99,7 @@ struct Machine<'a, 'p> {
     bundles: Vec<LocalBundle<'a>>,
     progress: BindingProgress,
     report: Report,
+    reference_trace: Option<Vec<trace::ReferenceIssuance>>,
 }
 /// Analyze one checked tree in a new analysis identity and the caller's shared
 /// budget/admission operation. Concrete package selections are revalidated against
@@ -109,7 +111,7 @@ pub fn analyze(
     budget: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> BindingReply {
-    analyze_inner(analysis_id, tree, profile, None, budget, admission)
+    analyze_inner(analysis_id, tree, profile, None, false, budget, admission).0
 }
 /// Execute Custom plans with a host-selected provider and checked authority.
 /// Ordinary analyze leaves unregistered Custom plans as MissingProvider.
@@ -121,22 +123,33 @@ pub fn analyze_with_host(
     budget: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> BindingReply {
-    analyze_inner(analysis_id, tree, profile, Some(host), budget, admission)
+    analyze_inner(
+        analysis_id,
+        tree,
+        profile,
+        Some(host),
+        false,
+        budget,
+        admission,
+    )
+    .0
 }
 fn analyze_inner(
     analysis_id: &str,
     tree: &ValidatedParseTree<'_>,
     profile: &ResolvedParseProfile<'_>,
     mut host: Option<&mut dyn BindingHost>,
+    capture_references: bool,
     budget: &mut Budget,
     admission: &mut SourceAdmission,
-) -> BindingReply {
+) -> (BindingReply, Vec<trace::ReferenceIssuance>) {
     let mut machine = Machine {
         profile,
         registry: profile.registry(),
         bundles: Vec::new(),
         progress: BindingProgress::empty(),
         report: Report::default(),
+        reference_trace: capture_references.then(Vec::new),
     };
     let result = budget.with_depth(|budget| -> Result<(), BindingError> {
         budget.charge(Resource::Work, analysis_id.len() as u64 + 1)?;
@@ -156,6 +169,7 @@ fn analyze_inner(
         Ok(())
     });
     machine.report.usage = budget.usage();
+    let trace = machine.reference_trace.take().unwrap_or_default();
     let outcome = match result {
         Ok(()) => match machine.progress.facts.take() {
             Some(facts) => BindingOutcome::Complete(BindingAnalysis {
@@ -185,10 +199,13 @@ fn analyze_inner(
             progress: machine.progress,
         },
     };
-    BindingReply {
-        outcome,
-        report: machine.report,
-    }
+    (
+        BindingReply {
+            outcome,
+            report: machine.report,
+        },
+        trace,
+    )
 }
 
 impl Machine<'_, '_> {

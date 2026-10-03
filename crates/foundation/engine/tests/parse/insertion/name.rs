@@ -14,6 +14,7 @@ use nepl3_engine::{
 enum ResultKind {
     Good,
     LocalOnly,
+    Unresolved,
     Head,
     Payload,
     Spelling,
@@ -23,6 +24,7 @@ enum ResultKind {
 fn explicit_name_spelling_checks_actual_text_payload_and_excludes_affixes() -> TestResult {
     for (old_text, text, before, spelling, after, expected) in [
         ("let x", false, " ", "x", "", ResultKind::Good),
+        ("let x", false, "y ", "x", "", ResultKind::Unresolved),
         ("let あ", false, " ", "あ", "", ResultKind::Good),
         ("let x", false, " ", "x", " tail", ResultKind::LocalOnly),
         ("let x tail", false, " ", "x", "", ResultKind::LocalOnly),
@@ -346,10 +348,55 @@ fn explicit_name_spelling_checks_actual_text_payload_and_excludes_affixes() -> T
                     &mut b,
                 );
                 match expected {
-                    ResultKind::Good | ResultKind::LocalOnly => {
+                    ResultKind::Good | ResultKind::LocalOnly | ResultKind::Unresolved => {
                         let checked = result.map_err(|e| format!("{e:?}"))?;
                         assert_eq!(checked.checked().path(), read.expected().path);
                         assert_eq!(checked.report().usage, b.usage());
+                        // The before-affix extends the existing declaration x to xy.
+                        // Correct spelling and complete parsing do not prove name resolution.
+                        if matches!(expected, ResultKind::Unresolved) {
+                            assert_eq!(candidate.seed().request().snapshot.text(), "let xy x");
+                            nepl3_engine::analysis::insertion::whole::check(
+                                checked.checked(),
+                                &mut b,
+                            )
+                            .map_err(|e| format!("{e:?}"))?;
+                            let reply = nepl3_engine::analysis::insertion::binding::execute(
+                                checked.checked(),
+                                "name-new",
+                                &mut codec,
+                                &mut b,
+                            )
+                            .map_err(|e| format!("{e:?}"))?;
+                            assert!(matches!(
+                                reply.reply().outcome,
+                                nepl3_engine::binding::BindingOutcome::Complete { .. }
+                            ));
+                            let actual = reply
+                                .for_source(
+                                    &reply.key(),
+                                    &candidate.seed().request().snapshot.reference(),
+                                    &mut b,
+                                )
+                                .map_err(|e| format!("{e:?}"))?;
+                            let references: Vec<_> = actual
+                                .facts()
+                                .occurrences
+                                .iter()
+                                .filter(|o| o.role == nepl3_core::facts::OccurrenceRole::Reference)
+                                .collect();
+                            assert_eq!(references.len(), 1);
+                            let reference = references[0];
+                            assert_eq!(reference.name, "x");
+                            assert_eq!(Some(&reference.span), checked.checked().head());
+                            assert_eq!(
+                                reference.resolution,
+                                nepl3_core::facts::ReferenceResolution::Unresolved("x".into())
+                            );
+                            assert_eq!(actual.facts().entities.len(), 1);
+                            assert_eq!(actual.facts().entities[0].name, "xy");
+                        }
+
                         if matches!(expected, ResultKind::LocalOnly) {
                             assert!(matches!(nepl3_engine::analysis::insertion::whole::check(checked.checked(), &mut b), Err(nepl3_engine::analysis::insertion::whole::WholeInsertionError::Input(nepl3_engine::parse::whole::WholeInputError::PartialRange | nepl3_engine::parse::whole::WholeInputError::Unconsumed { .. }))));
                         }
