@@ -11,6 +11,7 @@ pub(super) fn implementation_digest() -> Digest {
             include_bytes!("status.rs").as_slice(),
             include_bytes!("reference_trace.rs").as_slice(),
             include_bytes!("named_trace/provider.rs").as_slice(),
+            include_bytes!("name_spelling/provider.rs").as_slice(),
             include_bytes!("completion/region.rs").as_slice(),
         ]
         .concat(),
