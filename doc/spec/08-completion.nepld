@@ -404,4 +404,20 @@ body
       cons "[通常解析/つうじょうかいせき]・Reference[単独/たんどく]trace・[既存/きそん]probeの[費用/ひよう]を[維持/いじ]する。[後続/こうぞく]の[結合処理/けつごうしょり]では、HitやReferenceが[同/おな]じ[包含結果/ほうがんけっか]への[参照/さんしょう]であることを[検査/けんさ]する。[宣言/せんげん]の[新旧同一性/しんきゅうどういつせい]と[編集採用/へんしゅうさいよう]の[判定/はんてい]は[後続/こうぞく]の[対象/たいしょう]である。" nil
     nil
 
+  cons section declarationCorrespondence "2.27 [挿入前後/そうにゅうぜんご]の[宣言対応/せんげんたいおう]" body
+    cons paragraph
+      cons "native[操作/そうさ]declaration::correlateは、CheckedNameInsertionが[選択/せんたく]した[宣言/せんげん]と、MatchedReferenceの[最終解決先/さいしゅうかいけつさき]を[対応付/たいおうづ]ける。SameDeclarationは[元/もと]のBoundNamedProbe、[候補側/こうほがわ]のBoundNamedTrace、MatchedReferenceと[実際/じっさい]のEntity・EntityBirthを[不変借用/ふへんしゃくよう]で[保持/ほじ]する。"
+      cons "Limits・[新旧/しんきゅう]のAnalysisKeyに[加/くわ]え、[元/もと]のprobe・Hit・profileと[候補側/こうほがわ]の[包含/ほうがん]ReferenceTraceが[正確/せいかく]に[一致/いっち]することを[要求/ようきゅう]する。[独立/どくりつ]した[実行/じっこう]やprofileは、keyが[等/ひと]しくても[結合/けつごう]しない。" nil
+    cons paragraph
+      cons "[各/かく]Entityの[生成記録/せいせいきろく]を[自身/じしん]の[構文木/こうぶんき]で[復元/ふくげん]し、ownerと[名前対象/なまえたいしょう]への[一意/いちい]なChild・Foreign[経路/けいろ]を[比較/ひかく]する。[経路上/けいろじょう]のentry・shape・read・execution digestと、Foreignのschema・category・environment digestを[検査/けんさ]する。"
+      cons "[生成/せいせい]の[署名/しょめい]はowner・[名前対象/なまえたいしょう]の[構造上/こうぞうじょう]の[位置/いち]、package・execution digest・BindingId・Bind/Export・Ordinary/Header/Bodyの[区分/くぶん]を[含/ふく]む。[新旧/しんきゅう]それぞれの[記録内/きろくない]で[署名/しょめい]の[一意性/いちいせい]を[確認/かくにん]する。EntityId・scope・stage・execution_step・[再帰/さいき]groupの[番号/ばんごう]は[実行内/じっこうない]の[値/あたい]として[扱/あつか]う。[元/もと]の[一意性/いちいせい]は[取得済/しゅとくず]み[接頭実行/せっとうじっこう]に[限定/げんてい]される。" nil
+    cons paragraph
+      cons "[実際/じっさい]のText payloadとEntity.selection・token headを[照合/しょうごう]する。[名前/なまえ]とowner headの[直接/ちょくせつ]source[範囲/はんい]は、[挿入位置以前/そうにゅういちいぜん]に[終/お]わる[範囲/はんい]を[維持/いじ]し、[挿入位置/そうにゅういち]から[始/はじ]まる[範囲/はんい]を[挿入長/そうにゅうちょう]だけ[移動/いどう]する。[交差/こうさ]・[拡張/かくちょう]や[挿入位置/そうにゅういち]の[零幅/れいはば]は[採用/さいよう]しない。owner[全体/ぜんたい]のcoverは[固定/こてい]しない。"
+      cons "sourceは[各解析/かくかいせき]の[実行済/じっこうず]みclosureで[確認/かくにん]する。[補助/ほじょ]sourceはidentity・locator・[範囲/はんい]を[維持/いじ]する。[候補側/こうほがわ]に[残/のこ]る[旧/きゅう]primaryは[編集済/へんしゅうず]みprimaryの[代替/だいたい]にしない。source mapによる[間接証拠/かんせつしょうこ]はこの[操作/そうさ]の[対象外/たいしょうがい]である。" nil
+    cons paragraph
+      cons "[曖昧/あいまい]・[未解決/みかいけつ]・Deferred、[生成記録/せいせいきろく]のないEntity、[反復/はんぷく]・[共有構造/きょうゆうこうぞう]や[保存条件/ほぞんじょうけん]の[不成立/ふせいりつ]はUnprovenとして[区別/くべつ]する。Unprovenは[異/こと]なる[宣言/せんげん]であることの[証明/しょうめい]を[意味/いみ]しない。[照会停止/しょうかいていし]は[元/もと]の[結果/けっか]とReportを[変更/へんこう]しない。"
+      cons "SameDeclarationは[安定/あんてい]した[構造経路/こうぞうけいろ]と[直接/ちょくせつ]sourceに[限定/げんてい]したnative[証拠/しょうこ]である。[入力全体/にゅうりょくぜんたい]、[診断/しんだん]、[編集権限/へんしゅうけんげん]と[採用判定/さいようはんてい]は[別途/べっと][検証/けんしょう]する。" nil
+    nil
+
+
 nil
