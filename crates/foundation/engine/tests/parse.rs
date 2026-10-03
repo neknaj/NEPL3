@@ -1895,3 +1895,6 @@ fn executed_parse_preserves_append_and_native_host_failure_boundaries() -> TestR
     }
     Ok(())
 }
+
+#[path = "parse/missing_probe.rs"]
+mod missing_probe;

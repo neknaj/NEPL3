@@ -53,6 +53,22 @@ fn with_completed_input_extra<T>(
         &mut SourceAdmission,
     ) -> Result<T, String>,
 ) -> Result<T, String> {
+    with_source_profile(compiled, extra, input, |source, resolved, b, a| {
+        let parsed = parse_completed(source, resolved, b, a)?;
+        finish(&parsed, resolved, b, a)
+    })
+}
+fn with_source_profile<T>(
+    compiled: &CompiledLanguage,
+    extra: Option<&nepl3_engine::package::LanguagePackage>,
+    input: &str,
+    finish: impl FnOnce(
+        &SourceSnapshot,
+        &ResolvedParseProfile<'_>,
+        &mut Budget,
+        &mut SourceAdmission,
+    ) -> Result<T, String>,
+) -> Result<T, String> {
     let p = &compiled.package;
     let r = &compiled.registry;
     let identity = p
@@ -158,8 +174,7 @@ fn with_completed_input_extra<T>(
         &mut b,
     )
     .map_err(err)?;
-    let parsed = parse_completed(&source, &resolved, &mut b, &mut a)?;
-    finish(&parsed, &resolved, &mut b, &mut a)
+    finish(&source, &resolved, &mut b, &mut a)
 }
 
 fn parse_completed(
@@ -1064,3 +1079,6 @@ mod status;
 
 #[path = "binding/completion.rs"]
 mod completion;
+
+#[path = "binding/missing_probe.rs"]
+mod missing_probe;

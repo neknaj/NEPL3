@@ -21,6 +21,7 @@ pub(crate) mod lookup;
 mod model;
 pub use host::*;
 mod prepare;
+pub mod probe;
 mod runtime;
 mod scope;
 pub use model::*;
