@@ -509,6 +509,7 @@ fn name_spelling_preserves_ambiguity_and_supports_same_source_foreign_paths() ->
                                                         assert!(core::ptr::eq(suitable.declaration(), &proof));
                                                         assert!(core::ptr::eq(suitable.whole().parsed(), checked.checked().candidate()));
                                                         let parse_report = checked.checked().candidate().execution().report();
+                                                        let parse_report_before = parse_report.clone();
                                                         let binding_report = named.references().trace().reply().report.clone();
                                                         if input.starts_with("lambda parse") {
                                                             let expected = match input { "lambda parseWarning" => Severity::Warning, "lambda parseInformation" => Severity::Information, "lambda parseHint" => Severity::Hint, _ => return Err("unexpected suitable parse diagnostic".into()) };
@@ -533,12 +534,13 @@ fn name_spelling_preserves_ambiguity_and_supports_same_source_foreign_paths() ->
                                                         }
                                                         let mut cancelled=Budget::new(b.limits()); cancelled.cancel();
                                                         let Err(error)=quality::check(&proof,&mut cancelled) else{return Err("cancelled quality".into());};
-                                                        assert!(error.stop_reason().is_some());
+                                                        assert_eq!(error.stop_reason(), Some(StopReason::Cancelled));
                                                         let mut limits=b.limits(); limits.work-=1;
                                                         let mut other=Budget::new(limits); other.cancel();
                                                         assert!(matches!(quality::check(&proof,&mut other),Err(quality::QualityError::LimitsMismatch)));
-                                                        assert_eq!(other.usage().work,0);
+                                                        assert_eq!(other.usage(), Budget::new(limits).usage());
                                                         assert_eq!(named.references().trace().reply().report,binding_report);
+                                                        assert_eq!(checked.checked().candidate().execution().report(), &parse_report_before);
                                                     }
                                                 }
                                                 if input == "lambda parseMixed" {
