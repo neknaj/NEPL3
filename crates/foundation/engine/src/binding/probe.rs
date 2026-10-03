@@ -85,6 +85,7 @@ pub fn first_missing_reference<'a>(
         bundles: Vec::new(),
         progress: BindingProgress::empty(),
         report: Report::default(),
+        reference_trace: None,
     };
     let result = budget.with_depth(|budget| {
         budget.charge(Resource::Work, analysis_id.len() as u64 + 1)?;

@@ -1,6 +1,7 @@
 use super::*;
 mod custom;
 mod probe;
+mod trace;
 use crate::facts::{FactsHeader, FactsPhase};
 use alloc::boxed::Box;
 struct CustomHeader {
@@ -68,6 +69,7 @@ struct NamedOccurrence {
     resolution: ReferenceResolution,
 }
 struct Layout<'a> {
+    selection: &'a NodeSelection,
     node: &'a SyntaxNode,
     package: &'a LanguagePackage,
     fields: &'a [FieldSpec],
@@ -117,6 +119,7 @@ impl<'a, 'p> Machine<'a, 'p> {
             ShapeSelection::Recovery => return Err(BindingError::RecoveredTree),
         };
         Ok(Layout {
+            selection: selected,
             node,
             package,
             fields,
@@ -267,6 +270,7 @@ impl<'a, 'p> Machine<'a, 'p> {
         &mut self,
         stage: StageId,
         value: NamedOccurrence,
+        capture: Option<trace::PendingReference>,
         budget: &mut Budget,
     ) -> Result<OccurrenceId, BindingError> {
         let NamedOccurrence {
@@ -286,6 +290,15 @@ impl<'a, 'p> Machine<'a, 'p> {
             Resource::AllocationUnits,
             (core::mem::size_of::<Occurrence>() + core::mem::size_of::<OccurrenceStage>()) as u64,
         )?;
+        if capture.is_some() {
+            budget.charge(
+                Resource::AllocationUnits,
+                core::mem::size_of::<super::trace::ReferenceIssuance>() as u64,
+            )?;
+            if self.reference_trace.is_none() {
+                return Err(BindingError::Target);
+            }
+        }
         self.facts_mut()?.occurrences.push(Occurrence {
             id,
             scope,
@@ -301,6 +314,12 @@ impl<'a, 'p> Machine<'a, 'p> {
             stage,
             namespace_stage,
         });
+        if let Some(capture) = capture {
+            // All three issuance rows were charged before publishing any row.
+            if let Some(rows) = &mut self.reference_trace {
+                rows.push(capture.issued(id, stage, namespace_stage, namespace));
+            }
+        }
         Ok(id)
     }
     fn named(
@@ -309,9 +328,10 @@ impl<'a, 'p> Machine<'a, 'p> {
         layout: &Layout<'_>,
         namespace: &str,
         selector: &NameSelector,
-        role: OccurrenceRole,
+        action: (OccurrenceRole, Option<trace::PendingReference>),
         budget: &mut Budget,
     ) -> Result<(), BindingError> {
+        let (role, capture) = action;
         let namespace = self.namespace(frame.target.bundle, layout.package, namespace, budget)?;
         let (name, selection, origin) = self.name(frame.target, layout, selector, budget)?;
         let global =
@@ -332,6 +352,7 @@ impl<'a, 'p> Machine<'a, 'p> {
                     origin,
                     resolution,
                 },
+                capture,
                 budget,
             )?;
             if undefined {
@@ -386,6 +407,7 @@ impl<'a, 'p> Machine<'a, 'p> {
                     origin,
                     resolution: ReferenceResolution::Resolved(id),
                 },
+                None,
                 budget,
             )?;
         }
@@ -472,7 +494,7 @@ impl<'a, 'p> Machine<'a, 'p> {
         let mut execution_step = 0_u64;
         while let Some(mut frame) = frames.pop() {
             let mut captured = None;
-            if probing {
+            if probing || self.reference_trace.is_some() {
                 execution_step = execution_step
                     .checked_add(1)
                     .ok_or_else(|| BindingError::Stopped(budget.stop(StopReason::WorkLimit)))?;
@@ -632,17 +654,31 @@ impl<'a, 'p> Machine<'a, 'p> {
                                 &layout,
                                 namespace,
                                 name,
-                                OccurrenceRole::Definition,
+                                (OccurrenceRole::Definition, None),
                                 budget,
                             )?,
-                            Binding::Reference { namespace, name } => self.named(
-                                &mut frame,
-                                &layout,
-                                namespace,
-                                name,
-                                OccurrenceRole::Reference,
-                                budget,
-                            )?,
+                            Binding::Reference { namespace, name } => {
+                                let capture = if self.reference_trace.is_some() {
+                                    Some(self.prepare_reference_trace(
+                                        &frame,
+                                        &layout,
+                                        name,
+                                        (id, execution_step),
+                                        tree,
+                                        budget,
+                                    )?)
+                                } else {
+                                    None
+                                };
+                                self.named(
+                                    &mut frame,
+                                    &layout,
+                                    namespace,
+                                    name,
+                                    (OccurrenceRole::Reference, capture),
+                                    budget,
+                                )?;
+                            }
                             Binding::Export { namespace, name } => {
                                 let mut saved = None;
                                 for value in &headers {
@@ -663,7 +699,7 @@ impl<'a, 'p> Machine<'a, 'p> {
                                         &layout,
                                         namespace,
                                         name,
-                                        OccurrenceRole::Export,
+                                        (OccurrenceRole::Export, None),
                                         budget,
                                     )?;
                                     if frame.phase.header {

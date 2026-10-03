@@ -1094,3 +1094,6 @@ mod probe_read;
 
 #[path = "binding/name_spelling.rs"]
 mod name_spelling;
+
+#[path = "binding/reference_trace.rs"]
+mod reference_trace;

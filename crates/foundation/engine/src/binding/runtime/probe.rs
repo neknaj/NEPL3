@@ -32,7 +32,7 @@ impl Machine<'_, '_> {
         }
         Ok(None)
     }
-    fn probe_target(
+    pub(super) fn probe_target(
         &self,
         target: Target,
         tree: &ParseTree,
