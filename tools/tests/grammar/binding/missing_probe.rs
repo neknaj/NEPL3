@@ -4,7 +4,7 @@ use nepl3_engine::{
     package::{Binding, BindingId, NameSelector},
 };
 
-fn named_lambda() -> Result<CompiledLanguage, String> {
+pub(super) fn named_lambda() -> Result<CompiledLanguage, String> {
     let mut compiled = execution()?;
     let lambda = compiled
         .package

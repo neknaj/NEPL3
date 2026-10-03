@@ -4,6 +4,7 @@ pub mod alternatives;
 pub mod completion;
 pub mod expected;
 pub mod insertion;
+pub mod probe;
 pub mod query;
 pub mod region;
 pub mod rename;
