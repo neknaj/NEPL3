@@ -268,4 +268,21 @@ body
       cons "[入力/にゅうりょく]とsource[閉包/へいほう]を[検証/けんしょう]し、Hitの[公開前/こうかいまえ]にもFactSetの[閉包/へいほう]を[検査/けんさ]する。[全/すべ]ての[費用/ひよう]は[呼出側/よびだしがわ]の[累積/るいせき]Budgetへ[計上/けいじょう]する。" nil
     nil
 
+  cons section keyedReferenceProbe "2.19 [欠落参照名/けつらくさんしょうめい]の[解析同一性/かいせきどういつせい]と[位置照会/いちしょうかい]" body
+    cons paragraph
+      cons "PreparedBindingRequestのprobe_missing_referenceは[保持/ほじ]した[要求/ようきゅう]からnative probeを[実行/じっこう]し、analysis::probe::BoundProbeReplyを[生成/せいせい]する。"
+      cons "[結果/けっか]はAnalysisKey、Limitsと[正確/せいかく]な[入力構文木/にゅうりょくこうぶんき]の[不変借用/ふへんしゃくよう]を[内部/ないぶ]に[保持/ほじ]する。[外部/がいぶ]のraw replyと[申告/しんこく]されたkeyを[結合/けつごう]する[操作/そうさ]は[提供/ていきょう]しない。" nil
+    cons paragraph
+      cons "for_positionはLimits、AnalysisKeyの[全/ぜん]digest、SourceRefの[識別子/しきべつし]・revision・digest、UTF-8の[境界/きょうかい]とoffsetの[範囲/はんい]を[検査/けんさ]する。"
+      cons "[保持/ほじ]した[入力/にゅうりょく]のsource[閉包/へいほう]にはForeignと[未使用/みしよう]snapshotも[含/ふく]め、SourceAdmissionで[重複除去/ちょうふくじょきょ]する[前/まえ]にdigestとlocatorの[競合/きょうごう]を[検査/けんさ]する。"
+      cons "nativeの[途中状態/とちゅうじょうたい]のsourcesが[空/から]でも、[照会/しょうかい]は[元/もと]の[入力閉包/にゅうりょくへいほう]を[用/もち]いる。" nil
+    cons paragraph
+      cons "[最初/さいしょ]のHitが[指定位置/していいち]と[一致/いっち]すればHitAtPosition、[別位置/べついち]ならOtherHitを[返/かえ]す。OtherHitは[後続位置/こうぞくいち]の[不在/ふざい]を[意味/いみ]しない。"
+      cons "NoHit、Blocked、Stoppedも[同/おな]じ[照会検査/しょうかいけんさ]を[通/とお]した[結果/けっか]として[区別/くべつ]する。[全位置/ぜんいち]の[検索/けんさく]、expected_readとの[対応/たいおう]、[候補生成/こうほせいせい]や[編集権限/へんしゅうけんげん]は[後続範囲/こうぞくはんい]である。" nil
+    cons paragraph
+      cons "LimitsMismatchはBudgetの[使用前/しようまえ]に[判定/はんてい]する。[一致/いっち]したLimitsでは[照会側/しょうかいがわ]の[取消/とりけし]・[資源停止/しげんていし]がStaleAnalysisやnative[結果/けっか]の[返却/へんきゃく]に[先行/せんこう]する[場合/ばあい]がある。"
+      cons "[停止済/ていしず]みBudgetの[継続/けいぞく]ではsource[検査/けんさ]を[完了/かんりょう]できない。[独立/どくりつ]した[新/あたら]しい[照会/しょうかい]は[新/あたら]しいBudgetとSourceAdmissionで[行/おこな]える。"
+      cons "[同一操作/どういつそうさ]では[既存/きそん]の[累積予算/るいせきよさん]と[入場台帳/にゅうじょうだいちょう]を[継続/けいぞく]する。[照会失敗/しょうかいしっぱい]は[元/もと]のnative[結果/けっか]とReportを[変更/へんこう]しない。" nil
+    nil
+
 nil

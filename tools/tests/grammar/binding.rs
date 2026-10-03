@@ -1082,3 +1082,6 @@ mod completion;
 
 #[path = "binding/missing_probe.rs"]
 mod missing_probe;
+
+#[path = "binding/keyed_probe.rs"]
+mod keyed_probe;
