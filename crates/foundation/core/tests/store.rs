@@ -189,3 +189,71 @@ fn edits_invalidate_only_on_commit_and_preparation_is_metered() -> Result<(), So
     assert_eq!(store.snapshots().len(), 2);
     Ok(())
 }
+
+#[test]
+fn latest_budgeted_lookup_is_indexed_and_observes_retained_revision_order()
+-> Result<(), SourceError> {
+    let mut store = SourceStore::default();
+    assert!(
+        store
+            .latest_with_budget(&SourceId("empty".into()), &mut budget())?
+            .is_none()
+    );
+    // Descending insertion and non-monotone revisions prevent dependence on
+    // vector order. The unbudgeted linear maximum is an independent oracle.
+    for i in (0..512).rev() {
+        for revision in [7, 0, u64::MAX, 3] {
+            store.insert(SourceSnapshot::new(
+                SourceId(format!("s-{i:04}")),
+                revision,
+                "memory:lookup".into(),
+                b"abc".to_vec(),
+                &mut budget(),
+            )?)?;
+        }
+    }
+    for name in [
+        "before",
+        "s-0000",
+        "s-0255",
+        "s-0255-absent",
+        "s-0511",
+        "z-after",
+    ] {
+        let source = SourceId(name.into());
+        let mut b = Budget::new(Limits {
+            work: 1000,
+            allocation_units: 0,
+            ..budget().limits()
+        });
+        let actual = store.latest_with_budget(&source, &mut b)?;
+        let expected = store.latest(&source);
+        assert_eq!(actual, expected);
+        if let (Some(actual), Some(expected)) = (actual, expected) {
+            assert!(core::ptr::eq(actual, expected));
+            assert_eq!(actual.identity().revision, u64::MAX);
+        }
+        assert_eq!(b.usage().allocation_units, 0);
+        let cost = b.usage().work;
+        let mut exact = Budget::new(Limits {
+            work: cost,
+            ..budget().limits()
+        });
+        assert_eq!(store.latest_with_budget(&source, &mut exact)?, expected);
+        let mut short = Budget::new(Limits {
+            work: cost - 1,
+            ..budget().limits()
+        });
+        assert_eq!(
+            store.latest_with_budget(&source, &mut short),
+            Err(SourceError::Stopped(StopReason::WorkLimit))
+        );
+    }
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert_eq!(
+        store.latest_with_budget(&SourceId("s-0000".into()), &mut cancelled),
+        Err(SourceError::Stopped(StopReason::Cancelled))
+    );
+    Ok(())
+}

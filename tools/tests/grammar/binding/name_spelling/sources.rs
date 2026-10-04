@@ -1,3 +1,5 @@
+#[path = "sources/state.rs"]
+mod state;
 use super::*;
 use nepl3_core::budget::{Resource, StopReason};
 use nepl3_engine::analysis::insertion::{
@@ -55,6 +57,7 @@ pub(super) fn verify(
             assert!(!candidate_seen);
         }
     }
+    state::verify(&inventory, b)?;
     let use_ = measure.usage();
     assert_eq!(inventory.report().usage, use_);
     assert_eq!(use_.diagnostics, 0);
