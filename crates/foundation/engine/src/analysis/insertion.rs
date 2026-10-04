@@ -18,6 +18,7 @@ pub mod name;
 mod occurrence;
 pub mod quality;
 pub mod reference;
+pub mod sources;
 pub mod whole;
 
 pub struct InsertionInput<'a, 'tree, 'p> {

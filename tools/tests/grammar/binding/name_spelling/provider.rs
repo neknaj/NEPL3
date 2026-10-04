@@ -56,6 +56,17 @@ impl<H: BindingHost> BindingHost for ReportDiagnostic<H> {
         checked: &CheckedFactsView<'_, '_>,
         emit: &mut FactsEmitter<'_>,
     ) -> Result<CustomOutcome, BindingError> {
+        let source = {
+            let (budget, admission) = emit.budget_and_admission();
+            admission.import(
+                SourceId("candidate-diagnostic-only".into()),
+                0,
+                "memory:candidate-diagnostic-only".into(),
+                b"candidate-only evidence".to_vec(),
+                budget,
+            )?
+        };
+        emit.source(source)?;
         let schema = checked
             .profile()
             .registry()
