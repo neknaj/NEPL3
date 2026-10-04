@@ -3,6 +3,8 @@ use super::*;
 mod provider;
 #[path = "name_spelling/reader.rs"]
 mod reader;
+#[path = "name_spelling/sources.rs"]
+mod sources;
 use nepl3_engine::analysis::insertion::quality::{self, QualityOutcome};
 use nepl3_engine::{
     analysis::{
@@ -507,6 +509,7 @@ fn name_spelling_preserves_ambiguity_and_supports_same_source_foreign_paths() ->
                                                     _ => {
                                                         let QualityOutcome::Suitable(suitable) = outcome.map_err(err)? else {return Err(format!("strict suitable {input}"));};
                                                         assert!(core::ptr::eq(suitable.declaration(), &proof));
+                                                        sources::verify(&suitable, b)?;
                                                         assert!(core::ptr::eq(suitable.whole().parsed(), checked.checked().candidate()));
                                                         let parse_report = checked.checked().candidate().execution().report();
                                                         let parse_report_before = parse_report.clone();
@@ -983,7 +986,10 @@ fn name_spelling_preserves_ambiguity_and_supports_same_source_foreign_paths() ->
                                     )
                                     .map_err(err)?
                                     else {
-                                        return Err("diagnostic Reference".into());
+                                        return Err(format!(
+                                            "diagnostic Reference {:?}",
+                                            named.references().trace().reply().outcome
+                                        ));
                                     };
                                     let DeclarationOutcome::Same(same) = declaration::correlate(
                                         &matched,
@@ -1017,8 +1023,28 @@ fn name_spelling_preserves_ambiguity_and_supports_same_source_foreign_paths() ->
                                         ) if severity == Severity::Error => {
                                             assert_eq!(diagnostic.code, "QualityFixture")
                                         }
-                                        QualityOutcome::Suitable(_)
-                                            if severity != Severity::Error => {}
+                                        QualityOutcome::Suitable(strict)
+                                            if severity != Severity::Error =>
+                                        {
+                                            sources::verify(&strict, b)?;
+                                            use nepl3_engine::analysis::insertion::sources::{
+                                                Side, Stage, collect,
+                                            };
+                                            let inventory = collect(&strict, b).map_err(err)?;
+                                            let added: Vec<_> = inventory
+                                                .entries()
+                                                .iter()
+                                                .filter(|row| {
+                                                    row.source.identity().source.0
+                                                        == "candidate-diagnostic-only"
+                                                })
+                                                .collect();
+                                            assert_eq!(added.len(), 1);
+                                            assert_eq!(
+                                                (added[0].side, added[0].stage),
+                                                (Side::Candidate, Stage::BindingReply)
+                                            );
+                                        }
                                         _ => return Err("strict diagnostic threshold".into()),
                                     }
                                 }
