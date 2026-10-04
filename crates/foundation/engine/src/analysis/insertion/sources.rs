@@ -1,9 +1,10 @@
 //! Inventory of retained source evidence, not a host-current dependency proof.
+pub mod state;
 use super::quality::StrictNameInsertion;
 use crate::parse::RetainedParse;
 use alloc::vec::Vec;
 use nepl3_core::{
-    budget::{Budget, Resource, StopReason},
+    budget::{Budget, Limits, Resource, StopReason},
     diagnostic::Report,
     source::SourceSnapshot,
     syntax::canonical::{BundleMappings, CanonicalError},
@@ -34,6 +35,7 @@ pub struct SourceEvidence<'a> {
 /// Source mappings and non-source host/configuration dependencies are separate.
 pub struct SourceInventory<'a> {
     entries: Vec<SourceEvidence<'a>>,
+    limits: Limits,
     report: Report,
 }
 impl<'a> SourceInventory<'a> {
@@ -150,6 +152,7 @@ pub fn collect<'a>(
     )?;
     Ok(SourceInventory {
         entries,
+        limits: b.limits(),
         report: Report {
             usage: b.usage(),
             ..Report::default()

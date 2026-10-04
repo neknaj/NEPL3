@@ -63,9 +63,11 @@ fn sift_edits(
     Ok(())
 }
 impl SourceStore {
-    // Upper bound in the existing (source, revision) index. The predecessor is
-    // the greatest revision only if its full source name matches the request.
-    fn latest_for_edit(
+    /// Greatest revision retained for this SourceId in this store.
+    /// This uses O(log S) budgeted source-name comparisons and no allocation.
+    /// The result describes this immutable store, not external workspace state.
+    /// Absence, cancellation and resource exhaustion remain distinct.
+    pub fn latest_with_budget(
         &self,
         source: &SourceId,
         budget: &mut Budget,
@@ -125,7 +127,7 @@ impl SourceStore {
         while cursor < sorted.len() {
             let id = &edits[sorted[cursor]].span.snapshot;
             let source = self
-                .latest_for_edit(&id.source, budget)?
+                .latest_with_budget(&id.source, budget)?
                 .ok_or(SourceError::MissingSnapshot)?;
             comparison(&id.source, &source.storage.id.source, budget)?;
             if source.storage.id != *id {
