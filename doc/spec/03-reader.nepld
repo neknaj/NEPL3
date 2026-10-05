@@ -371,6 +371,18 @@ body
         cons "[転送/てんそう]・[複製/ふくせい]の[割当/わりあて]は[別途計上/べっとけいじょう]し、[同/おな]じ[診断/しんだん]/eventの[件数/けんすう]を[二重計上/にじゅうけいじょう]しない。"
         nil
       cons paragraph
+        cons "[受入境界/うけいれきょうかい]は、[選択済/せんたくず]みnepl3.reader revision 1と[同/おな]じschema identityを[持/も]つDiagnosticについて、codeがReaderDiagnosticCodeの[宣言済/せんげんず]みvariant[名/めい]であることを[確認/かくにん]する。"
+        cons "FailedのprimaryとReportの[各/かく]Diagnosticを[別々/べつべつ]に[検査/けんさ]し、primaryの[一度/いちど]だけのecho[一致/いっち]も[維持/いじ]する。"
+        cons "[未宣言/みせんげん]code、[欠落/けつらく]・[異形/いけい]のcatalog、[不一致/ふいっち]identityをProviderContractとして[拒否/きょひ]する。"
+        cons "[外部/がいぶ]provider schemaや[別/べつ]revisionのcodeをこのcatalogで[制限/せいげん]せず、[従来/じゅうらい]の[構造/こうぞう]・source[検査/けんさ]を[保/たも]つ。" nil
+      cons paragraph
+        cons "この[規則/きそく]はnativeとportableのRead/Dependent/Transform[返信/へんしん]、[既受理/きじゅり]collector、domain[部分値/ぶぶんち]を[持/も]たないoperationのReportにも[適用/てきよう]する。"
+        cons "[汎用/はんよう]Report codecへreader[依存/いぞん]を[追加/ついか]せず、codeとargumentsの[個別/こべつ]な[対応規則/たいおうきそく]をこの[検査/けんさ]から[推定/すいてい]しない。"
+        cons "registryの[選択/せんたく]identityとdescriptorを[同/おな]じ[項目/こうもく]から[借用/しゃくよう]し、[探索/たんさく]・[名前比較/なまえひかく]のWorkを[比較前/ひかくまえ]に[共有/きょうゆう]Budgetへ[計上/けいじょう]する。"
+        cons "lookupは[型検証/かたけんしょう]proofを[作/つく]らず、catalog[検査/けんさ]だけでは[割当/わりあて]やDiagnostics/Events[件数/けんすう]を[増/ふ]やさない。"
+        cons "[非停止/ひていし]の[契約違反/けいやくいはん]ではpendingを[保/たも]って[有効/ゆうこう]な[返信/へんしん]を[再提出/さいていしゅつ]できる。"
+        cons "native resumeの[検証/けんしょう]が[予算/よさん]・[取消/とりけし]で[停止/ていし]した[場合/ばあい]は、[既存/きそん]の[終端/しゅうたん]Stopped[規則/きそく]でpendingを[消費/しょうひ]し、[既受理/きじゅり]artifactだけを[保持/ほじ]する。" nil
+      cons paragraph
         cons "[現在/げんざい]のReaderPlan digestはarena indexを[含/ふく]む[実行/じっこう]plan identityであり、continuationの[別/べつ]planへの[誤適用/ごてきよう]を[防/ふせ]ぐ。"
         cons "Grammar packageの[意味/いみ]digestとは[別/べつ]である。"
         cons "package[比較/ひかく]では、ruleの[名前順/なまえじゅん]、reader[参照/さんしょう]の[解決/かいけつ]、[意味上/いみじょう]の[順序/じゅんじょ]を[正規化/せいきか]する。"

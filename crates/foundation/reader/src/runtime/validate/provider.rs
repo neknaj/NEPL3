@@ -248,6 +248,7 @@ pub(crate) fn check_provider(
         },
     };
     if let Some((diagnostic, recovery)) = failed {
+        accepted_diagnostic(diagnostic, &sources, &[], machine.registry, budget)?;
         // Account variable-size equality before comparing the primary with the
         // returned diagnostic list; the primary itself is not counted twice.
         for item in &returned.diagnostics {

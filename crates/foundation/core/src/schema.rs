@@ -484,6 +484,29 @@ impl SchemaRegistry {
             .map(|(reference, _)| reference)
             .find(|reference| reference.package == package && reference.revision == revision)
     }
+    /// Resource-aware lookup of the selected identity and its exact descriptor.
+    /// Both references borrow this registry. This performs no finalization or
+    /// structural validation and creates no cached admission proof.
+    pub fn selected_descriptor_with_budget(
+        &self,
+        package: &str,
+        revision: u64,
+        budget: &mut Budget,
+    ) -> Result<Option<(&SchemaRef, &SchemaDescriptor)>, StopReason> {
+        budget.charge(Resource::Work, 1)?;
+        for (reference, descriptor) in &self.schemas {
+            budget.charge(
+                Resource::Work,
+                (reference.package.len() as u64)
+                    .saturating_add(package.len() as u64)
+                    .saturating_add(9),
+            )?;
+            if reference.package == package && reference.revision == revision {
+                return Ok(Some((reference, descriptor)));
+            }
+        }
+        Ok(None)
+    }
     /// Check both the selected operation's expected type and the payload's
     /// structure. The borrowed boundary avoids copying a remote result merely
     /// to wrap it in `NdfValue` for validation.
