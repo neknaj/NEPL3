@@ -216,6 +216,14 @@
       "aliases": "doc/migration/aliases/15-site.json",
       "route": "docs/spec/15-site.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "references",
+      "source": "doc/spec/references.nepld",
+      "projection": "doc/spec/references.md",
+      "aliases": "doc/migration/aliases/references.json",
+      "route": "docs/spec/references.html",
+      "renderer": "nepl3-tools.markdown-annotated/4"
     }
   ],
   "files": [
