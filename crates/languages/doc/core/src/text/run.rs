@@ -106,8 +106,9 @@ pub(super) fn execute<'a>(
         match action {
             Action::Text(text) => append(&mut out, text, b)?,
             Action::Node(index, depth) => {
-                b.with_depth_at_least(base.saturating_add(depth), |b| -> Result<(), Failure> {
-                    let next = depth.saturating_add(1);
+                let absolute = base.checked_add(depth).ok_or(StopReason::DepthLimit)?;
+                b.with_depth_at_least(absolute, |b| -> Result<(), Failure> {
+                    let next = depth.checked_add(1).ok_or(StopReason::DepthLimit)?;
                     let node = usize::try_from(index)
                         .ok()
                         .and_then(|index| doc.nodes.get(index))
