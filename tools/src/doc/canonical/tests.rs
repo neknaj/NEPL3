@@ -1,6 +1,9 @@
 use super::*;
 use crate::testing::Fixture;
 use serde_json::json;
+#[path = "tests/svg.rs"]
+#[cfg(not(target_family = "wasm"))]
+mod svg;
 
 #[test]
 #[ignore = "explicit measurement of current canonical document preparation costs"]

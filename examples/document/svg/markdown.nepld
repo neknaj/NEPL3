@@ -1,0 +1,6 @@
+article ja "MarkdownのSVG画像"
+body
+cons paragraph cons "Docの画像を相対リンクで表示する。" nil
+cons image asset "triangle" none "{[三角形/さんかくけい]/triangle}" some "TikZで作成した{図/静的SVGとして検査した画像}"
+cons paragraph cons sentence cons text "文中の図：" cons image asset "triangle" none "三角形" nil nil
+nil
