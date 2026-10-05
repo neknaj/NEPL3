@@ -8,7 +8,7 @@ use nepl3_core::{
     value_codec::FoundationValueCodec,
 };
 use nepl3_doc_core::{
-    model::LinkTarget,
+    model::{DocEmbed, EmbedKind, EmbedRef, LinkTarget},
     pages::{self, PageDestination, PageLinkPlan, PageSet},
     prepare,
 };
@@ -42,12 +42,90 @@ impl<E> From<StopReason> for PagesRenderError<'_, E> {
     }
 }
 
+/// Native Code-aware rendering retains each imported occurrence separately.
+/// This does not add a portable operation or accept a serialized render proof.
+#[derive(Debug)]
+pub struct RenderedCodePages {
+    pub pages: RenderedPages,
+    pub foreign: Vec<Vec<ForeignPlacement>>,
+}
+#[derive(Debug)]
+pub enum PagesCodeRenderError<'a, E, F> {
+    Pages(PagesRenderError<'a, E>),
+    Foreign {
+        page: u64,
+        error: ForeignRenderError<F>,
+    },
+    /// Highlight decoration cannot define semantic Doc anchors. Qualified
+    /// presentation identities belong in DataId rather than DOM Id.
+    CodeId {
+        page: u64,
+        node: u64,
+    },
+}
+impl<E, F> From<StopReason> for PagesCodeRenderError<'_, E, F> {
+    fn from(reason: StopReason) -> Self {
+        Self::Pages(PagesRenderError::Stopped(reason))
+    }
+}
+impl<'a, E, F> From<PagesRenderError<'a, E>> for PagesCodeRenderError<'a, E, F> {
+    fn from(error: PagesRenderError<'a, E>) -> Self {
+        Self::Pages(error)
+    }
+}
+
 pub fn render_pages<'a, C: FoundationValueCodec>(
     request: &'a PagesHtmlRequest,
     r: &SchemaRegistry,
     c: &mut C,
     b: &mut Budget,
 ) -> Result<RenderedPages, PagesRenderError<'a, C::Error>> {
+    type NoAdapter =
+        fn(u64, &DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, core::convert::Infallible>;
+    match render_pages_impl::<C, core::convert::Infallible, NoAdapter>(request, r, c, b, None) {
+        Ok(result) => Ok(result.pages),
+        Err(PagesCodeRenderError::Pages(error)) => Err(error),
+        Err(PagesCodeRenderError::CodeId { .. }) => {
+            Err(PagesRenderError::Render(RenderError::InternalShape))
+        }
+        Err(PagesCodeRenderError::Foreign { error, .. }) => match error {
+            ForeignRenderError::Render(error) => Err(PagesRenderError::Render(error)),
+            ForeignRenderError::Foreign(never) => match never {},
+        },
+    }
+}
+
+/// Explicit native host composition. The adapter receives the exact immutable
+/// page's Code embed and must display its retained bytes without evaluation.
+/// All page links are resolved before rendering; other guest kinds stay pending.
+/// Code markup must not carry DOM Id attributes: they cannot satisfy Doc links
+/// or local References when the real target is hidden by language selection.
+pub fn render_pages_with_code<'a, C: FoundationValueCodec, F>(
+    request: &'a PagesHtmlRequest,
+    r: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+    adapter: &mut impl FnMut(u64, &DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, F>,
+) -> Result<RenderedCodePages, PagesCodeRenderError<'a, C::Error, F>> {
+    render_pages_impl(request, r, c, b, Some(adapter))
+}
+
+enum CodeAdapterError<E> {
+    Host(E),
+    Id(u64),
+    Stopped(StopReason),
+}
+
+fn render_pages_impl<'a, C: FoundationValueCodec, F, A>(
+    request: &'a PagesHtmlRequest,
+    r: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+    mut adapter: Option<&mut A>,
+) -> Result<RenderedCodePages, PagesCodeRenderError<'a, C::Error, F>>
+where
+    A: FnMut(u64, &DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, F>,
+{
     let checked = pages::resolve(&request.set, r, c, b).map_err(|e| match e {
         pages::PageError::Stopped(s) => PagesRenderError::Stopped(s),
         e => PagesRenderError::Input(e),
@@ -65,16 +143,26 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
                 return Err(PagesRenderError::InvalidExternalUri {
                     page: pending.page,
                     node: *node,
-                });
+                }
+                .into());
             }
-        } else {
+        } else if !(adapter.is_some()
+            && matches!(
+                pending.requirement,
+                prepare::DocRequirement::Foreign {
+                    kind: EmbedKind::Code,
+                    ..
+                }
+            ))
+        {
             unresolved = true;
         }
     }
     if unresolved {
-        return Err(PagesRenderError::NeedsResolution(checked.into_plan()));
+        return Err(PagesRenderError::NeedsResolution(checked.into_plan()).into());
     }
     let mut fragments = Vec::new();
+    let mut foreign = Vec::new();
     let mut page_links = plan.links.as_slice();
     let mut page_pending = plan.remaining.as_slice();
     for (page, input) in request.set.pages.iter().enumerate() {
@@ -131,15 +219,67 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
             }
             page_pending = rest;
         }
-        let fragment =
+        let fragment = if let Some(adapter) = adapter.as_mut() {
+            let rendered = crate::build::render_prepared_with_foreign(
+                &prepared,
+                &links,
+                &mut |embed, index, b| {
+                    let markup =
+                        adapter(page as u64, embed, index, b).map_err(CodeAdapterError::Host)?;
+                    for (node, value) in markup.fragment.nodes.iter().enumerate() {
+                        b.charge(Resource::Work, 1)
+                            .map_err(CodeAdapterError::Stopped)?;
+                        if let HtmlNode::Element { attributes, .. } = value {
+                            for attribute in attributes {
+                                b.charge(Resource::Work, 1)
+                                    .map_err(CodeAdapterError::Stopped)?;
+                                if matches!(attribute, HtmlAttribute::Id { .. }) {
+                                    return Err(CodeAdapterError::Id(node as u64));
+                                }
+                            }
+                        }
+                    }
+                    Ok(markup)
+                },
+                b,
+                true,
+            );
+            // An adapter may report its own error after stopping the shared
+            // budget. The formal stop takes precedence over that host error.
+            b.poll()?;
+            let rendered = rendered.map_err(|error| match error {
+                ForeignRenderError::Foreign(CodeAdapterError::Id(node)) => {
+                    PagesCodeRenderError::CodeId {
+                        page: page as u64,
+                        node,
+                    }
+                }
+                ForeignRenderError::Foreign(CodeAdapterError::Stopped(reason)) => {
+                    PagesCodeRenderError::from(reason)
+                }
+                ForeignRenderError::Foreign(CodeAdapterError::Host(error)) => {
+                    PagesCodeRenderError::Foreign {
+                        page: page as u64,
+                        error: ForeignRenderError::Foreign(error),
+                    }
+                }
+                ForeignRenderError::Render(error) => PagesCodeRenderError::Foreign {
+                    page: page as u64,
+                    error: ForeignRenderError::Render(error),
+                },
+            })?;
+            push(&mut foreign, rendered.foreign, b)?;
+            rendered.fragment
+        } else {
             crate::build::render_prepared(&prepared, &links, b).map_err(|e| match e {
                 RenderError::Stopped(s) => PagesRenderError::Stopped(s),
                 e => PagesRenderError::Render(e),
-            })?;
+            })?
+        };
         push(&mut fragments, fragment, b)?;
     }
     if !page_links.is_empty() || !page_pending.is_empty() {
-        return Err(PagesRenderError::Render(RenderError::InternalShape));
+        return Err(PagesRenderError::Render(RenderError::InternalShape).into());
     }
     // Borrow emitted IDs on the first incoming fragment link. Pages without
     // such links need no collection; semantic labels remain insufficient.
@@ -198,13 +338,17 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
                         page: page as u64,
                         node: cause.node,
                         target: index as u64,
-                    });
+                    }
+                    .into());
                 }
             }
         }
     }
-    Ok(RenderedPages {
-        identity: plan.identity,
-        fragments,
+    Ok(RenderedCodePages {
+        pages: RenderedPages {
+            identity: plan.identity,
+            fragments,
+        },
+        foreign,
     })
 }

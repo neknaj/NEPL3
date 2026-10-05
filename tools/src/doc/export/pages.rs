@@ -2,7 +2,8 @@
 //! page set renders; the final manifest is the completion marker, not a deploy.
 use super::*;
 use nepl3_doc_core::pages::{FileBytes, PageDocument, PageFile, PageRegistration, PageSet};
-use nepl3_doc_html::pages::{PagesHtmlRequest, render_pages};
+use nepl3_doc_html::pages::{PagesHtmlRequest, render_pages_with_code};
+mod code;
 use serde::Deserialize;
 use std::{collections::BTreeMap, io::Write};
 pub mod resources;
@@ -99,6 +100,7 @@ pub fn generate_with_resources(
     let mut pages = Vec::new();
     let mut origins = Vec::new();
     let mut profiles = Vec::new();
+    let mut page_code = Vec::new();
     if resources.len() > 128 {
         return Err("FileCountLimit".into());
     }
@@ -139,7 +141,7 @@ pub fn generate_with_resources(
         if total > MAX_SOURCE_BYTES {
             return Err("SourceLimit".into());
         }
-        let (document, profile, parse_usage, lower_usage) =
+        let (document, profile, parse_usage, lower_usage, code) =
             crate::doc::source::with_named_input_limits(
                 true,
                 compiled,
@@ -163,9 +165,17 @@ pub fn generate_with_resources(
                         &mut c,
                     )
                     .map_err(|e| format!("lower: {e:?}; usage={:?}", lower_budget.usage()))?;
-                    Ok((doc, profile.digest(), b.usage(), lower_budget.usage()))
+                    let code = code::PreparedPageCode::prepare(&doc, tree, profile, output_budget)?;
+                    Ok((doc, profile.digest(), b.usage(), lower_budget.usage(), code))
                 },
             )?;
+        output_budget
+            .charge(
+                nepl3_core::budget::Resource::AllocationUnits,
+                (2 * core::mem::size_of::<code::PreparedPageCode>()) as u64,
+            )
+            .map_err(err)?;
+        page_code.push(code);
         profiles.push(profile);
         pages.push(PageDocument {
             registration: PageRegistration {
@@ -196,8 +206,21 @@ pub fn generate_with_resources(
     let empty = SourceStore::default();
     let mut a = SourceAdmission::default();
     let mut c = FoundationCodec::new(r, &empty, &mut a).map_err(err)?;
-    let rendered = render_pages(&request, r, &mut c, output_budget)
-        .map_err(|e| format!("resolve/render: {e:?}; usage={:?}", output_budget.usage()))?;
+    let rendered = render_pages_with_code(
+        &request,
+        r,
+        &mut c,
+        output_budget,
+        &mut |page, embed, index, b| {
+            let code = usize::try_from(page)
+                .ok()
+                .and_then(|page| page_code.get(page))
+                .ok_or("CodePageMissing")?;
+            code.render(embed, index, r, b)
+        },
+    )
+    .map_err(|e| format!("resolve/render: {e:?}; usage={:?}", output_budget.usage()))?
+    .pages;
     let rendered_usage = output_budget.usage();
     let mut files = BTreeMap::new();
     let mut file_kinds = BTreeMap::new();
@@ -269,8 +292,8 @@ pub fn generate_with_resources(
         "output_budget":{"contract":"nepl3.local-doc-pages.execution/1","limits":resources::limits(output_budget.limits()),
             "initial_usage":resources::usage(initial_usage),"usage":resources::usage(output_budget.usage())},
         "registered_files":file_origins,
-        "renderer":"nepl3-doc-html pages/3","options":{"parallel":"Rows"},"viewer_scripts":false,
-        "packages":"compiled checked bootstrap fixtures","scope":"Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Assets and foreign rendering remain unsupported. Not Pages deployment evidence.",
+        "renderer":"nepl3-doc-html pages/4","options":{"parallel":"Rows"},"viewer_scripts":false,
+        "packages":"compiled checked bootstrap fixtures","scope":"Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Retained Code uses shared syntax-only highlighting without guest evaluation; assets and other foreign rendering remain unsupported. Not Pages deployment evidence.",
         "budget_scope":"Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
         "output_usage":{"work":output_budget.usage().work,"allocation_units":output_budget.usage().allocation_units,"output_bytes":output_budget.usage().output_bytes}
     })).map_err(err)? + "\n";

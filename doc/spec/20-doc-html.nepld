@@ -316,6 +316,11 @@ body
     cons paragraph cons "開発hostは同じparse・lower処理の元のParseTreeからengine regionsを取得し、共通no_stdのbyte-span正規化を使う。guestの再parse、意味lower、評価、LSP server呼び出しは行わない。現在の入力はSyntaxOnlyであり、reader factsは使用しない。RawCode・InlineCodeは文字列を保持する。" nil
     cons paragraph cons "表示範囲はguest rootのcoverと同一snapshotに限定する。重複spanを正規化し、空白・改行・非装飾範囲を元のbyte順で保持する。全内容を型付きTextとして出力する。source欠落、範囲不一致、Invalid、Stoppedは明示的な失敗とし、無装飾の成功へ変換しない。classのない正常な結果は元の文字列を表示する。" nil
     cons paragraph cons "安定したCSS分類キーはnepl-code-content・nepl-code-marker・nepl-code-delimiter・nepl-code-name・nepl-code-quantity・nepl-code-annotationである。schema package・revision・digest・class名は曖昧さのないhex形式のdata-nepl-idに保持する。任意のclass名をCSS識別子として扱わない。light・darkで分類キーを維持し、前景・背景の変数だけを切り替える。" nil
-    cons paragraph cons "同じ単一文書にCodeとSVGを含め、CSSのexternal・inlineとSVGのexternal・embeddedを組み合わせられる。PagesのCode対応、reader-fact統合、不完全なホスト文書のexportは後続の範囲である。Code guestの意味的な誤りは、表示のために意味解析を要求する根拠としない。" nil
+    cons paragraph cons "同じ単一文書にCodeとSVGを含め、CSSのexternal・inlineとSVGのexternal・embeddedを組み合わせられる。reader-fact統合と不完全なホスト文書のexportは後続の範囲である。Code guestの意味的な誤りは、表示のために意味解析を要求する根拠としない。" nil
+    cons paragraph cons "Pagesのnative render_pages_with_codeは、全ページの参照を検査してから、入力ページ・EmbedRef・不変のguest closureをadapterへ渡す。Code以外の未解決要求はadapter呼出前に拒否する。従来のrender_pagesとportable操作はCodeをNeedsResolutionとする。" nil
+    cons paragraph cons "Code装飾のDOM IdはDocの意味anchorではない。言語選択で非表示になったanchorをCodeのIdで代用できないよう、このPages profileではCode出力内のId属性を拒否する。表示分類の完全なidentityはDataIdで保持できる。ページ間linkと同一文書内Referenceの双方に適用する。" nil
+    cons paragraph cons "開発hostのdoc-html pagesは、元のParseTreeとprofileが有効なparse・lower処理内でCodeの共有highlightを準備する。入力ページ・EmbedRef・guestのcanonical digestを照合して出力へ渡し、guestを再parse・意味lower・評価しない。共有embedの各出現を保持し、複製のWorkとAllocationUnitsを累積output Budgetへ計上する。" nil
+    cons paragraph cons "本文、Code、参照、markup検査、書出しが完了するまで出力を公開しない。adapterが停止後に別のエラーを返してもBudgetのStoppedを優先する。source欠落・別ページのguest・不正markup・表示されない参照先は成功や部分成果物にしない。" nil
+    cons paragraph cons "native APIはページごとのforeign placementを返す。hostのexportは文書の元情報をmanifestに保持するが、この合成を公開portable Code操作、reader-fact対応、runtime受入の完了へ読み替えない。PagesのImage・SVG描画とCode以外のforeignは引き続き未対応である。" nil
     nil
   nil

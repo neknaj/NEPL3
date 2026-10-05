@@ -286,3 +286,63 @@ fn page_output_rejects_an_anchor_hidden_by_language_selection() -> Result<(), St
     ));
     Ok(())
 }
+
+#[test]
+fn legacy_html_pages_require_resolution_for_code_without_evaluating_guests() -> Result<(), String> {
+    let compiled = compiled()?;
+    // The embedded Doc has an empty title and empty Ruby base. It is legal
+    // source to display, not a guest document to semantically lower/evaluate.
+    let input = r#"article en "Host" body cons paragraph cons code Doc article en sentence nil body cons paragraph cons sentence cons ruby text "" text "r" nil nil nil nil nil"#;
+    with_input(&compiled, input, "Article", |tree, profile, _, _| {
+        let store = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
+        let document = lower::document(
+            tree.syntax(),
+            &compiled.doc.package.schema,
+            Category::Article,
+            profile.registry(),
+            &mut budget(),
+            &mut codec,
+        )
+        .map_err(err)?;
+        let request = nepl3_doc_html::pages::PagesHtmlRequest {
+            set: PageSet {
+                pages: vec![PageDocument {
+                    registration: PageRegistration {
+                        id: "code".into(),
+                        source: "code.nepld".into(),
+                        route: "code.html".into(),
+                    },
+                    document,
+                }],
+                files: vec![],
+            },
+            options: nepl3_doc_html::RenderOptions {
+                parallel: nepl3_doc_html::ParallelMode::Rows,
+            },
+        };
+        let original = request.clone();
+        let error = nepl3_doc_html::pages::render_pages(
+            &request,
+            profile.registry(),
+            &mut codec,
+            &mut budget(),
+        )
+        .err()
+        .ok_or("Code silently rendered by legacy API")?;
+        let nepl3_doc_html::pages::PagesRenderError::NeedsResolution(plan) = error else {
+            return Err(format!("unexpected error: {error:?}"));
+        };
+        assert!(plan.remaining.iter().any(|pending| matches!(
+            pending.requirement,
+            nepl3_doc_core::prepare::DocRequirement::Foreign {
+                kind: nepl3_doc_core::model::EmbedKind::Code,
+                ..
+            }
+        )));
+        assert_eq!(request, original);
+        Ok(())
+    })
+}
