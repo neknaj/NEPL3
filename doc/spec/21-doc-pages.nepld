@@ -1044,6 +1044,28 @@ body
         cons "[旧/きゅう]anchor[対応/たいおう]・[正本/せいほん]registry[切替/きりかえ]・[人/ひと]の[意味/いみ]レビューは[別条件/べつじょうけん]であり、[限定/げんてい]projectionの[成功/せいこう]だけで[元/もと]Markdownを[削除/さくじょ]しない。"
         nil
       nil
+  cons section html_compatibility "canonical HTMLの[互換/ごかん]anchor" body
+    cons paragraph
+      cons "canonical registryのaliasesを[使/つか]うHTMLは、[通常/つうじょう]のDocページ[集合/しゅうごう]を[生成/せいせい]した[後/あと]、[明示/めいじ]したnative host[合成/ごうせい]で[互換/ごかん]anchorを[追加/ついか]する。"
+      cons "これはportable rendererやDocの[意味/いみ]IDを[変更/へんこう]する[操作/そうさ]ではない。[通常/つうじょう]のページ[書出/かきだ]しはaliasesを[暗黙/あんもく]に[読/よ]まない。" nil
+    cons paragraph
+      cons "aliasesはMarkdownと[同/おな]じnameとsectionのrecord[配列/はいれつ]で、nullのsectionはArticle、それ[以外/いがい]は[表示/ひょうじ]されたSectionを[指/さ]す。"
+      cons "[追加/ついか]するnameは[空/から]でない[英数字/えいすうじ]・Unicode[文字/もじ]・ハイフン・underscoreに[制限/せいげん]し、[同一/どういつ]ページの[重複/ちょうふく]、[既存/きそん]DOM IDとの[衝突/しょうとつ]、[欠落/けつらく]・[非表示/ひひょうじ]の[対象/たいしょう]を[拒否/きょひ]する。"
+      cons "[実際/じっさい]のArticleまたはSectionの[先頭/せんとう]へ[型付/かたつ]きSpanとIdを[挿入/そうにゅう]し、[各/かく]SpanのElementOriginを[対象/たいしょう]の[意味/いみ]nodeへ[対応/たいおう]させる。"
+      cons "[元/もと]のnode[番号/ばんごう]とoriginを[保/たも]ち、HTML[文字列/もじれつ]の[置換/ちかん]やsource Spanの[捏造/ねつぞう]を[行/おこな]わない。" nil
+    cons paragraph
+      cons "[入力/にゅうりょく]JSONは[各/かく]ページ1MiB・4096record、[合計/ごうけい]10000000byte・128ページまでのhost[上限/じょうげん]を[持/も]つ。"
+      cons "file・JSON・manifestの[処理/しょり]は[従来/じゅうらい]のhost[記録/きろく]でありruntime Usageへ[含/ふく]めない。[型付/かたつ]き[追加/ついか]・[検査/けんさ]・[最終/さいしゅう]serializeは[同/おな]じoutput Budgetを[共有/きょうゆう]する。"
+      cons "[全/ぜん]ページの[検査/けんさ]が[終/お]わるまで[出力/しゅつりょく]fileを[書/か]かず、[取消/とりけし]・[予算停止/よさんていし]・[不正入力/ふせいにゅうりょく]を[成功/せいこう]へ[変/か]えない。" nil
+    cons paragraph
+      cons "manifestのcompatibilityはrenderer nepl3-tools.canonical-html-aliases/1、ページIDと[元/もと]JSONのdigest、[独立/どくりつ]したinput_identityとexecution_identityを[記録/きろく]する。"
+      cons "[入力/にゅうりょく]identityはdomain nepl3.canonical-html.compatibility/1とNUL、8byte big-endianのページ[数/すう]、[登録順/とうろくじゅん]の[各/かく]ページIDのbyte[長/ちょう]・UTF-8 byte[列/れつ]・32byteのJSON digestをhashする。"
+      cons "[合成実行/ごうせいじっこう]identityはdomain nepl3.canonical-html.compatibility-execution/1とNUL、[従来/じゅうらい]execution_identityと[互換入力/ごかんにゅうりょく]identityのhex[文字列/もじれつ]を[各/かく]8byte[長/ちょう]でframeしてhashする。"
+      cons "[従来/じゅうらい]の[意味/いみ]identityは[保持/ほじ]し、[変更後/へんこうご]のfile hashを[出力記録/しゅつりょくきろく]へ[残/のこ]す。JSONの[空白/くうはく]だけの[変更/へんこう]は[入力証拠/にゅうりょくしょうこ]を[変/か]えるが、HTMLの[変更/へんこう]を[要求/ようきゅう]しない。" nil
+    cons paragraph
+      cons "[明示/めいじ]したaliasesの[生成/せいせい]は、GitHub[等/とう]の[自動/じどう]anchorや[過去/かこ]の[公開経路/こうかいけいろ]との[完全互換/かんぜんごかん]を[証明/しょうめい]しない。"
+      cons "[実/じつ]ブラウザの[移動/いどう]・accessibility・[旧/きゅう]URLの[確認/かくにん]と、ページ[単位/たんい]の[正本切替/せいほんきりかえ]は[別/べつ]の[検証/けんしょう]とする。" nil
+    nil
   cons section annotated "[注釈付/ちゅうしゃくつ]きMarkdown[閲覧/えつらん]projection" body
     cons paragraph
       cons sentence cons code "nepl3-tools doc-markdown annotated <source.nepld> <aliases.json> <new-file.md>" cons text " は、Doc" cons ruby text "正本" text "せいほん" cons text "の" cons ruby text "読" text "よ" cons text "み・" cons ruby text "注記" text "ちゅうき" cons text "をGitHub" cons ruby text "等" text "とう" cons text "の" cons ruby text "閲覧用" text "えつらんよう" cons text "Markdownへ" cons ruby text "明示" text "めいじ" cons text "する" cons ruby text "別" text "べつ" cons text "profileである。" nil

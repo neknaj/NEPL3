@@ -3,6 +3,7 @@
 use super::*;
 use nepl3_doc_core::pages::{FileBytes, PageDocument, PageFile, PageRegistration, PageSet};
 use nepl3_doc_html::pages::{PagesHtmlRequest, render_pages_with_code};
+pub(crate) mod aliases;
 mod code;
 use serde::Deserialize;
 use std::{collections::BTreeMap, io::Write};
@@ -91,11 +92,24 @@ pub fn generate_with_resources(
     phases: resources::PhaseLimits,
     output_budget: &mut Budget,
 ) -> Result<GeneratedPages, String> {
+    generate_with_aliases(compiled, inputs, resources, phases, output_budget, &[])
+}
+
+/// Explicit native-host compatibility composition; ordinary page export is unchanged.
+pub(crate) fn generate_with_aliases(
+    compiled: &Compiled,
+    inputs: &[(Entry, String)],
+    resources: &[(Entry, Vec<u8>)],
+    phases: resources::PhaseLimits,
+    output_budget: &mut Budget,
+    aliases: &[aliases::PageAliases],
+) -> Result<GeneratedPages, String> {
     output_budget.poll().map_err(err)?;
     let initial_usage = output_budget.usage();
     if inputs.is_empty() || inputs.len() > 128 {
         return Err("PageCountLimit".into());
     }
+    aliases::check_binding(inputs, aliases, output_budget)?;
     let mut total = 0u64;
     let mut pages = Vec::new();
     let mut origins = Vec::new();
@@ -206,7 +220,7 @@ pub fn generate_with_resources(
     let empty = SourceStore::default();
     let mut a = SourceAdmission::default();
     let mut c = FoundationCodec::new(r, &empty, &mut a).map_err(err)?;
-    let rendered = render_pages_with_code(
+    let mut rendered = render_pages_with_code(
         &request,
         r,
         &mut c,
@@ -221,6 +235,20 @@ pub fn generate_with_resources(
     )
     .map_err(|e| format!("resolve/render: {e:?}; usage={:?}", output_budget.usage()))?
     .pages;
+    for (page, fragment) in request.set.pages.iter().zip(&mut rendered.fragments) {
+        for input in aliases {
+            output_budget
+                .charge(
+                    nepl3_core::budget::Resource::Work,
+                    (input.page.len() + page.registration.id.len() + 1) as u64,
+                )
+                .map_err(err)?;
+            if input.page == page.registration.id {
+                aliases::apply(fragment, &input.values, output_budget)?;
+                break;
+            }
+        }
+    }
     let rendered_usage = output_budget.usage();
     let mut files = BTreeMap::new();
     let mut file_kinds = BTreeMap::new();
@@ -297,7 +325,9 @@ pub fn generate_with_resources(
         "budget_scope":"Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
         "output_usage":{"work":output_budget.usage().work,"allocation_units":output_budget.usage().allocation_units,"output_bytes":output_budget.usage().output_bytes}
     })).map_err(err)? + "\n";
-    Ok(GeneratedPages { files, manifest })
+    let mut generated = GeneratedPages { files, manifest };
+    aliases::record(&mut generated, aliases)?;
+    Ok(generated)
 }
 fn conflict(a: &str, b: &str) -> bool {
     let mut left = a.split('/');
