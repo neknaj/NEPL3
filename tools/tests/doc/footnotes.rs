@@ -115,3 +115,48 @@ fn footnotes_keep_cumulative_limits_and_original_nesting_depth() -> Result<(), S
         Ok(())
     })
 }
+
+#[test]
+fn legacy_footnotes_reject_unresolved_math_without_erasing_it() -> Result<(), String> {
+    use nepl3_doc_core::{check::Category, lower};
+    let compiled = compiled()?;
+    // Display syntax is not code evaluation, and the legacy entry point has no
+    // Math resolver. None of these positions may silently lose its guest.
+    for source in [
+        r#"article en "T" body cons paragraph cons sentence cons math Math frac 1 0 nil nil nil"#,
+        r#"article en "T" body cons display Math frac 1 0 nil"#,
+        r#"article en sentence cons math Math frac 1 0 nil body nil"#,
+        r#"article en "T" body cons paragraph cons sentence cons anno text "base" cons math Math frac 1 0 nil nil nil nil"#,
+        r#"article en "T" body cons code Math frac 1 0 nil"#,
+    ] {
+        with_input(&compiled, source, "Article", |tree, profile, _, _| {
+            let store = SourceStore::default();
+            let mut admission = SourceAdmission::default();
+            let mut codec =
+                FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
+            let document = lower::document(
+                tree.syntax(),
+                &compiled.doc.package.schema,
+                Category::Article,
+                profile.registry(),
+                &mut budget(),
+                &mut codec,
+            )
+            .map_err(err)?;
+            let original = document.clone();
+            assert!(matches!(
+                render_footnotes(
+                    &document,
+                    profile.registry(),
+                    &mut codec,
+                    &mut budget(),
+                    &[]
+                ),
+                Err(Error::NeedsResolution)
+            ));
+            assert_eq!(document, original);
+            Ok(())
+        })?;
+    }
+    Ok(())
+}
