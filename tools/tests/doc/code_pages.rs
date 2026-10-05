@@ -93,3 +93,20 @@ fn code_pages_reject_other_guests_and_preserve_output_stops() -> Result<(), Stri
     assert!(pages::generate(&c, &[code, math]).is_err_and(|e| e.contains("NeedsResolution")));
     Ok(())
 }
+
+#[test]
+fn math_code_uses_its_shared_frontend_without_evaluation() -> Result<(), String> {
+    let c = compiled()?;
+    let source = r#"article en "Math source" body cons paragraph cons code Math frac 1 0 nil nil"#;
+    let output = pages::generate(&c, &[input("math", source)])?;
+    let html = core::str::from_utf8(output.files.get("math/index.html").ok_or("missing page")?)
+        .map_err(err)?;
+    assert!(html.contains("<code>"));
+    assert!(html.contains(">frac<"), "{html}");
+    // The Math grammar declares the Number leaf with the quantity style.
+    assert!(html.contains("nepl-code-quantity"), "{html}");
+    // Division by zero is displayed as authored source, never evaluated.
+    assert!(html.contains(">0<"), "{html}");
+    assert!(!html.contains("<math"));
+    Ok(())
+}
