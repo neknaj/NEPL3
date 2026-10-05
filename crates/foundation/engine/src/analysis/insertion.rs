@@ -10,6 +10,7 @@ use nepl3_core::{
 };
 pub mod binding;
 pub mod checked;
+pub mod context;
 pub mod declaration;
 pub mod declared;
 pub mod draft;

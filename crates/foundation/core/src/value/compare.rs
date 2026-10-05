@@ -98,9 +98,20 @@ impl NdfValue {
                         _ => 1,
                     };
                     b.charge(Resource::Work, size(a).saturating_add(size(c)))?;
-                    // At least one side may be composite, but unequal enum tags
-                    // return without traversing that side's children.
-                    if a != c {
+                    // Do not invoke NdfValue::PartialEq here: it owns another
+                    // unbudgeted traversal stack even for scalar comparisons.
+                    // Composite equal tags have already been handled above.
+                    let equal = match (a, c) {
+                        (NdfValue::Unit, NdfValue::Unit) | (NdfValue::None, NdfValue::None) => true,
+                        (NdfValue::Bool(a), NdfValue::Bool(c)) => a == c,
+                        (NdfValue::U64(a), NdfValue::U64(c)) => a == c,
+                        (NdfValue::Integer(a), NdfValue::Integer(c)) => a == c,
+                        (NdfValue::Rational(a), NdfValue::Rational(c)) => a == c,
+                        (NdfValue::Text(a), NdfValue::Text(c)) => a == c,
+                        (NdfValue::Bytes(a), NdfValue::Bytes(c)) => a == c,
+                        _ => false,
+                    };
+                    if !equal {
                         return Ok(false);
                     }
                     None
