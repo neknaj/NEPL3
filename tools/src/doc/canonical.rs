@@ -2,7 +2,12 @@
 //! This host adapter never infers migration approval from successful rendering.
 use crate::{Result, doc::projection::annotated::host, repository};
 use serde::Deserialize;
-use std::{collections::BTreeSet, fs, io::Read, path::Path};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fs,
+    io::Read,
+    path::Path,
+};
 
 mod projection;
 pub(crate) mod references;
@@ -11,6 +16,45 @@ mod tests;
 
 use crate::doc::projection::annotated::host::RENDERER;
 const MAX_REGISTRY: u64 = 1_048_576;
+
+#[derive(Default)]
+struct OutputRoute {
+    file: bool,
+    children: BTreeMap<String, usize>,
+}
+#[derive(Default)]
+struct OutputRoutes {
+    // Flat ownership also bounds destruction stack depth on smaller-stack hosts.
+    nodes: Vec<OutputRoute>,
+}
+impl OutputRoutes {
+    fn insert(&mut self, path: &str) -> Result<()> {
+        if self.nodes.is_empty() {
+            self.nodes.push(OutputRoute::default());
+        }
+        let mut index = 0;
+        for part in path.split('/') {
+            if self.nodes[index].file {
+                return Err("output file used as directory".into());
+            }
+            let key = part.to_ascii_lowercase();
+            index = if let Some(&next) = self.nodes[index].children.get(&key) {
+                next
+            } else {
+                let next = self.nodes.len();
+                self.nodes.push(OutputRoute::default());
+                self.nodes[index].children.insert(key, next);
+                next
+            };
+        }
+        let node = &mut self.nodes[index];
+        if node.file || !node.children.is_empty() {
+            return Err("duplicate or overlapping output route".into());
+        }
+        node.file = true;
+        Ok(())
+    }
+}
 
 fn portable_path(name: &str) -> bool {
     !name.is_empty()
@@ -34,7 +78,8 @@ fn portable_path(name: &str) -> bool {
 pub struct Registry {
     pub version: u32,
     pub pages: Vec<Page>,
-    /// Explicit passive Markdown destinations; never promoted to Doc pages.
+    /// Passive Markdown destinations, or static SVG files in an all-footnotes
+    /// batch. Neither kind is promoted to a semantic Doc page.
     #[serde(default)]
     pub files: Vec<ReferenceFile>,
     /// Markdown batch allowance; old-only checks keep per-page limits.
@@ -128,7 +173,16 @@ fn parse_registry(raw: &[u8]) -> Result<Registry> {
     if registry.version != 1 || registry.pages.is_empty() || registry.pages.len() > 1000 {
         return Err("unsupported or empty canonical registry".into());
     }
-    if !registry.files.is_empty()
+    let svg = registry
+        .pages
+        .iter()
+        .all(|p| p.renderer == projection::FOOTNOTES_RENDERER);
+    if (!svg
+        || registry
+            .files
+            .iter()
+            .any(|file| !file.source.ends_with(".svg") || !file.route.ends_with(".svg")))
+        && !registry.files.is_empty()
         && registry
             .pages
             .iter()
@@ -204,15 +258,28 @@ fn parse_registry(raw: &[u8]) -> Result<Registry> {
                 .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'-')
             || !ids.insert(&file.id)
             || !portable_path(&file.source)
-            || !file.source.starts_with("doc/")
-            || !file.source.ends_with(".md")
+            || (!svg && !file.source.starts_with("doc/"))
+            || !file.source.ends_with(if svg { ".svg" } else { ".md" })
             || !paths.insert(file.source.to_ascii_lowercase())
             || !portable_path(&file.route)
-            || !file.route.starts_with("sources/")
-            || !file.route.ends_with(".md")
+            || (!svg && !file.route.starts_with("sources/"))
+            || !file.route.ends_with(if svg { ".svg" } else { ".md" })
             || !routes.insert(file.route.to_ascii_lowercase())
         {
-            return Err("invalid or colliding passive Markdown reference".into());
+            return Err("invalid or colliding registered file".into());
+        }
+    }
+    if svg {
+        if registry.pages.len() > 128 {
+            return Err("PageCountLimit".into());
+        }
+        let mut output = OutputRoutes::default();
+        output.insert("manifest.json")?;
+        for page in &registry.pages {
+            output.insert(&page.projection)?;
+        }
+        for file in &registry.files {
+            output.insert(&file.route)?;
         }
     }
     // Every registered source, alias and projection is a file. Reject a known
