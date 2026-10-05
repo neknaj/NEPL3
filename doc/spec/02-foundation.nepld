@@ -81,6 +81,14 @@ body
         cons "[予算停止後/よさんていしご]は[同/おな]じBudgetの[停止理由/ていしりゆう]を[保持/ほじ]し、hostが[別操作/べつそうさ]のBudget/SourceAdmissionを[明示/めいじ]した[場合/ばあい]だけ[再試行/さいしこう]できる。"
         cons "[返却/へんきゃく]IDは、SourceId[順/じゅん]に[並/なら]べる。"
         nil
+      cons paragraph
+        cons "nativeのSourceStore.apply_guardedは、[呼出側/よびだしがわ]が[選/えら]んだcurrent[依存/いぞん]snapshotと、hostが[許可/きょか]した[版付/はんつ]きwritable identityを[検査/けんさ]してからapplyを[呼/よ]ぶ。"
+        cons "[各依存/かくいぞん]はstoreの[最大/さいだい]revisionと、identity・URI・[全/ぜん]バイト[列/れつ]が[一致/いっち]する[必要/ひつよう]がある。[履歴/りれき]として[保持/ほじ]した[証拠/しょうこ]を、そのままcurrent[依存/いぞん]へ[変換/へんかん]しない。"
+        cons "[全/すべ]てのeditに[対応/たいおう]するSnapshotIdがwritableに[存在/そんざい]することを[確/たし]かめる。SourceIdやURIだけで[許可/きょか]を[広/ひろ]げず、[別/べつ]revisionへ[権限/けんげん]を[引/ひ]き[継/つ]がない。"
+        cons "MissingDependency・ChangedDependencyは[入力依存列/にゅうりょくいぞんれつ]の[位置/いち]、NotWritableはedit[列/れつ]の[位置/いち]を[返/かえ]す。sourceの[検査失敗/けんさしっぱい]とBudgetの[停止理由/ていしりゆう]も[型付/かたつ]きで[保持/ほじ]する。"
+        cons "[排他的借用/はいたてきしゃくよう]の[間/あいだ]に[検査/けんさ]と[適用/てきよう]を[行/おこな]い、[失敗/しっぱい]ではstoreを[変更/へんこう]しない。[消費予算/しょうひよさん]とadmissionはapplyの[規則/きそく]に[従/したが]う。"
+        cons "[依存/いぞん]の[完全性/かんぜんせい]・[意味的/いみてき]な[受理/じゅり]・[権限入力/けんげんにゅうりょく]の[認証/にんしょう]・[外部/がいぶ]workspaceの[最新性/さいしんせい]はhostの[責務/せきむ]である。このnative APIはwire schemaを[追加/ついか]せず、[外部/がいぶ]ファイルへのatomicな[書込/かきこ]みを[保証/ほしょう]しない。"
+        nil
       nil
   cons section schema_kind "2. schemaとkind"
     body

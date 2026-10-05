@@ -443,4 +443,14 @@ body
       cons "[保証範囲/ほしょうはんい]は[指定/してい]storeの[観測/かんそく]である。[外部/がいぶ]workspaceの[最新性/さいしんせい]、host[設定/せってい]、[依存/いぞん]の[完全性/かんぜんせい]、[編集権限/へんしゅうけんげん]と[適用/てきよう]の[原子性/げんしせい]はhost[側/がわ]の[後続検証/こうぞくけんしょう]とする。" nil
     nil
 
+  cons section suppliedParseContext "2.31 [明示/めいじ]されたnative[解析入力/かいせきにゅうりょく]との[比較/ひかく]" body
+    cons paragraph
+      cons "context::compare_originalはStrictNameInsertionが[保持/ほじ]する[編集前/へんしゅうまえ]のseedと、hostが[明示/めいじ]したParseContextを[比較/ひかく]する。[意図的/いとてき]に[編集/へんしゅう]した[候補側/こうほがわ]の入力とは[比較/ひかく]しない。"
+      cons "profileとenvironment setは、[同/おな]じ[不変/ふへん]native instanceを[要求/ようきゅう]する。[独立/どくりつ]に[再構築/さいこうちく]した[同値/どうち]なinstanceも、ProfileInstanceまたはEnvironmentInstanceとして[区別/くべつ]する。"
+      cons "requestはsnapshotのidentity・URI・[全/ぜん]バイト[列/れつ]、start・limit、final_input、entry、[順序付/じゅんじょつ]き[初期/しょき]reader statesを[照合/しょうごう]する。Snapshot・Range・FinalInput・Entry・ReaderStateCount・ReaderState[位置/いち]により、[最初/さいしょ]の[相違/そうい]を[返/かえ]す。" nil
+    cons paragraph
+      cons "Limits[不一致/ふいっち]とBudget[停止/ていし]は[入力/にゅうりょく]の[相違/そうい]と[分/わ]けた[型付/かたつ]きerrorである。[可変長比較/かへんちょうひかく]とreader stateの[走査領域/そうさりょういき]を[同/おな]じ[操作/そうさ]の[累積/るいせき]Budgetへ[計上/けいじょう]する。[保持/ほじ]した[入力/にゅうりょく]やReportを[変更/へんこう]しない。"
+      cons "[相違/そうい]なしという[結果/けっか]は、その[呼出時/よびだしじ]に[明示/めいじ]した[入力/にゅうりょく]の[一致/いっち]だけを[示/しめ]す。[動的/どうてき]に[取得/しゅとく]したsource[依存/いぞん]・providerのhost[設定/せってい]・[外部/がいぶ]workspaceの[最新性/さいしんせい]・[編集権限/へんしゅうけんげん]を[証明/しょうめい]する[値/あたい]として[使用/しよう]しない。[後続/こうぞく]の[編集適用/へんしゅうてきよう]にはhost[所有/しょゆう]の[境界/きょうかい]で[別途/べっと][検査/けんさ]が[必要/ひつよう]である。" nil
+    nil
+
 nil
