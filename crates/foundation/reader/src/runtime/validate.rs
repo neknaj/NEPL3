@@ -72,6 +72,7 @@ pub(crate) fn request(
 
     Ok(())
 }
+mod diagnostics;
 mod provider;
 #[cfg(test)]
 mod tests;
@@ -127,7 +128,8 @@ pub(crate) fn accepted_diagnostic(
 ) -> Result<(), ReaderError> {
     diagnostic
         .validate(sources, added, registry, budget)
-        .map_err(report_error)
+        .map_err(report_error)?;
+    diagnostics::code(diagnostic, registry, budget)
 }
 fn report_error(error: nepl3_core::diagnostic::validation::ReportValidationError) -> ReaderError {
     use nepl3_core::diagnostic::validation::ReportValidationError;
@@ -153,7 +155,8 @@ pub(crate) fn accepted_report(
     }
     accepted
         .validate(sources, added, registry, budget)
-        .map_err(report_error)
+        .map_err(report_error)?;
+    diagnostics::report(accepted, registry, budget)
 }
 pub(crate) fn report(
     report: &Report,
@@ -173,7 +176,8 @@ pub(crate) fn report(
     }
     report
         .validate(sources, &[], registry, budget)
-        .map_err(report_error)
+        .map_err(report_error)?;
+    diagnostics::report(report, registry, budget)
 }
 #[allow(clippy::too_many_arguments)]
 fn artifacts(

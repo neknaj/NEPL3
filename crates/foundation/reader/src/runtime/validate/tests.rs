@@ -340,3 +340,5 @@ fn direct_artifacts_do_not_revalidate_unrelated_accepted_maps() -> Result<(), St
     assert_eq!(stopped.poll(), Err(StopReason::WorkLimit));
     Ok(())
 }
+
+mod diagnostic_codes;
