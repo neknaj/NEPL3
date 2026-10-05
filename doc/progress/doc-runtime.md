@@ -27,6 +27,17 @@ Sentence consumerの所有移行、NEPL3a、旧lexical commentの全面撤去、
 
 ## 段階別の履歴
 
+### 2026-10-05: HTMLページ集合のCode合成
+
+native `render_pages_with_code`は、参照解決後に正確なページとembedをadapterへ渡す。
+旧`render_pages`とportable codecのCode拒否は維持する。新profileはCode装飾のDOM Idを
+拒否し、言語選択で隠れたDoc anchorをCode内のIdで代用させない。DataIdは保持する。
+
+開発hostは元のvalidated ParseTree/profileのscope内で共有highlightを準備し、
+canonical guest digestで消費入力を照合する。繰り返し出現のSpan/Text複製は予算計上する。
+Codeの意味lower・評価・再parseは行わない。全体のリンク・markup検査後に出力する。
+reader facts、Pagesの画像・他guest、portable Code操作と全体受入は未完了である。
+
 ### 2026-10-05: 明示Math surfaceをfootnotes集合へ接続
 
 `render_footnotes_svg_math`はsurface identityを受け取り、全Math occurrenceを準備してから

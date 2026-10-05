@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/20&#45;doc&#45;html.nepld; renderer nepl3-tools.markdown-annotated/4; source SHA-256 61b46e5fb6c3fefbe544973139e6f7f02afe7185655752cf0cd0e7efda507976; alias input SHA-256 a89d4b749408c5f6e9ccc8ed5749c8203bf1a66d788d81725b0d44b7af3c82d5. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/20&#45;doc&#45;html.nepld; renderer nepl3-tools.markdown-annotated/4; source SHA-256 bda3f351334e67fe936a869ddaa77f45fe36c044da5d6839e4d2ba4563282e73; alias input SHA-256 a89d4b749408c5f6e9ccc8ed5749c8203bf1a66d788d81725b0d44b7af3c82d5. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="20-docのhtml変換"></a>
 
@@ -86,4 +86,14 @@ Codeのnative host合成は、保持したguest closureをadapterへ渡し、検
 
 安定したCSS分類キーはnepl\-code\-content・nepl\-code\-marker・nepl\-code\-delimiter・nepl\-code\-name・nepl\-code\-quantity・nepl\-code\-annotationである。schema package・revision・digest・class名は曖昧さのないhex形式のdata\-nepl\-idに保持する。任意のclass名をCSS識別子として扱わない。light・darkで分類キーを維持し、前景・背景の変数だけを切り替える。
 
-同じ単一文書にCodeとSVGを含め、CSSのexternal・inlineとSVGのexternal・embeddedを組み合わせられる。PagesのCode対応、reader\-fact統合、不完全なホスト文書のexportは後続の範囲である。Code guestの意味的な誤りは、表示のために意味解析を要求する根拠としない。
+同じ単一文書にCodeとSVGを含め、CSSのexternal・inlineとSVGのexternal・embeddedを組み合わせられる。reader\-fact統合と不完全なホスト文書のexportは後続の範囲である。Code guestの意味的な誤りは、表示のために意味解析を要求する根拠としない。
+
+Pagesのnative render\_pages\_with\_codeは、全ページの参照を検査してから、入力ページ・EmbedRef・不変のguest closureをadapterへ渡す。Code以外の未解決要求はadapter呼出前に拒否する。従来のrender\_pagesとportable操作はCodeをNeedsResolutionとする。
+
+Code装飾のDOM IdはDocの意味anchorではない。言語選択で非表示になったanchorをCodeのIdで代用できないよう、このPages profileではCode出力内のId属性を拒否する。表示分類の完全なidentityはDataIdで保持できる。ページ間linkと同一文書内Referenceの双方に適用する。
+
+開発hostのdoc\-html pagesは、元のParseTreeとprofileが有効なparse・lower処理内でCodeの共有highlightを準備する。入力ページ・EmbedRef・guestのcanonical digestを照合して出力へ渡し、guestを再parse・意味lower・評価しない。共有embedの各出現を保持し、複製のWorkとAllocationUnitsを累積output Budgetへ計上する。
+
+本文、Code、参照、markup検査、書出しが完了するまで出力を公開しない。adapterが停止後に別のエラーを返してもBudgetのStoppedを優先する。source欠落・別ページのguest・不正markup・表示されない参照先は成功や部分成果物にしない。
+
+native APIはページごとのforeign placementを返す。hostのexportは文書の元情報をmanifestに保持するが、この合成を公開portable Code操作、reader\-fact対応、runtime受入の完了へ読み替えない。PagesのImage・SVG描画とCode以外のforeignは引き続き未対応である。
