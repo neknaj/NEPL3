@@ -27,6 +27,17 @@ Sentence consumerの所有移行、NEPL3a、旧lexical commentの全面撤去、
 
 ## 段階別の履歴
 
+### 2026-10-05: 不完全Doc sourceの解析結果を保持するhost入口
+
+開発hostの`parse_source_for_display`は、共通driverのsource表示専用経路を用い、
+Recovered treeのMissing・Unexpected・Unparsedを保持する。既存の厳密parseと
+全文exportはRecoveredを拒否する。回復nodeをDocの意味値へ置換しない。
+
+元snapshotとprofileを保持したtreeを検証し、SyntaxOnlyの共通regionsへ渡せる。
+native・非nativeの同一tree、元source、既知構文のhighlight、完全入力との一致と
+停止を試験する。reader facts、対話UI・HTML preview・CLIへの接続は未実装である。
+この入口だけでは不完全なArticleのexportやportable操作・T07/T21受入を成立させない。
+
 ### 2026-10-05: HTMLページ集合のCode合成
 
 native `render_pages_with_code`は、参照解決後に正確なページとembedをadapterへ渡す。

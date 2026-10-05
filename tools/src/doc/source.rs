@@ -232,13 +232,47 @@ pub fn parse_source_route(
     a: &mut SourceAdmission,
     native: bool,
 ) -> Result<nepl3_engine::recovery::ParseTree, String> {
+    parse_source_route_impl(source, resolved, alias, category, b, a, native, false)
+}
+
+/// Source-only parsing retains Missing/Unexpected/Unparsed nodes. This route
+/// never lowers or exports a Doc document and does not relax full export.
+#[allow(clippy::too_many_arguments)]
+pub fn parse_source_for_display(
+    source: &SourceSnapshot,
+    resolved: &ResolvedParseProfile<'_>,
+    alias: &str,
+    category: &str,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+    native: bool,
+) -> Result<nepl3_engine::recovery::ParseTree, String> {
+    parse_source_route_impl(source, resolved, alias, category, b, a, native, true)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn parse_source_route_impl(
+    source: &SourceSnapshot,
+    resolved: &ResolvedParseProfile<'_>,
+    alias: &str,
+    category: &str,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+    native: bool,
+    retain_recovery: bool,
+) -> Result<nepl3_engine::recovery::ParseTree, String> {
     let prefix = crate::source::driver::reservation_prefix(source, b)?;
     b.charge(Resource::AllocationUnits, prefix.len() as u64)
         .map_err(err)?;
     let mut host =
         crate::doc::host::native(resolved.registry(), host_identity(), prefix.clone(), b)
             .map_err(err)?;
-    crate::source::driver::parse(
+    let parse = if retain_recovery {
+        crate::source::driver::parse_for_source_display
+    } else {
+        crate::source::driver::parse
+    };
+    parse(
         source,
         resolved,
         alias,

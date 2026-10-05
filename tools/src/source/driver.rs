@@ -12,6 +12,20 @@ fn err(v: impl std::fmt::Debug) -> String {
     format!("{v:?}")
 }
 
+fn check_tail(source: &SourceSnapshot, cursor: u64) -> Result<(), String> {
+    let tail = usize::try_from(cursor)
+        .ok()
+        .and_then(|offset| source.text().get(offset..))
+        .ok_or("invalid completed source cursor")?;
+    if !tail
+        .bytes()
+        .all(|c| matches!(c, b' ' | b'\t' | b'\r' | b'\n'))
+    {
+        return Err(format!("unexpected trailing input at byte {cursor}"));
+    }
+    Ok(())
+}
+
 pub fn reservation_prefix(source: &SourceSnapshot, b: &mut Budget) -> Result<String, String> {
     // One allocator namespace per source identity. A counter alone collides
     // when independently parsed pages enter the same source bundle.
@@ -41,6 +55,46 @@ pub fn parse(
     session_id: &str,
     prefix: &str,
     host: &mut impl ParseHost,
+) -> Result<nepl3_engine::recovery::ParseTree, String> {
+    parse_impl(
+        source, resolved, alias, category, b, a, native, session_id, prefix, host, false,
+    )
+}
+
+/// Retain explicit recovery nodes for source presentation only. This does not
+/// produce a checked domain value. Callers must validate the tree against the
+/// same profile before querying regions; reader facts are not returned here.
+#[allow(clippy::too_many_arguments)]
+pub fn parse_for_source_display(
+    source: &SourceSnapshot,
+    resolved: &ResolvedParseProfile<'_>,
+    alias: &str,
+    category: &str,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+    native: bool,
+    session_id: &str,
+    prefix: &str,
+    host: &mut impl ParseHost,
+) -> Result<nepl3_engine::recovery::ParseTree, String> {
+    parse_impl(
+        source, resolved, alias, category, b, a, native, session_id, prefix, host, true,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn parse_impl(
+    source: &SourceSnapshot,
+    resolved: &ResolvedParseProfile<'_>,
+    alias: &str,
+    category: &str,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+    native: bool,
+    session_id: &str,
+    prefix: &str,
+    host: &mut impl ParseHost,
+    retain_recovery: bool,
 ) -> Result<nepl3_engine::recovery::ParseTree, String> {
     let r = resolved.registry();
     let foundation = r.selected("nepl3.foundation", 1).ok_or("foundation")?;
@@ -157,16 +211,13 @@ pub fn parse(
             ParseOutcome::Complete { tree, cursor, .. } => {
                 // A prefix parse ends after its root, before trailing source
                 // whitespace. Keep the original snapshot, including file LF.
-                let tail = usize::try_from(cursor)
-                    .ok()
-                    .and_then(|offset| source.text().get(offset..))
-                    .ok_or("invalid completed source cursor")?;
-                if !tail
-                    .bytes()
-                    .all(|c| matches!(c, b' ' | b'\t' | b'\r' | b'\n'))
-                {
-                    return Err(format!("unexpected trailing input at byte {cursor}"));
-                }
+                check_tail(source, cursor)?;
+                return Ok(tree);
+            }
+            ParseOutcome::Recovered { tree, cursor, .. } if retain_recovery => {
+                // Retaining the snapshot does not prove that unconsumed bytes
+                // were classified as Unparsed. Do not silently accept a suffix.
+                check_tail(source, cursor)?;
                 return Ok(tree);
             }
             ParseOutcome::Stopped { reason, progress } => {
@@ -178,5 +229,31 @@ pub fn parse(
             }
             other => return Err(format!("candidate: {other:?}")),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn source_display_tail_guard_rejects_unclassified_bytes_and_invalid_cursors()
+    -> Result<(), String> {
+        let mut b = crate::doc::source::budget();
+        let source = SourceSnapshot::new(
+            SourceId("tail".into()),
+            0,
+            "memory:tail".into(),
+            "é \r\n".as_bytes().to_vec(),
+            &mut b,
+        )
+        .map_err(err)?;
+        assert!(check_tail(&source, 0).is_err());
+        assert!(check_tail(&source, 1).is_err()); // Not a UTF-8 boundary.
+        assert!(check_tail(&source, 2).is_ok());
+        assert!(check_tail(&source, 5).is_ok());
+        assert!(check_tail(&source, 6).is_err());
+        assert!(check_tail(&source, u64::MAX).is_err());
+        Ok(())
     }
 }
