@@ -7,9 +7,9 @@ from socket import socket
 from socketserver import BaseServer
 import threading
 from typing import Literal, final, override
-from urllib.parse import urlsplit
+from urllib.parse import quote, urlsplit
 
-from playwright.sync_api import Request, Response, Route, sync_playwright
+from playwright.sync_api import Page, Request, Response, Route, expect, sync_playwright
 from tools.serialization.json import JsonValue, decode, integer, object_value, string
 
 type Engine = Literal['chromium', 'firefox', 'webkit']
@@ -46,11 +46,28 @@ class Case:
     width: int
     page: str
     state: Measurement
+    fragment_targets: int = 0
 
     def representation(self) -> dict[str, JsonValue]:
         return dict(engine=self.engine, version=self.version, width=self.width, page=self.page,
                     scripts=self.state.scripts, styles=self.state.styles,
-                    overflow=self.state.overflow, title=self.state.title)
+                    overflow=self.state.overflow, title=self.state.title, fragment_targets=self.fragment_targets)
+
+
+def observe_fragments(page: Page, url: str) -> int:
+    """Exercise real hash navigation with scripts disabled, including native-host aliases."""
+    targets = page.locator('span[id]')
+    count = targets.count()
+    for index in range(count):
+        identity = targets.nth(index).get_attribute('id')
+        assert identity, 'empty fragment destination'
+        destination = url + '#' + quote(identity, safe='')
+        _ = page.goto(destination, wait_until='commit')
+        expect(page).to_have_url(destination)
+        target = page.locator(':target')
+        expect(target).to_have_count(1)
+        expect(target).to_have_attribute('id', identity)
+    return count
 
 
 def observe(root: Path, base: str, pages: Sequence[str],
@@ -117,7 +134,8 @@ def observe(root: Path, base: str, pages: Sequence[str],
                                 if name == 'examples/index.html':
                                     assert page.locator('pre > code').all_text_contents() == list(example_sources), \
                                         'example display differs from source'
-                                rows.append(Case(engine, browser.version, width, name, state))
+                                fragments = observe_fragments(page, f'http://127.0.0.1:{server.server_port}' + base + name)
+                                rows.append(Case(engine, browser.version, width, name, state, fragments))
                         finally:
                             context.close()
                 finally:
