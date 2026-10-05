@@ -1,0 +1,11 @@
+article ja "Markdownの数式"
+body
+  cons paragraph cons sentence
+    cons text "本文中の分数 "
+    cons anno math Math frac 1 2 cons text "分子と分母の構造を保持する。" nil
+    cons text " にDocの脚注を付ける。"
+    nil nil
+  cons display Math frac add x 1 add y 2
+  cons table cons default nil some row cons "数式" nil
+    cons row cons sentence cons math Math frac 3 4 nil nil nil
+  nil

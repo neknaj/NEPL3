@@ -1,6 +1,8 @@
 use super::*;
 #[path = "annotated_pages/images.rs"]
 mod images;
+#[path = "annotated_pages/math.rs"]
+mod math;
 use nepl3_doc_core::{check::Category, lower, pages::*};
 use nepl3_tools::doc::projection::{
     Error,

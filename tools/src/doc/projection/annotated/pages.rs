@@ -1,6 +1,7 @@
 //! Explicit Markdown page-set projection. Routes name Markdown destinations,
 //! never inferred HTML routes. Passive files have bytes but no semantic labels.
 pub use super::images::ImageDependency;
+pub use super::math::MathSurfaces;
 use super::*;
 use nepl3_doc_core::pages::{self as domain, PageDestination, PageSet};
 
@@ -14,6 +15,13 @@ pub struct PagesArtifact {
     /// contents are not embedded by this viewing profile.
     pub dependencies: Vec<Vec<LinkDependency>>,
     pub image_dependencies: Vec<Vec<ImageDependency>>,
+    pub math_dependencies: Vec<Vec<MathDependency>>,
+}
+
+#[derive(Debug)]
+pub struct MathDependency {
+    pub embed: u64,
+    pub guest_digest: Digest,
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -57,7 +65,18 @@ pub(crate) fn render_styles<C: FoundationValueCodec>(
 where
     C::Error: core::fmt::Debug,
 {
-    render_inner(set, registry, codec, budget, aliases, styles, false)
+    render_inner(
+        set,
+        registry,
+        codec,
+        budget,
+        aliases,
+        PageMode {
+            styles,
+            svg: false,
+            math: None,
+        },
+    )
 }
 
 /// Explicit SVG image profile. Every file is validated and must be used as an
@@ -72,7 +91,51 @@ pub fn render_footnotes_svg<C: FoundationValueCodec>(
 where
     C::Error: core::fmt::Debug,
 {
-    render_inner(set, registry, codec, budget, aliases, None, true)
+    render_inner(
+        set,
+        registry,
+        codec,
+        budget,
+        aliases,
+        PageMode {
+            styles: None,
+            svg: true,
+            math: None,
+        },
+    )
+}
+
+/// SVG/footnote viewing with explicitly selected Math surfaces. Unlike the
+/// legacy entry points, this resolves faithful TeX Math before emitting pages.
+pub fn render_footnotes_svg_math<C: FoundationValueCodec>(
+    set: &PageSet,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+    aliases: &[&[Alias]],
+    surfaces: MathSurfaces<'_>,
+) -> Result<PagesArtifact, Error>
+where
+    C::Error: core::fmt::Debug,
+{
+    render_inner(
+        set,
+        registry,
+        codec,
+        budget,
+        aliases,
+        PageMode {
+            styles: None,
+            svg: true,
+            math: Some(surfaces),
+        },
+    )
+}
+
+struct PageMode<'a> {
+    styles: Option<&'a [NotesMode]>,
+    svg: bool,
+    math: Option<MathSurfaces<'a>>,
 }
 
 fn render_inner<C: FoundationValueCodec>(
@@ -81,12 +144,16 @@ fn render_inner<C: FoundationValueCodec>(
     codec: &mut C,
     budget: &mut Budget,
     aliases: &[&[Alias]],
-    styles: Option<&[NotesMode]>,
-    svg: bool,
+    mode: PageMode<'_>,
 ) -> Result<PagesArtifact, Error>
 where
     C::Error: core::fmt::Debug,
 {
+    let PageMode {
+        styles,
+        svg,
+        math: math_surfaces,
+    } = mode;
     if styles.is_some_and(|v| v.len() != set.pages.len()) {
         return Err(Error::Invalid("page style count mismatch".into()));
     }
@@ -108,6 +175,7 @@ where
     let mut output = Vec::new();
     let mut dependencies = Vec::new();
     let mut image_dependencies = Vec::new();
+    let mut math_dependencies = Vec::new();
     // CheckedPages is constructed by resolve in source-page order. Consume
     // each requirement/link once instead of filtering the whole set per page.
     let mut pending = checked.plan().remaining.as_slice();
@@ -128,8 +196,14 @@ where
         } else {
             None
         };
+        let page_math = if let Some(surfaces) = math_surfaces {
+            math::prepare(&input.document, surfaces, registry, codec, budget)?
+        } else {
+            Vec::new()
+        };
         let mut page_images = Vec::new();
         let mut used_images = Vec::new();
+        let mut used_math = Vec::new();
         while let Some((requirement, rest)) = pending.split_first() {
             budget.charge(Resource::Work, 1)?;
             if requirement.page != page as u64 {
@@ -148,6 +222,22 @@ where
                 )?;
                 push(&mut page_images, image, budget)?;
                 push(&mut used_images, dependency, budget)?;
+            } else if math::resolves(&page_math, &requirement.requirement, budget)? {
+                if let prepare::DocRequirement::Foreign {
+                    embed,
+                    guest_digest,
+                    ..
+                } = &requirement.requirement
+                {
+                    push(
+                        &mut used_math,
+                        MathDependency {
+                            embed: embed.0,
+                            guest_digest: *guest_digest,
+                        },
+                        budget,
+                    )?;
+                }
             } else {
                 check_pending(&requirement.requirement, budget)?;
             }
@@ -197,8 +287,11 @@ where
             &input.document,
             budget,
             aliases[page],
-            &links,
-            &page_images,
+            ResolvedInputs {
+                links: &links,
+                images: &page_images,
+                math: &page_math,
+            },
             document_digest,
             if svg {
                 NotesMode::Footnotes
@@ -209,6 +302,7 @@ where
         push(&mut output, rendered, budget)?;
         push(&mut dependencies, used, budget)?;
         push(&mut image_dependencies, used_images, budget)?;
+        push(&mut math_dependencies, used_math, budget)?;
     }
     if !pending.is_empty() || !page_links.is_empty() {
         return Err(Error::Invalid("checked page plan order mismatch".into()));
@@ -243,6 +337,7 @@ where
         pages,
         dependencies,
         image_dependencies,
+        math_dependencies,
     })
 }
 
