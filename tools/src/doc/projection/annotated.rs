@@ -5,6 +5,7 @@ use nepl3_core::source::Digest;
 use serde::Deserialize;
 mod blocks;
 mod footnotes;
+mod images;
 use footnotes::PendingFootnote;
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -157,7 +158,16 @@ where
     for requirement in &plan.requirements {
         check_pending(requirement, budget)?;
     }
-    Ok(render_resolved_profile(document, budget, aliases, &[], plan.document_digest, mode)?.0)
+    Ok(render_resolved_profile(
+        document,
+        budget,
+        aliases,
+        &[],
+        &[],
+        plan.document_digest,
+        mode,
+    )?
+    .0)
 }
 
 fn check_pending(requirement: &prepare::DocRequirement, budget: &mut Budget) -> Result<(), Error> {
@@ -183,6 +193,7 @@ fn render_resolved_profile(
     budget: &mut Budget,
     aliases: &[Alias],
     links: &[(u64, String)],
+    images: &[images::Image],
     document_digest: Digest,
     mode: NotesMode,
 ) -> Result<(Artifact, Vec<String>), Error> {
@@ -227,6 +238,7 @@ fn render_resolved_profile(
         },
         aliases,
         links,
+        images,
         emitted: Vec::new(),
         mode,
         footnotes: Vec::new(),
@@ -276,6 +288,7 @@ struct Annotated<'a, 'b> {
     plain: Writer<'a, 'b>,
     aliases: &'a [Alias],
     links: &'a [(u64, String)],
+    images: &'a [images::Image],
     emitted: Vec<String>,
     mode: NotesMode,
     footnotes: Vec<PendingFootnote<'a>>,
@@ -291,6 +304,7 @@ enum Piece<'a> {
     Footnote(u64),
     LinkStart(u64),
     LinkEnd(u64, &'a str),
+    Image(u64),
 }
 enum Task<'a> {
     Node(u64, u64),
@@ -313,6 +327,46 @@ fn push<T>(items: &mut Vec<T>, item: T, budget: &mut Budget) -> Result<(), Error
     Ok(())
 }
 impl<'a> Annotated<'a, '_> {
+    fn image(&mut self, node: u64) -> Result<(), Error> {
+        let mut resolved = None;
+        for image in self.images {
+            self.plain.budget.charge(Resource::Work, 1)?;
+            if image.node == node {
+                resolved = Some(image);
+                break;
+            }
+        }
+        let image = resolved.ok_or(Error::NeedsResolution)?;
+        self.plain.emit("![")?;
+        for c in image.alt.chars() {
+            self.plain.budget.charge(Resource::Work, 1)?;
+            if c.is_ascii_punctuation() || matches!(c, '\n' | '\r' | '\t') {
+                let mut n = c as u8;
+                let mut digits = [b'0'; 3];
+                let mut start = digits.len();
+                loop {
+                    start -= 1;
+                    digits[start] = b'0' + n % 10;
+                    n /= 10;
+                    if n == 0 {
+                        break;
+                    }
+                }
+                self.plain.emit("&#")?;
+                self.plain.emit(
+                    core::str::from_utf8(&digits[start..]).map_err(|_| Error::Text { node })?,
+                )?;
+                self.plain.emit(";")?;
+            } else if c.is_control() {
+                return Err(Error::Text { node });
+            } else {
+                self.plain.emit(c.encode_utf8(&mut [0; 4]))?;
+            }
+        }
+        self.plain.emit("](<")?;
+        self.plain.emit(&image.href)?;
+        self.plain.emit(">)")
+    }
     fn anchor(&mut self, name: &str) -> Result<(), Error> {
         for prior in &self.emitted {
             self.plain
@@ -416,6 +470,9 @@ impl<'a> Annotated<'a, '_> {
                             push(&mut pieces, Piece::Code(node, text), self.plain.budget)?
                         }
                         DocKind::Break => push(&mut pieces, Piece::Break(node), self.plain.budget)?,
+                        DocKind::InlineImage { .. } => {
+                            push(&mut pieces, Piece::Image(node), self.plain.budget)?
+                        }
                         DocKind::Ruby { base, reading } => {
                             for task in [
                                 Task::Piece(Piece::RubyTag("</rt></ruby>")),
@@ -551,6 +608,10 @@ impl<'a> Annotated<'a, '_> {
         let mut link = None;
         for piece in pieces {
             match piece {
+                Piece::Image(node) => {
+                    self.image(node)?;
+                    previous_code = false;
+                }
                 Piece::Text(node, text) => {
                     self.plain.text(node, text, false)?;
                     previous_code = false;
@@ -660,6 +721,14 @@ impl<'a> Annotated<'a, '_> {
                 } => self
                     .plain
                     .raw_code(child.0, language_hint.as_deref(), text)?,
+                DocKind::Image { caption, .. } => {
+                    self.image(child.0)?;
+                    self.plain.emit("\n\n")?;
+                    if let Some(caption) = caption {
+                        self.sentences(&[caption.0], Some(""))?;
+                        self.plain.emit("\n\n")?;
+                    }
+                }
                 DocKind::List { kind, items } => self.flat_list(child.0, *kind, items)?,
                 DocKind::Table {
                     columns,

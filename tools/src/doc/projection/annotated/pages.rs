@@ -1,5 +1,6 @@
 //! Explicit Markdown page-set projection. Routes name Markdown destinations,
 //! never inferred HTML routes. Passive files have bytes but no semantic labels.
+pub use super::images::ImageDependency;
 use super::*;
 use nepl3_doc_core::pages::{self as domain, PageDestination, PageSet};
 
@@ -12,6 +13,7 @@ pub struct PagesArtifact {
     /// Link interfaces used by each page, in source traversal order. Target
     /// contents are not embedded by this viewing profile.
     pub dependencies: Vec<Vec<LinkDependency>>,
+    pub image_dependencies: Vec<Vec<ImageDependency>>,
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -55,6 +57,36 @@ pub(crate) fn render_styles<C: FoundationValueCodec>(
 where
     C::Error: core::fmt::Debug,
 {
+    render_inner(set, registry, codec, budget, aliases, styles, false)
+}
+
+/// Explicit SVG image profile. Every file is validated and must be used as an
+/// image; legacy passive-file rendering remains a separate operation.
+pub fn render_footnotes_svg<C: FoundationValueCodec>(
+    set: &PageSet,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+    aliases: &[&[Alias]],
+) -> Result<PagesArtifact, Error>
+where
+    C::Error: core::fmt::Debug,
+{
+    render_inner(set, registry, codec, budget, aliases, None, true)
+}
+
+fn render_inner<C: FoundationValueCodec>(
+    set: &PageSet,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+    aliases: &[&[Alias]],
+    styles: Option<&[NotesMode]>,
+    svg: bool,
+) -> Result<PagesArtifact, Error>
+where
+    C::Error: core::fmt::Debug,
+{
     if styles.is_some_and(|v| v.len() != set.pages.len()) {
         return Err(Error::Invalid("page style count mismatch".into()));
     }
@@ -62,24 +94,63 @@ where
     if aliases.len() != set.pages.len() {
         return Err(Error::Invalid("page alias count mismatch".into()));
     }
+    // Bound image inputs before the portable PageSet admission can clone or
+    // hash their byte arrays. Validation does not perform external I/O.
+    let mut files = if svg {
+        Some(images::Files::validate(set, budget)?)
+    } else {
+        None
+    };
     let checked = domain::resolve(set, registry, codec, budget).map_err(|e| match e {
         domain::PageError::Stopped(s) => Error::Stopped(s),
         e => Error::Invalid(format!("{e:?}")),
     })?;
     let mut output = Vec::new();
     let mut dependencies = Vec::new();
+    let mut image_dependencies = Vec::new();
     // CheckedPages is constructed by resolve in source-page order. Consume
     // each requirement/link once instead of filtering the whole set per page.
     let mut pending = checked.plan().remaining.as_slice();
     let mut page_links = checked.plan().links.as_slice();
     for (page, input) in set.pages.iter().enumerate() {
         budget.charge(Resource::Work, 1)?;
+        let prepared = if svg {
+            Some(
+                nepl3_doc_core::text::prepare(&input.document, registry, codec, budget).map_err(
+                    |error| match error {
+                        nepl3_doc_core::portable::PortableError::Stopped(reason) => {
+                            Error::Stopped(reason)
+                        }
+                        error => Error::Invalid(format!("{error:?}")),
+                    },
+                )?,
+            )
+        } else {
+            None
+        };
+        let mut page_images = Vec::new();
+        let mut used_images = Vec::new();
         while let Some((requirement, rest)) = pending.split_first() {
             budget.charge(Resource::Work, 1)?;
             if requirement.page != page as u64 {
                 break;
             }
-            check_pending(&requirement.requirement, budget)?;
+            if let (Some(files), Some(prepared), prepare::DocRequirement::Asset { node, asset }) =
+                (&mut files, &prepared, &requirement.requirement)
+            {
+                let (image, dependency) = files.resolve(
+                    &input.document,
+                    prepared,
+                    &input.registration.route,
+                    *node,
+                    asset,
+                    budget,
+                )?;
+                push(&mut page_images, image, budget)?;
+                push(&mut used_images, dependency, budget)?;
+            } else {
+                check_pending(&requirement.requirement, budget)?;
+            }
             pending = rest;
         }
         let document_digest = checked
@@ -127,14 +198,23 @@ where
             budget,
             aliases[page],
             &links,
+            &page_images,
             document_digest,
-            styles.map_or(NotesMode::Inline, |v| v[page]),
+            if svg {
+                NotesMode::Footnotes
+            } else {
+                styles.map_or(NotesMode::Inline, |v| v[page])
+            },
         )?;
         push(&mut output, rendered, budget)?;
         push(&mut dependencies, used, budget)?;
+        push(&mut image_dependencies, used_images, budget)?;
     }
     if !pending.is_empty() || !page_links.is_empty() {
         return Err(Error::Invalid("checked page plan order mismatch".into()));
+    }
+    if let Some(files) = files {
+        files.finish(budget)?;
     }
     // Semantic label existence is insufficient: the selected viewing profile
     // must actually emit the destination anchor (not an unreachable arena node).
@@ -162,6 +242,7 @@ where
         identity: checked.plan().identity,
         pages,
         dependencies,
+        image_dependencies,
     })
 }
 
