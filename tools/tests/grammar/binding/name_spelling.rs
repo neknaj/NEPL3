@@ -1,4 +1,6 @@
 use super::*;
+#[path = "name_spelling/context.rs"]
+mod context;
 #[path = "name_spelling/provider.rs"]
 mod provider;
 #[path = "name_spelling/reader.rs"]
@@ -510,6 +512,7 @@ fn name_spelling_preserves_ambiguity_and_supports_same_source_foreign_paths() ->
                                                         let QualityOutcome::Suitable(suitable) = outcome.map_err(err)? else {return Err(format!("strict suitable {input}"));};
                                                         assert!(core::ptr::eq(suitable.declaration(), &proof));
                                                         sources::verify(&suitable, b)?;
+                                                        context::verify(&suitable, Some(alternate_profile), b)?;
                                                         assert!(core::ptr::eq(suitable.whole().parsed(), checked.checked().candidate()));
                                                         let parse_report = checked.checked().candidate().execution().report();
                                                         let parse_report_before = parse_report.clone();
@@ -1027,6 +1030,7 @@ fn name_spelling_preserves_ambiguity_and_supports_same_source_foreign_paths() ->
                                             if severity != Severity::Error =>
                                         {
                                             sources::verify(&strict, b)?;
+                                            context::verify(&strict, None, b)?;
                                             use nepl3_engine::analysis::insertion::sources::{
                                                 Side, Stage, collect,
                                             };
