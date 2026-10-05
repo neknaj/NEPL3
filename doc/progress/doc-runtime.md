@@ -27,6 +27,17 @@ Sentence consumerの所有移行、NEPL3a、旧lexical commentの全面撤去、
 
 ## 段階別の履歴
 
+### 2026-10-05: 明示Math surfaceをfootnotes集合へ接続
+
+`render_footnotes_svg_math`はsurface identityを受け取り、全Math occurrenceを準備してから
+checked PageSetのforeign要求を解決する。未対応guest・未使用embed・到達不能Mathを拒否する。
+見出し・本文・脚注・対応済みtable cellのInlineMathと、本文のDisplayMathを構造から出力する。
+RubyのHTML内・link label内のMath、およびtableのpipeを含むTeXは拒否する。
+
+footnotes集合CLIはcompile済みの標準surfaceを明示選択する。使用pageのcontextとreceiptに
+Math embedの検査済みguest digestを加え、Mathを含まないpageのMarkdownは維持する。
+旧APIのNeedsResolutionは変更しない。実GitHub描画・MathJax比較・T07/T21受入は未検証である。
+
 ### 2026-10-05: Markdown Math fragmentのnative準備
 
 `MathDisplayHost::prepare_markdown_node`は実DocのInlineMath/DisplayMathを、

@@ -70,6 +70,7 @@ fn page_context(
     input: &Input,
     dependencies: &[annotated::pages::LinkDependency],
     images: &[annotated::pages::ImageDependency],
+    math: &[annotated::pages::MathDependency],
     budget: &mut Budget,
 ) -> Result<Digest> {
     let mut bytes = Vec::new();
@@ -113,6 +114,14 @@ fn page_context(
             field(&mut bytes, image.asset_id.as_bytes(), budget)?;
             field(&mut bytes, image.route.as_bytes(), budget)?;
             field(&mut bytes, &image.digest.0, budget)?;
+        }
+    }
+    if !math.is_empty() {
+        field(&mut bytes, b"structural-math-tex/1\0", budget)?;
+        field(&mut bytes, &(math.len() as u64).to_be_bytes(), budget)?;
+        for dependency in math {
+            field(&mut bytes, &dependency.embed.to_be_bytes(), budget)?;
+            field(&mut bytes, &dependency.guest_digest.0, budget)?;
         }
     }
     charge(budget, Resource::Work, bytes.len())?;
@@ -162,10 +171,10 @@ fn grouped(
     references: ReferenceInputs,
     budget: &mut Budget,
 ) -> Result<(annotated::pages::PagesArtifact, Vec<PageFile>)> {
-    let svg = !references.is_empty()
-        && inputs
-            .iter()
-            .all(|input| input.page.renderer == FOOTNOTES_RENDERER);
+    let footnotes = inputs
+        .iter()
+        .all(|input| input.page.renderer == FOOTNOTES_RENDERER);
+    let svg = !references.is_empty() && footnotes;
     charge(
         budget,
         Resource::AllocationUnits,
@@ -276,13 +285,28 @@ fn grouped(
     } else {
         None
     };
-    let output = if svg {
-        annotated::pages::render_footnotes_svg(
+    let output = if footnotes {
+        let math = compiled
+            .others
+            .iter()
+            .find(|p| p.schema.package == "standard.math")
+            .ok_or("missing standard Math surface")?;
+        let sentence = compiled
+            .others
+            .iter()
+            .find(|p| p.schema.package == "nepl3.syntax.sentence")
+            .ok_or("missing standard Sentence surface")?;
+        annotated::pages::render_footnotes_svg_math(
             &set,
             &compiled.doc.registry,
             &mut codec,
             budget,
             &refs,
+            annotated::pages::MathSurfaces {
+                math: &math.schema,
+                sentence: Some(&sentence.schema),
+                doc: Some(&compiled.doc.package.schema),
+            },
         )
     } else {
         annotated::pages::render_styles(
@@ -436,6 +460,7 @@ fn generate_batch(
                 input,
                 &group.dependencies[index],
                 &group.image_dependencies[index],
+                &group.math_dependencies[index],
                 budget,
             )?;
             let artifact = &group.pages[index];
@@ -531,9 +556,18 @@ fn generate_batch(
                 total.checked_add(size).ok_or("ContextLimit")
             })
     })?;
+    let math_allowance = group.as_ref().map_or(Ok(0usize), |g| {
+        g.math_dependencies.iter().try_fold(0usize, |total, page| {
+            page.len()
+                .checked_mul(256)
+                .and_then(|n| total.checked_add(n))
+                .ok_or("ContextLimit")
+        })
+    })?;
     let receipt_allowance = (files.len() * 32768 + 1024)
         .checked_add(dependency_allowance)
         .and_then(|n| n.checked_add(image_allowance))
+        .and_then(|n| n.checked_add(math_allowance))
         .and_then(|n| n.checked_mul(2))
         .ok_or("ContextLimit")?;
     charge(budget, Resource::Work, receipt_allowance)?;
@@ -552,6 +586,10 @@ fn generate_batch(
             if has_svg {
                 page["images"] = serde_json::Value::Array(g.image_dependencies[index].iter().map(|image|
                     serde_json::json!({"node":image.node,"asset_id":image.asset_id,"route":image.route,"sha256":hex(image.digest)})).collect());
+            }
+            if !g.math_dependencies[index].is_empty() {
+                page["math"] = serde_json::Value::Array(g.math_dependencies[index].iter().map(|math|
+                    serde_json::json!({"embed":math.embed,"guest_sha256":hex(math.guest_digest)})).collect());
             }
             page
         }).collect::<Vec<_>>()),

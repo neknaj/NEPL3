@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "pages": [{
+    "id": "math-example",
+    "source": "markdown.nepld",
+    "projection": "markdown.md",
+    "route": "markdown.md",
+    "aliases": "markdown.aliases.json",
+    "renderer": "nepl3-tools.markdown-footnotes-pages/1"
+  }],
+  "files": []
+}

@@ -6,6 +6,8 @@ use serde::Deserialize;
 mod blocks;
 mod footnotes;
 mod images;
+mod math;
+use crate::doc::math::markdown::Placement;
 use footnotes::PendingFootnote;
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -162,8 +164,11 @@ where
         document,
         budget,
         aliases,
-        &[],
-        &[],
+        ResolvedInputs {
+            links: &[],
+            images: &[],
+            math: &[],
+        },
         plan.document_digest,
         mode,
     )?
@@ -186,18 +191,28 @@ fn check_pending(requirement: &prepare::DocRequirement, budget: &mut Budget) -> 
     Ok(())
 }
 
+struct ResolvedInputs<'a> {
+    links: &'a [(u64, String)],
+    images: &'a [images::Image],
+    math: &'a [math::MathEntry<'a>],
+}
+
 // Private: callers have either inspected this document or resolved its exact
 // borrowed PageSet. A decoded plan/digest is never an admission proof.
 fn render_resolved_profile(
     document: &DocumentSyntax,
     budget: &mut Budget,
     aliases: &[Alias],
-    links: &[(u64, String)],
-    images: &[images::Image],
+    inputs: ResolvedInputs<'_>,
     document_digest: Digest,
     mode: NotesMode,
 ) -> Result<(Artifact, Vec<String>), Error> {
     budget.poll()?;
+    let ResolvedInputs {
+        links,
+        images,
+        math,
+    } = inputs;
     let DocRoot::Article(root) = document.value.root else {
         return Err(Error::Unsupported { node: 0 });
     };
@@ -239,6 +254,8 @@ fn render_resolved_profile(
         aliases,
         links,
         images,
+        math,
+        emitted_math: Vec::new(),
         emitted: Vec::new(),
         mode,
         footnotes: Vec::new(),
@@ -253,6 +270,16 @@ fn render_resolved_profile(
     let title_end = writer.plain.output.len();
     writer.body(body.0, 1)?;
     writer.finish_footnotes()?;
+    for entry in math {
+        let mut found = false;
+        for node in &writer.emitted_math {
+            writer.plain.budget.charge(Resource::Work, 1)?;
+            found |= *node == entry.node;
+        }
+        if !found {
+            return Err(Error::Unsupported { node: entry.node });
+        }
+    }
     // An alias for an unreachable section must not silently disappear.
     for alias in aliases {
         writer
@@ -289,6 +316,8 @@ struct Annotated<'a, 'b> {
     aliases: &'a [Alias],
     links: &'a [(u64, String)],
     images: &'a [images::Image],
+    math: &'a [math::MathEntry<'a>],
+    emitted_math: Vec<u64>,
     emitted: Vec<String>,
     mode: NotesMode,
     footnotes: Vec<PendingFootnote<'a>>,
@@ -305,6 +334,7 @@ enum Piece<'a> {
     LinkStart(u64),
     LinkEnd(u64, &'a str),
     Image(u64),
+    Math(u64),
 }
 enum Task<'a> {
     Node(u64, u64),
@@ -470,6 +500,9 @@ impl<'a> Annotated<'a, '_> {
                             push(&mut pieces, Piece::Code(node, text), self.plain.budget)?
                         }
                         DocKind::Break => push(&mut pieces, Piece::Break(node), self.plain.budget)?,
+                        DocKind::InlineMath { .. } => {
+                            push(&mut pieces, Piece::Math(node), self.plain.budget)?
+                        }
                         DocKind::InlineImage { .. } => {
                             push(&mut pieces, Piece::Image(node), self.plain.budget)?
                         }
@@ -606,8 +639,23 @@ impl<'a> Annotated<'a, '_> {
         }
         let mut previous_code = false;
         let mut link = None;
+        let mut ruby_depth = 0u64;
         for piece in pieces {
             match piece {
+                Piece::Math(node) => {
+                    if ruby_depth != 0 || link.is_some() {
+                        return Err(Error::Unsupported { node });
+                    }
+                    self.math(
+                        node,
+                        if table_cell {
+                            Placement::TableCell
+                        } else {
+                            Placement::Inline
+                        },
+                    )?;
+                    previous_code = false;
+                }
                 Piece::Image(node) => {
                     self.image(node)?;
                     previous_code = false;
@@ -628,6 +676,16 @@ impl<'a> Annotated<'a, '_> {
                     previous_code = true;
                 }
                 Piece::Tag(tag) | Piece::RubyTag(tag) => {
+                    if tag == "<ruby>" {
+                        ruby_depth = ruby_depth
+                            .checked_add(1)
+                            .ok_or_else(|| self.plain.budget.stop(StopReason::DepthLimit))?;
+                    }
+                    if tag == "</rt></ruby>" {
+                        ruby_depth = ruby_depth
+                            .checked_sub(1)
+                            .ok_or_else(|| Error::Invalid("unbalanced Ruby boundary".into()))?;
+                    }
                     self.plain.emit(tag)?;
                     previous_code = false;
                 }
@@ -721,6 +779,10 @@ impl<'a> Annotated<'a, '_> {
                 } => self
                     .plain
                     .raw_code(child.0, language_hint.as_deref(), text)?,
+                DocKind::DisplayMath { .. } => {
+                    self.math(child.0, Placement::DisplayBlock)?;
+                    self.plain.emit("\n\n")?;
+                }
                 DocKind::Image { caption, .. } => {
                     self.image(child.0)?;
                     self.plain.emit("\n\n")?;
