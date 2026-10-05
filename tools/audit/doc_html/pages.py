@@ -4,7 +4,7 @@ import json
 import re
 import subprocess
 import sys
-from playwright.sync_api import Route, sync_playwright
+from playwright.sync_api import Route, expect, sync_playwright
 
 GUESTS = [
     'article en "日本語 😀 é </code><script> &"\r\nbody\t nil',
@@ -66,13 +66,14 @@ def main() -> None:
                             if style != expected_color:
                                 raise AssertionError(('Wrong page stylesheet', theme, style))
                             page.get_by_role('link', name='Target', exact=True).click()
-                            if not page.url.endswith('/target/index.html#n-746172676574'):
-                                raise AssertionError(('Wrong target', page.url))
-                            if page.locator(':target').count() != 1:
-                                raise AssertionError('Missing selected Doc anchor')
+                            expect(page).to_have_url((output / 'target/index.html').as_uri() + '#n-746172676574')
+                            # URL navigation may be observed before fragment targeting
+                            # settles. Retry the real DOM assertion, never skip it.
+                            expect(page.locator(':target')).to_have_count(1)
+                            expect(page.locator(':target')).to_have_attribute('id', 'n-746172676574')
                             page.get_by_role('link', name='Back', exact=True).click()
-                            if page.url != (output / 'code/index.html').as_uri():
-                                raise AssertionError(('Wrong return route', page.url))
+                            expect(page).to_have_url((output / 'code/index.html').as_uri())
+                            expect(page.locator('pre > code')).to_have_count(len(GUESTS))
                             results.append({'engine': implementation.name, 'theme': theme,
                                             'width': width, 'result': 'passed'})
             finally:

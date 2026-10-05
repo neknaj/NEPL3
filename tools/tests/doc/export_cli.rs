@@ -2,6 +2,68 @@
 use std::{fs, process::Command};
 
 #[test]
+fn incomplete_code_input_publishes_no_files() -> Result<(), Box<dyn std::error::Error>> {
+    let root = std::env::temp_dir().join(format!("nepl3-incomplete-code-{}", std::process::id()));
+    fs::create_dir(&root)?;
+    let source = root.join("incomplete.nepld");
+    let incomplete = r#"article en "Host" body cons paragraph cons code Math frac 1 0 nil"#;
+    fs::write(&source, incomplete)?;
+    let binary = env!("CARGO_BIN_EXE_nepl3-tools");
+    for css in ["external", "inline"] {
+        let output = root.join(css);
+        let run = Command::new(binary)
+            .args(["doc-html", "export", "--css", css])
+            .arg(&source)
+            .arg(&output)
+            .output()?;
+        assert!(!run.status.success());
+        assert!(!output.exists(), "incomplete source published files");
+        assert_eq!(fs::read_to_string(&source)?, incomplete);
+    }
+    let valid = r#"article en "Complete" body cons paragraph cons code Math frac 1 0 nil nil"#;
+    fs::write(root.join("valid.nepld"), valid)?;
+    let manifest = root.join("pages.json");
+    fs::write(
+        &manifest,
+        serde_json::to_vec(&serde_json::json!({"version":1,"pages":[
+            {"id":"valid","source":"valid.nepld","route":"valid/index.html"},
+            {"id":"incomplete","source":"incomplete.nepld","route":"incomplete/index.html"}
+        ]}))?,
+    )?;
+    let output = root.join("pages");
+    let run = Command::new(binary)
+        .args(["doc-html", "pages"])
+        .arg(&manifest)
+        .arg(&output)
+        .output()?;
+    assert!(!run.status.success());
+    assert!(
+        !output.exists(),
+        "a valid first page must not leak a partial batch"
+    );
+    assert_eq!(fs::read_to_string(&source)?, incomplete);
+    assert_eq!(fs::read_to_string(root.join("valid.nepld"))?, valid);
+    // Repair only the missing host tail: the same batch and output path now
+    // succeed, so the negative case was not a path or CLI-dispatch failure.
+    fs::write(&source, format!("{incomplete} nil"))?;
+    let run = Command::new(binary)
+        .args(["doc-html", "pages"])
+        .arg(&manifest)
+        .arg(&output)
+        .output()?;
+    assert!(
+        run.status.success(),
+        "{}",
+        String::from_utf8_lossy(&run.stderr)
+    );
+    assert!(output.join("valid/index.html").is_file());
+    assert!(output.join("incomplete/index.html").is_file());
+    assert!(output.join("manifest.json").is_file());
+    fs::remove_dir_all(root)?;
+    Ok(())
+}
+
+#[test]
 fn css_modes_cli_and_failure_boundaries() -> Result<(), Box<dyn std::error::Error>> {
     let root = std::env::temp_dir().join(format!("nepl3-css-cli-{}", std::process::id()));
     fs::create_dir(&root)?;
