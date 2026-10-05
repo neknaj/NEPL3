@@ -157,6 +157,7 @@ fn canonical_source_link_follows_title_and_uses_projection_directory() -> Result
 #[test]
 fn prepared_reference_keeps_source_and_output_identities_separate() -> Result<()> {
     let fixture = Fixture::new()?;
+    fixture.write("doc/aliases.json", "[]")?;
     let mut manifest = registry();
     manifest["files"] = json!([{"id":"guide","source":"doc/guide.md","route":"sources/guide.md"}]);
     fixture.json("doc/canonical.json", &manifest)?;
@@ -512,6 +513,7 @@ fn canonical_file_access_rejects_even_repository_internal_symlinks() -> Result<(
 #[test]
 fn html_uses_canonical_doc_and_never_overwrites_existing_output() -> Result<()> {
     let fixture = Fixture::new()?;
+    fixture.write("doc/aliases.json", "[]")?;
     fixture.json("doc/canonical.json", &registry())?;
     fixture.write(
         "doc/sample.nepld",
@@ -1298,5 +1300,92 @@ fn footnotes_registry_preserves_relative_links_and_no_partial_publication() -> R
     f.json("pages.json", &registry)?;
     assert!(footnotes_manifest(&f.root().join("pages.json"), &f.root().join("unsafe")).is_err());
     assert!(!f.root().join("unsafe").exists());
+    Ok(())
+}
+
+#[test]
+fn canonical_html_preserves_declared_legacy_heading_fragments() -> Result<()> {
+    let fixture = Fixture::new()?;
+    fixture.json("doc/canonical.json", &registry())?;
+    fixture.write(
+        "doc/sample.nepld",
+        r#"article ja "題" body cons section sources "公開資料" body cons paragraph cons "本文" nil nil nil"#,
+    )?;
+    fixture.write(
+        "doc/aliases.json",
+        r#"[{"section":null,"name":"題"},{"section":"sources","name":"公開資料"}]"#,
+    )?;
+    let generated = generate_html(fixture.root(), "doc/canonical.json")?;
+    let html = std::str::from_utf8(&generated.files["docs/sample.html"])?;
+    // The configured former Markdown fragments must remain valid destinations
+    // in the canonical HTML, alongside the semantic section's stable identity.
+    for id in ["題", "公開資料", "n-736f7572636573"] {
+        assert_eq!(
+            html.matches(&format!(" id=\"{id}\"")).count(),
+            1,
+            "missing or duplicated {id}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn canonical_html_alias_receipt_separates_source_and_composition() -> Result<()> {
+    let fixture = Fixture::new()?;
+    fixture.json("doc/canonical.json", &registry())?;
+    fixture.write("doc/sample.nepld", r#"article ja "題" body nil"#)?;
+    let mut outputs = Vec::new();
+    for raw in [
+        r#"[{"section":null,"name":"old"}]"#,
+        r#"[ { "section": null, "name": "old" } ]"#,
+        r#"[{"section":null,"name":"renamed"}]"#,
+    ] {
+        fixture.write("doc/aliases.json", raw)?;
+        outputs.push(generate_html(fixture.root(), "doc/canonical.json")?);
+    }
+    assert_eq!(outputs[0].files, outputs[1].files);
+    assert_ne!(outputs[1].files, outputs[2].files);
+    let receipts: Vec<serde_json::Value> = outputs
+        .iter()
+        .map(|o| serde_json::from_str(&o.manifest))
+        .collect::<std::result::Result<_, _>>()?;
+    for other in &receipts[1..] {
+        assert_eq!(receipts[0]["identity"], other["identity"]);
+        assert_eq!(
+            receipts[0]["execution_identity"],
+            other["execution_identity"]
+        );
+        assert_ne!(
+            receipts[0]["compatibility"]["input_identity"],
+            other["compatibility"]["input_identity"]
+        );
+        assert_ne!(
+            receipts[0]["compatibility"]["execution_identity"],
+            other["compatibility"]["execution_identity"]
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn canonical_late_invalid_alias_does_not_write_partial_pages() -> Result<()> {
+    let fixture = Fixture::new()?;
+    let mut registry = registry();
+    registry["pages"].as_array_mut().ok_or("pages")?.push(json!({"id":"second","source":"doc/second.nepld","projection":"doc/second.md","aliases":"doc/second.json","route":"docs/second.html","renderer":RENDERER}));
+    fixture.json("doc/canonical.json", &registry)?;
+    for path in ["doc/sample.nepld", "doc/second.nepld"] {
+        fixture.write(path, r#"article ja "題" body nil"#)?;
+    }
+    fixture.write("doc/aliases.json", r#"[{"name":"same"}]"#)?;
+    fixture.write(
+        "doc/second.json",
+        r#"[{"section":"missing","name":"same"}]"#,
+    )?;
+    let output = fixture.root().join("output");
+    assert!(html(fixture.root(), "doc/canonical.json", &output).is_err());
+    assert!(!output.exists());
+    // A name is document-local, so reuse on a different page is valid.
+    fixture.write("doc/second.json", r#"[{"name":"same"}]"#)?;
+    html(fixture.root(), "doc/canonical.json", &output)?;
     Ok(())
 }
