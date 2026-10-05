@@ -241,6 +241,20 @@ mod tests {
     use super::*;
     use crate::doc::source;
     #[test]
+    fn fallback_categories_have_stable_css_classes() {
+        for (role, expected) in [
+            (FallbackRole::Content, "nepl-code-content"),
+            (FallbackRole::Marker, "nepl-code-marker"),
+            (FallbackRole::Delimiter, "nepl-code-delimiter"),
+            (FallbackRole::Name, "nepl-code-name"),
+            (FallbackRole::Quantity, "nepl-code-quantity"),
+            (FallbackRole::Annotation, "nepl-code-annotation"),
+        ] {
+            assert_eq!(class(role), expected);
+        }
+    }
+
+    #[test]
     fn missing_source_stops_and_callback_errors_remain_explicit() -> Result<(), String> {
         let compiled = source::compiled()?;
         let text = "article en \"Host\" body cons paragraph cons code Doc article en \"Guest\" body nil nil nil";
