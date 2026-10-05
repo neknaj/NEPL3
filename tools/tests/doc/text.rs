@@ -1,4 +1,6 @@
 use super::*;
+#[path = "text/native.rs"]
+mod native;
 use nepl3_core::value_codec::FoundationValueCodec;
 use nepl3_doc_core::{
     check::Category,

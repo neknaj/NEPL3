@@ -9,7 +9,7 @@ use crate::{
 use alloc::vec::Vec;
 pub use model::*;
 use nepl3_core::{
-    budget::{Budget, Resource},
+    budget::{Budget, Limits, Resource},
     schema::SchemaRegistry,
     value_codec::{FoundationCodecError, FoundationValueCodec},
 };
@@ -61,10 +61,34 @@ pub fn plain_text_borrowed<C: FoundationValueCodec>(
 pub struct PreparedText<'a> {
     document: &'a DocumentSyntax,
     identity: TextIdentity,
+    limits: Limits,
+}
+/// Native prepared projection error, separate from the portable reply schema.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PreparedTextError {
+    LimitsMismatch,
 }
 impl<'a> PreparedText<'a> {
     pub fn identity(&self) -> &TextIdentity {
         &self.identity
+    }
+    /// Project another sentence from this immutable, validated document.
+    /// Continue the preparation operation's cumulative Budget. Equal limits
+    /// are checked, but do not prove that the caller preserved paid usage.
+    /// Entry, resolution, output and traversal checks still run on every call;
+    /// only document admission and identity computation are reused. Serialized
+    /// identities cannot construct this value or bypass document validation.
+    pub fn project(
+        &self,
+        sentence: SentenceRef,
+        policy: AnnotationPolicy,
+        resolved: &[ResolvedInlineText],
+        b: &mut Budget,
+    ) -> Result<PlainTextReply, PreparedTextError> {
+        if b.limits() != self.limits {
+            return Err(PreparedTextError::LimitsMismatch);
+        }
+        Ok(self.execute(sentence, policy, resolved, b))
     }
     fn execute(
         &self,
@@ -132,6 +156,7 @@ pub fn prepare<'a, C: FoundationValueCodec>(
     }
     Ok(PreparedText {
         document,
+        limits: b.limits(),
         identity: TextIdentity {
             document_digest,
             embeds,
