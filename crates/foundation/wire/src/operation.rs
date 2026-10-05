@@ -3,6 +3,7 @@
 //! Operation dispatch, authorization and continuation registration belong to hosts.
 mod context;
 mod frame;
+mod pending;
 mod reply;
 use crate::{WireError, boundary::typed::Codec, boundary::*, source::*, view::*};
 use alloc::vec::Vec;
@@ -15,6 +16,10 @@ use nepl3_core::{
     source::{SourceAdmission, SourceStore},
     syntax::{ResourceContent, validate_resources},
     value::{NdfValue, OperationRef, SchemaRef},
+};
+pub use pending::{
+    PendingReplyFrame, ReplyAdmissionError, ReplyFrameError, ReplyPayload, ReplyPayloadKind,
+    decode_pending_reply_frame,
 };
 pub use reply::{decode_reply, decode_resume, encode_reply, encode_resume};
 

@@ -5,6 +5,7 @@
 pub mod control;
 pub mod delegation;
 pub mod dispatch;
+pub mod pending;
 #[cfg(not(target_family = "wasm"))]
 pub mod process;
 pub mod reply;
@@ -107,6 +108,19 @@ impl<R: Read, W: Write> Connection<R, W> {
         admission: &mut SourceAdmission,
         b: &mut Budget,
     ) -> Result<Option<ProviderFrame>, TransportError> {
+        let Some(bytes) = self.read_frame_bytes(b)? else {
+            return Ok(None);
+        };
+        let (frame, suffix) =
+            nepl3_wire::operation::decode_frame(&bytes, true, registry, sources, admission, b)?
+                .ok_or(TransportError::Truncated)?;
+        if !suffix.is_empty() {
+            return Err(WireError::InvalidLength.into());
+        }
+        self.advance(&frame, true)?;
+        Ok(Some(frame))
+    }
+    fn read_frame_bytes(&mut self, b: &mut Budget) -> Result<Option<Vec<u8>>, TransportError> {
         let mut header = [0; 8];
         let count = fill(&mut self.reader, &mut header, b)?;
         if count == 0 {
@@ -128,14 +142,7 @@ impl<R: Read, W: Write> Connection<R, W> {
         if fill(&mut self.reader, &mut bytes[8..], b)? != payload {
             return Err(TransportError::Truncated);
         }
-        let (frame, suffix) =
-            nepl3_wire::operation::decode_frame(&bytes, true, registry, sources, admission, b)?
-                .ok_or(TransportError::Truncated)?;
-        if !suffix.is_empty() {
-            return Err(WireError::InvalidLength.into());
-        }
-        self.advance(&frame, true)?;
-        Ok(Some(frame))
+        Ok(Some(bytes))
     }
     pub fn send(
         &mut self,

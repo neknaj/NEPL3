@@ -6,6 +6,8 @@ use nepl3_wire::{WireError, operation::*};
 mod context;
 #[path = "operation/frame.rs"]
 mod frame;
+#[path = "operation/pending.rs"]
+mod pending;
 #[path = "operation/reply.rs"]
 mod reply;
 fn error(e: impl core::fmt::Debug) -> String {
