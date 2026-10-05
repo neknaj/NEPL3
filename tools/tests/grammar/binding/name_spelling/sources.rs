@@ -1,3 +1,5 @@
+#[path = "sources/apply.rs"]
+mod apply;
 #[path = "sources/state.rs"]
 mod state;
 use super::*;
@@ -58,6 +60,7 @@ pub(super) fn verify(
         }
     }
     state::verify(&inventory, b)?;
+    apply::verify(strict, b)?;
     let use_ = measure.usage();
     assert_eq!(inventory.report().usage, use_);
     assert_eq!(use_.diagnostics, 0);

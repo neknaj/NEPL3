@@ -129,6 +129,60 @@ fn main() -> Result<(), String> {
     if result != Err(SourceError::Stopped(StopReason::AllocationLimit)) || allocated != 0 {
         return Err("R037: source edit allocated before its zero allocation limit".into());
     }
+    // A scalar must use only the same charged outer frontier as an empty
+    // composite. A hidden NdfValue::PartialEq call allocates a second Vec.
+    use nepl3_core::value::{Integer, NdfValue, Rational};
+    let mut equality_limits = setup.limits();
+    equality_limits.allocation_units = core::mem::size_of::<(&NdfValue, &NdfValue, u64)>() as u64;
+    let empty = NdfValue::List(Vec::new());
+    let mut equality_budget = Budget::new(equality_limits);
+    let (baseline_result, baseline_allocated) =
+        measure(|| empty.equal_with_budget(&empty, &mut equality_budget));
+    if baseline_result != Ok(true) || baseline_allocated == 0 {
+        return Err("NDF equality allocation control failed".into());
+    }
+    let integer =
+        Integer::from_canonical(false, &[255; 128]).map_err(|error| format!("{error:?}"))?;
+    let rational =
+        Rational::from_canonical(2_i64.into(), &[3]).map_err(|error| format!("{error:?}"))?;
+    for (left, right, expected) in [
+        (NdfValue::Bool(true), NdfValue::Bool(false), false),
+        (NdfValue::U64(7), NdfValue::U64(7), true),
+        (
+            NdfValue::Integer(integer.clone()),
+            NdfValue::Integer(integer),
+            true,
+        ),
+        (
+            NdfValue::Rational(rational.clone()),
+            NdfValue::Rational(rational),
+            true,
+        ),
+        (
+            NdfValue::Bytes(vec![1, 2]),
+            NdfValue::Bytes(vec![1, 3]),
+            false,
+        ),
+        (NdfValue::Unit, NdfValue::Unit, true),
+        (NdfValue::Unit, NdfValue::None, false),
+        (
+            NdfValue::Text("abc".into()),
+            NdfValue::Text("abd".into()),
+            false,
+        ),
+        (NdfValue::Unit, NdfValue::List(vec![NdfValue::Unit]), false),
+    ] {
+        let mut operation = Budget::new(equality_limits);
+        let (result, allocated) = measure(|| left.equal_with_budget(&right, &mut operation));
+        if result != Ok(expected) || allocated != baseline_allocated {
+            return Err(format!(
+                "NDF scalar equality used an additional allocation: {result:?}, {allocated}, baseline {baseline_allocated}"
+            ));
+        }
+    }
+    println!(
+        "NDF scalar equality: no additional allocation beyond charged frontier ({baseline_allocated} bytes)"
+    );
     println!("allocation regression passed");
     Ok(())
 }

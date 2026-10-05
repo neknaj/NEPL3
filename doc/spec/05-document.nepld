@@ -373,6 +373,12 @@ body
         cons "sourceは[共有/きょうゆう]admissionで[同/どう]snapshotを[一度/いちど]だけ[計上/けいじょう]し、[出力/しゅつりょく]byte、Work、Allocation、[深/ふか]さを[計上/けいじょう]する。"
         cons "[停止時/ていしじ]は[元要求/もとようきゅう]を[保持/ほじ]し、Stoppedを[返/かえ]す。"
         cons "Completeは、テキスト[抽出/ちゅうしゅつ]が[完了/かんりょう]した[場合/ばあい]に[限/かぎ]って[返/かえ]す。" nil
+      cons paragraph
+        cons sentence cons code "PreparedText::project" cons text " は、prepareが" cons ruby text "検査" text "けんさ" cons text "した" cons ruby text "同一" text "どういつ" cons text "の" cons ruby text "不変文書" text "ふへんぶんしょ" cons text "から、Sentenceを" cons ruby text "繰" text "く" cons text "り" cons ruby text "返" text "かえ" cons text "し" cons ruby text "投影" text "とうえい" cons text "するnative APIである。" nil
+        cons "document[検査/けんさ]とidentity[計算/けいさん]を[再利用/さいりよう]し、entry・[解決済/かいけつず]みtext・[出力/しゅつりょく]・[深/ふか]さは[毎回検査/まいかいけんさ]する。"
+        cons "[呼出側/よびだしがわ]はprepareから[同/おな]じ[累積/るいせき]Budgetを[継続/けいぞく]する。"
+        cons "Limitsの[一致/いっち]を[検査/けんさ]し、[不一致/ふいっち]は[型付/かたつ]きLimitsMismatchを[返/かえ]すが、Limitsの[一致/いっち]だけで[使用量/しようりょう]の[継続/けいぞく]を[証明/しょうめい]しない。"
+        cons "[直列化/ちょくれつか]したidentityからPreparedTextを[構築/こうちく]する[入口/いりぐち]は[設/もう]けない。" nil
       nil
     cons section print "8.2. print の[実行契約/じっこうけいやく]" body
       cons paragraph

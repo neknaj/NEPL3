@@ -129,3 +129,42 @@ fn budgeted_equality_keeps_values_and_composes_caller_depth() -> Result<(), Stop
     assert_eq!(b.poll(), Err(StopReason::DepthLimit));
     Ok(())
 }
+
+#[test]
+fn budgeted_scalar_equality_uses_one_logical_frontier_slot() -> Result<(), StopReason> {
+    for (left, right, expected) in [
+        (NdfValue::Unit, NdfValue::Unit, true),
+        (NdfValue::None, NdfValue::None, true),
+        (NdfValue::Unit, NdfValue::None, false),
+        (NdfValue::Bool(true), NdfValue::Bool(false), false),
+        (NdfValue::U64(7), NdfValue::U64(7), true),
+        (
+            NdfValue::Integer(7_i64.into()),
+            NdfValue::Integer(8_i64.into()),
+            false,
+        ),
+        (
+            NdfValue::Text("abc".into()),
+            NdfValue::Text("abc".into()),
+            true,
+        ),
+        (
+            NdfValue::Bytes(vec![1, 2]),
+            NdfValue::Bytes(vec![1, 3]),
+            false,
+        ),
+        (NdfValue::List(vec![NdfValue::Unit]), NdfValue::Unit, false),
+    ] {
+        let mut cap = limits();
+        cap.allocation_units = core::mem::size_of::<(&NdfValue, &NdfValue, u64)>() as u64;
+        let mut exact = Budget::new(cap);
+        assert_eq!(left.equal_with_budget(&right, &mut exact)?, expected);
+        assert_eq!(exact.usage().allocation_units, cap.allocation_units);
+        cap.allocation_units -= 1;
+        assert_eq!(
+            left.equal_with_budget(&right, &mut Budget::new(cap)),
+            Err(StopReason::AllocationLimit)
+        );
+    }
+    Ok(())
+}

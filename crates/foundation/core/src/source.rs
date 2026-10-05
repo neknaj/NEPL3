@@ -1,9 +1,11 @@
 //! Immutable UTF-8 snapshots, checked byte spans and editor position adapters.
 mod edit;
+mod guard;
 use crate::budget::{Budget, Resource, StopReason};
 #[cfg(target_has_atomic = "ptr")]
 use alloc::sync::Arc;
 use alloc::{string::String, vec::Vec};
+pub use guard::GuardedEditError;
 #[cfg(target_has_atomic = "ptr")]
 type SnapshotStorage = alloc::sync::Arc<SnapshotData>;
 #[cfg(target_has_atomic = "ptr")]
