@@ -425,8 +425,21 @@ pub(crate) fn generate_html_with_projections(
     let mut resources = reference_inputs(root, registry.files)?;
     references::apply(&mut resources, projections)?;
     let mut inputs = Vec::new();
+    let mut aliases = Vec::new();
+    let mut alias_bytes = 0usize;
     let mut total = 0u64;
     for page in registry.pages {
+        let raw = bounded(root, &page.aliases, MAX_REGISTRY)?;
+        alias_bytes = alias_bytes
+            .checked_add(raw.len())
+            .ok_or("AliasInputLimit")?;
+        if alias_bytes > 10_000_000 {
+            return Err("AliasInputLimit".into());
+        }
+        aliases.push(super::export::pages::aliases::PageAliases::parse(
+            page.id.clone(),
+            raw,
+        )?);
         let bytes = bounded(root, &page.source, super::export::MAX_SOURCE_BYTES)?;
         total = total.checked_add(bytes.len() as u64).ok_or("SourceLimit")?;
         if total > super::export::MAX_SOURCE_BYTES {
@@ -443,12 +456,13 @@ pub(crate) fn generate_html_with_projections(
             source,
         ));
     }
-    let mut generated = super::export::pages::generate_with_resources(
+    let mut generated = super::export::pages::generate_with_aliases(
         &super::source::compiled()?,
         &inputs,
         &resources,
         super::export::pages::resources::PhaseLimits::default(),
         &mut output_budget,
+        &aliases,
     )?;
     references::record(&mut generated, projections)?;
     Ok(generated)

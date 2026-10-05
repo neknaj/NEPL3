@@ -26,7 +26,8 @@ class BrowserTests(unittest.TestCase):
         self.assertEqual(state, Measurement(0, 1, False, 'Title'))
         self.assertEqual(Case('chromium', 'fixture', 375, 'index.html', state).representation(),
                          dict(engine='chromium', version='fixture', width=375, page='index.html',
-                              scripts=0, styles=1, overflow=False, title='Title'))
+                              scripts=0, styles=1, overflow=False, title='Title', fragment_targets=0))
+        self.assertEqual(Case('chromium', 'fixture', 375, 'index.html', state, 2).representation()['fragment_targets'], 2)
         fields: tuple[tuple[str, JsonValue], ...] = (
             ('scripts', True), ('styles', '1'), ('overflow', 0), ('title', None))
         for key, value in fields:
@@ -50,8 +51,19 @@ class BrowserTests(unittest.TestCase):
                             and not row.state.overflow for row in cases))
         self.assertEqual([row.state.title for row in cases], ['Overview', 'Examples'] * 6)
 
+    def test_japanese_and_nested_fragment_navigation(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            site(root, content='<article><span id="題"></span><h1>題</h1>'
+                 + '<section id="n-736f7572636573"><span id="公開資料"></span>'
+                 + '<h2>公開資料</h2></section></article>')
+            cases = observe(root, '/NEPL3/', ('index.html',), ())
+        self.assertEqual(len(cases), 6)
+        self.assertTrue(all(row.fragment_targets == 2 for row in cases))
+
     def test_script_overflow_styles_and_example_mismatch_fail(self) -> None:
-        scenarios = (('script', '<script>0</script>', True, 'hello 世界\n'),
+        scenarios = (('empty-fragment', '<span id=""></span>', True, 'hello 世界\n'),
+                     ('script', '<script>0</script>', True, 'hello 世界\n'),
                      ('overflow', '<div style="width:2000px">wide</div>', True, 'hello 世界\n'),
                      ('styles', '', False, 'hello 世界\n'),
                      ('example', '', True, 'different input'))
