@@ -52,12 +52,16 @@ and reaps the Node process after 30 seconds, including a stuck emulator call.
 - The UF2 includes RP2040 boot2 and vectors. The runner enters the vector table
   directly: boot ROM, boot2 execution and actual hardware startup remain
   untested. `disable-intrinsics` avoids depending on emulator ROM routines.
-- Known PLL/UART startup warnings are recorded; other warnings and errors
-  fail. Clock accuracy, peripherals, multicore behavior and physical hardware
-  are outside this test's claim.
-- `rp2040js` is pinned to 1.3.4 with the npm lockfile. The converter accepts a
+- Early startup warnings from PLL_SYS_BASE, PLL_USB_BASE or UART0 are recorded;
+  later warnings, other components and errors fail. The CPU stepping schedule
+  remains fixed at 125 MHz even when emulator peripheral clocks change. Clock
+  accuracy, general peripheral behavior, multicore behavior and physical
+  hardware are outside this test's claim.
+- `rp2040js` is pinned to 1.4.0 with the npm lockfile. The converter accepts a
   restricted ELF32 little-endian ARM load image and emits family-tagged UF2.
   The loader validates all block headers and vector bounds before execution.
+  Qualify emulator upgrades by running the same hashed UF2 through the full
+  protocol and terminal wait; passing the npm helper tests alone is insufficient.
 - Browser execution, RISC-V and big-endian execution remain separate work.
   This lane cannot substitute for their required tests, WASI, or Doc rendering.
 
