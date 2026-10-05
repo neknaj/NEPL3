@@ -12,6 +12,8 @@ mod control;
 mod delegation;
 #[path = "reply/delivery.rs"]
 mod delivery;
+#[path = "reply/pending.rs"]
+mod pending;
 #[path = "reply/resume.rs"]
 mod resume;
 #[path = "reply/routing.rs"]
