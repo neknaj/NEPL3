@@ -57,10 +57,31 @@ def main() -> None:
                                 const color = getComputedStyle(token).color;
                                 const background = getComputedStyle(pre).backgroundColor;
                                 if (document.documentElement.scrollWidth > innerWidth + 1) throw Error('Overflow');
-                                return JSON.stringify({color,background});
+                                // A stylesheet-only probe complements the real
+                                // frontend token above; it does not claim every
+                                // role was emitted by this particular guest.
+                                const categories = {};
+                                const sentinel = document.createElement('span');
+                                sentinel.style.color = 'rgb(1, 2, 3)';
+                                const probe = document.createElement('span');
+                                sentinel.append(probe);
+                                document.querySelector('.nepl-doc').append(sentinel);
+                                for (const role of ['content','marker','delimiter','name','quantity','annotation']) {
+                                    probe.className = 'nepl-code-' + role;
+                                    categories[role] = getComputedStyle(probe).color;
+                                }
+                                sentinel.remove();
+                                return JSON.stringify({color,background,categories});
                             }""")
                             expected_style = {'color': 'rgb(163, 32, 53)', 'background': 'rgb(244, 246, 248)'} if theme == 'light' else {'color': 'rgb(255, 158, 171)', 'background': 'rgb(11, 16, 22)'}
-                            if not isinstance(value, str) or json.loads(value) != expected_style:
+                            palette = {
+                                'light': ['rgb(31, 41, 55)', 'rgb(163, 32, 53)', 'rgb(70, 85, 105)', 'rgb(7, 87, 168)', 'rgb(34, 107, 53)', 'rgb(113, 67, 155)'],
+                                'dark': ['rgb(226, 234, 243)', 'rgb(255, 158, 171)', 'rgb(193, 206, 219)', 'rgb(155, 201, 255)', 'rgb(168, 221, 181)', 'rgb(197, 181, 238)'],
+                            }
+                            expected_values: dict[str, object] = dict(expected_style)
+                            expected_values['categories'] = dict(zip(
+                                ('content', 'marker', 'delimiter', 'name', 'quantity', 'annotation'), palette[theme], strict=True))
+                            if not isinstance(value, str) or json.loads(value) != expected_values:
                                 raise AssertionError(('Wrong theme', theme, value))
                             results.append({'engine': implementation.name, 'theme': theme, 'css': mode, 'result': 'passed'})
                             page.close()
