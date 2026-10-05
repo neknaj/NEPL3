@@ -20,6 +20,8 @@ mod html;
 mod input;
 #[path = "doc/labels.rs"]
 mod labels;
+#[path = "doc/markdown_math.rs"]
+mod markdown_math;
 #[path = "doc/math.rs"]
 mod math;
 #[path = "doc/mixed.rs"]

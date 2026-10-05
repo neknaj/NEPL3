@@ -27,6 +27,25 @@ Sentence consumerの所有移行、NEPL3a、旧lexical commentの全面撤去、
 
 ## 段階別の履歴
 
+### 2026-10-05: Markdown Math fragmentのnative準備
+
+`MathDisplayHost::prepare_markdown_node`は実DocのInlineMath/DisplayMathを、
+既存の独立MathML検査と構造TeX生成へ渡す。評価は行わず、Codeは受理しない。
+TeXで保持できないForeignAnnotation等は型付きUnsupportedとして返し、
+注釈を省いた式やMathMLの文字列化で代用しない。
+
+`PreparedMarkdown`は同じ不変Docへのborrowとnode番号を保持するnative handleである。
+portable受渡し・遠隔providerの証明には使用しない。生成時と同じLimitsを要求し、
+呼出側は準備から出力まで同じ累積Budgetを使う。Limits一致だけでは使用量の継続を証明しない。
+InlineはGitHubのドル・backtick区切り、DisplayBlockはmath fenced code blockを生成する。
+空のTeX、改行・backtickを含むTeX、TableCell内のpipeは明示的に拒否し、別の式へ書き換えない。
+文書の隣接文字・list/table構造に合わせた配置は呼出側の責務として残る。
+
+これはfragment準備の段階であり、footnotes page-set・CLI・canonical context identityへは
+未接続である。既存footnotes APIはMathをNeedsResolutionとして拒否する。
+GitHubの実描画、MathJaxとの差分、全数式の意味同等性、T07/T21受入は未検証である。
+出力記法の参照は[GitHub公式の数式記法](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/writing-mathematical-expressions)。
+
 ### 2026-09-21: collectorの環境検査済みprefixを保持
 
 正常な同期readが返すcollectorに、開始時のsource長までの競合検査scopeを保存する。

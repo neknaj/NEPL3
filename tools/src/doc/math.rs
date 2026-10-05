@@ -12,6 +12,7 @@ use nepl3_doc_core::model::{DocKind, DocumentSyntax};
 use nepl3_markup::mathml::Display;
 use nepl3_math_core::{check, lower, model::MathSyntax};
 pub mod display;
+pub mod markdown;
 
 #[derive(Debug)]
 pub enum Error<E> {
