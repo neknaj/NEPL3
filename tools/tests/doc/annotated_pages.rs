@@ -1,4 +1,6 @@
 use super::*;
+#[path = "annotated_pages/images.rs"]
+mod images;
 use nepl3_doc_core::{check::Category, lower, pages::*};
 use nepl3_tools::doc::projection::{
     Error,

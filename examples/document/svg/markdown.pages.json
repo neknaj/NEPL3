@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "pages": [{
+    "id": "svg-example",
+    "source": "markdown.nepld",
+    "projection": "markdown.md",
+    "aliases": "markdown.aliases.json",
+    "route": "markdown.md",
+    "renderer": "nepl3-tools.markdown-footnotes-pages/1"
+  }],
+  "files": [{
+    "id": "triangle",
+    "source": "triangle.svg",
+    "route": "assets/triangle.svg"
+  }]
+}

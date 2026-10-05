@@ -69,6 +69,7 @@ fn hex(value: Digest) -> String {
 fn page_context(
     input: &Input,
     dependencies: &[annotated::pages::LinkDependency],
+    images: &[annotated::pages::ImageDependency],
     budget: &mut Budget,
 ) -> Result<Digest> {
     let mut bytes = Vec::new();
@@ -102,6 +103,16 @@ fn page_context(
         )?;
         if let Some(fragment) = &dependency.fragment {
             field(&mut bytes, fragment.as_bytes(), budget)?;
+        }
+    }
+    if !images.is_empty() {
+        field(&mut bytes, b"static-svg/1\0", budget)?;
+        field(&mut bytes, &(images.len() as u64).to_be_bytes(), budget)?;
+        for image in images {
+            field(&mut bytes, &image.node.to_be_bytes(), budget)?;
+            field(&mut bytes, image.asset_id.as_bytes(), budget)?;
+            field(&mut bytes, image.route.as_bytes(), budget)?;
+            field(&mut bytes, &image.digest.0, budget)?;
         }
     }
     charge(budget, Resource::Work, bytes.len())?;
@@ -150,7 +161,11 @@ fn grouped(
     inputs: &[Input],
     references: ReferenceInputs,
     budget: &mut Budget,
-) -> Result<annotated::pages::PagesArtifact> {
+) -> Result<(annotated::pages::PagesArtifact, Vec<PageFile>)> {
+    let svg = !references.is_empty()
+        && inputs
+            .iter()
+            .all(|input| input.page.renderer == FOOTNOTES_RENDERER);
     charge(
         budget,
         Resource::AllocationUnits,
@@ -223,7 +238,7 @@ fn grouped(
             registration: PageRegistration {
                 id: entry.id,
                 source: entry.source.clone(),
-                route: entry.source,
+                route: if svg { entry.route } else { entry.source },
             },
             content: FileBytes(bytes),
         });
@@ -261,15 +276,26 @@ fn grouped(
     } else {
         None
     };
-    Ok(annotated::pages::render_styles(
-        &set,
-        &compiled.doc.registry,
-        &mut codec,
-        budget,
-        &refs,
-        styles.as_deref(),
-    )
-    .map_err(|e| format!("Markdown page set: {e:?}; usage={:?}", budget.usage()))?)
+    let output = if svg {
+        annotated::pages::render_footnotes_svg(
+            &set,
+            &compiled.doc.registry,
+            &mut codec,
+            budget,
+            &refs,
+        )
+    } else {
+        annotated::pages::render_styles(
+            &set,
+            &compiled.doc.registry,
+            &mut codec,
+            budget,
+            &refs,
+            styles.as_deref(),
+        )
+    }
+    .map_err(|e| format!("Markdown page set: {e:?}; usage={:?}", budget.usage()))?;
+    Ok((output, if svg { set.files } else { Vec::new() }))
 }
 
 #[cfg(test)]
@@ -310,10 +336,11 @@ fn generate_batch(
     charge(budget, Resource::Work, 1)?;
     let (raw, inputs, references, needs_group) = capture(root, raw)?;
     let compiled = crate::doc::source::compiled()?;
-    let mut group = if needs_group {
-        Some(grouped(&compiled, &inputs, references, budget)?)
+    let (mut group, svg_files) = if needs_group {
+        let (group, files) = grouped(&compiled, &inputs, references, budget)?;
+        (Some(group), files)
     } else {
-        None
+        (None, Vec::new())
     };
     if let Some(group) = &mut group {
         for (artifact, input) in group.pages.iter_mut().zip(&inputs) {
@@ -360,12 +387,18 @@ fn generate_batch(
     } else {
         None
     };
+    let file_capacity = inputs
+        .len()
+        .checked_add(svg_files.len())
+        .ok_or("OutputLimit")?;
+    let has_svg = !svg_files.is_empty();
     charge(
         budget,
         Resource::AllocationUnits,
-        inputs.len() * (core::mem::size_of::<(String, String)>() + core::mem::size_of::<Digest>()),
+        file_capacity * core::mem::size_of::<(String, String)>()
+            + inputs.len() * core::mem::size_of::<Digest>(),
     )?;
-    let mut files = Vec::with_capacity(inputs.len());
+    let mut files = Vec::with_capacity(file_capacity);
     let mut documents = Vec::with_capacity(inputs.len());
     for (index, input) in inputs.iter().enumerate() {
         budget.poll().map_err(err)?;
@@ -399,7 +432,12 @@ fn generate_batch(
             (legacy, document_digest)
         } else {
             let group = group.as_ref().ok_or("missing page context")?;
-            let context = page_context(input, &group.dependencies[index], budget)?;
+            let context = page_context(
+                input,
+                &group.dependencies[index],
+                &group.image_dependencies[index],
+                budget,
+            )?;
             let artifact = &group.pages[index];
             // Paths passed portable ASCII validation. Escaping hyphens prevents
             // a filename from closing the comment; none contains a newline.
@@ -442,13 +480,22 @@ fn generate_batch(
     charge(
         budget,
         Resource::AllocationUnits,
-        files.len() * core::mem::size_of::<serde_json::Value>(),
+        file_capacity * core::mem::size_of::<serde_json::Value>(),
     )?;
-    let mut records = Vec::with_capacity(files.len());
+    let mut records = Vec::with_capacity(file_capacity);
     for ((path, text), document_digest) in files.iter().zip(documents) {
         charge(budget, Resource::Work, text.len() + path.len())?;
         charge(budget, Resource::AllocationUnits, path.len() * 6 + 512)?;
         records.push(serde_json::json!({"path":path,"sha256":hex(Digest::of(text.as_bytes())),"bytes":text.len(),"document_digest":hex(document_digest)}));
+    }
+    for file in svg_files {
+        let path = file.registration.route;
+        let text = String::from_utf8(file.content.0)?;
+        charge(budget, Resource::Work, text.len() + path.len())?;
+        charge(budget, Resource::OutputBytes, text.len())?;
+        charge(budget, Resource::AllocationUnits, path.len() * 6 + 512)?;
+        records.push(serde_json::json!({"path":path,"sha256":hex(Digest::of(text.as_bytes())),"bytes":text.len(),"kind":"static-svg"}));
+        files.push((path, text));
     }
     // Reserve before json! copies the records and before serialization. Each
     // portable path is <=4096 bytes; 32 KiB covers escaped path, fields, digest
@@ -469,8 +516,24 @@ fn generate_batch(
                 total.checked_add(size).ok_or("ContextLimit")
             })
     })?;
+    let image_allowance = group.as_ref().map_or(Ok(0usize), |g| {
+        g.image_dependencies
+            .iter()
+            .flatten()
+            .try_fold(0usize, |total, image| {
+                let size = image
+                    .asset_id
+                    .len()
+                    .checked_add(image.route.len())
+                    .and_then(|n| n.checked_mul(6))
+                    .and_then(|n| n.checked_add(512))
+                    .ok_or("ContextLimit")?;
+                total.checked_add(size).ok_or("ContextLimit")
+            })
+    })?;
     let receipt_allowance = (files.len() * 32768 + 1024)
         .checked_add(dependency_allowance)
+        .and_then(|n| n.checked_add(image_allowance))
         .and_then(|n| n.checked_mul(2))
         .ok_or("ContextLimit")?;
     charge(budget, Resource::Work, receipt_allowance)?;
@@ -484,8 +547,14 @@ fn generate_batch(
     };
     let receipt = serde_json::json!({"format":"nepl3.canonical-markdown-stage/2",
         "input_context":identity.map(hex),"input_pageset":group.as_ref().map(|g| hex(g.identity)),
-        "page_dependencies":group.as_ref().map(|g| inputs.iter().zip(&g.dependencies).map(|(input, dependencies)|
-            serde_json::json!({"path":input.page.projection,"links":dependencies})).collect::<Vec<_>>()),
+        "page_dependencies":group.as_ref().map(|g| inputs.iter().zip(&g.dependencies).enumerate().map(|(index, (input, dependencies))| {
+            let mut page = serde_json::json!({"path":input.page.projection,"links":dependencies});
+            if has_svg {
+                page["images"] = serde_json::Value::Array(g.image_dependencies[index].iter().map(|image|
+                    serde_json::json!({"node":image.node,"asset_id":image.asset_id,"route":image.route,"sha256":hex(image.digest)})).collect());
+            }
+            page
+        }).collect::<Vec<_>>()),
         "files":records,
         "output_budget":{"limits":{"source_bytes":limits.source_bytes,"work":limits.work,
             "depth":limits.depth,"nodes":limits.nodes,"allocation_units":limits.allocation_units,
