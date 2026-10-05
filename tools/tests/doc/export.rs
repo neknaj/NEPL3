@@ -388,3 +388,37 @@ fn parsed_code_reuses_shared_regions_without_lowering_the_guest() -> Result<(), 
     assert!(block.contains("article"), "{block}");
     Ok(())
 }
+
+#[test]
+fn incomplete_code_or_host_never_completes_export() -> Result<(), String> {
+    let compiled = compiled()?;
+    let complete = r#"article en "Host" body cons paragraph cons code Math frac 1 0 nil nil"#;
+    for css in [export::CssMode::External, export::CssMode::Inline] {
+        let mut stages = Vec::new();
+        let result =
+            export::generate_observed_with_css(&compiled, complete, css, &mut |measurement| {
+                stages.push(measurement.stage)
+            })?;
+        assert!(result.html.contains("nepl-code-quantity"));
+        assert!(stages.contains(&export::Stage::RenderAndSerialize));
+    }
+    // Code skips semantic evaluation, not the syntax required to delimit its
+    // guest and the enclosing host. Missing source must not become empty HTML.
+    for input in [
+        r#"article en "Host" body cons paragraph cons code Math frac 1"#,
+        r#"article en "Host" body cons paragraph cons code Math frac 1 0"#,
+        r#"article en "Host" body cons paragraph cons code Math frac 1 0 nil"#,
+        r#"article en "Host" body cons paragraph cons code Doc article en "unfinished"#,
+    ] {
+        for css in [export::CssMode::External, export::CssMode::Inline] {
+            let mut stages = Vec::new();
+            let result =
+                export::generate_observed_with_css(&compiled, input, css, &mut |measurement| {
+                    stages.push(measurement.stage)
+                });
+            assert!(result.is_err(), "incomplete input exported: {input}");
+            assert!(!stages.contains(&export::Stage::RenderAndSerialize));
+        }
+    }
+    Ok(())
+}
