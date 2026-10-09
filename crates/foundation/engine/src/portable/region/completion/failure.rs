@@ -21,7 +21,7 @@ pub fn to_value<C: FoundationValueCodec>(
     let empty = SourceStore::default();
     let mut local = c.scoped(&empty);
     validate(reply, request, capability, r, &mut local, b)?;
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let cause = match &reply.error {
         RegionCompletionError::Selection(error) => variant(
             s.engine,
@@ -65,7 +65,7 @@ pub fn from_value<C: FoundationValueCodec>(
     r.validate(&expected("RegionCompletionFailureReply", b)?, value, b)?;
     let empty = SourceStore::default();
     let mut local = c.scoped(&empty);
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let f = fields(value, s.engine, "RegionCompletionFailureReply", 4)?;
     let error = match parts(&f[2], s.engine, "RegionCompletionError")? {
         ("Selection", [error]) => RegionCompletionError::Selection(

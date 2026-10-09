@@ -44,7 +44,7 @@ fn schema<E>(r: &SchemaRegistry) -> Result<&SchemaRef, PortableError<E>> {
     if !r.is_finalized() {
         return Err(SchemaError::Unfinalized.into());
     }
-    r.selected("nepl3.markup", 2)
+    r.selected("nepl3.markup", 3)
         .ok_or(SchemaError::UnknownSchema.into())
 }
 fn check_named<E>(
@@ -60,7 +60,7 @@ fn check_named<E>(
     r.validate(
         &TypeDescriptor::Named(TypeRef {
             package: "nepl3.markup".into(),
-            revision: 2,
+            revision: 3,
             name: name.into(),
         }),
         v,

@@ -249,7 +249,11 @@ pub(crate) fn validate(
                         (class.name.len() + class.schema.package.len()) as u64 + 1,
                     )?;
                     if class.name.is_empty()
-                        || input.profile.registry().descriptor(&class.schema).is_none()
+                        || input
+                            .profile
+                            .registry()
+                            .descriptor_with_budget(&class.schema, b)?
+                            .is_none()
                     {
                         return Err(RegionError::Sidecar);
                     }
@@ -265,7 +269,13 @@ pub(crate) fn validate(
                         Resource::Work,
                         (schema.package.len() + kind.len()) as u64 + 1,
                     )?;
-                    if kind.is_empty() || input.profile.registry().descriptor(schema).is_none() {
+                    if kind.is_empty()
+                        || input
+                            .profile
+                            .registry()
+                            .descriptor_with_budget(schema, b)?
+                            .is_none()
+                    {
                         return Err(RegionError::Sidecar);
                     }
                     check_span(to, b)?;

@@ -2,6 +2,9 @@
 //! and CSS provenance are host preparation obligations, not inferred from paths.
 pub(crate) mod check;
 mod identity;
+mod inline_svg;
+pub use crate::katex::svg::{Aspect as HtmlSvgAspect, Endpoint as HtmlSvgEndpoint};
+pub use inline_svg::HtmlSvgElement;
 mod ruby;
 pub(crate) mod serialize;
 pub mod svg;
@@ -124,6 +127,7 @@ pub enum HtmlAttribute {
     Lang { value: String },
     Role { value: HtmlRole },
     AriaLabel { value: String },
+    AriaHidden { value: bool },
     AriaLevel { value: u64 },
     DataId { value: String },
     DataGroup { value: String },
@@ -144,6 +148,7 @@ impl HtmlAttribute {
             Self::Lang { .. } => "lang",
             Self::Role { .. } => "role",
             Self::AriaLabel { .. } => "aria-label",
+            Self::AriaHidden { .. } => "aria-hidden",
             Self::AriaLevel { .. } => "aria-level",
             Self::DataId { .. } => "data-nepl-id",
             Self::DataGroup { .. } => "data-nepl-group",
@@ -159,6 +164,10 @@ impl HtmlAttribute {
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum HtmlNode {
+    SvgElement {
+        element: HtmlSvgElement,
+        children: Vec<u64>,
+    },
     Text {
         text: String,
     },

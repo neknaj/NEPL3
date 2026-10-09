@@ -19,7 +19,7 @@ pub fn call_to_value<C: FoundationValueCodec>(
     budget: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
     call.validate_projection(profile, budget)?;
-    let value = call.value(&Schemas::new(profile.registry())?, codec, budget)?;
+    let value = call.value(&Schemas::new(profile.registry(), budget)?, codec, budget)?;
     profile
         .registry()
         .validate(&expected("HeadCall", budget)?, &value, budget)?;
@@ -38,7 +38,12 @@ pub fn call_decode<C: FoundationValueCodec>(
     profile
         .registry()
         .validate(&expected("HeadCall", budget)?, value, budget)?;
-    let call = HeadCall::read(value, &Schemas::new(profile.registry())?, codec, budget)?;
+    let call = HeadCall::read(
+        value,
+        &Schemas::new(profile.registry(), budget)?,
+        codec,
+        budget,
+    )?;
     call.validate_projection(profile, budget)?;
     windows.admit(&call, budget)?;
     Ok(call)
@@ -53,7 +58,7 @@ pub fn reply_to_value<C: FoundationValueCodec>(
     budget: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
     call.validate_reply(reply, profile, budget)?;
-    let value = reply.value(&Schemas::new(profile.registry())?, codec, budget)?;
+    let value = reply.value(&Schemas::new(profile.registry(), budget)?, codec, budget)?;
     profile
         .registry()
         .validate(&expected("HeadReply", budget)?, &value, budget)?;
@@ -69,7 +74,12 @@ pub fn reply_decode<C: FoundationValueCodec>(
     profile
         .registry()
         .validate(&expected("HeadReply", budget)?, value, budget)?;
-    let reply = HeadReply::read(value, &Schemas::new(profile.registry())?, codec, budget)?;
+    let reply = HeadReply::read(
+        value,
+        &Schemas::new(profile.registry(), budget)?,
+        codec,
+        budget,
+    )?;
     issued.validate_reply(&reply, profile, budget)?;
     Ok(reply)
 }

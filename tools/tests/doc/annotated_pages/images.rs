@@ -239,3 +239,116 @@ fn static_svg_caps_precede_portable_admission_allocations() -> Result<(), String
     }
     Ok(())
 }
+
+#[test]
+fn image_free_pages_do_not_pay_unused_plain_text_preparation() -> Result<(), String> {
+    let c = compiled()?;
+    let store = SourceStore::default();
+    for count in [4, 16, 32] {
+        let source = format!("article en \"Text\" body {} nil",
+            "cons paragraph cons \"A text-only page keeps its checked document and needs no image alt preparation.\" nil ".repeat(count));
+        let set = PageSet {
+            pages: vec![page(&c, "a", "a.nepld", "a.md", &source)?],
+            files: vec![],
+        };
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+        let mut plain_budget = budget();
+        let plain =
+            render(&set, &c.doc.registry, &mut codec, &mut plain_budget, &[&[]]).map_err(err)?;
+        // Measure the discarded preparation in the same warm admission state.
+        let mut redundant = budget();
+        nepl3_doc_core::text::prepare(
+            &set.pages[0].document,
+            &c.doc.registry,
+            &mut codec,
+            &mut redundant,
+        )
+        .map_err(err)?;
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+        let mut actual = budget();
+        let svg = render_footnotes_svg(&set, &c.doc.registry, &mut codec, &mut actual, &[&[]])
+            .map_err(err)?;
+        assert_eq!(svg.pages[0].markdown, plain.pages[0].markdown);
+        assert_eq!(svg.pages[0].document_digest, plain.pages[0].document_digest);
+        assert!(svg.image_dependencies[0].is_empty());
+        let extra = actual
+            .usage()
+            .work
+            .saturating_sub(plain_budget.usage().work);
+        eprintln!(
+            "IMAGE_PREPARATION_METRICS paragraphs={count} plain_work={} svg_work={} unused_prepare_work={} svg_allocation={} unused_prepare_allocation={}",
+            plain_budget.usage().work,
+            actual.usage().work,
+            redundant.usage().work,
+            actual.usage().allocation_units,
+            redundant.usage().allocation_units
+        );
+        assert!(
+            extra < redundant.usage().work / 2,
+            "{count}: extra={extra}, unused={}",
+            redundant.usage().work
+        );
+        for reason in [StopReason::WorkLimit, StopReason::AllocationLimit] {
+            let mut limits = actual.limits();
+            if reason == StopReason::WorkLimit {
+                limits.work = actual.usage().work - 1;
+            } else {
+                limits.allocation_units = actual.usage().allocation_units - 1;
+            }
+            let mut admission = SourceAdmission::default();
+            let mut codec =
+                FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+            let mut stopped = Budget::new(limits);
+            assert!(
+                matches!(render_footnotes_svg(&set, &c.doc.registry, &mut codec, &mut stopped, &[&[]]), Err(Error::Stopped(s)) if s == reason)
+            );
+            assert_eq!(stopped.poll(), Err(reason));
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn image_preparation_follows_current_page_requirements_across_gaps() -> Result<(), String> {
+    let c = compiled()?;
+    let source = r#"article en "Image" body cons paragraph cons sentence cons link external "https://example.com/" text "External" nil nil cons image asset "triangle" none "alt" some "caption" nil"#;
+    let mut set = fixture(&c, source)?;
+    let image_only = render_svg(&c, &set).map_err(err)?;
+    set.pages.insert(
+        0,
+        page(
+            &c,
+            "empty",
+            "empty.nepld",
+            "empty.md",
+            "article en \"Empty\" body nil",
+        )?,
+    );
+    set.pages.insert(1, page(&c, "links", "links.nepld", "links.md", "article en \"Links\" body cons paragraph cons sentence cons link external \"https://example.com/\" text \"External\" nil nil nil")?);
+    set.pages.push(page(
+        &c,
+        "gap",
+        "gap.nepld",
+        "gap.md",
+        "article en \"Gap\" body nil",
+    )?);
+    set.pages
+        .push(page(&c, "other", "other.nepld", "other.md", source)?);
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let aliases: [&[annotated::Alias]; 5] = [&[]; 5];
+    let result = render_footnotes_svg(&set, &c.doc.registry, &mut codec, &mut budget(), &aliases)
+        .map_err(err)?;
+    assert_eq!(result.pages[2].markdown, image_only.pages[0].markdown);
+    for (i, deps) in result.image_dependencies.iter().enumerate() {
+        assert_eq!(deps.len(), usize::from(i == 2 || i == 4));
+    }
+    assert!(result.pages[1].markdown.contains("https"));
+    assert!(result.pages[4].markdown.contains("assets/triangle.svg"));
+    Ok(())
+}

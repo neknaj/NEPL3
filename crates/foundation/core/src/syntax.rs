@@ -256,11 +256,9 @@ impl SyntaxBundle {
             for (node_index, node) in bundle.nodes.iter().enumerate() {
                 budget.charge(Resource::Nodes, 1)?;
                 let descriptor = registry
-                    .descriptor(&node.schema)
+                    .descriptor_with_budget(&node.schema, budget)?
                     .ok_or(SchemaError::UnknownSchema)?;
-                if !descriptor.types.iter().any(|ty| ty.name == node.kind) {
-                    return Err(SchemaError::UnknownType.into());
-                }
+                SchemaRegistry::named_definition(descriptor, &node.kind, budget)?;
                 check_origin(bundle, node.origin)?;
                 if let Some(reference) = node.token {
                     let token = usize::try_from(reference.0)
@@ -441,8 +439,12 @@ fn check_origin(bundle: &SyntaxBundle, origin: OriginRef) -> Result<(), SyntaxEr
         Ok(())
     }
 }
-fn require_schema(registry: &SchemaRegistry, schema: &SchemaRef) -> Result<(), SyntaxError> {
-    if registry.descriptor(schema).is_some() {
+fn require_schema(
+    registry: &SchemaRegistry,
+    schema: &SchemaRef,
+    budget: &mut Budget,
+) -> Result<(), SyntaxError> {
+    if registry.descriptor_with_budget(schema, budget)?.is_some() {
         Ok(())
     } else {
         Err(SchemaError::UnknownSchema.into())

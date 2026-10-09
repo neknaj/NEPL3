@@ -15,7 +15,7 @@ pub fn request_to_value<C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let value = record(
         s.engine,
         "RegionCompletionRequest",
@@ -35,7 +35,7 @@ pub fn request_decode<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<RegionCompletionRequest, PortableError<C::Error>> {
     r.validate(&expected("RegionCompletionRequest", b)?, value, b)?;
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let f = fields(value, s.engine, "RegionCompletionRequest", 2)?;
     Ok(RegionCompletionRequest {
         region: Value::read(&f[0], &s, c, b)?,
@@ -59,7 +59,7 @@ pub fn reply_to_value<C: FoundationValueCodec>(
         };
     };
     let r = input.binding.profile.registry();
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let mut store = SourceStore::default();
     crate::portable::binding::check::add(&mut store, &reply.sources, b, c.source_admission())?;
     let mut local = c.scoped(&store);
@@ -102,7 +102,7 @@ pub fn reply_decode<C: FoundationValueCodec>(
 ) -> Result<RegionCompletionReply, PortableError<C::Error>> {
     let r = input.binding.profile.registry();
     r.validate(&expected("RegionCandidates", b)?, value, b)?;
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let f = fields(value, s.engine, "RegionCandidates", 6)?;
     let sources = c.decode_sources(&f[5], b).map_err(boundary)?;
     let mut store = SourceStore::default();
@@ -170,7 +170,7 @@ fn validate<C: FoundationValueCodec>(
         RegionCompletionOutcome::Stopped(reason) => return Err((*reason).into()),
         RegionCompletionOutcome::Invalid(_) => return Err(PortableError::RequestMismatch),
     };
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let region_value = region.value(&s, c, b)?;
     let actual_region_value = actual_region.value(&s, c, b)?;
     if !region_value.equal_with_budget(&actual_region_value, b)?

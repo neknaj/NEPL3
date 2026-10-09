@@ -1,6 +1,8 @@
 //! Typed foundation source adapters. Source digests and span geometry are checked
 //! after structural decoding; a record labelled SourceContent is never trusted.
 mod order;
+#[cfg(test)]
+mod tests;
 use crate::{WireError, decode_checked, encode_checked};
 use alloc::{string::String, vec::Vec};
 use nepl3_core::{
@@ -46,14 +48,31 @@ fn source_ref(
     schema: &SchemaRef,
     budget: &mut Budget,
 ) -> Result<NdfValue, WireError> {
+    source_ref_fields(
+        &reference.source_id,
+        reference.revision,
+        &reference.digest,
+        schema,
+        budget,
+    )
+}
+
+// Borrow identity fields until the final owned NDF fields are constructed.
+fn source_ref_fields(
+    source_id: &SourceId,
+    revision: u64,
+    digest: &Digest,
+    schema: &SchemaRef,
+    budget: &mut Budget,
+) -> Result<NdfValue, WireError> {
     budget.charge(Resource::AllocationUnits, 32)?;
     record(
         schema,
         "SourceRef",
         [
-            text(&reference.source_id.0, budget)?,
-            NdfValue::U64(reference.revision),
-            NdfValue::Bytes(reference.digest.0.to_vec()),
+            text(&source_id.0, budget)?,
+            NdfValue::U64(revision),
+            NdfValue::Bytes(digest.0.to_vec()),
         ],
         budget,
     )
@@ -235,18 +254,13 @@ pub(crate) fn span_value(
     schema: &SchemaRef,
     budget: &mut Budget,
 ) -> Result<NdfValue, WireError> {
+    budget.poll()?;
     let id = span.snapshot_ref();
-    budget.charge(Resource::AllocationUnits, id.source.0.len() as u64)?;
-    let reference = SourceRef {
-        source_id: id.source.clone(),
-        revision: id.revision,
-        digest: id.digest,
-    };
     record(
         schema,
         "Span",
         [
-            source_ref(&reference, schema, budget)?,
+            source_ref_fields(&id.source, id.revision, &id.digest, schema, budget)?,
             NdfValue::U64(span.start()),
             NdfValue::U64(span.end()),
         ],

@@ -20,7 +20,7 @@ pub fn request_to_value<C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
-    let value = request.value(&Schemas::new(registry)?, c, b)?;
+    let value = request.value(&Schemas::new(registry, b)?, c, b)?;
     registry.validate(&expected("QueryRequest", b)?, &value, b)?;
     Ok(value)
 }
@@ -33,7 +33,7 @@ pub fn request_decode<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<QueryRequest, PortableError<C::Error>> {
     registry.validate(&expected("QueryRequest", b)?, v, b)?;
-    QueryRequest::read(v, &Schemas::new(registry)?, c, b)
+    QueryRequest::read(v, &Schemas::new(registry, b)?, c, b)
 }
 pub fn reply_to_value<C: FoundationValueCodec>(
     reply: &QueryReply,
@@ -45,7 +45,7 @@ pub fn reply_to_value<C: FoundationValueCodec>(
     let mut store = SourceStore::default();
     super::binding::check::add(&mut store, &reply.sources, b, c.source_admission())?;
     check::validate(reply, request, registry, &store, b)?;
-    let s = Schemas::new(registry)?;
+    let s = Schemas::new(registry, b)?;
     let mut local = c.scoped(&store);
     let outcome = value::outcome_value(&reply.outcome, registry, &s, &mut local, b)?;
     let value = record(
@@ -72,7 +72,7 @@ pub fn reply_decode<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<QueryReply, PortableError<C::Error>> {
     registry.validate(&expected("QueryReply", b)?, v, b)?;
-    let s = Schemas::new(registry)?;
+    let s = Schemas::new(registry, b)?;
     let f = fields(v, s.engine, "QueryReply", 4)?;
     let sources = c.decode_sources(&f[3], b).map_err(boundary)?;
     let mut store = SourceStore::default();

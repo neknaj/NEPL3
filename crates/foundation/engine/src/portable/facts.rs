@@ -27,7 +27,7 @@ pub fn request_view_to_value<C: FoundationValueCodec>(
     let profile = request.profile();
     let request = request.request();
     request.issue(profile, b, codec.source_admission())?;
-    let s = Schemas::new(profile.registry())?;
+    let s = Schemas::new(profile.registry(), b)?;
     let mappings = tree::canonical::Mappings::new(&request.tree.bundle, b)?;
     let (path, owner) =
         mappings.path_value(&request.tree.bundle, request.path, &s, profile, codec, b)?;
@@ -90,7 +90,7 @@ pub fn request_decode<C: FoundationValueCodec>(
     profile
         .registry()
         .validate(&expected("FactsRequest", b)?, value, b)?;
-    let s = Schemas::new(profile.registry())?;
+    let s = Schemas::new(profile.registry(), b)?;
     let f = fields(value, s.engine, "FactsRequest", 6)?;
     let tree = tree::from_value(&f[0], profile, codec, b)?;
     let existing = codec.decode_fact_set(&f[3], b).map_err(boundary)?;
@@ -124,7 +124,7 @@ pub fn reply_to_value<C: FoundationValueCodec>(
     reply.validate(request, b, codec.source_admission())?;
     let (delta, report, sources, maps) = reply.parts();
     let profile = request.profile();
-    let s = Schemas::new(profile.registry())?;
+    let s = Schemas::new(profile.registry(), b)?;
     let base = request
         .request()
         .existing
@@ -194,7 +194,7 @@ pub fn reply_from_value<C: FoundationValueCodec>(
     profile
         .registry()
         .validate(&expected("FactsReply", b)?, value, b)?;
-    let s = Schemas::new(profile.registry())?;
+    let s = Schemas::new(profile.registry(), b)?;
     let (case, f) = parts(value, s.engine, "FactsReply")?;
     let (reason, f) = if case == "Stopped" {
         if f.len() != 5 {

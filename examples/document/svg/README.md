@@ -13,7 +13,9 @@ nepl3-tools doc-html svg --css inline --svg embedded examples/document/svg/examp
 
 triangle.svgはtriangle.texからlatexとdvisvgmで生成した。図の内部に白い背景を含むため、暗い文書背景でも黒線を判読できる。
 
-この試作は既存のpages操作やportable asset準備操作の完成を意味しない。doc-html exportのlocal-only契約は維持する。
+数式を含む原稿では、同じSVG操作へ `--math-renderer mathml-only` を指定できる。省略時は `katex-preferred` となり、対応するKaTeX adapterが未接続の間は理由をmanifestへ記録してMathMLを用いる。Codeの内容は評価せず、保持したソースを表示する。
+
+この試作は既存のpages操作やportable asset準備操作の完成を意味しない。既存の `prepare_local`・SVG-only・SVG+Code準備APIの契約は維持し、SVG+Mathは別の準備経路で扱う。実ブラウザでの表示確認は構造・生成試験と区別する。
 
 ## MarkdownへのSVG出力
 

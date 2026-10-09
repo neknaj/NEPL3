@@ -82,17 +82,14 @@ pub fn read<'a>(
     if !registry.is_finalized() {
         return Err(SchemaError::Unfinalized.into());
     }
-    let schema = registry
-        .selected("nepl3.sentence", 1)
+    let (schema, descriptor) = registry
+        .selected_descriptor_with_budget("nepl3.sentence", 1, budget)?
         .ok_or(SchemaError::UnknownSchema)?;
     if !crate::schema::matches(schema, budget)? {
         return Err(SentenceError::SchemaIdentity);
     }
     budget.charge(Resource::AllocationUnits, 64 + schema.package.len() as u64)?;
     let mut kinds = [0u64; 6];
-    let descriptor = registry
-        .descriptor(schema)
-        .ok_or(SchemaError::UnknownSchema)?;
     for (slot, name) in kinds.iter_mut().zip([
         "View:Sentence",
         "View:TextRun",

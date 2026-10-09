@@ -57,26 +57,23 @@ impl CheckedReaderContext<'_> {
     ) -> Result<CheckedReaderContext<'a>, ContextError<core::convert::Infallible>> {
         use crate::runtime::copy::CopyCost;
         let result = (|| {
-            budget.charge(
-                Resource::Work,
-                (schema.package.len() as u64)
-                    .saturating_add(self.foundation.package.len() as u64)
-                    .saturating_add(68),
-            )?;
+            budget.charge(Resource::Work, 1)?;
             if !registry.is_finalized()
-                || registry.descriptor(&self.foundation).is_none()
-                || registry.descriptor(schema).is_none()
+                || registry
+                    .descriptor_with_budget(&self.foundation, budget)?
+                    .is_none()
+                || registry.descriptor_with_budget(schema, budget)?.is_none()
                 || category.is_empty()
                 || mode.is_empty()
             {
                 return Err(ContextError::InvalidContext);
             }
             for binding in &self.environment.value.bindings {
-                budget.charge(
-                    Resource::Work,
-                    binding.namespace.schema.package.len() as u64 + 34,
-                )?;
-                if registry.descriptor(&binding.namespace.schema).is_none() {
+                budget.charge(Resource::Work, 1)?;
+                if registry
+                    .descriptor_with_budget(&binding.namespace.schema, budget)?
+                    .is_none()
+                {
                     return Err(ContextError::InvalidContext);
                 }
                 registry
@@ -97,7 +94,8 @@ impl CheckedReaderContext<'_> {
                 Resource::Work,
                 (schema.package.len() as u64)
                     .saturating_add(category.len() as u64)
-                    .saturating_add(mode.len() as u64),
+                    .saturating_add(mode.len() as u64)
+                    .saturating_add(self.foundation.package.len() as u64),
             )?;
             budget.charge(
                 Resource::AllocationUnits,
@@ -134,15 +132,21 @@ impl CheckedReaderContext<'_> {
         use crate::runtime::copy::CopyCost;
         budget.charge(Resource::Work, 1)?;
         if !registry.is_finalized()
-            || registry.descriptor(&self.foundation).is_none()
-            || registry.descriptor(schema).is_none()
+            || registry
+                .descriptor_with_budget(&self.foundation, budget)?
+                .is_none()
+            || registry.descriptor_with_budget(schema, budget)?.is_none()
             || category.is_empty()
             || mode.is_empty()
         {
             return Err(ContextError::InvalidContext);
         }
         for binding in &self.environment.value.bindings {
-            if registry.descriptor(&binding.namespace.schema).is_none() {
+            budget.charge(Resource::Work, 1)?;
+            if registry
+                .descriptor_with_budget(&binding.namespace.schema, budget)?
+                .is_none()
+            {
                 return Err(ContextError::InvalidContext);
             }
             registry
@@ -173,6 +177,13 @@ impl CheckedReaderContext<'_> {
             closure.push(source);
         }
         self.raw().charge(budget)?;
+        budget.charge(
+            Resource::Work,
+            (schema.package.len() as u64)
+                .saturating_add(category.len() as u64)
+                .saturating_add(mode.len() as u64)
+                .saturating_add(self.foundation.package.len() as u64),
+        )?;
         budget.charge(
             Resource::AllocationUnits,
             (schema.package.len() + category.len() + mode.len() + self.foundation.package.len())
@@ -222,8 +233,12 @@ impl ReaderContext {
                 .map_err(ContextError::Boundary)?;
         }
         if !registry.is_finalized()
-            || registry.descriptor(codec.foundation_schema()).is_none()
-            || registry.descriptor(&self.schema).is_none()
+            || registry
+                .descriptor_with_budget(codec.foundation_schema(), budget)?
+                .is_none()
+            || registry
+                .descriptor_with_budget(&self.schema, budget)?
+                .is_none()
             || self.category.is_empty()
             || self.mode.is_empty()
         {
@@ -235,7 +250,9 @@ impl ReaderContext {
             budget.charge(Resource::Work, 1)?;
             if binding.name.is_empty()
                 || binding.namespace.name.is_empty()
-                || registry.descriptor(&binding.namespace.schema).is_none()
+                || registry
+                    .descriptor_with_budget(&binding.namespace.schema, budget)?
+                    .is_none()
                 || self.environment.value.bindings[..index]
                     .iter()
                     .any(|b| b.namespace == binding.namespace && b.name == binding.name)

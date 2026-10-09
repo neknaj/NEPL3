@@ -1,4 +1,6 @@
 //! Exclusive capacity reservation for one host-authorized delegated execution.
+pub mod child;
+
 use nepl3_core::budget::{Budget, Limits, StopReason, Usage};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

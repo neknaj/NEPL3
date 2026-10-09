@@ -12,6 +12,12 @@ pub(super) fn id(s: &str) -> bool {
         && s.bytes()
             .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'-')
 }
+// Registered stylesheet class tokens are separate from data identifiers.
+pub(super) fn class(s: &str) -> bool {
+    s.as_bytes().first().is_some_and(u8::is_ascii_alphabetic)
+        && s.bytes()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, b'-' | b'_'))
+}
 pub(super) fn path(s: &str) -> bool {
     !s.is_empty()
         && s.split('/').all(|part| {

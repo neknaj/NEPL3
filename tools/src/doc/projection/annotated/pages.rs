@@ -138,6 +138,28 @@ struct PageMode<'a> {
     math: Option<MathSurfaces<'a>>,
 }
 
+// The native CheckedPages proof guarantees page-ordered requirements. Inspect
+// only this page's remaining prefix; image-free pages need no alt-text owner.
+fn needs_image_text(
+    remaining: &[domain::PageRequirement],
+    page: u64,
+    budget: &mut Budget,
+) -> Result<bool, Error> {
+    for requirement in remaining {
+        budget.charge(Resource::Work, 1)?;
+        if requirement.page != page {
+            break;
+        }
+        if matches!(
+            requirement.requirement,
+            prepare::DocRequirement::Asset { .. }
+        ) {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
 fn render_inner<C: FoundationValueCodec>(
     set: &PageSet,
     registry: &SchemaRegistry,
@@ -182,7 +204,7 @@ where
     let mut page_links = checked.plan().links.as_slice();
     for (page, input) in set.pages.iter().enumerate() {
         budget.charge(Resource::Work, 1)?;
-        let prepared = if svg {
+        let prepared = if svg && needs_image_text(pending, page as u64, budget)? {
             Some(
                 nepl3_doc_core::text::prepare(&input.document, registry, codec, budget).map_err(
                     |error| match error {

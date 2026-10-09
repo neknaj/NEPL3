@@ -1,3 +1,5 @@
+#[path = "portable/lookup.rs"]
+mod lookup;
 use super::*;
 use nepl3_core::{
     budget::{Budget, StopReason},
@@ -14,7 +16,10 @@ use nepl3_engine::{
 use nepl3_wire::foundation::FoundationCodec;
 fn transport_reserve() -> HeadTransportReserve {
     HeadTransportReserve {
-        work: 100_000,
+        // Conservatively reserve outbound and inbound transport; this also
+        // admitted the recorded linear-lookup cost before binary optimization.
+        // The caller's parent caps remain unchanged.
+        work: 500_000,
         nodes: 10_000,
         allocation_units: 1_000_000,
         output_bytes: 100_000,
@@ -46,7 +51,9 @@ fn delegated_grant_and_real_framing_share_the_original_work_cap() -> TestResult 
             profile,
             &[&source_table],
             HeadTransportReserve {
-                work: 20_000,
+                // Covers the pre-binary-search measured send cost
+                // (197608 encode + 4406 framing), within the same 500k parent.
+                work: 210_000,
                 ..transport_reserve()
             },
             &mut parent,
@@ -56,7 +63,12 @@ fn delegated_grant_and_real_framing_share_the_original_work_cap() -> TestResult 
         let empty = SourceStore::default();
         let mut codec =
             FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(error)?;
-        let packet = issued.to_value(&mut codec).map_err(error)?;
+        let packet = issued.to_value(&mut codec).map_err(|e| {
+            format!(
+                "delegation encode: {e:?}; parent={:?}",
+                issued.parent_usage()
+            )
+        })?;
         let bytes = issued
             .transport(|b| nepl3_wire::encode(&packet, b))
             .map_err(error)?;
@@ -79,6 +91,18 @@ fn delegated_grant_and_real_framing_share_the_original_work_cap() -> TestResult 
         let mut remote = Budget::new(receiver_limits(grant, framing.usage()).map_err(error)?);
         let received =
             delegation_decode(&value, profile, &mut receiver_codec, &mut remote).map_err(error)?;
+        // The projection is immutable and performs the same work on every call.
+        // Derive the expected execution count from remaining Work rather than
+        // retaining an arbitrary count that depended on unmetered schema walks.
+        let mut probe = Budget::new(remote.limits());
+        received
+            .call
+            .validate_projection(profile, &mut probe)
+            .map_err(error)?;
+        let per_iteration = probe.usage().work;
+        assert!(per_iteration > 0);
+        let expected_iterations = (remote.limits().work - remote.usage().work) / per_iteration;
+        assert!(expected_iterations > 0);
         let mut iterations = 0;
         loop {
             match received.call.validate_projection(profile, &mut remote) {
@@ -87,7 +111,7 @@ fn delegated_grant_and_real_framing_share_the_original_work_cap() -> TestResult 
                 other => return Err(format!("unexpected repeated projection: {other:?}").into()),
             }
         }
-        assert!(iterations > 100);
+        assert_eq!(iterations, expected_iterations);
         let observed = metered_usage(framing.usage(), remote.usage()).map_err(error)?;
         let before = issued.parent_usage();
         assert!(before.work + observed.work <= cap.work);
@@ -756,7 +780,12 @@ fn head_delegation_accounts_window_reception_once_and_merges_relative_costs_with
         let mut host_codec =
             FoundationCodec::new(profile.registry(), &empty, &mut parent_admission)
                 .map_err(error)?;
-        let packet = issued.to_value(&mut host_codec).map_err(error)?;
+        let packet = issued.to_value(&mut host_codec).map_err(|e| {
+            format!(
+                "delegation encode: {e:?}; parent={:?}",
+                issued.parent_usage()
+            )
+        })?;
         // Independent transport framing has its own host-selected cap. Its
         // cost is not claimed as part of the child operation's Usage.
         let mut remote_admission = SourceAdmission::default();
@@ -800,8 +829,8 @@ fn head_delegation_accounts_window_reception_once_and_merges_relative_costs_with
         let received_value = issued
             .transport(|b| nepl3_wire::decode(&bytes, b))
             .map_err(error)?;
-        let delivery =
-            delivery_decode(&received_value, &mut issued, &mut host_codec).map_err(error)?;
+        let delivery = delivery_decode(&received_value, &mut issued, &mut host_codec)
+            .map_err(|e| format!("delivery decode: {e:?}; parent={:?}", issued.parent_usage()))?;
         assert!(observed.work > delivery.usage.work);
         assert!(observed.allocation_units > delivery.usage.allocation_units);
         let saved_delivery = delivery.clone();

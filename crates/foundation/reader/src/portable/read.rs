@@ -10,7 +10,9 @@ use crate::{
     },
 };
 use nepl3_core::source::SourceAdmission;
+pub(crate) mod native;
 pub mod operation;
+pub mod sender;
 mod value;
 use super::transform::{boundary, reader};
 
@@ -21,9 +23,25 @@ pub struct ReadReplyContext<'a> {
 }
 
 impl ReadReplyContext<'_> {
-    fn schema(&self) -> Result<&SchemaRef, ReaderError> {
+    /// Absolute dispatch depth from the session's private saved pending slot.
+    /// This alone does not authorize an execution or a received reply.
+    pub fn saved_depth(&self) -> Result<u64, ReaderError> {
+        match &self.continuation.pending {
+            ProviderCall::Read { depth_base, .. } | ProviderCall::Dependent { depth_base, .. } => {
+                Ok(*depth_base)
+            }
+            ProviderCall::Transform { .. } => Err(ReaderError::ProviderContract),
+        }
+    }
+
+    fn schema(&self, budget: &mut Budget) -> Result<&SchemaRef, ReaderError> {
         self.registry
-            .selected(crate::schema::PACKAGE, crate::schema::REVISION)
+            .selected_descriptor_with_budget(
+                crate::schema::PACKAGE,
+                crate::schema::REVISION,
+                budget,
+            )?
+            .map(|(schema, _)| schema)
             .ok_or(ReaderError::Context)
     }
     /// Apply the native provider checks before accepting a received reply.
@@ -48,12 +66,7 @@ impl ReadReplyContext<'_> {
             current: &c.current,
         };
         let frame = c.frames.last().ok_or(ReaderError::Continuation)?;
-        let depth_base = match &c.pending {
-            ProviderCall::Read { depth_base, .. } | ProviderCall::Dependent { depth_base, .. } => {
-                *depth_base
-            }
-            ProviderCall::Transform { .. } => return Err(ReaderError::ProviderContract),
-        };
+        let depth_base = self.saved_depth()?;
         budget.with_depth_at_least(depth_base, |budget| {
             check_provider(
                 &boundary,
@@ -111,11 +124,14 @@ pub fn reply_to_value<C: FoundationValueCodec>(
         codec.source_admission(),
     )
     .map_err(reader)?;
+    let mappings =
+        super::transform::dispatch_mappings(&context.continuation.current.source_maps, maps, b)
+            .map_err(reader)?;
     let result = {
-        let mut scoped = codec.scoped_with_mappings(&sources, maps);
+        let mut scoped = codec.scoped_with_mappings(&sources, &mappings);
         value::encode(
             reply,
-            context.schema().map_err(reader)?,
+            context.schema(b).map_err(reader)?,
             context.registry,
             &mut scoped,
             b,
@@ -134,7 +150,7 @@ pub fn reply_from_value<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<ReadReply, PortableError<C::Error>> {
     checked::<C>(value, context, b)?;
-    let schema = context.schema().map_err(reader)?;
+    let schema = context.schema(b).map_err(reader)?;
     let (case, fields) = super::transform::value::parts(value, schema, "ReadReply")?;
     let (source_index, map_index) = value::source_indices(case, fields.len())?;
     let added = codec
@@ -151,8 +167,11 @@ pub fn reply_from_value<C: FoundationValueCodec>(
         .scoped(&sources)
         .decode_mappings(&fields[map_index], b)
         .map_err(boundary)?;
+    let mappings =
+        super::transform::dispatch_mappings(&context.continuation.current.source_maps, &maps, b)
+            .map_err(reader)?;
     let reply = {
-        let mut scoped = codec.scoped_with_mappings(&sources, &maps);
+        let mut scoped = codec.scoped_with_mappings(&sources, &mappings);
         value::decode(
             case,
             fields,

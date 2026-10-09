@@ -1,5 +1,7 @@
 use super::*;
 use nepl3_engine::facts::*;
+#[path = "custom/history_lookup.rs"]
+mod history_lookup;
 #[path = "custom/recursive.rs"]
 mod recursive;
 pub(super) fn implementation_digest() -> Digest {

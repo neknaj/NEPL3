@@ -264,12 +264,14 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
                 .map_err(|error| document_error(error, b))?;
         let mut document_position = 0usize;
         let mut foreign = Vec::new();
-        // Admission is local to this immutable HTML validation. Guest operations
-        // retain the codec's original ledger and cumulative Budget.
-        let mut admission = nepl3_core::source::SourceAdmission::default();
-        let rendered = html::render_with_foreign(
-            &sentence,
-            self.registry,
+        // End the ledger borrow before the callback reborrows the codec. The
+        // sealed proof keeps exact immutable syntax; the same Budget/admission
+        // covers validation, HTML generation and nested guest operations.
+        let checked = sentence
+            .validate(self.registry, b, self.codec.source_admission())
+            .map_err(|e| Error::Render(html::Error::from(e)))?;
+        let rendered = html::render_checked_with_foreign(
+            &checked,
             &mut |closure, embed, b| {
                 if let Some(surface) = self.doc_surface {
                     b.charge(
@@ -344,7 +346,6 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
                 Ok::<_, Error<C::Error>>(result.markup)
             },
             b,
-            &mut admission,
         )
         .map_err(|error| match error {
             html::RenderFailure::Sentence(error) => Error::Render(error),

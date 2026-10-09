@@ -10,15 +10,19 @@ fn recovering_tokenizer_returns_the_prior_native_collector() -> Result<(), Reade
     let mut store = SourceStore::default();
     store.insert(input.clone())?;
     let raw = context(&schema, &registry)?;
+    let mut missing_raw = raw.clone();
+    missing_raw.mode = "missing".into();
     let modes = vec![ReaderMode {
         name: "test".into(),
         skip: vec![],
         take: vec![],
     }];
-    for failure_kind in 0..4 {
+    for failure_kind in 0..8 {
         let mut b = budget();
         let mut admission = SourceAdmission::default();
         let context = check_context(&raw, &store, &registry, &mut b, &mut admission)?;
+        let missing_context =
+            check_context(&missing_raw, &store, &registry, &mut b, &mut admission)?;
         let mut session =
             TokenizationSession::new("recover".into(), &modes, &checked, &registry, &mut b)?;
         let scope = TokenizationScope {
@@ -68,25 +72,71 @@ fn recovering_tokenizer_returns_the_prior_native_collector() -> Result<(), Reade
             0 => session.close(),
             2 => request_scope.operation_id.push('x'),
             3 => b = Budget::new(b.limits()),
+            4 => {
+                session.close();
+            }
+            5 | 6 => {
+                let headroom = if failure_kind == 5 {
+                    82
+                } else {
+                    82 + 2 + 29 + 25 + 17 + 45
+                };
+                let remaining = b.limits().work - b.usage().work;
+                b.charge(Resource::Work, remaining - headroom)?;
+            }
             _ => {}
         }
         let result = session.read_with_accepted_recover(
             ScopedTokenizationRequest {
                 scope: &request_scope,
-                target: target(if failure_kind == 1 { u64::MAX } else { 0 }),
-                input: request(),
+                target: target(if failure_kind == 1 || failure_kind == 4 {
+                    u64::MAX
+                } else {
+                    0
+                }),
+                input: TokenizationRequest {
+                    context: if failure_kind == 7 {
+                        &missing_context
+                    } else {
+                        &context
+                    },
+                    ..request()
+                },
             },
             &store,
             &mut b,
             &mut admission,
             original,
         );
+        if failure_kind == 5 || failure_kind == 6 {
+            let Ok(reply) = result else {
+                return Err(ReaderError::ProviderContract);
+            };
+            assert!(matches!(
+                reply.outcome,
+                TokenizationOutcome::Stopped {
+                    reason: StopReason::WorkLimit
+                }
+            ));
+            assert_eq!(reply.cursor, 0);
+            assert!(reply.new_state.is_none() && reply.trivia.is_empty() && reply.facts.is_empty());
+            assert_eq!(reply.accepted.scope(), &scope);
+            assert_eq!(reply.accepted.sources().as_ptr(), sources);
+            assert_eq!(reply.accepted.source_maps().as_ptr(), maps);
+            assert_eq!(reply.accepted.sources()[0].text(), "a\n");
+            assert_eq!(reply.accepted.report().usage, b.usage());
+            continue;
+        }
         let Err(AcceptedTokenizationFailure::Recoverable { error, accepted }) = result else {
             return Err(ReaderError::ProviderContract);
         };
         match failure_kind {
             0 => assert_eq!(error, ReaderError::Closed),
-            1 => assert!(matches!(error, ReaderError::Schema(_))),
+            1 | 4 => assert!(matches!(
+                error,
+                ReaderError::Schema(SchemaError::UnknownType)
+            )),
+            7 => assert_eq!(error, ReaderError::Context),
             _ => assert_eq!(error, ReaderError::Continuation),
         }
         assert_eq!(accepted.scope(), &scope);
@@ -97,6 +147,25 @@ fn recovering_tokenizer_returns_the_prior_native_collector() -> Result<(), Reade
             assert_eq!(accepted.report().usage, usage);
         } else {
             assert_eq!(accepted.report().usage, b.usage());
+        }
+        if failure_kind == 7 {
+            let corrected = session
+                .read_with_accepted_recover(
+                    ScopedTokenizationRequest {
+                        scope: &scope,
+                        target: target(0),
+                        input: request(),
+                    },
+                    &store,
+                    &mut b,
+                    &mut admission,
+                    accepted,
+                )
+                .map_err(AcceptedTokenizationFailure::into_error)?;
+            assert!(matches!(
+                corrected.outcome,
+                TokenizationOutcome::Reserve { .. }
+            ));
         }
     }
     Ok(())

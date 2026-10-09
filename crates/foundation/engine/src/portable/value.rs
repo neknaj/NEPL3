@@ -19,16 +19,19 @@ pub(super) struct Schemas<'a> {
     pub foundation: &'a SchemaRef,
 }
 impl<'a> Schemas<'a> {
-    pub fn new<E>(registry: &'a SchemaRegistry) -> Result<Self, PortableError<E>> {
+    pub fn new<E>(registry: &'a SchemaRegistry, b: &mut Budget) -> Result<Self, PortableError<E>> {
         Ok(Self {
             reader: registry
-                .selected("nepl3.reader", 1)
+                .selected_descriptor_with_budget("nepl3.reader", 1, b)?
+                .map(|(schema, _)| schema)
                 .ok_or(SchemaError::UnknownSchema)?,
             engine: registry
-                .selected("nepl3.engine", 1)
+                .selected_descriptor_with_budget("nepl3.engine", 1, b)?
+                .map(|(schema, _)| schema)
                 .ok_or(SchemaError::UnknownSchema)?,
             foundation: registry
-                .selected("nepl3.foundation", 1)
+                .selected_descriptor_with_budget("nepl3.foundation", 1, b)?
+                .map(|(schema, _)| schema)
                 .ok_or(SchemaError::UnknownSchema)?,
         })
     }

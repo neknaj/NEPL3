@@ -71,6 +71,9 @@ fn composition_preserves_doc_bytes_and_identifies_every_payload() -> Result<()> 
     let input = || GeneratedPages {
         files: BTreeMap::from([("docs/intro.html".into(), b"<h1>Source output</h1>".to_vec())]),
         manifest: "{\"doc\":true}".into(),
+        math_reports: vec![crate::doc::export::math::Report::new(
+            crate::doc::export::math::Renderer::MathmlOnly,
+        )],
     };
     for base in ["/NEPL3/", "/acceptance/project/"] {
         let overview = overview::Overview {
@@ -105,6 +108,11 @@ fn composition_preserves_doc_bytes_and_identifies_every_payload() -> Result<()> 
             },
             Some(&overview),
         )?;
+        assert_eq!(first.math_reports.len(), 1);
+        assert_eq!(
+            first.math_reports[0].preference,
+            crate::doc::export::math::Renderer::MathmlOnly
+        );
         assert_eq!(first.files, second.files);
         assert_eq!(first.manifest, second.manifest);
         assert_eq!(first.files["docs/intro.html"], b"<h1>Source output</h1>");

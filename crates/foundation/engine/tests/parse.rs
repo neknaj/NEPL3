@@ -1904,3 +1904,6 @@ mod keyed_probe;
 
 #[path = "parse/probe_read.rs"]
 mod probe_read;
+
+#[path = "parse/head_lookup.rs"]
+mod head_lookup;

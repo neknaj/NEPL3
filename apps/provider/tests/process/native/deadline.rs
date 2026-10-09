@@ -2,6 +2,7 @@
 use super::*;
 use nepl3_provider::TransportError;
 use std::io::{Read, Write};
+mod reservation;
 
 #[derive(Clone, Copy, Debug)]
 pub(super) enum Mode {
@@ -48,11 +49,12 @@ pub(super) fn child(mode: Mode) -> Result<(), String> {
 
 pub(super) fn run() -> Result<(), String> {
     for mode in [Mode::Silent, Mode::Partial] {
-        run_case(mode).map_err(|e| format!("deadline {mode:?}: {e}"))?;
+        run_case(mode, false).map_err(|e| format!("deadline {mode:?}: {e}"))?;
+        run_case(mode, true).map_err(|e| format!("reserved deadline {mode:?}: {e}"))?;
     }
     Ok(())
 }
-fn run_case(mode: Mode) -> Result<(), String> {
+fn run_case(mode: Mode, reserved: bool) -> Result<(), String> {
     let mut command = Command::new(std::env::current_exe().map_err(error)?);
     command.arg(mode.argument());
     let mut process = Process::spawn(&mut command).map_err(error)?;
@@ -69,8 +71,12 @@ fn run_case(mode: Mode) -> Result<(), String> {
         if marker != [0x7f] {
             return Err("incorrect startup marker".into());
         }
-        ready_tx.send(()).map_err(error)?;
         let mut connection = Connection::new(input, output);
+        if reserved {
+            let outcome = reservation::receive(connection, mode, ready_tx);
+            return done_tx.send(outcome).map_err(error);
+        }
+        ready_tx.send(()).map_err(error)?;
         let result = connection.receive(
             &bootstrap()?,
             &SourceStore::default(),

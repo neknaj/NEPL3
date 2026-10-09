@@ -165,10 +165,34 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
         node: u64,
         b: &mut Budget,
     ) -> Result<RenderedMath, Error<C::Error>> {
+        self.render_node_with_display(document, node, b)
+            .map(|(rendered, _)| rendered)
+    }
+    fn render_node_with_display(
+        &mut self,
+        document: &DocumentSyntax,
+        node: u64,
+        b: &mut Budget,
+    ) -> Result<(RenderedMath, Display), Error<C::Error>> {
         let result = (|| {
-            document
+            let checked = document
                 .validate_structure(self.registry, b, self.codec.source_admission())
                 .map_err(Error::Document)?;
+            self.render_checked_node(&checked, node, b)
+        })();
+        b.poll()?;
+        result
+    }
+    // Private: callers must retain the same host and cumulative budget within
+    // the validation call. This proof is never accepted through a public API.
+    fn render_checked_node(
+        &mut self,
+        checked: &nepl3_doc_core::check::ValidatedDocumentSyntax<'_>,
+        node: u64,
+        b: &mut Budget,
+    ) -> Result<(RenderedMath, Display), Error<C::Error>> {
+        let result = (|| {
+            let document = checked.document();
             let kind = &document
                 .value
                 .nodes
@@ -186,6 +210,7 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
                 .get(embed.0 as usize)
                 .ok_or(Error::Node(node))?;
             self.render(&guest.closure, display, b)
+                .map(|rendered| (rendered, display))
         })();
         b.poll()?;
         result
@@ -295,4 +320,9 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
         })
     }
 }
+pub mod assets;
 pub mod katex;
+
+pub mod occurrence;
+
+pub mod document;

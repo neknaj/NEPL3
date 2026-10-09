@@ -16,28 +16,28 @@ pub(in crate::portable) fn source_value<E>(
     registry: &SchemaRegistry,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<E>> {
-    source(error, &ErrorSchemas::new(registry)?, b)
+    source(error, &ErrorSchemas::new(registry, b)?, b)
 }
 pub(in crate::portable) fn source_read<E>(
     value: &NdfValue,
     registry: &SchemaRegistry,
     b: &mut Budget,
 ) -> Result<SourceError, PortableError<E>> {
-    source_from(value, &ErrorSchemas::new(registry)?, b)
+    source_from(value, &ErrorSchemas::new(registry, b)?, b)
 }
 pub(in crate::portable) fn origin_value<E>(
     error: &OriginError,
     registry: &SchemaRegistry,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<E>> {
-    origin(error, &ErrorSchemas::new(registry)?, b)
+    origin(error, &ErrorSchemas::new(registry, b)?, b)
 }
 pub(in crate::portable) fn origin_read<E>(
     value: &NdfValue,
     registry: &SchemaRegistry,
     b: &mut Budget,
 ) -> Result<OriginError, PortableError<E>> {
-    origin_from(value, &ErrorSchemas::new(registry)?, b)
+    origin_from(value, &ErrorSchemas::new(registry, b)?, b)
 }
 pub(super) fn stop_reason(error: &BindingError) -> Option<StopReason> {
     error.stop_cause()
@@ -48,16 +48,19 @@ struct ErrorSchemas<'a> {
     reader: &'a SchemaRef,
 }
 impl<'a> ErrorSchemas<'a> {
-    fn new<E>(registry: &'a SchemaRegistry) -> Result<Self, PortableError<E>> {
+    fn new<E>(registry: &'a SchemaRegistry, b: &mut Budget) -> Result<Self, PortableError<E>> {
         Ok(Self {
             engine: registry
-                .selected("nepl3.engine", 1)
+                .selected_descriptor_with_budget("nepl3.engine", 1, b)?
+                .map(|(schema, _)| schema)
                 .ok_or(SchemaError::UnknownSchema)?,
             foundation: registry
-                .selected("nepl3.foundation", 1)
+                .selected_descriptor_with_budget("nepl3.foundation", 1, b)?
+                .map(|(schema, _)| schema)
                 .ok_or(SchemaError::UnknownSchema)?,
             reader: registry
-                .selected("nepl3.reader", 1)
+                .selected_descriptor_with_budget("nepl3.reader", 1, b)?
+                .map(|(schema, _)| schema)
                 .ok_or(SchemaError::UnknownSchema)?,
         })
     }
@@ -74,14 +77,14 @@ pub(in crate::portable) fn encode<E>(
     registry: &SchemaRegistry,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<E>> {
-    binding(value, &ErrorSchemas::new(registry)?, b)
+    binding(value, &ErrorSchemas::new(registry, b)?, b)
 }
 pub(in crate::portable) fn decode<E>(
     value: &NdfValue,
     registry: &SchemaRegistry,
     b: &mut Budget,
 ) -> Result<BindingError, PortableError<E>> {
-    binding_from(value, &ErrorSchemas::new(registry)?, b)
+    binding_from(value, &ErrorSchemas::new(registry, b)?, b)
 }
 macro_rules! codec {
     ($encode:ident,$decode:ident,$ty:ident,$owner:ident,$name:literal,[$($unit:ident),*],[$($case:ident:$nested:ident/$nested_from:ident),*])=> {

@@ -8,8 +8,10 @@ use serde_json::{Map, Value};
 #[derive(Debug)]
 pub enum Error {
     Shape,
+    AssetPolicy,
     Stopped(StopReason),
     Markup(fragment::Error),
+    Projection(fragment::ProjectionError),
 }
 impl From<StopReason> for Error {
     fn from(reason: StopReason) -> Self {
@@ -119,6 +121,19 @@ fn node(value: Value, b: &mut Budget) -> Result<Node, Error> {
 /// Unknown fields/kinds, malformed content and stops fail the entire operation.
 /// Class/asset binding, source identity and accessible MathML remain host duties.
 pub fn render(value: Value, policy: &Policy<'_>, b: &mut Budget) -> Result<Rendered, Error> {
+    let fragment = parse(value, b)?;
+    let checked = fragment::validate(&fragment, policy, b).map_err(markup_error)?;
+    fragment::serialize(&checked, b).map_err(markup_error)
+}
+
+fn markup_error(error: fragment::Error) -> Error {
+    match error {
+        fragment::Error::Stopped(reason) => Error::Stopped(reason),
+        error => Error::Markup(error),
+    }
+}
+
+pub(crate) fn parse(value: Value, b: &mut Budget) -> Result<Fragment, Error> {
     b.poll()?;
     let mut f = fields(value, 2)?;
     if string(take(&mut f, "kind", b)?)? != "parsed-unchecked" {
@@ -134,11 +149,57 @@ pub fn render(value: Value, policy: &Policy<'_>, b: &mut Budget) -> Result<Rende
     for value in values {
         nodes.push(node(value, b)?);
     }
-    let fragment = Fragment { nodes };
-    let map = |e| match e {
-        fragment::Error::Stopped(reason) => Error::Stopped(reason),
-        e => Error::Markup(e),
-    };
-    let checked = fragment::validate(&fragment, policy, b).map_err(map)?;
-    fragment::serialize(&checked, b).map_err(map)
+    Ok(Fragment { nodes })
+}
+
+/// Owned, validation-gated visual parts, before renderer/asset/Doc admission.
+/// No mutable access or deserialization can turn an unrelated string into this
+/// type. The policy is copied from the trusted host, never inferred from output.
+/// Retaining this object does not prove stylesheet bytes, renderer execution,
+/// visual fidelity, accessibility, or compatibility with a containing document.
+/// Scope syntax is checked, but uniqueness belongs to the future compositor;
+/// repeated serialization does not authorize duplicate scopes in one document.
+pub struct PreparedVisual {
+    parts: fragment::PreparedVisual,
+}
+impl PreparedVisual {
+    /// Consumes host-decoded content into a visual-only typed projection.
+    /// CSS bytes are emitted here; asset/Math ownership remains external.
+    pub fn into_html(self, b: &mut Budget) -> Result<fragment::ProjectedVisual, Error> {
+        self.parts.into_html(b).map_err(|e| match e {
+            fragment::ProjectionError::Stopped(s) => Error::Stopped(s),
+            e => Error::Projection(e),
+        })
+    }
+    pub fn fragment(&self) -> &Fragment {
+        self.parts.fragment()
+    }
+    pub fn scope(&self) -> &str {
+        self.parts.scope()
+    }
+    pub fn classes(&self) -> &[String] {
+        self.parts.classes()
+    }
+    pub fn serialize(&self, b: &mut Budget) -> Result<Rendered, Error> {
+        self.parts.serialize(b).map_err(markup_error)
+    }
+}
+
+/// Consume byte-bounded internal JSON, validate the complete finite visual
+/// tree and preserve its owned nodes plus exact copied host policy. Unknown
+/// content and stopped budgets fail atomically. JSON storage must already have
+/// been bounded by its receiving host, as for `render`.
+pub fn prepare(value: Value, policy: &Policy<'_>, b: &mut Budget) -> Result<PreparedVisual, Error> {
+    let fragment = parse(value, b)?;
+    prepare_fragment(fragment, policy, b)
+}
+/// Consume already decoded finite nodes without serializing through JSON again.
+/// This only establishes the same markup/policy boundary as prepare().
+pub(crate) fn prepare_fragment(
+    fragment: Fragment,
+    policy: &Policy<'_>,
+    b: &mut Budget,
+) -> Result<PreparedVisual, Error> {
+    let parts = fragment::prepare_owned(fragment, policy, b).map_err(markup_error)?;
+    Ok(PreparedVisual { parts })
 }

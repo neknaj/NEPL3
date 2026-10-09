@@ -18,7 +18,7 @@ pub fn request_to_value<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
     check_request(request, b)?;
-    let value = request.value(&Schemas::new(registry)?, c, b)?;
+    let value = request.value(&Schemas::new(registry, b)?, c, b)?;
     registry.validate(&expected("RenameRequest", b)?, &value, b)?;
     Ok(value)
 }
@@ -29,7 +29,7 @@ pub fn request_decode<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<RenameRequest, PortableError<C::Error>> {
     registry.validate(&expected("RenameRequest", b)?, v, b)?;
-    let request = RenameRequest::read(v, &Schemas::new(registry)?, c, b)?;
+    let request = RenameRequest::read(v, &Schemas::new(registry, b)?, c, b)?;
     check_request(&request, b)?;
     Ok(request)
 }
@@ -43,7 +43,7 @@ pub fn reply_to_value<C: FoundationValueCodec>(
     let mut store = SourceStore::default();
     super::binding::check::add(&mut store, &reply.sources, b, c.source_admission())?;
     validate(reply, request, registry, &store, b)?;
-    let s = Schemas::new(registry)?;
+    let s = Schemas::new(registry, b)?;
     let mut local = c.scoped(&store);
     let v = record(
         s.engine,
@@ -67,7 +67,7 @@ pub fn reply_decode<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<RenameReply, PortableError<C::Error>> {
     registry.validate(&expected("RenameReply", b)?, v, b)?;
-    let s = Schemas::new(registry)?;
+    let s = Schemas::new(registry, b)?;
     let f = fields(v, s.engine, "RenameReply", 4)?;
     let sources = c.decode_sources(&f[3], b).map_err(boundary)?;
     let mut store = SourceStore::default();

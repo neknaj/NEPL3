@@ -19,7 +19,7 @@ pub fn to_value<C: FoundationValueCodec>(
     validate(reply, request, r, b)?;
     let empty = SourceStore::default();
     let mut local = c.scoped(&empty);
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let value = record(
         s.engine,
         "ScopeCandidateFailureReply",
@@ -43,7 +43,7 @@ pub fn from_value<C: FoundationValueCodec>(
     r.validate(&expected("ScopeCandidateFailureReply", b)?, value, b)?;
     let empty = SourceStore::default();
     let mut local = c.scoped(&empty);
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let f = fields(value, s.engine, "ScopeCandidateFailureReply", 3)?;
     let reply = ScopeCandidateFailureReply {
         request: super::request_decode(&f[0], r, &mut local, b)?,

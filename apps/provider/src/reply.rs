@@ -40,40 +40,95 @@ impl<R: Read, W: Write> Connection<R, W> {
         transport: &mut Budget,
         validation: &mut Budget,
     ) -> Result<OperationReply, ReplyError> {
-        let result = (|| {
-            let frame = self
-                .receive(registry, sources, admission, transport)
-                .map_err(ReplyError::Transport)?;
-            let Some(frame) = frame else {
-                return Err(ReplyError::Closed);
-            };
-            let ProviderFrame::Reply { request_id, reply } = frame else {
-                return Err(if matches!(frame, ProviderFrame::Close) {
-                    ReplyError::Closed
-                } else {
-                    ReplyError::UnexpectedFrame
-                });
-            };
-            if request_id != request.request_id {
-                return Err(ReplyError::RequestId {
-                    expected: request.request_id,
-                    received: request_id,
-                });
-            }
-            suspending::validate_reply(
-                &reply,
-                request,
-                context,
-                registry,
-                authorized_sources,
-                validation,
-            )
-            .map_err(ReplyError::Validation)?;
-            Ok(reply)
-        })();
+        let result = self
+            .receive(registry, sources, admission, transport)
+            .map_err(ReplyError::Transport)
+            .and_then(|frame| {
+                check_frame(
+                    frame,
+                    request,
+                    context,
+                    registry,
+                    authorized_sources,
+                    validation,
+                )
+            });
         if result.is_err() {
             self.closed = true;
         }
         result
     }
+
+    /// Receive and validate one response sequentially on the same Budget.
+    /// Transport and semantic-validation failures retain their distinct errors;
+    /// successful charges remain on either failure and the connection closes.
+    /// A caller may use this inside IssuedInvocation::run_local to enforce its
+    /// reserved parent ceiling without retrospective validation back-charging.
+    /// This entry alone does not reserve capacity, authenticate Report Usage,
+    /// manage operation lifetimes, or terminate/reap a provider process.
+    #[allow(clippy::too_many_arguments)]
+    pub fn receive_reply_with_budget(
+        &mut self,
+        request: &Invoke,
+        context: Digest,
+        registry: &SchemaRegistry,
+        sources: &SourceStore,
+        authorized_sources: &impl DiagnosticSourceResolver,
+        admission: &mut SourceAdmission,
+        budget: &mut Budget,
+    ) -> Result<OperationReply, ReplyError> {
+        let result = self
+            .receive(registry, sources, admission, budget)
+            .map_err(ReplyError::Transport)
+            .and_then(|frame| {
+                check_frame(
+                    frame,
+                    request,
+                    context,
+                    registry,
+                    authorized_sources,
+                    budget,
+                )
+            });
+        if result.is_err() {
+            self.closed = true;
+        }
+        result
+    }
+}
+
+fn check_frame(
+    frame: Option<ProviderFrame>,
+    request: &Invoke,
+    context: Digest,
+    registry: &SchemaRegistry,
+    authorized_sources: &impl DiagnosticSourceResolver,
+    budget: &mut Budget,
+) -> Result<OperationReply, ReplyError> {
+    let Some(frame) = frame else {
+        return Err(ReplyError::Closed);
+    };
+    let ProviderFrame::Reply { request_id, reply } = frame else {
+        return Err(if matches!(frame, ProviderFrame::Close) {
+            ReplyError::Closed
+        } else {
+            ReplyError::UnexpectedFrame
+        });
+    };
+    if request_id != request.request_id {
+        return Err(ReplyError::RequestId {
+            expected: request.request_id,
+            received: request_id,
+        });
+    }
+    suspending::validate_reply(
+        &reply,
+        request,
+        context,
+        registry,
+        authorized_sources,
+        budget,
+    )
+    .map_err(ReplyError::Validation)?;
+    Ok(reply)
 }

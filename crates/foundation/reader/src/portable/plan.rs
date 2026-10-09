@@ -47,7 +47,7 @@ pub fn mode_to_value<C: FoundationValueCodec>(
     budget.poll()?;
     crate::tokenizer::validate_modes(core::slice::from_ref(mode), plan, plan.registry(), budget)
         .map_err(mode_error)?;
-    let value = mode.encode(&Context::new(plan.registry())?, codec, budget)?;
+    let value = mode.encode(&Context::new(plan.registry(), budget)?, codec, budget)?;
     validate_mode(&value, plan, budget)?;
     Ok(value)
 }
@@ -60,7 +60,12 @@ pub fn mode_from_value<C: FoundationValueCodec>(
 ) -> Result<ReaderMode, PortableError<C::Error>> {
     budget.poll()?;
     validate_mode(value, plan, budget)?;
-    let mode = ReaderMode::decode(value, &Context::new(plan.registry())?, codec, budget)?;
+    let mode = ReaderMode::decode(
+        value,
+        &Context::new(plan.registry(), budget)?,
+        codec,
+        budget,
+    )?;
     crate::tokenizer::validate_modes(core::slice::from_ref(&mode), plan, plan.registry(), budget)
         .map_err(mode_error)?;
     Ok(mode)
@@ -110,7 +115,7 @@ pub fn to_value<C: FoundationValueCodec>(
     budget: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
     budget.poll()?;
-    let context = Context::new(plan.registry())?;
+    let context = Context::new(plan.registry(), budget)?;
     let value = plan.plan().encode(&context, codec, budget)?;
     validate(&value, plan.registry(), budget)?;
     Ok(value)
@@ -125,7 +130,7 @@ pub fn from_value<C: FoundationValueCodec>(
 ) -> Result<ReaderPlan, PortableError<C::Error>> {
     budget.poll()?;
     validate(value, registry, budget)?;
-    let plan = ReaderPlan::decode(value, &Context::new(registry)?, codec, budget)?;
+    let plan = ReaderPlan::decode(value, &Context::new(registry, budget)?, codec, budget)?;
     plan.check(registry, budget).map_err(plan_error)?;
     Ok(plan)
 }

@@ -9,7 +9,7 @@ use crate::{
 use alloc::vec::Vec;
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
-    schema::{SchemaRegistry, TypeShape},
+    schema::{SchemaError, SchemaRegistry, TypeShape},
     source::SourceAdmission,
     syntax::{FieldValue, NodeRef, SyntaxBundle, SyntaxError},
     value::{KindRef, NdfValue},
@@ -98,7 +98,9 @@ pub(crate) fn path<'a>(
         budget.charge(Resource::Work, 1)?;
         budget.observe_depth(depth as u64 + 1)?;
         let node = node(bundle, step.node)?;
-        let descriptor = registry.descriptor(&node.schema).ok_or(TreeError::Path)?;
+        let descriptor = registry
+            .descriptor_with_budget(&node.schema, budget)?
+            .ok_or(TreeError::Path)?;
         budget.charge(
             Resource::Work,
             (descriptor.types.len() as u64).saturating_mul(node.kind.len() as u64 + 1),
@@ -130,11 +132,17 @@ fn same_kind(
     node: &nepl3_core::syntax::SyntaxNode,
     kind: &KindRef,
     registry: &SchemaRegistry,
-) -> bool {
-    node.schema == kind.schema
-        && registry
-            .kind_name(&kind.schema, kind.local_kind)
-            .is_ok_and(|name| name == node.kind)
+    budget: &mut Budget,
+) -> Result<bool, TreeError> {
+    if node.schema != kind.schema {
+        return Ok(false);
+    }
+    match registry.kind_name_with_budget(&kind.schema, kind.local_kind, budget) {
+        Ok(name) => Ok(name == node.kind),
+        Err(SchemaError::Stopped(reason)) => Err(TreeError::Stopped(reason)),
+        // A semantic lookup miss remains a kind mismatch, not a new tree error.
+        Err(_) => Ok(false),
+    }
 }
 
 struct IndexedContext<'a> {
@@ -541,27 +549,37 @@ impl ParseTree {
                 }
                 let package = checked.package();
                 let valid = match &selected.shape {
-                    ShapeSelection::Form { index } => usize::try_from(*index)
-                        .ok()
-                        .and_then(|i| package.forms.get(i))
-                        .is_some_and(|f| {
-                            f.category == selected.entry.category
-                                && same_kind(node, &f.kind, registry)
-                                && f.fields.len() == node.fields.len()
-                        }),
-                    ShapeSelection::Leaf { index } => usize::try_from(*index)
-                        .ok()
-                        .and_then(|i| package.leaves.get(i))
-                        .is_some_and(|l| {
-                            l.category == selected.entry.category
-                                && same_kind(node, &l.kind, registry)
-                                && node.fields.is_empty()
-                        }),
+                    ShapeSelection::Form { index } => {
+                        match usize::try_from(*index)
+                            .ok()
+                            .and_then(|i| package.forms.get(i))
+                        {
+                            Some(f) => {
+                                f.category == selected.entry.category
+                                    && same_kind(node, &f.kind, registry, budget)?
+                                    && f.fields.len() == node.fields.len()
+                            }
+                            None => false,
+                        }
+                    }
+                    ShapeSelection::Leaf { index } => {
+                        match usize::try_from(*index)
+                            .ok()
+                            .and_then(|i| package.leaves.get(i))
+                        {
+                            Some(l) => {
+                                l.category == selected.entry.category
+                                    && same_kind(node, &l.kind, registry, budget)?
+                                    && node.fields.is_empty()
+                            }
+                            None => false,
+                        }
+                    }
                     ShapeSelection::Builtin { read } => {
-                        matches!(package.read(*read)?,ReadSpec::Builtin{kind,..} if same_kind(node,kind,registry)&&node.fields.is_empty())
+                        matches!(package.read(*read)?,ReadSpec::Builtin{kind,..} if same_kind(node,kind,registry,budget)?&&node.fields.is_empty())
                     }
                     ShapeSelection::List { read, cons } => {
-                        matches!(package.read(*read)?,ReadSpec::ListOf{cons:c,nil,..} if same_kind(node,if *cons{c}else{nil},registry)&&node.fields.len()==if *cons{2}else{0})
+                        matches!(package.read(*read)?,ReadSpec::ListOf{cons:c,nil,..} if same_kind(node,if *cons{c}else{nil},registry,budget)?&&node.fields.len()==if *cons{2}else{0})
                     }
                     ShapeSelection::Dynamic {
                         provider, shape, ..
@@ -586,7 +604,7 @@ impl ParseTree {
                         profile.provider(&provider.shape, budget)?;
                         profile.provider(&provider.child_context, budget)?;
                         checked.validate_head_shape(shape, budget)?;
-                        same_kind(node, &shape.kind, registry)
+                        same_kind(node, &shape.kind, registry, budget)?
                             && node.fields.len() == shape.fields.len()
                     }
                     ShapeSelection::Recovery => {
@@ -666,3 +684,6 @@ impl ParseTree {
         Ok(ValidatedParseTree { tree: self, syntax })
     }
 }
+
+#[cfg(test)]
+mod tests;

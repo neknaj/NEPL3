@@ -3,6 +3,7 @@
 use nepl3_core::budget::{Budget, Resource, StopReason};
 pub mod fragment;
 mod path;
+pub mod svg;
 pub use path::{path_data, view_box};
 
 /// Check computed declarations emitted by the current Math-to-TeX surface.

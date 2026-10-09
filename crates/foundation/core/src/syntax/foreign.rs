@@ -34,7 +34,7 @@ impl ForeignClosure {
         self.syntax
             .bundle
             .validate_with_sources(registry, b, admission)?;
-        require_schema(registry, &self.syntax.schema)?;
+        require_schema(registry, &self.syntax.schema, b)?;
         b.charge(Resource::Work, self.syntax.category.len() as u64 + 40)?;
         if self.syntax.category.is_empty()
             || self.syntax.root != self.syntax.bundle.root
@@ -183,7 +183,7 @@ pub(super) fn environment(
             Resource::Work,
             (binding.name.len() + binding.namespace.name.len()) as u64 + 1,
         )?;
-        require_schema(registry, &binding.namespace.schema)?;
+        require_schema(registry, &binding.namespace.schema, b)?;
         if binding.name.is_empty() || binding.namespace.name.is_empty() {
             return Err(SyntaxError::Environment);
         }

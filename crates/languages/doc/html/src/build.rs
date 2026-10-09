@@ -6,6 +6,7 @@ use nepl3_markup::html::*;
 
 mod block;
 mod inline;
+mod session;
 const CLASSES: &[&str] = &[
     "nepl-doc",
     "nepl-sentence",
@@ -103,13 +104,19 @@ impl Builder<'_, '_> {
         self.attr(e, HtmlAttribute::Alt { value: alt })
     }
 
-    fn guest(&mut self, job: Job, embed: EmbedRef, markup: HtmlRequest) -> Result<(), RenderError> {
+    fn guest(
+        &mut self,
+        job: Job,
+        embed: EmbedRef,
+        markup: HtmlRequest,
+        slot: HtmlSlot,
+    ) -> Result<(), RenderError> {
         let depth = self
             .b
             .current_depth()
             .saturating_add(self.depths[job.parent as usize]);
         self.b.with_depth_at_least::<_, RenderError>(depth, |b| {
-            validate(&markup.fragment, HtmlSlot::Phrasing, &markup.policy, b)?;
+            validate(&markup.fragment, slot, &markup.policy, b)?;
             Ok(())
         })?;
         // Preserve the backend's output envelope across the guest boundary.
@@ -127,7 +134,9 @@ impl Builder<'_, '_> {
                 return Err(RenderError::OutputDepth { node: job.node });
             }
             match &markup.fragment.nodes[index as usize] {
-                HtmlNode::Element { children, .. } | HtmlNode::MathElement { children, .. } => {
+                HtmlNode::Element { children, .. }
+                | HtmlNode::MathElement { children, .. }
+                | HtmlNode::SvgElement { children, .. } => {
                     for child in children {
                         push(&mut pending, (*child, depth + 1), self.b)?;
                     }
@@ -143,7 +152,9 @@ impl Builder<'_, '_> {
         for mut node in markup.fragment.nodes {
             self.b.charge(Resource::Nodes, 1)?;
             match &mut node {
-                HtmlNode::Element { children, .. } | HtmlNode::MathElement { children, .. } => {
+                HtmlNode::Element { children, .. }
+                | HtmlNode::MathElement { children, .. }
+                | HtmlNode::SvgElement { children, .. } => {
                     for child in children {
                         self.b.charge(Resource::Work, 1)?;
                         *child = offset
@@ -394,141 +405,31 @@ pub(crate) fn render_prepared_with_foreign<E>(
     budget: &mut Budget,
     validate_final: bool,
 ) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
-    budget.poll()?;
-    let mut w = Builder {
+    render_prepared_with_context(
         prepared,
         links,
-        b: budget,
-        nodes: Vec::new(),
-        depths: Vec::new(),
-        origins: Vec::new(),
-        jobs: Vec::new(),
-        classes: Vec::new(),
-        foreign: Vec::new(),
-    };
-    let (root, slot) = match prepared.document.value.root {
-        DocRoot::Article(root) => (root.0, HtmlSlot::Block),
-        DocRoot::Sentence(root) => (root.0, HtmlSlot::Phrasing),
-        DocRoot::Inline(root) => (root.0, HtmlSlot::Phrasing),
-        _ => return Err(RenderError::InternalShape.into()),
-    };
-    let article = w.element(
-        None,
-        root,
-        if slot == HtmlSlot::Block {
-            HtmlTag::Article
-        } else {
-            HtmlTag::Span
-        },
-    )?;
-    if slot == HtmlSlot::Block {
-        w.class(article, "nepl-doc")?;
-        let DocKind::Article {
-            language,
-            title,
-            body,
-        } = &prepared.document.value.nodes[root as usize].kind
-        else {
-            return Err(RenderError::InternalShape.into());
-        };
-        let lang = copy(language, w.b)?;
-        w.attr(article, HtmlAttribute::Lang { value: lang })?;
-        w.job(body.0, article, 1)?;
-        w.heading(article, root, title.0, 1)?;
-    } else {
-        w.class(article, "nepl-sentence")?;
-        w.job(root, article, 1)?;
-    }
-    while let Some(job) = w.jobs.pop() {
-        w.b.charge(Resource::Work, 1)?;
-        let kind = &prepared.document.value.nodes[job.node as usize].kind;
-        if let DocKind::InlineMath { syntax } | DocKind::Code { syntax } = kind {
-            let embed = prepared
-                .document
-                .value
-                .embeds
-                .get(syntax.0 as usize)
-                .ok_or(RenderError::InternalShape)?;
-            let depth =
-                w.b.current_depth()
-                    .saturating_add(w.depths[job.parent as usize]);
-            let result = w
-                .b
-                .with_depth_at_least(depth, |b| Ok::<_, RenderError>(adapter(embed, *syntax, b)))?;
-            w.b.poll()?;
-            let markup = result.map_err(ForeignRenderError::Foreign)?;
-            let target = if matches!(kind, DocKind::Code { .. }) {
-                let figure = w.element(Some(job.parent), job.node, HtmlTag::Figure)?;
-                let pre = w.element(Some(figure), job.node, HtmlTag::Pre)?;
-                let code = w.element(Some(pre), job.node, HtmlTag::Code)?;
-                Job {
-                    parent: code,
-                    ..job
-                }
-            } else {
-                job
-            };
-            w.guest(target, *syntax, markup)?;
-            continue;
-        }
-        if !w.block(job, kind)? {
-            w.inline(job, kind)?;
-        }
-    }
-    let mut classes = w.classes;
-    for class in CLASSES {
-        let mut present = false;
-        for prior in &classes {
-            w.b.charge(Resource::Work, prior.len().min(class.len()) as u64 + 1)?;
-            if prior == class {
-                present = true;
-                break;
+        &mut |context, b| adapter(context.embed(), context.reference(), b),
+        budget,
+        validate_final,
+    )
+}
+
+pub(crate) fn render_prepared_with_context<'a, E>(
+    prepared: &crate::prepare::PreparedRendering<'a>,
+    links: &[(u64, HtmlHref)],
+    adapter: &mut impl FnMut(crate::guests::Context<'a>, &mut Budget) -> Result<HtmlRequest, E>,
+    budget: &mut Budget,
+    validate_final: bool,
+) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
+    let mut session = session::Session::new(prepared, links, budget, validate_final)?;
+    loop {
+        match session.advance()? {
+            session::Step::Guest(context) => {
+                let markup = session.with_pending(|b| adapter(context, b))?;
+                session.resume(markup)?;
             }
+            session::Step::Finished(rendered) => return Ok(rendered),
+            session::Step::Waiting => return Err(RenderError::InternalShape.into()),
         }
-        if present {
-            continue;
-        }
-        let value = copy(class, w.b)?;
-        push(&mut classes, value, w.b)?;
     }
-    let markup = HtmlRequest {
-        fragment: HtmlFragment {
-            root: article,
-            nodes: w.nodes,
-        },
-        slot,
-        policy: HtmlPolicy { classes },
-    };
-    if validate_final {
-        validate(&markup.fragment, markup.slot, &markup.policy, w.b)?;
-    }
-    // Bind even visually identical outputs to their actual generation options.
-    let parallel = match &prepared.options.parallel {
-        ParallelMode::Rows => ParallelMode::Rows,
-        ParallelMode::Columns => ParallelMode::Columns,
-        ParallelMode::Single {
-            language,
-            fallbacks,
-        } => {
-            let language = copy(language, w.b)?;
-            let mut values = Vec::new();
-            for value in fallbacks {
-                let value = copy(value, w.b)?;
-                push(&mut values, value, w.b)?;
-            }
-            ParallelMode::Single {
-                language,
-                fallbacks: values,
-            }
-        }
-    };
-    Ok(RenderedInlineWithForeign {
-        fragment: RenderedFragment {
-            document_digest: prepared.identity,
-            options: RenderOptions { parallel },
-            markup,
-            origins: w.origins,
-        },
-        foreign: w.foreign,
-    })
 }

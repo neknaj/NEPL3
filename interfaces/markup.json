@@ -1,6 +1,6 @@
 {
   "package": "nepl3.markup",
-  "revision": 2,
+  "revision": 3,
   "types": {
     "HtmlTag": {
       "variant": {
@@ -169,7 +169,7 @@
             {
               "named": {
                 "package": "nepl3.markup",
-                "revision": 2,
+                "revision": 3,
                 "name": "HtmlRole"
               }
             }
@@ -181,13 +181,18 @@
             {
               "named": {
                 "package": "nepl3.markup",
-                "revision": 2,
+                "revision": 3,
                 "name": "HtmlHref"
               }
             }
           ]
         ],
-        "EmbeddedSvg": [["svg", "Text"]],
+        "EmbeddedSvg": [
+          [
+            "svg",
+            "Text"
+          ]
+        ],
         "Src": [
           [
             "path",
@@ -224,10 +229,16 @@
             {
               "named": {
                 "package": "nepl3.markup",
-                "revision": 2,
+                "revision": 3,
                 "name": "CellScope"
               }
             }
+          ]
+        ],
+        "AriaHidden": [
+          [
+            "value",
+            "Bool"
           ]
         ]
       },
@@ -236,9 +247,34 @@
     "HtmlNode": {
       "variant": {
         "MathElement": [
-          ["tag", {"named": {"package": "nepl3.markup", "revision": 2, "name": "MathMlTag"}}],
-          ["attributes", {"list": {"named": {"package": "nepl3.markup", "revision": 2, "name": "MathMlAttribute"}}}],
-          ["children", {"list": "U64"}]
+          [
+            "tag",
+            {
+              "named": {
+                "package": "nepl3.markup",
+                "revision": 3,
+                "name": "MathMlTag"
+              }
+            }
+          ],
+          [
+            "attributes",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.markup",
+                  "revision": 3,
+                  "name": "MathMlAttribute"
+                }
+              }
+            }
+          ],
+          [
+            "children",
+            {
+              "list": "U64"
+            }
+          ]
         ],
         "Text": [
           [
@@ -252,7 +288,7 @@
             {
               "named": {
                 "package": "nepl3.markup",
-                "revision": 2,
+                "revision": 3,
                 "name": "HtmlTag"
               }
             }
@@ -263,9 +299,27 @@
               "list": {
                 "named": {
                   "package": "nepl3.markup",
-                  "revision": 2,
+                  "revision": 3,
                   "name": "HtmlAttribute"
                 }
+              }
+            }
+          ],
+          [
+            "children",
+            {
+              "list": "U64"
+            }
+          ]
+        ],
+        "SvgElement": [
+          [
+            "element",
+            {
+              "named": {
+                "package": "nepl3.markup",
+                "revision": 3,
+                "name": "HtmlSvgElement"
               }
             }
           ],
@@ -291,7 +345,7 @@
             "list": {
               "named": {
                 "package": "nepl3.markup",
-                "revision": 2,
+                "revision": 3,
                 "name": "HtmlNode"
               }
             }
@@ -318,7 +372,7 @@
           {
             "named": {
               "package": "nepl3.markup",
-              "revision": 2,
+              "revision": 3,
               "name": "HtmlFragment"
             }
           }
@@ -328,7 +382,7 @@
           {
             "named": {
               "package": "nepl3.markup",
-              "revision": 2,
+              "revision": 3,
               "name": "HtmlSlot"
             }
           }
@@ -338,7 +392,7 @@
           {
             "named": {
               "package": "nepl3.markup",
-              "revision": 2,
+              "revision": 3,
               "name": "HtmlPolicy"
             }
           }
@@ -393,7 +447,7 @@
             {
               "named": {
                 "package": "nepl3.markup",
-                "revision": 2,
+                "revision": 3,
                 "name": "MathMlDisplay"
               }
             }
@@ -430,7 +484,7 @@
             {
               "named": {
                 "package": "nepl3.markup",
-                "revision": 2,
+                "revision": 3,
                 "name": "MathMlOperatorForm"
               }
             }
@@ -471,7 +525,7 @@
             {
               "named": {
                 "package": "nepl3.markup",
-                "revision": 2,
+                "revision": 3,
                 "name": "MathMlTag"
               }
             }
@@ -482,7 +536,7 @@
               "list": {
                 "named": {
                   "package": "nepl3.markup",
-                  "revision": 2,
+                  "revision": 3,
                   "name": "MathMlAttribute"
                 }
               }
@@ -501,7 +555,7 @@
             {
               "named": {
                 "package": "nepl3.markup",
-                "revision": 2,
+                "revision": 3,
                 "name": "HtmlFragment"
               }
             }
@@ -518,7 +572,7 @@
             "list": {
               "named": {
                 "package": "nepl3.markup",
-                "revision": 2,
+                "revision": 3,
                 "name": "MathMlNode"
               }
             }
@@ -533,12 +587,113 @@
           {
             "named": {
               "package": "nepl3.markup",
-              "revision": 2,
+              "revision": 3,
               "name": "HtmlPolicy"
             }
           }
         ]
       ],
+      "constraints": []
+    },
+    "HtmlSvgAspect": {
+      "variant": {
+        "None": [],
+        "MinSlice": [],
+        "MidSlice": [],
+        "MaxSlice": []
+      },
+      "constraints": []
+    },
+    "HtmlSvgEndpoint": {
+      "variant": {
+        "Zero": [],
+        "Full": []
+      },
+      "constraints": []
+    },
+    "HtmlSvgElement": {
+      "variant": {
+        "Svg": [
+          [
+            "width",
+            "Text"
+          ],
+          [
+            "height",
+            "Text"
+          ],
+          [
+            "viewBox",
+            {
+              "option": "Text"
+            }
+          ],
+          [
+            "aspect",
+            {
+              "option": {
+                "named": {
+                  "package": "nepl3.markup",
+                  "revision": 3,
+                  "name": "HtmlSvgAspect"
+                }
+              }
+            }
+          ]
+        ],
+        "Path": [
+          [
+            "data",
+            "Text"
+          ]
+        ],
+        "Line": [
+          [
+            "x1",
+            {
+              "named": {
+                "package": "nepl3.markup",
+                "revision": 3,
+                "name": "HtmlSvgEndpoint"
+              }
+            }
+          ],
+          [
+            "y1",
+            {
+              "named": {
+                "package": "nepl3.markup",
+                "revision": 3,
+                "name": "HtmlSvgEndpoint"
+              }
+            }
+          ],
+          [
+            "x2",
+            {
+              "named": {
+                "package": "nepl3.markup",
+                "revision": 3,
+                "name": "HtmlSvgEndpoint"
+              }
+            }
+          ],
+          [
+            "y2",
+            {
+              "named": {
+                "package": "nepl3.markup",
+                "revision": 3,
+                "name": "HtmlSvgEndpoint"
+              }
+            }
+          ],
+          [
+            "strokeWidth",
+            "Text"
+          ]
+        ]
+      },
       "constraints": []
     }
   },

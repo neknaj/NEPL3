@@ -281,3 +281,12 @@ fn local_stop_retains_checked_partial_and_report_and_prevents_next_callback() ->
     assert_eq!(parent.poll(), Err(StopReason::Cancelled));
     Ok(())
 }
+
+#[path = "delegation/parent.rs"]
+mod parent;
+
+#[path = "delegation/binding.rs"]
+mod binding;
+
+#[path = "delegation/transport.rs"]
+mod transport;

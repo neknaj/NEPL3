@@ -61,8 +61,8 @@ fn schema<'a, E>(registry: &'a SchemaRegistry, b: &mut Budget) -> Result<&'a Sch
     if !registry.is_finalized() {
         return Err(SchemaError::Unfinalized.into());
     }
-    let selected = registry
-        .selected("nepl3.sentence", 1)
+    let (selected, _) = registry
+        .selected_descriptor_with_budget("nepl3.sentence", 1, b)?
         .ok_or(SchemaError::UnknownSchema)?;
     if !crate::schema::matches(selected, b)? {
         return Err(Error::SchemaIdentity);

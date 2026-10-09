@@ -106,10 +106,16 @@ impl RecoveryPlan {
                         .saturating_mul(sync.ancestor_category.len() as u64 + 1),
                 )?;
                 package.category(&sync.ancestor_category)?;
+                budget.charge(
+                    Resource::Work,
+                    (sync.kind.schema.package.len() as u64)
+                        .saturating_add(package.schema.package.len() as u64)
+                        .saturating_add(41),
+                )?;
                 if sync.kind.schema != package.schema {
                     return Err(PackageError::KindShape);
                 }
-                registry.kind_name(&sync.kind.schema, sync.kind.local_kind)?;
+                registry.kind_name_with_budget(&sync.kind.schema, sync.kind.local_kind, budget)?;
                 if sync.spelling.as_ref().is_some_and(|v| v.is_empty()) {
                     return Err(PackageError::EmptyName);
                 }

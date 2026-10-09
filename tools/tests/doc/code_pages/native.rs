@@ -329,3 +329,201 @@ fn explicit_code_api_keeps_plain_page_output_identical() -> Result<(), String> {
     assert!(new.foreign[0].is_empty());
     Ok(())
 }
+
+#[test]
+fn native_math_pages_share_source_admission_and_keep_old_route_closed() -> Result<(), String> {
+    use nepl3_doc_core::model::{BlockRef, EmbedKind};
+    use nepl3_doc_html::pages::{render_pages, render_pages_with_guests};
+    use nepl3_markup::mathml::Display;
+    use nepl3_tools::doc::math::MathDisplayHost;
+    let c = compiled()?;
+    let source = r#"article en "Math" body cons display Math label frac 1 0 Sentence "{[字/じ]/character}" nil"#;
+    let mut request = request(&c, &[("a", source), ("b", source)], ParallelMode::Rows)?;
+    let doc = &mut request.set.pages[0].document;
+    let display = doc
+        .value
+        .nodes
+        .iter()
+        .position(|n| matches!(n.kind, DocKind::DisplayMath { .. }))
+        .ok_or("display")? as u64;
+    let body = doc
+        .value
+        .nodes
+        .iter_mut()
+        .find_map(|n| {
+            if let DocKind::Body { blocks } = &mut n.kind {
+                Some(blocks)
+            } else {
+                None
+            }
+        })
+        .ok_or("body")?;
+    body.push(BlockRef(display));
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    assert!(matches!(
+        render_pages(&request, &c.doc.registry, &mut codec, &mut budget()),
+        Err(PagesRenderError::NeedsResolution(_))
+    ));
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let mut limits = budget().limits();
+    limits.source_bytes = 2 * source.len() as u64;
+    let mut output = Budget::new(limits);
+    let mut calls = Vec::new();
+    let rendered = render_pages_with_guests(
+        &request,
+        &c.doc.registry,
+        &mut codec,
+        &mut output,
+        &mut |page, guest, index, codec, b| {
+            assert_eq!(guest.kind, EmbedKind::DisplayMath);
+            let before = b.usage();
+            let mut host = MathDisplayHost {
+                registry: &c.doc.registry,
+                math_surface: &c.others[0].schema,
+                sentence_surface: Some(&c.others[3].schema),
+                doc_surface: Some(&c.doc.package.schema),
+                codec,
+            };
+            let markup = host
+                .render(&guest.closure, Display::Block, b)
+                .map_err(err)?
+                .into_html(b)
+                .map_err(err)?
+                .markup;
+            assert_eq!(before.source_bytes, b.usage().source_bytes);
+            assert!(b.usage().work > before.work);
+            calls.push((page, index.0));
+            Ok::<_, String>(markup)
+        },
+    )
+    .map_err(err)?;
+    assert_eq!(output.usage().source_bytes, 2 * source.len() as u64);
+    assert_eq!(calls, vec![(0, 0), (0, 0), (1, 0)]);
+    assert_eq!(rendered.foreign[0].len(), 2);
+    assert_eq!(rendered.foreign[1].len(), 1);
+    limits.source_bytes -= 1;
+    let mut short = Budget::new(limits);
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let mut callback = false;
+    assert!(
+        render_pages_with_guests(
+            &request,
+            &c.doc.registry,
+            &mut codec,
+            &mut short,
+            &mut |_, _, _, _, _| {
+                callback = true;
+                Err::<HtmlRequest, _>("unexpected callback")
+            }
+        )
+        .is_err()
+    );
+    assert!(!callback);
+    assert_eq!(short.poll(), Err(StopReason::SourceLimit));
+    Ok(())
+}
+
+#[test]
+fn native_math_pages_reject_later_assets_before_callbacks_and_preserve_cancel() -> Result<(), String>
+{
+    use nepl3_doc_html::pages::{PagesGuestRenderError, render_pages_with_guests};
+    let c = compiled()?;
+    let math = r#"article en "Math" body cons display Math 1 nil"#;
+    let image = r#"article en "Image" body cons image asset "missing" none "Alt" none nil"#;
+    let request = request(&c, &[("a", math), ("b", image)], ParallelMode::Rows)?;
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let mut calls = 0;
+    let result = render_pages_with_guests(
+        &request,
+        &c.doc.registry,
+        &mut codec,
+        &mut budget(),
+        &mut |_, _, _, _, _| {
+            calls += 1;
+            Err::<HtmlRequest, _>("unexpected callback")
+        },
+    );
+    assert!(matches!(
+        result,
+        Err(PagesGuestRenderError::Pages(
+            PagesRenderError::NeedsResolution(_)
+        ))
+    ));
+    assert_eq!(calls, 0);
+    let mut request = request;
+    request.set.pages.pop();
+    let mut output = budget();
+    let result = render_pages_with_guests(
+        &request,
+        &c.doc.registry,
+        &mut codec,
+        &mut output,
+        &mut |_, _, _, _, b| {
+            b.cancel();
+            Err::<HtmlRequest, _>("host failure")
+        },
+    );
+    assert!(matches!(
+        result,
+        Err(PagesGuestRenderError::Pages(PagesRenderError::Stopped(
+            StopReason::Cancelled
+        )))
+    ));
+    Ok(())
+}
+
+#[test]
+fn native_math_annotation_cannot_inject_dom_identity() -> Result<(), String> {
+    use nepl3_doc_html::pages::{PagesGuestRenderError, render_pages_with_guests};
+    use nepl3_markup::mathml::Tag;
+    let c = compiled()?;
+    let request = request(
+        &c,
+        &[("a", r#"article en "Math" body cons display Math 1 nil"#)],
+        ParallelMode::Rows,
+    )?;
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let result = render_pages_with_guests(
+        &request,
+        &c.doc.registry,
+        &mut codec,
+        &mut budget(),
+        &mut |_, guest, _, _, b| {
+            let mut value = echo(
+                guest,
+                Some(HtmlAttribute::Id {
+                    value: "forged".into(),
+                }),
+                b,
+            )?;
+            value.fragment.nodes.push(HtmlNode::MathElement {
+                tag: Tag::Text,
+                attributes: vec![],
+                children: vec![1],
+            });
+            value.fragment.nodes.push(HtmlNode::MathElement {
+                tag: Tag::Math,
+                attributes: vec![],
+                children: vec![2],
+            });
+            value.fragment.root = 3;
+            Ok::<_, String>(value)
+        },
+    );
+    assert!(
+        matches!(
+            result,
+            Err(PagesGuestRenderError::GuestId { page: 0, node: 1 })
+        ),
+        "{result:?}"
+    );
+    Ok(())
+}

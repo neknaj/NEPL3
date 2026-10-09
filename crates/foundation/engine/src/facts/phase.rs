@@ -100,7 +100,7 @@ pub(crate) fn validate(
         }
         let descriptor = profile
             .registry()
-            .descriptor(&provider.operation.schema)
+            .descriptor_with_budget(&provider.operation.schema, b)?
             .ok_or(FactsError::Phase)?;
         b.charge(
             Resource::Work,

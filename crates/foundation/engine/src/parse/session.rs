@@ -1036,14 +1036,18 @@ impl<'a> ParseSession<'a> {
         let schema = self
             .profile
             .registry()
-            .selected("nepl3.engine", 1)
+            .selected_descriptor_with_budget("nepl3.engine", 1, budget)?
+            .map(|(schema, _)| schema)
             .ok_or(nepl3_core::schema::SchemaError::UnknownSchema)?;
         let name = if missing {
             "RecoveryMissing"
         } else {
             "RecoveryUnparsed"
         };
-        let kind_id = self.profile.registry().kind_id(schema, name)?;
+        let kind_id = self
+            .profile
+            .registry()
+            .kind_id_with_budget(schema, name, budget)?;
         budget.charge(Resource::AllocationUnits, schema.package.len() as u64)?;
         let kind = KindRef {
             schema: schema.clone(),
@@ -1646,3 +1650,6 @@ fn limits_within(a: Limits, b: Limits) -> bool {
         && a.diagnostics <= b.diagnostics
         && a.events <= b.events
 }
+
+#[cfg(test)]
+mod tests;

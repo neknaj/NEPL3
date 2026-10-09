@@ -119,7 +119,8 @@ pub fn into_html(fragment: Fragment, b: &mut Budget) -> Result<HtmlProjection, E
                 for mut node in fragment.nodes {
                     b.charge(Resource::Work, 1)?;
                     if let HtmlNode::Element { children, .. }
-                    | HtmlNode::MathElement { children, .. } = &mut node
+                    | HtmlNode::MathElement { children, .. }
+                    | HtmlNode::SvgElement { children, .. } = &mut node
                     {
                         for child in children {
                             b.charge(Resource::Work, 1)?;

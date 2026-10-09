@@ -192,7 +192,8 @@ impl Machine<'_, '_> {
         };
         let schema = self
             .registry
-            .selected("nepl3.engine", 1)
+            .selected_descriptor_with_budget("nepl3.engine", 1, budget)?
+            .map(|(schema, _)| schema)
             .ok_or(nepl3_core::schema::SchemaError::UnknownSchema)?;
         budget.charge(Resource::AllocationUnits, schema.package.len() as u64 * 2)?;
         let mut fields = Vec::new();
@@ -249,3 +250,6 @@ impl Machine<'_, '_> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests;

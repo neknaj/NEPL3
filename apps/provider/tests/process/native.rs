@@ -20,6 +20,8 @@ use std::{
 };
 mod deadline;
 mod model;
+mod pending;
+mod reader;
 mod reference;
 mod routing;
 mod schema_failure;
@@ -457,6 +459,15 @@ fn run_process(
 }
 
 pub fn run() -> Result<(), String> {
+    if let Some(case) = reader::child_mode() {
+        return reader::child(case);
+    }
+    if std::env::args().any(|arg| arg == "--pending-source-child") {
+        return pending::child(true);
+    }
+    if std::env::args().any(|arg| arg == "--pending-source-only-child") {
+        return pending::child(false);
+    }
     if let Some(mode) = deadline::child_mode() {
         return deadline::child(mode);
     }
@@ -475,11 +486,13 @@ pub fn run() -> Result<(), String> {
     schema_failure::run()?;
     deadline::run()?;
     routing::run()?;
+    pending::run()?;
+    reader::run()?;
     run_process("--provider-child", |connection| {
         exchange(connection, 41, true)
     })?;
     println!(
-        "process_protocol: 10 passed (3 schema failures; 3 native/process comparisons; 1 suspended cancellation; 1 reverse-order routing; 2 blocked-read deadlines)"
+        "process_protocol: 19 passed (3 schema failures; 3 native/process comparisons; 1 suspended cancellation; 1 reverse-order routing; 4 blocked-read deadlines including 2 reserved-parent cleanup cases; 3 staged-source replies; 4 standalone Reader comparisons)"
     );
     Ok(())
 }

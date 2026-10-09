@@ -46,8 +46,17 @@ pub(crate) fn request(
     admission.admit_existing(request.snapshot, budget)?;
     registry.validate(state_type, request.state, budget)?;
     let context = request.context;
-    if registry.selected("nepl3.foundation", 1) != Some(context.foundation_schema())
-        || registry.descriptor(&context.schema).is_none()
+    let (foundation, _) = registry
+        .selected_descriptor_with_budget("nepl3.foundation", 1, budget)?
+        .ok_or(ReaderError::Context)?;
+    budget.charge(
+        Resource::Work,
+        (context.foundation_schema().package.len() as u64).saturating_add(41),
+    )?;
+    if foundation != context.foundation_schema()
+        || registry
+            .descriptor_with_budget(&context.schema, budget)?
+            .is_none()
     {
         return Err(ReaderError::Context);
     }
@@ -64,7 +73,10 @@ pub(crate) fn request(
     }
     // A digest proof can be reused with a new operation; selected schema identities must still resolve.
     for binding in &context.environment.value.bindings {
-        if registry.descriptor(&binding.namespace.schema).is_none() {
+        if registry
+            .descriptor_with_budget(&binding.namespace.schema, budget)?
+            .is_none()
+        {
             return Err(SchemaError::UnknownSchema.into());
         }
         registry.validate_typed(&binding.value, budget)?;
@@ -94,10 +106,34 @@ fn expectations(
                 operation,
                 arguments,
             } => {
-                let desc = registry
-                    .descriptor(&operation.schema)
+                let (selected, desc) = registry
+                    .selected_descriptor_with_budget(
+                        &operation.schema.package,
+                        operation.schema.revision,
+                        budget,
+                    )?
                     .ok_or(SchemaError::UnknownSchema)?;
-                if !desc.operations.iter().any(|op| op.name == operation.name) {
+                budget.charge(
+                    Resource::Work,
+                    (operation.schema.package.len() as u64).saturating_add(41),
+                )?;
+                if selected != &operation.schema {
+                    return Err(SchemaError::UnknownSchema.into());
+                }
+                let mut found = false;
+                for candidate in &desc.operations {
+                    budget.charge(
+                        Resource::Work,
+                        (candidate.name.len() as u64)
+                            .saturating_add(operation.name.len() as u64)
+                            .saturating_add(1),
+                    )?;
+                    if candidate.name == operation.name {
+                        found = true;
+                        break;
+                    }
+                }
+                if !found {
                     return Err(ReaderError::ProviderContract);
                 }
                 registry.validate_typed(arguments, budget)?;
@@ -236,7 +272,12 @@ fn artifacts(
                 }
             }
             ReaderFact::Presentation { class, span } => {
-                if class.name.is_empty() || machine.registry.descriptor(&class.schema).is_none() {
+                if class.name.is_empty()
+                    || machine
+                        .registry
+                        .descriptor_with_budget(&class.schema, budget)?
+                        .is_none()
+                {
                     return Err(ReaderError::ProviderContract);
                 }
                 validate_span(span, sources)?;
@@ -247,7 +288,12 @@ fn artifacts(
                 from,
                 to,
             } => {
-                if kind.is_empty() || machine.registry.descriptor(schema).is_none() {
+                if kind.is_empty()
+                    || machine
+                        .registry
+                        .descriptor_with_budget(schema, budget)?
+                        .is_none()
+                {
                     return Err(ReaderError::ProviderContract);
                 }
                 validate_span(from, sources)?;

@@ -75,7 +75,7 @@ fn derive<C: FoundationValueCodec>(
     if id.is_empty() || !within(limits, profile.profile().limits) {
         return Err(PortableError::Shape);
     }
-    let s = Schemas::new(profile.registry())?;
+    let s = Schemas::new(profile.registry(), b)?;
     let ordered =
         crate::package::identity::sorted(&profile.profile().languages, |v| (&v.alias, ""), b)
             .map_err(TreeError::from)?;
@@ -182,7 +182,7 @@ pub fn request_to_value<C: FoundationValueCodec>(
     codec: &mut C,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
-    let s = Schemas::new(request.profile.registry())?;
+    let s = Schemas::new(request.profile.registry(), b)?;
     b.charge(Resource::Work, request.analysis_id.len() as u64)?;
     b.charge(Resource::AllocationUnits, request.analysis_id.len() as u64)?;
     let id = String::from(request.analysis_id);
@@ -215,7 +215,7 @@ pub fn request_decode<C: FoundationValueCodec>(
     profile
         .registry()
         .validate(&expected("BindingRequest", b)?, value, b)?;
-    let s = Schemas::new(profile.registry())?;
+    let s = Schemas::new(profile.registry(), b)?;
     let f = fields(value, s.engine, "BindingRequest", 5)?;
     let analysis_id = String::read(&f[0], &s, codec, b)?;
     let tree = super::tree::from_value(&f[1], profile, codec, b)?;
@@ -255,7 +255,7 @@ pub(in crate::portable) fn access_error_value<E>(
     registry: &nepl3_core::schema::SchemaRegistry,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<E>> {
-    let s = Schemas::new(registry)?;
+    let s = Schemas::new(registry, b)?;
     let value = match error {
         BindingAccessError::Stopped(reason) => variant(
             s.engine,
@@ -293,7 +293,7 @@ pub(in crate::portable) fn access_error_read<E>(
     b: &mut Budget,
 ) -> Result<BindingAccessError, PortableError<E>> {
     registry.validate(&expected("BindingAccessError", b)?, value, b)?;
-    let s = Schemas::new(registry)?;
+    let s = Schemas::new(registry, b)?;
     let (name, fields) = parts(value, s.engine, "BindingAccessError")?;
     Ok(match (name, fields) {
         ("Stopped", [reason]) => BindingAccessError::Stopped(super::facts::stop_from(reason, &s)?),
@@ -310,7 +310,7 @@ pub fn reply_to_value<C: FoundationValueCodec>(
     codec: &mut C,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
-    let s = Schemas::new(registry)?;
+    let s = Schemas::new(registry, b)?;
     let value = record(
         s.engine,
         "BoundBindingReply",
@@ -333,7 +333,7 @@ pub fn reply_decode<C: FoundationValueCodec>(
 ) -> Result<DecodedBoundBindingReply, PortableError<C::Error>> {
     let registry = request.profile.registry();
     registry.validate(&expected("BoundBindingReply", b)?, value, b)?;
-    let s = Schemas::new(registry)?;
+    let s = Schemas::new(registry, b)?;
     let f = fields(value, s.engine, "BoundBindingReply", 2)?;
     let key = key_read(&f[0], &s, codec, b)?;
     if key != request.key {

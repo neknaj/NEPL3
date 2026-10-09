@@ -167,7 +167,7 @@ impl HeadCall {
     ) -> Result<(), HeadError> {
         self.slice(&token.head, budget)?;
         budget.charge(Resource::Work, token.kind.schema.package.len() as u64 + 34)?;
-        registry.kind_name(&token.kind.schema, token.kind.local_kind)?;
+        registry.kind_name_with_budget(&token.kind.schema, token.kind.local_kind, budget)?;
         registry.validate(&TypeDescriptor::NdfValue, &token.payload, budget)?;
         Ok(())
     }
@@ -264,7 +264,7 @@ impl HeadCall {
         }
         budget.charge(Resource::Work, node.schema.package.len() as u64 + 34)?;
         let descriptor = registry
-            .descriptor(&node.schema)
+            .descriptor_with_budget(&node.schema, budget)?
             .ok_or(SchemaError::UnknownSchema)?;
         let mut record = None;
         for ty in &descriptor.types {

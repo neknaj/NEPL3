@@ -20,7 +20,7 @@ def generate() -> str:
         frozenset(("MarkupSyntax",)),
         MappingProxyType({"languageHint": "language_hint", "sourceMaps": "source_maps",
                           "documentDigest": "document_digest", "guestDigest": "guest_digest",
-                          "htmlPolicy": "html_policy"}),
+                          "htmlPolicy": "html_policy", "viewBox": "view_box", "strokeWidth": "stroke_width"}),
         tuple_case,
     )
     return adapters.generate(ROOT, "markup", "markup", options)

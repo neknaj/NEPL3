@@ -227,7 +227,7 @@ impl LanguagePackage {
         }
         for schema in core::iter::once(&self.schema).chain(&self.payload_schemas) {
             budget.charge(Resource::Work, 1)?;
-            if registry.descriptor(schema).is_none() {
+            if registry.descriptor_with_budget(schema, budget)?.is_none() {
                 return Err(SchemaError::UnknownSchema.into());
             }
         }
@@ -310,7 +310,7 @@ impl LanguagePackage {
                 return Err(PackageError::SignatureMismatch);
             }
             let descriptor = registry
-                .descriptor(&extension.operation.schema)
+                .descriptor_with_budget(&extension.operation.schema, budget)?
                 .ok_or(PackageError::MissingExtension)?;
             budget.charge(Resource::Work, descriptor.operations.len() as u64)?;
             let operation = descriptor

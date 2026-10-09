@@ -361,7 +361,10 @@ pub fn validate<'a>(fragment: &'a Fragment, b: &mut Budget) -> Result<Validated<
             Node::Html { fragment: html } => {
                 if matches!(
                     html.nodes.get(index(html.root, html.nodes.len())?),
-                    Some(crate::html::HtmlNode::MathElement { .. })
+                    Some(
+                        crate::html::HtmlNode::MathElement { .. }
+                            | crate::html::HtmlNode::SvgElement { .. }
+                    )
                 ) {
                     return Err(Error::Content(node as u64));
                 }

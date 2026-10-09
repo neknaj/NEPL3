@@ -1,6 +1,8 @@
 //! Script-free local Doc export, using the same production pipeline as tests.
 pub mod assets;
 mod code;
+pub mod math;
+pub mod native;
 pub mod pages;
 mod stylesheet;
 use super::source::{Compiled, budget, compiled, err, with_input_route};
@@ -42,6 +44,7 @@ pub struct LocalDocument {
     pub html: String,
     pub manifest: String,
     pub stylesheet: String,
+    pub math: Option<math::Report>,
 }
 
 pub fn generate(compiled: &Compiled, input: &str) -> Result<LocalDocument, String> {
@@ -77,7 +80,23 @@ pub fn generate_observed_with_css(
     css: CssMode,
     observe: &mut impl FnMut(StageMeasurement),
 ) -> Result<LocalDocument, String> {
-    generate_impl(compiled, input, css, None, observe)
+    generate_impl(
+        compiled,
+        input,
+        css,
+        None,
+        Some(math::Renderer::default()),
+        observe,
+    )
+}
+/// Select standalone Math rendering explicitly; pages and SVG have separate routes.
+pub fn generate_with_options(
+    compiled: &Compiled,
+    input: &str,
+    css: CssMode,
+    math: math::Renderer,
+) -> Result<LocalDocument, String> {
+    generate_impl(compiled, input, css, None, Some(math), &mut |_| {})
 }
 fn generate_impl(
     compiled: &Compiled,
@@ -87,6 +106,7 @@ fn generate_impl(
         &[nepl3_doc_html::assets::SvgInput<'_>],
         nepl3_doc_html::assets::SvgMode,
     )>,
+    math_renderer: Option<math::Renderer>,
     observe: &mut impl FnMut(StageMeasurement),
 ) -> Result<LocalDocument, String> {
     if input.len() as u64 > MAX_SOURCE_BYTES {
@@ -151,20 +171,49 @@ fn generate_impl(
             }
         }
         let prepare_start = Instant::now();
+        let mut math_report = math_renderer.map(math::Report::new);
         let options = RenderOptions {
             parallel: ParallelMode::Rows,
         };
         enum Prepared<'a> {
             Local(nepl3_doc_html::code::PreparedCodeArticle<'a>),
             Svg(nepl3_doc_html::assets::PreparedSvgCodeArticle<'a>),
+            Guests(nepl3_doc_html::guests::PreparedArticle<'a>),
+            SvgGuests(nepl3_doc_html::assets::PreparedSvgGuestsArticle<'a>),
         }
         let prepared = if let Some((inputs, mode)) = assets {
-            Prepared::Svg(
-                nepl3_doc_html::assets::prepare_svg_code(
+            if math_renderer.is_some() {
+                Prepared::SvgGuests(
+                    nepl3_doc_html::assets::prepare_svg_guests(
+                        &doc,
+                        &options,
+                        inputs,
+                        mode,
+                        profile.registry(),
+                        &mut codec,
+                        &mut output_budget,
+                    )
+                    .map_err(err)?,
+                )
+            } else {
+                Prepared::Svg(
+                    nepl3_doc_html::assets::prepare_svg_code(
+                        &doc,
+                        &options,
+                        inputs,
+                        mode,
+                        profile.registry(),
+                        &mut codec,
+                        &mut output_budget,
+                    )
+                    .map_err(err)?,
+                )
+            }
+        } else if math_renderer.is_some() {
+            Prepared::Guests(
+                nepl3_doc_html::guests::prepare(
                     &doc,
                     &options,
-                    inputs,
-                    mode,
                     profile.registry(),
                     &mut codec,
                     &mut output_budget,
@@ -189,24 +238,45 @@ fn generate_impl(
             usage: output_budget.usage(),
         });
         let render_start = Instant::now();
+        let mut occurrence = 0u64;
+        let mut adapter = |embed: &nepl3_doc_core::model::DocEmbed,
+                           reference,
+                           b: &mut nepl3_core::budget::Budget| {
+            let ordinal = occurrence;
+            occurrence = occurrence.checked_add(1).ok_or("GuestOccurrenceOverflow")?;
+            if embed.kind == nepl3_doc_core::model::EmbedKind::Code {
+                return code::render(embed, tree, profile, b);
+            }
+            let report = math_report.as_mut().ok_or("MathPolicy")?;
+            let mut host = crate::doc::math::MathDisplayHost {
+                registry: profile.registry(),
+                math_surface: &compiled.others[0].schema,
+                sentence_surface: Some(&compiled.others[3].schema),
+                doc_surface: Some(&compiled.doc.package.schema),
+                codec: &mut codec,
+            };
+            report.render(embed, reference, ordinal, &mut host, b)
+        };
         let rendered = match &prepared {
+            Prepared::Guests(p) => {
+                nepl3_doc_html::guests::render(p, &mut adapter, &mut output_budget)
+                    .map_err(err)?
+                    .fragment
+            }
+            Prepared::SvgGuests(p) => {
+                nepl3_doc_html::assets::render_svg_guests(p, &mut adapter, &mut output_budget)
+                    .map_err(err)?
+                    .fragment
+            }
             Prepared::Local(p) => {
-                nepl3_doc_html::code::render_code(
-                    p,
-                    &mut |embed, _, b| code::render(embed, tree, profile, b),
-                    &mut output_budget,
-                )
-                .map_err(err)?
-                .fragment
+                nepl3_doc_html::code::render_code(p, &mut adapter, &mut output_budget)
+                    .map_err(err)?
+                    .fragment
             }
             Prepared::Svg(p) => {
-                nepl3_doc_html::assets::render_svg_code(
-                    p,
-                    &mut |embed, _, b| code::render(embed, tree, profile, b),
-                    &mut output_budget,
-                )
-                .map_err(err)?
-                .fragment
+                nepl3_doc_html::assets::render_svg_code(p, &mut adapter, &mut output_budget)
+                    .map_err(err)?
+                    .fragment
             }
         };
         let document_css =
@@ -245,12 +315,13 @@ fn generate_impl(
         }
         let manifest = serde_json::to_string_pretty(&serde_json::json!({
             "format":"nepl3.local-doc-export/1",
-            "scope":"local Doc only; external pages, assets and foreign rendering require resolution",
+            "scope":"standalone Doc with selected native Code/Math; external links/assets/pages require resolution",
             "source_sha256":digest(input.as_bytes()),
             "profile_sha256":digest_hex(profile.digest()),
             "doc_schema_sha256":digest_hex(compiled.doc.package.schema.digest),
-            "renderer":"nepl3-doc-html local/1",
-            "options":{"parallel":"Rows","css":css.as_str()},
+            "renderer":"nepl3-doc-html local/2",
+            "options":{"parallel":"Rows","css":css.as_str(),"math_renderer":math_renderer},
+            "math":math_report,
             "stylesheet":{"sha256":digest(document_css.as_bytes()),"license":"MIT"},
             "font":{"family":"Klee One","weights":[400,600],"stylesheet":stylesheet::FONT_STYLESHEET,"bundled":false,"offline":"system fallback"},
             "files":files,
@@ -264,6 +335,7 @@ fn generate_impl(
             html,
             manifest,
             stylesheet: document_css,
+            math: math_report,
         })
     })
 }
@@ -285,8 +357,9 @@ fn check_shell_depth(
             ));
         }
         budget.observe_depth(depth).map_err(err)?;
-        if let HtmlNode::Element { children, .. } | HtmlNode::MathElement { children, .. } =
-            &fragment.nodes[node as usize]
+        if let HtmlNode::Element { children, .. }
+        | HtmlNode::MathElement { children, .. }
+        | HtmlNode::SvgElement { children, .. } = &fragment.nodes[node as usize]
         {
             for child in children.iter().rev() {
                 push_pending(&mut pending, (*child, depth + 1), budget)?;
@@ -344,11 +417,19 @@ pub fn write(input: &Path, output: &Path) -> crate::Result<()> {
 
 /// Write the selected local export, preserving the no-overwrite contract.
 pub fn write_with_css(input: &Path, output: &Path, css: CssMode) -> crate::Result<()> {
+    write_with_options(input, output, css, math::Renderer::default())
+}
+pub fn write_with_options(
+    input: &Path,
+    output: &Path,
+    css: CssMode,
+    math: math::Renderer,
+) -> crate::Result<()> {
     if output.exists() {
         return Err("output directory already exists".into());
     }
     let source = read_source(input)?;
-    let generated = generate_with_css(&compiled()?, &source, css)?;
+    let generated = generate_with_options(&compiled()?, &source, css, math)?;
     fs::create_dir(output)?;
     if css == CssMode::External {
         fs::create_dir(output.join("assets"))?;
@@ -360,7 +441,23 @@ pub fn write_with_css(input: &Path, output: &Path, css: CssMode) -> crate::Resul
     fs::write(output.join("document.html"), generated.html.as_bytes())?;
     // This is written last. Missing manifest means the output is incomplete.
     fs::write(output.join("manifest.json"), generated.manifest.as_bytes())?;
+    emit_math_notice(generated.math.as_ref());
     Ok(())
+}
+
+pub(super) fn emit_math_notice(report: Option<&math::Report>) {
+    if let Some(report) = report {
+        let count = report
+            .occurrences
+            .iter()
+            .filter(|o| o.fallback.is_some())
+            .count();
+        if count != 0 {
+            eprintln!(
+                "MathRendererUnavailable: no qualified KaTeX export adapter; independent MathML used for {count} occurrence(s). Details are recorded in the Doc export manifest"
+            );
+        }
+    }
 }
 
 fn shell(
@@ -431,12 +528,171 @@ fn shell_with_assets(
                 }) as u64,
         )
         .map_err(err)?;
-    output_budget
-        .charge(
-            nepl3_core::budget::Resource::AllocationUnits,
-            (head.len() + fragment.len() + tail.len()) as u64,
-        )
-        .map_err(err)?;
-    let html = format!("{head}{fragment}{tail}");
-    Ok(html)
+    wrap_fragment(fragment, &head, tail, output_budget).map_err(err)
 }
+
+/// Reuse the owned serializer buffer; the caller charges shell OutputBytes.
+/// Prefix insertion moves the fragment; growth can move it once more.
+fn wrap_fragment(
+    mut fragment: String,
+    head: &str,
+    tail: &str,
+    budget: &mut nepl3_core::budget::Budget,
+) -> std::result::Result<String, nepl3_core::budget::StopReason> {
+    use nepl3_core::budget::{Resource, StopReason};
+    budget.poll()?;
+    let length = fragment
+        .len()
+        .checked_add(head.len())
+        .and_then(|n| n.checked_add(tail.len()))
+        .filter(|n| *n <= isize::MAX as usize)
+        .ok_or_else(|| budget.stop(StopReason::AllocationLimit))?;
+    budget.charge(Resource::Work, length as u64)?;
+    if length > fragment.capacity() {
+        budget.charge(
+            Resource::AllocationUnits,
+            (length - fragment.capacity()) as u64,
+        )?;
+        budget.charge(Resource::Work, fragment.len() as u64)?;
+        fragment
+            .try_reserve_exact(length - fragment.len())
+            .map_err(|_| budget.stop(StopReason::AllocationLimit))?;
+    }
+    fragment.insert_str(0, head);
+    fragment.push_str(tail);
+    Ok(fragment)
+}
+
+#[cfg(test)]
+mod shell_buffer_tests {
+    use super::wrap_fragment;
+    use nepl3_core::budget::{Budget, Limits, Resource, StopReason};
+
+    fn limits() -> Limits {
+        Limits {
+            work: 10_000,
+            allocation_units: 10_000,
+            ..Limits::default()
+        }
+    }
+
+    #[test]
+    fn shell_reuses_existing_capacity_and_preserves_utf8() -> Result<(), StopReason> {
+        let mut body = String::with_capacity(128);
+        body.push_str("<p>日本語 &amp; text</p>");
+        let pointer = body.as_ptr();
+        let length = body.len() + "<html></html>".len();
+        let mut budget = Budget::new(Limits {
+            work: length as u64,
+            allocation_units: 0,
+            ..limits()
+        });
+        let output = wrap_fragment(body, "<html>", "</html>", &mut budget)?;
+        assert_eq!(output, "<html><p>日本語 &amp; text</p></html>");
+        assert_eq!(pointer, output.as_ptr());
+        assert_eq!(budget.usage().allocation_units, 0);
+        assert_eq!(budget.usage().work, length as u64);
+        assert_eq!(budget.usage().output_bytes, 0);
+        Ok(())
+    }
+
+    #[test]
+    fn shell_growth_charges_only_new_storage_and_copy_work() -> Result<(), StopReason> {
+        let body = String::from("body");
+        let capacity = body.capacity();
+        let head = "h".repeat(capacity + 10);
+        let length = head.len() + body.len() + 1;
+        let mut budget = Budget::new(limits());
+        let output = wrap_fragment(body, &head, "t", &mut budget)?;
+        assert_eq!(output, format!("{head}bodyt"));
+        assert_eq!(budget.usage().allocation_units, (length - capacity) as u64);
+        assert_eq!(budget.usage().work, (length + 4) as u64);
+        Ok(())
+    }
+
+    #[test]
+    fn shell_respects_sticky_work_and_allocation_limits() {
+        for allocation in [false, true] {
+            let body = String::from("body");
+            let capacity = body.capacity();
+            let head = "h".repeat(capacity + 10);
+            let length = head.len() + body.len();
+            let mut limit = limits();
+            let reason = if allocation {
+                limit.allocation_units = (length - capacity - 1) as u64;
+                StopReason::AllocationLimit
+            } else {
+                limit.work = (length - 1) as u64;
+                StopReason::WorkLimit
+            };
+            let mut budget = Budget::new(limit);
+            assert_eq!(wrap_fragment(body, &head, "", &mut budget), Err(reason));
+            assert_eq!(budget.poll(), Err(reason));
+        }
+    }
+
+    #[test]
+    fn shell_exact_growth_budget_and_last_copy_work_boundary() {
+        for short in [false, true] {
+            let body = String::from("body");
+            let capacity = body.capacity();
+            let head = "h".repeat(capacity + 10);
+            let length = head.len() + body.len();
+            let growth = (length - capacity) as u64;
+            let work = (length + 4) as u64;
+            let mut budget = Budget::new(Limits {
+                allocation_units: growth,
+                work: work - u64::from(short),
+                ..limits()
+            });
+            let result = wrap_fragment(body, &head, "", &mut budget);
+            assert_eq!(budget.usage().allocation_units, growth);
+            if short {
+                assert_eq!(result, Err(StopReason::WorkLimit));
+                assert_eq!(budget.poll(), Err(StopReason::WorkLimit));
+            } else {
+                assert_eq!(result, Ok(format!("{head}body")));
+                assert_eq!(budget.usage().work, work);
+            }
+        }
+    }
+
+    #[test]
+    fn shell_does_not_resume_a_stopped_budget() -> Result<(), StopReason> {
+        for reason in [StopReason::Cancelled, StopReason::AllocationLimit] {
+            let mut budget = Budget::new(limits());
+            budget.charge(Resource::Work, 7)?;
+            budget.charge(Resource::AllocationUnits, 3)?;
+            budget.stop(reason);
+            let usage = budget.usage();
+            assert_eq!(
+                wrap_fragment("body".into(), "head", "tail", &mut budget),
+                Err(reason)
+            );
+            assert_eq!(budget.usage(), usage);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn shell_spare_storage_still_requires_copy_work() {
+        let mut body = String::with_capacity(128);
+        body.push_str("本文");
+        let mut budget = Budget::new(Limits {
+            allocation_units: 0,
+            work: ("前本文後".len() - 1) as u64,
+            ..limits()
+        });
+        assert_eq!(
+            wrap_fragment(body, "前", "後", &mut budget),
+            Err(StopReason::WorkLimit)
+        );
+        assert_eq!(budget.usage().allocation_units, 0);
+        assert_eq!(budget.poll(), Err(StopReason::WorkLimit));
+    }
+}
+
+#[cfg(test)]
+mod math_guests;
+#[cfg(test)]
+mod svg_math;

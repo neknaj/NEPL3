@@ -8,7 +8,7 @@ pub(in crate::portable) fn value<E>(
     r: &SchemaRegistry,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<E>> {
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let value = match error {
         CandidateError::Stopped(reason) => variant(
             s.engine,
@@ -44,7 +44,7 @@ pub(in crate::portable) fn read<E>(
     b: &mut Budget,
 ) -> Result<CandidateError, PortableError<E>> {
     r.validate(&expected("CandidateError", b)?, value, b)?;
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     Ok(match parts(value, s.engine, "CandidateError")? {
         ("Stopped", [reason]) => {
             CandidateError::Stopped(crate::portable::facts::stop_from(reason, &s)?)

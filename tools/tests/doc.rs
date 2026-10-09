@@ -26,6 +26,12 @@ mod labels;
 mod markdown_math;
 #[path = "doc/math.rs"]
 mod math;
+#[path = "doc/math_fallback.rs"]
+mod math_fallback;
+#[path = "doc/math_no_renderer.rs"]
+mod math_no_renderer;
+#[path = "doc/math_pages.rs"]
+mod math_pages;
 #[path = "doc/mixed.rs"]
 mod mixed;
 #[path = "doc/pages.rs"]
@@ -756,6 +762,27 @@ mod export_cli;
 
 // These tests launch the native CLI and require host temporary directories.
 // Pure SVG validation/rendering tests remain in markup and doc-html on WASI.
+#[path = "doc/math_export_cli.rs"]
+mod math_export_cli;
 #[cfg(not(target_family = "wasm"))]
 #[path = "doc/svg.rs"]
 mod svg;
+#[cfg(not(target_family = "wasm"))]
+#[path = "doc/svg_math.rs"]
+mod svg_math;
+
+#[path = "doc/math_process.rs"]
+mod math_process;
+
+#[path = "doc/math_document.rs"]
+mod math_document;
+
+#[path = "doc/math_import.rs"]
+mod math_import;
+
+#[path = "doc/math_bundle.rs"]
+mod math_bundle;
+
+#[cfg(not(target_family = "wasm"))]
+#[path = "doc/native_export_cli.rs"]
+mod native_export_cli;

@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "scope": "A01 / host-repository architecture command evidence: dependency DAG, actual edges and all implemented portable libraries; compilation only, no runtime or acceptance decision",
+  "commands": [
+    {
+      "id": "rustc",
+      "argv": [
+        "rustc",
+        "-Vv"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 30
+    },
+    {
+      "id": "cargo",
+      "argv": [
+        "cargo",
+        "--version"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 30
+    },
+    {
+      "id": "target",
+      "argv": [
+        "rustup",
+        "target",
+        "list",
+        "--installed"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 30
+    },
+    {
+      "id": "repository",
+      "argv": [
+        "cargo",
+        "run",
+        "--locked",
+        "-p",
+        "nepl3-tools",
+        "--",
+        "check"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 900
+    },
+    {
+      "id": "dependency-tests",
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "nepl3-tools",
+        "--lib",
+        "dependency::"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300
+    },
+    {
+      "id": "portable-core-arm",
+      "argv": [
+        "cargo",
+        "check",
+        "--locked",
+        "--lib",
+        "--no-default-features",
+        "--features",
+        "nepl3-suite/doc-sentence,nepl3-suite/sentence-html",
+        "--target",
+        "thumbv6m-none-eabi",
+        "-p",
+        "nepl3-core",
+        "-p",
+        "nepl3-reader",
+        "-p",
+        "nepl3-engine",
+        "-p",
+        "nepl3-wire",
+        "-p",
+        "nepl3-grammar-core",
+        "-p",
+        "nepl3-doc-core",
+        "-p",
+        "nepl3-math-core",
+        "-p",
+        "nepl3-markup",
+        "-p",
+        "nepl3-doc-html",
+        "-p",
+        "nepl3-math-tex",
+        "-p",
+        "nepl3-math-mathml",
+        "-p",
+        "nepl3-suite",
+        "-p",
+        "nepl3-sentence-core"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 900
+    }
+  ]
+}

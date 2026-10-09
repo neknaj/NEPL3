@@ -8,6 +8,8 @@ export default {
       writeFileSync(tex.slice(5), 'entered synchronous render', 'utf8');
       while (true) { /* deliberately requires host termination */ }
     }
+    if (tex === 'bad-markup') return '<div>bad</div>';
+    if (tex === 'unicode-json') return '<span>字\\"</span>';
     if (tex === 'warning') console.warn('renderer warning');
     if (tex === 'stdio') process.stdout.write('unexpected output');
     if (tex === 'exit') process.exit(0);

@@ -139,7 +139,10 @@ impl ParseArena {
         slot::<SyntaxNode>(budget)?;
         slot::<Token>(budget)?;
         slot::<Origin>(budget)?;
-        let name = text(registry.kind_name(&kind.schema, kind.local_kind)?, budget)?;
+        let name = text(
+            registry.kind_name_with_budget(&kind.schema, kind.local_kind, budget)?,
+            budget,
+        )?;
         let head = span(&token.head, budget)?;
         let cover = span(&token.head, budget)?;
         let origin_span = span(&token.head, budget)?;

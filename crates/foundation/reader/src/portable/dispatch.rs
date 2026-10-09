@@ -52,9 +52,10 @@ impl DispatchContext<'_> {
         }
         Ok(())
     }
-    fn schema<E>(&self) -> Result<&SchemaRef, PortableError<E>> {
+    fn schema<E>(&self, b: &mut Budget) -> Result<&SchemaRef, PortableError<E>> {
         self.registry
-            .selected(crate::schema::PACKAGE, crate::schema::REVISION)
+            .selected_descriptor_with_budget(crate::schema::PACKAGE, crate::schema::REVISION, b)?
+            .map(|(schema, _)| schema)
             .ok_or(PortableError::Shape)
     }
 }
@@ -67,7 +68,7 @@ pub fn to_value<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<TypedValue, PortableError<C::Error>> {
     context.check(input, b)?;
-    let schema = context.schema()?;
+    let schema = context.schema(b)?;
     let value = match input {
         ProviderInput::Read(r) => {
             request_to_value(r, schema, codec, context.sources, context.registry, b)?
@@ -108,7 +109,7 @@ pub fn from_value<C: FoundationValueCodec>(
         TypedValue::Record(v) => NdfValue::Record(v),
         TypedValue::Variant(_) => return Err(PortableError::Shape),
     };
-    let schema = context.schema()?;
+    let schema = context.schema(b)?;
     let input = match context.signature.kind {
         ProviderKind::Read => {
             b.charge(

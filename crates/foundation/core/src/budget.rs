@@ -1,4 +1,5 @@
 //! Shared, monotonic logical resource accounting. This does not intercept physical OOM.
+mod scope;
 
 /// Logical limits for one operation and every nested operation.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -67,6 +68,7 @@ impl Budget {
         self.depth
     }
     /// Hosts restore a saved, validated provider depth while resolving a suspended call.
+    /// The caller depth is restored on Result return and Rust unwinding, not abort.
     pub fn with_depth_at_least<T, E: From<StopReason>>(
         &mut self,
         base: u64,
@@ -82,9 +84,11 @@ impl Budget {
         self.depth = target;
         self.usage.depth = self.usage.depth.max(target);
         self.observed_depth = self.observed_depth.max(target);
-        let result = operation(self);
-        self.depth = previous;
-        result
+        let scope = scope::Depth {
+            budget: self,
+            previous,
+        };
+        operation(&mut *scope.budget)
     }
     pub fn new(limits: Limits) -> Self {
         Self {
@@ -102,8 +106,8 @@ impl Budget {
         self.limits
     }
     /// Temporarily lower resource ceilings without changing observed Usage.
-    /// Nested calls cannot widen the current ceiling. Every Result path restores
-    /// the outer limits, while a stop remains sticky and is never rolled back.
+    /// Nested calls cannot widen the current ceiling. Result return and Rust
+    /// unwinding restore outer limits; usage and sticky stops are never rolled back.
     pub fn with_ceiling<T, E: From<StopReason>>(
         &mut self,
         ceiling: Limits,
@@ -121,25 +125,25 @@ impl Budget {
             diagnostics: outer.diagnostics.min(ceiling.diagnostics),
             events: outer.events.min(ceiling.events),
         };
-        let result = (|| {
-            for resource in [
-                Resource::SourceBytes,
-                Resource::Work,
-                Resource::Nodes,
-                Resource::AllocationUnits,
-                Resource::OutputBytes,
-                Resource::Diagnostics,
-                Resource::Events,
-            ] {
-                self.charge(resource, 0)?;
-            }
-            if self.usage.depth > self.limits.depth {
-                return Err(self.stop(StopReason::DepthLimit).into());
-            }
-            operation(self)
-        })();
-        self.limits = outer;
-        result
+        let scope = scope::Ceiling {
+            budget: self,
+            previous: outer,
+        };
+        for resource in [
+            Resource::SourceBytes,
+            Resource::Work,
+            Resource::Nodes,
+            Resource::AllocationUnits,
+            Resource::OutputBytes,
+            Resource::Diagnostics,
+            Resource::Events,
+        ] {
+            scope.budget.charge(resource, 0)?;
+        }
+        if scope.budget.usage.depth > scope.budget.limits.depth {
+            return Err(scope.budget.stop(StopReason::DepthLimit).into());
+        }
+        operation(&mut *scope.budget)
     }
     /// Record already completed work observed by an authorized host, including
     /// a delegated operation that finished after this budget stopped locally.
@@ -290,7 +294,8 @@ impl Budget {
         Ok(())
     }
     /// Measure a validation operation's relative depth without resetting Usage.
-    /// Nested measurements contribute to their enclosing measurement. Callers
+    /// Nested measurements contribute to their enclosing measurement even when
+    /// a host catches an inner Rust unwind. This does not catch a panic. Callers
     /// use pure validation operations which never replace the Budget itself.
     pub fn measure_depth<T, E: From<StopReason>>(
         &mut self,
@@ -300,14 +305,19 @@ impl Budget {
         let base = self.depth;
         let previous = self.observed_depth;
         self.observed_depth = base;
-        let result = operation(self);
-        let measured = self.observed_depth;
-        self.observed_depth = previous.max(measured);
+        let scope = scope::Measurement {
+            budget: self,
+            previous,
+        };
+        let result = operation(&mut *scope.budget);
+        let measured = scope.budget.observed_depth;
+        drop(scope);
         let value = result?;
         self.poll()?;
         Ok((value, measured.saturating_sub(base)))
     }
-    /// Restores current depth on either normal success or failure; cumulative work remains charged.
+    /// Restores current depth on Result return and Rust unwinding; cumulative
+    /// work remains charged. Aborting the process is outside this guarantee.
     pub fn with_depth<T, E: From<StopReason>>(
         &mut self,
         operation: impl FnOnce(&mut Self) -> Result<T, E>,
@@ -318,11 +328,13 @@ impl Budget {
         let next = previous.checked_add(1).ok_or(StopReason::DepthLimit)?;
         self.depth = next;
         self.usage.depth = self.usage.depth.max(next);
-        let result = operation(self);
-        // A host callback can replace the budget. Restore the caller's depth
-        // rather than subtracting from an untrusted post-callback value.
-        self.depth = previous;
-        result
+        // Restore the saved depth rather than subtracting from the callback's
+        // value. This does not repair charges erased by replacing the Budget.
+        let scope = scope::Depth {
+            budget: self,
+            previous,
+        };
+        operation(&mut *scope.budget)
     }
 }
 

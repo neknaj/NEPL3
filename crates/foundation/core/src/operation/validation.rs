@@ -66,7 +66,7 @@ impl OperationResult<TypedValue> {
             return Err(SchemaError::Unfinalized.into());
         }
         let descriptor = registry
-            .descriptor(&operation.schema)
+            .descriptor_with_budget(&operation.schema, budget)?
             .ok_or(SchemaError::UnknownSchema)?;
         let mut selected = None;
         for candidate in &descriptor.operations {

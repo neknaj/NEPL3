@@ -1,30 +1,17 @@
 //! Closed visual tree for generated Math, separate from author-controlled HTML.
 //! This is a native validation boundary, not a renderer authenticity, fidelity,
 //! resource-availability or portable transport proof.
-use super::{computed_style, length, path_data, view_box};
+pub use super::svg::{Aspect, Endpoint};
+use super::{computed_style, svg};
 use crate::text::is_xml_character;
 use alloc::{string::String, vec::Vec};
 use nepl3_core::budget::{Budget, Resource, StopReason};
+mod owned;
+mod projection;
+pub use projection::{ProjectedVisual, ProjectionError};
 mod serialize;
+pub use owned::{PreparedVisual, prepare_owned};
 pub use serialize::{Rendered, serialize};
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Aspect {
-    None,
-    MinSlice,
-    MidSlice,
-    MaxSlice,
-}
-impl Aspect {
-    fn value(self) -> &'static str {
-        match self {
-            Self::None => "none",
-            Self::MinSlice => "xMinYMin slice",
-            Self::MidSlice => "xMidYMin slice",
-            Self::MaxSlice => "xMaxYMin slice",
-        }
-    }
-}
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Node {
@@ -52,19 +39,6 @@ pub enum Node {
         y2: Endpoint,
         stroke_width: String,
     },
-}
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Endpoint {
-    Zero,
-    Full,
-}
-impl Endpoint {
-    fn value(self) -> &'static str {
-        match self {
-            Self::Zero => "0",
-            Self::Full => "100%",
-        }
-    }
 }
 /// A postorder tree: the last node is the root, every other node has exactly
 /// one parent, and children precede parents. Shared nodes must be expanded by
@@ -203,20 +177,34 @@ pub fn validate<'a>(
                 aspect,
                 children: edges,
             } => {
-                budget.charge(Resource::Work, (width.len() + height.len()) as u64)?;
                 children = Some(edges);
-                (width == "100%" || length(width, false))
-                    && length(height, false)
-                    && match viewport {
-                        Some(value) => view_box(value, budget)?,
-                        None => aspect.is_none(),
-                    }
+                svg::validate_attributes(
+                    svg::Element::Svg {
+                        width,
+                        height,
+                        view_box: viewport.as_deref(),
+                        aspect: *aspect,
+                    },
+                    budget,
+                )?
             }
-            Node::Path { data } => path_data(data, budget)?,
-            Node::Line { stroke_width, .. } => {
-                budget.charge(Resource::Work, stroke_width.len() as u64)?;
-                length(stroke_width, false)
-            }
+            Node::Path { data } => svg::validate_attributes(svg::Element::Path { data }, budget)?,
+            Node::Line {
+                x1,
+                y1,
+                x2,
+                y2,
+                stroke_width,
+            } => svg::validate_attributes(
+                svg::Element::Line {
+                    x1: *x1,
+                    y1: *y1,
+                    x2: *x2,
+                    y2: *y2,
+                    stroke_width,
+                },
+                budget,
+            )?,
         };
         if !valid {
             return Err(Error::Attribute { node: id });

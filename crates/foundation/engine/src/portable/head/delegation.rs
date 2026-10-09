@@ -209,7 +209,7 @@ impl<'a, 'p> IssuedHeadDelegation<'a, 'p> {
         let call = self.call;
         let limits = self.limits;
         self.transport(|budget| {
-            let s = Schemas::new(profile.registry())?;
+            let s = Schemas::new(profile.registry(), budget)?;
             let value = record(
                 s.engine,
                 "HeadDelegation",
@@ -357,7 +357,7 @@ pub fn delegation_limits<C: FoundationValueCodec>(
     budget: &mut Budget,
 ) -> Result<Limits, PortableError<C::Error>> {
     budget.charge(Resource::Work, 1)?;
-    let s = Schemas::new(registry)?;
+    let s = Schemas::new(registry, budget)?;
     let f = fields(value, s.engine, "HeadDelegation", 2)?;
     budget.charge(
         Resource::AllocationUnits,
@@ -380,7 +380,7 @@ pub fn delegation_decode<C: FoundationValueCodec>(
     codec: &mut C,
     budget: &mut Budget,
 ) -> Result<HeadDelegation, PortableError<C::Error>> {
-    let s = Schemas::new(profile.registry())?;
+    let s = Schemas::new(profile.registry(), budget)?;
     profile
         .registry()
         .validate(&expected("HeadDelegation", budget)?, value, budget)?;
@@ -426,7 +426,7 @@ pub fn delivery_to_value<C: FoundationValueCodec>(
         return Err(crate::head::HeadError::Report.into());
     }
     let usage = metered_usage(framing, budget.usage())?;
-    let s = Schemas::new(profile.registry())?;
+    let s = Schemas::new(profile.registry(), budget)?;
     let value = record(
         s.engine,
         "HeadDelivery",
@@ -449,7 +449,7 @@ pub fn delivery_decode<C: FoundationValueCodec>(
     let profile = issued.profile;
     let call = issued.call;
     issued.transport(|budget| {
-        let s = Schemas::new(profile.registry())?;
+        let s = Schemas::new(profile.registry(), budget)?;
         profile
             .registry()
             .validate(&expected("HeadDelivery", budget)?, value, budget)?;

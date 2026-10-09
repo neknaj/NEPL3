@@ -5,6 +5,7 @@ use nepl3_sentence_core::model::Kind;
 use nepl3_wire::foundation::FoundationCodec;
 
 mod namespace;
+mod profile;
 
 #[test]
 fn composed_doc_namespace_keeps_fragment_source_identity() -> Result<(), String> {
@@ -277,7 +278,9 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
                         doc_surface: Some(&compiled.doc.package.schema),
                         codec: &mut codec,
                     };
+                    let admitted_bytes = b.usage().source_bytes;
                     let result = host.render(&math.value.embeds[0], b);
+                    assert_eq!(b.usage().source_bytes, admitted_bytes);
                     match &expected {
                         Expected::Composed => {
                             let output = result.map_err(err)?;

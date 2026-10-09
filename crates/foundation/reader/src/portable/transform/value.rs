@@ -124,6 +124,7 @@ pub(super) fn encode<C: FoundationValueCodec>(
 pub(super) fn decode<C: FoundationValueCodec>(
     f: &[NdfValue],
     sources: Vec<SourceSnapshot>,
+    source_maps: Vec<nepl3_core::origin::Mapping>,
     s: &SchemaRef,
     c: &mut C,
     b: &mut Budget,
@@ -180,7 +181,7 @@ pub(super) fn decode<C: FoundationValueCodec>(
     Ok(TransformReply {
         outcome,
         sources,
-        source_maps: c.decode_mappings(&f[2], b).map_err(boundary)?,
+        source_maps,
         report,
     })
 }
