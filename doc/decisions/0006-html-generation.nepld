@@ -1,6 +1,25 @@
 article ja "HTML[先行利用/せんこうりよう]と[生成時/せいせいじ]KaTeX"
 body
   cons paragraph
+    cons "この[文書/ぶんしょ]は[採用時/さいようじ]の[理由/りゆう]と[指示/しじ]の[記録/きろく]であり、[現在/げんざい]の[作業順/さぎょうじゅん]・[実装状態/じっそうじょうたい]の[正本/せいほん]ではない。"
+    cons sentence
+      cons ruby text "成果物" text "せいかぶつ" cons text "と" cons ruby text "順序" text "じゅんじょ" cons text "は "
+      cons link relative "../../design/tasks.json" none text "T22〜T25"
+      cons text "、" cons ruby text "層間" text "そうかん" cons text "の" cons ruby text "接続" text "せつぞく" cons text "は "
+      cons link relative "../spec/18-html-delivery.md" none concat cons text "第18" cons ruby text "章" text "しょう" nil
+      cons text "、" cons ruby text "実装" text "じっそう" cons text "・" cons ruby text "受入状態" text "うけいれじょうたい" cons text "は "
+      cons link relative "../../implementation-status.json" none text "implementation-status.json"
+      cons text " を" cons ruby text "参照" text "さんしょう" cons text "する。" nil
+    nil
+  cons paragraph
+    cons sentence
+      cons ruby text "当時" text "とうじ" cons text "の" cons ruby text "基準" text "きじゅん" cons text "として" cons ruby text "提示" text "ていじ" cons text "された"
+      cons code "933f0bb" cons text "へ" cons ruby text "戻" text "もど" cons text "さず、" cons ruby text "既存" text "きそん" cons text "の"
+      cons code "lower::document" cons text "・" cons code "labels::check" cons text "・" cons code "plain_text"
+      cons text "・source printerと、" cons ruby text "進行中" text "しんこうちゅう" cons text "だったMath arena・shape・lower・codecを" cons ruby text "育" text "そだ" cons text "てる" cons ruby text "方針" text "ほうしん" cons text "を" cons ruby text "採" text "と" cons text "った。" nil
+    cons "この[実装経緯/じっそうけいい]を、[現在/げんざい]の[内部関数構成/ないぶかんすうこうせい]や[特定/とくてい]commitを[要求/ようきゅう]する[恒久/こうきゅう]API[契約/けいやく]とは[扱/あつか]わない。"
+    nil
+  cons paragraph
     cons "2026-09-07の[直接指示/ちょくせつしじ]により、4[言語製品/げんごせいひん]の[最終範囲/さいしゅうはんい]を[保/たも]ったまま、[文書/ぶんしょ]HTMLを[先行利用/せんこうりよう]するT22〜T25を[追加/ついか]する。"
     cons "[元/もと]のT10/T13[全体依存/ぜんたいいぞん]を、Doc[単独/たんどく]HTMLや[表示用/ひょうじよう]Mathの[先行実装/せんこうじっそう]まで[待/ま]たせる[条件/じょうけん]として[使/つか]わない。"
     cons "[既存/きそん]parser・Doc[処理/しょり]・Math arenaを[育/そだ]て、toolsに[別/べつ]の[利用者向/りようしゃむ]け[処理系/しょりけい]を[作/つく]らない。"
