@@ -251,7 +251,7 @@ class ArchiveTests(unittest.TestCase):
     def test_hardlinked_inputs_are_rejected_without_modification(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp).resolve()
-            source, revision, _ = self.fixture(root)
+            source, revision, files = self.fixture(root)
             path = root / 'bundle.zip'; expected = archive.pack(source, path, revision)
             linked = root / 'linked.zip'
             try:
@@ -266,7 +266,7 @@ class ArchiveTests(unittest.TestCase):
             os.link(source / 'probe.stdout', root / 'linked.stdout')
             with self.assertRaises(ValueError):
                 _ = archive.pack(source, root / 'bad.zip', revision)
-            self.assertEqual((source / 'probe.stdout').read_bytes(), b'evidence\n')
+            self.assertEqual((source / 'probe.stdout').read_bytes(), files['probe.stdout'])
 
     def test_legacy_verify_keeps_filewise_boundary(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
