@@ -36,6 +36,7 @@ num-traits = { version = "0.2", default-features = false }
 pulldown-cmark = { version = "=0.13.4", default-features = false, features = ["html"] }
 
 [workspace.lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
 unsafe_code = "forbid"
 
 [workspace.lints.clippy]

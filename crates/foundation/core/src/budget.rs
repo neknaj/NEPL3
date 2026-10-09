@@ -1,5 +1,9 @@
 //! Shared, monotonic logical resource accounting. This does not intercept physical OOM.
 
+mod charge;
+#[cfg(kani)]
+mod verification;
+
 /// Logical limits for one operation and every nested operation.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct Limits {
@@ -229,7 +233,6 @@ impl Budget {
     }
     /// Overflow is treated as exceeding the corresponding limit. Failed charges do not mutate usage.
     pub fn charge(&mut self, resource: Resource, amount: u64) -> Result<(), StopReason> {
-        self.poll()?;
         let (used, limit, reason) = match resource {
             Resource::SourceBytes => (
                 &mut self.usage.source_bytes,
@@ -267,12 +270,16 @@ impl Budget {
                 StopReason::EventLimit,
             ),
         };
-        let Some(next) = used.checked_add(amount).filter(|v| *v <= limit) else {
-            self.stopped = Some(reason);
-            return Err(reason);
-        };
-        *used = next;
-        Ok(())
+        match charge::transition(*used, limit, amount, self.stopped, reason) {
+            charge::Charge::Charged { used: next } => {
+                *used = next;
+                Ok(())
+            }
+            charge::Charge::Stopped { reason } => {
+                self.stopped = Some(reason);
+                Err(reason)
+            }
+        }
     }
     /// Checks an iterative traversal depth relative to the active caller, recording its high-water mark.
     pub fn observe_depth(&mut self, relative: u64) -> Result<(), StopReason> {
