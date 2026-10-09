@@ -13,6 +13,8 @@ use nepl3_reader::{
 mod head;
 #[path = "package/portable.rs"]
 mod portable;
+#[path = "package/profile_head.rs"]
+mod profile_head;
 #[path = "package/profile_schema.rs"]
 mod profile_schema;
 #[path = "package/recovery.rs"]

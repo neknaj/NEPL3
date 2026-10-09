@@ -139,3 +139,114 @@ fn profile_schema_admission_accounts_for_registry_identity_before_closure() -> T
     assert_eq!(successful[1].1, expected);
     Ok(())
 }
+
+#[test]
+fn profile_provider_schema_lookup_has_its_own_admission_after_host_matching() -> TestResult {
+    use nepl3_core::{source::Digest, value::OperationRef};
+    use nepl3_engine::profile::{ProviderImplementation, ProviderRequirement};
+    for padding in [0, 16] {
+        let (registry, schema, names) = fixture(padding)?;
+        let operation = OperationRef {
+            schema: schema.clone(),
+            name: "absent".into(),
+        };
+        let implementation = Digest::of(b"test provider identity");
+        let host = ProviderImplementation {
+            provider: "fixture".into(),
+            revision: 1,
+            implementation_digest: implementation,
+            operations: vec![operation.clone()],
+        };
+        let mut input = profile(schema.clone());
+        input.providers.push(ProviderRequirement {
+            provider: host.provider.clone(),
+            revision: 1,
+            implementation_digest: implementation,
+            operation: operation.clone(),
+        });
+        let before = input.clone();
+        let mut descriptor_charges = vec![1];
+        descriptor_charges.extend(
+            names
+                .iter()
+                .map(|name| (name.len() + schema.package.len() + 9) as u64),
+        );
+        descriptor_charges.push((schema.package.len() + 41) as u64);
+        // Resolve entry, initial schema admission, selected-schema membership,
+        // host lookup, host operation membership; all arrays have one entry.
+        let mut prefix = vec![1];
+        prefix.extend(&descriptor_charges);
+        prefix.extend([
+            (schema.package.len() + 34) as u64,
+            (host.provider.len() + 2) as u64,
+            (schema.package.len() + operation.name.len() + 34) as u64,
+        ]);
+        let prefix_work: u64 = prefix.iter().sum();
+        let hosts = [host.clone()];
+        let catalog = RuntimeCatalog {
+            packages: &[],
+            providers: &hosts,
+            resources: &[],
+        };
+        // A same-width nonmatching host operation stops immediately before the
+        // lookup under test. It checks the independently calculated prefix.
+        let mut mismatch = host.clone();
+        mismatch.operations[0].name = "xxxxxx".into();
+        let controls = [mismatch];
+        let control = RuntimeCatalog {
+            packages: &[],
+            providers: &controls,
+            resources: &[],
+        };
+        let mut control_budget = budget();
+        assert!(matches!(
+            input.resolve(&control, &registry, &mut control_budget),
+            Err(ProfileError::MissingProvider)
+        ));
+        assert_eq!(control_budget.usage().work, prefix_work);
+        let mut charges = prefix;
+        charges.extend(&descriptor_charges);
+        // Empty descriptor operation table still charges its lookup entry.
+        charges.push(1);
+        let required: u64 = charges.iter().sum();
+        for prior in [0, 7] {
+            let mut exact = Budget::new(Limits {
+                work: prior + required,
+                ..budget().limits()
+            });
+            exact
+                .charge(Resource::Work, prior)
+                .map_err(|e| format!("{e:?}"))?;
+            assert!(matches!(
+                input.resolve(&catalog, &registry, &mut exact),
+                Err(ProfileError::MissingProvider)
+            ));
+            assert_eq!(exact.usage().work, prior + required);
+            let mut expected = control_budget.usage();
+            expected.work = prior + required;
+            assert_eq!(exact.usage(), expected);
+            // Exercise every charge of the second descriptor scan, independent
+            // of the earlier successful schema scan and host comparisons.
+            let mut accepted = prior + prefix_work;
+            for charge in &descriptor_charges {
+                let mut stopped = Budget::new(Limits {
+                    work: accepted + charge - 1,
+                    ..budget().limits()
+                });
+                stopped
+                    .charge(Resource::Work, prior)
+                    .map_err(|e| format!("{e:?}"))?;
+                assert!(matches!(
+                    input.resolve(&catalog, &registry, &mut stopped),
+                    Err(ProfileError::Stopped(StopReason::WorkLimit))
+                ));
+                assert_eq!(stopped.usage().work, accepted);
+                assert_eq!(stopped.poll(), Err(StopReason::WorkLimit));
+                accepted += charge;
+            }
+        }
+        assert_eq!(input, before);
+        assert_eq!(hosts[0], host);
+    }
+    Ok(())
+}

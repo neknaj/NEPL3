@@ -277,7 +277,7 @@ impl ParseProfile {
                 return Err(ProfileError::MissingProvider);
             }
             let descriptor = registry
-                .descriptor(&provider.operation.schema)
+                .descriptor_with_budget(&provider.operation.schema, budget)?
                 .ok_or(ProfileError::MissingSchema)?;
             lookup(
                 budget,
