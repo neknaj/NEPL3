@@ -398,3 +398,42 @@ requests change; larger groups may cost more for deeply branching inputs.
 Zero-allocation wide-input and exact/one-short deep-branch spill regressions
 cover both sides of this tradeoff. Removed AllocationUnits represent removed
 heap requests, not waived validation. Full acceptance remains separate.
+
+## Pure resource-charge verification
+
+`Budget::charge` applies the pure scalar transition in `budget/charge.rs`.
+The transition receives the prior counter, limit, amount and first stop and
+returns a typed charged/stopped outcome. Its mutable application boundary
+updates only the selected counter and stop. This is a bounded implementation
+scope, not a claim that every Budget operation or core API is pure.
+
+The Kani harness in `budget/verification.rs` calls that same production method.
+It admits all u64 fields, all seven resources and all nine current stop reasons,
+including overflow, zero charge, a counter above a lowered ceiling and an
+existing stop. A u128 specification checks the result and complete Usage;
+limits, active depth and observed depth must remain unchanged. The harness has
+no loops, recursion, input assumptions or alternate verification implementation.
+Its enum generators must be updated when resource or stop variants are added.
+
+Use Kani 0.68.0 (CBMC 6.11.0, bundled nightly-2026-08-21) separately from the
+normal Rust 1.97 toolchain. Kani is a development tool and introduces no
+production dependency. Install it following its official installation guide:
+
+```sh
+cargo install --locked kani-verifier --version 0.68.0
+cargo kani setup
+cargo fetch --locked
+CARGO_NET_OFFLINE=true cargo kani -p nepl3-core --harness charge_preserves_contract_and_unrelated_state
+```
+
+Kani 0.68.0 does not accept `--locked`. Preserve and compare Cargo.lock before
+and after verification; a missing offline dependency is an execution failure,
+not a passed proof. Keep the exact source revision, lock hash, tool versions,
+command and raw output with the run evidence. Normal tests, Clippy and target
+builds remain separate checks. This harness proves only one charge operation
+and its application boundary, not other Budget operations, schema traversal,
+physical memory bounds or the compiler/verifier's own correctness.
+
+The required `resource-charge-proof` CI job runs the pinned verifier and keeps
+its raw output and source/lock identity for 14 days. The quality gate requires
+this job to succeed; the artifact is scoped proof evidence, not full acceptance.
