@@ -30,7 +30,9 @@ pub(super) fn apply(inputs: &mut [(Entry, Vec<u8>)], projections: &[Projection])
     let mut total = 0usize;
     // Validate the complete selection before changing any input.
     for projection in projections {
-        if !seen.insert(&projection.source)
+        if !projection.source.starts_with("doc/")
+            || !projection.source.ends_with(".md")
+            || !seen.insert(&projection.source)
             || !portable_path(&projection.route)
             || !projection.route.ends_with(".html")
             || projection.renderer.is_empty()
