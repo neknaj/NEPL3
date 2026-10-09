@@ -233,3 +233,78 @@ fn observed_usage_is_atomic_and_preserves_prior_stop() {
     assert_eq!(budget.limits, limits);
     assert_eq!(budget.depth, depth);
 }
+
+/// Model an arbitrary callback's terminating post-state and Result; this proves
+/// the wrapper boundary, not callback computations or unwind restoration.
+fn depth_scope_contract(base: Option<u64>) {
+    let mut budget = arbitrary_budget();
+    let limits = budget.limits;
+    let usage = budget.usage;
+    let active = budget.depth;
+    let measured = budget.observed_depth;
+    let stopped = budget.stopped;
+    let target = match base {
+        Some(base) => u128::from(active.max(base)),
+        None => u128::from(active) + 1,
+    };
+    let rejected = stopped.or(if target > u128::from(limits.depth) {
+        Some(StopReason::DepthLimit)
+    } else {
+        None
+    });
+    let replacement = arbitrary_budget();
+    let post_limits = replacement.limits;
+    let post_usage = replacement.usage;
+    let post_measured = replacement.observed_depth;
+    let post_stopped = replacement.stopped;
+    let callback_result: Result<u64, StopReason> = if kani::any() {
+        Ok(kani::any())
+    } else {
+        Err(reason())
+    };
+    let mut calls = 0u8;
+    let callback = |inner: &mut Budget| {
+        assert_eq!(calls, 0);
+        calls += 1;
+        assert_eq!(rejected, None);
+        let mut entered_usage = usage;
+        entered_usage.depth = usage.depth.max(target as u64);
+        assert_eq!(inner.limits, limits);
+        assert_eq!(inner.usage, entered_usage);
+        assert_eq!(inner.depth, target as u64);
+        assert_eq!(inner.observed_depth, measured.max(target as u64));
+        assert_eq!(inner.stopped, None);
+        *inner = replacement;
+        callback_result
+    };
+    let result = match base {
+        Some(base) => budget.with_depth_at_least(base, callback),
+        None => budget.with_depth(callback),
+    };
+    assert_eq!(budget.depth, active);
+    if let Some(reason) = rejected {
+        assert_eq!(calls, 0);
+        assert_eq!(result, Err(reason));
+        assert_eq!(budget.limits, limits);
+        assert_eq!(budget.usage, usage);
+        assert_eq!(budget.observed_depth, measured);
+        assert_eq!(budget.stopped, Some(reason));
+    } else {
+        assert_eq!(calls, 1);
+        assert_eq!(result, callback_result);
+        assert_eq!(budget.limits, post_limits);
+        assert_eq!(budget.usage, post_usage);
+        assert_eq!(budget.observed_depth, post_measured);
+        assert_eq!(budget.stopped, post_stopped);
+    }
+}
+
+#[kani::proof]
+fn next_depth_scope_restores_only_saved_active_depth() {
+    depth_scope_contract(None);
+}
+
+#[kani::proof]
+fn restored_depth_scope_restores_only_saved_active_depth() {
+    depth_scope_contract(Some(kani::any()));
+}
