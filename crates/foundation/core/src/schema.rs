@@ -787,7 +787,49 @@ impl SchemaRegistry {
             .find(|(r, _)| r == reference)
             .map(|(_, d)| d)
     }
-    /// Iterative traversal avoids dependence on the machine call-stack for external values.
+    /// Validate a borrowed value against a type using this finalized registry.
+    ///
+    /// Success returns structural evidence borrowing the original value; no
+    /// domain semantics or cross-field invariants are established. Validation
+    /// visits children in forward depth-first order without recursive calls.
+    /// Each sibling's Work admission precedes child Nodes/depth checks. A failed
+    /// call retains already charged usage and never clears an existing stop.
+    ///
+    /// # Errors
+    /// Returns Unfinalized before charging if the registry is not finalized.
+    /// UnknownSchema, UnknownType or UnknownVariant identifies an unresolved
+    /// descriptor; WrongType and FieldCount reject structural mismatches.
+    /// Stopped reports a resource limit or cancellation; an existing Budget
+    /// stop is never replaced by validation.
+    ///
+    /// # Current implementation costs
+    /// Traversal time is linear in visited values and admitted siblings, plus
+    /// descriptor lookup and string-comparison costs. All siblings are charged
+    /// before the first child is visited, including on an early child error.
+    /// Registry/type/variant lookups are currently
+    /// linear scans. Pending storage is proportional to the maximum number of
+    /// simultaneously pending branching ancestors plus a constant current frame,
+    /// with eight inline frames and budgeted heap overflow;
+    /// values and descriptors are borrowed. These are implementation details,
+    /// not fixed allocator-size or wall-clock guarantees. Work/AllocationUnits
+    /// are logical counters, not complete CPU/physical-memory measurements.
+    ///
+    /// # Example
+    /// ```
+    /// use nepl3_core::{budget::{Budget, Limits}, schema::{SchemaRegistry,
+    ///     SchemaError, TypeDescriptor}, value::NdfValue};
+    /// let mut budget = Budget::new(Limits {
+    ///     work: 32, nodes: 32, depth: 8, allocation_units: 4096,
+    ///     ..Limits::default()
+    /// });
+    /// let mut registry = SchemaRegistry::default();
+    /// registry.finalize(&mut budget)?;
+    /// let value = NdfValue::U64(7);
+    /// registry.validate(&TypeDescriptor::U64, &value, &mut budget)?;
+    /// assert!(matches!(registry.validate(&TypeDescriptor::Bool, &value,
+    ///     &mut budget), Err(SchemaError::WrongType)));
+    /// # Ok::<(), SchemaError>(())
+    /// ```
     pub fn validate<'a>(
         &self,
         expected: &TypeDescriptor,
@@ -799,7 +841,7 @@ impl SchemaRegistry {
         }
         budget.charge(Resource::Work, 1)?;
         let mut pending =
-            frontier::Frontier::new(Siblings::Uniform(expected, core::slice::from_ref(value), 1));
+            frontier::Frontier::new(Siblings::uniform(expected, core::slice::from_ref(value), 1));
         while let Some(group) = pending.pop() {
             let Some((ty, value, depth, rest)) = group.split_first()? else {
                 continue;
@@ -840,20 +882,17 @@ impl SchemaRegistry {
                         return Err(SchemaError::WrongType);
                     }
                     match value {
-                        NdfValue::Some(value) => push(Siblings::Uniform(
+                        NdfValue::Some(value) => push(Siblings::uniform(
                             ty,
                             core::slice::from_ref(value.as_ref()),
                             next_depth,
                         ))?,
                         NdfValue::List(values) => {
-                            push(Siblings::Uniform(ty, values, next_depth))?;
+                            push(Siblings::uniform(ty, values, next_depth))?;
                         }
                         NdfValue::Record(_) | NdfValue::Variant(_) => {
                             let (fields, values) = self.fields_for(value)?;
-                            if fields.len() != values.len() {
-                                return Err(SchemaError::FieldCount);
-                            }
-                            push(Siblings::Fields(fields, values, next_depth))?;
+                            push(Siblings::fields(fields, values, next_depth)?)?;
                         }
                         _ => {}
                     }
@@ -868,13 +907,13 @@ impl SchemaRegistry {
                 (TypeDescriptor::Natural, NdfValue::Integer(number)) if !number.is_negative() => {}
                 (TypeDescriptor::Bytes32, NdfValue::Bytes(bytes)) if bytes.len() == 32 => {}
                 (TypeDescriptor::Option(_), NdfValue::None) => {}
-                (TypeDescriptor::Option(inner), NdfValue::Some(value)) => push(Siblings::Uniform(
+                (TypeDescriptor::Option(inner), NdfValue::Some(value)) => push(Siblings::uniform(
                     inner,
                     core::slice::from_ref(value.as_ref()),
                     next_depth,
                 ))?,
                 (TypeDescriptor::List(inner), NdfValue::List(values)) => {
-                    push(Siblings::Uniform(inner, values, next_depth))?;
+                    push(Siblings::uniform(inner, values, next_depth))?;
                 }
                 (TypeDescriptor::Named(name), value) => {
                     let (reference, descriptor) = self
@@ -907,10 +946,7 @@ impl SchemaRegistry {
                         }
                         _ => return Err(SchemaError::WrongType),
                     };
-                    if fields.len() != values.len() {
-                        return Err(SchemaError::FieldCount);
-                    }
-                    push(Siblings::Fields(fields, values, next_depth))?;
+                    push(Siblings::fields(fields, values, next_depth)?)?;
                 }
                 _ => return Err(SchemaError::WrongType),
             }

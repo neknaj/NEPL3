@@ -4,8 +4,13 @@ use super::{FieldDescriptor, SchemaError, TypeDescriptor};
 use crate::budget::{Budget, Resource};
 use crate::value::NdfValue;
 
+/// Admitted sibling sequence. Its representation cannot be constructed by
+/// callers; heterogeneous field/value lengths are checked by [`Self::fields`].
 #[derive(Clone, Copy)]
-pub(super) enum Siblings<'d, 'v> {
+pub(super) struct Siblings<'d, 'v>(Kind<'d, 'v>);
+
+#[derive(Clone, Copy)]
+enum Kind<'d, 'v> {
     Uniform(&'d TypeDescriptor, &'v [NdfValue], u64),
     Fields(&'d [FieldDescriptor], &'v [NdfValue], u64),
 }
@@ -34,25 +39,49 @@ pub(super) fn enqueue<'d, 'v>(
 }
 
 impl<'d, 'v> Siblings<'d, 'v> {
+    /// Borrow a homogeneous sequence at one traversal depth without allocation.
+    pub(super) fn uniform(ty: &'d TypeDescriptor, values: &'v [NdfValue], depth: u64) -> Self {
+        Self(Kind::Uniform(ty, values, depth))
+    }
+
+    /// Admit a field/value pairing before any child Work or storage is charged.
+    /// Equal lengths establish the representation invariant; mismatch returns
+    /// FieldCount without producing a group. Empty equal slices are valid.
+    pub(super) fn fields(
+        fields: &'d [FieldDescriptor],
+        values: &'v [NdfValue],
+        depth: u64,
+    ) -> Result<Self, SchemaError> {
+        if fields.len() != values.len() {
+            return Err(SchemaError::FieldCount);
+        }
+        Ok(Self(Kind::Fields(fields, values, depth)))
+    }
+
+    /// Number of unvisited siblings, in constant time and without allocation.
     pub(super) fn len(self) -> usize {
-        match self {
-            Self::Uniform(_, values, _) | Self::Fields(_, values, _) => values.len(),
+        match self.0 {
+            Kind::Uniform(_, values, _) | Kind::Fields(_, values, _) => values.len(),
         }
     }
 
+    /// Return the first visit and nonempty remainder, preserving alignment,
+    /// ordering and depth. This pure constant-time step allocates nothing.
+    /// The defensive alignment check also detects an internal invariant bug;
+    /// callers cannot construct a misaligned representation directly.
     pub(super) fn split_first(self) -> Result<Option<Visit<'d, 'v>>, SchemaError> {
-        match self {
-            Self::Uniform(ty, values, depth) => Ok(values.split_first().map(|(value, rest)| {
+        match self.0 {
+            Kind::Uniform(ty, values, depth) => Ok(values.split_first().map(|(value, rest)| {
                 (
                     ty,
                     value,
                     depth,
-                    (!rest.is_empty()).then_some(Self::Uniform(ty, rest, depth)),
+                    (!rest.is_empty()).then_some(Self(Kind::Uniform(ty, rest, depth))),
                 )
             })),
-            Self::Fields(fields, values, depth) => {
-                // Every group is admitted only after the public field-count check.
-                // Keep this internal slicing boundary checked as well.
+            Kind::Fields(fields, values, depth) => {
+                // Construction is sealed behind fields(); slicing both tails
+                // preserves its invariant. Keep a defensive boundary check.
                 if fields.len() != values.len() {
                     return Err(SchemaError::FieldCount);
                 }
@@ -62,7 +91,8 @@ impl<'d, 'v> Siblings<'d, 'v> {
                             &field.ty,
                             value,
                             depth,
-                            (!values.is_empty()).then_some(Self::Fields(fields, values, depth)),
+                            (!values.is_empty())
+                                .then_some(Self(Kind::Fields(fields, values, depth))),
                         )
                     },
                 ))
@@ -77,6 +107,50 @@ mod tests {
     use crate::budget::{Limits, StopReason};
     use crate::schema::SchemaRegistry;
     use alloc::vec;
+
+    /// Both mismatch directions fail before a group exists. Successful tails
+    /// preserve each descriptor/value pairing and never retain an empty frame.
+    #[test]
+    fn field_admission_and_remainders_preserve_alignment() -> Result<(), SchemaError> {
+        let fields = [
+            FieldDescriptor {
+                name: "first".into(),
+                ty: TypeDescriptor::U64,
+            },
+            FieldDescriptor {
+                name: "second".into(),
+                ty: TypeDescriptor::Bool,
+            },
+        ];
+        let values = [NdfValue::U64(7), NdfValue::Bool(true)];
+        for (field_count, value_count) in [(0, 1), (1, 0), (1, 2), (2, 1)] {
+            assert!(matches!(
+                Siblings::fields(&fields[..field_count], &values[..value_count], 4),
+                Err(SchemaError::FieldCount)
+            ));
+        }
+        assert!(Siblings::fields(&[], &[], 4)?.split_first()?.is_none());
+        let group = Siblings::fields(&fields, &values, 4)?;
+        assert_eq!(group.len(), 2);
+        let Some((ty, value, depth, Some(rest))) = group.split_first()? else {
+            return Err(SchemaError::FieldCount);
+        };
+        assert_eq!(ty, &TypeDescriptor::U64);
+        assert_eq!(value, &values[0]);
+        assert_eq!(depth, 4);
+        assert_eq!(rest.len(), 1);
+        let Some((ty, value, depth, None)) = rest.split_first()? else {
+            return Err(SchemaError::FieldCount);
+        };
+        assert_eq!(ty, &TypeDescriptor::Bool);
+        assert_eq!(value, &values[1]);
+        assert_eq!(depth, 4);
+        assert_eq!(
+            core::mem::size_of::<Siblings<'_, '_>>(),
+            core::mem::size_of::<Kind<'_, '_>>()
+        );
+        Ok(())
+    }
 
     #[test]
     fn deep_branching_groups_charge_exact_spill_and_keep_sticky_stops() -> Result<(), SchemaError> {
