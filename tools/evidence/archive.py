@@ -50,6 +50,15 @@ def directory(path: Path) -> None:
         checked(stat.S_ISDIR(metadata.st_mode) and not linked(metadata), 'linked or non-directory ancestor')
 
 
+def unchanged(before: os.stat_result, after: os.stat_result) -> bool:
+    """Compare observations made by the same metadata API, never stat to fstat."""
+    return not linked(after) and (
+        after.st_mode, after.st_nlink, after.st_dev, after.st_ino,
+        after.st_size, after.st_mtime_ns, after.st_ctime_ns) == (
+        before.st_mode, before.st_nlink, before.st_dev, before.st_ino,
+        before.st_size, before.st_mtime_ns, before.st_ctime_ns)
+
+
 def read_file(path: Path, limit: int) -> bytes:
     metadata = path.lstat()
     checked(stat.S_ISREG(metadata.st_mode) and not linked(metadata) and metadata.st_nlink == 1, 'linked or special input')
@@ -57,12 +66,17 @@ def read_file(path: Path, limit: int) -> bytes:
     with path.open('rb') as stream:
         opened = os.fstat(stream.fileno())
         checked(stat.S_ISREG(opened.st_mode) and not linked(opened) and opened.st_nlink == 1 and
-                (opened.st_dev, opened.st_ino) == (metadata.st_dev, metadata.st_ino), 'input changed before read')
+                (opened.st_dev, opened.st_ino, opened.st_size) ==
+                (metadata.st_dev, metadata.st_ino, metadata.st_size), 'input changed before read')
+        # CPython 3.13 Windows lstat exposes birth time as ctime, whereas fstat
+        # exposes ChangeTime (python/cpython#157671). Check each API against
+        # itself, retaining path identity/link checks around the open and read.
+        checked(unchanged(metadata, path.lstat()), 'input path changed before read')
         data = stream.read(limit + 1)
         after = os.fstat(stream.fileno())
-    checked(len(data) <= limit and len(data) == metadata.st_size and
-            (after.st_size, after.st_mtime_ns, after.st_ctime_ns) ==
-            (metadata.st_size, metadata.st_mtime_ns, metadata.st_ctime_ns), 'input changed while reading')
+        checked(unchanged(opened, after), 'input handle changed while reading')
+        checked(unchanged(metadata, path.lstat()), 'input path changed while reading')
+    checked(len(data) <= limit and len(data) == metadata.st_size, 'input changed while reading')
     return data
 
 

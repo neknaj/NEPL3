@@ -302,3 +302,54 @@ class ArchiveTests(unittest.TestCase):
             with self.subTest(defect=defect), patch('zipfile.ZipFile', side_effect=AssertionError('bad directory reached parser')):
                 with self.assertRaises(ValueError):
                     _ = archive.unpack(data, hash_bytes(data), 'a' * 40)
+
+def stat_with(value: os.stat_result, changes: dict[str, int]) -> os.stat_result:
+    # Tuple fields omit nanosecond and platform-specific attributes. Preserve
+    # all named metadata, including Windows reparse flags, then vary one field.
+    tuple_fields = {'st_mode', 'st_ino', 'st_dev', 'st_nlink', 'st_uid', 'st_gid', 'st_size'}
+    named: dict[str, object] = {key: getattr(value, key) for key in dir(value) if key.startswith('st_') and key not in tuple_fields}
+    named.update(changes)
+    result = os.stat_result(value, named)
+    for key in dir(value):
+        if key.startswith('st_') and key not in changes:
+            if getattr(result, key) != getattr(value, key):
+                raise AssertionError(f'mock dropped {key}')
+    if not archive.unchanged(result, result):
+        raise AssertionError('mock metadata is not self-consistent')
+    return result
+
+
+class ReadFileMetadataTests(unittest.TestCase):
+    def test_path_and_handle_timestamps_may_use_different_windows_semantics(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'probe.stdout'
+            _ = path.write_bytes(b'evidence')
+            original_fstat = os.fstat
+            def handle_metadata(fd: int) -> os.stat_result:
+                value = original_fstat(fd)
+                return stat_with(value, {'st_ctime_ns': value.st_ctime_ns + 1000})
+            with patch('os.fstat', side_effect=handle_metadata):
+                self.assertEqual(archive.read_file(path, 8), b'evidence')
+
+    def test_handle_mutation_during_read_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'probe.stdout'
+            _ = path.write_bytes(b'evidence')
+            value = path.stat()
+            for field in ['st_mtime_ns', 'st_ctime_ns']:
+                changed = stat_with(value, {field: getattr(value, field) + 1})
+                with self.subTest(field=field), patch('os.fstat', side_effect=[value, changed]):
+                    with self.assertRaises(ValueError):
+                        _ = archive.read_file(path, 8)
+
+    def test_path_mutation_after_open_or_read_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'probe.stdout'
+            _ = path.write_bytes(b'evidence')
+            value = path.stat()
+            for field in ['st_mtime_ns', 'st_ctime_ns']:
+                changed = stat_with(value, {field: getattr(value, field) + 1})
+                for observations in [[value, changed], [value, value, changed]]:
+                    with self.subTest(field=field, count=len(observations)), patch.object(Path, 'lstat', side_effect=observations):
+                        with self.assertRaises(ValueError):
+                            _ = archive.read_file(path, 8)
