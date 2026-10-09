@@ -61,7 +61,7 @@ pub(super) fn check(
         let bridge = temp.join(format!("cleanup-{mode}.cjs"));
         let descendant = "const fs=require('node:fs');const t=setInterval(()=>{if(fs.existsSync(process.argv[1]))process.exit(0)},10);setTimeout(()=>process.exit(0),10000);";
         std::fs::write(&bridge, format!(
-            "process.stdin.on('end',()=>{{const c=require('node:child_process').spawn(process.execPath,['-e',{},{}],{{stdio:['ignore',1,2]}});c.on('spawn',()=>{{require('node:fs').writeFileSync({},'ready');process.exit(0)}})}});process.stdin.resume();",
+            "process.stdin.on('end',()=>{{const c=require('node:child_process').spawn(process.execPath,['-e',{},{}],{{detached:true,windowsHide:true,stdio:['ignore',1,2]}});c.on('spawn',()=>{{require('node:fs').writeFileSync({},'ready');process.exit(0)}})}});process.stdin.resume();",
             serde_json::to_string(descendant).map_err(err)?,
             serde_json::to_string(&release.0.to_string_lossy()).map_err(err)?,
             serde_json::to_string(&marker.to_string_lossy()).map_err(err)?,
@@ -185,7 +185,7 @@ fn ordinary_failure(
     // Descendant keeps stdout open. Stderr is reported only after it exists.
     let descendant = "const fs=require('node:fs');setInterval(()=>{if(fs.existsSync(process.argv[1]))process.exit(0)},10);setTimeout(()=>process.exit(0),10000);";
     std::fs::write(&bridge, format!(
-        "process.stdin.on('end',()=>{{const c=require('node:child_process').spawn(process.execPath,['-e',{},{}],{{stdio:['ignore',1,'ignore']}});c.on('spawn',()=>{{process.stderr.write('bad',()=>process.exit(0))}})}});process.stdin.resume();",
+        "process.stdin.on('end',()=>{{const c=require('node:child_process').spawn(process.execPath,['-e',{},{}],{{detached:true,windowsHide:true,stdio:['ignore',1,'ignore']}});c.on('spawn',()=>{{process.stderr.write('bad',()=>process.exit(0))}})}});process.stdin.resume();",
         serde_json::to_string(descendant).map_err(err)?,
         serde_json::to_string(&release.0.to_string_lossy()).map_err(err)?,
     )).map_err(err)?;

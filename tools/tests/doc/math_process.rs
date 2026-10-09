@@ -202,7 +202,7 @@ pub fn check(request: &PreparedRequest<'_>, node: &str) -> Result<(), String> {
     let ready_json = serde_json::to_string(&ready.to_string_lossy()).map_err(err)?;
     let descendant = "const fs=require('node:fs'); const release=process.argv[1]; const timer=setInterval(()=>{if(fs.existsSync(release)){clearInterval(timer);process.exit(0);}},10);setTimeout(()=>process.exit(0),10000);";
     let source = format!(
-        "process.stdin.on('end',()=>{{const c=require('node:child_process').spawn(process.execPath,['-e',{},{}],{{stdio:['ignore',1,2]}});c.on('spawn',()=>{{require('node:fs').writeFileSync({},'ready');process.exit(0);}});}});process.stdin.resume();",
+        "process.stdin.on('end',()=>{{const c=require('node:child_process').spawn(process.execPath,['-e',{},{}],{{detached:true,windowsHide:true,stdio:['ignore',1,2]}});c.on('spawn',()=>{{require('node:fs').writeFileSync({},'ready');process.exit(0);}});}});process.stdin.resume();",
         serde_json::to_string(descendant).map_err(err)?,
         release_json,
         ready_json

@@ -37,7 +37,7 @@ pub(super) fn check(
     let bridge = temp.join("unwind-held-pipe.cjs");
     let child = "const fs=require('node:fs');setInterval(()=>{if(fs.existsSync(process.argv[1]))process.exit(0)},10);setTimeout(()=>process.exit(0),10000);";
     std::fs::write(&bridge, format!(
-        "process.stdin.on('end',()=>{{const c=require('node:child_process').spawn(process.execPath,['-e',{},{}],{{stdio:['ignore',1,2]}});c.on('spawn',()=>{{require('node:fs').writeFileSync({},'ready');process.exit(0)}})}});process.stdin.resume();",
+        "process.stdin.on('end',()=>{{const c=require('node:child_process').spawn(process.execPath,['-e',{},{}],{{detached:true,windowsHide:true,stdio:['ignore',1,2]}});c.on('spawn',()=>{{require('node:fs').writeFileSync({},'ready');process.exit(0)}})}});process.stdin.resume();",
         serde_json::to_string(child).map_err(err)?,
         serde_json::to_string(&release.to_string_lossy()).map_err(err)?,
         serde_json::to_string(&ready.to_string_lossy()).map_err(err)?,

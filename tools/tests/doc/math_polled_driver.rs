@@ -251,6 +251,9 @@ pub(super) fn check(
     held_pipes(&request, cfg, temp)?;
     Ok(())
 }
+// A Windows Node parent puts non-detached descendants in a kill-on-close job.
+// Detach this fixture so it really retains pipes after the direct parent exits;
+// the release file and finite child watchdog still own its test lifetime.
 fn held_pipes(request: &PreparedRequest<'_>, cfg: Config<'_>, temp: &Path) -> Result<(), String> {
     for mode in 0..3 {
         let release = temp.join(format!("driver-descendant-release-{mode}"));
@@ -262,7 +265,7 @@ fn held_pipes(request: &PreparedRequest<'_>, cfg: Config<'_>, temp: &Path) -> Re
             temp,
             &format!("driver-descendant-{mode}.cjs"),
             &format!(
-                "process.stdin.on('end',()=>{{const c=require('node:child_process').spawn(process.execPath,['-e',{},{}],{{stdio:['ignore',1,2]}});c.on('spawn',()=>{{require('node:fs').writeFileSync({},'ready');process.exit(0);}});}});process.stdin.resume();",
+                "process.stdin.on('end',()=>{{const c=require('node:child_process').spawn(process.execPath,['-e',{},{}],{{detached:true,windowsHide:true,stdio:['ignore',1,2]}});c.on('spawn',()=>{{require('node:fs').writeFileSync({},'ready');process.exit(0);}});}});process.stdin.resume();",
                 serde_json::to_string(descendant).map_err(err)?,
                 release_json,
                 ready_json
@@ -329,12 +332,25 @@ fn held_pipes(request: &PreparedRequest<'_>, cfg: Config<'_>, temp: &Path) -> Re
             }
         }
         for _ in 0..3 {
-            if !matches!(running.poll(&mut b), driver::Poll::Pending { failure: Some(f), .. } if f == expected)
-            {
+            let unexpected = match running.poll(&mut b) {
+                driver::Poll::Pending {
+                    failure: Some(f), ..
+                } if f == expected => None,
+                driver::Poll::Pending {
+                    failure,
+                    termination_error,
+                } => Some(format!("Pending({failure:?}, {termination_error:?})")),
+                driver::Poll::Finished(Ok(_)) => Some("Finished(Ok)".into()),
+                driver::Poll::Finished(Err(error)) => Some(format!("Finished({error:?})")),
+                driver::Poll::Consumed => Some("Consumed".into()),
+            };
+            if let Some(observed) = unexpected {
                 std::fs::write(&release, "release").map_err(err)?;
                 running.cancel();
                 let _ = finish_driver(&mut running, &mut b);
-                return Err("pending cleanup was lost".into());
+                return Err(format!(
+                    "pending cleanup was lost: mode={mode}, expected={expected:?}, observed={observed}"
+                ));
             }
             thread::sleep(Duration::from_millis(2));
         }
