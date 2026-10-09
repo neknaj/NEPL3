@@ -248,6 +248,14 @@
       "aliases": "doc/decisions/0004-pages-recovery-doc-inventory.aliases.json",
       "route": "docs/decisions/0004-pages-recovery-doc-inventory.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "html-generation-decision",
+      "source": "doc/decisions/0006-html-generation.nepld",
+      "projection": "doc/decisions/0006-html-generation.md",
+      "aliases": "doc/decisions/0006-html-generation.aliases.json",
+      "route": "docs/decisions/0006-html-generation.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
@@ -275,6 +283,16 @@
       "id": "pages-information-architecture-source",
       "source": "doc/decisions/pages-information-architecture.md",
       "route": "sources/pages-information-architecture.md"
+    },
+    {
+      "id": "tasks-source",
+      "source": "design/tasks.json",
+      "route": "sources/tasks.json"
+    },
+    {
+      "id": "implementation-status-source",
+      "source": "implementation-status.json",
+      "route": "sources/implementation-status.json"
     }
   ],
   "output_limits": {
