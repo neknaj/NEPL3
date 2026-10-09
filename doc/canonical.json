@@ -232,6 +232,14 @@
       "aliases": "doc/decisions/0001-repository-foundation.aliases.json",
       "route": "docs/decisions/0001-repository-foundation.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "foundation-runtime-decision",
+      "source": "doc/decisions/0005-foundation-runtime-contracts.nepld",
+      "projection": "doc/decisions/0005-foundation-runtime-contracts.md",
+      "aliases": "doc/decisions/0005-foundation-runtime-contracts.aliases.json",
+      "route": "docs/decisions/0005-foundation-runtime-contracts.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
