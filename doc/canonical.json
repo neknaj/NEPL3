@@ -256,6 +256,14 @@
       "aliases": "doc/decisions/0006-html-generation.aliases.json",
       "route": "docs/decisions/0006-html-generation.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "design-contract-corrections-decision",
+      "source": "doc/decisions/0002-design-contract-corrections.nepld",
+      "projection": "doc/decisions/0002-design-contract-corrections.md",
+      "aliases": "doc/decisions/0002-design-contract-corrections.aliases.json",
+      "route": "docs/decisions/0002-design-contract-corrections.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
@@ -293,6 +301,16 @@
       "id": "implementation-status-source",
       "source": "implementation-status.json",
       "route": "sources/implementation-status.json"
+    },
+    {
+      "id": "design-review-source",
+      "source": "doc/review.md",
+      "route": "sources/review.md"
+    },
+    {
+      "id": "design-review-register-source",
+      "source": "design/review.json",
+      "route": "sources/review.json"
     }
   ],
   "output_limits": {
