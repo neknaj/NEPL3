@@ -88,3 +88,37 @@ fn measurement_cannot_hide_prior_usage_from_a_lower_ceiling() -> Result<(), Stop
     assert_eq!(b.poll(), Err(StopReason::DepthLimit));
     Ok(())
 }
+
+/// A real stop/cancel before depth observation retains prior resource charges.
+/// Returning Err from a callback is a separate contract from setting this stop.
+#[test]
+fn prior_stop_and_cancel_preserve_observation_prefix() -> Result<(), StopReason> {
+    for reason in [
+        StopReason::Cancelled,
+        StopReason::SourceLimit,
+        StopReason::WorkLimit,
+        StopReason::DepthLimit,
+        StopReason::NodeLimit,
+        StopReason::AllocationLimit,
+        StopReason::OutputLimit,
+        StopReason::DiagnosticLimit,
+        StopReason::EventLimit,
+    ] {
+        let mut b = budget();
+        b.charge(Resource::Work, 3)?;
+        b.observe_depth(5)?;
+        let before = b.usage();
+        assert_eq!(b.stop(reason), reason);
+        b.cancel();
+        assert_eq!(b.observe_depth(u64::MAX), Err(reason));
+        assert_eq!(b.usage(), before);
+        assert_eq!(b.current_depth(), 0);
+        assert_eq!(b.observed_depth, 5);
+    }
+    let mut b = budget();
+    b.observe_depth(7)?;
+    b.cancel();
+    assert_eq!(b.observe_depth(0), Err(StopReason::Cancelled));
+    assert_eq!(b.usage().depth, 7);
+    Ok(())
+}
