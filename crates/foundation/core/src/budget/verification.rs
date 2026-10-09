@@ -144,3 +144,92 @@ fn depth_observation_preserves_contract_and_unrelated_state() {
     assert_eq!(budget.limits, limits);
     assert_eq!(budget.depth, depth);
 }
+
+/// Every field can independently overflow or exceed a lowered ceiling.
+/// Unlike ordinary charging, admitted completed work is recorded after stop.
+#[kani::proof]
+#[kani::unwind(10)]
+fn observed_usage_is_atomic_and_preserves_prior_stop() {
+    let mut budget = arbitrary_budget();
+    let limits = budget.limits;
+    let usage = budget.usage;
+    let depth = budget.depth;
+    let measured = budget.observed_depth;
+    let stopped = budget.stopped;
+    let observed = arbitrary_budget().usage;
+    let fields = [
+        (
+            u128::from(usage.source_bytes) + u128::from(observed.source_bytes),
+            limits.source_bytes,
+            StopReason::SourceLimit,
+        ),
+        (
+            u128::from(usage.work) + u128::from(observed.work),
+            limits.work,
+            StopReason::WorkLimit,
+        ),
+        (
+            u128::from(usage.depth.max(observed.depth)),
+            limits.depth,
+            StopReason::DepthLimit,
+        ),
+        (
+            u128::from(usage.nodes) + u128::from(observed.nodes),
+            limits.nodes,
+            StopReason::NodeLimit,
+        ),
+        (
+            u128::from(usage.allocation_units) + u128::from(observed.allocation_units),
+            limits.allocation_units,
+            StopReason::AllocationLimit,
+        ),
+        (
+            u128::from(usage.output_bytes) + u128::from(observed.output_bytes),
+            limits.output_bytes,
+            StopReason::OutputLimit,
+        ),
+        (
+            u128::from(usage.diagnostics) + u128::from(observed.diagnostics),
+            limits.diagnostics,
+            StopReason::DiagnosticLimit,
+        ),
+        (
+            u128::from(usage.events) + u128::from(observed.events),
+            limits.events,
+            StopReason::EventLimit,
+        ),
+    ];
+    let mut failure = None;
+    for (sum, limit, reason) in fields {
+        if failure.is_none() && sum > u128::from(limit) {
+            failure = Some(reason);
+        }
+    }
+    let expected = if failure.is_none() {
+        Usage {
+            source_bytes: fields[0].0 as u64,
+            work: fields[1].0 as u64,
+            depth: fields[2].0 as u64,
+            nodes: fields[3].0 as u64,
+            allocation_units: fields[4].0 as u64,
+            output_bytes: fields[5].0 as u64,
+            diagnostics: fields[6].0 as u64,
+            events: fields[7].0 as u64,
+        }
+    } else {
+        usage
+    };
+    let expected_measured = if failure.is_none() {
+        measured.max(observed.depth)
+    } else {
+        measured
+    };
+    let expected_stop = stopped.or(failure);
+    let result = budget.record_observed_usage(observed);
+    assert_eq!(budget.usage, expected);
+    assert_eq!(budget.observed_depth, expected_measured);
+    assert_eq!(budget.stopped, expected_stop);
+    assert_eq!(result, expected_stop.map_or(Ok(()), Err));
+    assert_eq!(budget.limits, limits);
+    assert_eq!(budget.depth, depth);
+}
