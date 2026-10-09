@@ -4,7 +4,7 @@
   "commands": [
     {
       "id": "evidence-tools",
-      "argv": ["python", "-m", "unittest", "tools.evidence.test_runner", "-v"],
+      "argv": ["python", "-m", "unittest", "tools.evidence.test_runner", "tools.evidence.test_archive", "-v"],
       "cwd": ".",
       "timeout_seconds": 120
     }

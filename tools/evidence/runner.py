@@ -1,5 +1,6 @@
 """Collect command evidence; never decide acceptance or write a review."""
 import argparse
+from collections.abc import Mapping
 import hashlib
 import json
 from pathlib import Path
@@ -13,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from tools.serialization.json import JsonValue, decode
 from tools.evidence.records import (
-    Command, Environment, Exited, File, Incomplete, Interrupted, Report, Result,
+    Command, Environment, Exited, File, Incomplete, Interrupted, Report, Result, Specification,
     report, specification as specification,
 )
 
@@ -82,23 +83,27 @@ def run(root: Path, spec_path: Path, output: Path) -> bool:
     return not changed and len(rows) == len(spec.commands) and all(row.passed for row in rows)
 
 
-def verify(output: Path) -> Report:
-    value = report(read_json(output / 'manifest.json'))
+def verify_files(files: Mapping[str, bytes]) -> Report:
+    """Check already bounded raw data; never execute the recorded commands."""
+    if 'manifest.json' not in files or 'spec.json' not in files:
+        raise ValueError('missing evidence manifest or spec')
+    value = report(decode(files['manifest.json'], reject_duplicates=True, reject_nonfinite=True))
     names: set[str] = set()
     for entry in value.files:
         name = entry.path
         if not re.fullmatch('[a-z0-9.-]+', name) or name in ('.', '..', 'manifest.json') or name in names:
             raise ValueError('invalid evidence path')
         names.add(name)
-        path = output / name
-        if path.is_symlink() or not path.is_file():
-            raise ValueError('evidence must be regular data')
-        data = path.read_bytes()
-        if len(data) != entry.bytes or digest(data) != entry.sha256:
+        data = files.get(name)
+        if data is None or len(data) != entry.bytes or digest(data) != entry.sha256:
             raise ValueError('evidence hash mismatch')
-    if {p.name for p in output.iterdir()} != names | {'manifest.json'}:
+    if set(files) != names | {'manifest.json'}:
         raise ValueError('evidence file set changed')
-    spec = specification(read_json(output / 'spec.json'))
+    spec = specification(decode(files['spec.json'], reject_duplicates=True, reject_nonfinite=True))
+    return verify_commands(value, spec, names)
+
+
+def verify_commands(value: Report, spec: Specification, names: set[str]) -> Report:
     if value.scope != spec.scope:
         raise ValueError('scope mismatch')
     if not 0 < len(value.commands) <= len(spec.commands):
@@ -117,6 +122,26 @@ def verify(output: Path) -> Report:
         if not {row.command.id + '.stdout', row.command.id + '.stderr'} <= names:
             raise ValueError('missing raw logs')
     return value
+
+
+def verify(output: Path) -> Report:
+    value = report(read_json(output / 'manifest.json'))
+    names: set[str] = set()
+    for entry in value.files:
+        name = entry.path
+        if not re.fullmatch('[a-z0-9.-]+', name) or name in ('.', '..', 'manifest.json') or name in names:
+            raise ValueError('invalid evidence path')
+        names.add(name)
+        path = output / name
+        if path.is_symlink() or not path.is_file():
+            raise ValueError('evidence must be regular data')
+        data = path.read_bytes()
+        if len(data) != entry.bytes or digest(data) != entry.sha256:
+            raise ValueError('evidence hash mismatch')
+    if {p.name for p in output.iterdir()} != names | {'manifest.json'}:
+        raise ValueError('evidence file set changed')
+    spec = specification(read_json(output / 'spec.json'))
+    return verify_commands(value, spec, names)
 
 
 class Arguments(argparse.Namespace):
