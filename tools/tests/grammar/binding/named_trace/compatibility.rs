@@ -1,6 +1,6 @@
 use super::*;
 #[test]
-fn disabled_capture_preserves_measured_prechange_usage() -> Result<(), String> {
+fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<(), String> {
     let compiled = execution()?;
     with_input(&compiled, "lambda x x", |tree, profile, _, _| {
         for mode in [0, 1] {
@@ -28,9 +28,9 @@ fn disabled_capture_preserves_measured_prechange_usage() -> Result<(), String> {
             assert_eq!(
                 b.usage(),
                 if mode == 0 {
-                    expected(10, 2223, 4, 21, 5819, 0, 0)
+                    expected(10, 2223, 4, 21, (5819, 4), 0, 0)
                 } else {
-                    expected(10, 2340, 5, 21, 6369, 0, 0)
+                    expected(10, 2340, 5, 21, (6369, 4), 0, 0)
                 }
             );
             let mut limits = budget().limits();
@@ -71,9 +71,9 @@ fn disabled_capture_preserves_measured_prechange_usage() -> Result<(), String> {
             assert_eq!(
                 short.usage(),
                 if mode == 0 {
-                    expected(10, 2155, 4, 21, 5819, 0, 0)
+                    expected(10, 2155, 4, 21, (5819, 4), 0, 0)
                 } else {
-                    expected(10, 2272, 5, 21, 6369, 0, 0)
+                    expected(10, 2272, 5, 21, (6369, 4), 0, 0)
                 }
             );
         }
@@ -92,7 +92,7 @@ fn disabled_capture_preserves_measured_prechange_usage() -> Result<(), String> {
             &mut SourceAdmission::default(),
         );
         assert!(matches!(r.outcome, BindingOutcome::Complete(_)));
-        assert_eq!(b.usage(), expected(20, 8854, 8, 98, 22039, 2, 1));
+        assert_eq!(b.usage(), expected(20, 8854, 8, 98, (22039, 22), 2, 1));
         let mut limits = budget().limits();
         limits.work = b.usage().work - 1;
         let mut short = Budget::new(limits);
@@ -112,7 +112,7 @@ fn disabled_capture_preserves_measured_prechange_usage() -> Result<(), String> {
                 ..
             }
         ));
-        assert_eq!(short.usage(), expected(20, 8789, 8, 98, 22039, 2, 1));
+        assert_eq!(short.usage(), expected(20, 8789, 8, 98, (22039, 22), 2, 1));
         Ok(())
     })?;
     let compiled = missing_probe::named_lambda()?;
@@ -138,7 +138,7 @@ fn disabled_capture_preserves_measured_prechange_usage() -> Result<(), String> {
             r.outcome,
             nepl3_engine::binding::probe::ProbeOutcome::Hit(_)
         ));
-        assert_eq!(b.usage(), expected(8, 2041, 5, 17, 5844, 0, 0));
+        assert_eq!(b.usage(), expected(8, 2041, 5, 17, (5844, 2), 0, 0));
         let mut limits = budget().limits();
         limits.work = b.usage().work - 1;
         let mut short = Budget::new(limits);
@@ -153,19 +153,25 @@ fn disabled_capture_preserves_measured_prechange_usage() -> Result<(), String> {
             r.outcome,
             nepl3_engine::binding::probe::ProbeOutcome::Stopped(StopReason::WorkLimit)
         ));
-        assert_eq!(short.usage(), expected(8, 1973, 5, 17, 5276, 0, 0));
+        assert_eq!(short.usage(), expected(8, 1973, 5, 17, (5276, 2), 0, 0));
         Ok(())
     })
 }
 
 // Measured on main23fab043 before capture changes, including Work-stop boundaries.
 // AllocationUnits contains native layout sizes; the fixed baseline is explicitly 64-bit.
+// Inline validation removes one heap tuple per scalar validation here:
+// lambda: 3 token payloads + 1 Expr leaf; recovered lambda: 2 token payloads.
+// custom: (6 tokens + 2 Expr leaves) checked at analyze entry and FactsRequestView
+// issue, plus 3 metadata records with 2 independently validated scalar fields.
+// Both normal and one-short Work runs reach all of these validations. Every
+// other historical Usage field stays exact; this is not a broad tolerance.
 fn expected(
     source_bytes: u64,
     work: u64,
     depth: u64,
     nodes: u64,
-    allocation_units: u64,
+    allocation_units: (u64, u64),
     diagnostics: u64,
     events: u64,
 ) -> nepl3_core::budget::Usage {
@@ -174,7 +180,13 @@ fn expected(
         work,
         depth,
         nodes,
-        allocation_units,
+        allocation_units: allocation_units.0
+            - allocation_units.1
+                * core::mem::size_of::<(
+                    &nepl3_core::schema::TypeDescriptor,
+                    &nepl3_core::value::NdfValue,
+                    u64,
+                )>() as u64,
         output_bytes: 0,
         diagnostics,
         events,

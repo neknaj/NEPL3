@@ -379,3 +379,14 @@ Reader/Engine全受入や実機試験の代わりにはしません。
 このCI整備をDoc HTML・文書移行・Pages公開の完成へ読み替えません。
 CIの区切り後はDoc生成を進め、意味・リンク・安定IDの対応を検証できたページから
 nepld正本へ移行し、検査済みの同じsite artifactを公開します。
+
+### Inline schema-validation frontier
+
+Structural validation retains up to eight pending references in a fixed inline
+array. Wider frontiers use budgeted, fallible heap storage for overflow entries,
+retaining capacity for reuse. The traversal order and all schema checks remain
+unchanged, including per-child Work charging and Nodes/depth accounting. The
+removed AllocationUnits correspond to removed heap requests, not waived checks;
+inline storage is bounded independently of input depth. Exact/one-short tests
+cover both inline and spill boundaries. Full acceptance remains separate from
+these local storage checks.
