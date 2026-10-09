@@ -438,9 +438,17 @@ Kani 0.68.0 does not accept `--locked`. Preserve and compare Cargo.lock before
 and after verification; a missing offline dependency is an execution failure,
 not a passed proof. Keep the exact source revision, lock hash, tool versions,
 command and raw output with the run evidence. Normal tests, Clippy and target
-builds remain separate checks. These harnesses prove only a single charge or
-depth observation and their application boundaries, not other Budget operations, schema traversal,
+builds remain separate checks. These harnesses prove only a single charge, depth observation or completed-usage
+recording and their application boundaries, not other Budget operations, schema traversal,
 physical memory bounds or the compiler/verifier's own correctness.
+
+`Budget::record_observed_usage` applies `budget/observed.rs` as a pure transition
+of Usage, measurement depth and sticky stop. Its production Kani harness checks
+all eight fields together using u128 reference sums: admission is atomic,
+field-error precedence is preserved, and admitted already-completed work is
+recorded even after an existing stop. Failed admission retains Usage and the
+measurement mark; limits and active depth are unchanged. This proof does not
+authenticate host observations or establish the saved grant that authorizes them.
 
 The required `resource-charge-proof` CI job runs the pinned verifier and keeps
 its raw output and source/lock identity for 14 days. The quality gate requires

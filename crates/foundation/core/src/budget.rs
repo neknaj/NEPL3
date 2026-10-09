@@ -2,6 +2,7 @@
 
 mod charge;
 mod depth;
+mod observed;
 #[cfg(kani)]
 mod verification;
 
@@ -152,71 +153,19 @@ impl Budget {
     /// a remote claim. The caller must verify the saved grant and observation.
     /// All bounds are checked before recording; an existing stop is preserved.
     pub fn record_observed_usage(&mut self, observed: Usage) -> Result<(), StopReason> {
-        fn sum(a: u64, b: u64, limit: u64, reason: StopReason) -> Result<u64, StopReason> {
-            a.checked_add(b).filter(|v| *v <= limit).ok_or(reason)
-        }
-        let next = (|| {
-            Ok(Usage {
-                source_bytes: sum(
-                    self.usage.source_bytes,
-                    observed.source_bytes,
-                    self.limits.source_bytes,
-                    StopReason::SourceLimit,
-                )?,
-                work: sum(
-                    self.usage.work,
-                    observed.work,
-                    self.limits.work,
-                    StopReason::WorkLimit,
-                )?,
-                depth: {
-                    let depth = self.usage.depth.max(observed.depth);
-                    if depth > self.limits.depth {
-                        return Err(StopReason::DepthLimit);
-                    }
-                    depth
-                },
-                nodes: sum(
-                    self.usage.nodes,
-                    observed.nodes,
-                    self.limits.nodes,
-                    StopReason::NodeLimit,
-                )?,
-                allocation_units: sum(
-                    self.usage.allocation_units,
-                    observed.allocation_units,
-                    self.limits.allocation_units,
-                    StopReason::AllocationLimit,
-                )?,
-                output_bytes: sum(
-                    self.usage.output_bytes,
-                    observed.output_bytes,
-                    self.limits.output_bytes,
-                    StopReason::OutputLimit,
-                )?,
-                diagnostics: sum(
-                    self.usage.diagnostics,
-                    observed.diagnostics,
-                    self.limits.diagnostics,
-                    StopReason::DiagnosticLimit,
-                )?,
-                events: sum(
-                    self.usage.events,
-                    observed.events,
-                    self.limits.events,
-                    StopReason::EventLimit,
-                )?,
-            })
-        })();
-        match next {
-            Ok(next) => {
-                self.usage = next;
-                self.observed_depth = self.observed_depth.max(observed.depth);
-                self.poll()
-            }
-            Err(reason) => Err(self.stop(reason)),
-        }
+        let next = observed::record(
+            self.usage,
+            observed,
+            self.limits,
+            self.observed_depth,
+            self.stopped,
+        );
+        self.usage = next.usage;
+        self.observed_depth = next.measured;
+        self.stopped = next.stopped;
+        self.poll()
     }
+
     /// Records a validated nested operation's stop without replacing an earlier cause.
     pub fn stop(&mut self, reason: StopReason) -> StopReason {
         *self.stopped.get_or_insert(reason)
