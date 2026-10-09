@@ -53,7 +53,7 @@ jobs:
       - name: Package checked file bytes using the official Pages transport
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9
         with:
-          name: github-pages
+          name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist/checked/site
           include-hidden-files: true
           retention-days: 14
@@ -62,6 +62,8 @@ jobs:
       - name: Deploy checked documentation
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346
+        with:
+          artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Verify public documentation bytes and basic routes
         run: |
           python tools/site/smoke.py dist/checked/site https://neknaj.github.io/NEPL3/ --manifest-sha256 "$MANIFEST_SHA256" > dist/public-smoke.json
@@ -69,7 +71,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: pages-smoke-${{ github.event.workflow_run.head_sha }}
+          name: pages-smoke-${{ github.event.workflow_run.head_sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist/public-smoke.json
           if-no-files-found: warn
           retention-days: 14
