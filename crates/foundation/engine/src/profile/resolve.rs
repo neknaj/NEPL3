@@ -175,7 +175,7 @@ impl ParseProfile {
                 }
             }
             let descriptor = registry
-                .descriptor(schema)
+                .descriptor_with_budget(schema, budget)?
                 .ok_or(ProfileError::MissingSchema)?;
             for ty in &descriptor.types {
                 match &ty.shape {
