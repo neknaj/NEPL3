@@ -122,3 +122,60 @@ fn prior_stop_and_cancel_preserve_observation_prefix() -> Result<(), StopReason>
     assert_eq!(b.usage().depth, 7);
     Ok(())
 }
+
+/// Depth scopes restore the saved caller depth, not a decremented callback
+/// depth. Callback Result and sticky stop intentionally remain distinct.
+#[test]
+fn depth_scopes_preserve_callback_result_and_replacement() -> Result<(), StopReason> {
+    fn scope(
+        b: &mut Budget,
+        restored: bool,
+        callback: impl FnOnce(&mut Budget) -> Result<(), StopReason>,
+    ) -> Result<(), StopReason> {
+        if restored {
+            b.with_depth_at_least(9, callback)
+        } else {
+            b.with_depth(callback)
+        }
+    }
+    for restored in [false, true] {
+        let mut b = budget();
+        b.with_depth_at_least(4, |b| {
+            assert_eq!(
+                scope(b, restored, |b| {
+                    b.charge(Resource::Work, 3)?;
+                    Err(StopReason::Cancelled)
+                }),
+                Err(StopReason::Cancelled)
+            );
+            assert_eq!(b.current_depth(), 4);
+            assert_eq!(b.usage().work, 3);
+            assert_eq!(b.poll(), Ok(()));
+            assert_eq!(
+                scope(b, restored, |b| {
+                    b.cancel();
+                    Ok(())
+                }),
+                Ok(())
+            );
+            assert_eq!(b.current_depth(), 4);
+            assert_eq!(b.poll(), Err(StopReason::Cancelled));
+            Ok::<_, StopReason>(())
+        })?;
+        assert_eq!(b.current_depth(), 0);
+        let mut b = budget();
+        b.with_depth_at_least(4, |b| {
+            scope(b, restored, |b| {
+                *b = budget();
+                b.charge(Resource::Work, 6)?;
+                Ok(())
+            })?;
+            assert_eq!(b.current_depth(), 4);
+            assert_eq!(b.usage().work, 6);
+            Ok::<_, StopReason>(())
+        })?;
+        assert_eq!(b.current_depth(), 0);
+        assert_eq!(b.usage().work, 6);
+    }
+    Ok(())
+}

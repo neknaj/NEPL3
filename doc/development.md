@@ -420,7 +420,7 @@ Its production harness admits arbitrary active depth, relative depth, ceiling,
 prior stop, historical Usage depth and current measurement depth. It checks the
 u128 absolute-depth sum, first-stop precedence, both independent high-water
 marks and every unrelated field. Old marks above a lowered ceiling are retained;
-only the newly observed absolute depth is checked here. This does not prove
+only the newly observed absolute depth is checked here. This individual harness does not prove
 `measure_depth`, `with_depth`, `with_ceiling` or callback restoration.
 
 Use Kani 0.68.0 (CBMC 6.11.0, bundled nightly-2026-08-21) separately from the
@@ -438,9 +438,10 @@ Kani 0.68.0 does not accept `--locked`. Preserve and compare Cargo.lock before
 and after verification; a missing offline dependency is an execution failure,
 not a passed proof. Keep the exact source revision, lock hash, tool versions,
 command and raw output with the run evidence. Normal tests, Clippy and target
-builds remain separate checks. These harnesses prove only a single charge, depth observation or completed-usage
-recording and their application boundaries, not other Budget operations, schema traversal,
-physical memory bounds or the compiler/verifier's own correctness.
+builds remain separate checks. The harnesses cover the individual transitions
+and callback boundaries described here. They do not prove other Budget
+operations, schema traversal, physical memory bounds or the compiler/verifier's
+own correctness.
 
 `Budget::record_observed_usage` applies `budget/observed.rs` as a pure transition
 of Usage, measurement depth and sticky stop. Its production Kani harness checks
@@ -449,6 +450,17 @@ field-error precedence is preserved, and admitted already-completed work is
 recorded even after an existing stop. Failed admission retains Usage and the
 measurement mark; limits and active depth are unchanged. This proof does not
 authenticate host observations or establish the saved grant that authorizes them.
+
+`Budget::with_depth` and `with_depth_at_least` share the pure entry transition
+in `budget/depth/entry.rs`. Two production-method harnesses check admission,
+first-stop precedence, independent high-water marks and callback suppression on
+rejection. A symbolic callback checks entry state and supplies an arbitrary
+terminating post-state and Result. The wrappers restore only saved active depth
+and preserve all other post-callback fields and the callback Result, even when
+that Result differs from the sticky stop. These proofs concern this boundary,
+not callback computations, generic error conversions, panic/unwind restoration,
+divergence or authorization to replace/reset a Budget. They do not establish
+Usage monotonicity across an arbitrary whole-Budget replacement.
 
 The required `resource-charge-proof` CI job runs the pinned verifier and keeps
 its raw output and source/lock identity for 14 days. The quality gate requires

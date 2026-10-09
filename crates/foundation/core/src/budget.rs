@@ -78,16 +78,8 @@ impl Budget {
         base: u64,
         operation: impl FnOnce(&mut Self) -> Result<T, E>,
     ) -> Result<T, E> {
-        self.poll()?;
         let previous = self.depth;
-        let target = previous.max(base);
-        if target > self.limits.depth {
-            self.stopped = Some(StopReason::DepthLimit);
-            return Err(StopReason::DepthLimit.into());
-        }
-        self.depth = target;
-        self.usage.depth = self.usage.depth.max(target);
-        self.observed_depth = self.observed_depth.max(target);
+        self.enter_depth(depth::entry::Target::AtLeast(base))?;
         let result = operation(self);
         self.depth = previous;
         result
@@ -252,6 +244,31 @@ impl Budget {
             }
         }
     }
+    fn enter_depth(&mut self, target: depth::entry::Target) -> Result<(), StopReason> {
+        match depth::entry::enter(
+            self.depth,
+            target,
+            self.limits.depth,
+            self.usage.depth,
+            self.observed_depth,
+            self.stopped,
+        ) {
+            depth::entry::Entry::Entered {
+                active,
+                usage,
+                measured,
+            } => {
+                self.depth = active;
+                self.usage.depth = usage;
+                self.observed_depth = measured;
+                Ok(())
+            }
+            depth::entry::Entry::Stopped(reason) => {
+                self.stopped = Some(reason);
+                Err(reason)
+            }
+        }
+    }
     /// Measure a validation operation's relative depth without resetting Usage.
     /// Nested measurements contribute to their enclosing measurement. Callers
     /// use pure validation operations which never replace the Budget itself.
@@ -275,12 +292,8 @@ impl Budget {
         &mut self,
         operation: impl FnOnce(&mut Self) -> Result<T, E>,
     ) -> Result<T, E> {
-        self.poll()?;
-        self.observe_depth(1)?;
         let previous = self.depth;
-        let next = previous.checked_add(1).ok_or(StopReason::DepthLimit)?;
-        self.depth = next;
-        self.usage.depth = self.usage.depth.max(next);
+        self.enter_depth(depth::entry::Target::Next)?;
         let result = operation(self);
         // A host callback can replace the budget. Restore the caller's depth
         // rather than subtracting from an untrusted post-callback value.
