@@ -124,7 +124,7 @@ fn attr(
             }
             valid
         }
-        Role { .. } => true,
+        Role { .. } | AriaHidden { .. } => true,
         AriaLevel { value } => *value > 0,
         Href { value } => {
             t == HtmlTag::A
@@ -206,6 +206,11 @@ fn accepts(parent: HtmlTag, child: &HtmlNode) -> bool {
         HtmlNode::Text { .. } => None,
         HtmlNode::Element { tag, .. } => Some(*tag),
         HtmlNode::MathElement { .. } => return false,
+        HtmlNode::SvgElement {
+            element: HtmlSvgElement::Svg { .. },
+            ..
+        } => Some(Span),
+        HtmlNode::SvgElement { .. } => return false,
     };
     match parent {
         Br | Img => false,
@@ -332,7 +337,7 @@ pub(crate) fn validate_into<'a>(
 pub(crate) fn check_policy(p: &HtmlPolicy, root: u64, b: &mut Budget) -> Result<(), HtmlError> {
     for c in &p.classes {
         text(c, root, b)?;
-        if !uri::id(c) {
+        if !uri::class(c) {
             return Err(HtmlError::Policy);
         }
     }
@@ -346,6 +351,9 @@ fn validate_content<'a>(
     b: &mut Budget,
 ) -> Result<(), HtmlError> {
     let root = node(f, f.root)?;
+    if matches!(root, HtmlNode::SvgElement { .. }) {
+        return Err(HtmlError::Content(f.root));
+    }
     if let HtmlNode::MathElement {
         tag, attributes, ..
     } = root
@@ -394,6 +402,29 @@ fn validate_content<'a>(
         stack.push((r, depth, anchor, forbidden, true));
         match n {
             HtmlNode::Text { text: s } => text(s, r, b)?,
+            HtmlNode::SvgElement { element, children } => {
+                if !crate::katex::svg::validate_attributes(element.attributes(), b)? {
+                    return Err(HtmlError::Attribute { node: r, index: 0 });
+                }
+                let container = matches!(element, HtmlSvgElement::Svg { .. });
+                if !container && !children.is_empty() {
+                    return Err(HtmlError::Content(r));
+                }
+                for child in children.iter().rev() {
+                    b.charge(Resource::Work, 1)?;
+                    if !matches!(
+                        node(f, *child)?,
+                        HtmlNode::SvgElement {
+                            element: HtmlSvgElement::Path { .. } | HtmlSvgElement::Line { .. },
+                            ..
+                        }
+                    ) {
+                        return Err(HtmlError::Content(r));
+                    }
+                    b.charge(Resource::AllocationUnits, 64)?;
+                    stack.push((*child, depth.saturating_add(1), anchor, forbidden, false));
+                }
+            }
             HtmlNode::MathElement {
                 tag,
                 attributes,
@@ -421,7 +452,9 @@ fn validate_content<'a>(
                         HtmlNode::Element { tag, .. } if tag.is_phrasing() => {
                             crate::mathml::Child::Html
                         }
-                        HtmlNode::Element { .. } => return Err(HtmlError::Content(r)),
+                        HtmlNode::Element { .. } | HtmlNode::SvgElement { .. } => {
+                            return Err(HtmlError::Content(r));
+                        }
                         HtmlNode::MathElement { tag, .. } => crate::mathml::Child::Element(*tag),
                     };
                     if !crate::mathml::accepts(*tag, kind) {

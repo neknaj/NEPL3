@@ -20,6 +20,7 @@ pub struct FoundationCodec<'a> {
     mappings: &'a [Mapping],
     validated_mappings: Option<ValidatedSourceMap<'a>>,
     admission: &'a mut SourceAdmission,
+    span_descriptor: Option<TypeDescriptor>,
 }
 impl<'a> FoundationCodec<'a> {
     pub fn new(
@@ -39,10 +40,28 @@ impl<'a> FoundationCodec<'a> {
             sources,
             mappings: &[],
             validated_mappings: None,
+            span_descriptor: None,
             admission,
         })
     }
-    fn validate(&self, value: &NdfValue, name: &str, budget: &mut Budget) -> Result<(), WireError> {
+    fn validate(
+        &mut self,
+        value: &NdfValue,
+        name: &str,
+        budget: &mut Budget,
+    ) -> Result<(), WireError> {
+        budget.poll()?;
+        if name == "Span" {
+            if self.span_descriptor.is_none() {
+                budget.charge(
+                    Resource::AllocationUnits,
+                    ("nepl3.foundation".len() + name.len()) as u64,
+                )?;
+            }
+            let descriptor = self.span_descriptor.get_or_insert_with(|| expected(name));
+            self.registry.validate(descriptor, value, budget)?;
+            return Ok(());
+        }
         budget.charge(
             Resource::AllocationUnits,
             ("nepl3.foundation".len() + name.len()) as u64,
@@ -83,13 +102,10 @@ impl<'a> FoundationCodec<'a> {
         Ok(views)
     }
     fn span_admission(&mut self, span: &Span, budget: &mut Budget) -> Result<(), WireError> {
-        budget.charge(
-            Resource::AllocationUnits,
-            span.snapshot_ref().source.0.len() as u64,
-        )?;
+        budget.poll()?;
         let source = self
             .sources
-            .get(span.snapshot())
+            .get_ref(span.snapshot_ref())
             .ok_or(nepl3_core::source::SourceError::MissingSnapshot)?;
         self.admission.admit_existing(source, budget)?;
         source.slice(span)?;
@@ -113,6 +129,7 @@ impl<'a> FoundationCodec<'a> {
             sources,
             mappings,
             validated_mappings: None,
+            span_descriptor: None,
             admission: self.admission,
         }
     }
@@ -479,3 +496,6 @@ impl FoundationValueCodec for FoundationCodec<'_> {
         Ok(value)
     }
 }
+
+#[cfg(test)]
+mod cache;

@@ -7,7 +7,7 @@ use std::{fs, path::Path};
 const PATH: &str = "crates/languages/doc/html/src/schema/descriptor.rs";
 fn projection(value: &Value) -> Result<String> {
     let descriptor = foundation::descriptor(value)?;
-    if descriptor.package != "nepl3.doc.html" || descriptor.revision != 1 {
+    if descriptor.package != "nepl3.doc.html" || descriptor.revision != 2 {
         return Err("unexpected Doc HTML package identity".into());
     }
     foundation::generate::source_with(

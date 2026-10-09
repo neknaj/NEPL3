@@ -6,7 +6,7 @@ use super::{
 use crate::{
     builtin::{self, BuiltinReader},
     model::*,
-    plan::CheckedPlan,
+    plan::{CheckedPlan, PlanError},
     runtime::{
         self, ProviderReply, ReaderError, ReaderSession,
         copy::{CopyCost, copy, slot},
@@ -16,10 +16,13 @@ use alloc::{boxed::Box, rc::Rc, string::String, vec, vec::Vec};
 use nepl3_core::{
     budget::{Budget, Limits, Resource, StopReason},
     diagnostic::Report,
-    schema::SchemaRegistry,
+    schema::{SchemaError, SchemaRegistry},
     source::{Digest, SourceAdmission, SourceError, SourceReservation, SourceStore},
+    value::KindRef,
     view::{Token, Trivia, TriviaKind, ViewBundle},
 };
+mod context;
+mod echo;
 #[cfg(test)]
 mod ownership_tests;
 
@@ -148,6 +151,7 @@ pub struct TokenizationSession<'a> {
     modes: &'a [ReaderMode],
     checked: &'a CheckedPlan<'a>,
     registry: &'a SchemaRegistry,
+    wire_schema: &'a nepl3_core::value::SchemaRef,
     reader: ReaderSession<'a>,
     pending: Option<Pending>,
     next_request: u64,
@@ -165,9 +169,23 @@ pub(crate) fn validate_modes(
     budget: &mut Budget,
 ) -> Result<(), ReaderError> {
     for (index, mode) in modes.iter().enumerate() {
-        budget.charge(Resource::Work, (index + mode.name.len()) as u64)?;
-        if mode.name.is_empty() || modes[..index].iter().any(|m| m.name == mode.name) {
+        budget.charge(
+            Resource::Work,
+            (index as u64).saturating_add(mode.name.len() as u64),
+        )?;
+        if mode.name.is_empty() {
             return Err(ReaderError::Context);
+        }
+        for previous in &modes[..index] {
+            // The index charge above covers comparison overhead; charge both
+            // names before inspecting their bytes, including long prefixes.
+            budget.charge(
+                Resource::Work,
+                (previous.name.len() as u64).saturating_add(mode.name.len() as u64),
+            )?;
+            if previous.name == mode.name {
+                return Err(ReaderError::Context);
+            }
         }
         for reader in mode
             .skip
@@ -175,15 +193,73 @@ pub(crate) fn validate_modes(
             .map(|s| &s.reader)
             .chain(mode.take.iter().map(|t| &t.reader))
         {
+            budget.charge(Resource::Work, 1)?;
             if let TokenReader::Rule(name) = reader {
-                checked.plan().rule(name)?;
+                let mut found = false;
+                for rule in &checked.plan().rules {
+                    budget.charge(
+                        Resource::Work,
+                        (rule.name.len() as u64)
+                            .saturating_add(name.len() as u64)
+                            .saturating_add(1),
+                    )?;
+                    if rule.name == *name {
+                        found = true;
+                        break;
+                    }
+                }
+                if !found {
+                    return Err(PlanError::Reference.into());
+                }
             }
         }
         for take in &mode.take {
-            registry.kind_name(&take.kind.schema, take.kind.local_kind)?;
+            validate_kind(&take.kind, registry, budget)?;
         }
     }
     Ok(())
+}
+fn validate_kind(
+    kind: &KindRef,
+    registry: &SchemaRegistry,
+    budget: &mut Budget,
+) -> Result<(), ReaderError> {
+    budget.charge(Resource::Work, 1)?;
+    let schema = &kind.schema;
+    let (selected, descriptor) = registry
+        .selected_descriptor_with_budget(&schema.package, schema.revision, budget)?
+        .ok_or(SchemaError::UnknownSchema)?;
+    budget.charge(
+        Resource::Work,
+        (schema.package.len() as u64).saturating_add(41),
+    )?;
+    if selected != schema {
+        return Err(SchemaError::UnknownSchema.into());
+    }
+    usize::try_from(kind.local_kind)
+        .ok()
+        .and_then(|id| descriptor.types.get(id))
+        .ok_or(SchemaError::UnknownType)?;
+    Ok(())
+}
+fn selected_mode<'a>(
+    modes: &'a [ReaderMode],
+    name: &str,
+    budget: &mut Budget,
+) -> Result<&'a ReaderMode, ReaderError> {
+    budget.charge(Resource::Work, 1)?;
+    for mode in modes {
+        budget.charge(
+            Resource::Work,
+            (mode.name.len() as u64)
+                .saturating_add(name.len() as u64)
+                .saturating_add(1),
+        )?;
+        if mode.name == name {
+            return Ok(mode);
+        }
+    }
+    Err(ReaderError::Context)
 }
 impl<'a> TokenizationSession<'a> {
     pub fn new(
@@ -197,11 +273,17 @@ impl<'a> TokenizationSession<'a> {
         let plan_digest = checked.plan().digest(budget)?;
         let configuration_digest = super::identity::digest(modes, plan_digest, budget)?;
         let reader = ReaderSession::new(copy(&session_id, budget)?, checked, registry, budget)?;
+        // This selected wire schema is distinct from the executable/language
+        // plan schema saved in TokenizationContinuation.reader_schema.
+        let wire_schema = registry
+            .selected(crate::schema::PACKAGE, crate::schema::REVISION)
+            .ok_or(ReaderError::Context)?;
         Ok(Self {
             session_id,
             modes,
             checked,
             registry,
+            wire_schema,
             reader,
             pending: None,
             next_request: 0,
@@ -533,11 +615,12 @@ impl<'a> TokenizationSession<'a> {
             return Err(seed_failure(ReaderError::Continuation, accepted, budget));
         }
         if let TokenTarget::Builtin { token_kind, .. } = &target
-            && let Err(error) = self
-                .registry
-                .kind_name(&token_kind.schema, token_kind.local_kind)
+            && let Err(error) = validate_kind(token_kind, self.registry, budget)
         {
-            return Err(seed_failure(error.into(), accepted, budget));
+            return match runtime::stop_reason(&error) {
+                Some(reason) => Ok(empty_stop(request.start, reason, accepted, budget)),
+                None => Err(seed_failure(error, accepted, budget)),
+            };
         }
         if self.closed {
             return Err(seed_failure(ReaderError::Closed, accepted, budget));
@@ -546,12 +629,14 @@ impl<'a> TokenizationSession<'a> {
             return Err(seed_failure(ReaderError::Busy, accepted, budget));
         }
         self.scope = Some(Rc::clone(&accepted.scope));
-        let Some(mode) = self
-            .modes
-            .iter()
-            .find(|mode| mode.name == request.context.mode)
-        else {
-            return Err(seed_failure(ReaderError::Context, accepted, budget));
+        let mode = match selected_mode(self.modes, &request.context.mode, budget) {
+            Ok(mode) => mode,
+            Err(error) => {
+                return match runtime::stop_reason(&error) {
+                    Some(reason) => Ok(empty_stop(request.start, reason, accepted, budget)),
+                    None => Err(seed_failure(error, accepted, budget)),
+                };
+            }
         };
         // Validation precedes owned checkpoint copies, including long SourceIds and state values.
         if let Err(error) = runtime::validate::request(
@@ -818,10 +903,10 @@ impl<'a> TokenizationSession<'a> {
             let snapshot = sources
                 .resolve(&c.request.snapshot)
                 .ok_or(SourceError::MissingSnapshot)?;
-            let foundation = self
+            let (foundation, _) = self
                 .registry
-                .selected("nepl3.foundation", 1)
-                .ok_or(nepl3_core::schema::SchemaError::UnknownSchema)?;
+                .selected_descriptor_with_budget("nepl3.foundation", 1, budget)?
+                .ok_or(SchemaError::UnknownSchema)?;
             let context = crate::context::restored(
                 &c.request.context,
                 foundation,
@@ -843,11 +928,7 @@ impl<'a> TokenizationSession<'a> {
                 budget,
                 admission,
             )?;
-            let mode = self
-                .modes
-                .iter()
-                .find(|mode| mode.name == c.mode)
-                .ok_or(ReaderError::Context)?;
+            let mode = selected_mode(self.modes, &c.mode, budget)?;
             Ok((snapshot, context, mode))
         })();
         let (snapshot, context, mode) = match prepared {

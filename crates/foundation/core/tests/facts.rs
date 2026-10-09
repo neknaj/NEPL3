@@ -208,11 +208,32 @@ fn checked_view_reuse_avoids_rebuilding_but_admits_fresh_sources() -> Result<(),
     Ok(())
 }
 fn fixture() -> Result<(FactSet, FactAuthority, FactDelta, SchemaRegistry), String> {
+    fixture_with_catalog_padding(0)
+}
+fn fixture_with_catalog_padding(
+    padding: usize,
+) -> Result<(FactSet, FactAuthority, FactDelta, SchemaRegistry), String> {
     let mut b = budget();
     let descriptor =
         nepl3_core::schema::foundation::descriptor(&mut b).map_err(|e| format!("{e:?}"))?;
     let schema = descriptor.reference(&mut b).map_err(|e| format!("{e:?}"))?;
     let mut registry = SchemaRegistry::default();
+    for i in 0..padding {
+        let d = SchemaDescriptor {
+            package: format!("padding.{i:02}"),
+            revision: 1,
+            types: vec![],
+            operations: vec![],
+        };
+        registry
+            .register(
+                d.reference(&mut b).map_err(|e| format!("{e:?}"))?,
+                d,
+                &mut b,
+            )
+            .map_err(|e| format!("{e:?}"))?;
+    }
+
     registry
         .register(schema.clone(), descriptor, &mut b)
         .map_err(|e| format!("{e:?}"))?;
@@ -488,5 +509,101 @@ fn facts_reject_missing_sources_namespace_roots_and_fresh_operation_limits() -> 
             Err(FactError::Stopped(_))
         ));
     }
+    Ok(())
+}
+
+#[test]
+fn namespace_schema_lookup_meters_catalog_growth_for_set_and_delta() -> Result<(), String> {
+    let mut usages = vec![];
+    for padding in [0, 32] {
+        let (set, authority, mut delta, registry) = fixture_with_catalog_padding(padding)?;
+        // Remove the independent relation-payload structural schema lookup:
+        // only the two namespace exact-identity lookups should differ.
+        delta.relations.clear();
+        let mut b = budget();
+        let checked = set
+            .validate(&registry, &mut b, &mut SourceAdmission::default())
+            .map_err(|e| format!("{e:?}"))?;
+        let set_usage = b.usage();
+        let mut b = budget();
+        delta
+            .validate(
+                &checked,
+                &authority,
+                &mut b,
+                &mut SourceAdmission::default(),
+            )
+            .map_err(|e| format!("{e:?}"))?;
+        usages.push((set_usage, b.usage()));
+    }
+    // Each of the two namespaces scans 32 extra 10-byte package names.
+    let additional = 2 * 32 * (10 + "nepl3.foundation".len() as u64 + 9);
+    assert_eq!(
+        usages[1].0,
+        Usage {
+            work: usages[0].0.work + additional,
+            ..usages[0].0
+        }
+    );
+    assert_eq!(
+        usages[1].1,
+        Usage {
+            work: usages[0].1.work + additional,
+            ..usages[0].1
+        }
+    );
+    Ok(())
+}
+
+#[test]
+fn namespace_schema_lookup_preserves_miss_name_and_stop_order() -> Result<(), String> {
+    let (mut set, _, _, registry) = fixture_with_catalog_padding(32)?;
+    set.namespaces.truncate(1);
+    set.scopes.clear();
+    set.entities.clear();
+    set.occurrences.clear();
+    set.relations.clear();
+    set.edges.clear();
+    set.sources.clear();
+    set.origins.clear();
+    set.source_maps.clear();
+    set.namespaces[0].schema.digest.0[0] ^= 1;
+    let original = set.clone();
+    let mut b = Budget::new(Limits {
+        work: 64,
+        ..budget().limits()
+    });
+    assert_eq!(
+        set.validate(&registry, &mut b, &mut SourceAdmission::default())
+            .err(),
+        Some(FactError::Stopped(StopReason::WorkLimit))
+    );
+    let used = b.usage();
+    assert_eq!(b.poll(), Err(StopReason::WorkLimit));
+    assert_eq!(
+        set.validate(&registry, &mut b, &mut SourceAdmission::default())
+            .err(),
+        Some(FactError::Stopped(StopReason::WorkLimit))
+    );
+    assert_eq!(b.usage(), used);
+    assert_eq!(set, original);
+    assert_eq!(
+        set.validate(&registry, &mut budget(), &mut SourceAdmission::default())
+            .err(),
+        Some(FactError::MissingNamespace)
+    );
+    set.namespaces[0].name.clear();
+    assert_eq!(
+        set.validate(&registry, &mut budget(), &mut SourceAdmission::default())
+            .err(),
+        Some(FactError::Name)
+    );
+    set.namespaces[0].name = "Names".into();
+    set.namespaces[0].schema.digest.0[0] ^= 1;
+    assert_eq!(
+        set.validate(&registry, &mut budget(), &mut SourceAdmission::default())
+            .err(),
+        Some(FactError::MissingScope)
+    );
     Ok(())
 }

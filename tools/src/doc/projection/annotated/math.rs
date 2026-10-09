@@ -38,22 +38,28 @@ where
         codec,
     };
     let mut entries = Vec::new();
-    for (node, value) in document.value.nodes.iter().enumerate() {
+    let prepared = host
+        .prepare_markdown_document(document, budget)
+        .map_err(|e| match e {
+            PrepareError::Host(crate::doc::math::Error::Stopped(s)) => Error::Stopped(s),
+            e => Error::Invalid(format!("Markdown Math: {e:?}")),
+        })?;
+    for prepared in prepared {
         budget.charge(Resource::Work, 1)?;
-        let embed = match value.kind {
-            DocKind::InlineMath { syntax } | DocKind::DisplayMath { syntax } => syntax,
-            _ => continue,
+        let node = prepared.doc_node();
+        let embed = match document
+            .value
+            .nodes
+            .get(node as usize)
+            .map(|value| &value.kind)
+        {
+            Some(DocKind::InlineMath { syntax } | DocKind::DisplayMath { syntax }) => *syntax,
+            _ => return Err(Error::NeedsResolution),
         };
-        let prepared = host
-            .prepare_markdown_node(document, node as u64, budget)
-            .map_err(|e| match e {
-                PrepareError::Host(crate::doc::math::Error::Stopped(s)) => Error::Stopped(s),
-                e => Error::Invalid(format!("Markdown Math: {e:?}")),
-            })?;
         push(
             &mut entries,
             MathEntry {
-                node: node as u64,
+                node,
                 embed,
                 prepared,
             },

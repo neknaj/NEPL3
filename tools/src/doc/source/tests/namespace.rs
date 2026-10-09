@@ -274,6 +274,129 @@ fn foreign_namespace_parts_preserve_refs_and_guest_boundaries() -> Result<(), St
                 let prepared =
                     html::prepare_with_foreign(&checked, &options, registry, &mut codec, b)
                         .map_err(err)?;
+                // A synthetic typed SVG guest isolates arena rebasing and Doc
+                // origins from KaTeX fidelity or final artifact preparation.
+                let svg_part = html::render_part_with_foreign(
+                    &prepared,
+                    MemberId(0),
+                    &mut |_, _, _| {
+                        use nepl3_markup::html::HtmlSvgElement;
+                        Ok::<_, String>(HtmlRequest {
+                            slot: HtmlSlot::Phrasing,
+                            policy: HtmlPolicy { classes: vec![] },
+                            fragment: HtmlFragment {
+                                root: 0,
+                                nodes: vec![
+                                    HtmlNode::Element {
+                                        tag: HtmlTag::Span,
+                                        attributes: vec![],
+                                        children: vec![1],
+                                    },
+                                    HtmlNode::SvgElement {
+                                        element: HtmlSvgElement::Svg {
+                                            width: "1em".into(),
+                                            height: "1em".into(),
+                                            view_box: None,
+                                            aspect: None,
+                                        },
+                                        children: vec![2],
+                                    },
+                                    HtmlNode::SvgElement {
+                                        element: HtmlSvgElement::Path {
+                                            data: "M0 0L1 1".into(),
+                                        },
+                                        children: vec![],
+                                    },
+                                ],
+                            },
+                        })
+                    },
+                    b,
+                )
+                .map_err(err)?;
+                let [svg_placement] = svg_part.foreign.as_slice() else {
+                    return Err("SVG guest placement".into());
+                };
+                let (_, _, svg_markup, svg_origins) = svg_part.part.into_parts();
+                let base = svg_placement.first_element;
+                assert!(base > 0);
+                assert_eq!(svg_placement.elements, 3);
+                assert!(
+                    matches!(&svg_markup.fragment.nodes[(base+1) as usize], HtmlNode::SvgElement { children, .. } if children == &[base+2])
+                );
+                for index in base..base + 3 {
+                    assert!(
+                        svg_origins.iter().any(|origin| origin.element == index
+                            && matches!(&documents[0].value.nodes[origin.node as usize].kind, nepl3_doc_core::model::DocKind::InlineMath { syntax } if *syntax == svg_placement.embed))
+                    );
+                }
+                let mut pending_depth = vec![(svg_markup.fragment.root, 1u64)];
+                let mut guest_depth = None;
+                while let Some((node, depth)) = pending_depth.pop() {
+                    if node == base {
+                        guest_depth = Some(depth);
+                        break;
+                    }
+                    match &svg_markup.fragment.nodes[node as usize] {
+                        HtmlNode::Element { children, .. }
+                        | HtmlNode::MathElement { children, .. }
+                        | HtmlNode::SvgElement { children, .. } => {
+                            pending_depth.extend(children.iter().map(|child| (*child, depth + 1)));
+                        }
+                        HtmlNode::Text { .. } => {}
+                    }
+                }
+                let guest_depth = guest_depth.ok_or("guest depth")?;
+                for too_deep in [false, true] {
+                    // Put svg at depth 255 or 256: its path adds the critical
+                    // final level. Omitting SVG edges would accept 257.
+                    let spans = 255 - guest_depth + u64::from(too_deep);
+                    let result = html::render_part_with_foreign(
+                        &prepared,
+                        MemberId(0),
+                        &mut |_, _, _| {
+                            use nepl3_markup::html::HtmlSvgElement;
+                            let mut nodes = (0..spans)
+                                .map(|i| HtmlNode::Element {
+                                    tag: HtmlTag::Span,
+                                    attributes: vec![],
+                                    children: vec![i + 1],
+                                })
+                                .collect::<Vec<_>>();
+                            nodes.push(HtmlNode::SvgElement {
+                                element: HtmlSvgElement::Svg {
+                                    width: "1em".into(),
+                                    height: "1em".into(),
+                                    view_box: None,
+                                    aspect: None,
+                                },
+                                children: vec![spans + 1],
+                            });
+                            nodes.push(HtmlNode::SvgElement {
+                                element: HtmlSvgElement::Path {
+                                    data: "M0 0".into(),
+                                },
+                                children: vec![],
+                            });
+                            Ok::<_, String>(HtmlRequest {
+                                fragment: HtmlFragment { root: 0, nodes },
+                                slot: HtmlSlot::Phrasing,
+                                policy: HtmlPolicy { classes: vec![] },
+                            })
+                        },
+                        b,
+                    );
+                    if too_deep {
+                        assert!(matches!(
+                            result,
+                            Err(ForeignPartError::Render(ForeignRenderError::Render(
+                                RenderError::OutputDepth { .. }
+                            )))
+                        ));
+                    } else {
+                        result.map_err(err)?;
+                    }
+                }
                 let mut measured = budget();
                 let mut calls = 0;
                 let rendered = html::render_part_with_foreign(
@@ -361,7 +484,8 @@ fn foreign_namespace_parts_preserve_refs_and_guest_boundaries() -> Result<(), St
                     for mut node in part.fragment.nodes {
                         match &mut node {
                             HtmlNode::Element { children, .. }
-                            | HtmlNode::MathElement { children, .. } => {
+                            | HtmlNode::MathElement { children, .. }
+                            | HtmlNode::SvgElement { children, .. } => {
                                 for child in children {
                                     *child += offset;
                                 }

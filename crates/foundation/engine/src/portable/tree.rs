@@ -20,7 +20,7 @@ pub fn to_value<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
     validate(tree, profile, codec, b)?;
-    let s = Schemas::new(profile.registry())?;
+    let s = Schemas::new(profile.registry(), b)?;
     let mappings = Mappings::new(&tree.bundle, b)?;
     let mut contexts = Vec::new();
     let mut recoveries = Vec::new();
@@ -142,7 +142,7 @@ pub fn from_value<C: FoundationValueCodec>(
     profile
         .registry()
         .validate(&expected("ParseTree", b)?, value, b)?;
-    let s = Schemas::new(profile.registry())?;
+    let s = Schemas::new(profile.registry(), b)?;
     let f = fields(value, s.engine, "ParseTree", 4)?;
     let bundle = codec.decode_syntax(&f[1], b).map_err(boundary)?;
     let mut contexts = Vec::new();

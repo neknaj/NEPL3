@@ -965,3 +965,12 @@ fn host_global_source_cannot_fill_a_missing_request_declaration() -> TestResult 
     );
     Ok(())
 }
+
+#[path = "portable/sender.rs"]
+mod sender;
+
+#[path = "portable/context_lookup.rs"]
+mod context_lookup;
+
+#[path = "portable/schema_gate.rs"]
+mod schema_gate;

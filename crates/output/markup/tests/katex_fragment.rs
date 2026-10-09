@@ -253,3 +253,116 @@ fn deep_tree_uses_explicit_stack_and_linear_work() -> Result<(), Error> {
     assert!(large > small && large < 3 * small);
     Ok(())
 }
+
+#[test]
+fn owned_visual_content_keeps_policy_and_rechecks_every_render_boundary() -> Result<(), Error> {
+    let make = || Fragment {
+        nodes: vec![Node::Text("字<&".into()), span(&[0])],
+    };
+    let mut scope = String::from("nepl-math-owned");
+    let mut class = String::from("katex");
+    let mut limits = budget().limits();
+    limits.output_bytes = 0;
+    let mut preparation = Budget::new(limits);
+    let prepared = {
+        let p = Policy {
+            classes: &[class.as_str()],
+            scope: &scope,
+        };
+        prepare_owned(make(), &p, &mut preparation)?
+    };
+    let prepared_usage = preparation.usage();
+    assert_eq!(prepared_usage.output_bytes, 0);
+    scope.clear();
+    class.clear();
+    assert_eq!(prepared.scope(), "nepl-math-owned");
+    assert_eq!(prepared.classes(), &["katex"]);
+    let mut clone = prepared.fragment().clone();
+    clone.nodes.clear();
+    assert_eq!(prepared.fragment().nodes.len(), 2);
+    for (allocation, amount, reason) in [
+        (
+            true,
+            prepared_usage.allocation_units,
+            StopReason::AllocationLimit,
+        ),
+        (false, prepared_usage.work, StopReason::WorkLimit),
+    ] {
+        for enough in [true, false] {
+            let mut limits = budget().limits();
+            limits.output_bytes = 0;
+            let bound = amount - u64::from(!enough);
+            if allocation {
+                limits.allocation_units = bound;
+            } else {
+                limits.work = bound;
+            }
+            let mut b = Budget::new(limits);
+            let p = Policy {
+                classes: &["katex"],
+                scope: "nepl-math-owned",
+            };
+            assert_eq!(prepare_owned(make(), &p, &mut b).is_ok(), enough);
+            if !enough {
+                assert_eq!(b.poll(), Err(reason));
+                let used = b.usage();
+                assert!(prepare_owned(make(), &p, &mut b).is_err());
+                assert_eq!(b.usage(), used);
+            }
+        }
+    }
+    let mut b = budget();
+    let first = prepared.serialize(&mut b)?;
+    let used = b.usage();
+    let second = prepared.serialize(&mut b)?;
+    assert_eq!(first.html(), second.html());
+    assert_eq!(first.stylesheet(), second.stylesheet());
+    assert_eq!(b.usage().output_bytes, 2 * used.output_bytes);
+    for (kind, amount, reason) in [
+        (0, used.work, StopReason::WorkLimit),
+        (1, used.allocation_units, StopReason::AllocationLimit),
+        (2, used.output_bytes, StopReason::OutputLimit),
+        (3, used.nodes, StopReason::NodeLimit),
+        (4, used.depth, StopReason::DepthLimit),
+    ] {
+        for enough in [true, false] {
+            let mut limits = budget().limits();
+            let bound = amount - u64::from(!enough);
+            match kind {
+                0 => limits.work = bound,
+                1 => limits.allocation_units = bound,
+                2 => limits.output_bytes = bound,
+                3 => limits.nodes = bound,
+                _ => limits.depth = bound + 3,
+            }
+            let mut b = Budget::new(limits);
+            let result = if kind == 4 {
+                b.with_depth_at_least(3, |b| prepared.serialize(b))
+            } else {
+                prepared.serialize(&mut b)
+            };
+            assert_eq!(result.is_ok(), enough);
+            if !enough {
+                assert_eq!(b.poll(), Err(reason));
+                let used = b.usage();
+                assert!(prepared.serialize(&mut b).is_err());
+                assert_eq!(b.usage(), used);
+            }
+            assert_eq!(b.current_depth(), 0);
+        }
+    }
+    let mut cancelled = budget();
+    cancelled.cancel();
+    let used = cancelled.usage();
+    assert!(matches!(
+        prepare_owned(make(), &policy(), &mut cancelled),
+        Err(Error::Stopped(StopReason::Cancelled))
+    ));
+    assert!(matches!(
+        prepared.serialize(&mut cancelled),
+        Err(Error::Stopped(StopReason::Cancelled))
+    ));
+    assert_eq!(cancelled.usage(), used);
+    assert!(prepare_owned(Fragment { nodes: vec![] }, &policy(), &mut budget()).is_err());
+    Ok(())
+}

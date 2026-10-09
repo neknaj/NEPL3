@@ -8,7 +8,6 @@ use crate::{
 use alloc::{boxed::Box, vec::Vec};
 use nepl3_core::{
     budget::{Budget, Resource},
-    schema::SchemaError,
     source::SourceStore,
     value::NdfValue,
     value_codec::FoundationValueCodec,
@@ -23,7 +22,7 @@ pub fn request_to_value<C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
-    let value = request.value(&Schemas::new(registry)?, c, b)?;
+    let value = request.value(&Schemas::new(registry, b)?, c, b)?;
     registry.validate(&expected("RegionRequest", b)?, &value, b)?;
     Ok(value)
 }
@@ -34,7 +33,7 @@ pub fn request_decode<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<RegionRequest, PortableError<C::Error>> {
     registry.validate(&expected("RegionRequest", b)?, value, b)?;
-    RegionRequest::read(value, &Schemas::new(registry)?, c, b)
+    RegionRequest::read(value, &Schemas::new(registry, b)?, c, b)
 }
 /// Reply validation recomputes this structural selection against the explicit
 /// prepared input. It does not authenticate how the input's reader facts arose.
@@ -46,7 +45,7 @@ pub fn reply_to_value<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
     let r = input.binding.profile.registry();
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let mut store = SourceStore::default();
     super::binding::check::add(&mut store, &reply.sources, b, c.source_admission())?;
     let mut local = c.scoped(&store);
@@ -75,7 +74,7 @@ pub fn reply_decode<C: FoundationValueCodec>(
 ) -> Result<RegionReply, PortableError<C::Error>> {
     let r = input.binding.profile.registry();
     r.validate(&expected("RegionReply", b)?, value, b)?;
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let f = fields(value, s.engine, "RegionReply", 5)?;
     let sources = c.decode_sources(&f[4], b).map_err(boundary)?;
     let mut store = SourceStore::default();
@@ -104,7 +103,7 @@ fn validate_reply<C: FoundationValueCodec>(
         return Err(PortableError::RequestMismatch);
     }
     let r = input.binding.profile.registry();
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     reply
         .report
         .validate(store, &[], r, b)
@@ -190,10 +189,8 @@ pub fn sidecar_value<C: FoundationValueCodec>(
 ) -> Result<NdfValue, PortableError<C::Error>> {
     crate::analysis::region::check::validate(binding, facts, b, c.source_admission())?;
     let registry = binding.profile.registry();
-    let s = Schemas::new(registry)?;
-    let reader = registry
-        .selected("nepl3.reader", 1)
-        .ok_or(SchemaError::UnknownSchema)?;
+    let s = Schemas::new(registry, b)?;
+    let reader = s.reader;
     let maps = super::tree::canonical::Mappings::new(&binding.tree.tree().bundle, b)?;
     let mut store = SourceStore::default();
     for owner in &maps.entries {
@@ -253,10 +250,8 @@ pub fn sidecar_decode<C: FoundationValueCodec>(
 ) -> Result<Option<Vec<ReaderFactBatch>>, PortableError<C::Error>> {
     let registry = binding.profile.registry();
     registry.validate(&expected("RegionSidecar", b)?, value, b)?;
-    let s = Schemas::new(registry)?;
-    let reader = registry
-        .selected("nepl3.reader", 1)
-        .ok_or(SchemaError::UnknownSchema)?;
+    let s = Schemas::new(registry, b)?;
+    let reader = s.reader;
     let map = super::tree::canonical::Mappings::new(&binding.tree.tree().bundle, b)?;
     let mut store = SourceStore::default();
     for owner in &map.entries {

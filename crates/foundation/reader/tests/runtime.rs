@@ -32,6 +32,9 @@ fn reader_type(name: &str) -> TypeDescriptor {
     })
 }
 fn registry() -> Result<(SchemaRegistry, SchemaRef), SchemaError> {
+    registry_with_padding(0)
+}
+fn registry_with_padding(padding: usize) -> Result<(SchemaRegistry, SchemaRef), SchemaError> {
     let mut registry = SchemaRegistry::default();
     let mut b = budget();
     let foundation = nepl3_core::schema::foundation::descriptor(&mut b)?;
@@ -40,6 +43,15 @@ fn registry() -> Result<(SchemaRegistry, SchemaRef), SchemaError> {
     let reader = nepl3_reader::schema::descriptor(&mut b)?;
     let reference = reader.reference(&mut b)?;
     registry.register(reference, reader, &mut b)?;
+    for i in 0..padding {
+        let descriptor = SchemaDescriptor {
+            package: format!("unrelated.{i}"),
+            revision: 1,
+            types: vec![],
+            operations: vec![],
+        };
+        registry.register(descriptor.reference(&mut b)?, descriptor, &mut b)?;
+    }
     let descriptor = SchemaDescriptor {
         package: "test".into(),
         revision: 1,
@@ -2896,3 +2908,232 @@ fn provider_overflow_rejects_read_failed_map_decode_without_consuming_slot()
     }
     Ok(())
 }
+
+#[path = "runtime/native.rs"]
+mod native;
+
+#[path = "runtime/echo.rs"]
+mod echo;
+
+#[path = "runtime/tokenizer/echo.rs"]
+mod tokenizer_echo;
+
+#[path = "support/tokenizer/echo.rs"]
+mod echo_projection;
+
+#[path = "runtime/tokenizer/context.rs"]
+mod tokenizer_context;
+
+#[test]
+fn provider_signature_meters_operation_schema_lookup() -> Result<(), PlanError> {
+    let (small, schema) = registry()?;
+    let (large, same_schema) = registry_with_padding(32)?;
+    assert_eq!(schema, same_schema);
+    // All value types are primitive. The only named continuation type belongs
+    // to the reader schema registered before the padding in both registries.
+    // Thus only lookup of the final operation schema crosses the new entries.
+    for kind in [
+        ProviderKind::Read,
+        ProviderKind::Transform,
+        ProviderKind::Dependent,
+    ] {
+        let signature = signature(&schema, kind);
+        let mut small_budget = budget();
+        signature.check(&small, &mut small_budget)?;
+        let mut large_budget = budget();
+        signature.check(&large, &mut large_budget)?;
+        let extra: u64 = (0..32)
+            .map(|i| format!("unrelated.{i}").len() as u64 + schema.package.len() as u64 + 9)
+            .sum();
+        assert_eq!(large_budget.usage().work - small_budget.usage().work, extra);
+        assert_eq!(large_budget.usage().allocation_units, 0);
+        let mut limited = Budget::new(Limits {
+            work: small_budget.usage().work,
+            ..budget().limits()
+        });
+        assert_eq!(
+            signature.check(&large, &mut limited),
+            Err(PlanError::Stopped(StopReason::WorkLimit))
+        );
+        assert_eq!(limited.poll(), Err(StopReason::WorkLimit));
+        assert_eq!(limited.usage().allocation_units, 0);
+        let mut type_prefix = budget();
+        for ty in [
+            &signature.value_input,
+            &signature.value_output,
+            &signature.state_type,
+            &signature.continuation_type,
+        ] {
+            large.validate_type(ty, &mut type_prefix)?;
+        }
+        let mut prefix_limit = Budget::new(Limits {
+            work: type_prefix.usage().work,
+            ..budget().limits()
+        });
+        assert_eq!(
+            signature.check(&large, &mut prefix_limit),
+            Err(PlanError::Stopped(StopReason::WorkLimit))
+        );
+        assert_eq!(prefix_limit.usage(), type_prefix.usage());
+        let mut cancelled = budget();
+        cancelled.charge(Resource::Work, 7)?;
+        cancelled.cancel();
+        let before = cancelled.usage();
+        assert_eq!(
+            signature.check(&large, &mut cancelled),
+            Err(PlanError::Stopped(StopReason::Cancelled))
+        );
+        assert_eq!(cancelled.usage(), before);
+        let mut missing = signature.clone();
+        missing.operation.name = "absent".into();
+        assert_eq!(
+            missing.check(&large, &mut budget()),
+            Err(PlanError::ProviderSignature)
+        );
+        missing.operation.name = signature.operation.name.clone();
+        missing.operation.schema.package = "absent.package".into();
+        assert_eq!(
+            missing.check(&large, &mut budget()),
+            Err(PlanError::ProviderSignature)
+        );
+        let mut forged = signature;
+        forged.operation.schema.digest = Digest::of(b"wrong descriptor");
+        assert_eq!(
+            forged.check(&large, &mut budget()),
+            Err(PlanError::ProviderSignature)
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn reader_plan_meters_own_schema_lookup_before_expression_validation() -> Result<(), PlanError> {
+    let (small, schema) = registry()?;
+    let (large, same_schema) = registry_with_padding(32)?;
+    assert_eq!(schema, same_schema);
+    let p = plan(
+        &schema,
+        vec![ReaderExpr::Literal("a".into())],
+        0,
+        TypeDescriptor::Unit,
+    );
+    let mut small_budget = budget();
+    p.check(&small, &mut small_budget)?;
+    let mut large_budget = budget();
+    p.check(&large, &mut large_budget)?;
+    let extra: u64 = (0..32)
+        .map(|i| format!("unrelated.{i}").len() as u64 + schema.package.len() as u64 + 9)
+        .sum();
+    assert_eq!(large_budget.usage().work - small_budget.usage().work, extra);
+    let schema_names = ["nepl3.foundation".to_owned(), "nepl3.reader".to_owned()]
+        .into_iter()
+        .chain((0..32).map(|i| format!("unrelated.{i}")))
+        .chain(std::iter::once("test".to_owned()));
+    let lookup_work = 1 + schema_names
+        .map(|name| name.len() as u64 + schema.package.len() as u64 + 9)
+        .sum::<u64>();
+    for (ceiling, retained) in [
+        (0, 0),
+        (1, 1),
+        (lookup_work, lookup_work),
+        (lookup_work + schema.package.len() as u64 + 40, lookup_work),
+    ] {
+        let mut limited = Budget::new(Limits {
+            work: ceiling,
+            ..budget().limits()
+        });
+        let Err(failure) = p.check_detailed(&large, &mut limited) else {
+            return Err(PlanError::UnknownSchema);
+        };
+        assert_eq!(failure.error, PlanError::Stopped(StopReason::WorkLimit));
+        assert_eq!(failure.expression, None);
+        assert_eq!(
+            limited.usage(),
+            Usage {
+                work: retained,
+                ..Usage::default()
+            }
+        );
+        assert_eq!(limited.poll(), Err(StopReason::WorkLimit));
+    }
+    let mut cancelled = budget();
+    cancelled.charge(Resource::Work, 7)?;
+    cancelled.cancel();
+    let before = cancelled.usage();
+    let Err(failure) = p.check_detailed(&large, &mut cancelled) else {
+        return Err(PlanError::UnknownSchema);
+    };
+    assert_eq!(failure.error, PlanError::Stopped(StopReason::Cancelled));
+    assert_eq!(failure.expression, None);
+    assert_eq!(cancelled.usage(), before);
+    let mut wrong = p.clone();
+    wrong.schema.digest = Digest::of(b"wrong plan schema");
+    assert!(matches!(
+        wrong.check(&large, &mut budget()),
+        Err(PlanError::UnknownSchema)
+    ));
+    wrong = p.clone();
+    wrong.schema.package = "absent".into();
+    assert!(matches!(
+        wrong.check(&large, &mut budget()),
+        Err(PlanError::UnknownSchema)
+    ));
+    // A finalized registry cannot inspect even an invalid identity for free.
+    let mut wrong_digest = p.clone();
+    wrong_digest.schema.digest = Digest::of(b"wrong plan schema");
+    let mut wrong_revision = p.clone();
+    wrong_revision.schema.revision = 2;
+    for invalid in [&wrong, &wrong_digest, &wrong_revision] {
+        let Err(failure) = invalid.check_detailed(&large, &mut budget()) else {
+            return Err(PlanError::UnknownSchema);
+        };
+        assert_eq!(failure.error, PlanError::UnknownSchema);
+        assert_eq!(failure.expression, None);
+        for stopped in [false, true] {
+            let mut b = Budget::new(Limits {
+                work: 0,
+                ..budget().limits()
+            });
+            if stopped {
+                b.cancel();
+            }
+            let expected = if stopped {
+                StopReason::Cancelled
+            } else {
+                StopReason::WorkLimit
+            };
+            let Err(failure) = invalid.check_detailed(&large, &mut b) else {
+                return Err(PlanError::UnknownSchema);
+            };
+            assert_eq!(failure.error, PlanError::Stopped(expected));
+            assert_eq!(failure.expression, None);
+            assert_eq!(b.usage(), Usage::default());
+        }
+    }
+    assert!(matches!(
+        p.check(&SchemaRegistry::default(), &mut cancelled),
+        Err(PlanError::UnknownSchema)
+    ));
+    Ok(())
+}
+
+#[path = "runtime/mappings.rs"]
+mod mappings;
+
+#[path = "runtime/expectations.rs"]
+mod expectations;
+
+#[path = "runtime/mode_admission.rs"]
+mod mode_admission;
+
+#[path = "runtime/request_lookup.rs"]
+mod request_lookup;
+
+#[path = "runtime/restore_lookup.rs"]
+mod restore_lookup;
+
+#[path = "runtime/context_admission.rs"]
+mod context_admission;
+
+#[path = "runtime/fact_lookup.rs"]
+mod fact_lookup;

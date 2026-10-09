@@ -60,19 +60,47 @@ impl<'a> NativeHost<'a> {
                 (providers.len() as u64 + 1)
                     * (operation.name.len() + operation.schema.package.len() + 40) as u64,
             )?;
-            let descriptor = registry
-                .descriptor(&operation.schema)
+            let (selected, descriptor) = registry
+                .selected_descriptor_with_budget(
+                    &operation.schema.package,
+                    operation.schema.revision,
+                    budget,
+                )?
                 .ok_or(ParseError::Context)?;
+            // A selected package/revision is not sufficient: retain the exact
+            // schema identity check performed by the former descriptor lookup.
+            if *selected != operation.schema {
+                return Err(ParseError::Context);
+            }
             budget.charge(
                 Resource::Work,
                 descriptor.operations.len() as u64 * (operation.name.len() as u64 + 1),
             )?;
-            if !descriptor
+            let signature = descriptor
                 .operations
                 .iter()
-                .any(|op| op.name == operation.name)
-            {
-                return Err(ParseError::Context);
+                .find(|op| op.name == operation.name)
+                .ok_or(ParseError::Context)?;
+            for (ty, expected) in [
+                (&signature.input, "ReadRequest"),
+                (&signature.output, "ReadReply"),
+            ] {
+                budget.charge(Resource::Work, 1)?;
+                let nepl3_core::schema::TypeDescriptor::Named(reference) = ty else {
+                    return Err(ParseError::Context);
+                };
+                budget.charge(
+                    Resource::Work,
+                    (reference.package.len() as u64)
+                        .saturating_add(reference.name.len() as u64)
+                        .saturating_add(9),
+                )?;
+                if reference.package != nepl3_reader::schema::PACKAGE
+                    || reference.revision != nepl3_reader::schema::REVISION
+                    || reference.name != expected
+                {
+                    return Err(ParseError::Context);
+                }
             }
             if providers
                 .iter()
@@ -103,6 +131,61 @@ impl<'a> NativeHost<'a> {
             sources: SourceStore::default(),
         })
     }
+    /// Copy the actual callback catalog for Profile resolution without borrowing
+    /// this mutable dispatch host for the entire resolved Profile lifetime.
+    pub fn provider_catalog(
+        &self,
+        b: &mut Budget,
+    ) -> Result<Vec<ProviderImplementation>, ParseError> {
+        b.poll()?;
+        b.charge(
+            Resource::Work,
+            (self.providers.len() as u64).saturating_add(1),
+        )?;
+        b.charge(
+            Resource::AllocationUnits,
+            (self.providers.len() as u64)
+                .saturating_mul(core::mem::size_of::<ProviderImplementation>() as u64),
+        )?;
+        let mut catalog = Vec::new();
+        catalog
+            .try_reserve_exact(self.providers.len())
+            .map_err(|_| b.stop(nepl3_core::budget::StopReason::AllocationLimit))?;
+        for provider in &self.providers {
+            b.charge(
+                Resource::Work,
+                (provider.provider.len() as u64).saturating_add(41),
+            )?;
+            b.charge(
+                Resource::AllocationUnits,
+                (provider.provider.len() as u64).saturating_add(
+                    (provider.operations.len() as u64)
+                        .saturating_mul(
+                            core::mem::size_of::<nepl3_core::value::OperationRef>() as u64
+                        ),
+                ),
+            )?;
+            let mut operations = Vec::new();
+            operations
+                .try_reserve_exact(provider.operations.len())
+                .map_err(|_| b.stop(nepl3_core::budget::StopReason::AllocationLimit))?;
+            for operation in &provider.operations {
+                let bytes = (operation.name.len() as u64)
+                    .saturating_add(operation.schema.package.len() as u64);
+                b.charge(Resource::Work, bytes.saturating_add(41))?;
+                b.charge(Resource::AllocationUnits, bytes)?;
+                operations.push(operation.clone());
+            }
+            catalog.push(ProviderImplementation {
+                provider: provider.provider.clone(),
+                revision: provider.revision,
+                implementation_digest: provider.implementation_digest,
+                operations,
+            });
+        }
+        Ok(catalog)
+    }
+
     pub fn providers(&self) -> &[ProviderImplementation] {
         &self.providers
     }

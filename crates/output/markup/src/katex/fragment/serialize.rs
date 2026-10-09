@@ -118,16 +118,7 @@ pub fn serialize(checked: &Checked<'_>, b: &mut Budget) -> Result<Rendered, Erro
                         html.literal(" ", b)?;
                     }
                     class(&mut html, checked.scope, id, b)?;
-                    css.literal(".", b)?;
-                    css.literal(checked.scope, b)?;
-                    css.literal(" .", b)?;
-                    class(&mut css, checked.scope, id, b)?;
-                    css.literal("{", b)?;
-                    for declaration in style.split_terminator(';') {
-                        css.literal(declaration, b)?;
-                        css.literal("!important;", b)?;
-                    }
-                    css.literal("}\n", b)?;
+                    style_rule(&mut css, checked.scope, id, style, b)?;
                 }
                 html.literal("\"", b)?;
                 if let Some(hidden) = aria_hidden {
@@ -205,4 +196,26 @@ pub fn serialize(checked: &Checked<'_>, b: &mut Budget) -> Result<Rendered, Erro
         html: html.finish(),
         stylesheet: css.finish(),
     })
+}
+
+// Keep both output paths in the same exact selector/declaration profile.
+pub(super) fn style_rule(
+    css: &mut Output,
+    scope: &str,
+    id: usize,
+    style: &str,
+    b: &mut Budget,
+) -> Result<(), Error> {
+    b.charge(Resource::Work, style.len() as u64)?;
+    css.literal(".", b)?;
+    css.literal(scope, b)?;
+    css.literal(" .", b)?;
+    class(css, scope, id, b)?;
+    css.literal("{", b)?;
+    for declaration in style.split_terminator(';') {
+        css.literal(declaration, b)?;
+        css.literal("!important;", b)?;
+    }
+    css.literal("}\n", b)?;
+    Ok(())
 }

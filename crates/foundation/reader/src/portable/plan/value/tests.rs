@@ -32,7 +32,7 @@ fn every_expression_and_character_class_preserves_schema_fields() -> Result<(), 
             .map_err(error)?;
     }
     registry.finalize(&mut budget()).map_err(error)?;
-    let context = Context::new::<nepl3_wire::WireError>(&registry).map_err(error)?;
+    let context = Context::new::<nepl3_wire::WireError>(&registry, &mut budget()).map_err(error)?;
     let sources = SourceStore::default();
     let mut admission = SourceAdmission::default();
     let mut codec = FoundationCodec::new(&registry, &sources, &mut admission).map_err(error)?;
@@ -226,6 +226,50 @@ fn every_expression_and_character_class_preserves_schema_fields() -> Result<(), 
         )
         .map_err(error)?;
         assert!(CharClass::decode(&value, &context, &mut codec, &mut budget()).is_err());
+    }
+    Ok(())
+}
+
+#[test]
+fn context_selection_keeps_shape_errors_and_typed_budget_stops() -> Result<(), String> {
+    for reader_present in [false, true] {
+        let mut registry = SchemaRegistry::default();
+        if reader_present {
+            let d = crate::schema::descriptor(&mut budget()).map_err(error)?;
+            registry
+                .register(d.reference(&mut budget()).map_err(error)?, d, &mut budget())
+                .map_err(error)?;
+        }
+        let mut b = budget();
+        assert!(matches!(
+            Context::new::<nepl3_wire::WireError>(&registry, &mut b),
+            Err(PortableError::Shape)
+        ));
+        // Reader lookup fails immediately on empty registry; otherwise the
+        // second, foundation lookup must fail. Selection does not finalize.
+        assert_eq!(
+            b.usage().work,
+            if reader_present {
+                1 + (12 + 12 + 9) + 1 + (12 + 16 + 9)
+            } else {
+                1
+            }
+        );
+        assert_eq!(b.usage().allocation_units, 0);
+        let mut limits = budget().limits();
+        limits.work = 0;
+        let mut stopped = Budget::new(limits);
+        assert!(matches!(
+            Context::new::<nepl3_wire::WireError>(&registry, &mut stopped),
+            Err(PortableError::Stopped(StopReason::WorkLimit))
+        ));
+        assert_eq!(stopped.poll(), Err(StopReason::WorkLimit));
+        let mut cancelled = budget();
+        cancelled.cancel();
+        assert!(matches!(
+            Context::new::<nepl3_wire::WireError>(&registry, &mut cancelled),
+            Err(PortableError::Stopped(StopReason::Cancelled))
+        ));
     }
     Ok(())
 }

@@ -1,9 +1,12 @@
 //! Typed reader request boundary. Source-table admission precedes context decoding.
 mod context;
+pub(crate) mod continuation;
 pub mod dependent;
 pub mod dispatch;
+mod error;
 pub mod plan;
 pub mod read;
+pub(crate) mod tokenizer;
 pub mod transform;
 use crate::{
     context::ContextError,

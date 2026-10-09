@@ -379,3 +379,761 @@ Reader/Engine全受入や実機試験の代わりにはしません。
 このCI整備をDoc HTML・文書移行・Pages公開の完成へ読み替えません。
 CIの区切り後はDoc生成を進め、意味・リンク・安定IDの対応を検証できたページから
 nepld正本へ移行し、検査済みの同じsite artifactを公開します。
+
+### HTML shellの出力buffer再利用
+
+Doc hostは、検証・serialize済みfragmentの所有Stringへ固定のhead/tailを追加する。
+最終長をchecked計算し、既存capacityを超える分のAllocationUnitsと、prefix挿入・
+追記・必要な再配置のWorkを課金してからfallible reserveする。本文を別の所有bufferへ
+再構築しないため追加allocationを減らすが、prefix挿入は本文を移動するためzero-copyや
+実行時間短縮を保証しない。既存のHTML検証・shell depth・OutputBytes課金・sticky stopは
+維持する。HTML/CSSのbyte同等性と、余剰capacity・exact/one-short上限・既停止Budgetを
+検査する。Usageの差は所有storageの再利用によるもので、上限増額や未実行受入の合格を
+意味しない。
+
+### Span識別子の一時コピー削減
+
+FoundationCodecのSpan admissionはSnapshotIdを借用してSourceStoreを検索する。
+SpanのNDF変換も識別子の各fieldを借用し、最終的に必要な所有NDF Textだけを作る。
+既停止Budgetのpoll、完全なsource identityの照合、admission、範囲・UTF-8境界とschemaの
+検査は保持する。削除したAllocationUnits課金は、実際に除去した一時SourceIdコピーに
+対応する。所有値を使う参照経路とのNDF・CBOR・digest一致、長い非ASCII識別子、
+exact/one-short上限とsticky stopを検査し、論理課金の減少と実heap測定は区別する。
+
+### Span expected-type descriptor reuse
+
+FoundationCodec lazily constructs its private expected Span descriptor once per
+codec. First use charges the actual 16-byte package and 4-byte name payload;
+subsequent validations borrow that descriptor while still validating every NDF
+value against the finalized registry. Constructors and child scopes start cold
+without allocation, and all paths poll the supplied budget. Source admission,
+range validation and mapping-scope invalidation are unchanged. Logical allocation
+savings alone do not establish native heap usage or full Doc export acceptance.
+
+### Inline schema-validation frontier
+
+Structural validation retains up to eight pending references in a fixed inline
+array. Wider frontiers use budgeted, fallible heap storage for overflow entries,
+retaining capacity for reuse. The traversal order and all schema checks remain
+unchanged, including per-child Work charging and Nodes/depth accounting. The
+removed AllocationUnits correspond to removed heap requests, not waived checks;
+inline storage is bounded independently of input depth. Exact/one-short tests
+cover both inline and spill boundaries. Full acceptance remains separate from
+these local storage checks.
+
+### Staged reply-source process regression
+
+The dedicated process harness includes three fixed terminal-reply cases for
+receive_pending_reply/finish_with: explicit admission of a trusted Unicode
+source before Report decoding, missing-source failure, and a policy-triggered
+sticky cancellation. The successful case verifies exact frame/diagnostic data
+and preservation of the following Close frame. Failed cases remain closed and
+cannot consume further Usage through receive. All children use the existing
+bounded deadline and reap/termination harness. Source fixtures are constructed
+before the measured receipt, not with a replacement policy Budget.
+
+This is real-pipe evidence for the staged transport prerequisite. It does not
+execute a Reader operation, negotiate this fixture's registry, establish domain
+acceptance or remote accounting, or complete a formal acceptance group.
+
+### Standalone builtinName sender
+
+`portable::read::sender::execute_name` checks the complete selected standard
+operation identity, admits only authorized entries of the request's explicit
+source table, and narrows decoding, checked context, native execution and later
+encoding to that owned table. Only the actual native builtinName path can issue
+its private result; no arbitrary ReadReply or fabricated ReaderContinuation is
+accepted. The issued result preserves execution Usage and its Report. A separate
+bounded encoding budget permits serialization/retry even after native execution
+stops, without resetting or rerunning execution. Encoding preserves the existing
+ReadReply schema and exact inner/outer Report correspondence.
+
+The process fixture compares Unicode Matched, NoMatch, nonfinal NeedMore and a
+native WorkLimit outcome with the same standalone native invocation. A fixed
+fixture registry and source policy are selected independently on both sides;
+this fixed whitelist does not exercise general Grants/dispatch_invoke authorization
+or request lifetime management. It is not schema negotiation or a host
+ReaderSession resume. Initial caller
+identity/depth association, cumulative remote-usage reconciliation and general
+Read/Dependent/Transform/Await integration remain unfinished. No formal acceptance
+status is promoted by these local tests. The provider's direct Reader dependency
+is development-only; Reader production still depends only on core.
+
+### Reader accounting is not settlement alone
+
+The provider Reader regression uses a real saved ReaderSession Await, actual
+builtinName execution, and an IssuedInvocation settled from the independently
+observed local execution Budget. The unchanged operation-local reply is still
+rejected by the saved Reader receiver and resume path, preserving the pending
+slot. One case has a larger saved Work baseline; a second uses a longer real
+Unicode token so every additive child counter reaches the saved baseline while
+its depth remains below the saved absolute depth. No Report or observed counter
+is rewritten to satisfy those checks. This protects the missing accounting/depth
+bridge rather than implementing it. The delegated negative cases measure builtin execution with separately budgeted
+fixture encoding, not end-to-end remote accounting. The positive control charges
+real execution, encoding and decoding to the shared parent Budget at the saved
+depth, then successfully resumes and consumes the preserved pending slot.
+
+### Native pending builtinName dispatch
+
+`ReaderSession::execute_pending_name` selects the private pending call, including
+its actual request cursor and linked standard signature, rather than reconstructing
+an invocation from the outer continuation request. It checks saved limits and
+monotonic usage, then resolves the checked native context and source table on the
+caller's actual shared Budget and source-admission ledger. These objects must be
+retained by the host; equal scalar counters alone cannot establish their provenance.
+The typed native path does not project the request to NDF or encode/decode it.
+
+Typed preparation is charged before the relative additive grant begins. Checked
+addition rejects overflow and grants exceeding the outer limits; depth remains
+an absolute ceiling covering historical peak, current depth and saved call depth.
+Execution restores outer limits and current depth while retaining usage and sticky
+stops. The issued result can be consumed with `into_reply` for ordinary typed
+resume; issuance does not consume the pending slot. Repeating execution reruns the
+pure builtin and charges again. Serialization retry instead reuses the issued
+result with an explicitly bounded encoding budget and preserves its original Report.
+
+Tests distinguish the pending cursor after a Unicode prefix from the outer request
+cursor, reuse admitted source bytes with zero new source grant, reject incompatible
+linked signatures, closed/missing sessions and invalid budget/depth baselines,
+and preserve WorkLimit in an issued stopped reply. This is a same-Budget native
+helper. Distributed accounting, authenticated observations, inherited remote source
+admission, general operation dispatch and formal acceptance remain separate work.
+
+### Saved Reader and Tokenizer echoes
+
+`ReaderSession` and `TokenizationSession` provide `pending_continuation_value`
+and `resume_continuation_value`. Tokenizer reservation waits use
+`reserve_continuation_value`. These APIs project the complete canonical saved
+continuation, then compare received NDF values against the still-owned private
+state. Canonical source ordering and coalescing of identical declarations affect
+only the projection, never native rollback storage or saved Usage.
+
+`pending_reply_value` projects the complete pending domain envelope:
+`ReadReply::Await`, or `TokenizationReply` with Await/Reserve and all eight outward
+fields. `resume_reply_value` and Tokenizer's `reserve_reply_value` compare that
+entire envelope, including duplicated call/request/report fields. They do not
+create a common `OperationReply::Await`, serialize terminal Tokenizer results,
+decode arbitrary continuations, or restore a new session from received state.
+
+The original limits, observed history and session identity are checked before
+polling an admitted operation's Budget. Malformed preflight or foreign-session
+rejection cannot consume another pending slot even with a stopped unrelated
+Budget. Exact comparison and encoding are metered. Failed export retains pending;
+an eligible shared-operation stop on resume uses the existing terminal cleanup
+and preserves accepted collector artifacts. Saved Report/Usage remain unchanged
+by repeated exports, and their diagnostics/events are not emitted again.
+
+`TokenizationSession::pending_read` and `pending_transform` borrow the actual
+nested Reader dispatch for existing terminal reply codecs. Read includes Dependent
+calls. The tokenizer checks Closed, NoPending and reservation waits before
+forwarding; the inner reader rejects the wrong provider kind. The context retains
+inner request/state, source closure, Usage, view offset and provider depth, which
+may differ from the later outer checkpoint. A codec error or stop alone does not
+consume pending. The caller still resumes, discards or closes through the native
+lifecycle. A borrowed context cannot remain usable across mutable session calls.
+
+Run the saved-state, envelope, ownership and codec integration fixtures with:
+
+```sh
+cargo test --locked -p nepl3-reader --test runtime echo::
+cargo test --locked -p nepl3-reader --test builtin echo::
+cargo test --locked -p nepl3-reader --doc
+```
+
+These include three provider kinds, canonical source tables, mapped nested views,
+distinct inner/outer checkpoints, reply-only export exhaustion, retained collectors,
+foreign/fresh budget rejection, report mismatch, dispatch rejection without a
+fabricated domain partial, and borrowed-context lifetimes. They are scoped tests,
+not formal Reader transport acceptance.
+
+### Native child execution through Tokenizer replies
+
+`cargo test --locked -p nepl3-provider --test tokenizer` composes a saved Tokenizer
+Await with the actual `builtinName` sender and `IssuedInvocation::execute_local_child`.
+The host builds the Invoke from the exact pending call request, after a leading
+trivia prefix; it does not substitute the outer tokenizer request. The callback
+uses its supplied execution Budget and separate SourceAdmission. The receiver
+uses the tokenizer's borrowed inner context and resumes through either complete
+continuation or full-reply echo after a terminal OperationReply CBOR roundtrip.
+
+The fixture distinguishes inner saved Usage, later outer saved Usage and the
+actual child execution basis. In the separate-budget compatibility case,
+successful Grants/issue validation uses a finite separate Budget, whose measured
+Usage is recorded once with `run_local` under the
+local ceiling before capturing the child basis. This includes context_digest's
+own source admission: the parent input, validation and child account for three
+explicit admissions in this fixture. Settlement records seven additive differences
+and absolute peak depth; the child's cumulative Report is never rebased or rewritten.
+
+The WorkLimit case calibrates the same input independently, then runs the real
+builtin with one less Work unit. It requires an actual issued Stopped reply, not a
+setup error or fabricated stop. The parent retains capacity for encoding,
+validation and resume. Both successful Token and terminal WorkLimit preserve
+accepted trivia, report the final parent Usage, consume both pending slots, and
+allow a new operation. Tampered reports/echoes are rejected before retrying with
+the same retained execution result; serialization retry does not rerun the child.
+
+This is trusted local Read/builtinName evidence. Fixture construction and
+adversarial clones are not a proof of complete host cost accounting. For the
+separate-budget compatibility path, failed validation/issue and failed retrospective
+charging still need their own accounting policy. Reserve, actual Transform/Dependent execution, general dispatch, remote
+request/attempt association, authenticated metering, remote source admission,
+process cleanup and formal cross-target acceptance remain separate work.
+
+### Parent-budget invocation validation
+
+`IssuedInvocation::issue_with_parent_validation` is an optional host entry that
+charges input validation and context hashing directly to the actual parent
+Budget before reserving the unchanged relative child grant. Successful charges
+remain on malformed-input/context errors and resource stops. A rejected charge
+itself is not recorded, and this is not physical CPU or complete host cost
+measurement. Validation failure creates no outstanding reservation. If validation
+succeeds but the requested grant no longer fits, issuance stops without reducing
+the grant or refunding validation work.
+
+The existing `issue(..., validation)` API retains its separate finite validation
+Budget and previous error ordering. Both paths preserve Input, Context and
+reservation/Stopped error stages. The new path uses current parent depth and
+retains historical peak; successful issuance may still be followed by local-child
+setup DepthLimit when its grant cannot cover that peak. `context_digest` retains
+its separate source-admission ledger even when its counters belong to the parent.
+
+Grants construction/admission and Invoke construction are outside this new method.
+The parent-validation Tokenizer fixture passes the actual parent to Grants as well,
+then uses an independent validation oracle without charging it again. The older
+successful post-charge fixture remains as a compatibility control. Both echo forms
+and actual builtin WorkLimit still roundtrip and resume the same saved state.
+
+```sh
+cargo test --locked -p nepl3-provider --test transport reply::delegation
+cargo test --locked -p nepl3-provider --test tokenizer
+```
+
+The parent-validation cases cover direct-cost comparison at nonzero depth,
+malformed/unknown input before reservation, input/context quota stops, seven-resource
+remaining-capacity boundaries, zero/maximum grants, ancestor limits, child historical
+depth rejection, and native outer-scope unwind before/after issuance. The unwind
+fixture is excluded on panic-abort targets. Remote observation trust, child-unwind
+costs that were never settled, other unmetered host work and formal acceptance
+remain outside this entry point.
+
+### Native Article Code/Math composition prerequisite
+
+The selected native guest route accepts Code, InlineMath and DisplayMath only;
+local-only and Code-only preparation retain their previous resolution requirements.
+The host receives immutable typed embeds and chooses actual renderers. Display
+Math imports are checked as block content; inline Math and Code remain phrasing.
+Per-occurrence placement and final complete HTML validation remain mandatory.
+
+Structural Code and DisplayMath wrappers are constructed before host callbacks.
+Their actual insertion-parent depth therefore also bounds temporary renderer
+traversals, even if the returned markup is shallow. This intentionally tightens
+near-limit Code callback depth, and wrapper charges may precede a host error.
+Sticky resource stops take precedence over callback fallback/error values.
+
+This native composition prerequisite does not add standalone CLI Math selection,
+KaTeX execution, pages/SVG Math resolution, browser verification or formal spec17
+acceptance. Those later host steps must retain explicit renderer policy and
+fallback reasons rather than silently changing structural Math to text.
+
+### Standalone MathML export host
+
+`doc-html export` now selects the native Code/Math Article route. The CLI accepts
+`--math-renderer katex-preferred|mathml-only` with either CSS packaging mode; the
+default is `katex-preferred`. No qualified KaTeX export adapter is configured in
+this host yet. Preferred mode therefore records a typed capability-unavailable
+notice for each rendered Math occurrence, charges its diagnostic count, and uses
+the independent MathML backend. Explicit `mathml-only` invokes neither KaTeX nor
+TeX preparation and records no capability-failure notice. Neither path evaluates
+Math. Invalid input, unsafe markup, cancellation and resource stops remain errors;
+no generic catch converts them to successful fallback.
+
+The manifest records the preference, actual representation, occurrence/embed
+selection and fallback reason alongside source/profile identity and output-file
+hashes. These are local host export notices, not authenticated remote provider
+Reports. The completed CLI also prints a capability notice when preferred mode
+used MathML. Code guests still render retained source through the existing checked
+highlighting adapter. HTML remains script-free, with the existing CSP, stylesheet
+hashes, render-before-write and no-overwrite rules.
+
+The subsequent SVG and page-set sections describe their separate composition
+steps. Standalone generation does not qualify a KaTeX adapter, certify remote
+renderer identity, or establish browser/spec17 acceptance. MathML display still depends on the viewing browser; actual browser
+coverage must be reported separately from structural generation tests.
+
+### Selected Math with static SVG export
+
+The new opaque SVG+guests preparation admits Code, InlineMath and DisplayMath
+under a private three-way guest policy. Existing SVG-only and SVG+Code APIs keep
+their old signatures and unsupported-requirement failures. Raw SVG validation,
+asset admission, digest checks, alt extraction, and all nonselected requirements
+remain unchanged.
+
+`doc-html svg` uses the same default/explicit Math renderer policy and shared
+callback as standalone export, with optional `--math-renderer` after `--svg`.
+Its manifest retains both typed Math notices and the SVG resource list. Same-byte
+assets can have distinct IDs but share one external file; embedded image
+occurrences remain separate outputs. All phases retain the same output budget,
+CSP and no-overwrite/render-before-write behavior. MathML requires no additional
+script or image permissions.
+
+Inline CSS plus embedded SVG makes document content single-file. Fonts remain
+unbundled, with the existing documented system fallback offline. This step does
+not establish actual-browser rendering, KaTeX qualification, page-set Math
+composition or formal acceptance.
+
+### Native page-set Math composition
+
+`doc-html pages` now uses the explicit native `render_pages_with_guests` route.
+The input manifest accepts `math_renderer: "katex-preferred" | "mathml-only"`,
+with the same preferred default and explicit unavailable-adapter notices as
+standalone export. Existing core `render_pages` and `render_pages_with_code`
+retain their original rejection of Math; portable replay is not widened.
+
+The resolver and each Math callback share one codec/source-admission ledger and
+one output budget. Sentence annotation HTML input validation also uses this
+ledger; a sealed, borrowed syntax proof releases the mutable ledger borrow before
+nested guest callbacks. Math renders at its actual insertion depth; Code retains its
+prepared syntax-only highlighting. The complete page set resolves before any
+callback. Unsupported assets/foreign requirements still fail, and imported DOM
+IDs cannot manufacture a hidden Doc anchor, including HTML inside MathML.
+
+Reports bind each page index, ID, logical source and output route to its selected
+policy and Math occurrences. Guest ordinals restart on each page and count Code
+as well as Math, so Code can leave gaps in Math records. The semantic page-set,
+output-budget and parse/lower identities keep their existing recipes. A separate
+`nepl3.local-doc-pages.mathml-host/1` identity binds the output execution digest,
+policy and unavailable KaTeX capability. This is a local host recipe, not an
+authenticated remote execution receipt.
+
+File hashes, source/profile identities, aliases, CSP and all-or-error generation
+before filesystem writes remain in effect. Capability notices are emitted only
+after the completion marker and refer to the Doc export manifest, which site
+composition retains as `doc-manifest.json`. This change does not implement
+page-set SVG assets, qualify KaTeX, prove browser rendering or complete spec17.
+
+
+### Sentence annotation admission repair
+
+Sentence HTML exposes native `render_checked_with_foreign` for an immutable
+`CheckedSyntax` produced in the same operation. Existing validating entry points
+still validate raw Sentence syntax, then use the shared checked builder. The
+checked route does not bypass markup, phrasing, DOM identity, callback-depth or
+final output checks. It is not a portable proof or authority to skip source
+admission in a fresh operation. Validation must also be repeated on entering a
+deeper caller context or changing the admission scope; the proof retains neither
+validation depth nor budget/admission identity.
+
+Math annotations validate through their existing codec/admission before the
+callback borrows that codec again. This removes the former fresh HTML-validation
+ledger, which charged an already admitted snapshot again while retaining the
+same Budget. No usage is subtracted or reset; newly encountered sources and all
+validation work remain charged, and stops retain their original precedence.
+
+### Retained native visual parts
+
+The internal KaTeX finite-tree boundary additionally offers `prepare`, returning
+opaque `PreparedVisual` content with owned nodes and an exact copied host class
+inventory/scope. It accepts the same bounded JSON shape and rejects malformed
+content before returning. It performs no renderer execution or output emission.
+
+Serialization rebuilds a metered borrowed policy view and validates the retained
+immutable tree again at the caller's actual depth and budget. Repeated output
+remains charged. The old `render` still directly decodes, validates and serializes;
+it does not pay the new ownership or duplicate-validation costs.
+
+This is a prerequisite for a future prepared Math artifact, not that artifact.
+Policy classes are not authenticated asset bytes, lexical scope validity is not
+document-wide uniqueness, and the retained object establishes neither source or
+renderer identity, visual fidelity, accessible MathML composition nor Doc/portable
+HTML admission. It has no raw-HTML conversion, mutable getter, unbudgeted Clone or
+Deserialize constructor. A containing artifact must separately bind its fixed
+CSS/fonts/license bytes, independently generated MathML and supervised execution.
+
+
+### Core-owned visual preparation
+
+The owned native visual implementation now lives in no_std
+`nepl3_markup::katex::fragment::PreparedVisual`; the tools JSON boundary delegates
+through its existing wrapper and maps stopped errors without changing their kind.
+No core dependency on tools, HtmlRequest variant or portable schema is added.
+
+The constructor moves an already admitted native Fragment and meters new policy
+copies. Its input buffers may have preexisting spare capacity: this is ownership,
+not a fresh retained-memory bound. Each serialization rebuilds the metered policy
+view and revalidates at the current depth. Core tests cover boundary/stop behavior
+and compile-fail mutation/clone attempts. Asset/class-catalog binding, executing
+identity, same-Math pairing and actual Doc insertion remain distinct unfinished
+work; this relocation does not mark T24 or browser acceptance complete.
+
+### Host-selected Dependent integration fixture
+
+The provider Tokenizer test now also selects a test-only `readTail` Dependent
+signature. A Scalar consumes `a` in ` a変数 ` before Then suspends; the retained
+outer start/trivia are distinct from the nested request starting at byte 2.
+The fixture authorizes the declared source table, decodes the Dependent input
+against that signature, and invokes the production builtin Name reader on the
+nested request. It does not pass a Dependent operation to the builtinName sender.
+
+The parent-validation path covers success and a calibrated actual builtin
+WorkLimit with both saved continuation and full-reply echoes. Both paths retain
+seven-resource settlement, absolute depth, independent source admission,
+OperationReply CBOR, tamper rejection/retry and a new operation after consumption.
+The helper returns decoding/context errors as errors; a successful test expecting
+ReadReply::Stopped therefore cannot silently substitute a pre-execution failure.
+The actual result's cumulative usage stays fixed while later serialization and
+resume costs accrue on the parent.
+
+This is a test-only host handler coupled to a real lexical reader, not a standard
+Dependent executor, common Tokenizer operation, remote metering protocol or
+proof that every fixture allocation/assertion is accounted. Generated source,
+Transform, Reserve and general handler failure recovery remain separate scopes.
+
+### Exact saved Invoke comparison before settlement
+
+`Invoke::check_saved` compares request ID, operation identity, input, environment,
+Limits and ordered source/resource tables against the host's retained Invoke.
+It uses the existing budgeted TypedValue and SourceSnapshot comparisons and
+charges resource IDs/digests/bytes before comparison. This comparison admits no
+source bytes and grants no authority. Even equally malformed values may compare
+equal; ordinary schema validation and authorization are still required.
+
+`IssuedInvocation::settle_saved_request` optionally runs that check under the
+actual parent's unreserved local ceiling before the existing identity checks and
+one-time settlement. Successful comparison costs stay charged on mismatch or
+stop. A failed request/identity check or an observation exceeding the grant records
+no remote Usage;
+the unresolved guard cancels its parent without replacing an earlier stop.
+The new entry has a separate `SavedSettlementError`; the existing `Error` enum
+is unchanged. The unchanged `settle` entry remains available for an independently verified
+observation after a parent stop. The new entry cannot perform fresh comparison
+on an already stopped parent, and does not silently bypass that verification.
+
+Exact content equality does not connect that content to a trusted measurement
+channel or distinguish repeated identical requests, reconnections or attempts.
+The host must establish those associations and terminal cleanup independently.
+The context digest retains its existing cycle-detection semantics; no wire
+record, remote inherited Budget transport, task status or formal acceptance
+result changes in this slice.
+
+### One-budget reply reception under a reserved parent
+
+`Connection::receive_reply_with_budget` uses one Budget sequentially for frame
+reception/decoding and semantic reply validation. The original `receive_reply`
+keeps separate transport/validation parameters and shares the same frame and
+request-ID checks. Transport stops remain `ReplyError::Transport`; semantic
+validation stops remain `ReplyError::Validation`. Either failure closes the
+connection and retains already charged work; no success is inferred from an
+unverified Report.
+
+The reserved-transport fixture sends an actual Invoke, receives and validates
+its response inside `IssuedInvocation::run_local`, and finally calls
+`settle_saved_request` with independently observed local fixture execution Usage.
+A direct send/receive/validate sequence is its full-Usage oracle, and decoding the
+sent bytes checks the original Invoke. The returned Report deliberately claims
+maximal Work while settlement uses only the separately held actual observation.
+Fixture construction and its separately budgeted initial issuance validation are
+outside this combined transport scope; the newer parent-validation issuance API
+can be selected by a host independently.
+
+The fixture covers Work stopping during send, receive/codec, and semantic
+validation, with full failed-prefix Usage compared to a direct same-ceiling
+oracle for those stops and non-stopping reply rejections. It also covers OutputLimit before any writer bytes, BrokenPipe, truncated input,
+wrong request ID and non-stopping output-contract failure. It checks retained
+local costs, parent-limit restoration, suppression of callbacks after a stop,
+and cancellation when an unverified outstanding grant is dropped. Terminal/Await
+success, invalid Await context, Close and EOF retain the legacy entry's outcomes.
+No actual process is launched by these tests: process interruption/reaping,
+request-lifetime management, remote measurement authentication and attempt
+association remain explicit host responsibilities. The new method does not
+perform reservation or settlement by itself.
+
+### Reserved-parent cleanup after a real process deadline
+
+The native process harness keeps the original Silent/Partial blocked-read cases
+and adds two reservation cases. A host worker creates an admitted invocation,
+registers its lifetime, and sends the actual Invoke under the parent's local
+ceiling before signalling readiness. The fixture child consumes stdin without
+executing that operation and then stays blocked: this is intentionally not a
+successful remote provider execution. The host forces termination and verifies
+reaping plus stable repeated exit-status retrieval.
+
+The worker's one-budget receive ends as Closed or Truncated. A counted reader
+records every read attempt (including EOF/Interrupted) and received bytes after
+the private startup marker. A Cursor over the identical empty/truncated fixture
+is the oracle from the same pre-receive Usage and local ceiling. Only the Work
+charged once per read call is adjusted by the measured call-count difference;
+all other Usage fields and received byte counts must match. This avoids assuming
+that pipe reads have Cursor's chunk boundaries.
+
+The tests close request lifetimes exactly once, omit already finished entries,
+reject registration after close, and drop the unresolved reservation. They check
+Cancelled, unchanged consumed Usage, restored parent Limits, and refusal of an
+additional charge or reservation. Forced process exit does not prove unused or
+zero remote capacity: no observation is invented and no settlement is attempted.
+The combined success of worker checks and the main thread's cleanup establishes
+this fixture's exit/reap/cancellation path. It does not establish remote metering,
+process-tree containment, inherited-accounting transport or attempt provenance.
+These OS-process cases are explicitly skipped on WASI, not counted as WASI passes.
+
+### Doc Profile resolution uses the actual native callback catalog
+
+The standard Doc named-input pipeline constructs its real NativeHost before
+resolving the ParseProfile. Package reader signatures still determine the
+requirements and allowlist; they no longer manufacture matching host
+ProviderImplementation entries. A metered independent catalog copy comes from
+NativeHost::provider_catalog, and the same host instance subsequently services
+the parser. The copy avoids extending an immutable borrow across mutable dispatch
+and charges Work/Allocation before cloning its strings and operation records.
+
+A regression adds a valid but unused reader operation to the package and registry
+without registering a callback. Previously that source parsed successfully;
+both explicit Await/resume and native-host routes now reject it as MissingProvider during
+Profile resolution. Positive Doc/Sentence/Math input, changed implementation
+identity, independent catalog storage and exhausted/cancelled preparation budgets
+are tested separately. The extra catalog-copy cost belongs to the selected parse
+Budget. Existing package/profile preparation still has its own finite host budgets;
+this change does not claim complete host-work accounting or full suite Profile
+support, nor does it close R009 or any formal acceptance group.
+
+The standalone Sentence source pipeline also uses `provider_catalog` instead of
+an uncharged `to_vec` snapshot. Its regression selects an Allocation ceiling
+that admits only the existing host preparation, then compares the copy-stage
+stop and complete Usage prefix against an independently prepared host/catalog
+oracle. Both owned Await and native-host routes must stop before finishing the
+parse, while ordinary input still succeeds. This closes that catalog-copy gap;
+it is not a claim that every Profile-construction allocation is now metered.
+
+Native reader registration uses the resource-aware registry lookup before
+accepting an operation. The selected package/revision must still have the exact
+requested schema digest. A regression adds 32 unrelated schemas before the
+registered reader and checks their search Work against an independent package-
+length formula, then bounds Work before any provider allocation. This change
+meters registry search only; it does not alter provider naming or add a new
+Read-envelope validation boundary.
+
+Native reader registration also checks the selected operation's nominal
+`ReadRequest -> ReadReply` envelope before creating a provider entry. A native
+Read callback cannot register Unit, Transform, differently named/revisioned
+reader types or an Option/List wrapper as that envelope. The check uses the
+already selected descriptor and charges comparison Work before inspecting names.
+It leaves operation package/name and purity policy unchanged: an externally named
+operation with the canonical Read envelope is accepted, including `pure: false`.
+This registration check does not validate callback behavior or remote execution.
+
+`ProviderSignature::check` also meters lookup of its operation schema and retains
+exact digest identity before selecting the operation. Its regression keeps the
+reader continuation schema ahead of added unrelated schemas, so the independent
+Work delta isolates the operation lookup for Read, Transform and Dependent.
+A low-Work check stops without allocating, and a mismatched digest remains a
+signature error. This does not claim that every lookup inside the preceding
+value-type validation is metered; the separate ReaderPlan schema lookup also
+remains outside this change.
+
+Named type validation now charges schema and type-name lookup Work before each
+comparison. It reuses the selected descriptor instead of repeating an unmetered
+lookup through `kind_id`. Primitive and wrapper traversal, Depth, nominal type
+existence, and UnknownSchema/UnknownType/Unfinalized errors retain their roles;
+validation does not traverse the referenced type's fields. A direct regression
+checks complete Usage from package/name lengths, nested wrappers, search-stage
+Work stops, cancelled prefix preservation and unknown identities. ReaderPlan's
+separate schema lookup remains outside this change.
+
+ReaderPlan's initial schema lookup now also uses metered selection and an exact
+SchemaRef comparison. An unfinalized registry retains the existing UnknownSchema
+result; a finalized registry must admit search Work before checking the identity.
+Consequently, cancellation or exhausted Work on a finalized registry takes
+precedence over discovering a missing or mismatched schema. This is an explicit
+change from the former unmetered identity-first path.
+Search-stage budget failures retain no expression attribution because expression
+validation has not begun. A minimal Literal plan isolates unrelated-schema search
+cost from provider and Named type validation, and checks preserved cancellation,
+low-Work Usage, missing schemas and mismatched digests.
+
+Portable terminal Read/Dependent and Transform reply codecs scope view validation
+to the saved checkpoint's accepted SourceMaps plus the reply's mapping delta.
+Transform decoding now reads mapping declarations before source-bearing views.
+The temporary union is budgeted and never changes the serialized or returned
+delta, the checkpoint or ambient codec authority. Native saved-dispatch checks
+still validate replies before encoding and after decoding.
+
+Regressions cover a host-parent/generated-child view using a new Transform map,
+Read/Dependent/Transform views using an earlier accepted map without re-emitting
+it, and independently encoded Foundation views inserted into schema-valid reply
+values before CBOR decode. A missing reply map cannot be supplied by ambient codec
+state; rejection leaves the pending dispatch available for a valid retry. These
+checks establish these mapped-view paths, not all portable/native equivalence or
+remote execution authentication.
+The accepted-map regression also composes an earlier A-to-B map with a new B-to-C
+map, rejects a B-to-A reply cycle without consuming the pending dispatch, and
+then accepts the corrected reply. A private scope-copy test checks the existing
+logical CopyCost formula and partial Work/Allocation stops before cloning;
+immutable Span identity storage may still be shared.
+
+Structural value validation now meters candidate searches for selected schemas,
+named type definitions and variant alternatives. This covers `validate` with a
+Named expectation and the NdfValue/TypedValue paths that resolve an actual typed
+record or variant. Identity comparisons are charged before equality. The existing
+error distinction is retained: a Named payload with the wrong identity is
+WrongType, while a dynamic payload with an unknown schema identity is
+UnknownSchema. Type/variant lookup order and field-count checks are unchanged
+when sufficient Work is available.
+
+Independent padding regressions vary schema, type and variant counts separately,
+using empty-field values to isolate lookup Work. They cover Record/Variant across
+all three expectations, sticky stops and identity/error cases. Existing traversal
+retains Work-before-frontier, Nodes and inherited Depth behavior; lookup itself
+does not allocate or add Nodes/Depth. The separate borrowed `validate_typed`
+lookup and other unmetered low-level accessors are outside this change.
+
+The Head transport fixtures' former 20k/100k Work reserves no longer admitted
+these newly metered structural walks. A diagnostic run measured 197608 Work for
+packet encoding and 4406 for local CBOR framing. Test-only reserves now allow
+210k for that send path and 500k for a round trip; parent caps and the original
+500k total-cap regression remain unchanged. The repeated immutable projection
+count is checked against remaining Work divided by an isolated per-call cost,
+instead of an arbitrary minimum iteration count. Grant and settlement assertions
+are retained; no production limit is raised by this fixture adjustment.
+The 2048-wrapper symbolic-type roundtrip fixture measured 10,845,179 Work after
+lookup accounting, exceeding its former incidental 10m success allowance.
+Only that success fixture now allows 12m Work; its depth bound, 100k-wrapper
+cleanup case and explicit depth-64 rejection remain unchanged.
+
+Borrowed typed-payload validation now uses the same metered schema/type/variant
+selection without cloning the payload. Its root Nodes/Depth and field traversal
+remain after successful lookup and field-count checks. Unfinalized still wins
+before any Budget access; on a finalized registry, an exhausted/cancelled Budget
+now stops before an invalid identity can be discovered. `validate_typed_as`
+retains its earlier poll and expected-type admission before actual validation.
+
+Borrowed regressions isolate candidate-count deltas for Record and Variant,
+including the extra expected-type lookup in the Named `validate_typed_as` route.
+They check zero allocation for empty payloads, parent Depth, sticky lookup stops,
+and identity/type/variant/field-count errors with sufficient Work.
+
+Registry type and variant tables are normalized by `register`; lookup now uses
+binary search while charging before every comparison. Reversed-input tests cover
+all registered positions and missing names before, between and after entries.
+This also lets the symbolic roundtrip fixture return to its original 10m Work
+allowance. The previously measured linear-search costs above describe that
+intermediate implementation, not a guarantee about later lookup algorithms.
+
+The old 100m desktop Doc preparation allowance still stopped adopted chapters
+after binary lookup. An explicit measurement run found parse/tree-check Work of
+550,404,329 (05-document), 562,624,600 (08-editor), and 764,350,502 (08-completion).
+The desktop development host now selects a finite 1b Work allowance before the
+operation starts and binds it into the ParseProfile. This shared host preset also
+supplies default lower/output phase Work allowances; each becomes 1b, not a claim
+of one combined document-wide budget. SourceBytes, Nodes, Depth, AllocationUnits,
+OutputBytes, Diagnostics and Events limits are unchanged. Explicit caller/phase
+limits, core Budget behavior and Head parent caps are
+not increased or retried automatically. This host-policy recalibration is
+separate from runtime acceptance.
+
+The canonical desktop batch policy is selected separately in `doc/canonical.json`.
+The 34-page Markdown regression measured 3,803,059,631 Work including its final
+projections; the complete HTML generation measured 3,417,820,807 Work and
+2,306,996,251 AllocationUnits. That checkpoint selected finite 4b Work for both
+batches and 2.5b HTML AllocationUnits. The other batch resources remain unchanged.
+The former HTML 2.3b AllocationUnits allowance stopped during serialization;
+this measurement does not establish that lookup accounting caused allocation
+growth. These configured allowances are fixed before a batch starts, not an
+automatic retry or an expansion of caller-provided limits. Temporary measurement
+prints are not part of production output. Generation success does not establish
+browser rendering or formal runtime acceptance.
+
+Reader NoMatch/NeedMore provider expectations now charge schema lookup, exact
+identity comparison and each operation-name comparison before inspecting the
+candidate. Missing operation and invalid argument/schema errors remain distinct
+with sufficient Work. A stopped Budget wins before an unperformed lookup.
+Tests derive missing-name search cost from independent candidate lengths and
+cover scan-boundary stops, cancellation, exact identities, argument validation
+and both externally resumed outcomes. This does not reinterpret an expectation
+as an invocation or change its existing argument-type contract.
+
+Diagnostic and Event metadata admission now meters selection of the metadata's
+exact schema independently of typed argument/payload validation. The existing
+metadata-header charge and empty code/stage/kind priority remain; schema search
+and exact identity checks are additionally charged before comparison. A missing
+or mismatched metadata schema remains Metadata with sufficient Work. Shared
+Report admission tests exercise this same path and preserve remote-usage
+non-absorption and local Diagnostics/Events counters. Registry-padding tests put
+the argument schema first so that the owner-schema lookup cost is isolated.
+
+Tokenizer mode admission now precharges each skip/take entry, visited rule name,
+token-kind schema candidate and exact schema identity. Duplicate-mode
+comparisons additionally charge both name byte lengths before comparing them;
+the previous index-based overhead remains. These checks are shared by native
+session creation and portable mode encoding/decoding. Unknown rule/schema/kind
+errors retain their classification with sufficient Work; sticky budget stops
+precede searches that cannot be afforded. Tests isolate long common-prefix
+comparisons and unrelated registry padding, then exercise valid roundtrips and
+native/portable cancellation. This scope does not claim all later tokenizer
+runtime lookups have been audited or close formal acceptance findings.
+
+Fresh tokenizer request admission now meters the builtin KindRef check and
+requested-mode selection before comparing schema/name bytes. The configuration
+and request kind checks share one implementation without changing their fees.
+Lookup exhaustion returns the normal Stopped outcome with the accepted prefix;
+semantic lookup errors remain recoverable. The existing raw Closed/Busy checks
+and accepted-budget provenance checks retain their order. Tests use explicit
+scope cost, registry/mode padding, long prefixes and partial-search cutoffs, and
+retain a native prefix containing a generated source and two mappings. Pending
+portable echo/resume paths are not a fresh TokenizationRequest decoder and are
+not claimed as coverage of this entry path.
+
+Tokenizer restoration now meters the foundation-schema selection and saved-mode
+search again for each reserve/resume operation. Construction and echo fees do
+not prepay these catalog traversals. The existing restoration transaction keeps
+pending on hard errors and consumes it on a resource stop while preserving the
+accepted collector. Regression tests independently isolate 32 unused modes and
+32 schemas preceding foundation. Public reserve/resume cutoff tests distinguish
+the new lookup stop from a later stop by exact Work and allocation deltas, retain
+generated source/maps/trivia, and reject reuse of the consumed pending slot.
+Missing-source and wrong-provider-kind rejections retain retryable pending state.
+
+Reader-context admission now uses a borrowed, budgeted exact-schema descriptor
+lookup for context and namespace identities. A checked digest/source-closure
+proof does not prove membership in a different operation registry. Runtime
+requests additionally retain the explicit selected foundation@1 check and charge
+its exact identity comparison. Missing context/foundation and namespace errors
+keep their existing classifications; source admission and digest validation
+remain in their prior order.
+
+Both retarget APIs charge these lookups before copying. The preserving variant's
+old schema-length prepayments are replaced by entry units plus actual lookup
+fees, rather than charging identity comparisons twice. Their copy stage charges
+the new schema/category/mode strings and the separate foundation package clone;
+allocation and source-closure charges remain unchanged. Tests isolate missing
+context/namespace scans, prove that a context checked under one registry is not
+silently accepted by another, retain digest/source-closure regressions, and check
+that lookup exhaustion is a normal reader stop without refunding SourceBytes.
+
+ReaderFact Presentation and Relation admission now uses the shared budgeted
+exact-schema lookup after the existing nonempty-name check. Unknown identities
+remain ProviderContract; class/relation vocabulary and span/source-map authority
+are unchanged. Public resume tests compare empty-name rejection against missing
+or wrong-digest schema rejection on the same pending slot, independently deriving
+the extra catalog Work. Corrected metadata with arbitrary nonempty vocabulary
+remains accepted. A lookup-specific cutoff retains the previously accepted
+source/map/diagnostic/event collector and consumes pending without publishing the
+rejected facts.
+
+Shared ViewBundle and Token admission now meters exact kind-schema lookup, plus
+role and relation schema lookup. Kind finalization and local-kind bounds retain
+their order; empty vocabulary and relation-target checks still precede metadata
+lookup. No new global finalization requirement is imposed on an empty view.
+Core regressions isolate one late-owner lookup in each of the four paths and
+check complete Usage deltas, exact-identity failures, lookup-specific stops and
+sticky cancellation. Geometry, child cycles, semantic relation cycles and the
+unrestricted nonempty presentation vocabulary remain unchanged.
+
+After View/Token lookup accounting, the same 34-page Markdown gate measured
+4,089,795,581 Work and exceeded the former 4b allowance. Its configured Work
+allowance is now finite 4.5b (the measurement temporarily used 5b); all other
+Markdown resource limits are unchanged. The HTML corpus separately completed
+under its unchanged 4b Work / 2.5b AllocationUnits policy, using 3,652,336,867 Work
+and 2,306,996,251 AllocationUnits. This is an explicit development-host batch
+policy update based on the adopted corpus, not an automatic retry or expansion
+of caller-supplied/core budgets. Neither generation result is formal acceptance.

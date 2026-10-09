@@ -125,8 +125,32 @@ fn transform_all_outcomes_keep_sources_reports_and_retry_after_rejected_native_o
                         0 => TransformOutcome::Complete {
                             value: NdfValue::Text("B".into()),
                             view: ViewBundle {
-                                elements: vec![],
-                                roots: vec![],
+                                elements: vec![
+                                    ViewElement {
+                                        kind: KindRef {
+                                            schema: schema.clone(),
+                                            local_kind: 0,
+                                        },
+                                        span: input.span(1, 2).map_err(error)?,
+                                        fields: vec![ViewField {
+                                            name: "mapped".into(),
+                                            children: vec![ViewRef(1)],
+                                        }],
+                                        roles: vec![],
+                                        relations: vec![],
+                                    },
+                                    ViewElement {
+                                        kind: KindRef {
+                                            schema: schema.clone(),
+                                            local_kind: 0,
+                                        },
+                                        span: span.clone(),
+                                        fields: vec![],
+                                        roles: vec![],
+                                        relations: vec![],
+                                    },
+                                ],
+                                roots: vec![ViewRef(0)],
                             },
                             facts: vec![ReaderFact::Capture {
                                 name: "decoded".into(),
@@ -224,6 +248,87 @@ fn transform_all_outcomes_keep_sources_reports_and_retry_after_rejected_native_o
                             .map_err(error)?;
                         let value =
                             reply_to_value(&expected, &proof, &mut codec, &mut b).map_err(error)?;
+                        // Isolate schema selection after structural validation, before source decode.
+                        let mut prefix = budget();
+                        prefix
+                            .charge(
+                                Resource::AllocationUnits,
+                                ("nepl3.reader".len() + "TransformReply".len()) as u64,
+                            )
+                            .map_err(error)?;
+                        registry
+                            .validate(&reader_type("TransformReply"), &value, &mut prefix)
+                            .map_err(error)?;
+                        let mut expected_usage = prefix.usage();
+                        expected_usage.work += 1;
+                        let mut limits = budget().limits();
+                        limits.work = expected_usage.work;
+                        let mut stopped = Budget::new(limits);
+                        let mut fresh = SourceAdmission::default();
+                        let mut fresh_codec =
+                            FoundationCodec::new(&registry, &empty, &mut fresh).map_err(error)?;
+                        assert!(matches!(
+                            reply_from_value(&value, &proof, &mut fresh_codec, &mut stopped),
+                            Err(nepl3_reader::portable::PortableError::Stopped(
+                                StopReason::WorkLimit
+                            ))
+                        ));
+                        assert_eq!(stopped.poll(), Err(StopReason::WorkLimit));
+                        assert_eq!(stopped.usage(), expected_usage);
+
+                        if let TransformOutcome::Complete { view, .. } = &expected.outcome {
+                            use nepl3_core::value_codec::FoundationValueCodec;
+                            let mut declared = SourceStore::default();
+                            declared.insert(input.clone()).map_err(error)?;
+                            for source in &expected.sources {
+                                declared.insert(source.clone()).map_err(error)?;
+                            }
+                            let mapped_view = codec
+                                .scoped_with_mappings(&declared, &expected.source_maps)
+                                .encode_views(view, &mut b)
+                                .map_err(error)?;
+                            let mut baseline = expected.clone();
+                            let TransformOutcome::Complete { view, .. } = &mut baseline.outcome
+                            else {
+                                return Err("Complete baseline".into());
+                            };
+                            *view = ViewBundle {
+                                elements: vec![],
+                                roots: vec![],
+                            };
+                            let mut independent =
+                                reply_to_value(&baseline, &proof, &mut codec, &mut b)
+                                    .map_err(error)?;
+                            let NdfValue::Record(record) = &mut independent else {
+                                return Err("TransformReply record".into());
+                            };
+                            let NdfValue::Variant(outcome) = &mut record.fields[0] else {
+                                return Err("TransformOutcome".into());
+                            };
+                            outcome.fields[1] = mapped_view;
+                            assert_eq!(independent, value);
+                            let bytes = nepl3_wire::encode(&independent, &mut b).map_err(error)?;
+                            let independent = nepl3_wire::decode(&bytes, &mut b).map_err(error)?;
+                            assert_eq!(
+                                reply_from_value(&independent, &proof, &mut codec, &mut b)
+                                    .map_err(error)?,
+                                expected
+                            );
+                            let mut missing_map = independent;
+                            let NdfValue::Record(record) = &mut missing_map else {
+                                return Err("TransformReply record".into());
+                            };
+                            record.fields[2] = NdfValue::List(vec![]);
+                            // Ambient codec mappings are not saved-dispatch authority.
+                            let mut ambient =
+                                codec.scoped_with_mappings(&declared, &expected.source_maps);
+                            assert!(
+                                reply_from_value(&missing_map, &proof, &mut ambient, &mut b)
+                                    .is_err()
+                            );
+                            assert_eq!(b.poll(), Ok(()));
+                            assert!(session.pending_transform().is_ok());
+                        }
                         let bytes = nepl3_wire::encode(&value, &mut b).map_err(error)?;
                         let decoded = nepl3_wire::decode(&bytes, &mut b).map_err(error)?;
                         let mut malformed = decoded.clone();

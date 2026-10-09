@@ -312,9 +312,10 @@ pub fn validate_diagnostic_metadata(
     b: &mut Budget,
 ) -> Result<(), ReportValidationError> {
     b.charge(Resource::Work, schema.package.len() as u64 + 34)?;
-    if code.is_empty() || stage.is_empty() || registry.descriptor(schema).is_none() {
+    if code.is_empty() || stage.is_empty() {
         return Err(ReportValidationError::Metadata);
     }
+    metadata_schema(schema, registry, b)?;
     registry.validate_typed(arguments, b)?;
     Ok(())
 }
@@ -327,10 +328,28 @@ pub fn validate_event_metadata(
     b: &mut Budget,
 ) -> Result<(), ReportValidationError> {
     b.charge(Resource::Work, schema.package.len() as u64 + 34)?;
-    if kind.is_empty() || registry.descriptor(schema).is_none() {
+    if kind.is_empty() {
         return Err(ReportValidationError::Metadata);
     }
+    metadata_schema(schema, registry, b)?;
     registry.validate_typed(payload, b)?;
+    Ok(())
+}
+fn metadata_schema(
+    schema: &crate::value::SchemaRef,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<(), ReportValidationError> {
+    let (selected, _) = registry
+        .selected_descriptor_with_budget(&schema.package, schema.revision, b)?
+        .ok_or(ReportValidationError::Metadata)?;
+    b.charge(
+        Resource::Work,
+        (schema.package.len() as u64).saturating_add(41),
+    )?;
+    if selected != schema {
+        return Err(ReportValidationError::Metadata);
+    }
     Ok(())
 }
 /// Internal count consistency only; this neither authenticates nor absorbs Usage.

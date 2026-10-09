@@ -33,6 +33,24 @@ pub fn write(
     css: CssMode,
     mode: &str,
 ) -> crate::Result<()> {
+    write_with_options(
+        input,
+        manifest,
+        output,
+        css,
+        mode,
+        math::Renderer::default(),
+    )
+}
+
+pub fn write_with_options(
+    input: &Path,
+    manifest: &Path,
+    output: &Path,
+    css: CssMode,
+    mode: &str,
+    math_renderer: math::Renderer,
+) -> crate::Result<()> {
     let mode = match mode {
         "external" => SvgMode::External,
         "embedded" => SvgMode::Embedded,
@@ -91,6 +109,7 @@ pub fn write(
         &source,
         css,
         Some((&inputs, mode)),
+        Some(math_renderer),
         &mut |_| {},
     )?;
     let mut files = BTreeMap::new();
@@ -109,7 +128,7 @@ pub fn write(
     }
     let mut report: serde_json::Value = serde_json::from_str(&generated.manifest)?;
     report["scope"] = serde_json::json!(
-        "single-document static SVG prototype; svg/g/path and bounded local path-glyph profile; pages and foreign requirements unsupported"
+        "single-document static SVG with selected native Code/Math; svg/g/path and bounded local path-glyph profile; pages and other foreign requirements unsupported"
     );
     report["options"]["svg"] = serde_json::json!(mode_name(mode));
     report["resources"] = serde_json::json!(resources);
@@ -135,6 +154,7 @@ pub fn write(
         output.join("manifest.json"),
         serde_json::to_vec_pretty(&report)?,
     )?;
+    emit_math_notice(generated.math.as_ref());
     Ok(())
 }
 fn mode_name(mode: SvgMode) -> &'static str {

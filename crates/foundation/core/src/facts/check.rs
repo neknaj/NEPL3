@@ -440,7 +440,10 @@ impl<'a> View<'a> {
         unique(&self.relations, |v| v.id.0, budget)?;
         for (i, namespace) in self.base.namespaces.iter().enumerate() {
             self.name(&namespace.name, budget)?;
-            if registry.descriptor(&namespace.schema).is_none() {
+            if registry
+                .descriptor_with_budget(&namespace.schema, budget)?
+                .is_none()
+            {
                 return Err(FactError::MissingNamespace);
             }
             self.scope(namespace.root, budget)?;

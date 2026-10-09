@@ -118,3 +118,40 @@ Customの受理mapはemitter/deltaの受理時点でbundle所有indexを同時�
 既存renameが平坦なmap表を探索し、guest-only mapによってhost名の編集先をaux sourceへ選べた問題も同じ所有契約で修正した。各Occurrence/Entityの逆写像、各元編集とownerの組に対する前向き導出、old/new側の位置比較を局所化する。実sealed `lambda x guest x` のguest reader返信にだけaux→host Nameを宣言した反例はaux-only writableで拒否し、host writableの正常編集と、Customが返した生成名からのemitter/delta両経路の正常renameを実再parse・再Binding・CBORで検査した。
 
 原Letのinitializer/body、nested Lambda、Foreign field priority、日本語位置、実providerが宣言した複数Exact/Transformed候補、停止・stale key・source/候補改変、bundle/root対応の不正受信を管理対象へ追加した。元Rust要求を受け取らないCBOR初回受信から実Bindingを行い、nativeの選択と候補・sourceを比較する。raw metadataや返信codecは意味proofを発行しない。LSP用highlight正規化、completion、増分解析、外部process認証・費用統合は別項目に残り、この接続からT06全体の完成を推定しない。
+
+
+## 2026-10-08: 保存済みReader・Tokenizerの境界
+
+checkpoint `7a5ba3d287081b83e4d9356969a689b8b7cdc3a8` では、Reader・Tokenizerのcontinuation全体と、Reader Await／Tokenizer Await・Reserve全体のcanonical echoを、同じsessionのprivateな保存状態へ照合する経路を検査した。Tokenizerから借用するterminal reply contextも、外側へコピーしたcontinuationから作らず、実際の内側Readerが保持する要求・source閉包・Usage・depthを参照する。
+
+[provider側の統合試験](../../apps/provider/tests/tokenizer.rs)は、実builtinNameのnative子実行からOperationReplyのCBOR往復、保存済みcontextでの検証、両echo方式でのTokenizer再開を接続する。実WorkLimit、改変拒否後の同じ実結果による再試行、trivia保持、最終Reportの親Usageとの一致、新operationへの再入場を含む。validationの実測費用を成功後に一度計上する経路と、親・validation・子の別々のSourceAdmissionを区別した。
+
+このcheckpointの通常native workspace試験はRust 1,468件とprocess 17ケースが成功し、21件は除外された。正式acceptanceや新しいcross-target実行の成功を意味しない。任意continuationのdecode／新session復元、共通operation輸送、Tokenizer terminal codec、remoteの計量・要求対応・終了回収、validation失敗時も含めた一般的な費用統合は未完了として維持する。現在のAPI・試験入口・保証範囲は[開発手順](../development.md#saved-reader-and-tokenizer-echoes)にまとめた。
+
+## 2026-10-08: 親Budgetでの入力検証と限定cross-target確認
+
+checkpoint `aee9e00a37d8c616774f35118371f1b492316253` は、任意選択の `IssuedInvocation::issue_with_parent_validation` を追加した。入力検証とcontext digest算出を実際の親Budgetで行い、成功後だけ変更していない子grantを予約する。検証途中までの成功した課金をエラー後も保持し、拒否された課金を加算しない。資源停止はstickyなままとし、検証失敗だけでは未精算予約を作らない。旧separate-budget APIの挙動は維持した。
+
+[専用試験](../../apps/provider/tests/transport/reply/delegation/parent.rs)は、全Usageの直接実行oracle、7加算資源の残容量ぴったり／超過、現在depth・祖先上限、入力／context段階の途中停止、停止しないcontextエラー後の再試行、API返却後の外側scopeのunwindを検査する。検証内部panicの一般保証ではない。Tokenizerの実builtinName子実行は旧経路を残し、親直接検証でも成功／実WorkLimitと両echo方式を通す。Grants構築・認可もこのfixtureでは親で計量し、別Budgetのoracleを二重に加算しない。
+
+このcheckpointの通常native workspace試験はRust 1,476件とprocess 17ケースが成功し、21件はignoredだった。全workspace Clippy、警告をエラーとするAPI文書生成、fmt、repository check、task文書整合検査も成功した。同じ実装のreader・wire・provider・suiteをWASIで実行し、runtime 321件と別枠のcompile-fail doctest 1件が成功した。host計測3件はignored、OS processは明示skip、native unwind試験はcfg除外である。
+
+これより前のcheckpoint `498fc8f9355e4b2bb425042664e34c6216e0f9e7` では、CIの基礎12 crateとsuiteのsentence／sentence_html targetをWASIで確認し、runtime計856件と別枠のcompile-fail doctest 10件が成功した。同時点のportable 11 crateは、CI指定featureを用いるbrowser WasmとARMv6-Mのcompile-only検査に成功した。これらを新APIの同範囲再実行と扱わず、実browser描画・firmwareリンク・実機動作・全WASI CIの成功とも扱わない。
+
+remoteの継承会計・要求対応・信頼できる実測・輸送費用・終了回収、全host作業の費用統合、正式acceptanceは未完了として維持する。現在の入口と保証範囲は[開発手順](../development.md#parent-budget-invocation-validation)を参照する。
+
+## 2026-10-09: 要求照合・返信費用・process取消の接続
+
+checkpoint `dc015bc0daa00c62a43bafecb4f6d9d07af34b02` は、試験専用Dependent handlerで明示source閉包を検査し、先行Scalarの後に実builtinNameを実行して、親への精算・OperationReply CBOR・保存済みTokenizer echo再開を結合した。親直接検証、成功／実WorkLimit、二つのecho方式の追加4経路と従来8経路を保持する。通常native workspaceはRust 1,477件＋process 17ケースが成功、21件ignoredだった。これは標準Dependent executorの実装ではない。
+
+checkpoint `804951c3b1a069704bff58f75ce1342f58be0f95` は、Invokeの全fieldと順序を持つsource/resource表を先課金で照合する `check_saved` と、親の未予約容量で照合してから精算する任意入口 `settle_saved_request` を追加した。既存Error enumと従来のsettleを維持し、新入口には別のSavedSettlementErrorを使う。同じcontextでもinput・operation・ID・grantの異なる要求を拒否し、比較費用を保持する。完全一致する要求でも、実測対象や同じ内容の別attemptを認証するわけではない。通常native workspaceはRust 1,486件＋process 17ケースが成功、21件ignored。core・reader・wire・provider・suiteのWASIではruntime 496件＋別枠のcompile-fail 1件が成功、3件ignored、OS processは明示skipだった。portable 11 crateのbrowser Wasm／ARMv6-Mはcompile-only確認に留まる。
+
+checkpoint `a495410cb8c0b8d73cce4211c6a1ed8ec1e1a6a1` は、受信・decodeから意味検査まで一つのBudgetで順次行う `receive_reply_with_budget` を追加した。旧入口の独立Budget引数・エラー区別・失敗時closeは維持する。実送信、受信/codec、意味検査の三段階の停止、非停止拒否と実I/O失敗、照合後精算を親予約へ結び、同じceilingの直接経路と全Usageを比較した。wire Reportの極大Workを独立観測として加算しない。通常native workspaceはRust 1,491件＋process 17ケースが成功、21件ignoredだった。
+
+checkpoint `b8c46c68f5c32a890256666c1df581b279864bb3` は、実processのSilent/Partial期限切れに親予約とlifetime取消を結合した。実Invoke送信後に応答待ちへ入り、main側で終了・回収と終了statusの再取得を確認する。workerは実read回数によるWork差だけを補正したoracleと受信Usageを照合し、未精算drop後のCancelledと再予約拒否を確認した。専用native process harnessは既存17ケースを保持した19ケースで成功した。この時点の全workspace検証は進行中であり、専用harnessの成功で置き換えない。強制終了はremote消費0の証拠ではなく、この試験では精算しない。
+
+### 継承会計transportで保持する区別
+
+通常のnative dispatcher／schedulerは、Invoke.limitsを同じ累積Budgetへ適用する絶対ceilingとして扱う。一方、IssuedInvocation／IssuedBudgetの明示的な委譲入口は、7加算資源の相対grantと絶対depth上限を扱う。既存Invoke全体を相対grantへ再解釈しない。trusted local childのbasisは実行開始時点の親Usageであり、予約発行時の固定値でも、current depthを歴史的peakから復元した値でもない。
+
+共通wireのInvoke／Resume／ProviderFrameには、継承basis・active depth・会計方式・attempt認証のfieldがない。通常dispatcherのceiling規則を変えず、親側の送受信費用をどの時点のbasisへ反映するか、Await/Resumeでどの会計状態を保持するか、明示source再受入と保存済みReaderへどう接続するかは未解決である。完全Invoke照合、Report codec、process回収の成功をremote観測認証へ昇格させない。R006/R009/R014/R017と正式acceptanceの状態は、この部分進捗から変更しない。

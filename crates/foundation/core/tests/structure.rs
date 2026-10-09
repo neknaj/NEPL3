@@ -158,7 +158,32 @@ fn validation_reuses_frontier_storage_but_visits_every_value() -> Result<(), Sch
 fn validation_bounds_frontier_before_expanding_wide_input() -> Result<(), SchemaError> {
     let (registry, _) = registry()?;
     let slot = core::mem::size_of::<(&TypeDescriptor, &NdfValue, u64)>() as u64;
-    for width in [2, 100_000] {
+    for (width, slots) in [(0, 0), (1, 0), (8, 0), (9, 8), (16, 8), (17, 16)] {
+        let value = NdfValue::List(vec![NdfValue::Unit; width]);
+        let mut limits = budget().limits();
+        limits.allocation_units = slots * slot;
+        let mut b = Budget::new(limits);
+        registry.validate(&TypeDescriptor::NdfValue, &value, &mut b)?;
+        assert_eq!(b.usage().allocation_units, slots * slot);
+        assert_eq!(b.usage().nodes, width as u64 + 1);
+        assert_eq!(b.usage().work, width as u64 + 1);
+        if slots > 0 {
+            limits.allocation_units -= 1;
+            let mut b = Budget::new(limits);
+            assert!(matches!(
+                registry.validate(&TypeDescriptor::NdfValue, &value, &mut b),
+                Err(SchemaError::Stopped(StopReason::AllocationLimit))
+            ));
+            let used = b.usage();
+            assert_eq!(b.poll(), Err(StopReason::AllocationLimit));
+            assert!(matches!(
+                registry.validate(&TypeDescriptor::NdfValue, &NdfValue::Unit, &mut b),
+                Err(SchemaError::Stopped(StopReason::AllocationLimit))
+            ));
+            assert_eq!(used, b.usage());
+        }
+    }
+    for width in [9, 100_000] {
         let value = NdfValue::List(vec![NdfValue::Unit; width]);
         for (limits, reason) in [
             (
@@ -170,7 +195,7 @@ fn validation_bounds_frontier_before_expanding_wide_input() -> Result<(), Schema
             ),
             (
                 Limits {
-                    allocation_units: slot,
+                    allocation_units: 0,
                     ..budget().limits()
                 },
                 StopReason::AllocationLimit,
@@ -178,9 +203,10 @@ fn validation_bounds_frontier_before_expanding_wide_input() -> Result<(), Schema
         ] {
             let mut b = Budget::new(limits);
             assert!(
-                matches!(registry.validate(&TypeDescriptor::NdfValue, &value, &mut b), Err(SchemaError::Stopped(found)) if found == reason)
+                matches!(registry.validate(&TypeDescriptor::NdfValue,&value,&mut b),Err(SchemaError::Stopped(found)) if found==reason)
             );
-            assert_eq!(b.usage().allocation_units, slot);
+            assert_eq!(b.usage().allocation_units, 0);
+            assert_eq!(b.usage().nodes, 1);
             assert_eq!(b.poll(), Err(reason));
         }
     }
@@ -205,7 +231,46 @@ fn validation_preserves_left_to_right_error_order() -> Result<(), SchemaError> {
             vec![missing.clone(), wrong_fields.clone()],
             SchemaError::UnknownType,
         ),
-        (vec![wrong_fields, missing], SchemaError::FieldCount),
+        (
+            vec![wrong_fields.clone(), missing.clone()],
+            SchemaError::FieldCount,
+        ),
+        (
+            {
+                let mut v = vec![NdfValue::Unit; 9];
+                v[0] = missing.clone();
+                v[8] = wrong_fields.clone();
+                v
+            },
+            SchemaError::UnknownType,
+        ),
+        (
+            {
+                let mut v = vec![NdfValue::Unit; 9];
+                v[0] = wrong_fields.clone();
+                v[8] = missing.clone();
+                v
+            },
+            SchemaError::FieldCount,
+        ),
+        (
+            {
+                let mut v = vec![NdfValue::Unit; 17];
+                v[0] = missing.clone();
+                v[16] = wrong_fields.clone();
+                v
+            },
+            SchemaError::UnknownType,
+        ),
+        (
+            {
+                let mut v = vec![NdfValue::Unit; 17];
+                v[0] = wrong_fields;
+                v[16] = missing;
+                v
+            },
+            SchemaError::FieldCount,
+        ),
     ] {
         assert!(
             matches!(registry.validate(&TypeDescriptor::NdfValue, &NdfValue::List(children), &mut budget()), Err(found) if found == expected)
@@ -814,4 +879,50 @@ fn rejected_deep_descriptor_is_safe_to_clone_compare_debug_and_drop() {
         Err(SchemaError::Stopped(StopReason::DepthLimit))
     ));
     drop(descriptor);
+}
+
+#[test]
+fn inline_validation_preserves_deep_and_prestopped_limits() -> Result<(), SchemaError> {
+    let (r, _) = registry()?;
+    let mut value = NdfValue::Unit;
+    for _ in 0..40 {
+        value = NdfValue::Some(Box::new(value));
+    }
+    let mut exact = budget().limits();
+    exact.allocation_units = 0;
+    exact.nodes = 41;
+    exact.work = 41;
+    exact.depth = 41;
+    r.validate(&TypeDescriptor::NdfValue, &value, &mut Budget::new(exact))?;
+    for resource in 0..3 {
+        let mut limits = exact;
+        let reason = match resource {
+            0 => {
+                limits.nodes -= 1;
+                StopReason::NodeLimit
+            }
+            1 => {
+                limits.work -= 1;
+                StopReason::WorkLimit
+            }
+            _ => {
+                limits.depth -= 1;
+                StopReason::DepthLimit
+            }
+        };
+        let mut b = Budget::new(limits);
+        assert!(
+            matches!(r.validate(&TypeDescriptor::NdfValue,&value,&mut b),Err(SchemaError::Stopped(found)) if found==reason)
+        );
+        assert_eq!(b.poll(), Err(reason));
+    }
+    let mut b = budget();
+    b.cancel();
+    let usage = b.usage();
+    assert!(matches!(
+        r.validate(&TypeDescriptor::NdfValue, &value, &mut b),
+        Err(SchemaError::Stopped(StopReason::Cancelled))
+    ));
+    assert_eq!(b.usage(), usage);
+    Ok(())
 }

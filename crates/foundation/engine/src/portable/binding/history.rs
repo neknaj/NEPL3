@@ -47,7 +47,7 @@ pub(super) fn validate<E>(
             return Err(PortableError::Shape);
         }
         let descriptor = registry
-            .descriptor(&batch.provider.operation.schema)
+            .descriptor_with_budget(&batch.provider.operation.schema, b)?
             .ok_or(PortableError::Shape)?;
         b.charge(
             Resource::Work,

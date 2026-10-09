@@ -179,11 +179,11 @@ pub(crate) fn rejection(
             report: report(budget),
         }),
         lexical::Scan::Failed(code, offset) => {
-            let schema = registry
-                .selected(schema::PACKAGE, schema::REVISION)
+            let (schema, _) = registry
+                .selected_descriptor_with_budget(schema::PACKAGE, schema::REVISION, budget)?
                 .ok_or(SchemaError::UnknownSchema)?;
-            let foundation = registry
-                .selected("nepl3.foundation", 1)
+            let (foundation, _) = registry
+                .selected_descriptor_with_budget("nepl3.foundation", 1, budget)?
                 .ok_or(SchemaError::UnknownSchema)?;
             let arguments = schema::arguments(
                 schema,

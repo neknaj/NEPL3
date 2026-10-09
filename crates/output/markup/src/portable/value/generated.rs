@@ -192,6 +192,7 @@ Self::Width {value} => variant(s,"HtmlAttribute","Width",[value.put(s,c,b)?],b),
 Self::Height {value} => variant(s,"HtmlAttribute","Height",[value.put(s,c,b)?],b),
 Self::Start {value} => variant(s,"HtmlAttribute","Start",[value.put(s,c,b)?],b),
 Self::Scope {value} => variant(s,"HtmlAttribute","Scope",[value.put(s,c,b)?],b),
+Self::AriaHidden {value} => variant(s,"HtmlAttribute","AriaHidden",[value.put(s,c,b)?],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -214,6 +215,7 @@ match (tag,f.len()) {
 ("Height",1)=>Ok(Self::Height {value:Value::read(&f[0],s,c,b)?}),
 ("Start",1)=>Ok(Self::Start {value:Value::read(&f[0],s,c,b)?}),
 ("Scope",1)=>Ok(Self::Scope {value:Value::read(&f[0],s,c,b)?}),
+("AriaHidden",1)=>Ok(Self::AriaHidden {value:Value::read(&f[0],s,c,b)?}),
 _=>Err(PortableError::Shape),}
 }
 }
@@ -223,6 +225,7 @@ match self {
 Self::MathElement {tag,attributes,children} => variant(s,"HtmlNode","MathElement",[tag.put(s,c,b)?,attributes.put(s,c,b)?,children.put(s,c,b)?],b),
 Self::Text {text} => variant(s,"HtmlNode","Text",[text.put(s,c,b)?],b),
 Self::Element {tag,attributes,children} => variant(s,"HtmlNode","Element",[tag.put(s,c,b)?,attributes.put(s,c,b)?,children.put(s,c,b)?],b),
+Self::SvgElement {element,children} => variant(s,"HtmlNode","SvgElement",[element.put(s,c,b)?,children.put(s,c,b)?],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -232,6 +235,7 @@ match (tag,f.len()) {
 ("MathElement",3)=>Ok(Self::MathElement {tag:Value::read(&f[0],s,c,b)?,attributes:Value::read(&f[1],s,c,b)?,children:Value::read(&f[2],s,c,b)?}),
 ("Text",1)=>Ok(Self::Text {text:Value::read(&f[0],s,c,b)?}),
 ("Element",3)=>Ok(Self::Element {tag:Value::read(&f[0],s,c,b)?,attributes:Value::read(&f[1],s,c,b)?,children:Value::read(&f[2],s,c,b)?}),
+("SvgElement",2)=>Ok(Self::SvgElement {element:Value::read(&f[0],s,c,b)?,children:Value::read(&f[1],s,c,b)?}),
 _=>Err(PortableError::Shape),}
 }
 }
@@ -407,6 +411,60 @@ fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)
 b.charge(Resource::Work,46)?;
 let f=fields(v,s,"MathMlFragment",3)?;
 Ok(Self {nodes:Value::read(&f[0],s,c,b)?,root:Value::read(&f[1],s,c,b)?,html_policy:Value::read(&f[2],s,c,b)?})
+}
+}
+impl Value for HtmlSvgAspect {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::None => variant(s,"HtmlSvgAspect","None",[],b),
+Self::MinSlice => variant(s,"HtmlSvgAspect","MinSlice",[],b),
+Self::MidSlice => variant(s,"HtmlSvgAspect","MidSlice",[],b),
+Self::MaxSlice => variant(s,"HtmlSvgAspect","MaxSlice",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,45)?;
+let (tag,f)=case(v,s,"HtmlSvgAspect")?;
+match (tag,f.len()) {
+("None",0)=>Ok(Self::None),
+("MinSlice",0)=>Ok(Self::MinSlice),
+("MidSlice",0)=>Ok(Self::MidSlice),
+("MaxSlice",0)=>Ok(Self::MaxSlice),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for HtmlSvgEndpoint {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Zero => variant(s,"HtmlSvgEndpoint","Zero",[],b),
+Self::Full => variant(s,"HtmlSvgEndpoint","Full",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,47)?;
+let (tag,f)=case(v,s,"HtmlSvgEndpoint")?;
+match (tag,f.len()) {
+("Zero",0)=>Ok(Self::Zero),
+("Full",0)=>Ok(Self::Full),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for HtmlSvgElement {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Svg {width,height,view_box,aspect} => variant(s,"HtmlSvgElement","Svg",[width.put(s,c,b)?,height.put(s,c,b)?,view_box.put(s,c,b)?,aspect.put(s,c,b)?],b),
+Self::Path {data} => variant(s,"HtmlSvgElement","Path",[data.put(s,c,b)?],b),
+Self::Line {x1,y1,x2,y2,stroke_width} => variant(s,"HtmlSvgElement","Line",[x1.put(s,c,b)?,y1.put(s,c,b)?,x2.put(s,c,b)?,y2.put(s,c,b)?,stroke_width.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,46)?;
+let (tag,f)=case(v,s,"HtmlSvgElement")?;
+match (tag,f.len()) {
+("Svg",4)=>Ok(Self::Svg {width:Value::read(&f[0],s,c,b)?,height:Value::read(&f[1],s,c,b)?,view_box:Value::read(&f[2],s,c,b)?,aspect:Value::read(&f[3],s,c,b)?}),
+("Path",1)=>Ok(Self::Path {data:Value::read(&f[0],s,c,b)?}),
+("Line",5)=>Ok(Self::Line {x1:Value::read(&f[0],s,c,b)?,y1:Value::read(&f[1],s,c,b)?,x2:Value::read(&f[2],s,c,b)?,y2:Value::read(&f[3],s,c,b)?,stroke_width:Value::read(&f[4],s,c,b)?}),
+_=>Err(PortableError::Shape),}
 }
 }
 }

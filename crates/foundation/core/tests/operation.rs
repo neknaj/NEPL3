@@ -6,6 +6,8 @@ use nepl3_core::{
 };
 #[path = "operation/batch.rs"]
 mod batch;
+#[path = "operation/request.rs"]
+mod request;
 #[path = "operation/validation.rs"]
 mod validation;
 

@@ -64,32 +64,124 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
         let prepared = self
             .prepare_node(document, node, Preference::KaTeXPreferred, budget)
             .map_err(PrepareError::Host)?;
-        let display = matches!(
-            usize::try_from(node)
-                .ok()
-                .and_then(|n| document.value.nodes.get(n))
-                .map(|n| &n.kind),
-            Some(DocKind::DisplayMath { .. })
-        );
-        let (_, tex) = prepared.into_parts();
-        let tex = match tex {
-            TexPreparation::Ready { tex, .. } => tex,
-            TexPreparation::Unsupported { node, reason } => {
-                return Err(PrepareError::Unsupported { node, reason });
+        prepared_markdown(document, node, prepared, budget)
+    }
+
+    /// One private operation owns structural validation and every Math node.
+    /// Registry, surfaces, codec/admission and cumulative budget cannot change
+    /// between validation and use. No cross-operation admission is exported.
+    pub(crate) fn prepare_markdown_document<'a>(
+        &mut self,
+        document: &'a DocumentSyntax,
+        budget: &mut Budget,
+    ) -> Result<Vec<PreparedMarkdown<'a>>, PrepareError<C::Error>> {
+        let result = (|| {
+            let mut count = 0usize;
+            for value in &document.value.nodes {
+                budget
+                    .charge(Resource::Work, 1)
+                    .map_err(super::Error::from)
+                    .map_err(PrepareError::Host)?;
+                if matches!(
+                    value.kind,
+                    DocKind::InlineMath { .. } | DocKind::DisplayMath { .. }
+                ) {
+                    count += 1;
+                }
             }
-            TexPreparation::MathMLOnly => return Err(PrepareError::MissingTex),
-        };
-        Ok(PreparedMarkdown {
-            document,
-            node,
-            display,
-            tex,
-            limits: budget.limits(),
-        })
+            if count == 0 {
+                return Ok(Vec::new());
+            }
+            let owner = document
+                .validate_structure(self.registry, budget, self.codec.source_admission())
+                .map_err(super::Error::Document)
+                .map_err(PrepareError::Host)?;
+            let bytes = count
+                .checked_mul(core::mem::size_of::<PreparedMarkdown<'_>>())
+                .ok_or_else(|| {
+                    PrepareError::Host(super::Error::Stopped(
+                        budget.stop(StopReason::AllocationLimit),
+                    ))
+                })?;
+            budget
+                .charge(Resource::AllocationUnits, bytes as u64)
+                .map_err(super::Error::from)
+                .map_err(PrepareError::Host)?;
+            let mut output = Vec::new();
+            output.try_reserve_exact(count).map_err(|_| {
+                PrepareError::Host(super::Error::Stopped(
+                    budget.stop(StopReason::AllocationLimit),
+                ))
+            })?;
+            for (node, value) in document.value.nodes.iter().enumerate() {
+                budget
+                    .charge(Resource::Work, 1)
+                    .map_err(super::Error::from)
+                    .map_err(PrepareError::Host)?;
+                if !matches!(
+                    value.kind,
+                    DocKind::InlineMath { .. } | DocKind::DisplayMath { .. }
+                ) {
+                    continue;
+                }
+                let (mathml, display) = self
+                    .render_checked_node(&owner, node as u64, budget)
+                    .map_err(PrepareError::Host)?;
+                let ready = super::display::prepare_rendered(
+                    node as u64,
+                    mathml,
+                    display,
+                    Preference::KaTeXPreferred,
+                    budget,
+                )
+                .map_err(PrepareError::Host)?;
+                let prepared = prepared_markdown(document, node as u64, ready, budget)?;
+                output.push(prepared);
+            }
+            Ok(output)
+        })();
+        budget
+            .poll()
+            .map_err(super::Error::from)
+            .map_err(PrepareError::Host)?;
+        result
     }
 }
 
+fn prepared_markdown<'a, E>(
+    document: &'a DocumentSyntax,
+    node: u64,
+    prepared: super::display::PreparedDisplay,
+    budget: &mut Budget,
+) -> Result<PreparedMarkdown<'a>, PrepareError<E>> {
+    let display = matches!(
+        usize::try_from(node)
+            .ok()
+            .and_then(|n| document.value.nodes.get(n))
+            .map(|n| &n.kind),
+        Some(DocKind::DisplayMath { .. })
+    );
+    let (_, tex) = prepared.into_parts();
+    let tex = match tex {
+        TexPreparation::Ready { tex, .. } => tex,
+        TexPreparation::Unsupported { node, reason } => {
+            return Err(PrepareError::Unsupported { node, reason });
+        }
+        TexPreparation::MathMLOnly => return Err(PrepareError::MissingTex),
+    };
+    Ok(PreparedMarkdown {
+        document,
+        node,
+        display,
+        tex,
+        limits: budget.limits(),
+    })
+}
+
 impl PreparedMarkdown<'_> {
+    pub(crate) fn doc_node(&self) -> u64 {
+        self.node
+    }
     /// Emits a standalone math fragment, not a rendered GitHub page. The caller
     /// remains responsible for structural placement and surrounding Markdown.
     /// Table pipes are rejected rather than rewritten into different TeX.
@@ -143,3 +235,6 @@ impl PreparedMarkdown<'_> {
         Ok(output)
     }
 }
+
+#[cfg(test)]
+mod tests;

@@ -10,7 +10,7 @@ pub fn request_to_value<C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
-    let value = value::request_value(request, &Schemas::new(r)?, c, b)?;
+    let value = value::request_value(request, &Schemas::new(r, b)?, c, b)?;
     r.validate(&expected("RegionQueryRequest", b)?, &value, b)?;
     Ok(value)
 }
@@ -21,7 +21,7 @@ pub fn request_decode<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<RegionQueryRequest, PortableError<C::Error>> {
     r.validate(&expected("RegionQueryRequest", b)?, v, b)?;
-    value::request_read(v, &Schemas::new(r)?, c, b)
+    value::request_read(v, &Schemas::new(r, b)?, c, b)
 }
 pub fn reply_to_value<C: FoundationValueCodec>(
     reply: &RegionQueryReply,
@@ -32,7 +32,7 @@ pub fn reply_to_value<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
     let r = input.binding.profile.registry();
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let mut store = SourceStore::default();
     crate::portable::binding::check::add(&mut store, &reply.sources, b, c.source_admission())?;
     let mut local = c.scoped(&store);
@@ -61,7 +61,7 @@ pub fn reply_decode<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<RegionQueryReply, PortableError<C::Error>> {
     let r = input.binding.profile.registry();
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     r.validate(&expected("RegionQueryReply", b)?, v, b)?;
     let f = fields(v, s.engine, "RegionQueryReply", 5)?;
     let sources = c.decode_sources(&f[4], b).map_err(boundary)?;
@@ -122,7 +122,7 @@ fn validate<C: FoundationValueCodec>(
     if let RegionQueryOutcome::Stopped(reason) = actual.outcome {
         return Err(reason.into());
     }
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let claimed = value::outcome_value(&reply.outcome, r, &s, c, b)?;
     let expected = value::outcome_value(&actual.outcome, r, &s, c, b)?;
     if !claimed.equal_with_budget(&expected, b)? || reply.sources.len() != actual.sources.len() {

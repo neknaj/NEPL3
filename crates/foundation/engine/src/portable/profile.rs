@@ -17,7 +17,7 @@ pub fn to_value<C: FoundationValueCodec>(
     let registry = profile.registry();
     let value = profile
         .profile()
-        .value(&Schemas::new(registry)?, codec, budget)?;
+        .value(&Schemas::new(registry, budget)?, codec, budget)?;
     registry.validate(&expected("ParseProfile", budget)?, &value, budget)?;
     Ok(value)
 }
@@ -35,7 +35,7 @@ pub fn from_value<C: FoundationValueCodec>(
 ) -> Result<ParseProfile, PortableError<C::Error>> {
     budget.poll()?;
     registry.validate(&expected("ParseProfile", budget)?, value, budget)?;
-    let profile = ParseProfile::read(value, &Schemas::new(registry)?, codec, budget)?;
+    let profile = ParseProfile::read(value, &Schemas::new(registry, budget)?, codec, budget)?;
     profile.resolve(catalog, registry, budget)?;
     Ok(profile)
 }

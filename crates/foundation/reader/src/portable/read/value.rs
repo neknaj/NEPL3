@@ -125,7 +125,7 @@ pub(super) fn encode<C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
-    let context = Context::new(registry)?;
+    let context = Context::new(registry, b)?;
     let (sources, maps, report) = metadata(reply)?;
     let report_value = c.encode_report(report, b).map_err(boundary)?;
     let source_value = c.encode_sources(sources, b).map_err(boundary)?;
@@ -236,7 +236,7 @@ pub(super) fn decode<C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<ReadReply, PortableError<C::Error>> {
-    let context = Context::new(registry)?;
+    let context = Context::new(registry, b)?;
     let report_index = match case {
         "Matched" => 7,
         "Failed" | "NoMatch" => 2,

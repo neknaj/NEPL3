@@ -1,0 +1,322 @@
+{
+  "format": "nepl3.katex.owned-source-graph/1",
+  "loaderPolicy": "fixed-owned-esm/1",
+  "packages": [
+    {
+      "name": "entities",
+      "version": "6.0.1",
+      "integrity": "sha512-aN97NXWF6AWBTahfVOIrB/NShkzi5H7F9r1s9mD3cDj4Ko5f2qhhVoYMibXF7GlLveb/D2ioWay8lxI97Ven3g=="
+    },
+    {
+      "name": "katex",
+      "version": "0.18.7",
+      "integrity": "sha512-h+UCwkZ+4Jz8WQ7MLGfj7UVFrRCizGb912fwF4luGdYsC5paYG1vx+jy+KRcC/XkpjGva/P7nAWuxNnPzRvzHw=="
+    },
+    {
+      "name": "parse5",
+      "version": "8.0.0",
+      "integrity": "sha512-9m4m5GSgXjL4AjumKzq1Fgfp3Z8rsvjRNbnkVwfu2ImRqE5D0LnY2QfDen18FSY9C573YU5XxSapdHZTZ2WolA=="
+    }
+  ],
+  "entries": {
+    "renderer": "katex/dist/katex.mjs",
+    "parser": "parse5/dist/index.js"
+  },
+  "files": [
+    {
+      "id": "entities/dist/esm/decode-codepoint.js",
+      "format": "esm",
+      "bytes": 2098,
+      "sha256": "5d8ee93923d609724c69c8c356147176af5226585d4f343c87a5eec6590ebca9",
+      "imports": []
+    },
+    {
+      "id": "entities/dist/esm/decode.js",
+      "format": "esm",
+      "bytes": 20168,
+      "sha256": "8af227bae5682a686bf9e9a6547af8c388274f41cb857ff39592fe74fc848d25",
+      "imports": [
+        {
+          "specifier": "./generated/decode-data-html.js",
+          "target": "entities/dist/esm/generated/decode-data-html.js"
+        },
+        {
+          "specifier": "./generated/decode-data-xml.js",
+          "target": "entities/dist/esm/generated/decode-data-xml.js"
+        },
+        {
+          "specifier": "./decode-codepoint.js",
+          "target": "entities/dist/esm/decode-codepoint.js"
+        }
+      ]
+    },
+    {
+      "id": "entities/dist/esm/escape.js",
+      "format": "esm",
+      "bytes": 4081,
+      "sha256": "50528d67b2fb87687f0658cfab58eb640ebbcd7e3bcfe8e5e2863e8293ae65b7",
+      "imports": []
+    },
+    {
+      "id": "entities/dist/esm/generated/decode-data-html.js",
+      "format": "esm",
+      "bytes": 47771,
+      "sha256": "b035b71d6969983297e39df1a06d760f2a8000a0f98444c4fe845fe1155da451",
+      "imports": []
+    },
+    {
+      "id": "entities/dist/esm/generated/decode-data-xml.js",
+      "format": "esm",
+      "bytes": 325,
+      "sha256": "e28599f48fddd869435e44e6ae8644e70a610450d97562e33c869c056e3b129f",
+      "imports": []
+    },
+    {
+      "id": "katex/dist/katex.mjs",
+      "format": "esm",
+      "bytes": 602874,
+      "sha256": "cc567bec51ade0dcfb0aac1bd8561fa293928386f221ad82d758d7b3643dafd5",
+      "imports": []
+    },
+    {
+      "id": "parse5/dist/common/doctype.js",
+      "format": "esm",
+      "bytes": 4661,
+      "sha256": "855d8cd764782cdc73003a9847d03ed261c5158f6a6901e563ccd4d3b92c8b16",
+      "imports": [
+        {
+          "specifier": "./html.js",
+          "target": "parse5/dist/common/html.js"
+        }
+      ]
+    },
+    {
+      "id": "parse5/dist/common/error-codes.js",
+      "format": "esm",
+      "bytes": 4746,
+      "sha256": "b38ae5ac4f2a31ce2e1cfeca35cf7b89cc66736cd5be068cc433a3ccaca78be2",
+      "imports": []
+    },
+    {
+      "id": "parse5/dist/common/foreign-content.js",
+      "format": "esm",
+      "bytes": 6299,
+      "sha256": "129a84a9d04b6050b6896de45a70e1ee468434e19bdd6486e3aef3405d137cac",
+      "imports": [
+        {
+          "specifier": "./html.js",
+          "target": "parse5/dist/common/html.js"
+        }
+      ]
+    },
+    {
+      "id": "parse5/dist/common/html.js",
+      "format": "esm",
+      "bytes": 17554,
+      "sha256": "e6cf93f387be70ddcd4f2bec67fbeb53161094f6306d834de461ec888a9dab76",
+      "imports": []
+    },
+    {
+      "id": "parse5/dist/common/token.js",
+      "format": "esm",
+      "bytes": 834,
+      "sha256": "52dac9efba3a637771818d633a5cf1df30c7913d05ff23235150c88319ea035a",
+      "imports": []
+    },
+    {
+      "id": "parse5/dist/common/unicode.js",
+      "format": "esm",
+      "bytes": 2989,
+      "sha256": "69a0a52be895d2bcf88850beead4a098c5305c0b5669d1e8a0fe26f621ea25c6",
+      "imports": []
+    },
+    {
+      "id": "parse5/dist/index.js",
+      "format": "esm",
+      "bytes": 1355,
+      "sha256": "b825162aced2e79be8d68d45efb1f89ec34ed4189467195a071a0d7b694a19d4",
+      "imports": [
+        {
+          "specifier": "./parser/index.js",
+          "target": "parse5/dist/parser/index.js"
+        },
+        {
+          "specifier": "./tree-adapters/default.js",
+          "target": "parse5/dist/tree-adapters/default.js"
+        },
+        {
+          "specifier": "./serializer/index.js",
+          "target": "parse5/dist/serializer/index.js"
+        },
+        {
+          "specifier": "./common/error-codes.js",
+          "target": "parse5/dist/common/error-codes.js"
+        },
+        {
+          "specifier": "./common/foreign-content.js",
+          "target": "parse5/dist/common/foreign-content.js"
+        },
+        {
+          "specifier": "./common/html.js",
+          "target": "parse5/dist/common/html.js"
+        },
+        {
+          "specifier": "./common/token.js",
+          "target": "parse5/dist/common/token.js"
+        },
+        {
+          "specifier": "./tokenizer/index.js",
+          "target": "parse5/dist/tokenizer/index.js"
+        }
+      ]
+    },
+    {
+      "id": "parse5/dist/parser/formatting-element-list.js",
+      "format": "esm",
+      "bytes": 4301,
+      "sha256": "a6e04b000b228a0bf7eba4e5462b343ec1e13dbfbe40bce913ade646bbde4461",
+      "imports": []
+    },
+    {
+      "id": "parse5/dist/parser/index.js",
+      "format": "esm",
+      "bytes": 107124,
+      "sha256": "23eb8e0f6b45abc36132c08f067899e0e615acbe9069762ba7780a66db78e65d",
+      "imports": [
+        {
+          "specifier": "../tokenizer/index.js",
+          "target": "parse5/dist/tokenizer/index.js"
+        },
+        {
+          "specifier": "./open-element-stack.js",
+          "target": "parse5/dist/parser/open-element-stack.js"
+        },
+        {
+          "specifier": "./formatting-element-list.js",
+          "target": "parse5/dist/parser/formatting-element-list.js"
+        },
+        {
+          "specifier": "../tree-adapters/default.js",
+          "target": "parse5/dist/tree-adapters/default.js"
+        },
+        {
+          "specifier": "../common/doctype.js",
+          "target": "parse5/dist/common/doctype.js"
+        },
+        {
+          "specifier": "../common/foreign-content.js",
+          "target": "parse5/dist/common/foreign-content.js"
+        },
+        {
+          "specifier": "../common/error-codes.js",
+          "target": "parse5/dist/common/error-codes.js"
+        },
+        {
+          "specifier": "../common/unicode.js",
+          "target": "parse5/dist/common/unicode.js"
+        },
+        {
+          "specifier": "../common/html.js",
+          "target": "parse5/dist/common/html.js"
+        },
+        {
+          "specifier": "../common/token.js",
+          "target": "parse5/dist/common/token.js"
+        }
+      ]
+    },
+    {
+      "id": "parse5/dist/parser/open-element-stack.js",
+      "format": "esm",
+      "bytes": 10918,
+      "sha256": "fe4b609a572c9aa06fbd45ac53632b3ad565168903f4126a6f98d5a9d1f42999",
+      "imports": [
+        {
+          "specifier": "../common/html.js",
+          "target": "parse5/dist/common/html.js"
+        }
+      ]
+    },
+    {
+      "id": "parse5/dist/serializer/index.js",
+      "format": "esm",
+      "bytes": 5269,
+      "sha256": "bb11a62d05d463bf756814d89227ea889733d3808fe7ebe27cb4f607ed85a4c7",
+      "imports": [
+        {
+          "specifier": "../common/html.js",
+          "target": "parse5/dist/common/html.js"
+        },
+        {
+          "specifier": "entities/escape",
+          "target": "entities/dist/esm/escape.js"
+        },
+        {
+          "specifier": "../tree-adapters/default.js",
+          "target": "parse5/dist/tree-adapters/default.js"
+        }
+      ]
+    },
+    {
+      "id": "parse5/dist/tokenizer/index.js",
+      "format": "esm",
+      "bytes": 98124,
+      "sha256": "738969a05c4e7d3c0ce566225e742d730d248db82972a84e517828cd97bc3bb4",
+      "imports": [
+        {
+          "specifier": "./preprocessor.js",
+          "target": "parse5/dist/tokenizer/preprocessor.js"
+        },
+        {
+          "specifier": "../common/unicode.js",
+          "target": "parse5/dist/common/unicode.js"
+        },
+        {
+          "specifier": "../common/token.js",
+          "target": "parse5/dist/common/token.js"
+        },
+        {
+          "specifier": "entities/decode",
+          "target": "entities/dist/esm/decode.js"
+        },
+        {
+          "specifier": "../common/error-codes.js",
+          "target": "parse5/dist/common/error-codes.js"
+        },
+        {
+          "specifier": "../common/html.js",
+          "target": "parse5/dist/common/html.js"
+        }
+      ]
+    },
+    {
+      "id": "parse5/dist/tokenizer/preprocessor.js",
+      "format": "esm",
+      "bytes": 7021,
+      "sha256": "12199175a31eb461dcecefa10ce2536c69ab92cdd2a1f67da3ea20b214599ac1",
+      "imports": [
+        {
+          "specifier": "../common/unicode.js",
+          "target": "parse5/dist/common/unicode.js"
+        },
+        {
+          "specifier": "../common/error-codes.js",
+          "target": "parse5/dist/common/error-codes.js"
+        }
+      ]
+    },
+    {
+      "id": "parse5/dist/tree-adapters/default.js",
+      "format": "esm",
+      "bytes": 5232,
+      "sha256": "14b6408b0abb1c041e645644f977db34da280239be8a59a2eb3c9e282e89b7c4",
+      "imports": [
+        {
+          "specifier": "../common/html.js",
+          "target": "parse5/dist/common/html.js"
+        }
+      ]
+    }
+  ],
+  "scope": "Exact external package source/edge content only; trusted loader/bootstrap/runtime and remote authenticity are separate"
+}

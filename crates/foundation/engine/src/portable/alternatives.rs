@@ -19,7 +19,7 @@ pub fn reply_to_value<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
     let r = input.profile.registry();
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let mut store = SourceStore::default();
     super::binding::check::add(&mut store, &reply.sources, b, c.source_admission())?;
     let mut local = c.scoped(&store);
@@ -47,7 +47,7 @@ pub fn reply_decode<C: FoundationValueCodec>(
 ) -> Result<DeclaredAlternativesReply, PortableError<C::Error>> {
     let r = input.profile.registry();
     r.validate(&expected("DeclaredAlternativesReply", b)?, value, b)?;
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let f = fields(value, s.engine, "DeclaredAlternativesReply", 4)?;
     let sources = c.decode_sources(&f[3], b).map_err(boundary)?;
     let mut store = SourceStore::default();
@@ -107,7 +107,7 @@ fn validate_reply<C: FoundationValueCodec>(
         DeclaredAlternativesOutcome::Invalid(error) => return Err(PortableError::Expected(error)),
         _ => {}
     }
-    let s = Schemas::new(input.profile.registry())?;
+    let s = Schemas::new(input.profile.registry(), b)?;
     let actual = value::outcome_value(&reply.outcome, input.profile.registry(), &s, c, b)?;
     let computed = value::outcome_value(&result.outcome, input.profile.registry(), &s, c, b)?;
     if !actual.equal_with_budget(&computed, b)? || result.sources.len() != reply.sources.len() {

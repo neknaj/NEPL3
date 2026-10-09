@@ -140,3 +140,6 @@ fn checked_context_uses_real_digest_and_exact_origin_source_closure() -> TestRes
     ));
     Ok(())
 }
+
+#[path = "context/lookup.rs"]
+mod lookup;

@@ -6,12 +6,18 @@ on:
     tags: ['**']
   pull_request:
   workflow_dispatch:
+    inputs:
+      collect_a01:
+        description: Collect A01 command evidence without deciding acceptance
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}${{ github.event_name == 'workflow_dispatch' && inputs.collect_a01 && format('-a01-{0}', github.run_id) || '' }}
   cancel-in-progress: true
 
 env:
@@ -89,7 +95,7 @@ jobs:
         working-directory: tools/site
         run: python -m unittest test_record_smoke.RecordSmokeTests.test_pass_and_failure_are_recorded_remotely
       - name: Evidence runner host portability
-        run: python -m unittest tools.evidence.test_runner
+        run: python -m unittest tools.evidence.test_runner tools.evidence.test_a01 tools.evidence.test_archive tools.evidence.test_actions tools.evidence.test_container
       - name: Generated checkout gate tests
         run: python -m unittest tools.audit.test_clean
       - name: Node renderer host toolchain
@@ -101,7 +107,11 @@ jobs:
         if: matrix.os != 'ubuntu-latest'
         run: |
           npm ci --prefix tools/audit/math --ignore-scripts
-          node --test tools/audit/math/node.test.mjs
+          node --test tools/audit/math/node.test.mjs tools/audit/math/visual.test.mjs
+          node --experimental-vm-modules --disable-warning=ExperimentalWarning --test tools/audit/math/modules.test.mjs
+          node --test tools/audit/math/stdio.test.mjs
+          cargo test --locked -p nepl3-tools --test doc math::prepared_math_request_matches_node_canonical_wire -- --ignored
+          cargo test --locked -p nepl3-tools --test doc math::prepared_math_native_process_lifecycle -- --ignored
       - name: Format
         if: matrix.os == 'ubuntu-latest'
         run: cargo fmt --all -- --check
@@ -259,11 +269,20 @@ jobs:
       - name: Install pinned Math renderer for integration tests
         run: npm ci --prefix tools/audit/math --ignore-scripts
       - name: Test shared KaTeX generation call
-        run: node --test tools/audit/math/render.test.mjs tools/audit/math/node.test.mjs tools/audit/math/parse.test.mjs
+        run: node --test tools/audit/math/render.test.mjs tools/audit/math/node.test.mjs tools/audit/math/parse.test.mjs tools/audit/math/visual.test.mjs
+      - name: Check fixed Math module sources and loading
+        run: |
+          node --experimental-vm-modules --disable-warning=ExperimentalWarning tools/generate/katex/modules.mjs
+          node --experimental-vm-modules --disable-warning=ExperimentalWarning --test tools/audit/math/modules.test.mjs
+          node --test tools/audit/math/stdio.test.mjs
+          cargo test --locked -p nepl3-tools --test doc math::prepared_math_request_matches_node_canonical_wire -- --ignored
+          cargo test --locked -p nepl3-tools --test doc math::prepared_math_native_process_lifecycle -- --ignored
       - name: Check fixed KaTeX assets
         run: |
           node tools/generate/katex.mjs
-          node --test tools/audit/math/assets.test.mjs
+          node --test tools/audit/math/assets.test.mjs tools/audit/math/classes.test.mjs
+          cargo test --locked -p nepl3-tools --test math tex::native_fixed_katex_asset_binding -- --ignored
+          cargo test --locked -p nepl3-tools --test math tex::fixed_math_catalog -- --ignored
       - name: Check production TeX against KaTeX
         run: |
           mkdir -p dist/math-visual
@@ -345,7 +364,7 @@ jobs:
           cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml --features doc-sentence --test sentence --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml --features sentence-html --test sentence_html --target wasm32-wasip2 -- --test-threads=1
       - name: Compile foundation for browser Wasm
-        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html -p nepl3-suite --no-default-features --features nepl3-suite/doc-sentence,nepl3-suite/sentence-html --target wasm32-unknown-unknown
+        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html -p nepl3-math-tex -p nepl3-math-mathml -p nepl3-suite --no-default-features --features nepl3-suite/doc-sentence,nepl3-suite/sentence-html --target wasm32-unknown-unknown
       - name: Compare identical foundation components with Pulley64
         env:
           CARGO_TARGET_WASM32_WASIP2_RUNNER: python ${{ github.workspace }}/tools/emulators/wasmtime/compare.py
@@ -377,7 +396,7 @@ jobs:
       - name: Install ARMv6-M target
         run: rustup target add thumbv6m-none-eabi
       - name: Compile every implemented portable core for ARMv6-M
-        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html -p nepl3-suite --no-default-features --features nepl3-suite/doc-sentence,nepl3-suite/sentence-html --target thumbv6m-none-eabi
+        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html -p nepl3-math-tex -p nepl3-math-mathml -p nepl3-suite --no-default-features --features nepl3-suite/doc-sentence,nepl3-suite/sentence-html --target thumbv6m-none-eabi
       - name: Validate converter and firmware formatting
         run: |
           python -m unittest discover -s tools/emulators/rp2040js -p 'test_*.py'
@@ -497,7 +516,7 @@ jobs:
   quality:
     name: quality
     if: ${{ always() }}
-    needs: [python-static, native, repository-contract, site-publication, wasi, baremetal-build, baremetal-rp2040, doc-browser]
+    needs: [python-static, native, repository-contract, site-publication, wasi, baremetal-build, baremetal-rp2040, doc-browser, a01-command-evidence]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -511,6 +530,8 @@ jobs:
           ARM_BUILD_RESULT: ${{ needs.baremetal-build.result }}
           RP2040_RESULT: ${{ needs.baremetal-rp2040.result }}
           DOC_BROWSER_RESULT: ${{ needs.doc-browser.result }}
+          A01_REQUESTED: ${{ github.event_name == 'workflow_dispatch' && inputs.collect_a01 }}
+          A01_RESULT: ${{ needs.a01-command-evidence.result }}
         run: |
           test "$PYTHON_RESULT" = success
           test "$REPOSITORY_RESULT" = success
@@ -520,3 +541,71 @@ jobs:
           test "$ARM_BUILD_RESULT" = success
           test "$RP2040_RESULT" = success
           test "$DOC_BROWSER_RESULT" = success
+          if [ "$A01_REQUESTED" = true ]; then
+            test "$A01_RESULT" = success
+          else
+            test "$A01_RESULT" = skipped
+          fi
+
+  a01-command-evidence:
+    name: A01 command evidence (explicit collection only)
+    if: github.event_name == 'workflow_dispatch' && inputs.collect_a01
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout the selected source without persisted credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install collector interpreter
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - name: Install the pinned compiler and required compile-only target
+        run: |
+          rustup show active-toolchain
+          rustup target add thumbv6m-none-eabi
+      - name: Verify collector and transport boundaries
+        run: python -m unittest tools.evidence.test_runner tools.evidence.test_a01 tools.evidence.test_archive tools.evidence.test_actions tools.evidence.test_container
+      - name: Collect architecture command evidence
+        id: collect
+        run: python -m tools.evidence.runner run tools/evidence/specs/a01.json dist/evidence/a01-command
+      - name: Preserve the raw bundle in the bounded inner archive
+        id: archive
+        if: always() && steps.collect.outcome != 'skipped'
+        run: |
+          set -o noclobber
+          python -m tools.evidence.archive pack dist/evidence/a01-command dist/evidence/a01.zip --source-revision "$GITHUB_SHA" > dist/evidence/a01.zip.sha256
+      - name: Retain raw diagnostics and the inner archive without approving them
+        id: upload
+        if: always() && steps.collect.outcome != 'skipped'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: a01-command-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            dist/evidence/a01-command/
+            dist/evidence/a01.zip
+            dist/evidence/a01.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
+      - name: Record the non-acceptance scope and requested retention
+        if: always() && steps.upload.outcome == 'success'
+        env:
+          COLLECT_OUTCOME: ${{ steps.collect.outcome }}
+          ARCHIVE_OUTCOME: ${{ steps.archive.outcome }}
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+        run: |
+          {
+            echo 'A01 command evidence only; acceptance_decision=false.'
+            echo "Source revision: $GITHUB_SHA"
+            echo "Collector step: $COLLECT_OUTCOME"
+            echo "Inner archive step: $ARCHIVE_OUTCOME"
+            echo "Actions artifact: $ARTIFACT_URL"
+            echo 'Requested retention: 30 days. Check actual artifact expiry before retrieval.'
+            echo 'Unavailable or expired logs must fail verification. No acceptance status is changed.'
+            if [ "$ARCHIVE_OUTCOME" = success ]; then
+              printf 'Inner ZIP SHA-256: '
+              cat dist/evidence/a01.zip.sha256
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -7,7 +7,7 @@ use std::{fs, path::Path};
 const PATH: &str = "crates/output/markup/src/schema/descriptor.rs";
 fn projection(value: &Value) -> Result<String> {
     let descriptor = foundation::descriptor(value)?;
-    if descriptor.package != "nepl3.markup" || descriptor.revision != 2 {
+    if descriptor.package != "nepl3.markup" || descriptor.revision != 3 {
         return Err("unexpected Markup package identity".into());
     }
     foundation::generate::source_with(

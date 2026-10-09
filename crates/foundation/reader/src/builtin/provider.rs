@@ -28,11 +28,8 @@ pub fn operation(
     budget: &mut Budget,
 ) -> Result<OperationRef, ReaderError> {
     let name = name(kind)?;
-    let schema = registry
-        .selected("nepl3.reader", 1)
-        .ok_or(SchemaError::UnknownSchema)?;
-    let descriptor = registry
-        .descriptor(schema)
+    let (schema, descriptor) = registry
+        .selected_descriptor_with_budget("nepl3.reader", 1, budget)?
         .ok_or(SchemaError::UnknownSchema)?;
     budget.charge(
         Resource::Work,
@@ -113,7 +110,10 @@ pub fn read(
             "builtinNumber" => BuiltinReader::Number,
             _ => return Err(ReaderError::ProviderContract),
         };
-        if registry.selected("nepl3.reader", 1) != Some(&operation_ref.schema)
+        if registry
+            .selected_descriptor_with_budget("nepl3.reader", 1, budget)?
+            .map(|(schema, _)| schema)
+            != Some(&operation_ref.schema)
             || request.state != &NdfValue::Unit
         {
             return Err(ReaderError::ProviderContract);

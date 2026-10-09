@@ -74,8 +74,9 @@ pub fn compose<'a>(
         let add = |index: u64| offset.checked_add(index).ok_or(Error::InternalShape);
         let root = add(part.fragment.root)?;
         for mut node in part.fragment.nodes {
-            if let HtmlNode::Element { children, .. } | HtmlNode::MathElement { children, .. } =
-                &mut node
+            if let HtmlNode::Element { children, .. }
+            | HtmlNode::MathElement { children, .. }
+            | HtmlNode::SvgElement { children, .. } = &mut node
             {
                 for child in children {
                     b.charge(Resource::Work, 1)?;

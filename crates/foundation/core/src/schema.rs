@@ -1,6 +1,7 @@
 //! Typed descriptors, deterministic identities and structural boundary checking.
 //! Domain constraint IDs remain obligations for the domain checker.
 pub mod foundation;
+mod frontier;
 use crate::{
     budget::{Budget, Resource, StopReason},
     source::Digest,
@@ -556,22 +557,23 @@ impl SchemaRegistry {
             crate::value::TypedValue::Record(v) => (&v.schema, &v.kind),
             crate::value::TypedValue::Variant(v) => (&v.schema, &v.type_name),
         };
-        let descriptor = self.descriptor(schema).ok_or(SchemaError::UnknownSchema)?;
-        let definition = descriptor
-            .types
-            .iter()
-            .find(|ty| &ty.name == name)
-            .ok_or(SchemaError::UnknownType)?;
+        let (selected, descriptor) = self
+            .selected_descriptor_with_budget(&schema.package, schema.revision, budget)?
+            .ok_or(SchemaError::UnknownSchema)?;
+        budget.charge(
+            Resource::Work,
+            (schema.package.len() as u64).saturating_add(41),
+        )?;
+        if selected != schema {
+            return Err(SchemaError::UnknownSchema);
+        }
+        let definition = Self::named_definition(descriptor, name, budget)?;
         let (fields, values) = match (&definition.shape, value) {
             (TypeShape::Record { fields }, crate::value::TypedValue::Record(v)) => {
                 (fields, &v.fields)
             }
             (TypeShape::Variant { variants }, crate::value::TypedValue::Variant(v)) => (
-                &variants
-                    .iter()
-                    .find(|variant| variant.name == v.variant)
-                    .ok_or(SchemaError::UnknownVariant)?
-                    .fields,
+                &Self::variant_definition(variants, &v.variant, budget)?.fields,
                 &v.fields,
             ),
             _ => return Err(SchemaError::WrongType),
@@ -642,29 +644,104 @@ impl SchemaRegistry {
         self.schemas.push((expected, descriptor));
         Ok(())
     }
+    // The descriptor must come from this registry: register() normalizes its
+    // definition table into scalar name order before any borrowed lookup.
+    pub(crate) fn named_definition<'a>(
+        descriptor: &'a SchemaDescriptor,
+        name: &str,
+        budget: &mut Budget,
+    ) -> Result<&'a NamedType, SchemaError> {
+        let index = Self::named_definition_index(descriptor, name, budget)?;
+        Ok(&descriptor.types[index])
+    }
+    fn named_definition_index(
+        descriptor: &SchemaDescriptor,
+        name: &str,
+        budget: &mut Budget,
+    ) -> Result<usize, SchemaError> {
+        let (mut lo, mut hi) = (0, descriptor.types.len());
+        while lo < hi {
+            let mid = lo + (hi - lo) / 2;
+            let definition = &descriptor.types[mid];
+            budget.charge(
+                Resource::Work,
+                (definition.name.len() as u64)
+                    .saturating_add(name.len() as u64)
+                    .saturating_add(1),
+            )?;
+            match definition.name.as_str().cmp(name) {
+                core::cmp::Ordering::Less => lo = mid + 1,
+                core::cmp::Ordering::Greater => hi = mid,
+                core::cmp::Ordering::Equal => return Ok(mid),
+            }
+        }
+        Err(SchemaError::UnknownType)
+    }
+    fn variant_definition<'a>(
+        variants: &'a [VariantDescriptor],
+        name: &str,
+        budget: &mut Budget,
+    ) -> Result<&'a VariantDescriptor, SchemaError> {
+        let (mut lo, mut hi) = (0, variants.len());
+        while lo < hi {
+            let mid = lo + (hi - lo) / 2;
+            let variant = &variants[mid];
+            budget.charge(
+                Resource::Work,
+                (variant.name.len() as u64)
+                    .saturating_add(name.len() as u64)
+                    .saturating_add(1),
+            )?;
+            match variant.name.as_str().cmp(name) {
+                core::cmp::Ordering::Less => lo = mid + 1,
+                core::cmp::Ordering::Greater => hi = mid,
+                core::cmp::Ordering::Equal => return Ok(variant),
+            }
+        }
+        Err(SchemaError::UnknownVariant)
+    }
+    fn named_identity_matches(
+        selected: &SchemaRef,
+        expected_name: &str,
+        actual: &SchemaRef,
+        actual_name: &str,
+        budget: &mut Budget,
+    ) -> Result<bool, StopReason> {
+        budget.charge(
+            Resource::Work,
+            (selected.package.len() as u64)
+                .saturating_add(actual.package.len() as u64)
+                .saturating_add(expected_name.len() as u64)
+                .saturating_add(actual_name.len() as u64)
+                .saturating_add(41),
+        )?;
+        Ok(selected == actual && expected_name == actual_name)
+    }
     fn fields_for<'a>(
         &'a self,
         value: &'a NdfValue,
+        budget: &mut Budget,
     ) -> Result<(&'a [FieldDescriptor], &'a [NdfValue]), SchemaError> {
         let (schema, name) = match value {
             NdfValue::Record(v) => (&v.schema, &v.kind),
             NdfValue::Variant(v) => (&v.schema, &v.type_name),
             _ => return Err(SchemaError::WrongType),
         };
-        let descriptor = self.descriptor(schema).ok_or(SchemaError::UnknownSchema)?;
-        let definition = descriptor
-            .types
-            .iter()
-            .find(|t| &t.name == name)
-            .ok_or(SchemaError::UnknownType)?;
+        let (selected, descriptor) = self
+            .selected_descriptor_with_budget(&schema.package, schema.revision, budget)?
+            .ok_or(SchemaError::UnknownSchema)?;
+        budget.charge(
+            Resource::Work,
+            (schema.package.len() as u64).saturating_add(41),
+        )?;
+        if selected != schema {
+            return Err(SchemaError::UnknownSchema);
+        }
+        let definition = Self::named_definition(descriptor, name, budget)?;
         match (&definition.shape, value) {
             (TypeShape::Record { fields }, NdfValue::Record(v)) => Ok((fields, &v.fields)),
             (TypeShape::Variant { variants }, NdfValue::Variant(v)) => Ok((
-                &variants
-                    .iter()
-                    .find(|variant| variant.name == v.variant)
-                    .ok_or(SchemaError::UnknownVariant)?
-                    .fields,
+                &Self::variant_definition(variants, &v.variant, budget)?.fields,
                 &v.fields,
             )),
             _ => Err(SchemaError::WrongType),
@@ -691,10 +768,14 @@ impl SchemaRegistry {
                     depth = depth.checked_add(1).ok_or(StopReason::DepthLimit)?;
                 }
                 TypeDescriptor::Named(reference) => {
-                    let schema = self
-                        .selected(&reference.package, reference.revision)
+                    let (_, descriptor) = self
+                        .selected_descriptor_with_budget(
+                            &reference.package,
+                            reference.revision,
+                            budget,
+                        )?
                         .ok_or(SchemaError::UnknownSchema)?;
-                    self.kind_id(schema, &reference.name)?;
+                    Self::named_definition(descriptor, &reference.name, budget)?;
                     return Ok(());
                 }
                 _ => return Ok(()),
@@ -770,6 +851,19 @@ impl SchemaRegistry {
             .map(|i| i as u64)
             .ok_or(SchemaError::UnknownType)
     }
+    /// Resolve a kind name through exact schema identity and a metered binary
+    /// search of the normalized type table. No allocation or finalization occurs.
+    pub fn kind_id_with_budget(
+        &self,
+        schema: &SchemaRef,
+        name: &str,
+        budget: &mut Budget,
+    ) -> Result<u64, SchemaError> {
+        let descriptor = self
+            .descriptor_with_budget(schema, budget)?
+            .ok_or(SchemaError::UnknownSchema)?;
+        Ok(Self::named_definition_index(descriptor, name, budget)? as u64)
+    }
     pub fn kind_name(&self, schema: &SchemaRef, id: u64) -> Result<&str, SchemaError> {
         let descriptor = self.descriptor(schema).ok_or(SchemaError::UnknownSchema)?;
         usize::try_from(id)
@@ -777,6 +871,42 @@ impl SchemaRegistry {
             .and_then(|i| descriptor.types.get(i))
             .map(|ty| ty.name.as_str())
             .ok_or(SchemaError::UnknownType)
+    }
+    /// Resolve a numeric kind through a budgeted exact schema lookup. The
+    /// type table is indexed directly; no type-name search or clone is needed.
+    /// This does not finalize the registry or validate the selected type.
+    pub fn kind_name_with_budget(
+        &self,
+        schema: &SchemaRef,
+        id: u64,
+        budget: &mut Budget,
+    ) -> Result<&str, SchemaError> {
+        let descriptor = self
+            .descriptor_with_budget(schema, budget)?
+            .ok_or(SchemaError::UnknownSchema)?;
+        usize::try_from(id)
+            .ok()
+            .and_then(|i| descriptor.types.get(i))
+            .map(|ty| ty.name.as_str())
+            .ok_or(SchemaError::UnknownType)
+    }
+    /// Budgeted exact-identity lookup borrowing this registry. This neither
+    /// finalizes the registry nor creates a structural or semantic proof.
+    pub fn descriptor_with_budget(
+        &self,
+        reference: &SchemaRef,
+        budget: &mut Budget,
+    ) -> Result<Option<&SchemaDescriptor>, StopReason> {
+        let Some((selected, descriptor)) =
+            self.selected_descriptor_with_budget(&reference.package, reference.revision, budget)?
+        else {
+            return Ok(None);
+        };
+        budget.charge(
+            Resource::Work,
+            (reference.package.len() as u64).saturating_add(41),
+        )?;
+        Ok((selected == reference).then_some(descriptor))
     }
     pub fn descriptor(&self, reference: &SchemaRef) -> Option<&SchemaDescriptor> {
         self.schemas
@@ -795,41 +925,16 @@ impl SchemaRegistry {
             return Err(SchemaError::Unfinalized);
         }
         budget.charge(Resource::Work, 1)?;
-        budget.charge(
-            Resource::AllocationUnits,
-            core::mem::size_of::<(&TypeDescriptor, &NdfValue, u64)>() as u64,
-        )?;
-        let mut pending = Vec::new();
-        pending
-            .try_reserve_exact(1)
-            .map_err(|_| budget.stop(StopReason::AllocationLimit))?;
-        // Logical reserved slots are independent of allocator over-allocation.
-        // Popping a node reuses its slot; only growing this traversal stack
-        // allocates additional storage, charged before requesting capacity.
-        let mut pending_slots = 1usize;
-        pending.push((expected, value, 1u64));
+        let mut pending = frontier::Frontier::new((expected, value, 1u64));
         while let Some((ty, value, depth)) = pending.pop() {
             budget.charge(Resource::Nodes, 1)?;
             budget.observe_depth(depth)?;
             let next_depth = depth.checked_add(1).ok_or(StopReason::DepthLimit)?;
-            let mut push = |ty, value| -> Result<(), SchemaError> {
+            let mut push = |ty, value, budget: &mut Budget| -> Result<(), SchemaError> {
                 // Charge each child before growing the frontier, rather than
                 // allowing a wide input to run to the next pop unmetered.
                 budget.charge(Resource::Work, 1)?;
-                if pending.len() == pending_slots {
-                    let next = pending_slots
-                        .checked_mul(2)
-                        .ok_or_else(|| budget.stop(StopReason::AllocationLimit))?;
-                    let bytes = (next - pending_slots)
-                        .checked_mul(core::mem::size_of::<(&TypeDescriptor, &NdfValue, u64)>())
-                        .ok_or_else(|| budget.stop(StopReason::AllocationLimit))?;
-                    budget.charge(Resource::AllocationUnits, bytes as u64)?;
-                    pending
-                        .try_reserve_exact(next - pending.len())
-                        .map_err(|_| budget.stop(StopReason::AllocationLimit))?;
-                    pending_slots = next;
-                }
-                pending.push((ty, value, next_depth));
+                pending.push((ty, value, next_depth), budget)?;
                 Ok(())
             };
             match (ty, value) {
@@ -859,19 +964,19 @@ impl SchemaRegistry {
                         return Err(SchemaError::WrongType);
                     }
                     match value {
-                        NdfValue::Some(value) => push(ty, value)?,
+                        NdfValue::Some(value) => push(ty, value, budget)?,
                         NdfValue::List(values) => {
                             for value in values.iter().rev() {
-                                push(ty, value)?;
+                                push(ty, value, budget)?;
                             }
                         }
                         NdfValue::Record(_) | NdfValue::Variant(_) => {
-                            let (fields, values) = self.fields_for(value)?;
+                            let (fields, values) = self.fields_for(value, budget)?;
                             if fields.len() != values.len() {
                                 return Err(SchemaError::FieldCount);
                             }
                             for (field, value) in fields.iter().zip(values).rev() {
-                                push(&field.ty, value)?;
+                                push(&field.ty, value, budget)?;
                             }
                         }
                         _ => {}
@@ -887,37 +992,44 @@ impl SchemaRegistry {
                 (TypeDescriptor::Natural, NdfValue::Integer(number)) if !number.is_negative() => {}
                 (TypeDescriptor::Bytes32, NdfValue::Bytes(bytes)) if bytes.len() == 32 => {}
                 (TypeDescriptor::Option(_), NdfValue::None) => {}
-                (TypeDescriptor::Option(inner), NdfValue::Some(value)) => push(inner, value)?,
+                (TypeDescriptor::Option(inner), NdfValue::Some(value)) => {
+                    push(inner, value, budget)?
+                }
                 (TypeDescriptor::List(inner), NdfValue::List(values)) => {
                     for value in values.iter().rev() {
-                        push(inner, value)?;
+                        push(inner, value, budget)?;
                     }
                 }
                 (TypeDescriptor::Named(name), value) => {
                     let (reference, descriptor) = self
-                        .schemas
-                        .iter()
-                        .find(|(r, _)| r.package == name.package && r.revision == name.revision)
+                        .selected_descriptor_with_budget(&name.package, name.revision, budget)?
                         .ok_or(SchemaError::UnknownSchema)?;
-                    let definition = descriptor
-                        .types
-                        .iter()
-                        .find(|t| t.name == name.name)
-                        .ok_or(SchemaError::UnknownType)?;
+                    let definition = Self::named_definition(descriptor, &name.name, budget)?;
                     let (fields, values) = match (&definition.shape, value) {
-                        (TypeShape::Record { fields }, NdfValue::Record(record))
-                            if &record.schema == reference && record.kind == name.name =>
-                        {
+                        (TypeShape::Record { fields }, NdfValue::Record(record)) => {
+                            if !Self::named_identity_matches(
+                                reference,
+                                &name.name,
+                                &record.schema,
+                                &record.kind,
+                                budget,
+                            )? {
+                                return Err(SchemaError::WrongType);
+                            }
                             (fields, &record.fields)
                         }
-                        (TypeShape::Variant { variants }, NdfValue::Variant(variant))
-                            if &variant.schema == reference && variant.type_name == name.name =>
-                        {
+                        (TypeShape::Variant { variants }, NdfValue::Variant(variant)) => {
+                            if !Self::named_identity_matches(
+                                reference,
+                                &name.name,
+                                &variant.schema,
+                                &variant.type_name,
+                                budget,
+                            )? {
+                                return Err(SchemaError::WrongType);
+                            }
                             (
-                                &variants
-                                    .iter()
-                                    .find(|v| v.name == variant.variant)
-                                    .ok_or(SchemaError::UnknownVariant)?
+                                &Self::variant_definition(variants, &variant.variant, budget)?
                                     .fields,
                                 &variant.fields,
                             )
@@ -928,7 +1040,7 @@ impl SchemaRegistry {
                         return Err(SchemaError::FieldCount);
                     }
                     for (field, value) in fields.iter().zip(values).rev() {
-                        push(&field.ty, value)?;
+                        push(&field.ty, value, budget)?;
                     }
                 }
                 _ => return Err(SchemaError::WrongType),

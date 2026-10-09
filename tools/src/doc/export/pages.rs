@@ -2,7 +2,7 @@
 //! page set renders; the final manifest is the completion marker, not a deploy.
 use super::*;
 use nepl3_doc_core::pages::{FileBytes, PageDocument, PageFile, PageRegistration, PageSet};
-use nepl3_doc_html::pages::{PagesHtmlRequest, render_pages_with_code};
+use nepl3_doc_html::pages::{PagesHtmlRequest, render_pages_with_guests};
 pub(crate) mod aliases;
 mod code;
 use serde::Deserialize;
@@ -14,6 +14,8 @@ use nepl3_core::budget::Budget;
 #[serde(deny_unknown_fields)]
 pub struct Manifest {
     pub version: u64,
+    #[serde(default)]
+    pub math_renderer: math::Renderer,
     pub pages: Vec<Entry>,
     #[serde(default)]
     pub files: Vec<Entry>,
@@ -52,6 +54,7 @@ fn input_path(entry: &Entry) -> Result<&str, String> {
 pub struct GeneratedPages {
     pub files: BTreeMap<String, Vec<u8>>,
     pub manifest: String,
+    pub math_reports: Vec<math::Report>,
 }
 
 /// In-memory host input pairs. Paths are logical names, not filesystem access.
@@ -103,6 +106,46 @@ pub(crate) fn generate_with_aliases(
     phases: resources::PhaseLimits,
     output_budget: &mut Budget,
     aliases: &[aliases::PageAliases],
+) -> Result<GeneratedPages, String> {
+    generate_impl(
+        compiled,
+        inputs,
+        resources,
+        phases,
+        output_budget,
+        aliases,
+        math::Renderer::default(),
+    )
+}
+
+/// Explicit host Math policy; the semantic page-set identity is unchanged.
+pub fn generate_with_resources_and_math(
+    compiled: &Compiled,
+    inputs: &[(Entry, String)],
+    resources: &[(Entry, Vec<u8>)],
+    phases: resources::PhaseLimits,
+    output_budget: &mut Budget,
+    renderer: math::Renderer,
+) -> Result<GeneratedPages, String> {
+    generate_impl(
+        compiled,
+        inputs,
+        resources,
+        phases,
+        output_budget,
+        &[],
+        renderer,
+    )
+}
+
+fn generate_impl(
+    compiled: &Compiled,
+    inputs: &[(Entry, String)],
+    resources: &[(Entry, Vec<u8>)],
+    phases: resources::PhaseLimits,
+    output_budget: &mut Budget,
+    aliases: &[aliases::PageAliases],
+    renderer: math::Renderer,
 ) -> Result<GeneratedPages, String> {
     output_budget.poll().map_err(err)?;
     let initial_usage = output_budget.usage();
@@ -220,17 +263,55 @@ pub(crate) fn generate_with_aliases(
     let empty = SourceStore::default();
     let mut a = SourceAdmission::default();
     let mut c = FoundationCodec::new(r, &empty, &mut a).map_err(err)?;
-    let mut rendered = render_pages_with_code(
+    // One fixed allocation per page report/counter. Occurrence vectors meter
+    // their own growth; no pre-rendered Math clone or second admission ledger.
+    let bytes = inputs
+        .len()
+        .checked_mul(core::mem::size_of::<math::Report>() + core::mem::size_of::<u64>())
+        .ok_or("PageReportAllocation")?;
+    output_budget
+        .charge(nepl3_core::budget::Resource::AllocationUnits, bytes as u64)
+        .map_err(err)?;
+    output_budget
+        .charge(nepl3_core::budget::Resource::Work, inputs.len() as u64)
+        .map_err(err)?;
+    let mut math_reports = Vec::new();
+    let mut occurrences = Vec::new();
+    math_reports
+        .try_reserve_exact(inputs.len())
+        .map_err(|_| err(output_budget.stop(nepl3_core::budget::StopReason::AllocationLimit)))?;
+    occurrences
+        .try_reserve_exact(inputs.len())
+        .map_err(|_| err(output_budget.stop(nepl3_core::budget::StopReason::AllocationLimit)))?;
+    for _ in inputs {
+        math_reports.push(math::Report::new(renderer));
+        occurrences.push(0u64);
+    }
+    let mut rendered = render_pages_with_guests(
         &request,
         r,
         &mut c,
         output_budget,
-        &mut |page, embed, index, b| {
-            let code = usize::try_from(page)
-                .ok()
-                .and_then(|page| page_code.get(page))
-                .ok_or("CodePageMissing")?;
-            code.render(embed, index, r, b)
+        &mut |page, embed, index, codec, b| {
+            let page = usize::try_from(page).map_err(err)?;
+            let count = occurrences.get_mut(page).ok_or("GuestPageMissing")?;
+            let ordinal = *count;
+            *count = count.checked_add(1).ok_or("GuestOccurrenceOverflow")?;
+            if embed.kind == nepl3_doc_core::model::EmbedKind::Code {
+                return page_code
+                    .get(page)
+                    .ok_or("CodePageMissing")?
+                    .render(embed, index, r, b);
+            }
+            let report = math_reports.get_mut(page).ok_or("MathPageMissing")?;
+            let mut host = crate::doc::math::MathDisplayHost {
+                registry: r,
+                math_surface: &compiled.others[0].schema,
+                sentence_surface: Some(&compiled.others[3].schema),
+                doc_surface: Some(&compiled.doc.package.schema),
+                codec,
+            };
+            report.render(embed, index, ordinal, &mut host, b)
         },
     )
     .map_err(|e| format!("resolve/render: {e:?}; usage={:?}", output_budget.usage()))?
@@ -313,19 +394,37 @@ pub(crate) fn generate_with_aliases(
         .collect::<Vec<_>>();
     let output_identity =
         resources::execution_identity(rendered.identity, output_budget.limits(), initial_usage);
+    // Separate host composition identity: fixed domain, existing execution
+    // digest, selected policy, and the known unavailable KaTeX capability.
+    let domain = b"nepl3.local-doc-pages.mathml-host/1\0";
+    let mut identity_bytes = [0u8; 70];
+    let length = domain.len() + 34;
+    identity_bytes[..domain.len()].copy_from_slice(domain);
+    identity_bytes[domain.len()..domain.len() + 32].copy_from_slice(&output_identity.0);
+    identity_bytes[domain.len() + 32] = match renderer {
+        math::Renderer::KatexPreferred => 0,
+        math::Renderer::MathmlOnly => 1,
+    };
+    let renderer_identity = Digest::of(&identity_bytes[..length]);
     let manifest = serde_json::to_string_pretty(&serde_json::json!({
         "format":"nepl3.local-doc-pages/1","identity":digest_hex(rendered.identity),"pages":origins,"files":records,
         "execution_identity":digest_hex(output_identity),
+        "render_execution":{"contract":"nepl3.local-doc-pages.mathml-host/1","identity":digest_hex(renderer_identity),"preference":renderer,"katex_adapter_available":false},
+        "math_pages": request.set.pages.iter().zip(&math_reports).enumerate().map(|(index,(page,report))|serde_json::json!({"page":index,"id":page.registration.id,"source":page.registration.source,"route":page.registration.route,"math":report})).collect::<Vec<_>>(),
         "phase_execution":{"contract":"nepl3.local-doc-pages.phases/1","identity":digest_hex(resources::phase_identity(output_identity,&profiles,phases))},
         "output_budget":{"contract":"nepl3.local-doc-pages.execution/1","limits":resources::limits(output_budget.limits()),
             "initial_usage":resources::usage(initial_usage),"usage":resources::usage(output_budget.usage())},
         "registered_files":file_origins,
-        "renderer":"nepl3-doc-html pages/4","options":{"parallel":"Rows"},"viewer_scripts":false,
-        "packages":"compiled checked bootstrap fixtures","scope":"Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Retained Code uses shared syntax-only highlighting without guest evaluation; assets and other foreign rendering remain unsupported. Not Pages deployment evidence.",
+        "renderer":"nepl3-doc-html pages/5","options":{"parallel":"Rows"},"viewer_scripts":false,
+        "packages":"compiled checked bootstrap fixtures","scope":"Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Retained Code uses shared syntax-only highlighting without guest evaluation; Inline/block Math uses independent MathML with explicit host policy and capability notices; assets and other foreign rendering remain unsupported. Not Pages deployment evidence.",
         "budget_scope":"Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
         "output_usage":{"work":output_budget.usage().work,"allocation_units":output_budget.usage().allocation_units,"output_bytes":output_budget.usage().output_bytes}
     })).map_err(err)? + "\n";
-    let mut generated = GeneratedPages { files, manifest };
+    let mut generated = GeneratedPages {
+        files,
+        manifest,
+        math_reports,
+    };
     aliases::record(&mut generated, aliases)?;
     Ok(generated)
 }
@@ -425,7 +524,7 @@ pub fn write(manifest: &Path, output: &Path) -> crate::Result<()> {
         }
         resources.push((entry, content));
     }
-    let generated = generate_with_resources(
+    let generated = generate_with_resources_and_math(
         &compiled()?,
         &inputs,
         &resources,
@@ -434,6 +533,7 @@ pub fn write(manifest: &Path, output: &Path) -> crate::Result<()> {
             lower: manifest_data.lower_limits.budget().limits(),
         },
         &mut manifest_data.output_limits.budget(),
+        manifest_data.math_renderer,
     )?;
     write_generated(generated, output)
 }
@@ -455,5 +555,8 @@ pub(crate) fn write_generated(generated: GeneratedPages, output: &Path) -> crate
         .create_new(true)
         .open(output.join("manifest.json"))?
         .write_all(generated.manifest.as_bytes())?;
+    for report in &generated.math_reports {
+        emit_math_notice(Some(report));
+    }
     Ok(())
 }

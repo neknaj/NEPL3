@@ -4,6 +4,7 @@ extern crate alloc;
 pub mod assets;
 mod build;
 pub mod code;
+pub mod guests;
 pub mod namespace;
 pub mod pages;
 pub mod portable;

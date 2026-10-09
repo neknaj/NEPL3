@@ -1340,3 +1340,12 @@ fn text_exact_runs_preserve_utf8_offsets_and_escape_boundaries() -> Result<(), R
     }
     Ok(())
 }
+
+#[path = "builtin/echo.rs"]
+mod echo;
+
+#[path = "support/tokenizer/echo.rs"]
+mod echo_projection;
+
+#[path = "builtin/provider_lookup.rs"]
+mod provider_lookup;

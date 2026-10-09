@@ -1,7 +1,7 @@
 use super::{check::unique, *};
 use nepl3_core::{
     budget::{Budget, Resource},
-    schema::{FieldDescriptor, SchemaRegistry, TypeDescriptor, TypeShape},
+    schema::{FieldDescriptor, SchemaError, SchemaRegistry, TypeDescriptor, TypeShape},
     value::KindRef,
 };
 use nepl3_reader::{builtin::BuiltinReader, tokenizer::TokenReader};
@@ -11,16 +11,18 @@ pub(super) fn record_kind<'a>(
     registry: &'a SchemaRegistry,
     budget: &mut Budget,
 ) -> Result<&'a [FieldDescriptor], PackageError> {
-    let name = registry.kind_name(&kind.schema, kind.local_kind)?;
     let descriptor = registry
-        .descriptor(&kind.schema)
-        .ok_or(PackageError::KindShape)?;
+        .descriptor_with_budget(&kind.schema, budget)?
+        .ok_or(SchemaError::UnknownSchema)?;
+    let ty = usize::try_from(kind.local_kind)
+        .ok()
+        .and_then(|i| descriptor.types.get(i))
+        .ok_or(SchemaError::UnknownType)?;
+    // Keep the historical table-admission allowance conservatively, although
+    // the registered numeric kind now indexes its immutable type directly.
+    // Registration rejects duplicate names; the former name search selected
+    // this exact type after performing a redundant second registry lookup.
     budget.charge(Resource::Work, descriptor.types.len() as u64 + 1)?;
-    let ty = descriptor
-        .types
-        .iter()
-        .find(|v| v.name == name)
-        .ok_or(PackageError::KindShape)?;
     match &ty.shape {
         TypeShape::Record { fields } => Ok(fields),
         _ => Err(PackageError::KindShape),

@@ -80,9 +80,21 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<RenderedPages, PagesRenderError<'a, C::Error>> {
-    type NoAdapter =
-        fn(u64, &DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, core::convert::Infallible>;
-    match render_pages_impl::<C, core::convert::Infallible, NoAdapter>(request, r, c, b, None) {
+    type NoAdapter<C> = fn(
+        u64,
+        &DocEmbed,
+        EmbedRef,
+        &mut C,
+        &mut Budget,
+    ) -> Result<HtmlRequest, core::convert::Infallible>;
+    match render_pages_impl::<C, core::convert::Infallible, NoAdapter<C>>(
+        request,
+        r,
+        c,
+        b,
+        None,
+        GuestPolicy::None,
+    ) {
         Ok(result) => Ok(result.pages),
         Err(PagesCodeRenderError::Pages(error)) => Err(error),
         Err(PagesCodeRenderError::CodeId { .. }) => {
@@ -107,7 +119,72 @@ pub fn render_pages_with_code<'a, C: FoundationValueCodec, F>(
     b: &mut Budget,
     adapter: &mut impl FnMut(u64, &DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, F>,
 ) -> Result<RenderedCodePages, PagesCodeRenderError<'a, C::Error, F>> {
-    render_pages_impl(request, r, c, b, Some(adapter))
+    let mut legacy = |page, embed: &DocEmbed, index, _codec: &mut C, b: &mut Budget| {
+        adapter(page, embed, index, b)
+    };
+    render_pages_impl(request, r, c, b, Some(&mut legacy), GuestPolicy::Code)
+}
+
+/// Native Code/Math page composition. The callback receives the resolver's
+/// codec so nested operations retain the same source-admission ledger.
+#[derive(Debug)]
+pub struct RenderedGuestPages {
+    pub pages: RenderedPages,
+    pub foreign: Vec<Vec<ForeignPlacement>>,
+}
+#[derive(Debug)]
+pub enum PagesGuestRenderError<'a, E, F> {
+    Pages(PagesRenderError<'a, E>),
+    Foreign {
+        page: u64,
+        error: ForeignRenderError<F>,
+    },
+    /// Imported presentation cannot supply semantic Doc anchors, including
+    /// HTML nested inside a MathML annotation.
+    GuestId {
+        page: u64,
+        node: u64,
+    },
+}
+pub fn render_pages_with_guests<'a, C: FoundationValueCodec, F>(
+    request: &'a PagesHtmlRequest,
+    r: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+    adapter: &mut impl FnMut(u64, &DocEmbed, EmbedRef, &mut C, &mut Budget) -> Result<HtmlRequest, F>,
+) -> Result<RenderedGuestPages, PagesGuestRenderError<'a, C::Error, F>> {
+    render_pages_impl(request, r, c, b, Some(adapter), GuestPolicy::CodeAndMath)
+        .map(|result| RenderedGuestPages {
+            pages: result.pages,
+            foreign: result.foreign,
+        })
+        .map_err(|error| match error {
+            PagesCodeRenderError::Pages(error) => PagesGuestRenderError::Pages(error),
+            PagesCodeRenderError::Foreign { page, error } => {
+                PagesGuestRenderError::Foreign { page, error }
+            }
+            PagesCodeRenderError::CodeId { page, node } => {
+                PagesGuestRenderError::GuestId { page, node }
+            }
+        })
+}
+#[derive(Clone, Copy)]
+enum GuestPolicy {
+    None,
+    Code,
+    CodeAndMath,
+}
+impl GuestPolicy {
+    fn accepts(self, kind: EmbedKind) -> bool {
+        match self {
+            Self::None => false,
+            Self::Code => kind == EmbedKind::Code,
+            Self::CodeAndMath => matches!(
+                kind,
+                EmbedKind::Code | EmbedKind::InlineMath | EmbedKind::DisplayMath
+            ),
+        }
+    }
 }
 
 enum CodeAdapterError<E> {
@@ -122,9 +199,10 @@ fn render_pages_impl<'a, C: FoundationValueCodec, F, A>(
     c: &mut C,
     b: &mut Budget,
     mut adapter: Option<&mut A>,
+    guests: GuestPolicy,
 ) -> Result<RenderedCodePages, PagesCodeRenderError<'a, C::Error, F>>
 where
-    A: FnMut(u64, &DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, F>,
+    A: FnMut(u64, &DocEmbed, EmbedRef, &mut C, &mut Budget) -> Result<HtmlRequest, F>,
 {
     let checked = pages::resolve(&request.set, r, c, b).map_err(|e| match e {
         pages::PageError::Stopped(s) => PagesRenderError::Stopped(s),
@@ -148,11 +226,8 @@ where
             }
         } else if !(adapter.is_some()
             && matches!(
-                pending.requirement,
-                prepare::DocRequirement::Foreign {
-                    kind: EmbedKind::Code,
-                    ..
-                }
+                &pending.requirement,
+                prepare::DocRequirement::Foreign { kind, .. } if guests.accepts(*kind)
             ))
         {
             unresolved = true;
@@ -225,7 +300,7 @@ where
                 &links,
                 &mut |embed, index, b| {
                     let markup =
-                        adapter(page as u64, embed, index, b).map_err(CodeAdapterError::Host)?;
+                        adapter(page as u64, embed, index, c, b).map_err(CodeAdapterError::Host)?;
                     for (node, value) in markup.fragment.nodes.iter().enumerate() {
                         b.charge(Resource::Work, 1)
                             .map_err(CodeAdapterError::Stopped)?;

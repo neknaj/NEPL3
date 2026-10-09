@@ -235,7 +235,9 @@ pub fn render(
             .ok_or(RenderError::InternalShape)?;
         for mut node in output.markup.fragment.nodes {
             match &mut node {
-                HtmlNode::Element { children, .. } | HtmlNode::MathElement { children, .. } => {
+                HtmlNode::Element { children, .. }
+                | HtmlNode::MathElement { children, .. }
+                | HtmlNode::SvgElement { children, .. } => {
                     for child in children {
                         budget.charge(Resource::Work, 1)?;
                         *child = offset
@@ -297,7 +299,9 @@ pub fn render(
             return Err(Error::OutputDepth { element: index });
         }
         match &markup.fragment.nodes[index as usize] {
-            HtmlNode::Element { children, .. } | HtmlNode::MathElement { children, .. } => {
+            HtmlNode::Element { children, .. }
+            | HtmlNode::MathElement { children, .. }
+            | HtmlNode::SvgElement { children, .. } => {
                 for child in children {
                     build::push(&mut pending, (*child, depth + 1), budget)?;
                 }

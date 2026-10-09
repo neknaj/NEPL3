@@ -18,13 +18,16 @@ pub(in crate::portable) struct Context<'a> {
 impl<'a> Context<'a> {
     pub(in crate::portable) fn new<E>(
         registry: &'a SchemaRegistry,
+        budget: &mut Budget,
     ) -> Result<Self, PortableError<E>> {
         Ok(Self {
             reader: registry
-                .selected("nepl3.reader", 1)
+                .selected_descriptor_with_budget("nepl3.reader", 1, budget)?
+                .map(|(schema, _)| schema)
                 .ok_or(PortableError::Shape)?,
             foundation: registry
-                .selected("nepl3.foundation", 1)
+                .selected_descriptor_with_budget("nepl3.foundation", 1, budget)?
+                .map(|(schema, _)| schema)
                 .ok_or(PortableError::Shape)?,
         })
     }

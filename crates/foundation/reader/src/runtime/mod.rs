@@ -1,5 +1,6 @@
 //! Iterative transactional reader execution. Host calls are explicit suspension points.
 mod checkpoint;
+mod echo;
 #[cfg(test)]
 mod ownership_tests;
 use checkpoint::{Frame, Saved};
@@ -615,6 +616,42 @@ impl<'a> ReaderSession<'a> {
                 .ok_or(PlanError::ProviderSignature)?,
             registry: self.registry,
         })
+    }
+    /// Execute the exact pending builtinName on the shared native Budget and
+    /// source-admission ledger, within a relative additive grant and absolute
+    /// depth ceiling. The caller must retain the actual operation Budget and
+    /// source-admission ledger; matching counters alone do not establish provenance.
+    /// Typed context/source preparation is charged before the additive grant starts.
+    /// The absolute depth grant must cover historical peak and active/saved depth.
+    /// Limits and active depth are restored, while charges and sticky stops remain.
+    ///
+    /// This does not consume the pending slot: use the issued result's `into_reply`
+    /// for ordinary typed resume. Calling this method again reruns the pure builtin
+    /// and charges again; serialization retries instead reuse the issued result.
+    /// This native-only helper does not implement remote dispatch or settlement.
+    pub fn execute_pending_name<C: nepl3_core::value_codec::FoundationValueCodec>(
+        &self,
+        grant: nepl3_core::budget::Limits,
+        codec: &mut C,
+        budget: &mut Budget,
+    ) -> Result<
+        crate::portable::read::sender::ExecutedName<'_>,
+        crate::portable::PortableError<C::Error>,
+    > {
+        budget.poll()?;
+        if self.closed {
+            return Err(crate::portable::PortableError::Reader(ReaderError::Closed));
+        }
+        let saved = self
+            .pending
+            .as_ref()
+            .ok_or(crate::portable::PortableError::Reader(
+                ReaderError::NoPending,
+            ))?;
+        let context = self
+            .pending_read()
+            .map_err(crate::portable::PortableError::Reader)?;
+        crate::portable::read::native::execute(context, saved.limits, grant, codec, budget)
     }
     /// A containing tokenizer terminates its operation if it cannot publish an Await envelope.
     pub(crate) fn discard_pending(&mut self) {

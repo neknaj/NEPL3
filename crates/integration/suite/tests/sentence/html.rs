@@ -518,10 +518,25 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
                                 attributes: vec![HtmlAttribute::Class {
                                     values: names.iter().map(|s| (*s).into()).collect(),
                                 }],
-                                children: vec![1],
+                                children: vec![1, 2],
                             },
                             HtmlNode::Text {
                                 text: "class guest".into(),
+                            },
+                            HtmlNode::SvgElement {
+                                element: HtmlSvgElement::Svg {
+                                    width: "1em".into(),
+                                    height: "1em".into(),
+                                    view_box: None,
+                                    aspect: None,
+                                },
+                                children: vec![3],
+                            },
+                            HtmlNode::SvgElement {
+                                element: HtmlSvgElement::Path {
+                                    data: "M0 0L1 1".into(),
+                                },
+                                children: vec![],
                             },
                         ],
                     },
@@ -539,6 +554,25 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
     }
     let paragraph = html::paragraph::compose(parts, &mut b()).map_err(err)?;
     let markup = paragraph.markup();
+    for occurrence in paragraph.placements() {
+        assert!(core::ptr::eq(occurrence.input(), &shared));
+        for foreign in occurrence.foreign() {
+            let base = foreign.first_element;
+            assert!(base > occurrence.first_element());
+            assert_eq!(foreign.elements, 4);
+            assert!(
+                matches!(&markup.fragment.nodes[(base+2) as usize], HtmlNode::SvgElement { children, .. } if children == &[base+3])
+            );
+            for element in base..base + 4 {
+                assert!(
+                    occurrence
+                        .origins()
+                        .iter()
+                        .any(|origin| origin.element == element && origin.node == 0)
+                );
+            }
+        }
+    }
     assert_eq!(
         markup.policy.classes,
         [
@@ -915,6 +949,26 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
     ));
     assert_eq!(calls, 1);
     assert_eq!(cancelled.poll(), Err(StopReason::Cancelled));
+    // A callback's ordinary error must not conceal its earlier sticky stop.
+    for reason in [StopReason::Cancelled, StopReason::WorkLimit] {
+        let mut measured = b();
+        let checked = shared
+            .validate(&r, &mut measured, &mut SourceAdmission::default())
+            .map_err(err)?;
+        let result = html::render_checked_with_foreign(
+            &checked,
+            &mut |_, _, b| {
+                b.stop(reason);
+                Err::<HtmlRequest, Error>(Error::InternalShape)
+            },
+            &mut measured,
+        );
+        assert!(
+            matches!(result, Err(html::RenderFailure::Sentence(Error::Stopped(actual))) if actual==reason)
+        );
+        assert_eq!(measured.poll(), Err(reason));
+        assert_eq!(measured.current_depth(), 0);
+    }
     let mut invalid = |_: &ForeignClosure, _, _: &mut Budget| {
         Ok::<_, Error>(HtmlRequest {
             fragment: HtmlFragment {
@@ -959,5 +1013,114 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
         Err(html::RenderFailure::Sentence(Error::Input(_)))
     ));
     assert_eq!(calls, 0);
+    Ok(())
+}
+
+#[test]
+fn checked_sentence_render_retains_admission_output_and_sticky_stops() -> Result<(), String> {
+    let r = registry()?;
+    let source = SourceSnapshot::new(
+        SourceId("checked-sentence".into()),
+        1,
+        "memory:checked".into(),
+        r#""{[字/じ]/character}""#.as_bytes().to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    let parsed = literal::read(
+        &source,
+        0,
+        source.text().len() as u64,
+        true,
+        &r,
+        &mut b(),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    let SentenceOutcome::Matched(parsed) = parsed.outcome else {
+        return Err("literal".into());
+    };
+    let input = &parsed.syntax;
+    let mut ordinary = b();
+    let expected =
+        html::render(input, &r, &mut ordinary, &mut SourceAdmission::default()).map_err(err)?;
+    // The checked seam is used immediately at the same nonzero active depth.
+    let mut raw_nested = b();
+    let nested_expected = raw_nested
+        .with_depth_at_least(3, |budget| {
+            html::render(input, &r, budget, &mut SourceAdmission::default())
+        })
+        .map_err(err)?;
+    let mut checked_nested = b();
+    let nested_output = checked_nested
+        .with_depth_at_least(3, |budget| {
+            let checked = input
+                .validate(&r, budget, &mut SourceAdmission::default())
+                .map_err(Error::from)?;
+            html::render_checked_with_foreign(
+                &checked,
+                &mut |_, embed, _| Err::<HtmlRequest, _>(Error::ForeignAdapterRequired(embed)),
+                budget,
+            )
+        })
+        .map_err(err)?;
+    assert_eq!(nested_output.markup(), nested_expected.markup());
+    assert_eq!(checked_nested.usage(), raw_nested.usage());
+    assert_eq!(checked_nested.current_depth(), 0);
+    let mut actual = b();
+    let mut admission = SourceAdmission::default();
+    let checked = input
+        .validate(&r, &mut actual, &mut admission)
+        .map_err(err)?;
+    let used = actual.usage();
+    let output = html::render_checked_with_foreign(
+        &checked,
+        &mut |_, embed, _| Err::<HtmlRequest, _>(Error::ForeignAdapterRequired(embed)),
+        &mut actual,
+    )
+    .map_err(err)?;
+    assert_eq!(used.source_bytes, source.text().len() as u64);
+    assert_eq!(actual.usage(), ordinary.usage());
+    assert_eq!(output.markup(), expected.markup());
+    assert_eq!(output.origins(), expected.origins());
+    let output2 = html::render_checked_with_foreign(
+        &checked,
+        &mut |_, embed, _| Err::<HtmlRequest, _>(Error::ForeignAdapterRequired(embed)),
+        &mut actual,
+    )
+    .map_err(err)?;
+    assert_eq!(output2.markup(), output.markup());
+    assert_eq!(actual.usage().source_bytes, used.source_bytes);
+    actual.cancel();
+    let cancelled = actual.usage();
+    assert!(
+        html::render_checked_with_foreign(
+            &checked,
+            &mut |_, embed, _| Err::<HtmlRequest, _>(Error::ForeignAdapterRequired(embed)),
+            &mut actual
+        )
+        .is_err()
+    );
+    assert_eq!(actual.poll(), Err(StopReason::Cancelled));
+    assert_eq!(actual.usage(), cancelled);
+    // A source proof cannot be acquired under a short fresh-operation allowance.
+    let mut limits = b().limits();
+    limits.source_bytes = source.text().len() as u64 - 1;
+    let mut short = Budget::new(limits);
+    assert!(
+        input
+            .validate(&r, &mut short, &mut SourceAdmission::default())
+            .is_err()
+    );
+    assert_eq!(short.poll(), Err(StopReason::SourceLimit));
+    // A malformed association cannot obtain a proof, even after prior admission.
+    let mut broken = input.clone();
+    broken.locations[0].origin = OriginId(u64::MAX);
+    let mut retry = b();
+    let mut ledger = SourceAdmission::default();
+    assert!(broken.validate(&r, &mut retry, &mut ledger).is_err());
+    let prior = retry.usage().source_bytes;
+    input.validate(&r, &mut retry, &mut ledger).map_err(err)?;
+    assert_eq!(retry.usage().source_bytes, prior);
     Ok(())
 }

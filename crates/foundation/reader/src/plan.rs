@@ -67,9 +67,20 @@ impl ProviderSignature {
         ] {
             registry.validate_type(ty, budget)?;
         }
-        let descriptor = registry
-            .descriptor(&self.operation.schema)
+        let (selected_schema, descriptor) = registry
+            .selected_descriptor_with_budget(
+                &self.operation.schema.package,
+                self.operation.schema.revision,
+                budget,
+            )?
             .ok_or(PlanError::ProviderSignature)?;
+        budget.charge(
+            Resource::Work,
+            (self.operation.schema.package.len() as u64).saturating_add(41),
+        )?;
+        if *selected_schema != self.operation.schema {
+            return Err(PlanError::ProviderSignature);
+        }
         let mut selected = None;
         for operation in &descriptor.operations {
             budget.charge(
@@ -286,7 +297,17 @@ impl ReaderPlan {
         budget: &mut Budget,
         at: &mut Option<ReaderId>,
     ) -> Result<CheckedPlan<'a>, PlanError> {
-        if !registry.is_finalized() || registry.descriptor(&self.schema).is_none() {
+        if !registry.is_finalized() {
+            return Err(PlanError::UnknownSchema);
+        }
+        let (selected, _) = registry
+            .selected_descriptor_with_budget(&self.schema.package, self.schema.revision, budget)?
+            .ok_or(PlanError::UnknownSchema)?;
+        budget.charge(
+            Resource::Work,
+            (self.schema.package.len() as u64).saturating_add(41),
+        )?;
+        if *selected != self.schema {
             return Err(PlanError::UnknownSchema);
         }
         registry.validate_type(&self.state_type, budget)?;

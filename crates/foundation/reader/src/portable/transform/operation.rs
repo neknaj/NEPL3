@@ -151,7 +151,7 @@ pub fn to_value<C: FoundationValueCodec>(
     let inner = reply_to_value(reply, context, codec, b)?;
     let f = fields(
         &inner,
-        context.schema().map_err(reader)?,
+        context.schema(b).map_err(reader)?,
         "TransformReply",
         4,
     )?;
@@ -252,7 +252,7 @@ pub fn from_value<C: FoundationValueCodec>(
     if let Some(inner) = inner {
         let encoded = fields(
             inner,
-            context.schema().map_err(reader)?,
+            context.schema(b).map_err(reader)?,
             "TransformReply",
             4,
         )?;

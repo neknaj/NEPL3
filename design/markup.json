@@ -1,5 +1,5 @@
 {
-  "contract": "nepl3.safe-markup/2",
+  "contract": "nepl3.safe-markup/3",
   "global_attributes": {
     "id": "HtmlId",
     "class": "RegisteredClassList",
@@ -8,12 +8,13 @@
     "aria-label": "Text",
     "aria-level": "PositiveDecimal",
     "data-nepl-id": "GeneratedId",
-    "data-nepl-group": "GeneratedId"
+    "data-nepl-group": "GeneratedId",
+    "aria-hidden": "Boolean"
   },
   "attribute_types": {
     "EmbeddedSvg": "bounded svg/g/path with root defs and local leaf-path use references; translation-only g matrices; 4096 uses and 8MiB instantiated element bytes; no DTD/entities/scripts/styles/external or recursive references; typed original UTF-8 serialized to image/svg+xml Base64 data URL; mutually exclusive with Src",
     "GeneratedId": "ASCII [a-z][a-z0-9-]*; allocated by renderer; author names encoded as n- plus UTF-8 lowercase hex",
-    "RegisteredClassList": "space-separated names registered in the backend stylesheet; not arbitrary source Text",
+    "RegisteredClassList": "Nonempty list of distinct ASCII [A-Za-z][A-Za-z0-9_-]* names registered in the backend stylesheet; not arbitrary source Text",
     "LanguageTag": "well-formed RFC 5646 tag",
     "Role": [
       "heading",
@@ -236,7 +237,7 @@
     }
   },
   "root_slots": {
-    "HtmlBlock": "html flow elements, root math display=block, root svg",
+    "HtmlBlock": "HTML flow elements or root math display=inline/block; flat HtmlRequest rejects standalone SvgElement roots",
     "HtmlPhrasing": "validated HTML phrasing including span/a/em/strong/ruby/br/code/img; inline math via its separate profile; no block elements or root svg",
     "Math": "root math with the required element arities",
     "Svg": "root svg"
@@ -244,16 +245,39 @@
   "namespace_transition": {
     "html": "only root math or root svg starts foreign namespace",
     "mathml": "mtext may contain validated HtmlPhrasing; other elements do not accept arbitrary HTML",
-    "svg": "only svg elements and Text"
+    "svg": "Integrated HtmlRequest SvgElement: svg contains only path/line, both childless; no Text, HTML or MathML. The separate broader SVG vocabulary above is not admitted through this inline arena."
   },
   "trusted_shell": "html/head/meta/style/body are emitted by fixed DocumentShell code, not accepted as user Markup nodes; stylesheet body is a fixed backend asset",
   "katex_computed_style": {
     "scope": "Lexical predicate for current generated Math TeX layout; not HTML admission, full KaTeX CSS, stylesheet extraction or fidelity proof",
     "declarations": "Empty or semicolon-separated exact lowercase property:value declarations, optional final semicolon; no whitespace, duplicate property, comments, escapes, functions or URLs",
     "length": "Unitless 0 or optional minus then decimal em; at most 7 integer and 4 fraction digits, magnitude <= 1000000; decimal point requires fraction digits",
-    "nonnegative_lengths": ["height", "width", "min-width", "padding-left", "border-bottom-width", "border-top-width", "border-right-width"],
-    "signed_lengths": ["top", "bottom", "left", "margin-left", "margin-right", "margin-top", "vertical-align"],
-    "keywords": {"position": ["relative"], "width": ["100%"]},
+    "nonnegative_lengths": [
+      "height",
+      "width",
+      "min-width",
+      "padding-left",
+      "border-bottom-width",
+      "border-top-width",
+      "border-right-width"
+    ],
+    "signed_lengths": [
+      "top",
+      "bottom",
+      "left",
+      "margin-left",
+      "margin-right",
+      "margin-top",
+      "vertical-align"
+    ],
+    "keywords": {
+      "position": [
+        "relative"
+      ],
+      "width": [
+        "100%"
+      ]
+    },
     "rejection": "Reject the entire declaration list; never strip unknown properties and claim faithful rendering; retain original bytes/order for later stylesheet lowering",
     "metering": "O(n) time, O(1) space, no allocation; charge 4n+1 Work before scanning and preserve sticky stop"
   },
@@ -266,6 +290,13 @@
     "metering": "O(n) time and O(1) space, no allocation; 4n+1 Work before scanning; failure never drops malformed path content"
   },
   "katex_view_box": "Exactly four single-space-separated decimal values in katex_path_data number profile; width/height unsigned and strictly positive; no leading/trailing space, commas or other whitespace. 4n+1 Work, O(n) time, O(1) space, no allocation. Does not prove path containment or aspect ratio/fidelity.",
+  "katex_svg_attributes": {
+    "scope": "Native borrowed attribute-only svg/path/line model shared by generated-Math projections; not HTML arena admission, portable Markup, tree, namespace, authenticity or fidelity proof",
+    "types": "Closed Aspect none/MinSlice/MidSlice/MaxSlice and Endpoint Zero/Full; Element carries only existing generated SVG attribute fields, no children or arbitrary names",
+    "rules": "Same katex_visual_fragment Svg/Path/Line attribute vocabulary; width alone permits 100%; aspect requires viewBox; path and viewport reuse existing lexical profiles",
+    "metering": "One Work before dispatch, then width+height bytes or stroke-width bytes before scanning; path/viewBox additionally charge their existing 4n+1 Work. Short-circuit rejection does not inspect later fields. No allocation, OutputBytes, Nodes or Depth; tree callers retain those obligations and sticky stops",
+    "compatibility": "Existing katex::fragment Aspect/Endpoint paths remain re-exported. The native attribute predicate itself grants no portable or HTML proof; integrated HtmlSvgElement is separately governed by nepl3.markup revision 3."
+  },
   "katex_visual_fragment": {
     "scope": "Closed native visual profile, separate from author HTML and portable Markup transport; never a renderer authenticity, fidelity, complete artifact or accessibility proof",
     "structure": "Postorder nodes; last node is Span root; each other node has exactly one parent; children strictly precede parent; no sharing, cycles or unreachable nodes",
@@ -281,9 +312,12 @@
     "cascade_preconditions": "Bound fixed KaTeX CSS must contain no competing important declaration (including shorthands/all); host excludes competing author rules for this scope. Browser tests compare computed properties and geometry under style-src-attr none. Not equivalence for arbitrary author stylesheets; accessible independent MathML and full Doc admission remain required",
     "metering": "Validation O(N+E+B log(C+1)), O(N) scratch, serialization O(N+E+output bytes), O(N+output bytes) space; sticky budget includes nodes, depth with generated wrapper, work, scratch/output allocation and combined HTML/CSS output bytes; no partial success",
     "host_parse": "Pinned parse5 8.0.0 parses visual output using HTML5 namespace handling, scripting disabled, source locations and fail-on-parse-error. Unknown elements/attributes/comments, implicit/unclosed container nodes and namespace changes reject the whole result. Finite postorder JSON is still revalidated by Rust; input/node/depth caps do not claim parser heap/time measurement",
-    "host_json": "Internal parsed-unchecked envelope with nodes; exact field sets and types are checked, strings moved into native tree. Outer transport caps bytes before JSON decoding and owns source identity/cancellation; this JSON is not the portable provider ABI"
+    "host_json": "Internal parsed-unchecked envelope with nodes; exact field sets and types are checked, strings moved into native tree. Outer transport caps bytes before JSON decoding and owns source identity/cancellation; this JSON is not the portable provider ABI",
+    "native_owned_preparation": "Pure no_std PreparedVisual privately retains a validated native Fragment plus exact copied host class/scope policy. Input buffer storage/capacity was admitted by the native caller; ownership transfer is not a fresh allocation bound. Preparation meters new policy storage/work and emits zero OutputBytes. Serialization rebuilds a metered borrowed policy and revalidates at current depth/Budget each time, charging repeated output. No mutable accessor, Clone, Deserialize, raw HTML insertion, asset/renderer authenticity, document uniqueness or portable proof.",
+    "native_html_projection": "Consuming PreparedVisual::into_html revalidates original at caller depth before extending the class policy, preserves original node indices/child buffers and appends an aria-hidden scope span at N. Empty unstyled class lists are omitted; duplicate tokens keep their first occurrence. Original registered classes, including unused names, remain present. Generated style class suffixes use original indices; stylesheet rules follow original root-first child traversal, retaining declaration order/bytes and !important. New storage/scans/comparisons and complete typed HTML validation share one sticky Budget; emitted CSS alone charges OutputBytes during conversion, subsequent HTML serialization charges its own bytes. Worst-case class dedup and generic policy membership are quadratic and metered. Immutable visual-only result has consuming extraction, no Clone or asset/scope-uniqueness/MathML/fidelity/artifact proof. Preparation input storage remains the native caller obligation."
   },
   "default_deny": true,
   "design_revision": "nepl3-design-2026-09-06-r4",
-  "html_profile": "interfaces/markup.json and doc/spec/19-html-fragment.md define flat Text/Element/MathElement nodes. HTML admits math roots (inline in phrasing, either display in flow); mtext admits checked HTML phrasing. IDs, ancestry and depth cross namespaces. SVG, KaTeX profiles and full artifact preparation remain required, not silently accepted."
+  "html_profile": "interfaces/markup.json revision 3 and canonical spec19 define flat Text/Element/MathElement/SvgElement nodes. SvgElement is the narrow generated-Math svg/path/line vocabulary, with fixed namespace; only svg enters from HTML positions admitting Span, no standalone SVG root or direct MathML child. svg contains only childless path/line. All edges participate in depth, identity traversal and offset remapping. AriaHidden is boolean. Registered classes use [A-Za-z][A-Za-z0-9_-]*; DataId/DataGroup remain lowercase. KaTeX projection, accessible dual representation and full artifact preparation remain separate.",
+  "general_svg_scope": "The broader SVG vocabulary and root_slots.Svg describe the separate generalized markup target. Inline HtmlRequest uses only the narrower implemented html_profile below; standalone Svg root/other SVG elements/Text remain outside that API, not removed from the generalized target."
 }

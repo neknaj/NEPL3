@@ -49,6 +49,7 @@ fn value(a: &HtmlAttribute, b: &mut Budget) -> Result<String, HtmlError> {
         | DataGroup { value }
         | Alt { value } => Some(value.as_str()),
         Src { path } => Some(path.as_str()),
+        AriaHidden { value } => Some(if *value { "true" } else { "false" }),
         Role { value } => Some(match value {
             HtmlRole::Heading => "heading",
             HtmlRole::Img => "img",
@@ -164,7 +165,7 @@ fn between_artifacts(
     Ok(out)
 }
 impl Output {
-    fn text(
+    pub(super) fn text(
         &mut self,
         s: &str,
         context: TextContext,
@@ -228,6 +229,11 @@ fn fragment_into(
         b.observe_depth(depth)?;
         let n = check::node(f, r)?;
         if exit {
+            if let HtmlNode::SvgElement { element, .. } = n {
+                out.literal("</", b)?;
+                out.literal(element.name(), b)?;
+                out.literal(">", b)?;
+            }
             if let HtmlNode::Element { tag, .. } = n {
                 out.literal("</", b)?;
                 out.literal(tag.name(), b)?;
@@ -243,6 +249,16 @@ fn fragment_into(
         b.charge(Resource::Nodes, 1)?;
         match n {
             HtmlNode::Text { text } => out.text(text, TextContext::Content, r, b)?,
+            HtmlNode::SvgElement { element, children } => {
+                super::inline_svg::open(element, out, r, b)?;
+                b.charge(Resource::AllocationUnits, 64)?;
+                stack.push((r, depth, true, false));
+                for c in children.iter().rev() {
+                    b.charge(Resource::Work, 1)?;
+                    b.charge(Resource::AllocationUnits, 64)?;
+                    stack.push((*c, depth.saturating_add(1), false, false));
+                }
+            }
             HtmlNode::MathElement {
                 tag,
                 attributes,

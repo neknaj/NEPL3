@@ -7,7 +7,10 @@ use nepl3_core::{
     source::SourceAdmission,
 };
 use nepl3_markup::html::*;
-use nepl3_sentence_core::{model::*, syntax::SentenceSyntax};
+use nepl3_sentence_core::{
+    model::*,
+    syntax::{CheckedSyntax, SentenceSyntax},
+};
 mod classes;
 pub mod paragraph;
 
@@ -201,7 +204,9 @@ impl Builder<'_> {
         for mut node in markup.fragment.nodes {
             self.b.charge(Resource::Nodes, 1)?;
             match &mut node {
-                HtmlNode::Element { children, .. } | HtmlNode::MathElement { children, .. } => {
+                HtmlNode::Element { children, .. }
+                | HtmlNode::MathElement { children, .. }
+                | HtmlNode::SvgElement { children, .. } => {
                     for child in children {
                         self.b.charge(Resource::Work, 1)?;
                         *child = offset.checked_add(*child).ok_or(Error::InternalShape)?;
@@ -338,7 +343,29 @@ pub fn render_with_foreign<'a, E: From<StopReason>>(
     b: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> Result<RenderedSentence<'a>, RenderFailure<E>> {
-    let output = build_with_foreign(input, registry, adapter, b, admission)?;
+    let checked = input
+        .validate(registry, b, admission)
+        .map_err(Error::from)?;
+    render_checked_with_foreign(&checked, adapter, b)
+}
+
+/// Native same-operation rendering of an already validated immutable Sentence.
+/// The caller retains the original Budget and source-admission scope. This
+/// borrowed proof is not portable or authority to omit admission in a new
+/// operation. Guest markup, insertion depth, IDs and final output are still
+/// checked; no guest is rendered during input validation. Validate again when
+/// entering a deeper caller context or a different admission scope: this proof
+/// retains neither the validation depth nor a Budget/admission identity.
+pub fn render_checked_with_foreign<'a, E: From<StopReason>>(
+    input: &CheckedSyntax<'a>,
+    adapter: &mut impl FnMut(
+        &nepl3_core::syntax::ForeignClosure,
+        EmbedRef,
+        &mut Budget,
+    ) -> Result<HtmlRequest, E>,
+    b: &mut Budget,
+) -> Result<RenderedSentence<'a>, RenderFailure<E>> {
+    let output = build_checked_with_foreign(input, adapter, b)?;
     validate(
         &output.markup.fragment,
         output.markup.slot,
@@ -362,7 +389,10 @@ pub fn render_part_with_foreign<'a, E: From<StopReason>>(
     b: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> Result<PendingSentence<'a>, RenderFailure<E>> {
-    let output = build_with_foreign(input, registry, adapter, b, admission)?;
+    let checked = input
+        .validate(registry, b, admission)
+        .map_err(Error::from)?;
+    let output = build_checked_with_foreign(&checked, adapter, b)?;
     check_part(
         &output.markup.fragment,
         output.markup.slot,
@@ -372,20 +402,17 @@ pub fn render_part_with_foreign<'a, E: From<StopReason>>(
     .map_err(Error::from)?;
     Ok(PendingSentence(output))
 }
-fn build_with_foreign<'a, E: From<StopReason>>(
-    input: &'a SentenceSyntax,
-    registry: &SchemaRegistry,
+fn build_checked_with_foreign<'a, E: From<StopReason>>(
+    checked: &CheckedSyntax<'a>,
     adapter: &mut impl FnMut(
         &nepl3_core::syntax::ForeignClosure,
         EmbedRef,
         &mut Budget,
     ) -> Result<HtmlRequest, E>,
     b: &mut Budget,
-    admission: &mut SourceAdmission,
 ) -> Result<RenderedSentence<'a>, RenderFailure<E>> {
-    input
-        .validate(registry, b, admission)
-        .map_err(Error::from)?;
+    b.poll().map_err(Error::from)?;
+    let input = checked.syntax();
     let root = match input.value.root {
         Root::Sentence(r) => r.0,
         Root::Inline(r) => r.0,
@@ -481,9 +508,9 @@ fn build_with_foreign<'a, E: From<StopReason>>(
                     .saturating_add(builder.depths[parent as usize]);
                 let markup = builder
                     .b
-                    .with_depth_at_least(depth, |b| adapter(closure, *syntax, b))
-                    .map_err(RenderFailure::Foreign)?;
+                    .with_depth_at_least(depth, |b| adapter(closure, *syntax, b));
                 builder.b.poll().map_err(Error::from)?;
+                let markup = markup.map_err(RenderFailure::Foreign)?;
                 builder.guest(parent, node, *syntax, markup)?;
             }
         }

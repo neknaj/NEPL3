@@ -193,6 +193,29 @@ fn terminal_replies(dependent: bool) -> Result<(), String> {
     ] {
         let mut codec = checked!(FoundationCodec::new(&registry, &store, &mut admission));
         let value = checked!(read::reply_to_value(&reply, &receiving, &mut codec, &mut b));
+        // Isolate schema selection after structural validation, before source decode.
+        let mut prefix = budget();
+        checked!(prefix.charge(
+            Resource::AllocationUnits,
+            ("nepl3.reader".len() + "ReadReply".len()) as u64
+        ));
+        checked!(registry.validate(&reader_type("ReadReply"), &value, &mut prefix));
+        let mut expected_usage = prefix.usage();
+        expected_usage.work += 1;
+        let mut limits = budget().limits();
+        limits.work = expected_usage.work;
+        let mut stopped = Budget::new(limits);
+        let mut fresh = SourceAdmission::default();
+        let mut fresh_codec = checked!(FoundationCodec::new(&registry, &store, &mut fresh));
+        assert!(matches!(
+            read::reply_from_value(&value, &receiving, &mut fresh_codec, &mut stopped),
+            Err(nepl3_reader::portable::PortableError::Stopped(
+                StopReason::WorkLimit
+            ))
+        ));
+        assert_eq!(stopped.poll(), Err(StopReason::WorkLimit));
+        assert_eq!(stopped.usage(), expected_usage);
+
         for reason in [StopReason::WorkLimit, StopReason::AllocationLimit] {
             let mut limits = budget().limits();
             match reason {

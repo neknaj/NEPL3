@@ -224,6 +224,54 @@
       "aliases": "doc/migration/aliases/references.json",
       "route": "docs/spec/references.html",
       "renderer": "nepl3-tools.markdown-annotated/4"
+    },
+    {
+      "id": "foundation-runtime-decision",
+      "source": "doc/decisions/0005-foundation-runtime-contracts.nepld",
+      "projection": "doc/decisions/0005-foundation-runtime-contracts.md",
+      "aliases": "doc/decisions/0005-foundation-runtime-contracts.aliases.json",
+      "route": "docs/decisions/0005-foundation-runtime-contracts.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "pages-recovery-inventory-decision",
+      "source": "doc/decisions/0004-pages-recovery-doc-inventory.nepld",
+      "projection": "doc/decisions/0004-pages-recovery-doc-inventory.md",
+      "aliases": "doc/decisions/0004-pages-recovery-doc-inventory.aliases.json",
+      "route": "docs/decisions/0004-pages-recovery-doc-inventory.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "repository-foundation-decision",
+      "source": "doc/decisions/0001-repository-foundation.nepld",
+      "projection": "doc/decisions/0001-repository-foundation.md",
+      "aliases": "doc/decisions/0001-repository-foundation.aliases.json",
+      "route": "docs/decisions/0001-repository-foundation.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "design-contract-corrections-decision",
+      "source": "doc/decisions/0002-design-contract-corrections.nepld",
+      "projection": "doc/decisions/0002-design-contract-corrections.md",
+      "aliases": "doc/decisions/0002-design-contract-corrections.aliases.json",
+      "route": "docs/decisions/0002-design-contract-corrections.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "web-tea-migration-decision",
+      "source": "doc/decisions/0003-web-tea-doc-migration.nepld",
+      "projection": "doc/decisions/0003-web-tea-doc-migration.md",
+      "aliases": "doc/decisions/0003-web-tea-doc-migration.aliases.json",
+      "route": "docs/decisions/0003-web-tea-doc-migration.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "html-generation-decision",
+      "source": "doc/decisions/0006-html-generation.nepld",
+      "projection": "doc/decisions/0006-html-generation.md",
+      "aliases": "doc/decisions/0006-html-generation.aliases.json",
+      "route": "docs/decisions/0006-html-generation.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
@@ -251,11 +299,41 @@
       "id": "pages-information-architecture-source",
       "source": "doc/decisions/pages-information-architecture.md",
       "route": "sources/pages-information-architecture.md"
+    },
+    {
+      "id": "design-review-source",
+      "source": "doc/review.md",
+      "route": "sources/review.md"
+    },
+    {
+      "id": "design-review-register-source",
+      "source": "design/review.json",
+      "route": "sources/review.json"
+    },
+    {
+      "id": "web-tea-import-source",
+      "source": "doc/history/web-tea-import.json",
+      "route": "sources/web-tea-import.json"
+    },
+    {
+      "id": "acceptance-catalog-source",
+      "source": "design/acceptance.json",
+      "route": "sources/acceptance.json"
+    },
+    {
+      "id": "tasks-source",
+      "source": "design/tasks.json",
+      "route": "sources/tasks.json"
+    },
+    {
+      "id": "implementation-status-source",
+      "source": "implementation-status.json",
+      "route": "sources/implementation-status.json"
     }
   ],
   "output_limits": {
     "source_bytes": 10000000,
-    "work": 1900000000,
+    "work": 4500000000,
     "depth": 1000,
     "nodes": 72000000,
     "allocation_units": 4000000000,
@@ -265,10 +343,10 @@
   },
   "html_output_limits": {
     "source_bytes": 10000000,
-    "work": 1700000000,
+    "work": 4000000000,
     "depth": 1000,
     "nodes": 48000000,
-    "allocation_units": 2300000000,
+    "allocation_units": 2500000000,
     "output_bytes": 10000000,
     "diagnostics": 1000,
     "events": 1000

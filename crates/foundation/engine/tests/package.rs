@@ -13,6 +13,8 @@ use nepl3_reader::{
 mod head;
 #[path = "package/portable.rs"]
 mod portable;
+#[path = "package/recovery.rs"]
+mod recovery;
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 fn budget() -> Budget {
     Budget::new(Limits {
@@ -344,6 +346,37 @@ fn persistent_tree_checks_parent_reads_spelling_payload_and_concrete_owner() -> 
             ],
         }],
     };
+    tree.validate(&resolved, &mut budget(), &mut SourceAdmission::default())
+        .map_err(|e| format!("{e:?}"))?;
+    // Both controls perform the same syntax/context/profile work. Only the
+    // in-range Leaf selection reaches kind comparison; it mismatches Form:Let
+    // and exits before static-field validation can add unrelated work.
+    let mut absent = tree.clone();
+    absent.contexts[0].nodes[0].shape = ShapeSelection::Leaf { index: u64::MAX };
+    let mut prefix = budget();
+    assert!(matches!(
+        absent.validate(&resolved, &mut prefix, &mut SourceAdmission::default()),
+        Err(TreeError::Selection)
+    ));
+    let mut mismatch = tree.clone();
+    mismatch.contexts[0].nodes[0].shape = ShapeSelection::Leaf { index: 0 };
+    assert!(matches!(
+        mismatch.validate(&resolved, &mut budget(), &mut SourceAdmission::default()),
+        Err(TreeError::Selection)
+    ));
+    let mut limits = budget().limits();
+    limits.work = prefix.usage().work;
+    let mut stopped = Budget::new(limits);
+    assert!(matches!(
+        mismatch.validate(&resolved, &mut stopped, &mut SourceAdmission::default()),
+        Err(TreeError::Stopped(
+            nepl3_core::budget::StopReason::WorkLimit
+        ))
+    ));
+    assert_eq!(
+        stopped.poll(),
+        Err(nepl3_core::budget::StopReason::WorkLimit)
+    );
     tree.validate(&resolved, &mut budget(), &mut SourceAdmission::default())
         .map_err(|e| format!("{e:?}"))?;
     // Source table order is unrestricted. An unrelated snapshot with the
@@ -1171,3 +1204,15 @@ fn resolved_profile_pins_real_package_host_providers_resources_and_foreign_modes
     ));
     Ok(())
 }
+
+#[path = "package/shape_lookup.rs"]
+mod shape_lookup;
+
+#[path = "package/schema_admission.rs"]
+mod schema_admission;
+
+#[path = "package/style_admission.rs"]
+mod style_admission;
+
+#[path = "package/extension_admission.rs"]
+mod extension_admission;

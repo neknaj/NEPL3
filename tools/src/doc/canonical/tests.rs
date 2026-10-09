@@ -1,6 +1,8 @@
 use super::*;
 use crate::testing::Fixture;
 use serde_json::json;
+#[path = "tests/json.rs"]
+mod json;
 #[path = "tests/math.rs"]
 #[cfg(not(target_family = "wasm"))]
 mod math;

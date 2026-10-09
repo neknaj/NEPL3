@@ -150,7 +150,7 @@ fn encode<C: FoundationValueCodec>(
     if matches!(&outcome,Outcome::Invalid(error,_) if error::stop_reason(error).is_some()) {
         return Err(PortableError::Shape);
     }
-    let s = Schemas::new(registry)?;
+    let s = Schemas::new(registry, b)?;
     let data = outcome.data();
     let store = check::validate(&data, registry, b, codec.source_admission())?;
     let mut local = codec.scoped(&store);
@@ -192,7 +192,7 @@ pub fn reply_from_value<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<DecodedBindingReply, PortableError<C::Error>> {
     registry.validate(&expected("BindingReply", b)?, value, b)?;
-    let s = Schemas::new(registry)?;
+    let s = Schemas::new(registry, b)?;
     let f = fields(value, s.engine, "BindingReply", 2)?;
     let (kind, p) = parts(&f[0], s.engine, "BindingOutcome")?;
     let (complete, index) = match (kind, p.len()) {

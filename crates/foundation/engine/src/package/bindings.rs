@@ -294,7 +294,11 @@ fn owner_inner(
     }
     for style in styles {
         budget.charge(Resource::Work, 1)?;
-        if style.class.name.is_empty() || registry.descriptor(&style.class.schema).is_none() {
+        if style.class.name.is_empty()
+            || registry
+                .descriptor_with_budget(&style.class.schema, budget)?
+                .is_none()
+        {
             return Err(PackageError::InvalidSelector);
         }
         check_selector(package, fields, &style.selector, budget)?;

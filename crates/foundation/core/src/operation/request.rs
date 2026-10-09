@@ -1,6 +1,8 @@
 //! Input admission against an operation selected independently by the host.
+mod binding;
 use super::*;
 use crate::schema::{SchemaError, SchemaRegistry};
+pub use binding::RequestBindingError;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum InputValidationError {
@@ -49,7 +51,7 @@ impl Invoke {
             return Err(SchemaError::Unfinalized.into());
         }
         let descriptor = registry
-            .descriptor(&selected.schema)
+            .descriptor_with_budget(&selected.schema, budget)?
             .ok_or(SchemaError::UnknownSchema)?;
         for candidate in &descriptor.operations {
             budget.charge(

@@ -43,10 +43,12 @@ pub(super) fn recovery(
     b: &mut Budget,
 ) -> Result<Diagnostic, ParseError> {
     let engine = registry
-        .selected("nepl3.engine", 1)
+        .selected_descriptor_with_budget("nepl3.engine", 1, b)?
+        .map(|(schema, _)| schema)
         .ok_or(nepl3_core::schema::SchemaError::UnknownSchema)?;
     let foundation = registry
-        .selected("nepl3.foundation", 1)
+        .selected_descriptor_with_budget("nepl3.foundation", 1, b)?
+        .map(|(schema, _)| schema)
         .ok_or(nepl3_core::schema::SchemaError::UnknownSchema)?;
     slots(3, b)?;
     let schema = record(
@@ -108,3 +110,6 @@ pub(super) fn recovery(
         fixes: vec![],
     })
 }
+
+#[cfg(test)]
+mod tests;

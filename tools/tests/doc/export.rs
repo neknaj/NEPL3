@@ -30,9 +30,10 @@ fn page_output_budget_is_explicit_shared_and_sticky() -> Result<(), String> {
         manifest["output_budget"]["usage"]["work"],
         selected.usage().work
     );
-    assert_eq!(manifest["output_budget"]["limits"]["work"], 100_000_000);
+    // The desktop host preset is 1b; explicit caller limits below stay binding.
+    assert_eq!(manifest["output_budget"]["limits"]["work"], 1_000_000_000);
     for page in manifest["pages"].as_array().ok_or("pages")? {
-        assert_eq!(page["operation_limits"]["work"], 100_000_000);
+        assert_eq!(page["operation_limits"]["work"], 1_000_000_000);
         assert_eq!(
             page["parse_and_validate_usage"]
                 .as_object()
@@ -106,7 +107,7 @@ fn page_manifest_requires_all_explicit_limit_fields() -> Result<(), String> {
     use nepl3_tools::doc::export::pages::{Manifest, resources::OutputLimits};
     let old = r#"{"version":1,"pages":[]}"#;
     let default: Manifest = serde_json::from_str(old).map_err(super::err)?;
-    assert_eq!(default.output_limits.work, 100_000_000);
+    assert_eq!(default.output_limits.work, 1_000_000_000);
     let mut value: serde_json::Value = serde_json::from_str(old).map_err(super::err)?;
     value["output_limits"] = serde_json::to_value(OutputLimits::default()).map_err(super::err)?;
     assert!(serde_json::from_value::<Manifest>(value.clone()).is_ok());

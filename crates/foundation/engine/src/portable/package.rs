@@ -43,7 +43,7 @@ pub fn to_value<C: FoundationValueCodec>(
     b.poll()?;
     let p = checked.package();
     let registry = checked.registry();
-    let s = Schemas::new(registry)?;
+    let s = Schemas::new(registry, b)?;
     let store = source_store(&p.provenance.sources, b)?;
     let mut codec = codec.scoped(&store);
     let mut modes = Vec::new();
@@ -105,7 +105,7 @@ pub fn from_value<C: FoundationValueCodec>(
 ) -> Result<LanguagePackage, PortableError<C::Error>> {
     b.poll()?;
     registry.validate(&expected("LanguagePackage", b)?, value, b)?;
-    let s = Schemas::new(registry)?;
+    let s = Schemas::new(registry, b)?;
     let f = fields(value, s.engine, "LanguagePackage", 14)?;
     let provenance = fields(&f[13], s.engine, "PackageProvenance", 4)?;
     let sources = codec.decode_sources(&provenance[0], b).map_err(boundary)?;

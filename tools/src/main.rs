@@ -41,6 +41,77 @@ fn run() -> nepl3_tools::Result<()> {
         ["sentence", "--write"] => nepl3_tools::sentence(&root),
         ["markup", "--write"] => nepl3_tools::markup(&root),
         ["doc-html", "--write"] => nepl3_tools::doc_html(&root),
+        ["doc-html", "export", "--native-host", host, input, output] => {
+            nepl3_tools::doc::export::native::write(
+                std::path::Path::new(input),
+                std::path::Path::new(output),
+                std::path::Path::new(host),
+                nepl3_tools::doc::export::CssMode::External,
+                nepl3_tools::doc::export::math::Renderer::default(),
+            )
+        }
+        [
+            "doc-html",
+            "export",
+            "--native-host",
+            host,
+            "--math-renderer",
+            renderer,
+            input,
+            output,
+        ] => nepl3_tools::doc::export::native::write(
+            std::path::Path::new(input),
+            std::path::Path::new(output),
+            std::path::Path::new(host),
+            nepl3_tools::doc::export::CssMode::External,
+            renderer.parse()?,
+        ),
+        [
+            "doc-html",
+            "export",
+            "--native-host",
+            host,
+            "--css",
+            css,
+            input,
+            output,
+        ] => nepl3_tools::doc::export::native::write(
+            std::path::Path::new(input),
+            std::path::Path::new(output),
+            std::path::Path::new(host),
+            css.parse()?,
+            nepl3_tools::doc::export::math::Renderer::default(),
+        ),
+        [
+            "doc-html",
+            "export",
+            "--native-host",
+            host,
+            "--css",
+            css,
+            "--math-renderer",
+            renderer,
+            input,
+            output,
+        ]
+        | [
+            "doc-html",
+            "export",
+            "--native-host",
+            host,
+            "--math-renderer",
+            renderer,
+            "--css",
+            css,
+            input,
+            output,
+        ] => nepl3_tools::doc::export::native::write(
+            std::path::Path::new(input),
+            std::path::Path::new(output),
+            std::path::Path::new(host),
+            css.parse()?,
+            renderer.parse()?,
+        ),
         ["doc-html", "export", input, output] => nepl3_tools::doc::export::write(
             std::path::Path::new(input),
             std::path::Path::new(output),
@@ -53,6 +124,44 @@ fn run() -> nepl3_tools::Result<()> {
                 css,
             )
         }
+        [
+            "doc-html",
+            "export",
+            "--math-renderer",
+            renderer,
+            input,
+            output,
+        ] => nepl3_tools::doc::export::write_with_options(
+            std::path::Path::new(input),
+            std::path::Path::new(output),
+            nepl3_tools::doc::export::CssMode::External,
+            renderer.parse()?,
+        ),
+        [
+            "doc-html",
+            "export",
+            "--css",
+            css,
+            "--math-renderer",
+            renderer,
+            input,
+            output,
+        ]
+        | [
+            "doc-html",
+            "export",
+            "--math-renderer",
+            renderer,
+            "--css",
+            css,
+            input,
+            output,
+        ] => nepl3_tools::doc::export::write_with_options(
+            std::path::Path::new(input),
+            std::path::Path::new(output),
+            css.parse()?,
+            renderer.parse()?,
+        ),
         [
             "doc-html",
             "svg",
@@ -69,6 +178,26 @@ fn run() -> nepl3_tools::Result<()> {
             std::path::Path::new(output),
             css.parse()?,
             mode,
+        ),
+        [
+            "doc-html",
+            "svg",
+            "--css",
+            css,
+            "--svg",
+            mode,
+            "--math-renderer",
+            renderer,
+            input,
+            assets,
+            output,
+        ] => nepl3_tools::doc::export::assets::write_with_options(
+            std::path::Path::new(input),
+            std::path::Path::new(assets),
+            std::path::Path::new(output),
+            css.parse()?,
+            mode,
+            renderer.parse()?,
         ),
         ["doc-html", "pages", manifest, output] => nepl3_tools::doc::export::pages::write(
             std::path::Path::new(manifest),
@@ -123,7 +252,7 @@ fn run() -> nepl3_tools::Result<()> {
                 "nepl3-tools doc-markdown annotated <input.nepld> <aliases.json> <new-output.md>"
             );
             println!(
-                "nepl3-tools check | tasks --check | tasks --write | evidence identity\n  foundation --write | reader --write | engine --write | grammar --write | doc --write | math --write | sentence --write | markup --write | doc-html --write\n  doc-html export [--css external|inline] <input.nepld> <new-output-directory>\n  doc-html svg --css external|inline --svg external|embedded <input.nepld> <assets.json> <new-output-directory>\n  doc-html pages <manifest.json> <new-output-directory>\n  doc-inventory --write --commit <40-hex-commit> | doc-inventory --check | doc-inventory --check-current\nRepository checks do not establish runtime conformance."
+                "nepl3-tools check | tasks --check | tasks --write | evidence identity\n  foundation --write | reader --write | engine --write | grammar --write | doc --write | math --write | sentence --write | markup --write | doc-html --write\n  doc-html export [--css external|inline] [--math-renderer katex-preferred|mathml-only] <input.nepld> <new-output-directory>\n  doc-html export --native-host <host.json> [--css external] [--math-renderer katex-preferred|mathml-only] <input.nepld> <new-output-directory>\n  doc-html svg --css external|inline --svg external|embedded [--math-renderer katex-preferred|mathml-only] <input.nepld> <assets.json> <new-output-directory>\n  doc-html pages <manifest.json> <new-output-directory>\n  doc-inventory --write --commit <40-hex-commit> | doc-inventory --check | doc-inventory --check-current\nRepository checks do not establish runtime conformance."
             );
             Ok(())
         }

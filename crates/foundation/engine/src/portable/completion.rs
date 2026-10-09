@@ -40,7 +40,7 @@ pub fn request_to_value<C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     b.charge(Resource::AllocationUnits, request.prefix.len() as u64)?;
     let value = record(
         s.engine,
@@ -62,7 +62,7 @@ pub fn request_decode<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<DecodedScopeCandidateRequest, PortableError<C::Error>> {
     r.validate(&expected("ScopeCandidateRequest", b)?, value, b)?;
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let f = fields(value, s.engine, "ScopeCandidateRequest", 3)?;
     Ok(DecodedScopeCandidateRequest {
         key: Value::read(&f[0], &s, c, b)?,
@@ -84,7 +84,7 @@ pub fn reply_to_value<C: FoundationValueCodec>(
     let mut local = c.scoped(&empty);
     let c = &mut local;
     validate_reply(reply, request, binding, r, c, b)?;
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let candidates = candidates_value(reply, &s, c, b)?;
     let value = record(
         s.engine,
@@ -113,7 +113,7 @@ pub fn reply_decode<C: FoundationValueCodec>(
     let mut local = c.scoped(&empty);
     let c = &mut local;
     r.validate(&expected("ScopeCandidates", b)?, value, b)?;
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let f = fields(value, s.engine, "ScopeCandidates", 5)?;
     let mut candidates = Vec::new();
     for item in list(&f[3])? {
@@ -189,7 +189,7 @@ fn validate_reply<C: FoundationValueCodec>(
     if actual.namespace != reply.namespace {
         return Err(PortableError::RequestMismatch);
     }
-    let s = Schemas::new(r)?;
+    let s = Schemas::new(r, b)?;
     let supplied = candidates_value(reply, &s, c, b)?;
     let computed = candidates_value(&actual, &s, c, b)?;
     if !supplied.equal_with_budget(&computed, b)? {
