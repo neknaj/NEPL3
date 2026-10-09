@@ -382,11 +382,19 @@ nepld正本へ移行し、検査済みの同じsite artifactを公開します�
 
 ### Inline schema-validation frontier
 
-Structural validation retains up to eight pending references in a fixed inline
-array. Wider frontiers use budgeted, fallible heap storage for overflow entries,
-retaining capacity for reuse. The traversal order and all schema checks remain
-unchanged, including per-child Work charging and Nodes/depth accounting. The
-removed AllocationUnits correspond to removed heap requests, not waived checks;
-inline storage is bounded independently of input depth. Exact/one-short tests
-cover both inline and spill boundaries. Full acceptance remains separate from
-these local storage checks.
+Structural validation retains up to eight borrowed sibling groups in a fixed
+inline array. Each group pairs a value slice with one expected type or an
+exactly aligned field-descriptor slice. A remainder reuses the slot freed by
+its current group; unary chains retain no empty ancestors. Wider lists no
+longer require storage proportional to their width, while deeply branching
+inputs spill with precharged fallible capacity sized for the actual group.
+The frontier retains overflow capacity for reuse.
+
+Traversal and schema checks remain forward depth-first. Every child is still
+charged individually for Work before any child Nodes/depth check, preserving
+partial Work usage and ordinary error order with Allocation nonbinding.
+Allocation-versus-Work stop precedence can change because the real storage
+requests change; larger groups may cost more for deeply branching inputs.
+Zero-allocation wide-input and exact/one-short deep-branch spill regressions
+cover both sides of this tradeoff. Removed AllocationUnits represent removed
+heap requests, not waived validation. Full acceptance remains separate.

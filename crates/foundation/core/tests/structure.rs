@@ -134,12 +134,13 @@ fn validation_reuses_frontier_storage_but_visits_every_value() -> Result<(), Sch
     ))));
     let value = NdfValue::List(vec![NdfValue::List(vec![NdfValue::U64(7); 32]); 100]);
     let mut b = Budget::new(Limits {
-        allocation_units: 16_384,
+        allocation_units: 0,
         ..budget().limits()
     });
     registry.validate(&ty, &value, &mut b)?;
-    // Root + 100 rows + 3,200 cells; storage is for the pending frontier, not
-    // a fresh allocation for each visited node. No value checks are skipped.
+    // Root + 100 rows + 3,200 cells. Borrowed sibling groups retain only
+    // branching ancestors; this shallow matrix needs no heap frontier.
+    assert_eq!(b.usage().allocation_units, 0);
     assert_eq!(b.usage().nodes, 3_301);
     assert_eq!(b.usage().work, 3_301);
     assert_eq!(b.usage().depth, 3);
@@ -155,59 +156,73 @@ fn validation_reuses_frontier_storage_but_visits_every_value() -> Result<(), Sch
 }
 
 #[test]
-fn validation_bounds_frontier_before_expanding_wide_input() -> Result<(), SchemaError> {
+fn validation_borrows_wide_siblings_but_eagerly_admits_every_child() -> Result<(), SchemaError> {
     let (registry, _) = registry()?;
-    let slot = core::mem::size_of::<(&TypeDescriptor, &NdfValue, u64)>() as u64;
-    for (width, slots) in [(0, 0), (1, 0), (8, 0), (9, 8), (16, 8), (17, 16)] {
+    for width in [0, 1, 8, 9, 17, 100_000] {
         let value = NdfValue::List(vec![NdfValue::Unit; width]);
         let mut limits = budget().limits();
-        limits.allocation_units = slots * slot;
+        limits.allocation_units = 0;
         let mut b = Budget::new(limits);
         registry.validate(&TypeDescriptor::NdfValue, &value, &mut b)?;
-        assert_eq!(b.usage().allocation_units, slots * slot);
+        assert_eq!(b.usage().allocation_units, 0);
         assert_eq!(b.usage().nodes, width as u64 + 1);
         assert_eq!(b.usage().work, width as u64 + 1);
-        if slots > 0 {
-            limits.allocation_units -= 1;
-            let mut b = Budget::new(limits);
-            assert!(matches!(
-                registry.validate(&TypeDescriptor::NdfValue, &value, &mut b),
-                Err(SchemaError::Stopped(StopReason::AllocationLimit))
-            ));
-            let used = b.usage();
-            assert_eq!(b.poll(), Err(StopReason::AllocationLimit));
-            assert!(matches!(
-                registry.validate(&TypeDescriptor::NdfValue, &NdfValue::Unit, &mut b),
-                Err(SchemaError::Stopped(StopReason::AllocationLimit))
-            ));
-            assert_eq!(used, b.usage());
-        }
     }
+    let ty = TypeDescriptor::List(Box::new(TypeDescriptor::U64));
     for width in [9, 100_000] {
-        let value = NdfValue::List(vec![NdfValue::Unit; width]);
-        for (limits, reason) in [
+        let mut values = vec![NdfValue::U64(0); width];
+        values[0] = NdfValue::Unit;
+        let value = NdfValue::List(values);
+        for (work, nodes, depth, expected, used_work, used_nodes, used_depth) in [
             (
-                Limits {
-                    work: 1,
-                    ..budget().limits()
-                },
-                StopReason::WorkLimit,
+                width as u64,
+                1_000_000,
+                100,
+                SchemaError::Stopped(StopReason::WorkLimit),
+                width as u64,
+                1,
+                1,
             ),
             (
-                Limits {
-                    allocation_units: 0,
-                    ..budget().limits()
-                },
-                StopReason::AllocationLimit,
+                width as u64 + 1,
+                1_000_000,
+                100,
+                SchemaError::WrongType,
+                width as u64 + 1,
+                2,
+                2,
+            ),
+            (
+                1_000_000,
+                1,
+                100,
+                SchemaError::Stopped(StopReason::NodeLimit),
+                width as u64 + 1,
+                1,
+                1,
+            ),
+            (
+                1_000_000,
+                1_000_000,
+                1,
+                SchemaError::Stopped(StopReason::DepthLimit),
+                width as u64 + 1,
+                2,
+                1,
             ),
         ] {
-            let mut b = Budget::new(limits);
-            assert!(
-                matches!(registry.validate(&TypeDescriptor::NdfValue,&value,&mut b),Err(SchemaError::Stopped(found)) if found==reason)
-            );
+            let mut b = Budget::new(Limits {
+                work,
+                nodes,
+                depth,
+                allocation_units: 0,
+                ..budget().limits()
+            });
+            assert_eq!(registry.validate(&ty, &value, &mut b).err(), Some(expected));
+            assert_eq!(b.usage().work, used_work);
+            assert_eq!(b.usage().nodes, used_nodes);
+            assert_eq!(b.usage().depth, used_depth);
             assert_eq!(b.usage().allocation_units, 0);
-            assert_eq!(b.usage().nodes, 1);
-            assert_eq!(b.poll(), Err(reason));
         }
     }
     Ok(())
@@ -274,6 +289,159 @@ fn validation_preserves_left_to_right_error_order() -> Result<(), SchemaError> {
     ] {
         assert!(
             matches!(registry.validate(&TypeDescriptor::NdfValue, &NdfValue::List(children), &mut budget()), Err(found) if found == expected)
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn borrowed_fields_resume_after_nested_values_and_across_spills() -> Result<(), SchemaError> {
+    fn fields() -> Vec<FieldDescriptor> {
+        vec![
+            FieldDescriptor {
+                name: "nested".into(),
+                ty: TypeDescriptor::List(Box::new(TypeDescriptor::NdfValue)),
+            },
+            FieldDescriptor {
+                name: "label".into(),
+                ty: TypeDescriptor::Text,
+            },
+            FieldDescriptor {
+                name: "flag".into(),
+                ty: TypeDescriptor::Bool,
+            },
+        ]
+    }
+    fn value(schema: &SchemaRef, variant: bool, fields: Vec<NdfValue>) -> NdfValue {
+        if variant {
+            NdfValue::Variant(Variant {
+                schema: schema.clone(),
+                type_name: "MixedVariant".into(),
+                variant: "Case".into(),
+                fields,
+            })
+        } else {
+            NdfValue::Record(Record {
+                schema: schema.clone(),
+                kind: "MixedRecord".into(),
+                fields,
+            })
+        }
+    }
+    let descriptor = SchemaDescriptor {
+        package: "mixed".into(),
+        revision: 1,
+        types: vec![
+            NamedType {
+                name: "MixedRecord".into(),
+                constraints: vec![],
+                shape: TypeShape::Record { fields: fields() },
+            },
+            NamedType {
+                name: "MixedVariant".into(),
+                constraints: vec![],
+                shape: TypeShape::Variant {
+                    variants: vec![VariantDescriptor {
+                        name: "Case".into(),
+                        fields: fields(),
+                    }],
+                },
+            },
+        ],
+        operations: vec![],
+    };
+    let schema = descriptor.reference(&mut budget())?;
+    let mut r = SchemaRegistry::default();
+    r.register(schema.clone(), descriptor, &mut budget())?;
+    r.finalize(&mut budget())?;
+    let missing = NdfValue::Record(Record {
+        schema: schema.clone(),
+        kind: "Missing".into(),
+        fields: vec![],
+    });
+    for variant in [false, true] {
+        let named = TypeDescriptor::Named(TypeRef {
+            package: "mixed".into(),
+            revision: 1,
+            name: if variant {
+                "MixedVariant"
+            } else {
+                "MixedRecord"
+            }
+            .into(),
+        });
+        for ty in [
+            &named,
+            &TypeDescriptor::TypedValue,
+            &TypeDescriptor::NdfValue,
+        ] {
+            let valid = value(
+                &schema,
+                variant,
+                vec![
+                    NdfValue::List(vec![NdfValue::Unit]),
+                    NdfValue::Text("ok".into()),
+                    NdfValue::Bool(true),
+                ],
+            );
+            let mut b = budget();
+            r.validate(ty, &valid, &mut b)?;
+            assert_eq!(
+                (b.usage().work, b.usage().nodes, b.usage().depth),
+                (5, 5, 3)
+            );
+            for (nested, expected, nodes) in [
+                (NdfValue::Unit, SchemaError::WrongType, 5),
+                (missing.clone(), SchemaError::UnknownType, 3),
+            ] {
+                let invalid = value(
+                    &schema,
+                    variant,
+                    vec![
+                        NdfValue::List(vec![nested]),
+                        NdfValue::Text("ok".into()),
+                        NdfValue::U64(7),
+                    ],
+                );
+                let mut b = budget();
+                assert_eq!(r.validate(ty, &invalid, &mut b).err(), Some(expected));
+                assert_eq!(
+                    (b.usage().work, b.usage().nodes, b.usage().depth),
+                    (5, nodes, 3)
+                );
+            }
+            let mut b = budget();
+            assert_eq!(
+                r.validate(ty, &value(&schema, variant, vec![]), &mut b)
+                    .err(),
+                Some(SchemaError::FieldCount)
+            );
+            assert_eq!(
+                (b.usage().work, b.usage().nodes, b.usage().depth),
+                (1, 1, 1)
+            );
+        }
+        let mut inner = value(
+            &schema,
+            variant,
+            vec![
+                NdfValue::List(vec![NdfValue::Unit]),
+                NdfValue::Text("ok".into()),
+                NdfValue::U64(7),
+            ],
+        );
+        for _ in 0..9 {
+            inner = NdfValue::List(vec![inner, missing.clone()]);
+        }
+        let mut b = budget();
+        assert_eq!(
+            r.validate(&TypeDescriptor::NdfValue, &inner, &mut b).err(),
+            Some(SchemaError::WrongType)
+        );
+        assert!(b.usage().allocation_units > 0);
+        assert_eq!(
+            (b.usage().work, b.usage().nodes, b.usage().depth),
+            (23, 14, 12)
         );
     }
     Ok(())
@@ -885,8 +1053,12 @@ fn rejected_deep_descriptor_is_safe_to_clone_compare_debug_and_drop() {
 fn inline_validation_preserves_deep_and_prestopped_limits() -> Result<(), SchemaError> {
     let (r, _) = registry()?;
     let mut value = NdfValue::Unit;
-    for _ in 0..40 {
-        value = NdfValue::Some(Box::new(value));
+    for i in 0..40 {
+        value = if i % 2 == 0 {
+            NdfValue::Some(Box::new(value))
+        } else {
+            NdfValue::List(vec![value])
+        };
     }
     let mut exact = budget().limits();
     exact.allocation_units = 0;
