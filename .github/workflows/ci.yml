@@ -89,7 +89,7 @@ jobs:
         working-directory: tools/site
         run: python -m unittest test_record_smoke.RecordSmokeTests.test_pass_and_failure_are_recorded_remotely
       - name: Evidence runner host portability
-        run: python -m unittest tools.evidence.test_runner
+        run: python -m unittest tools.evidence.test_runner tools.evidence.test_archive
       - name: Generated checkout gate tests
         run: python -m unittest tools.audit.test_clean
       - name: Node renderer host toolchain

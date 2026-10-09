@@ -45,3 +45,46 @@ verifyは記録内の矛盾・改変を検出する。manifestの作者や実行
 
 `inventory.py` は指定Git commit内の過去scriptを実行せず分類候補と重複を抽出する。
 分類候補は人による内容監査の代替ではない。過去の証拠を再sealしない。
+
+## Local raw-bundle transport
+
+`archive.py` preserves a collector bundle byte-for-byte in a deterministic,
+flat, uncompressed ZIP. It neither executes the recorded argv nor creates
+AcceptanceEvidence, changes status, authenticates an execution, or publishes
+anything. Failed/interrupted collector records remain failed/interrupted data.
+The original collector bundle, including `acceptance_decision=false`, is retained.
+
+```sh
+python -m tools.evidence.archive pack dist/evidence/raw-run dist/evidence/raw-run.zip --source-revision <collected-40-digit-revision>
+python -m tools.evidence.archive restore dist/evidence/raw-run.zip dist/evidence/raw-restored --source-revision <collected-40-digit-revision> --expected-sha256 <independently-recorded-archive-digest>
+python -m tools.evidence.runner verify dist/evidence/raw-restored
+```
+
+Select the expected digest and collected revision outside the incoming archive.
+The digest identifies this inner ZIP, not an enclosing GitHub Actions download.
+The archive does not contain its own expected digest or a locator-bearing formal
+record. Current source/spec identity must still be checked separately before
+using restored logs in any formal acceptance attempt.
+
+Inputs have at most 256 regular files, each at most 1 MiB and together at most
+32 MiB. Only the collector's spec, manifest and recorded stdout/stderr files are
+allowed. Empty raw output channels are preserved. The ZIP central-directory
+size and entry count are bounded before parsing; compressed, encrypted, ZIP64,
+noncanonical, linked/special, duplicate, nested and unexpected members fail.
+Symlink/reparse ancestors, hardlinked inputs and existing destinations fail.
+A source snapshot must pass the same collector consistency checks after restore.
+
+Every archive/member/hash check precedes creation of the output directory.
+Restore exclusively creates that directory; it never replaces an existing
+directory. A write, close or readback failure may leave incomplete output. That
+output is unaccepted, is not automatically deleted, and retries require a new
+destination. This preserves unrelated files if another process replaces or
+modifies the destination. Consumers must wait for successful return and verify
+the returned digest; filesystem creation is not an atomic publication protocol.
+This is not a sandbox against concurrent workspace replacement. Pack/restore
+errors do not grant acceptance or publication.
+
+This is the local preservation/restoration boundary only. Authenticated remote
+artifact selection, advertised retention/expiry, clean-CI retrieval, the formal
+record bridge and independent scope review remain required. Unavailable logs
+must fail verification; local archive roundtrip success does not mark an acceptance group passed.
