@@ -1,0 +1,18 @@
+[
+  {
+    "section": null,
+    "name": "0001-設計の取り込みとリポジトリ基盤"
+  },
+  {
+    "section": "problem",
+    "name": "問題"
+  },
+  {
+    "section": "decision",
+    "name": "判断"
+  },
+  {
+    "section": "effects",
+    "name": "影響と確認"
+  }
+]
