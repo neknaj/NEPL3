@@ -465,3 +465,16 @@ Usage monotonicity across an arbitrary whole-Budget replacement.
 The required `resource-charge-proof` CI job runs the pinned verifier and keeps
 its raw output and source/lock identity for 14 days. The quality gate requires
 this job to succeed; the artifact is scoped proof evidence, not full acceptance.
+
+`Budget::with_ceiling` uses the pure admission function `budget/ceiling.rs`.
+The eight effective limits are component-wise minima. Admission checks cumulative
+usage in source/work/nodes/allocation/output/diagnostics/events order, then checks
+historical usage depth last; active and measurement depth are not admission inputs.
+The production-method Kani harness uses arbitrary fields and prior stops, checks
+callback suppression on rejection and entry state on admission, and models an
+arbitrary replacement Budget with an independent callback Result. Every returning
+path restores only the saved outer limits; other callback state and its Result
+are retained. Nested ceiling intersection cannot widen limits, but a callback
+that directly replaces its Budget is not constrained by that guarantee. Panic,
+unwind, divergence, generic error conversion and whole-runtime acceptance remain
+outside this proof.

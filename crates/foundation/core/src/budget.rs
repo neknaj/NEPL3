@@ -1,5 +1,6 @@
 //! Shared, monotonic logical resource accounting. This does not intercept physical OOM.
 
+mod ceiling;
 mod charge;
 mod depth;
 mod observed;
@@ -107,35 +108,12 @@ impl Budget {
         ceiling: Limits,
         operation: impl FnOnce(&mut Self) -> Result<T, E>,
     ) -> Result<T, E> {
-        self.poll()?;
         let outer = self.limits;
-        self.limits = Limits {
-            source_bytes: outer.source_bytes.min(ceiling.source_bytes),
-            work: outer.work.min(ceiling.work),
-            depth: outer.depth.min(ceiling.depth),
-            nodes: outer.nodes.min(ceiling.nodes),
-            allocation_units: outer.allocation_units.min(ceiling.allocation_units),
-            output_bytes: outer.output_bytes.min(ceiling.output_bytes),
-            diagnostics: outer.diagnostics.min(ceiling.diagnostics),
-            events: outer.events.min(ceiling.events),
-        };
-        let result = (|| {
-            for resource in [
-                Resource::SourceBytes,
-                Resource::Work,
-                Resource::Nodes,
-                Resource::AllocationUnits,
-                Resource::OutputBytes,
-                Resource::Diagnostics,
-                Resource::Events,
-            ] {
-                self.charge(resource, 0)?;
-            }
-            if self.usage.depth > self.limits.depth {
-                return Err(self.stop(StopReason::DepthLimit).into());
-            }
-            operation(self)
-        })();
+        match ceiling::enter(outer, ceiling, self.usage, self.stopped) {
+            Ok(limits) => self.limits = limits,
+            Err(reason) => return Err(self.stop(reason).into()),
+        }
+        let result = operation(self);
         self.limits = outer;
         result
     }
