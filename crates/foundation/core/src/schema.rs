@@ -2,12 +2,14 @@
 //! Domain constraint IDs remain obligations for the domain checker.
 pub mod foundation;
 mod frontier;
+mod siblings;
 use crate::{
     budget::{Budget, Resource, StopReason},
     source::Digest,
     value::{NdfValue, SchemaRef},
 };
 use alloc::{boxed::Box, collections::BTreeSet, string::String, vec::Vec};
+use siblings::Siblings;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TypeRef {
@@ -796,18 +798,21 @@ impl SchemaRegistry {
             return Err(SchemaError::Unfinalized);
         }
         budget.charge(Resource::Work, 1)?;
-        let mut pending = frontier::Frontier::new((expected, value, 1u64));
-        while let Some((ty, value, depth)) = pending.pop() {
+        let mut pending =
+            frontier::Frontier::new(Siblings::Uniform(expected, core::slice::from_ref(value), 1));
+        while let Some(group) = pending.pop() {
+            let Some((ty, value, depth, rest)) = group.split_first()? else {
+                continue;
+            };
+            if let Some(rest) = rest {
+                // The pop just freed a slot: restoring this borrowed remainder
+                // reuses that slot and cannot request additional heap storage.
+                pending.push(rest, budget)?;
+            }
             budget.charge(Resource::Nodes, 1)?;
             budget.observe_depth(depth)?;
             let next_depth = depth.checked_add(1).ok_or(StopReason::DepthLimit)?;
-            let mut push = |ty, value| -> Result<(), SchemaError> {
-                // Charge each child before growing the frontier, rather than
-                // allowing a wide input to run to the next pop unmetered.
-                budget.charge(Resource::Work, 1)?;
-                pending.push((ty, value, next_depth), budget)?;
-                Ok(())
-            };
+            let mut push = |group| siblings::enqueue(&mut pending, group, budget);
             match (ty, value) {
                 (
                     TypeDescriptor::NdfValue
@@ -835,20 +840,20 @@ impl SchemaRegistry {
                         return Err(SchemaError::WrongType);
                     }
                     match value {
-                        NdfValue::Some(value) => push(ty, value)?,
+                        NdfValue::Some(value) => push(Siblings::Uniform(
+                            ty,
+                            core::slice::from_ref(value.as_ref()),
+                            next_depth,
+                        ))?,
                         NdfValue::List(values) => {
-                            for value in values.iter().rev() {
-                                push(ty, value)?;
-                            }
+                            push(Siblings::Uniform(ty, values, next_depth))?;
                         }
                         NdfValue::Record(_) | NdfValue::Variant(_) => {
                             let (fields, values) = self.fields_for(value)?;
                             if fields.len() != values.len() {
                                 return Err(SchemaError::FieldCount);
                             }
-                            for (field, value) in fields.iter().zip(values).rev() {
-                                push(&field.ty, value)?;
-                            }
+                            push(Siblings::Fields(fields, values, next_depth))?;
                         }
                         _ => {}
                     }
@@ -863,11 +868,13 @@ impl SchemaRegistry {
                 (TypeDescriptor::Natural, NdfValue::Integer(number)) if !number.is_negative() => {}
                 (TypeDescriptor::Bytes32, NdfValue::Bytes(bytes)) if bytes.len() == 32 => {}
                 (TypeDescriptor::Option(_), NdfValue::None) => {}
-                (TypeDescriptor::Option(inner), NdfValue::Some(value)) => push(inner, value)?,
+                (TypeDescriptor::Option(inner), NdfValue::Some(value)) => push(Siblings::Uniform(
+                    inner,
+                    core::slice::from_ref(value.as_ref()),
+                    next_depth,
+                ))?,
                 (TypeDescriptor::List(inner), NdfValue::List(values)) => {
-                    for value in values.iter().rev() {
-                        push(inner, value)?;
-                    }
+                    push(Siblings::Uniform(inner, values, next_depth))?;
                 }
                 (TypeDescriptor::Named(name), value) => {
                     let (reference, descriptor) = self
@@ -903,9 +910,7 @@ impl SchemaRegistry {
                     if fields.len() != values.len() {
                         return Err(SchemaError::FieldCount);
                     }
-                    for (field, value) in fields.iter().zip(values).rev() {
-                        push(&field.ty, value)?;
-                    }
+                    push(Siblings::Fields(fields, values, next_depth))?;
                 }
                 _ => return Err(SchemaError::WrongType),
             }
