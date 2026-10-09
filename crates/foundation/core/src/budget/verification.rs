@@ -1,4 +1,4 @@
-//! Bit-precise verification of the production charge transition and application.
+//! Bit-precise verification of production resource transitions and applications.
 //! No assumptions exclude overflow, lowered ceilings, or pre-existing stops.
 use super::*;
 
@@ -16,10 +16,7 @@ fn reason() -> StopReason {
     }
 }
 
-/// All u64 inputs, all seven counters and all nine prior stops are admissible.
-/// The expected addition uses u128, independent of checked_add in production.
-#[kani::proof]
-fn charge_preserves_contract_and_unrelated_state() {
+fn arbitrary_budget() -> Budget {
     let limits = Limits {
         source_bytes: kani::any(),
         work: kani::any(),
@@ -43,13 +40,25 @@ fn charge_preserves_contract_and_unrelated_state() {
     let depth = kani::any();
     let observed_depth = kani::any();
     let stopped = if kani::any() { Some(reason()) } else { None };
-    let mut budget = Budget {
+    Budget {
         limits,
         usage,
         depth,
         stopped,
         observed_depth,
-    };
+    }
+}
+
+/// All u64 inputs, all seven counters and all nine prior stops are admissible.
+/// The expected addition uses u128, independent of checked_add in production.
+#[kani::proof]
+fn charge_preserves_contract_and_unrelated_state() {
+    let mut budget = arbitrary_budget();
+    let limits = budget.limits;
+    let usage = budget.usage;
+    let depth = budget.depth;
+    let observed_depth = budget.observed_depth;
+    let stopped = budget.stopped;
     let resource = match kani::any::<u8>() % 7 {
         0 => Resource::SourceBytes,
         1 => Resource::Work,
@@ -102,4 +111,36 @@ fn charge_preserves_contract_and_unrelated_state() {
     assert_eq!(budget.limits, limits);
     assert_eq!(budget.depth, depth);
     assert_eq!(budget.observed_depth, observed_depth);
+}
+
+/// No assumptions relate active depth, old marks or the current limit.
+/// Use u128 addition to specify the production observation independently.
+#[kani::proof]
+fn depth_observation_preserves_contract_and_unrelated_state() {
+    let mut budget = arbitrary_budget();
+    let limits = budget.limits;
+    let usage = budget.usage;
+    let depth = budget.depth;
+    let observed_depth = budget.observed_depth;
+    let stopped = budget.stopped;
+    let relative: u64 = kani::any();
+    let sum = u128::from(depth) + u128::from(relative);
+    let mut expected_usage = usage;
+    let mut expected_observed = observed_depth;
+    let expected_stop = match stopped {
+        Some(reason) => Some(reason),
+        None if sum <= u128::from(limits.depth) => {
+            expected_usage.depth = usage.depth.max(sum as u64);
+            expected_observed = observed_depth.max(sum as u64);
+            None
+        }
+        None => Some(StopReason::DepthLimit),
+    };
+    let result = budget.observe_depth(relative);
+    assert_eq!(budget.usage, expected_usage);
+    assert_eq!(budget.observed_depth, expected_observed);
+    assert_eq!(budget.stopped, expected_stop);
+    assert_eq!(result, expected_stop.map_or(Ok(()), Err));
+    assert_eq!(budget.limits, limits);
+    assert_eq!(budget.depth, depth);
 }

@@ -1,6 +1,7 @@
 //! Shared, monotonic logical resource accounting. This does not intercept physical OOM.
 
 mod charge;
+mod depth;
 #[cfg(kani)]
 mod verification;
 
@@ -283,18 +284,24 @@ impl Budget {
     }
     /// Checks an iterative traversal depth relative to the active caller, recording its high-water mark.
     pub fn observe_depth(&mut self, relative: u64) -> Result<(), StopReason> {
-        self.poll()?;
-        let Some(depth) = self
-            .depth
-            .checked_add(relative)
-            .filter(|v| *v <= self.limits.depth)
-        else {
-            self.stopped = Some(StopReason::DepthLimit);
-            return Err(StopReason::DepthLimit);
-        };
-        self.usage.depth = self.usage.depth.max(depth);
-        self.observed_depth = self.observed_depth.max(depth);
-        Ok(())
+        match depth::observe(
+            self.depth,
+            relative,
+            self.limits.depth,
+            self.usage.depth,
+            self.observed_depth,
+            self.stopped,
+        ) {
+            depth::Observation::Observed { usage, measured } => {
+                self.usage.depth = usage;
+                self.observed_depth = measured;
+                Ok(())
+            }
+            depth::Observation::Stopped { reason } => {
+                self.stopped = Some(reason);
+                Err(reason)
+            }
+        }
     }
     /// Measure a validation operation's relative depth without resetting Usage.
     /// Nested measurements contribute to their enclosing measurement. Callers

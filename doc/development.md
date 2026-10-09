@@ -399,7 +399,7 @@ Zero-allocation wide-input and exact/one-short deep-branch spill regressions
 cover both sides of this tradeoff. Removed AllocationUnits represent removed
 heap requests, not waived validation. Full acceptance remains separate.
 
-## Pure resource-charge verification
+## Pure resource-transition verification
 
 `Budget::charge` applies the pure scalar transition in `budget/charge.rs`.
 The transition receives the prior counter, limit, amount and first stop and
@@ -415,6 +415,14 @@ limits, active depth and observed depth must remain unchanged. The harness has
 no loops, recursion, input assumptions or alternate verification implementation.
 Its enum generators must be updated when resource or stop variants are added.
 
+`Budget::observe_depth` likewise applies the pure transition in `budget/depth.rs`.
+Its production harness admits arbitrary active depth, relative depth, ceiling,
+prior stop, historical Usage depth and current measurement depth. It checks the
+u128 absolute-depth sum, first-stop precedence, both independent high-water
+marks and every unrelated field. Old marks above a lowered ceiling are retained;
+only the newly observed absolute depth is checked here. This does not prove
+`measure_depth`, `with_depth`, `with_ceiling` or callback restoration.
+
 Use Kani 0.68.0 (CBMC 6.11.0, bundled nightly-2026-08-21) separately from the
 normal Rust 1.97 toolchain. Kani is a development tool and introduces no
 production dependency. Install it following its official installation guide:
@@ -423,15 +431,15 @@ production dependency. Install it following its official installation guide:
 cargo install --locked kani-verifier --version 0.68.0
 cargo kani setup
 cargo fetch --locked
-CARGO_NET_OFFLINE=true cargo kani -p nepl3-core --harness charge_preserves_contract_and_unrelated_state
+CARGO_NET_OFFLINE=true cargo kani -p nepl3-core --harness budget::verification::
 ```
 
 Kani 0.68.0 does not accept `--locked`. Preserve and compare Cargo.lock before
 and after verification; a missing offline dependency is an execution failure,
 not a passed proof. Keep the exact source revision, lock hash, tool versions,
 command and raw output with the run evidence. Normal tests, Clippy and target
-builds remain separate checks. This harness proves only one charge operation
-and its application boundary, not other Budget operations, schema traversal,
+builds remain separate checks. These harnesses prove only a single charge or
+depth observation and their application boundaries, not other Budget operations, schema traversal,
 physical memory bounds or the compiler/verifier's own correctness.
 
 The required `resource-charge-proof` CI job runs the pinned verifier and keeps
