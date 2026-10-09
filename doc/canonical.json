@@ -224,6 +224,14 @@
       "aliases": "doc/migration/aliases/references.json",
       "route": "docs/spec/references.html",
       "renderer": "nepl3-tools.markdown-annotated/4"
+    },
+    {
+      "id": "repository-foundation-decision",
+      "source": "doc/decisions/0001-repository-foundation.nepld",
+      "projection": "doc/decisions/0001-repository-foundation.md",
+      "aliases": "doc/decisions/0001-repository-foundation.aliases.json",
+      "route": "docs/decisions/0001-repository-foundation.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
