@@ -583,3 +583,21 @@ proof gate. The tests do not establish arbitrary ledger/text bounds, exact
 Work/Allocation costs, physical allocation failure handling, remote usage
 authentication or complete runtime acceptance. The existing scoped resource
 proofs and the outstanding acceptance states are unchanged.
+
+### Saved execution-scope re-entry coverage
+
+The suite's `suspension::execution::tests::` native regressions cover the actual
+`ExecutionScope::root` and `run` composition. A saved frame whose Work ceiling
+has already been exceeded is rejected before observing its saved depth: the
+callback is suppressed and the full Usage value is unchanged. This distinguishes
+the required ceiling-before-depth wrapper order from the reversed order, even
+though each Budget wrapper has separate scoped proofs. A later zero-depth ceiling
+also rejects a saved frame without callback execution or a new depth observation.
+Further cases retain a temporary capture ceiling after the outer ceiling is
+restored, and preserve a typed callback error and charged work while restoring
+outer limits and a nonzero active host depth. Root construction intentionally
+defers cumulative resource admission until `run`.
+
+These are native composition regressions, not additional formal proofs or a
+claim that a production defect was found. They do not establish scheduler or
+remote-host correctness, panic/unwind restoration, or complete runtime acceptance.
