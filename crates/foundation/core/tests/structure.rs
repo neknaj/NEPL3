@@ -1335,3 +1335,350 @@ fn origin_missing_or_mismatched_identity_remains_typed_and_atomic() -> Result<()
     }
     Ok(())
 }
+
+#[test]
+fn source_map_closure_revalidation_precharges_long_identity_lookup() -> Result<(), OriginError> {
+    let a = SourceSnapshot::new(
+        SourceId(format!("{}a", "x".repeat(99_999))),
+        0,
+        "memory:a".into(),
+        b"a".to_vec(),
+        &mut budget(),
+    )?;
+    let b = SourceSnapshot::new(
+        SourceId(format!("{}b", "x".repeat(99_999))),
+        0,
+        "memory:b".into(),
+        b"a".to_vec(),
+        &mut budget(),
+    )?;
+    let mapping = Mapping {
+        source: a.span(0, 1)?,
+        target: b.span(0, 1)?,
+        kind: MappingKind::Exact,
+    };
+    let mut store = SourceStore::default();
+    store.insert(a)?;
+    store.insert(b)?;
+    let mappings = [mapping];
+    let proof = SourceMap::validate_mappings(&mappings, &store, &mut budget())?;
+    let mut limits = budget().limits();
+    limits.work = 3;
+    let mut stopped = Budget::new(limits);
+    assert_eq!(
+        proof.validate_sources(&store, &mut stopped),
+        Err(OriginError::Stopped(StopReason::WorkLimit))
+    );
+    Ok(())
+}
+
+#[test]
+fn source_map_bound_store_fast_path_and_independent_revalidation_remain_distinct()
+-> Result<(), OriginError> {
+    fn snapshot(suffix: char, bytes: &[u8]) -> Result<SourceSnapshot, SourceError> {
+        SourceSnapshot::new(
+            SourceId(format!("{}{suffix}", "x".repeat(99_999))),
+            0,
+            format!("memory:{suffix}"),
+            bytes.to_vec(),
+            &mut budget(),
+        )
+    }
+    let a = snapshot('a', b"a")?;
+    let b = snapshot('b', b"a")?;
+    let mapping = Mapping {
+        source: a.span(0, 1)?,
+        target: b.span(0, 1)?,
+        kind: MappingKind::Exact,
+    };
+    let mut store = SourceStore::default();
+    store.insert(a)?;
+    store.insert(b)?;
+    let mappings = [mapping.clone()];
+    let bound = SourceMap::validate_mappings(&mappings, &store, &mut budget())?
+        .bind_sources(&store, &mut budget())?;
+    let mut limits = budget().limits();
+    limits.work = 1;
+    let mut fast = Budget::new(limits);
+    bound.validate_sources(&store, &mut fast)?;
+    assert_eq!(fast.usage().work, 1);
+    let mut independent = SourceStore::default();
+    independent.insert(snapshot('a', b"a")?)?;
+    independent.insert(snapshot('b', b"a")?)?;
+    // Binary search visits b,a for source a and b for source b: 3*(2L+1).
+    // Two independent identities cost 2*(L+41), geometry costs 2, and
+    // closure entry, two endpoint visits cost 3:
+    // total 800090.
+    for cap in [0, 1, 3, 800_089] {
+        limits.work = cap;
+        let mut stopped = Budget::new(limits);
+        assert_eq!(
+            bound.validate_sources(&independent, &mut stopped),
+            Err(OriginError::Stopped(StopReason::WorkLimit))
+        );
+        assert!(stopped.usage().work <= cap);
+    }
+    limits.work = 800_090;
+    let mut exact = Budget::new(limits);
+    bound.validate_sources(&independent, &mut exact)?;
+    assert_eq!(exact.usage().work, limits.work);
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert_eq!(
+        bound.validate_sources(&store, &mut cancelled),
+        Err(OriginError::Stopped(StopReason::Cancelled))
+    );
+    assert_eq!(cancelled.usage().work, 0);
+    let mut conflicting = SourceStore::default();
+    conflicting.insert(snapshot('a', b"a")?)?;
+    conflicting.insert(snapshot('b', b"b")?)?;
+    assert_eq!(
+        bound.validate_sources(&conflicting, &mut budget()),
+        Err(OriginError::Source(SourceError::MissingSnapshot))
+    );
+    limits.work = 3;
+    let mut map = SourceMap::default();
+    assert_eq!(
+        map.insert(mapping.clone(), &independent, &mut Budget::new(limits)),
+        Err(OriginError::Stopped(StopReason::WorkLimit))
+    );
+    assert_eq!(
+        map.inverse(&mapping.target, &independent),
+        Err(OriginError::Unmapped)
+    );
+    assert_eq!(
+        SourceMap::validate_mapping_parts(&[], &mappings, &independent, &mut Budget::new(limits))
+            .err(),
+        Some(OriginError::Stopped(StopReason::WorkLimit))
+    );
+    map.insert(mapping.clone(), &independent, &mut budget())?;
+    assert_eq!(map.inverse(&mapping.target, &independent)?, mapping.source);
+    Ok(())
+}
+
+#[test]
+fn source_index_shared_key_shortcut_keeps_revision_and_independent_key_checks()
+-> Result<(), OriginError> {
+    let source = SourceSnapshot::new(
+        SourceId("x".repeat(100_000)),
+        0,
+        "memory:source".into(),
+        b"a".to_vec(),
+        &mut budget(),
+    )?;
+    let mut store = SourceStore::default();
+    store.insert(source.clone())?;
+    let mut limits = budget().limits();
+    limits.work = 1;
+    // Borrow the actual stored key, also exercising the shortcut on targets
+    // without shared atomic snapshot storage.
+    let key = &store.snapshots()[0].identity().source;
+    {
+        let mut same = Budget::new(limits);
+        assert!(store.get_revision_with_budget(key, 0, &mut same)?.is_some());
+        assert_eq!(same.usage().work, 1);
+        assert!(
+            store
+                .get_revision_with_budget(key, 1, &mut Budget::new(limits))?
+                .is_none()
+        );
+    }
+    let independent = SourceId(source.identity().source.0.clone());
+    assert_eq!(
+        store.get_revision_with_budget(&independent, 0, &mut Budget::new(limits)),
+        Err(StopReason::WorkLimit)
+    );
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert_eq!(
+        store.get_revision_with_budget(&source.identity().source, 0, &mut cancelled),
+        Err(StopReason::Cancelled)
+    );
+    assert_eq!(cancelled.usage().work, 0);
+    Ok(())
+}
+
+#[test]
+#[cfg(target_has_atomic = "ptr")]
+fn source_map_endpoint_cursors_reuse_only_resolved_shared_identities() -> Result<(), OriginError> {
+    let a = SourceSnapshot::new(
+        SourceId(format!("{}a", "x".repeat(99_999))),
+        0,
+        "memory:a".into(),
+        b"ab".to_vec(),
+        &mut budget(),
+    )?;
+    let b = SourceSnapshot::new(
+        SourceId(format!("{}b", "x".repeat(99_999))),
+        0,
+        "memory:b".into(),
+        b"ab".to_vec(),
+        &mut budget(),
+    )?;
+    let mut store = SourceStore::default();
+    store.insert(a.clone())?;
+    store.insert(b.clone())?;
+    for count in [1, 8, 64] {
+        let mut mappings = Vec::new();
+        for i in 0..count {
+            // Fresh ranges still require geometry validation on a cursor hit.
+            let start = i % 2;
+            mappings.push(Mapping {
+                source: a.span(start, start + 1)?,
+                target: b.span(start, start + 1)?,
+                kind: MappingKind::Exact,
+            });
+        }
+        let proof = SourceMap::validate_mappings(&mappings, &store, &mut budget())?;
+        let mut measured = budget();
+        proof.validate_sources(&store, &mut measured)?;
+        #[cfg(target_has_atomic = "ptr")]
+        {
+            // First a search compares b then a, first b search compares b;
+            // all later endpoints pay one pointer probe and one range check.
+            assert_eq!(measured.usage().work, 200_010 + 6 * (count - 1));
+            let mut limits = budget().limits();
+            limits.work = measured.usage().work - 1;
+            assert_eq!(
+                proof.validate_sources(&store, &mut Budget::new(limits)),
+                Err(OriginError::Stopped(StopReason::WorkLimit))
+            );
+        }
+    }
+    // Warm both endpoint cursors in the first part, then change only ranges.
+    // Reusing a previously returned slice would incorrectly accept this pair.
+    let warm = [Mapping {
+        source: a.span(0, 1)?,
+        target: b.span(0, 1)?,
+        kind: MappingKind::Exact,
+    }];
+    let changed = [Mapping {
+        source: a.span(0, 1)?,
+        target: b.span(1, 2)?,
+        kind: MappingKind::Exact,
+    }];
+    assert_eq!(
+        SourceMap::validate_mapping_parts(&warm, &changed, &store, &mut budget()).err(),
+        Some(OriginError::Irreversible)
+    );
+    Ok(())
+}
+
+#[test]
+#[cfg(target_has_atomic = "ptr")]
+fn imported_origin_cursor_reuses_only_the_same_scoped_snapshot() -> Result<(), OriginError> {
+    let source = SourceSnapshot::new(
+        SourceId("x".repeat(100_000)),
+        0,
+        "memory:origin-cursor".into(),
+        b"ab".to_vec(),
+        &mut budget(),
+    )?;
+    let mut store = SourceStore::default();
+    store.insert(source.clone())?;
+    let mut origins = Vec::new();
+    for index in 0..64 {
+        let start = index % 2;
+        let span = source.span(start, start + 1)?;
+        origins.push(match index % 3 {
+            0 => Origin::Direct(span),
+            1 => Origin::Generated {
+                operation: OperationRef {
+                    schema: SchemaRef {
+                        package: "test".into(),
+                        revision: 0,
+                        digest: Digest([0; 32]),
+                    },
+                    name: "expand".into(),
+                },
+                callsite: Some(span),
+                inputs: vec![],
+            },
+            _ => Origin::Synthetic {
+                reason: "inserted".into(),
+                anchor: Some(span),
+            },
+        });
+    }
+    // Each origin pays enter+exit. First source lookup/identity/range costs 3;
+    // later origins pay a shared-identity probe and their own range check.
+    let exact_work = 64 * 2 + 3 + 63 * 2;
+    let mut limits = budget().limits();
+    limits.work = exact_work;
+    let mut exact = Budget::new(limits);
+    OriginGraph::validate_origins(&origins, &store, &mut exact)?;
+    assert_eq!(exact.usage().work, exact_work);
+    limits.work -= 1;
+    assert_eq!(
+        OriginGraph::validate_origins(&origins, &store, &mut Budget::new(limits)),
+        Err(OriginError::Stopped(StopReason::WorkLimit))
+    );
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert_eq!(
+        OriginGraph::validate_origins(&origins, &store, &mut cancelled),
+        Err(OriginError::Stopped(StopReason::Cancelled))
+    );
+    assert_eq!(cancelled.usage().work, 0);
+    let conflicting = SourceSnapshot::new(
+        source.identity().source.clone(),
+        0,
+        "memory:origin-cursor".into(),
+        b"ac".to_vec(),
+        &mut budget(),
+    )?;
+    origins.push(Origin::Direct(conflicting.span(0, 1)?));
+    assert_eq!(
+        OriginGraph::validate_origins(&origins, &store, &mut budget()),
+        Err(OriginError::Source(SourceError::MissingSnapshot))
+    );
+    origins.pop();
+    origins.push(Origin::Synthetic {
+        reason: String::new(),
+        anchor: Some(source.span(0, 1)?),
+    });
+    assert_eq!(
+        OriginGraph::validate_origins(&origins, &store, &mut budget()),
+        Err(OriginError::EmptyReason)
+    );
+    origins.pop();
+    origins.push(Origin::Generated {
+        operation: OperationRef {
+            schema: SchemaRef {
+                package: "test".into(),
+                revision: 0,
+                digest: Digest([0; 32]),
+            },
+            name: String::new(),
+        },
+        callsite: Some(source.span(0, 1)?),
+        inputs: vec![],
+    });
+    assert_eq!(
+        OriginGraph::validate_origins(&origins, &store, &mut budget()),
+        Err(OriginError::EmptyReason)
+    );
+    // A separately decoded equal identity must take the charged fallback.
+    let independent = SourceSnapshot::new(
+        source.identity().source.clone(),
+        0,
+        "memory:origin-cursor".into(),
+        b"ab".to_vec(),
+        &mut budget(),
+    )?;
+    origins.pop();
+    origins.push(Origin::Direct(independent.span(0, 1)?));
+    let mut short = budget().limits();
+    short.work = exact_work + 4;
+    assert_eq!(
+        OriginGraph::validate_origins(&origins, &store, &mut Budget::new(short)),
+        Err(OriginError::Stopped(StopReason::WorkLimit))
+    );
+    // Equal prefixes and an already warm cursor cannot grant another store's
+    // declarations: a new import performs its own source checks.
+    assert_eq!(
+        OriginGraph::validate_origins(&origins[..64], &SourceStore::default(), &mut budget()),
+        Err(OriginError::Source(SourceError::MissingSnapshot))
+    );
+    Ok(())
+}

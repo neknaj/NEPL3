@@ -128,7 +128,12 @@ impl<'a> FoundationCodec<'a> {
             Some(maps) => value.validate_with_maps(self.sources, self.registry, maps, budget)?,
             None => {
                 self.mapping_admission(budget)?;
-                let maps = SourceMap::validate_mappings(self.mappings, self.sources, budget)?;
+                let maps = SourceMap::validate_bound_mapping_parts(
+                    self.mappings,
+                    &[],
+                    self.sources,
+                    budget,
+                )?;
                 value.validate_with_maps(self.sources, self.registry, &maps, budget)?;
                 // Both sources and mapping slices are immutably borrowed for
                 // this scope. Reuse mapping admission/geometry/cycle proof,

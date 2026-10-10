@@ -1,5 +1,7 @@
 //! Borrowed report validation. Resource accounting of a remote operation remains
 //! an operation-boundary obligation; a report's claimed Usage is never absorbed.
+#[cfg(test)]
+mod tests;
 use super::{Diagnostic, Event, Report};
 use crate::{
     budget::{Budget, Resource, StopReason},
@@ -139,8 +141,10 @@ impl DiagnosticSourceResolver for Sources<'_> {
             b,
         )? {
             b.charge(Resource::Work, 33)?;
-            if source.identity() == span.snapshot_ref() {
-                return Ok(source.slice(span)?);
+            // The index already established source and revision. Only digest
+            // and range remain; do not compare the long source key again.
+            if source.identity().digest == span.snapshot_ref().digest {
+                return Ok(source.slice_range(span.start(), span.end())?);
             }
         }
         for source in &self.added {
@@ -151,7 +155,7 @@ impl DiagnosticSourceResolver for Sources<'_> {
                     .saturating_add(34),
             )?;
             if source.identity() == span.snapshot_ref() {
-                return Ok(source.slice(span)?);
+                return Ok(source.slice_range(span.start(), span.end())?);
             }
         }
         Err(SourceError::MissingSnapshot.into())

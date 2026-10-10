@@ -976,25 +976,47 @@ impl SourceStore {
         revision: u64,
         budget: &mut Budget,
     ) -> Result<Option<&SourceSnapshot>, StopReason> {
+        Ok(self
+            .get_revision_position_with_budget(source, revision, budget)?
+            .map(|(_, snapshot)| snapshot))
+    }
+    pub(crate) fn snapshot_at_position(&self, position: usize) -> Option<&SourceSnapshot> {
+        self.index
+            .get(position)
+            .map(|index| &self.snapshots[*index])
+    }
+    pub(crate) fn get_revision_position_with_budget(
+        &self,
+        source: &SourceId,
+        revision: u64,
+        budget: &mut Budget,
+    ) -> Result<Option<(usize, &SourceSnapshot)>, StopReason> {
         budget.poll()?;
         let (mut low, mut high) = (0, self.index.len());
         while low < high {
             let mid = low + (high - low) / 2;
             let snapshot = &self.snapshots[self.index[mid]];
+            let same_source = core::ptr::eq(&snapshot.storage.id.source, source);
+            // A borrowed identical SourceId needs no byte comparison. Revision
+            // ordering still applies; independent equal IDs retain the full
+            // prepaid byte bound. This grants no admission or source scope.
             budget.charge(
                 Resource::Work,
-                (snapshot.storage.id.source.0.len() as u64)
-                    .saturating_add(source.0.len() as u64)
-                    .saturating_add(1),
+                if same_source {
+                    1
+                } else {
+                    (snapshot.storage.id.source.0.len() as u64)
+                        .saturating_add(source.0.len() as u64)
+                        .saturating_add(1)
+                },
             )?;
-            match snapshot
-                .storage
-                .id
-                .source
-                .cmp(source)
-                .then_with(|| snapshot.storage.id.revision.cmp(&revision))
-            {
-                core::cmp::Ordering::Equal => return Ok(Some(snapshot)),
+            let source_order = if same_source {
+                core::cmp::Ordering::Equal
+            } else {
+                snapshot.storage.id.source.cmp(source)
+            };
+            match source_order.then_with(|| snapshot.storage.id.revision.cmp(&revision)) {
+                core::cmp::Ordering::Equal => return Ok(Some((mid, snapshot))),
                 core::cmp::Ordering::Less => low = mid + 1,
                 core::cmp::Ordering::Greater => high = mid,
             }
