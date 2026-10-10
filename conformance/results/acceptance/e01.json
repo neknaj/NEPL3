@@ -1,0 +1,336 @@
+{
+  "schema": "nepl3.acceptance-evidence/1",
+  "acceptance_id": "E01",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "2cef687547bfdc21d06a6932683922a8c7fbed4f5bec696365a6be2a32f7490b",
+    "spec_sha256": "ab8afb9a22a09bf7beebf5fa26272bb7e1eab7f06dbfd73f18ce5ecadcda9173"
+  },
+  "result": "passed",
+  "runs": [
+    {
+      "kind": "command",
+      "target": "native-x86_64-linux",
+      "result": "passed",
+      "exit_code": 0,
+      "checks": [
+        "228 fixed source-position observations match the independently checked oracle on exact committed source bytes.",
+        "Both byte-to-position and position-to-byte conversion cover UTF-8, UTF-16 and UTF-32, Japanese, supplementary-plane scalars and CRLF.",
+        "Valid boundaries and typed rejection classes include CRLF interior, scalar interior, surrogate interior, outside-source positions and invalid lines/columns.",
+        "The E-unicode catalog input a𠮷b\\r\\n文書 and its prescribed ranges are executed rather than inferred from another fixture.",
+        "All four source tests passed, including catalog drift/endpoints/direction guards and malformed-oracle rejection."
+      ],
+      "environment": {
+        "runner": {
+          "name": "GitHub Actions ubuntu",
+          "version": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39"
+        },
+        "tools": [
+          {
+            "name": "rustc",
+            "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+          },
+          {
+            "name": "cargo",
+            "version": "cargo 1.97.0 (c980f4866 2026-06-30)"
+          }
+        ]
+      },
+      "command": "cargo test --locked -p nepl3-tools --test source -- --test-threads=1 --nocapture",
+      "log": "dist/evidence/e01/native-x86_64-linux.log",
+      "log_sha256": "2ea538f85b4f8ca235e88c21869bef22e9555a20d91f3d62ec5cb27f13ac88c3",
+      "artifact": {
+        "schema": "nepl3.github-artifact/1",
+        "repository": "neknaj/NEPL3",
+        "repository_id": 1359036639,
+        "run_id": 38077151123,
+        "run_attempt": 1,
+        "source_commit": "f9bd70ff3f9bd63185de373904186480bb209bf9",
+        "artifact_id": 11678708935,
+        "artifact_name": "source-position-ubuntu-latest-f9bd70ff3f9bd63185de373904186480bb209bf9",
+        "archive_sha256": "73bef85db3c22ca4fed3b76613115caf9ab50cbb3dd22352ed473c7db8cbb284",
+        "archive_bytes": 2990,
+        "member": "source-position.stdout",
+        "expires_at_unix": 1792868287
+      }
+    },
+    {
+      "kind": "command",
+      "target": "native-x86_64-windows",
+      "result": "passed",
+      "exit_code": 0,
+      "checks": [
+        "228 fixed source-position observations match the independently checked oracle on exact committed source bytes.",
+        "Both byte-to-position and position-to-byte conversion cover UTF-8, UTF-16 and UTF-32, Japanese, supplementary-plane scalars and CRLF.",
+        "Valid boundaries and typed rejection classes include CRLF interior, scalar interior, surrogate interior, outside-source positions and invalid lines/columns.",
+        "The E-unicode catalog input a𠮷b\\r\\n文書 and its prescribed ranges are executed rather than inferred from another fixture.",
+        "All four source tests passed, including catalog drift/endpoints/direction guards and malformed-oracle rejection."
+      ],
+      "environment": {
+        "runner": {
+          "name": "GitHub Actions windows",
+          "version": "Windows-2025Server-10.0.26100-SP0"
+        },
+        "tools": [
+          {
+            "name": "rustc",
+            "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+          },
+          {
+            "name": "cargo",
+            "version": "cargo 1.97.0 (c980f4866 2026-06-30)"
+          }
+        ]
+      },
+      "command": "cargo test --locked -p nepl3-tools --test source -- --test-threads=1 --nocapture",
+      "log": "dist/evidence/e01/native-x86_64-windows.log",
+      "log_sha256": "aa18150c18c9afc74dc4869499b5df1431693a93eab27e5bbed2d915356f8468",
+      "artifact": {
+        "schema": "nepl3.github-artifact/1",
+        "repository": "neknaj/NEPL3",
+        "repository_id": 1359036639,
+        "run_id": 38077151123,
+        "run_attempt": 1,
+        "source_commit": "f9bd70ff3f9bd63185de373904186480bb209bf9",
+        "artifact_id": 11679117566,
+        "artifact_name": "source-position-windows-latest-f9bd70ff3f9bd63185de373904186480bb209bf9",
+        "archive_sha256": "3ea25a0e2bd821592c6e19907f62f6872bc1f7fa850a16b0043fe258c64dc10a",
+        "archive_bytes": 3002,
+        "member": "source-position.stdout",
+        "expires_at_unix": 1792868589
+      }
+    },
+    {
+      "kind": "command",
+      "target": "native-aarch64-macos",
+      "result": "passed",
+      "exit_code": 0,
+      "checks": [
+        "228 fixed source-position observations match the independently checked oracle on exact committed source bytes.",
+        "Both byte-to-position and position-to-byte conversion cover UTF-8, UTF-16 and UTF-32, Japanese, supplementary-plane scalars and CRLF.",
+        "Valid boundaries and typed rejection classes include CRLF interior, scalar interior, surrogate interior, outside-source positions and invalid lines/columns.",
+        "The E-unicode catalog input a𠮷b\\r\\n文書 and its prescribed ranges are executed rather than inferred from another fixture.",
+        "All four source tests passed, including catalog drift/endpoints/direction guards and malformed-oracle rejection."
+      ],
+      "environment": {
+        "runner": {
+          "name": "GitHub Actions macos",
+          "version": "macOS-26.6.2-arm64-arm-64bit-Mach-O"
+        },
+        "tools": [
+          {
+            "name": "rustc",
+            "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+          },
+          {
+            "name": "cargo",
+            "version": "cargo 1.97.0 (c980f4866 2026-06-30)"
+          }
+        ]
+      },
+      "command": "cargo test --locked -p nepl3-tools --test source -- --test-threads=1 --nocapture",
+      "log": "dist/evidence/e01/native-aarch64-macos.log",
+      "log_sha256": "a844ca0d99e8fa55deb739a8db809e71b21b88d5f0da33ca44a4c76b3317a2b9",
+      "artifact": {
+        "schema": "nepl3.github-artifact/1",
+        "repository": "neknaj/NEPL3",
+        "repository_id": 1359036639,
+        "run_id": 38077151123,
+        "run_attempt": 1,
+        "source_commit": "f9bd70ff3f9bd63185de373904186480bb209bf9",
+        "artifact_id": 11679211968,
+        "artifact_name": "source-position-macos-latest-f9bd70ff3f9bd63185de373904186480bb209bf9",
+        "archive_sha256": "a9cb14b39279eff2ea10bf5dc09bd6f3cc90a05eb635b609fb0e7488f2ad01fe",
+        "archive_bytes": 3016,
+        "member": "source-position.stdout",
+        "expires_at_unix": 1792868153
+      }
+    },
+    {
+      "kind": "command",
+      "target": "wasi-wasip2-wasmtime",
+      "result": "passed",
+      "exit_code": 0,
+      "checks": [
+        "228 fixed source-position observations match the independently checked oracle on exact committed source bytes.",
+        "Both byte-to-position and position-to-byte conversion cover UTF-8, UTF-16 and UTF-32, Japanese, supplementary-plane scalars and CRLF.",
+        "Valid boundaries and typed rejection classes include CRLF interior, scalar interior, surrogate interior, outside-source positions and invalid lines/columns.",
+        "The E-unicode catalog input a𠮷b\\r\\n文書 and its prescribed ranges are executed rather than inferred from another fixture.",
+        "All four source tests passed, including catalog drift/endpoints/direction guards and malformed-oracle rejection."
+      ],
+      "environment": {
+        "runner": {
+          "name": "GitHub Actions wasi",
+          "version": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39"
+        },
+        "tools": [
+          {
+            "name": "rustc",
+            "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+          },
+          {
+            "name": "cargo",
+            "version": "cargo 1.97.0 (c980f4866 2026-06-30)"
+          },
+          {
+            "name": "wasmtime",
+            "version": "wasmtime 44.0.1 (f302ebd6b 2026-04-30)"
+          }
+        ]
+      },
+      "command": "cargo test --locked -p nepl3-tools --test source --target wasm32-wasip2 -- --test-threads=1 --nocapture",
+      "log": "dist/evidence/e01/wasi-wasip2-wasmtime.log",
+      "log_sha256": "6c2ac32a5888543f290ea1cb5cb4cab7a92b15c07bb75806459925bb380cb495",
+      "artifact": {
+        "schema": "nepl3.github-artifact/1",
+        "repository": "neknaj/NEPL3",
+        "repository_id": 1359036639,
+        "run_id": 38077151123,
+        "run_attempt": 1,
+        "source_commit": "f9bd70ff3f9bd63185de373904186480bb209bf9",
+        "artifact_id": 11679507980,
+        "artifact_name": "source-position-wasi-f9bd70ff3f9bd63185de373904186480bb209bf9",
+        "archive_sha256": "c296fead8d3ebc620b754f6b2f5f2a54ed9d01a6fdb48311e15015f993f58f90",
+        "archive_bytes": 3454,
+        "member": "source-position.stdout",
+        "expires_at_unix": 1792868300
+      }
+    },
+    {
+      "kind": "command",
+      "target": "browser-chromium",
+      "result": "passed",
+      "exit_code": 0,
+      "checks": [
+        "228 fixed source-position observations match the independently checked oracle on exact committed source bytes.",
+        "Both byte-to-position and position-to-byte conversion cover UTF-8, UTF-16 and UTF-32, Japanese, supplementary-plane scalars and CRLF.",
+        "Valid boundaries and typed rejection classes include CRLF interior, scalar interior, surrogate interior, outside-source positions and invalid lines/columns.",
+        "The E-unicode catalog input a𠮷b\\r\\n文書 and its prescribed ranges are executed rather than inferred from another fixture."
+      ],
+      "environment": {
+        "runner": {
+          "name": "chromium",
+          "version": "151.0.7922.34"
+        },
+        "tools": [
+          {
+            "name": "playwright",
+            "version": "1.62.0"
+          },
+          {
+            "name": "rustc",
+            "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+          }
+        ]
+      },
+      "command": "/opt/hostedtoolcache/Python/3.13.16/x64/bin/python /home/runner/work/NEPL3/NEPL3/tools/emulators/browser/run.py --engine chromium --wasm /home/runner/work/NEPL3/NEPL3/dist/browser-foundation/fixture.wasm --oracle /home/runner/work/NEPL3/NEPL3/conformance/inputs/browser/source-position.json",
+      "log": "dist/evidence/e01/browser-chromium.log",
+      "log_sha256": "695a1cd627fdfb6c7927c574e098aef7412fc44545b5ca389dabbcdc31c13f4e",
+      "artifact": {
+        "schema": "nepl3.github-artifact/1",
+        "repository": "neknaj/NEPL3",
+        "repository_id": 1359036639,
+        "run_id": 38077151123,
+        "run_attempt": 1,
+        "source_commit": "f9bd70ff3f9bd63185de373904186480bb209bf9",
+        "artifact_id": 11679562081,
+        "artifact_name": "browser-foundation-f9bd70ff3f9bd63185de373904186480bb209bf9",
+        "archive_sha256": "9bd21d46e9900af2b6fe88af49e44bd55daced1e46a92148426fe19f384cd4cd",
+        "archive_bytes": 26216,
+        "member": "chromium.stdout",
+        "expires_at_unix": 1792867779
+      }
+    },
+    {
+      "kind": "command",
+      "target": "browser-firefox",
+      "result": "passed",
+      "exit_code": 0,
+      "checks": [
+        "228 fixed source-position observations match the independently checked oracle on exact committed source bytes.",
+        "Both byte-to-position and position-to-byte conversion cover UTF-8, UTF-16 and UTF-32, Japanese, supplementary-plane scalars and CRLF.",
+        "Valid boundaries and typed rejection classes include CRLF interior, scalar interior, surrogate interior, outside-source positions and invalid lines/columns.",
+        "The E-unicode catalog input a𠮷b\\r\\n文書 and its prescribed ranges are executed rather than inferred from another fixture."
+      ],
+      "environment": {
+        "runner": {
+          "name": "firefox",
+          "version": "153.0"
+        },
+        "tools": [
+          {
+            "name": "playwright",
+            "version": "1.62.0"
+          },
+          {
+            "name": "rustc",
+            "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+          }
+        ]
+      },
+      "command": "/opt/hostedtoolcache/Python/3.13.16/x64/bin/python /home/runner/work/NEPL3/NEPL3/tools/emulators/browser/run.py --engine firefox --wasm /home/runner/work/NEPL3/NEPL3/dist/browser-foundation/fixture.wasm --oracle /home/runner/work/NEPL3/NEPL3/conformance/inputs/browser/source-position.json",
+      "log": "dist/evidence/e01/browser-firefox.log",
+      "log_sha256": "852ce45fb023bcf44605e40859ca445b58a1ca39e338f4875bd7f25a5c3481bf",
+      "artifact": {
+        "schema": "nepl3.github-artifact/1",
+        "repository": "neknaj/NEPL3",
+        "repository_id": 1359036639,
+        "run_id": 38077151123,
+        "run_attempt": 1,
+        "source_commit": "f9bd70ff3f9bd63185de373904186480bb209bf9",
+        "artifact_id": 11679562081,
+        "artifact_name": "browser-foundation-f9bd70ff3f9bd63185de373904186480bb209bf9",
+        "archive_sha256": "9bd21d46e9900af2b6fe88af49e44bd55daced1e46a92148426fe19f384cd4cd",
+        "archive_bytes": 26216,
+        "member": "firefox.stdout",
+        "expires_at_unix": 1792867779
+      }
+    },
+    {
+      "kind": "command",
+      "target": "browser-webkit",
+      "result": "passed",
+      "exit_code": 0,
+      "checks": [
+        "228 fixed source-position observations match the independently checked oracle on exact committed source bytes.",
+        "Both byte-to-position and position-to-byte conversion cover UTF-8, UTF-16 and UTF-32, Japanese, supplementary-plane scalars and CRLF.",
+        "Valid boundaries and typed rejection classes include CRLF interior, scalar interior, surrogate interior, outside-source positions and invalid lines/columns.",
+        "The E-unicode catalog input a𠮷b\\r\\n文書 and its prescribed ranges are executed rather than inferred from another fixture."
+      ],
+      "environment": {
+        "runner": {
+          "name": "webkit",
+          "version": "26.5"
+        },
+        "tools": [
+          {
+            "name": "playwright",
+            "version": "1.62.0"
+          },
+          {
+            "name": "rustc",
+            "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+          }
+        ]
+      },
+      "command": "/opt/hostedtoolcache/Python/3.13.16/x64/bin/python /home/runner/work/NEPL3/NEPL3/tools/emulators/browser/run.py --engine webkit --wasm /home/runner/work/NEPL3/NEPL3/dist/browser-foundation/fixture.wasm --oracle /home/runner/work/NEPL3/NEPL3/conformance/inputs/browser/source-position.json",
+      "log": "dist/evidence/e01/browser-webkit.log",
+      "log_sha256": "b3873486027f994edf411c2ce19c3bad42115b503ac01da40ef480dea48a87fc",
+      "artifact": {
+        "schema": "nepl3.github-artifact/1",
+        "repository": "neknaj/NEPL3",
+        "repository_id": 1359036639,
+        "run_id": 38077151123,
+        "run_attempt": 1,
+        "source_commit": "f9bd70ff3f9bd63185de373904186480bb209bf9",
+        "artifact_id": 11679562081,
+        "artifact_name": "browser-foundation-f9bd70ff3f9bd63185de373904186480bb209bf9",
+        "archive_sha256": "9bd21d46e9900af2b6fe88af49e44bd55daced1e46a92148426fe19f384cd4cd",
+        "archive_bytes": 26216,
+        "member": "webkit.stdout",
+        "expires_at_unix": 1792867779
+      }
+    }
+  ]
+}
