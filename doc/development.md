@@ -519,3 +519,17 @@ the higher base. One-node exact-fit controls cover binding, evaluation, text and
 shape-only foreign enumeration; the foreign validation regression instead checks
 that overflow is rejected before an intentionally invalid guest is validated.
 These examples do not prove guest execution or all host-side depth calculations.
+
+
+A host-side Reader composition regression in `nepl3-provider --test reader`
+carries the saved terminal Read proof through Connection::send, fragmented
+Connection::receive_pending_reply, source admission, typed Report comparison and
+ReaderSession::resume. A source-policy failure closes the transport and preserves
+the Reader slot; subsequent send/receive attempts perform no I/O. A truncated
+Reader frame also preserves the slot. A later domain Report mismatch leaves the
+slot pending but does not retroactively close the successfully admitted transport.
+The successful path preserves the Unicode diagnostic/mapping and consumes exactly
+one frame before a following Close. Only resume consumes the Reader slot.
+The Reader dependency is test-only. This is same-process I/O composition using a
+shared cumulative Budget, not a remote Reader implementation or authenticated
+cross-process usage accounting.
