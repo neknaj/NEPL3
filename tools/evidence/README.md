@@ -114,6 +114,59 @@ both the complete ZIP and all expanded data. Empty output channels are preserved
 
 This is a pure byte-decoding boundary. It does not authenticate the digest pin,
 select or download an artifact, verify its repository/run/source/expiry, write
-logs, or grant acceptance. Those checks and the typed formal-record locator are
-still required before clean-CI restoration. Real Actions ZIP compatibility tests
+logs, or grant acceptance. The typed formal-record locator below preserves those pins; authenticated
+retrieval and filesystem restoration are separate boundaries described below. Real Actions ZIP compatibility tests
 are diagnostic observations, not formal execution evidence.
+
+## Typed artifact locator
+
+Command and review runs may carry an optional `artifact` object with schema
+`nepl3.github-artifact/1`. It pins this repository and repository ID, run/attempt,
+source commit, artifact ID/name, outer ZIP digest/size, exact raw-log member and
+advertised expiry as UTC Unix seconds. Missing remains backward-compatible;
+explicit null, unknown fields, duplicate fields and positional arrays fail.
+Integer tokens must have no fractional part or exponent. A locator does not
+replace the existing raw-log digest, target-kind, independent-review or result
+checks, and cannot turn a rejected review into a successful process run.
+
+The initial metadata verifier is restricted to completed successful main-push
+CI runs. GitHub PR workflow head IDs and actual merge checkout IDs differ; this
+backend rejects PR runs rather than assuming equality. It verifies repository,
+run attempt, source, workflow path, advertised digest/size/expiry and the artifact
+creation interval. This metadata boundary does not download or restore files.
+The actual selected source/spec identity must still match the current checkout
+and formal record. Unavailable or expired artifacts must fail retrieval, even
+when a cached log exists. No latest-run substitution or automatic pin refresh is
+permitted. No acceptance group is promoted by these tooling components.
+
+## Pinned log retrieval
+
+Run `python -m tools.evidence.retrieval` from the current checkout. It builds the
+current Rust identity tool, reads only status-owned acceptance records, compares
+their source/spec identity with the current checkout and pinned Git commit, then
+restores unchanged member bytes under `dist/evidence/`. It never changes status,
+selects a latest artifact, executes historical code, or treats transport success
+as acceptance. Run the existing `tasks --check` and repository `check` afterward;
+CI runs retrieval before these gates. An empty plan performs no HTTP requests.
+
+The existing `GITHUB_TOKEN` needs only repository contents/read and Actions/read.
+The token goes solely to fixed `api.github.com` endpoints. A separately opened
+HTTPS connection follows one authenticated redirect to Azure Blob storage without
+the token, cookies or proxy credentials. Other redirect hosts fail explicitly.
+A killed/reaped worker enforces a 45-second total network deadline; metadata,
+HTTP framing, archive bytes and decompressed members all have explicit limits.
+Artifacts created in the same second as either run-attempt interval boundary are
+rejected as ambiguous. Advertised expiry is checked before and after retrieval.
+
+At most 256 log requests, 64 MiB of outer downloads and 32 MiB of expanded data
+are accepted per attempt. All sources and raw hashes are checked before output
+creation. Existing matching logs are preserved; conflicting files, links and
+unsafe ancestors fail. A locator always requires fresh metadata/retrieval, even
+when a local log matches. Without a locator an explicitly supplied matching local
+log remains usable, but a fresh checkout lacking it fails. A failed write may
+leave partial unaccepted output; no unrelated files are deleted or replaced.
+This is not a sandbox against a process concurrently replacing the workspace.
+
+Offline transport, metadata and filesystem fixtures are tooling tests. Real
+artifact collection, successful authenticated retrieval, scope review and the
+unchanged formal Rust checks are required before claiming an acceptance attempt.

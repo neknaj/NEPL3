@@ -89,7 +89,7 @@ jobs:
         working-directory: tools/site
         run: python -m unittest test_record_smoke.RecordSmokeTests.test_pass_and_failure_are_recorded_remotely
       - name: Evidence runner host portability
-        run: python -m unittest tools.evidence.test_runner tools.evidence.test_archive tools.evidence.test_artifact
+        run: python -m unittest tools.evidence.test_runner tools.evidence.test_archive tools.evidence.test_artifact tools.evidence.retrieval.test_metadata tools.evidence.retrieval.test_network tools.evidence.retrieval.test_restore tools.evidence.retrieval.test_plan
       - name: Generated checkout gate tests
         run: python -m unittest tools.audit.test_clean
       - name: Node renderer host toolchain
@@ -221,6 +221,9 @@ jobs:
 
   repository-contract:
     name: repository and generated contracts
+    permissions:
+      contents: read
+      actions: read
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -257,6 +260,10 @@ jobs:
           python -m unittest discover -s tools/migration -p test_contract.py
       - name: Initial seed input adapter tests
         run: python -m unittest discover -s tools/bootstrap -p test_grammar.py
+      - name: Restore pinned acceptance logs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python -m tools.evidence.retrieval
       - name: Generated tasks
         run: cargo run --locked -p nepl3-tools -- tasks --check
       - name: Check repository contracts
