@@ -36,12 +36,7 @@ fn storage<T>(count: usize, b: &mut Budget) -> Result<Vec<T>, WireError> {
     Ok(Vec::with_capacity(count))
 }
 
-fn bound(
-    index: &[(usize, usize)],
-    address: usize,
-    upper: bool,
-    b: &mut Budget,
-) -> Result<usize, WireError> {
+fn bound(index: &[(usize, usize)], address: usize, b: &mut Budget) -> Result<usize, WireError> {
     // Charge the element-count search bound before comparisons. Pointer order
     // varies with allocation layout; logical Usage must not depend on it.
     b.charge(
@@ -51,7 +46,7 @@ fn bound(
     let (mut start, mut end) = (0, index.len());
     while start < end {
         let middle = start + (end - start) / 2;
-        if index[middle].0 < address || (upper && index[middle].0 == address) {
+        if index[middle].0 < address {
             start = middle + 1;
         } else {
             end = middle;
@@ -63,11 +58,21 @@ fn bound(
 impl Sink for Batch<'_, '_> {
     fn enter(&mut self, value: &NdfValue, b: &mut Budget) -> Result<bool, WireError> {
         let address = core::ptr::from_ref(value).addr();
-        let start = bound(&self.index, address, false, b)?;
-        let end = bound(&self.index, address, true, b)?;
+        let start = bound(&self.index, address, b)?;
         let mut count = 0;
-        for &(_, request) in &self.index[start..end] {
+        let mut position = start;
+        loop {
+            // Charge every equal-entry probe and the terminal probe, even
+            // when this address sorts after the last slot. Usage must not
+            // depend on allocation layout or an in-bounds final comparison.
             b.charge(Resource::Work, 1)?;
+            let Some(&(candidate, request)) = self.index.get(position) else {
+                break;
+            };
+            if candidate != address {
+                break;
+            }
+            position += 1;
             let state = &mut self.states[request];
             if state.digest.is_some() {
                 continue;
@@ -136,7 +141,7 @@ pub(crate) fn digests(
         b.charge(Resource::Work, 1)?;
         b.charge(Resource::OutputBytes, 32)?;
         let address = core::ptr::from_ref(input.value).addr();
-        let position = bound(&batch.index, address, false, b)?;
+        let position = bound(&batch.index, address, b)?;
         // An insertion can shift every existing slot. Precharge that bound,
         // independently of this allocation's position in address order.
         b.charge(Resource::Work, batch.index.len() as u64)?;
