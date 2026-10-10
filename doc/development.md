@@ -689,3 +689,9 @@ closure-owned source endpoint を欠かした場合は、同じ endpoint が文�
 runnerはclean checkoutに結び付いたbuild、u64/BigIntの型付き結果、各engineのraw observations、version、input/binary hashesを保存する。Linuxのdescendant trackingはdetached browserとreparentingを扱い、timeout時にTERM/KILLと終了確認を行う。trusted test runnerの範囲であり、敵対的processの隔離や暗号学的実行証明ではない。十個のPython失敗系試験とadapterのhost試験・clippy・Wasm build、basedpyright all-modeがlocalで成功した。三engineの実行結果は対応するCI artifactで別途確認する。
 
 これはE01全七targetのAcceptanceEvidenceを組み立てる処理ではない。`design/acceptance.json`、LKG、publication identityの状態は変更しない。
+
+### Native / WASI source-position oracle（2026-10-10）
+
+`tools/tests/source/position.rs` はbrowser sliceと同じ173ケースのJSONを`include_str!`で読み、privateな型付きschemaで検証してからproductionの`SourceSnapshot` / `LineIndex`を直接呼ぶ。empty input・末尾CRLF・三種類のsnapshot mismatch・canonical u64・invalid positionを含む固定inventoryを全件実行する。余分なfield、重複field、未知のcase/selector/error、欠損fixture、不正な引数を拒否し、期待座標やerrorを変更した場合は実行照合が失敗する。nativeの三OSとWASIは同じ入力を使い、別の期待値生成器を追加しない。
+
+CIは既存の`tools/evidence/runner.py`で各native targetとWasmtimeのfocused command・tool versions・host identity・raw logsを保存する。三つのintegration testsはlocal Linuxとchecksumを確認したWasmtime 44.0.1で成功し、focused Clippyも成功した。Windows・macOSの実行成功はそれぞれのCIログを確認するまで主張しない。これらはbounded sliceのcommand evidenceであり、E01七targetの正式受入やT01完了への自動昇格は行わない。
