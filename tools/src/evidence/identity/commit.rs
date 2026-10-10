@@ -240,10 +240,12 @@ mod tests {
         let files = fixture()?;
         let original = save(&files)?;
         let expected = committed(files.root(), &original)?;
+        assert!(!object_id(&"A".repeat(40)));
+        assert!(object_id(&"a".repeat(40)));
         for bad in [
             "HEAD".to_owned(),
             original[..12].to_owned(),
-            original.to_uppercase(),
+            "A".repeat(40),
             "0".repeat(40),
         ] {
             assert!(committed(files.root(), &bad).is_err(), "{bad}");
