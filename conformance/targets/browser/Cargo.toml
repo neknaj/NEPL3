@@ -1,0 +1,19 @@
+[package]
+name = "nepl3-conformance-browser"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "MIT"
+
+# Test-only ABI adapter; all source-position semantics come from the core.
+[workspace]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+nepl3-core = { path = "../../../crates/foundation/core" }
+
+[profile.release]
+opt-level = 2
+panic = "abort"

@@ -444,6 +444,23 @@ jobs:
         run: |
           python -m pip install -r tools/audit/doc_html/requirements.txt
           python -m playwright install --with-deps chromium firefox webkit
+      - name: Execute foundation source positions in three browsers
+        run: |
+          rustup target add wasm32-unknown-unknown
+          CARGO_TARGET_DIR=dist/browser-host-target cargo test --locked --manifest-path conformance/targets/browser/Cargo.toml
+          python -m unittest discover -s tools/emulators/browser -p 'test_*.py'
+          python tools/emulators/browser/run.py --repository . --output dist/browser-foundation
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ always() }}
+        with:
+          name: browser-foundation-${{ github.sha }}
+          path: |
+            dist/browser-foundation/*.json
+            dist/browser-foundation/*.stdout
+            dist/browser-foundation/*.stderr
+            dist/browser-foundation/fixture.wasm
+          if-no-files-found: error
+          retention-days: 14
       - name: Generate actual Doc output corpus
         run: |
           mkdir -p dist/doc-browser

@@ -681,3 +681,11 @@ closure-owned source endpoint を欠かした場合は、同じ endpoint が文�
 `nepl3-core` の `contracts` integration test は、BOM・日本語・補助Unicode scalar・CRLF・単独CR/LFを含む固定入力について、UTF-8/16/32の期待位置を明示する。変換に成功した位置だけの往復確認から、全ての表現可能な位置を両方向で要求する確認へ変更した。scalar内部・CRLF内部・範囲外のoffsetとpositionも区別して拒否を確認する。BOM直後の正しいbyte offset 3を誤って拒否する一時的なmutationは、この試験を失敗させた。production sourceを復元した後、contractsの35試験が成功した。
 
 これはT01/E01に関係する固定oracleの補強であり、実ブラウザーでのfoundation Wasm実行や七target分の正式受入証拠を追加したものではない。E01を含む受入状態は変更しない。
+
+### Browser foundation source-position slice（2026-10-10）
+
+`conformance/targets/browser` は production の `SourceSnapshot` / `LineIndex` を呼ぶ test-only cdylib を Wasm 化する。固定した173ケースを Chromium・Firefox・WebKit の全てで照合する runner を `tools/emulators/browser` に追加した。期待値は変換器から生成せず、BOM・日本語・補助scalar・改行・空入力・末尾CRLF・snapshot mismatchのbyte/column表から固定する。fixtureの正確なUTF-8 bytesもWasmから読み出し、同じbyte幅の文字への置換を検出する。
+
+runnerはclean checkoutに結び付いたbuild、u64/BigIntの型付き結果、各engineのraw observations、version、input/binary hashesを保存する。Linuxのdescendant trackingはdetached browserとreparentingを扱い、timeout時にTERM/KILLと終了確認を行う。trusted test runnerの範囲であり、敵対的processの隔離や暗号学的実行証明ではない。十個のPython失敗系試験とadapterのhost試験・clippy・Wasm build、basedpyright all-modeがlocalで成功した。三engineの実行結果は対応するCI artifactで別途確認する。
+
+これはE01全七targetのAcceptanceEvidenceを組み立てる処理ではない。`design/acceptance.json`、LKG、publication identityの状態は変更しない。
