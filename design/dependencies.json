@@ -198,7 +198,7 @@
         "nepl3-wire"
       ],
       "no_std": false,
-      "responsibility": "native processでportable call protocolを公開"
+      "responsibility": "native processでportable call protocolを公開; dev-only nepl3-reader for typed ReaderSession source-report composition through host Connection I/O"
     },
     {
       "name": "nepl3-tools",
