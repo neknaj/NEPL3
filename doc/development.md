@@ -695,3 +695,5 @@ runnerはclean checkoutに結び付いたbuild、u64/BigIntの型付き結果、
 `tools/tests/source/position.rs` はbrowser sliceと同じ173ケースのJSONを`include_str!`で読み、privateな型付きschemaで検証してからproductionの`SourceSnapshot` / `LineIndex`を直接呼ぶ。empty input・末尾CRLF・三種類のsnapshot mismatch・canonical u64・invalid positionを含む固定inventoryを全件実行する。余分なfield、重複field、未知のcase/selector/error、欠損fixture、不正な引数を拒否し、期待座標やerrorを変更した場合は実行照合が失敗する。nativeの三OSとWASIは同じ入力を使い、別の期待値生成器を追加しない。
 
 CIは既存の`tools/evidence/runner.py`で各native targetとWasmtimeのfocused command・tool versions・host identity・raw logsを保存する。三つのintegration testsはlocal Linuxとchecksumを確認したWasmtime 44.0.1で成功し、focused Clippyも成功した。Windows・macOSの実行成功はそれぞれのCIログを確認するまで主張しない。これらはbounded sliceのcommand evidenceであり、E01七targetの正式受入やT01完了への自動昇格は行わない。
+
+Wasmtimeのdownload/extractionはCI runnerのtemporary directoryで行う。source checkoutへ未追跡の配布物を置くと、既存evidence runnerのclean-source gateが証拠採取前に拒否するためである。checksum検証とclean-source gateは維持する。

@@ -329,6 +329,7 @@ jobs:
           rustup target add wasm32-wasip2 wasm32-unknown-unknown
           rustc --version --verbose
       - name: Install verified Wasmtime
+        working-directory: ${{ runner.temp }}
         run: |
           curl --fail --location --retry 3 --output wasmtime.tar.xz https://github.com/bytecodealliance/wasmtime/releases/download/v44.0.1/wasmtime-v44.0.1-x86_64-linux.tar.xz
           echo 'afd58715f105e3a7f454169daed22168c5736ec5f225fb04c4ac62c54c9508a3  wasmtime.tar.xz' | sha256sum --check --strict
