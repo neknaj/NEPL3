@@ -675,3 +675,9 @@ actual encoding/hash outputs are separate measurements.
 `nepl3-doc-core` の `foreign` integration test に、外部 codec・親 DocumentSyntax・ForeignClosure 自身の mapping を分けた native fixture を追加した。外部 mapping の変更は closure bytes・document digest・PageSet identity を変えず、親文書の mapping の変更は guest identity を保持する。closure 自身の mapping の変更は guest・document・PageSet identity を変える。guest digest は `GUEST_DOMAIN` と独立した wire encoding の連結から照合し、PageSet 内の closure 値・standalone preparation・fresh codec での portable reconstruction とも比較する。
 
 closure-owned source endpoint を欠かした場合は、同じ endpoint が文書と外部 store にあっても standalone/batch とも拒否する。これは native FoundationCodec の所有境界を確認する回帰試験であり、任意の custom codec の文脈非依存性や全受入群の完了を主張しない。guest view に必須の mapping 自体を除去する別ケースは、この追加試験の範囲外である。
+
+### source position の独立期待値（2026-10-10）
+
+`nepl3-core` の `contracts` integration test は、BOM・日本語・補助Unicode scalar・CRLF・単独CR/LFを含む固定入力について、UTF-8/16/32の期待位置を明示する。変換に成功した位置だけの往復確認から、全ての表現可能な位置を両方向で要求する確認へ変更した。scalar内部・CRLF内部・範囲外のoffsetとpositionも区別して拒否を確認する。BOM直後の正しいbyte offset 3を誤って拒否する一時的なmutationは、この試験を失敗させた。production sourceを復元した後、contractsの35試験が成功した。
+
+これはT01/E01に関係する固定oracleの補強であり、実ブラウザーでのfoundation Wasm実行や七target分の正式受入証拠を追加したものではない。E01を含む受入状態は変更しない。
