@@ -1,5 +1,5 @@
 use super::*;
-use nepl3_core::budget::Usage;
+use nepl3_core::budget::{Resource, Usage};
 
 fn limits(value: u64) -> Limits {
     Limits {
@@ -12,6 +12,124 @@ fn limits(value: u64) -> Limits {
         diagnostics: value,
         events: value,
     }
+}
+
+#[test]
+fn reentry_rejects_spent_ceiling_before_observing_saved_depth() -> Result<(), StopReason> {
+    let outer = limits(100);
+    let mut budget = Budget::new(outer);
+    let root = ExecutionScope::root(&mut budget, Limits { work: 1, ..outer })?;
+    // Capture does not execute the frame. Other work can consume the shared
+    // budget before this saved frame is entered or resumed.
+    budget.charge(Resource::Work, 2)?;
+    let before = budget.usage();
+    assert_eq!(before.depth, 0);
+    assert_eq!(root.depth, 1);
+    let mut calls = 0;
+    let result: Result<(), StopReason> = root.run(&mut budget, |_| {
+        calls += 1;
+        Ok(())
+    });
+    assert_eq!(result, Err(StopReason::WorkLimit));
+    assert_eq!(calls, 0);
+    // A reversed depth/ceiling wrapper order would incorrectly raise this mark.
+    assert_eq!(budget.usage(), before);
+    assert_eq!(budget.current_depth(), 0);
+    assert_eq!(budget.limits(), outer);
+    assert_eq!(budget.poll(), Err(StopReason::WorkLimit));
+    Ok(())
+}
+
+#[test]
+fn reentry_rejects_saved_depth_under_a_later_zero_ceiling() -> Result<(), StopReason> {
+    let outer = limits(100);
+    let mut budget = Budget::new(outer);
+    let root = ExecutionScope::root(&mut budget, outer)?;
+    let before = budget.usage();
+    let temporary = Limits { depth: 0, ..outer };
+    let mut calls = 0;
+    let result: Result<(), StopReason> = budget.with_ceiling(temporary, |budget| {
+        let result = root.run(budget, |_| {
+            calls += 1;
+            Ok::<_, StopReason>(())
+        });
+        assert_eq!(budget.limits(), temporary);
+        assert_eq!(budget.current_depth(), 0);
+        assert_eq!(budget.usage(), before);
+        result
+    });
+    assert_eq!(result, Err(StopReason::DepthLimit));
+    assert_eq!(calls, 0);
+    assert_eq!(budget.usage(), before);
+    assert_eq!(budget.limits(), outer);
+    assert_eq!(budget.current_depth(), 0);
+    assert_eq!(budget.poll(), Err(StopReason::DepthLimit));
+    Ok(())
+}
+
+#[test]
+fn root_retains_temporary_capture_ceiling_after_outer_restoration() -> Result<(), StopReason> {
+    let outer = limits(100);
+    let temporary = Limits {
+        depth: 4,
+        ..limits(7)
+    };
+    let mut budget = Budget::new(outer);
+    let root = budget.with_ceiling(temporary, |budget| ExecutionScope::root(budget, outer))?;
+    assert_eq!(budget.limits(), outer);
+    assert_eq!(budget.usage(), Usage::default());
+    root.run(&mut budget, |budget| {
+        assert_eq!(budget.limits(), temporary);
+        assert_eq!(budget.current_depth(), 1);
+        budget.charge(Resource::Work, 7)
+    })?;
+    assert_eq!(budget.limits(), outer);
+    assert_eq!(budget.current_depth(), 0);
+    assert_eq!(budget.usage().work, 7);
+    assert_eq!(budget.usage().depth, 1);
+    Ok(())
+}
+
+#[test]
+fn callback_error_keeps_charges_and_restores_host_frame() -> Result<(), StopReason> {
+    #[derive(Debug, PartialEq)]
+    enum Failure {
+        Domain,
+        Resource(StopReason),
+    }
+    impl From<StopReason> for Failure {
+        fn from(reason: StopReason) -> Self {
+            Self::Resource(reason)
+        }
+    }
+    let outer = limits(100);
+    let saved = limits(10);
+    for host_depth in [3, 7] {
+        let mut budget = Budget::new(outer);
+        // Capture under host depth four, producing a saved depth of five.
+        let root = budget.with_depth_at_least(4, |budget| ExecutionScope::root(budget, saved))?;
+        assert_eq!(root.depth, 5);
+        budget.with_depth_at_least(host_depth, |budget| {
+            let result: Result<(), Failure> = root.run(budget, |budget| {
+                assert_eq!(budget.limits(), saved);
+                // Exercise both a deeper saved frame and a deeper active host.
+                assert_eq!(budget.current_depth(), host_depth.max(5));
+                budget.charge(Resource::Work, 2)?;
+                Err(Failure::Domain)
+            });
+            assert_eq!(result, Err(Failure::Domain));
+            assert_eq!(budget.limits(), outer);
+            assert_eq!(budget.current_depth(), host_depth);
+            assert_eq!(budget.usage().work, 2);
+            assert_eq!(budget.usage().depth, host_depth.max(5));
+            budget.poll()
+        })?;
+        assert_eq!(budget.current_depth(), 0);
+        assert_eq!(budget.limits(), outer);
+        assert_eq!(budget.usage().work, 2);
+        assert_eq!(budget.poll(), Ok(()));
+    }
+    Ok(())
 }
 
 #[test]
