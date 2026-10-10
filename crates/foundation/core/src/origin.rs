@@ -436,7 +436,13 @@ impl<'a> ValidatedSourceMap<'a> {
         budget: &mut Budget,
     ) -> Result<bool, OriginError> {
         budget.charge(Resource::Work, 1)?;
-        if parent.contains(child) {
+        if parent
+            .snapshot_ref()
+            .compare_with_budget(child.snapshot_ref(), budget)?
+            == core::cmp::Ordering::Equal
+            && parent.start() <= child.start()
+            && child.end() <= parent.end()
+        {
             return Ok(true);
         }
         if self.direct_cover(parent, child, budget)? {
@@ -451,13 +457,13 @@ impl<'a> ValidatedSourceMap<'a> {
                 budget.charge(Resource::Work, 1)?;
                 budget.charge(Resource::Nodes, 1)?;
                 budget.observe_depth(depth)?;
-                if point_within(current, parent) {
+                if point_within(current, parent, budget)? {
                     continue;
                 }
                 let mut found = false;
                 for mapping in self.iter() {
                     budget.charge(Resource::Work, 1)?;
-                    if !point_on(current, &mapping.target) {
+                    if !point_on(current, &mapping.target, budget)? {
                         continue;
                     }
                     found = true;
@@ -506,7 +512,10 @@ impl<'a> ValidatedSourceMap<'a> {
         for mapping in self.iter() {
             budget.charge(Resource::Work, 1)?;
             let target = &mapping.target;
-            if target.snapshot_ref() != child.snapshot_ref()
+            if target
+                .snapshot_ref()
+                .compare_with_budget(child.snapshot_ref(), budget)?
+                != core::cmp::Ordering::Equal
                 || (target.start() == target.end()) != anchor
                 || if anchor {
                     target.start() != child.start()
@@ -524,12 +533,22 @@ impl<'a> ValidatedSourceMap<'a> {
         let Some(mapping) = candidate else {
             return Ok(false);
         };
-        if !mapping.target.contains(child) || mapping.source.snapshot_ref() != parent.snapshot_ref()
+        // Candidate selection already established the target identity. Only
+        // range inclusion remains; the source identity is checked separately.
+        if mapping.target.start() > child.start()
+            || child.end() > mapping.target.end()
+            || mapping
+                .source
+                .snapshot_ref()
+                .compare_with_budget(parent.snapshot_ref(), budget)?
+                != core::cmp::Ordering::Equal
         {
             return Ok(false);
         }
         if mapping.kind == MappingKind::Transformed {
-            return Ok(parent.contains(&mapping.source));
+            return Ok(
+                parent.start() <= mapping.source.start() && mapping.source.end() <= parent.end()
+            );
         }
         // Exact mappings have equal lengths, already checked by construction.
         // Translate only the requested subrange, without cloning a Span/ID.
@@ -538,20 +557,26 @@ impl<'a> ValidatedSourceMap<'a> {
         Ok(parent.start() <= start && end <= parent.end())
     }
 }
-fn point_on(point: Point<'_>, span: &Span) -> bool {
-    point.snapshot == span.snapshot_ref()
+fn point_on(point: Point<'_>, span: &Span, budget: &mut Budget) -> Result<bool, StopReason> {
+    Ok(point
+        .snapshot
+        .compare_with_budget(span.snapshot_ref(), budget)?
+        == core::cmp::Ordering::Equal
         && point.anchor == (span.start() == span.end())
         && point.offset >= span.start()
-        && point.offset - span.start() < point_count(span)
+        && point.offset - span.start() < point_count(span))
 }
-fn point_within(point: Point<'_>, span: &Span) -> bool {
-    point.snapshot == span.snapshot_ref()
+fn point_within(point: Point<'_>, span: &Span, budget: &mut Budget) -> Result<bool, StopReason> {
+    Ok(point
+        .snapshot
+        .compare_with_budget(span.snapshot_ref(), budget)?
+        == core::cmp::Ordering::Equal
         && point.offset >= span.start()
         && if point.anchor {
             point.offset <= span.end()
         } else {
             point.offset < span.end()
-        }
+        })
 }
 impl SourceMap {
     pub fn insert(

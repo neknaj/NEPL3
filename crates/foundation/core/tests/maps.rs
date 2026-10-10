@@ -652,10 +652,18 @@ fn direct_mapped_ranges_do_not_allocate_per_byte() -> TestResult {
         }];
         let checked = SourceMap::validate_mappings(&maps, &sources, &mut budget())
             .map_err(|e| format!("{e:?}"))?;
-        // A direct range proof needs no copied IDs or per-byte pending stack.
+        // Two traversal charges plus three identity comparisons. The initial
+        // distinct snapshots cost 8 + 41; shared endpoint comparisons cost one
+        // each on Arc targets, and retain the byte bound on other targets.
+        // The range proof still needs no copied IDs or per-byte pending stack.
+        let work = if cfg!(target_has_atomic = "ptr") {
+            53
+        } else {
+            149
+        };
         let limits = Limits {
             allocation_units: 0,
-            work: 10,
+            work,
             nodes: 2,
             depth: 2,
             ..budget().limits()
@@ -667,6 +675,7 @@ fn direct_mapped_ranges_do_not_allocate_per_byte() -> TestResult {
                 .map_err(|e| format!("{e:?}"))?
         );
         assert_eq!(query.usage().allocation_units, 0);
+        assert_eq!(query.usage().work, work);
         assert_eq!(query.usage().depth, 2);
         for (limited, reason) in [
             (Limits { work: 1, ..limits }, StopReason::WorkLimit),
@@ -906,5 +915,148 @@ fn snapshot_dag_proves_large_transforms_without_enumerating_the_point_product() 
         SourceMap::validate_mappings(&cycle, &sources, &mut Budget::new(limits)),
         Err(OriginError::Cycle)
     ));
+    Ok(())
+}
+
+#[test]
+fn direct_containment_precharges_independent_long_identity_comparison() -> TestResult {
+    let name = "x".repeat(100_000);
+    let a = source(&name, "abc")?;
+    let b = source(&name, "abc")?;
+    let parent = a.span(0, 3).map_err(|e| format!("{e:?}"))?;
+    let child = b.span(1, 2).map_err(|e| format!("{e:?}"))?;
+    let mut sources = SourceStore::default();
+    sources.insert(a).map_err(|e| format!("{e:?}"))?;
+    let proof =
+        SourceMap::validate_mappings(&[], &sources, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    // Entry costs one, and the complete independent identity costs L + 41.
+    let exact = 100_042;
+    for work in [0, 1, exact - 1] {
+        let mut limited = Budget::new(Limits {
+            work,
+            ..budget().limits()
+        });
+        for _ in 0..2 {
+            assert_eq!(
+                proof.contains(&parent, &child, &mut limited),
+                Err(OriginError::Stopped(StopReason::WorkLimit))
+            );
+        }
+    }
+    let mut exact_budget = Budget::new(Limits {
+        work: exact,
+        ..budget().limits()
+    });
+    assert_eq!(proof.contains(&parent, &child, &mut exact_budget), Ok(true));
+    assert_eq!(exact_budget.usage().work, exact);
+    assert_eq!(exact_budget.usage().allocation_units, 0);
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert_eq!(
+        proof.contains(&parent, &child, &mut cancelled),
+        Err(OriginError::Stopped(StopReason::Cancelled))
+    );
+    assert_eq!(cancelled.usage().work, 0);
+    Ok(())
+}
+
+#[test]
+fn mapped_containment_prepays_each_independent_identity() -> TestResult {
+    let name_a = format!("{}a", "x".repeat(9_999));
+    let name_b = format!("{}b", "x".repeat(9_999));
+    let a = source(&name_a, "abc")?;
+    let b = source(&name_b, "abc")?;
+    let parent = source(&name_a, "abc")?
+        .span(0, 3)
+        .map_err(|e| format!("{e:?}"))?;
+    let child = source(&name_b, "abc")?
+        .span(1, 2)
+        .map_err(|e| format!("{e:?}"))?;
+    let mut store = SourceStore::default();
+    store.insert(a.clone()).map_err(|e| format!("{e:?}"))?;
+    store.insert(b.clone()).map_err(|e| format!("{e:?}"))?;
+    for kind in [MappingKind::Exact, MappingKind::Transformed] {
+        let mappings = [Mapping {
+            source: a.span(0, 3).map_err(|e| format!("{e:?}"))?,
+            target: b.span(0, 3).map_err(|e| format!("{e:?}"))?,
+            kind,
+        }];
+        let proof = SourceMap::validate_mappings(&mappings, &store, &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+        // Entry + map visit + three independent complete identities (L + 41).
+        let exact = 2 + 3 * (10_000 + 41);
+        let limits = Limits {
+            work: exact,
+            allocation_units: 0,
+            ..budget().limits()
+        };
+        let mut sufficient = Budget::new(limits);
+        assert_eq!(proof.contains(&parent, &child, &mut sufficient), Ok(true));
+        assert_eq!(sufficient.usage().work, exact);
+        assert_eq!(sufficient.usage().allocation_units, 0);
+        for work in [0, 1, exact - 1] {
+            let mut limited = Budget::new(Limits { work, ..limits });
+            assert_eq!(
+                proof.contains(&parent, &child, &mut limited),
+                Err(OriginError::Stopped(StopReason::WorkLimit))
+            );
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn pointwise_containment_prepays_independent_identity_on_every_hop() -> TestResult {
+    let names = [
+        format!("{}a", "x".repeat(999)),
+        format!("{}b", "x".repeat(999)),
+        format!("{}c", "x".repeat(999)),
+    ];
+    let mut store = SourceStore::default();
+    for name in &names {
+        store
+            .insert(source(name, "x")?)
+            .map_err(|e| format!("{e:?}"))?;
+    }
+    // Independently construct every endpoint, including both occurrences of B.
+    let span = |name: &str| -> Result<_, Box<dyn std::error::Error>> {
+        Ok(source(name, "x")?
+            .span(0, 1)
+            .map_err(|e| format!("{e:?}"))?)
+    };
+    let parent = span(&names[0])?;
+    let child = span(&names[2])?;
+    let mappings = [
+        Mapping {
+            source: span(&names[0])?,
+            target: span(&names[1])?,
+            kind: MappingKind::Exact,
+        },
+        Mapping {
+            source: span(&names[1])?,
+            target: span(&names[2])?,
+            kind: MappingKind::Exact,
+        },
+    ];
+    let proof = SourceMap::validate_mappings(&mappings, &store, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    // Fast path: four identity checks + three visits. Pointwise: three parent
+    // checks, four edge checks, three popped points, and four edge visits.
+    let exact = 11 * (1_000 + 41) + 10;
+    let limits = Limits {
+        work: exact,
+        ..budget().limits()
+    };
+    let mut sufficient = Budget::new(limits);
+    assert_eq!(proof.contains(&parent, &child, &mut sufficient), Ok(true));
+    assert_eq!(sufficient.usage().work, exact);
+    assert_eq!(sufficient.usage().nodes, 3);
+    for work in [1, exact - 1] {
+        let mut limited = Budget::new(Limits { work, ..limits });
+        assert_eq!(
+            proof.contains(&parent, &child, &mut limited),
+            Err(OriginError::Stopped(StopReason::WorkLimit))
+        );
+    }
     Ok(())
 }
