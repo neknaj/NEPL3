@@ -601,3 +601,34 @@ defers cumulative resource admission until `run`.
 These are native composition regressions, not additional formal proofs or a
 claim that a production defect was found. They do not establish scheduler or
 remote-host correctness, panic/unwind restoration, or complete runtime acceptance.
+
+### Markdown batch validation reuse
+
+The annotated Math preparation loop validates its immutable containing Doc once
+when it encounters the first Math node. Crate-private host helpers reuse that
+native `ValidatedDocumentSyntax` only inside the same registry, source-admission
+ledger, cumulative Budget and active-depth scope. Each selected Math guest still
+passes the existing schema/foreign-closure validation, lowering, shape checking,
+MathML and structural TeX preparation. Public single-node entry points continue
+validating arbitrary input. This is not a portable or cross-operation paid-work
+proof. Full Doc validation still includes unselected nodes and embeds.
+The loop rejects changed limits or active depth before reuse and after every
+guest preparation, including the last guest. This guard does not detect an
+arbitrary custom codec replacing the Budget with another value having identical
+bounds; preserving cumulative usage remains the codec's contract.
+
+The SVG page profile prepares plain text lazily at the first image requirement
+and reuses it for that page's later images. Image-free pages retain complete
+PageSet admission without redundant alt-text preparation. Static SVG validation,
+asset resolution and rejection of unused assets remain in place. All phases use
+the original cumulative Budget; stops are not reset and limits are not raised.
+Math preparation now precedes lazy image preparation, so competing failures can
+be reported in a different order; byte-identical error strings are not promised.
+
+Regression coverage compares multiple Math fragments with the independently
+validating public path and requires lower Work and AllocationUnits. Image-free
+pages must match the plain page profile's complete Usage and output. Multi-Math
+page cases retain exact/one-below limits, cancellation, elevated caller depth,
+invalid origin/unreachable node/unused embed rejection, and faithful output.
+These native checks do not complete formal acceptance or prove all rendering
+paths linear-time.

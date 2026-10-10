@@ -101,7 +101,7 @@ fn math_tables_keep_cells_and_reject_pipe_fences() -> Result<(), String> {
 #[test]
 fn math_page_rejects_orphans_and_preserves_cumulative_budget() -> Result<(), String> {
     let c = compiled()?;
-    let source = r#"article en "Math" body cons display Math frac 1 0 nil"#;
+    let source = r#"article en "Math" body cons display Math frac 1 0 cons display Math add x y cons display Math mul x y nil"#;
     let set = PageSet {
         pages: vec![page(&c, "a", "a.nepld", "a.md", source)?],
         files: vec![],
@@ -126,6 +126,13 @@ fn math_page_rejects_orphans_and_preserves_cumulative_budget() -> Result<(), Str
     };
     let mut measured = budget();
     let expected = render(&set, &mut measured).map_err(err)?;
+    let mut at_host_depth = budget();
+    let elevated = at_host_depth
+        .with_depth_at_least(5, |b| render(&set, b))
+        .map_err(err)?;
+    assert_eq!(elevated.pages[0].markdown, expected.pages[0].markdown);
+    assert_eq!(at_host_depth.current_depth(), 0);
+    assert!(at_host_depth.usage().depth >= measured.usage().depth + 5);
     for reason in [
         StopReason::WorkLimit,
         StopReason::AllocationLimit,
@@ -193,6 +200,10 @@ fn math_page_rejects_orphans_and_preserves_cumulative_budget() -> Result<(), Str
         .clone();
     unreachable.pages[0].document.value.nodes.push(math);
     assert!(render(&unreachable, &mut budget()).is_err());
+    let mut bad_origin = set.clone();
+    bad_origin.pages[0].document.value.nodes[0].origin =
+        Some(nepl3_core::origin::OriginId(u64::MAX));
+    assert!(render(&bad_origin, &mut budget()).is_err());
     Ok(())
 }
 
