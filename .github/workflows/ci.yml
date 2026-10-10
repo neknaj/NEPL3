@@ -109,6 +109,16 @@ jobs:
         run: cargo clippy --workspace --all-targets --locked --features nepl3-suite/sentence-html -- -D warnings
       - name: Tests
         run: cargo test --workspace --locked
+      - name: Record native source-position oracle execution
+        run: python tools/evidence/runner.py run tools/evidence/specs/source-position-native.json dist/source-position-native
+      - name: Preserve native source-position evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: source-position-${{ matrix.os }}-${{ github.sha }}
+          path: dist/source-position-native/
+          if-no-files-found: error
+          retention-days: 14
       - name: Composition runtime consumer
         run: cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml
       - name: Test external Sentence Doc adapter
@@ -319,6 +329,7 @@ jobs:
           rustup target add wasm32-wasip2 wasm32-unknown-unknown
           rustc --version --verbose
       - name: Install verified Wasmtime
+        working-directory: ${{ runner.temp }}
         run: |
           curl --fail --location --retry 3 --output wasmtime.tar.xz https://github.com/bytecodealliance/wasmtime/releases/download/v44.0.1/wasmtime-v44.0.1-x86_64-linux.tar.xz
           echo 'afd58715f105e3a7f454169daed22168c5736ec5f225fb04c4ac62c54c9508a3  wasmtime.tar.xz' | sha256sum --check --strict
@@ -344,6 +355,21 @@ jobs:
           cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml --features doc-sentence --test sentence --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked --manifest-path conformance/extensions/suite/Cargo.toml --features sentence-html --test sentence_html --target wasm32-wasip2 -- --test-threads=1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - name: Record WASI source-position oracle execution
+        env:
+          CARGO_TARGET_WASM32_WASIP2_RUNNER: wasmtime run
+        run: python tools/evidence/runner.py run tools/evidence/specs/source-position-wasi.json dist/source-position-wasi
+      - name: Preserve WASI source-position evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: source-position-wasi-${{ github.sha }}
+          path: dist/source-position-wasi/
+          if-no-files-found: error
+          retention-days: 14
       - name: Compile foundation for browser Wasm
         run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html -p nepl3-suite --no-default-features --features nepl3-suite/doc-sentence,nepl3-suite/sentence-html --target wasm32-unknown-unknown
       - name: Compare identical foundation components with Pulley64

@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "scope": "Fixed 173-case source-position oracle on wasi; not formal seven-target acceptance",
+  "commands": [
+    {
+      "id": "rustc",
+      "argv": [
+        "rustc",
+        "--version",
+        "--verbose"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 30
+    },
+    {
+      "id": "cargo",
+      "argv": [
+        "cargo",
+        "--version",
+        "--verbose"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 30
+    },
+    {
+      "id": "wasmtime",
+      "argv": [
+        "wasmtime",
+        "--version"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 30
+    },
+    {
+      "id": "source-position",
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "nepl3-tools",
+        "--test",
+        "source",
+        "--target",
+        "wasm32-wasip2",
+        "--",
+        "--test-threads=1",
+        "--nocapture"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1200
+    }
+  ]
+}
