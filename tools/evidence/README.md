@@ -99,3 +99,21 @@ working-tree/index inputs cannot silently replace the pinned commit's bytes.
 A matching profile is an input-identity comparison, not authentication of a CI
 run or acceptance of its results. Artifact selection, expiry, safe log restoration,
 and the formal-record bridge remain separate requirements.
+
+## Actions ZIP byte boundary
+
+`artifact.py` decodes an independently pinned outer Actions ZIP into unchanged
+member bytes. Unlike the canonical local collector archive, this transport accepts
+stored or deflated members and signed streaming data descriptors. It requires
+flat lowercase ASCII names, regular files, bounded directory records before ZIP
+allocation, matching contiguous local headers/payloads/descriptors, and no ZIP64,
+extra fields, comments, links, duplicate names or unowned local bytes. Every member
+is CRC-checked; the complete outer ZIP must match the caller-supplied SHA-256.
+Limits are 256 members, 96-byte names, 1 MiB per expanded member and 32 MiB for
+both the complete ZIP and all expanded data. Empty output channels are preserved.
+
+This is a pure byte-decoding boundary. It does not authenticate the digest pin,
+select or download an artifact, verify its repository/run/source/expiry, write
+logs, or grant acceptance. Those checks and the typed formal-record locator are
+still required before clean-CI restoration. Real Actions ZIP compatibility tests
+are diagnostic observations, not formal execution evidence.
