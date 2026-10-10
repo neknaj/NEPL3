@@ -308,3 +308,125 @@ fn next_depth_scope_restores_only_saved_active_depth() {
 fn restored_depth_scope_restores_only_saved_active_depth() {
     depth_scope_contract(Some(kani::any()));
 }
+
+/// Arbitrary callback replacement is modeled: only the saved outer limits
+/// are restored. Result-returning callbacks are modeled, not panic or divergence.
+#[kani::proof]
+#[kani::unwind(10)]
+fn ceiling_scope_preserves_priority_and_restores_only_limits() {
+    let mut budget = arbitrary_budget();
+    let requested = arbitrary_budget().limits;
+    let outer = budget.limits;
+    let usage = budget.usage;
+    let active = budget.depth;
+    let measured = budget.observed_depth;
+    let stopped = budget.stopped;
+    // An independent field-wise oracle specifies intersection and priority.
+    let pairs = [
+        (
+            outer.source_bytes,
+            requested.source_bytes,
+            usage.source_bytes,
+            StopReason::SourceLimit,
+        ),
+        (
+            outer.work,
+            requested.work,
+            usage.work,
+            StopReason::WorkLimit,
+        ),
+        (
+            outer.nodes,
+            requested.nodes,
+            usage.nodes,
+            StopReason::NodeLimit,
+        ),
+        (
+            outer.allocation_units,
+            requested.allocation_units,
+            usage.allocation_units,
+            StopReason::AllocationLimit,
+        ),
+        (
+            outer.output_bytes,
+            requested.output_bytes,
+            usage.output_bytes,
+            StopReason::OutputLimit,
+        ),
+        (
+            outer.diagnostics,
+            requested.diagnostics,
+            usage.diagnostics,
+            StopReason::DiagnosticLimit,
+        ),
+        (
+            outer.events,
+            requested.events,
+            usage.events,
+            StopReason::EventLimit,
+        ),
+        (
+            outer.depth,
+            requested.depth,
+            usage.depth,
+            StopReason::DepthLimit,
+        ),
+    ];
+    let mut effective = [0u64; 8];
+    let mut rejected = stopped;
+    for (i, (old, new, used, reason)) in pairs.into_iter().enumerate() {
+        effective[i] = if old < new { old } else { new };
+        if rejected.is_none() && (used > old || used > new) {
+            rejected = Some(reason);
+        }
+    }
+    let expected_limits = Limits {
+        source_bytes: effective[0],
+        work: effective[1],
+        nodes: effective[2],
+        allocation_units: effective[3],
+        output_bytes: effective[4],
+        diagnostics: effective[5],
+        events: effective[6],
+        depth: effective[7],
+    };
+    let replacement = arbitrary_budget();
+    let post_usage = replacement.usage;
+    let post_active = replacement.depth;
+    let post_measured = replacement.observed_depth;
+    let post_stopped = replacement.stopped;
+    let callback_result: Result<u64, StopReason> = if kani::any() {
+        Ok(kani::any())
+    } else {
+        Err(reason())
+    };
+    let mut calls = 0u8;
+    let result = budget.with_ceiling(requested, |inner| {
+        assert_eq!(calls, 0);
+        calls += 1;
+        assert_eq!(rejected, None);
+        assert_eq!(inner.limits, expected_limits);
+        assert_eq!(inner.usage, usage);
+        assert_eq!(inner.depth, active);
+        assert_eq!(inner.observed_depth, measured);
+        assert_eq!(inner.stopped, None);
+        *inner = replacement;
+        callback_result
+    });
+    assert_eq!(budget.limits, outer);
+    if let Some(reason) = rejected {
+        assert_eq!(calls, 0);
+        assert_eq!(result, Err(reason));
+        assert_eq!(budget.usage, usage);
+        assert_eq!(budget.depth, active);
+        assert_eq!(budget.observed_depth, measured);
+        assert_eq!(budget.stopped, Some(reason));
+    } else {
+        assert_eq!(calls, 1);
+        assert_eq!(result, callback_result);
+        assert_eq!(budget.usage, post_usage);
+        assert_eq!(budget.depth, post_active);
+        assert_eq!(budget.observed_depth, post_measured);
+        assert_eq!(budget.stopped, post_stopped);
+    }
+}

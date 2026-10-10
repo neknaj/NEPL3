@@ -179,3 +179,47 @@ fn depth_scopes_preserve_callback_result_and_replacement() -> Result<(), StopRea
     }
     Ok(())
 }
+
+#[test]
+fn ceiling_scopes_restore_limits_but_preserve_callback_result_and_state() -> Result<(), StopReason>
+{
+    let mut b = budget();
+    let outer = b.limits();
+    let narrow = Limits { work: 10, ..outer };
+    b.with_ceiling(narrow, |b| {
+        assert_eq!(b.limits(), narrow);
+        let failed: Result<(), StopReason> = b.with_ceiling(outer, |b| {
+            assert_eq!(b.limits(), narrow);
+            b.charge(Resource::Work, 3)?;
+            Err(StopReason::OutputLimit)
+        });
+        assert_eq!(failed, Err(StopReason::OutputLimit));
+        assert_eq!(b.limits(), narrow);
+        assert_eq!(b.poll(), Ok(()));
+        b.with_ceiling(outer, |b| {
+            b.cancel();
+            Ok::<_, StopReason>(())
+        })?;
+        assert_eq!(b.poll(), Err(StopReason::Cancelled));
+        Ok::<_, StopReason>(())
+    })?;
+    assert_eq!(b.limits(), outer);
+    assert_eq!(b.usage().work, 3);
+    assert_eq!(b.poll(), Err(StopReason::Cancelled));
+    let mut b = budget();
+    b.with_ceiling(narrow, |b| {
+        *b = Budget::new(Limits {
+            work: 200,
+            depth: 200,
+            ..outer
+        });
+        b.charge(Resource::Work, 6)?;
+        b.observe_depth(11)?;
+        Ok::<_, StopReason>(())
+    })?;
+    assert_eq!(b.limits(), outer);
+    assert_eq!(b.usage().work, 6);
+    assert_eq!(b.usage().depth, 11);
+    assert_eq!(b.observed_depth, 11);
+    Ok(())
+}
