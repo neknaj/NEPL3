@@ -656,3 +656,16 @@ require continuation of the same cumulative Budget/registry/source admission.
 Matching bounds do not prove paid-usage identity. These are in-operation native
 proofs, not wire receipts, cache authorization, guest semantic proofs or complete
 runtime acceptance. No resource ceiling is raised or reset.
+
+### Digest request lookup probes
+
+A batch node visit finds the first matching immutable-reference request with one
+charged lower-bound search, then scans equal requests in their existing order.
+Every run candidate and one terminal probe are charged, including end-of-index;
+completed requests consume the probe but do not restart hashes. This replaces a
+second binary search without tying Usage to address rank. The domain, encoding,
+active hash scopes, insertion shifts and request-order results are unchanged.
+Direct regressions cover missing addresses and duplicate runs at different ranks,
+all short Work ceilings, sticky stops and completed matches. No universal CPU
+speedup is claimed for duplicate-heavy inputs; the deterministic Work change and
+actual encoding/hash outputs are separate measurements.
