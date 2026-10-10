@@ -6,7 +6,7 @@
 
 | revision | 対象path | 確認できる記録 |
 | --- | --- | --- |
-| `44bb19235cbf8039af2fceca59c0c9d7c261db00` | `conformance/results/acceptance/e01.json` | E01の7環境・各228観測と認証付きlog復元を確認した固定入力の正式記録。OriginGraphのsource変更後は現在入力の証拠として再利用せず、元記録を保全する。 |
+| `44bb19235cbf8039af2fceca59c0c9d7c261db00` | `conformance/results/acceptance/e01.json` | E01の7環境・各228観測と認証付きlog復元を確認した固定入力の正式記録。OriginGraphのsource変更後は現在入力の証拠として再利用せず、元記録はこのGit revisionから取得する。 |
 | `d87ca8c4ba18e74bc71efb0e2958af87ac971e1b` | `conformance/results/` | 2026年9月13日までの検証archive。mainの祖先として到達可能。 |
 | `fd8057199f2f32fb36455210df36e78015b77fab` | `conformance/results/` | 今回の整理前の2,046ファイル。後続の文書移行・外部consumer・runtime段階記録を含む。 |
 | `fd8057199f2f32fb36455210df36e78015b77fab` | `conformance/results/reader-builtins/allocation-baseline.log`、`allocation-working.log` | R020の同一allocation probeによる修正前後の観測。 |
