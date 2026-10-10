@@ -333,19 +333,87 @@ fn line_positions_roundtrip_unicode_and_all_line_endings() -> Result<(), SourceE
     let snapshot = source("a", 0, "\u{feff}日🙂\r\nx\ry\nz")?;
     let index = LineIndex::new(&snapshot, &mut budget())?;
     assert_eq!(index.line_count(), 4);
-    for encoding in [
+    // Fixed positions are an oracle independent of either conversion direction.
+    // BOM: bytes 0..3; 日: 3..6; 🙂: 6..10; CRLF: 10..12;
+    // x/CR: 12..14; y/LF: 14..16; z/EOF: 16..17.
+    // A roundtrip that skips rejected offsets could pass if position() rejects
+    // every offset, so require all representable positions explicitly.
+    let positions = [
+        (0, 0, [0, 0, 0]),
+        (3, 0, [3, 1, 1]),
+        (6, 0, [6, 2, 2]),
+        (10, 0, [10, 4, 3]),
+        (12, 1, [0, 0, 0]),
+        (13, 1, [1, 1, 1]),
+        (14, 2, [0, 0, 0]),
+        (15, 2, [1, 1, 1]),
+        (16, 3, [0, 0, 0]),
+        (17, 3, [1, 1, 1]),
+    ];
+    for (column, encoding) in [
         PositionEncoding::Utf8,
         PositionEncoding::Utf16,
         PositionEncoding::Utf32,
-    ] {
-        for offset in 0..=snapshot.text().len() as u64 {
-            if snapshot.span(offset, offset).is_err() {
-                continue;
-            }
-            if let Ok(position) = index.position(&snapshot, offset, encoding) {
-                assert_eq!(index.offset(&snapshot, position, encoding)?, offset);
-            }
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        for (offset, line, characters) in positions {
+            let expected = Position {
+                line,
+                character: characters[column],
+            };
+            assert_eq!(index.position(&snapshot, offset, encoding)?, expected);
+            assert_eq!(index.offset(&snapshot, expected, encoding)?, offset);
         }
+        for offset in [1, 2, 4, 5, 7, 8, 9] {
+            assert_eq!(
+                index.position(&snapshot, offset, encoding),
+                Err(SourceError::ScalarBoundary)
+            );
+        }
+        assert_eq!(
+            index.position(&snapshot, 11, encoding),
+            Err(SourceError::LineTerminator)
+        );
+        for offset in [18, u64::MAX] {
+            assert_eq!(
+                index.position(&snapshot, offset, encoding),
+                Err(SourceError::Bounds)
+            );
+        }
+        assert_eq!(
+            index.offset(
+                &snapshot,
+                Position {
+                    line: 3,
+                    character: 2
+                },
+                encoding
+            ),
+            Err(SourceError::Position)
+        );
+        assert_eq!(
+            index.offset(
+                &snapshot,
+                Position {
+                    line: 4,
+                    character: 0
+                },
+                encoding
+            ),
+            Err(SourceError::Position)
+        );
+    }
+    for character in [1, 2, 4, 5, 7, 8, 9] {
+        assert_eq!(
+            index.offset(
+                &snapshot,
+                Position { line: 0, character },
+                PositionEncoding::Utf8
+            ),
+            Err(SourceError::ScalarBoundary)
+        );
     }
     assert_eq!(
         index.position(&snapshot, 10, PositionEncoding::Utf16)?,
