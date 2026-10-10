@@ -114,7 +114,7 @@ impl OriginGraph {
                 }
                 budget.charge(Resource::Nodes, 1)?;
                 let origin = &origins[index];
-                validate_spans(origin, sources)?;
+                validate_spans(origin, sources, budget)?;
                 state[index] = 1;
                 budget.charge(
                     Resource::AllocationUnits,
@@ -151,7 +151,7 @@ impl OriginGraph {
         budget: &mut Budget,
     ) -> Result<OriginId, OriginError> {
         budget.poll()?;
-        validate_spans(&origin, sources)?;
+        validate_spans(&origin, sources, budget)?;
         let mut height = 1u64;
         for parent in parents(&origin) {
             budget.charge(Resource::Work, 1)?;
@@ -194,7 +194,11 @@ fn parents(origin: &Origin) -> &[OriginId] {
         _ => &[],
     }
 }
-fn validate_spans(origin: &Origin, sources: &SourceStore) -> Result<(), OriginError> {
+fn validate_spans(
+    origin: &Origin,
+    sources: &SourceStore,
+    budget: &mut Budget,
+) -> Result<(), OriginError> {
     let span = match origin {
         Origin::Direct(span) => Some(span),
         Origin::Composite(_) => None,
@@ -216,10 +220,18 @@ fn validate_spans(origin: &Origin, sources: &SourceStore) -> Result<(), OriginEr
         }
     };
     if let Some(span) = span {
-        sources
-            .get_ref(span.snapshot_ref())
-            .ok_or(SourceError::MissingSnapshot)?
-            .slice(span)?;
+        let identity = span.snapshot_ref();
+        let snapshot = sources
+            .get_revision_with_budget(&identity.source, identity.revision, budget)?
+            .ok_or(SourceError::MissingSnapshot)?;
+        if snapshot.identity().compare_with_budget(identity, budget)? != core::cmp::Ordering::Equal
+        {
+            return Err(SourceError::MissingSnapshot.into());
+        }
+        // Identity has already been checked with its full byte bound. Validate
+        // geometry directly rather than repeating an unmetered identity check.
+        budget.charge(Resource::Work, 1)?;
+        snapshot.slice_range(span.start(), span.end())?;
     }
     Ok(())
 }

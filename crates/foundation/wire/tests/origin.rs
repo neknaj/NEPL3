@@ -93,3 +93,49 @@ fn origin_variants_roundtrip_and_wire_cycles_are_rejected() -> TestResult {
     ));
     Ok(())
 }
+
+#[test]
+fn long_origin_identity_is_budgeted_at_the_foundation_codec_boundary() -> TestResult {
+    use nepl3_core::{budget::StopReason, source::SourceStore, value_codec::FoundationValueCodec};
+    use nepl3_wire::foundation::FoundationCodec;
+    fn error(e: impl core::fmt::Debug) -> String {
+        format!("{e:?}")
+    }
+    let descriptor = foundation::descriptor(&mut budget()).map_err(error)?;
+    let schema = descriptor.reference(&mut budget()).map_err(error)?;
+    let mut registry = SchemaRegistry::default();
+    registry
+        .register(schema, descriptor, &mut budget())
+        .map_err(error)?;
+    registry.finalize(&mut budget()).map_err(error)?;
+    let source = SourceSnapshot::new(
+        SourceId("x".repeat(100_000)),
+        0,
+        "memory:origin".into(),
+        b"a".to_vec(),
+        &mut budget(),
+    )
+    .map_err(error)?;
+    let origins = vec![Origin::Direct(source.span(0, 1).map_err(error)?)];
+    let mut store = SourceStore::default();
+    store.insert(source).map_err(error)?;
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&registry, &store, &mut admission).map_err(error)?;
+    // Two units cover the old entry/exit traversal. The fixed path must
+    // stop at the 200001-unit index comparison after only the entry unit,
+    // before inspecting the long key or serializing it.
+    let mut limits = budget().limits();
+    limits.work = 2;
+    let mut stopped = Budget::new(limits);
+    assert_eq!(
+        codec.encode_origins(&origins, &mut stopped),
+        Err(WireError::Stopped(StopReason::WorkLimit))
+    );
+    assert_eq!(stopped.usage().work, 1);
+    let value = codec
+        .encode_origins(&origins, &mut budget())
+        .map_err(error)?;
+    let restored = codec.decode_origins(&value, &mut budget()).map_err(error)?;
+    assert_eq!(restored, origins);
+    Ok(())
+}

@@ -290,10 +290,8 @@
     },
     {
       "id": "E01",
-      "status": "passed",
-      "evidence": [
-        "conformance/results/acceptance/e01.json"
-      ]
+      "status": "not-run",
+      "evidence": []
     },
     {
       "id": "E02",

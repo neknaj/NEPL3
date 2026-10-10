@@ -1166,3 +1166,172 @@ fn inline_scalar_validation_needs_no_heap_and_preserves_stop_priority() -> Resul
     }
     Ok(())
 }
+
+#[test]
+fn origin_source_lookup_stops_before_unbudgeted_long_identity_work() -> Result<(), OriginError> {
+    let id = SourceId("x".repeat(100_000));
+    let source = SourceSnapshot::new(id, 0, "memory:long".into(), b"a".to_vec(), &mut budget())?;
+    let span = source.span(0, 1)?;
+    let mut store = SourceStore::default();
+    store.insert(source)?;
+    let mut graph = OriginGraph::default();
+    let mut limits = budget().limits();
+    limits.work = 0;
+    let mut stopped = Budget::new(limits);
+    assert_eq!(
+        graph.push(Origin::Direct(span), &store, &mut stopped),
+        Err(OriginError::Stopped(StopReason::WorkLimit))
+    );
+    assert!(graph.origins().is_empty());
+    Ok(())
+}
+
+#[test]
+fn origin_span_work_is_metered_for_every_variant_and_import_path() -> Result<(), OriginError> {
+    let name = "x".repeat(100_000);
+    let original = SourceSnapshot::new(
+        SourceId(name.clone()),
+        0,
+        "memory:origin".into(),
+        b"a".to_vec(),
+        &mut budget(),
+    )?;
+    // Equal identities in independent storage must not use the pointer shortcut.
+    let stored = SourceSnapshot::new(
+        SourceId(name),
+        0,
+        "memory:origin".into(),
+        b"a".to_vec(),
+        &mut budget(),
+    )?;
+    let span = original.span(0, 1)?;
+    let mut store = SourceStore::default();
+    store.insert(stored)?;
+    let variants = [
+        Origin::Direct(span.clone()),
+        Origin::Generated {
+            operation: OperationRef {
+                schema: SchemaRef {
+                    package: "test".into(),
+                    revision: 0,
+                    digest: Digest([0; 32]),
+                },
+                name: "expand".into(),
+            },
+            callsite: Some(span.clone()),
+            inputs: vec![],
+        },
+        Origin::Synthetic {
+            reason: "inserted".into(),
+            anchor: Some(span),
+        },
+    ];
+    // One index comparison (2L+1), full identity (1+L+40), geometry (1).
+    let append_work = 300_043;
+    for origin in variants {
+        for limit in [0, 1, 200_000, 200_001, append_work - 1] {
+            let mut limits = budget().limits();
+            limits.work = limit;
+            let mut b = Budget::new(limits);
+            let mut graph = OriginGraph::default();
+            assert_eq!(
+                graph.push(origin.clone(), &store, &mut b),
+                Err(OriginError::Stopped(StopReason::WorkLimit))
+            );
+            assert!(graph.origins().is_empty());
+            assert!(b.usage().work <= limit);
+        }
+        let mut limits = budget().limits();
+        limits.work = append_work;
+        let mut b = Budget::new(limits);
+        let mut graph = OriginGraph::default();
+        assert_eq!(graph.push(origin.clone(), &store, &mut b)?, OriginId(0));
+        assert_eq!(b.usage().work, append_work);
+        // Imported validation adds entry and exit traversal work, not an
+        // unmetered shortcut through the same source lookup.
+        limits.work = append_work + 1;
+        assert_eq!(
+            OriginGraph::validate_origins(
+                std::slice::from_ref(&origin),
+                &store,
+                &mut Budget::new(limits)
+            ),
+            Err(OriginError::Stopped(StopReason::WorkLimit))
+        );
+        limits.work += 1;
+        let mut b = Budget::new(limits);
+        OriginGraph::validate_origins(std::slice::from_ref(&origin), &store, &mut b)?;
+        assert_eq!(b.usage().work, append_work + 2);
+        let restored =
+            OriginGraph::from_origins(vec![origin.clone()], &store, &mut Budget::new(limits))?;
+        assert_eq!(restored.origins(), std::slice::from_ref(&origin));
+        let before = graph.origins().to_vec();
+        let mut cancelled = budget();
+        cancelled.cancel();
+        assert_eq!(
+            graph.push(origin.clone(), &store, &mut cancelled),
+            Err(OriginError::Stopped(StopReason::Cancelled))
+        );
+        assert_eq!(graph.origins(), before);
+        assert_eq!(cancelled.usage().work, 0);
+        assert_eq!(
+            OriginGraph::validate_origins(&[origin], &store, &mut cancelled),
+            Err(OriginError::Stopped(StopReason::Cancelled))
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn origin_missing_or_mismatched_identity_remains_typed_and_atomic() -> Result<(), OriginError> {
+    let name = "x".repeat(100_000);
+    let source = SourceSnapshot::new(
+        SourceId(name.clone()),
+        0,
+        "memory:origin".into(),
+        b"a".to_vec(),
+        &mut budget(),
+    )?;
+    let origin = Origin::Direct(source.span(0, 1)?);
+    for (id, revision, bytes) in [
+        (format!("{}y", &name[..name.len() - 1]), 0, b"a".to_vec()),
+        (name.clone(), 1, b"a".to_vec()),
+        (name, 0, b"b".to_vec()),
+    ] {
+        let mut store = SourceStore::default();
+        store.insert(SourceSnapshot::new(
+            SourceId(id),
+            revision,
+            "memory:origin".into(),
+            bytes,
+            &mut budget(),
+        )?)?;
+        let mut graph = OriginGraph::default();
+        graph.push(
+            Origin::Synthetic {
+                reason: "existing".into(),
+                anchor: None,
+            },
+            &store,
+            &mut budget(),
+        )?;
+        let before = graph.origins().to_vec();
+        let mut limits = budget().limits();
+        limits.work = 100;
+        assert_eq!(
+            graph.push(origin.clone(), &store, &mut Budget::new(limits)),
+            Err(OriginError::Stopped(StopReason::WorkLimit))
+        );
+        assert_eq!(graph.origins(), before);
+        assert_eq!(
+            graph.push(origin.clone(), &store, &mut budget()),
+            Err(OriginError::Source(SourceError::MissingSnapshot))
+        );
+        assert_eq!(graph.origins(), before);
+        assert_eq!(
+            OriginGraph::from_origins(vec![origin.clone()], &store, &mut budget()).err(),
+            Some(OriginError::Source(SourceError::MissingSnapshot))
+        );
+    }
+    Ok(())
+}
