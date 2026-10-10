@@ -1,6 +1,8 @@
 //! Immutable UTF-8 snapshots, checked byte spans and editor position adapters.
 mod edit;
 mod guard;
+#[cfg(test)]
+mod tests;
 use crate::budget::{Budget, Resource, StopReason};
 #[cfg(target_has_atomic = "ptr")]
 use alloc::sync::Arc;
