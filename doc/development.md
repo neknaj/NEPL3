@@ -95,6 +95,8 @@ Awaitとpartialのない応答ではcallbackを呼ばず、元のclosureを使�
 Readerの意味検査、request lifetimeの確定、生成sourceの認可、remote Usageの検証、子processの終了・回収はhostの後続責務であり、このAPIでは実行しない。
 既存のreceive系APIは変更しない。局所試験は `cargo test --locked -p nepl3-wire --test operation pending::` と `cargo test --locked -p nepl3-provider --test transport reply::pending::` で実行する。
 
+Readerの生成sourceを持つReportの境界は `cargo test --locked -p nepl3-reader --test runtime framed::` で検査する。実際のReaderSessionが保存したRead要求に対し、Unicode生成sourceを参照する診断をframed CBORで受け取り、pending replyのsource入場、内外Reportの照合、ReaderSessionの再開までを同一process内で接続する。生成sourceを追加しない受信、payloadのsource宣言欠落、内外Reportの不一致は拒否し、Reader側のpending slotを保持する。これは共有Budget下のterminal Readの回帰であり、process間実行、transport Connection、remote Usageの認証、正式受入の完了を示すものではない。WASIでは同じコマンドへ `--target wasm32-wasip2 -- --test-threads=1` を追加する。
+
 nativeの依存操作schedulerは `cargo test --locked -p nepl3-suite --test dispatch` で検査する。WASIでは `--target wasm32-wasip2 -- --test-threads=1` を追加する。schedulerは明示的なframe列でInvoke・依存要求・Resumeを逐次実行し、同じ実行Budgetへ祖先の上限と深さを適用する。要求ごとのsource権限、循環検出、Invalidのpartialと診断、停止後のcallback抑止、取消を検査する。追加生成sourceの認可・登録とprocess間の総予算管理は後続の実装範囲である。T11・T12は段階実装中であり、正式受入の状態は `implementation-status.json` のacceptanceを参照する。
 
 nativeの `cargo test --locked -p nepl3-provider --test process_protocol` は、実processのstdin/stdoutでschemaを取得し、Invoke・Await・Resumeの結果とUnicode診断をnative経路と比較する。schema不足・identity不一致・応答前EOFと、Await中のCancelも検査する。このtest targetは専用harnessを使い、protocol用stdoutへテストランナーの表示が混入することを防ぐ。WASIではOS process試験を明示的にskipする。一般的なhost scheduler、process間の総予算管理、全providerの互換性は継続する実装・受入範囲である。
