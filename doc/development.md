@@ -495,3 +495,25 @@ callbacks that never replace the Budget. Ordinary nested tests also check a
 semantic validation error concurrent with resource exhaustion. This does not
 prove validation internals, generic error conversions, panic/unwind, divergence,
 or formal acceptance.
+
+Shape admission callers must also preserve depth overflow before calling Budget.
+The Math, Doc and Sentence graph validators use checked addition for caller base
+plus the live traversal stack and cached subtree height. Saturating these sums
+would hide an overflowing depth when the configured limit itself is u64::MAX.
+Their `--test shape absolute_depth_overflow` regressions cover one-node shapes
+and shared DAGs at exact-fit and overflowing bases, restored active depth,
+retained charges and a sticky DepthLimit. The DAG fixtures visit the shared child
+first on a shorter path, so the longest-path check cannot be replaced by the
+maximum live stack. This is a caller-side regression scope, not a proof of every
+rendering, lowering, evaluation or host depth calculation.
+
+The same overflow gate applies when a previously checked handle is reused at a
+higher caller depth: Math binding analysis and evaluation, Sentence plain-text
+rendering, foreign occurrence enumeration and foreign closure validation reject
+an overflowing absolute depth with sticky DepthLimit. These callers retain their
+existing charge order and restore the enclosing active depth through Budget.
+Regressions create each handle at base zero using the same Budget before testing
+the higher base. One-node exact-fit controls cover binding, evaluation, text and
+shape-only foreign enumeration; the foreign validation regression instead checks
+that overflow is rejected before an intentionally invalid guest is validated.
+These examples do not prove guest execution or all host-side depth calculations.

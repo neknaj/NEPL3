@@ -423,3 +423,36 @@ fn wide_expression_storage_work_grows_linearly() -> Result<(), String> {
     }
     Ok(())
 }
+
+#[test]
+fn checked_evaluation_rejects_overflowing_caller_depth() -> Result<(), String> {
+    let value = model(vec![MathKind::Symbol { name: "x".into() }]);
+    let raw_environment = empty();
+    for base in [u64::MAX - 1, u64::MAX] {
+        let mut budget = Budget::new(Limits {
+            depth: u64::MAX,
+            ..b().limits()
+        });
+        let input = check::expression(&value, &mut budget).map_err(err)?;
+        let environment = environment::check(&raw_environment, &mut budget).map_err(err)?;
+        let before = budget.usage();
+        let result =
+            budget.with_depth_at_least(base, |b| evaluation::evaluate(&input, &environment, b));
+        assert_eq!(budget.current_depth(), 0);
+        assert!(budget.usage().work > before.work);
+        if base == u64::MAX {
+            assert!(matches!(
+                result,
+                Err(evaluation::Error::Stopped(StopReason::DepthLimit))
+            ));
+            assert_eq!(budget.poll(), Err(StopReason::DepthLimit));
+        } else {
+            assert!(matches!(
+                result.map_err(err)?.outcome,
+                Outcome::Symbolic { .. }
+            ));
+            assert_eq!(budget.poll(), Ok(()));
+        }
+    }
+    Ok(())
+}

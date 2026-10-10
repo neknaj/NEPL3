@@ -48,7 +48,10 @@ pub fn evaluate<'a>(
         b.charge(Resource::Work, 1)?;
         match task {
             Task::Visit(node, depth) => {
-                b.with_depth_at_least::<_, StopReason>(caller.saturating_add(depth), |_| Ok(()))?;
+                let absolute = caller
+                    .checked_add(depth)
+                    .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
+                b.with_depth_at_least::<_, StopReason>(absolute, |_| Ok(()))?;
                 b.charge(Resource::Nodes, 1)?;
                 let kind = &source
                     .nodes

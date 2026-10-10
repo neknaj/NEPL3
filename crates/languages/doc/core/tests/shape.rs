@@ -193,3 +193,65 @@ fn shared_child_still_counts_on_the_longest_path() -> Result<(), ShapeError> {
     assert_eq!(b.usage().nodes, 3);
     Ok(())
 }
+
+fn check_absolute_depth_boundary(input: DocValue, height: u64) -> Result<(), ShapeError> {
+    for overflow in [false, true] {
+        let base = u64::MAX - height + u64::from(overflow);
+        let mut b = Budget::new(Limits {
+            depth: u64::MAX,
+            ..budget().limits()
+        });
+        b.charge(nepl3_core::budget::Resource::Work, 7)?;
+        let result = b.with_depth_at_least(base, |b| input.validate_shape(b).map(|_| ()));
+        assert_eq!(b.current_depth(), 0);
+        assert_eq!(b.usage().nodes, input.nodes.len() as u64);
+        assert!(b.usage().work > 7);
+        if overflow {
+            assert_eq!(result, Err(ShapeError::Stopped(StopReason::DepthLimit)));
+            assert_eq!(b.poll(), Err(StopReason::DepthLimit));
+            let charged = b.usage();
+            assert_eq!(
+                b.charge(nepl3_core::budget::Resource::Work, 0),
+                Err(StopReason::DepthLimit)
+            );
+            assert_eq!(b.usage(), charged);
+        } else {
+            result?;
+            assert_eq!(b.poll(), Ok(()));
+            assert_eq!(b.usage().depth, u64::MAX);
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn absolute_depth_overflow_leaf() -> Result<(), ShapeError> {
+    check_absolute_depth_boundary(
+        value(
+            DocRoot::Inline(InlineRef(0)),
+            vec![DocKind::Text { text: "x".into() }],
+        ),
+        1,
+    )
+}
+
+#[test]
+fn absolute_depth_overflow_shared_subtree() -> Result<(), ShapeError> {
+    // The shared child is visited first on the short path. Cached height,
+    // not the maximum live DFS stack, must enforce the later longer path.
+    check_absolute_depth_boundary(
+        value(
+            DocRoot::Inline(InlineRef(2)),
+            vec![
+                DocKind::Text { text: "x".into() },
+                DocKind::Concat {
+                    inlines: vec![InlineRef(0)],
+                },
+                DocKind::Concat {
+                    inlines: vec![InlineRef(0), InlineRef(1)],
+                },
+            ],
+        ),
+        3,
+    )
+}

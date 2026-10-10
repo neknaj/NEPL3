@@ -178,3 +178,38 @@ fn deep_inline_empty_content_and_shared_expansion() -> Result<(), Error> {
     ));
     Ok(())
 }
+
+#[test]
+fn prepared_text_rejects_overflowing_caller_depth() -> Result<(), Error> {
+    let value = SentenceValue {
+        root: Root::Inline(InlineRef(0)),
+        nodes: vec![Kind::Text { text: "x".into() }],
+        embeds: vec![],
+    };
+    let registry = SchemaRegistry::default();
+    for base in [u64::MAX - 1, u64::MAX] {
+        let mut budget = Budget::new(Limits {
+            depth: u64::MAX,
+            ..b().limits()
+        });
+        let prepared = text::prepare(
+            &value,
+            &registry,
+            &mut budget,
+            &mut SourceAdmission::default(),
+        )?;
+        let before = budget.usage();
+        let result = budget.with_depth_at_least(base, |b| prepared.render(BaseOnly, &[], b));
+        assert_eq!(budget.current_depth(), 0);
+        assert!(budget.usage().work > before.work);
+        if base == u64::MAX {
+            assert_eq!(result, Err(Error::Stopped(StopReason::DepthLimit)));
+            assert_eq!(budget.poll(), Err(StopReason::DepthLimit));
+            assert_eq!(budget.usage().output_bytes, before.output_bytes);
+        } else {
+            assert_eq!(result?, "x");
+            assert_eq!(budget.poll(), Ok(()));
+        }
+    }
+    Ok(())
+}

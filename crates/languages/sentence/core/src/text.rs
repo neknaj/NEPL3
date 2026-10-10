@@ -131,7 +131,10 @@ impl<'a> PreparedText<'a> {
             match action {
                 Action::Text(text) => append(&mut output, text, b)?,
                 Action::Node(id, depth) => {
-                    b.with_depth_at_least::<_, Error>(base.saturating_add(depth), |b| {
+                    let absolute = base
+                        .checked_add(depth)
+                        .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
+                    b.with_depth_at_least::<_, Error>(absolute, |b| {
                         let kind = usize::try_from(id)
                             .ok()
                             .and_then(|i| value.nodes.get(i))
