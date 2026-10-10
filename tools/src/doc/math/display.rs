@@ -60,6 +60,26 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
         budget: &mut Budget,
     ) -> Result<PreparedDisplay, Error<C::Error>> {
         let mathml = self.render_node(document, node, budget)?;
+        self.prepare_rendered(mathml, preference, budget)
+    }
+
+    pub(crate) fn prepare_validated_node(
+        &mut self,
+        checked: &nepl3_doc_core::check::ValidatedDocumentSyntax<'_>,
+        node: u64,
+        preference: Preference,
+        budget: &mut Budget,
+    ) -> Result<PreparedDisplay, Error<C::Error>> {
+        let mathml = self.render_validated_node(checked, node, budget)?;
+        self.prepare_rendered(mathml, preference, budget)
+    }
+
+    fn prepare_rendered(
+        &mut self,
+        mathml: RenderedMath,
+        preference: Preference,
+        budget: &mut Budget,
+    ) -> Result<PreparedDisplay, Error<C::Error>> {
         let tex = match preference {
             Preference::MathMLOnly => TexPreparation::MathMLOnly,
             Preference::KaTeXPreferred => {

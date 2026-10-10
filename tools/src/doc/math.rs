@@ -166,9 +166,26 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
         b: &mut Budget,
     ) -> Result<RenderedMath, Error<C::Error>> {
         let result = (|| {
-            document
+            let checked = document
                 .validate_structure(self.registry, b, self.codec.source_admission())
                 .map_err(Error::Document)?;
+            self.render_validated_node(&checked, node, b)
+        })();
+        b.poll()?;
+        result
+    }
+
+    // The batch caller retains this immutable proof only within one registry,
+    // source-admission ledger, cumulative Budget and active-depth scope.
+    pub(crate) fn render_validated_node(
+        &mut self,
+        checked: &nepl3_doc_core::check::ValidatedDocumentSyntax<'_>,
+        node: u64,
+        b: &mut Budget,
+    ) -> Result<RenderedMath, Error<C::Error>> {
+        b.poll()?;
+        let document = checked.document();
+        let result = (|| {
             let kind = &document
                 .value
                 .nodes

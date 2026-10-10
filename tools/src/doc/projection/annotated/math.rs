@@ -7,6 +7,9 @@ use crate::doc::math::{
 use nepl3_core::value::SchemaRef;
 use nepl3_doc_core::model::{EmbedKind, EmbedRef};
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Clone, Copy)]
 pub struct MathSurfaces<'a> {
     pub math: &'a SchemaRef,
@@ -18,6 +21,20 @@ pub(super) struct MathEntry<'a> {
     pub node: u64,
     pub embed: EmbedRef,
     prepared: PreparedMarkdown<'a>,
+}
+
+fn check_scope(
+    budget: &mut Budget,
+    limits: nepl3_core::budget::Limits,
+    depth: u64,
+) -> Result<(), Error> {
+    budget.charge(Resource::Work, 9)?;
+    if budget.limits() != limits || budget.current_depth() != depth {
+        return Err(Error::Invalid(
+            "Markdown Math codec changed execution bounds".into(),
+        ));
+    }
+    Ok(())
 }
 
 pub(super) fn prepare<'a, C: FoundationValueCodec>(
@@ -38,18 +55,41 @@ where
         codec,
     };
     let mut entries = Vec::new();
+    let mut structure = None;
+    let limits = budget.limits();
+    let depth = budget.current_depth();
     for (node, value) in document.value.nodes.iter().enumerate() {
         budget.charge(Resource::Work, 1)?;
         let embed = match value.kind {
             DocKind::InlineMath { syntax } | DocKind::DisplayMath { syntax } => syntax,
             _ => continue,
         };
+        check_scope(budget, limits, depth)?;
+        // Validate the containing Doc once, without skipping unselected nodes
+        // or embeds. Every selected guest is still independently checked below.
+        let checked = match &structure {
+            Some(checked) => checked,
+            None => {
+                let result =
+                    document.validate_structure(registry, budget, host.codec.source_admission());
+                // Match the public host boundary even when a stopped budget is
+                // wrapped in a nested structure/syntax error.
+                budget.poll()?;
+                structure.insert(
+                    result.map_err(|e| Error::Invalid(format!("Markdown Math document: {e:?}")))?,
+                )
+            }
+        };
         let prepared = host
-            .prepare_markdown_node(document, node as u64, budget)
+            .prepare_markdown_validated_node(checked, node as u64, budget)
             .map_err(|e| match e {
                 PrepareError::Host(crate::doc::math::Error::Stopped(s)) => Error::Stopped(s),
                 e => Error::Invalid(format!("Markdown Math: {e:?}")),
             })?;
+        // A custom codec must not silently carry this native proof into a
+        // different scope. Matching bounds cannot detect a same-bounds Budget
+        // replacement: preserving cumulative usage remains the codec contract.
+        check_scope(budget, limits, depth)?;
         push(
             &mut entries,
             MathEntry {
