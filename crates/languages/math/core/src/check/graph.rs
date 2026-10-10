@@ -1,7 +1,7 @@
 use super::{Category, ShapeError, ValidatedMathShape, edges};
 use crate::{model::*, number};
 use alloc::{vec, vec::Vec};
-use nepl3_core::budget::{Budget, Resource};
+use nepl3_core::budget::{Budget, Resource, StopReason};
 
 impl MathValue {
     pub fn validate_shape<'a>(
@@ -29,13 +29,13 @@ impl MathValue {
         stack.push((root, 0_usize));
         let caller = b.current_depth();
         while let Some((node, next)) = stack.last().copied() {
-            b.with_depth_at_least::<_, ShapeError>(
-                caller.saturating_add(stack.len() as u64),
-                |b| {
-                    b.charge(Resource::Work, 1)?;
-                    Ok(())
-                },
-            )?;
+            let absolute = caller
+                .checked_add(stack.len() as u64)
+                .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
+            b.with_depth_at_least::<_, ShapeError>(absolute, |b| {
+                b.charge(Resource::Work, 1)?;
+                Ok(())
+            })?;
             if let Some((child, category)) = edges::edge(&self.nodes[node].kind, next) {
                 let child = self.reference(child, category)?;
                 if let Some(frame) = stack.last_mut() {
@@ -56,10 +56,10 @@ impl MathValue {
                     heights[node] = heights[node].max(heights[child as usize].saturating_add(1));
                     i += 1;
                 }
-                b.with_depth_at_least::<_, ShapeError>(
-                    caller.saturating_add(heights[node]),
-                    |_| Ok(()),
-                )?;
+                let absolute_height = caller
+                    .checked_add(heights[node])
+                    .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
+                b.with_depth_at_least::<_, ShapeError>(absolute_height, |_| Ok(()))?;
                 self.local(node, &mut used, b)?;
                 color[node] = 2;
                 order.push(node);

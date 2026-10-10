@@ -1,7 +1,7 @@
 use super::{ShapeError, ValidatedDocShape, edges};
 use crate::model::{DocKind, DocValue, EmbedKind};
 use alloc::{vec, vec::Vec};
-use nepl3_core::budget::{Budget, Resource};
+use nepl3_core::budget::{Budget, Resource, StopReason};
 
 impl DocValue {
     pub fn validate_shape<'a>(
@@ -37,13 +37,13 @@ impl DocValue {
         color[root] = 1;
         let base = budget.current_depth();
         while let Some((node, next)) = stack.last().copied() {
-            budget.with_depth_at_least::<_, ShapeError>(
-                base.saturating_add(stack.len() as u64),
-                |b| {
-                    b.charge(Resource::Work, 1)?;
-                    Ok(())
-                },
-            )?;
+            let absolute = base
+                .checked_add(stack.len() as u64)
+                .ok_or_else(|| budget.stop(StopReason::DepthLimit))?;
+            budget.with_depth_at_least::<_, ShapeError>(absolute, |b| {
+                b.charge(Resource::Work, 1)?;
+                Ok(())
+            })?;
             if let Some((child, category)) = edges::edge(&self.nodes[node].kind, next) {
                 let child = self.reference(child, category)?;
                 if let Some(frame) = stack.last_mut() {
@@ -68,15 +68,14 @@ impl DocValue {
                     heights[node] = heights[node].max(height.saturating_add(1));
                     child_index += 1;
                 }
-                budget.with_depth_at_least::<_, ShapeError>(
-                    base.saturating_add(heights[node]),
-                    |_| Ok(()),
-                )?;
-                let node_visible =
-                    budget.with_depth_at_least(base.saturating_add(stack.len() as u64), |b| {
-                        self.local(node, &visible, &mut used, b)?;
-                        self.visible(node, &visible, b)
-                    })?;
+                let absolute_height = base
+                    .checked_add(heights[node])
+                    .ok_or_else(|| budget.stop(StopReason::DepthLimit))?;
+                budget.with_depth_at_least::<_, ShapeError>(absolute_height, |_| Ok(()))?;
+                let node_visible = budget.with_depth_at_least(absolute, |b| {
+                    self.local(node, &visible, &mut used, b)?;
+                    self.visible(node, &visible, b)
+                })?;
                 visible[node] = node_visible;
                 color[node] = 2;
                 order.push(node);

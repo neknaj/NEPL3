@@ -87,7 +87,10 @@ impl<'a> CheckedShape<'a> {
         let base = b.current_depth();
         while let Some(&(node, next)) = stack.last() {
             let depth = stack.len() as u64;
-            b.with_depth_at_least::<_, Error>(base.saturating_add(depth), |b| {
+            let absolute = base
+                .checked_add(depth)
+                .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
+            b.with_depth_at_least::<_, Error>(absolute, |b| {
                 b.charge(Resource::Work, 1)?;
                 if next == 0
                     && let Kind::ForeignInline { syntax } = self.value.nodes[node]
@@ -127,7 +130,10 @@ impl<'a> CheckedShape<'a> {
         let embeds = self.foreign_depths(b)?;
         let base = b.current_depth();
         for (closure, depth) in self.value.embeds.iter().zip(embeds) {
-            b.with_depth_at_least::<_, Error>(base.saturating_add(depth), |b| {
+            let absolute = base
+                .checked_add(depth)
+                .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
+            b.with_depth_at_least::<_, Error>(absolute, |b| {
                 closure.validate(registry, b, admission)?;
                 Ok(())
             })?;
@@ -211,7 +217,10 @@ impl SentenceValue {
         colors[root] = 1;
         let base = b.current_depth();
         while let Some((node, next)) = stack.last().copied() {
-            b.with_depth_at_least::<_, Error>(base.saturating_add(stack.len() as u64), |b| {
+            let absolute = base
+                .checked_add(stack.len() as u64)
+                .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
+            b.with_depth_at_least::<_, Error>(absolute, |b| {
                 b.charge(Resource::Work, 1)?;
                 Ok(())
             })?;
@@ -239,7 +248,10 @@ impl SentenceValue {
                 any |= visible[child];
                 index += 1;
             }
-            b.with_depth_at_least::<_, Error>(base.saturating_add(heights[node]), |_| Ok(()))?;
+            let absolute_height = base
+                .checked_add(heights[node])
+                .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
+            b.with_depth_at_least::<_, Error>(absolute_height, |_| Ok(()))?;
             let require_content = |child: u64| -> Result<(), Error> {
                 let index = reference(self, child, Category::Inline)?;
                 if !visible[index] {

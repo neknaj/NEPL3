@@ -459,3 +459,118 @@ fn deeply_nested_sentence_is_iterative_to_check_clone_and_drop() -> Result<(), E
     assert_eq!(v.clone(), v);
     Ok(())
 }
+
+fn check_absolute_depth_boundary(input: SentenceValue, height: u64) -> Result<(), Error> {
+    for overflow in [false, true] {
+        let base = u64::MAX - height + u64::from(overflow);
+        let mut b = Budget::new(Limits {
+            depth: u64::MAX,
+            ..budget().limits()
+        });
+        b.charge(nepl3_core::budget::Resource::Work, 7)?;
+        let result = b.with_depth_at_least(base, |b| input.validate_shape(b).map(|_| ()));
+        assert_eq!(b.current_depth(), 0);
+        assert_eq!(b.usage().nodes, input.nodes.len() as u64);
+        assert!(b.usage().work > 7);
+        if overflow {
+            assert_eq!(result, Err(Error::Stopped(StopReason::DepthLimit)));
+            assert_eq!(b.poll(), Err(StopReason::DepthLimit));
+            let charged = b.usage();
+            assert_eq!(
+                b.charge(nepl3_core::budget::Resource::Work, 0),
+                Err(StopReason::DepthLimit)
+            );
+            assert_eq!(b.usage(), charged);
+        } else {
+            result?;
+            assert_eq!(b.poll(), Ok(()));
+            assert_eq!(b.usage().depth, u64::MAX);
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn absolute_depth_overflow_leaf() -> Result<(), Error> {
+    check_absolute_depth_boundary(value(vec![Kind::Sentence { inlines: vec![] }]), 1)
+}
+
+#[test]
+fn absolute_depth_overflow_shared_subtree() -> Result<(), Error> {
+    // The shared child is visited first on the short path. Cached height,
+    // not the maximum live DFS stack, must enforce the later longer path.
+    check_absolute_depth_boundary(
+        value(vec![
+            Kind::Sentence {
+                inlines: vec![InlineRef(1), InlineRef(2)],
+            },
+            Kind::Emphasis {
+                inline: InlineRef(3),
+            },
+            Kind::Strong {
+                inline: InlineRef(1),
+            },
+            Kind::Break,
+        ]),
+        4,
+    )
+}
+
+#[test]
+fn checked_foreign_occurrences_reject_overflowing_caller_depth() -> Result<(), Error> {
+    let input = SentenceValue {
+        root: Root::Inline(InlineRef(0)),
+        nodes: vec![Kind::ForeignInline {
+            syntax: EmbedRef(0),
+        }],
+        embeds: vec![invalid_guest()],
+    };
+    for base in [u64::MAX - 1, u64::MAX] {
+        let mut b = Budget::new(Limits {
+            depth: u64::MAX,
+            ..budget().limits()
+        });
+        let shape = input.validate_shape(&mut b)?;
+        let before = b.usage();
+        let result = b.with_depth_at_least(base, |b| shape.foreign_occurrences(b));
+        assert_eq!(b.current_depth(), 0);
+        assert!(b.usage().work > before.work);
+        if base == u64::MAX {
+            assert_eq!(result, Err(Error::Stopped(StopReason::DepthLimit)));
+            assert_eq!(b.poll(), Err(StopReason::DepthLimit));
+        } else {
+            assert_eq!(result?.len(), 1);
+            assert_eq!(b.poll(), Ok(()));
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn checked_foreign_validation_rejects_overflow_before_guest_validation() -> Result<(), Error> {
+    let input = SentenceValue {
+        root: Root::Inline(InlineRef(0)),
+        nodes: vec![Kind::ForeignInline {
+            syntax: EmbedRef(0),
+        }],
+        embeds: vec![invalid_guest()],
+    };
+    let mut b = Budget::new(Limits {
+        depth: u64::MAX,
+        ..budget().limits()
+    });
+    let shape = input.validate_shape(&mut b)?;
+    let result = b.with_depth_at_least(u64::MAX, |b| {
+        shape.validate_foreign(
+            &nepl3_core::schema::SchemaRegistry::default(),
+            b,
+            &mut nepl3_core::source::SourceAdmission::default(),
+        )
+    });
+    // The invalid closure deliberately distinguishes the depth gate from the
+    // later guest validator; shape proof alone never validates that closure.
+    assert_eq!(result, Err(Error::Stopped(StopReason::DepthLimit)));
+    assert_eq!(b.poll(), Err(StopReason::DepthLimit));
+    assert_eq!(b.current_depth(), 0);
+    Ok(())
+}
