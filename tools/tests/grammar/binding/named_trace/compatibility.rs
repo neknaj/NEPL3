@@ -28,9 +28,9 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
             assert_eq!(
                 b.usage(),
                 if mode == 0 {
-                    expected(10, 2223, 4, 21, (5819, 4), 0, 0)
+                    expected(10, (2223, 6), 4, 21, (5819, 4), 0, 0)
                 } else {
-                    expected(10, 2340, 5, 21, (6369, 4), 0, 0)
+                    expected(10, (2340, 6), 5, 21, (6369, 4), 0, 0)
                 }
             );
             let mut limits = budget().limits();
@@ -71,9 +71,9 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
             assert_eq!(
                 short.usage(),
                 if mode == 0 {
-                    expected(10, 2155, 4, 21, (5819, 4), 0, 0)
+                    expected(10, (2155, 6), 4, 21, (5819, 4), 0, 0)
                 } else {
-                    expected(10, 2272, 5, 21, (6369, 4), 0, 0)
+                    expected(10, (2272, 6), 5, 21, (6369, 4), 0, 0)
                 }
             );
         }
@@ -92,7 +92,10 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
             &mut SourceAdmission::default(),
         );
         assert!(matches!(r.outcome, BindingOutcome::Complete(_)));
-        assert_eq!(b.usage(), expected(20, 8854, 8, 98, (22039, 22), 2, 1));
+        assert_eq!(
+            b.usage(),
+            expected(20, (8854, 36), 8, 98, (22039, 22), 2, 1)
+        );
         let mut limits = budget().limits();
         limits.work = b.usage().work - 1;
         let mut short = Budget::new(limits);
@@ -112,7 +115,10 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
                 ..
             }
         ));
-        assert_eq!(short.usage(), expected(20, 8789, 8, 98, (22039, 22), 2, 1));
+        assert_eq!(
+            short.usage(),
+            expected(20, (8789, 36), 8, 98, (22039, 22), 2, 1)
+        );
         Ok(())
     })?;
     let compiled = missing_probe::named_lambda()?;
@@ -138,7 +144,7 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
             r.outcome,
             nepl3_engine::binding::probe::ProbeOutcome::Hit(_)
         ));
-        assert_eq!(b.usage(), expected(8, 2041, 5, 17, (5844, 2), 0, 0));
+        assert_eq!(b.usage(), expected(8, (2041, 6), 5, 17, (5844, 2), 0, 0));
         let mut limits = budget().limits();
         limits.work = b.usage().work - 1;
         let mut short = Budget::new(limits);
@@ -153,7 +159,10 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
             r.outcome,
             nepl3_engine::binding::probe::ProbeOutcome::Stopped(StopReason::WorkLimit)
         ));
-        assert_eq!(short.usage(), expected(8, 1973, 5, 17, (5276, 2), 0, 0));
+        assert_eq!(
+            short.usage(),
+            expected(8, (1973, 6), 5, 17, (5276, 2), 0, 0)
+        );
         Ok(())
     })
 }
@@ -166,9 +175,20 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
 // issue, plus 3 metadata records with 2 independently validated scalar fields.
 // Both normal and one-short Work runs reach all of these validations. Every
 // other historical Usage field stays exact; this is not a broad tolerance.
+// Origin validation now charges each one-entry binding-input lookup: 2L+1
+// for the index, 1 for the shared immutable identity, and 1 for geometry.
+// The work tuple is (historical Work, validated source-span count); keeping
+// these components separate makes the additional logical work explicit.
+// Lambda and recovered lambda each validate 3 Direct origins at the
+// entry tree and final facts boundaries (6). RecoveryMissing supplies the
+// tokenless third Direct origin in the recovered fixture.
+// The custom fixture validates 6 Direct origins at six boundaries (36):
+// analyze-entry tree; request-view tree and existing facts; post-host
+// existing facts; combined delta; final facts. Its host adds no origins.
+// Both normal and one-short paths reach the same origin validations.
 fn expected(
     source_bytes: u64,
-    work: u64,
+    work: (u64, u64),
     depth: u64,
     nodes: u64,
     allocation_units: (u64, u64),
@@ -177,7 +197,7 @@ fn expected(
 ) -> nepl3_core::budget::Usage {
     nepl3_core::budget::Usage {
         source_bytes,
-        work,
+        work: work.0 + work.1 * (2 * "binding-input".len() as u64 + 3),
         depth,
         nodes,
         allocation_units: allocation_units.0
