@@ -509,7 +509,7 @@ jobs:
           mkdir -p dist/resource-charge-proof
           cargo install --locked kani-verifier --version 0.68.0 2>&1 | tee dist/resource-charge-proof/install.log
           cargo kani setup 2>&1 | tee dist/resource-charge-proof/setup.log
-      - name: Verify the production resource transitions
+      - name: Verify production resource and saved-scope transitions
         run: |
           mkdir -p dist/resource-charge-proof
           git rev-parse HEAD > dist/resource-charge-proof/source.txt
@@ -519,6 +519,7 @@ jobs:
           sha256sum Cargo.lock > dist/resource-charge-proof/lock-before.txt
           cargo fetch --locked
           CARGO_NET_OFFLINE=true cargo kani -p nepl3-core --harness budget::verification:: 2>&1 | tee dist/resource-charge-proof/verification.log
+          CARGO_NET_OFFLINE=true cargo kani -p nepl3-suite --harness suspension::execution::verification:: 2>&1 | tee dist/resource-charge-proof/execution-scope.log
           sha256sum Cargo.lock > dist/resource-charge-proof/lock-after.txt
           cmp dist/resource-charge-proof/lock-before.txt dist/resource-charge-proof/lock-after.txt
           git diff --exit-code

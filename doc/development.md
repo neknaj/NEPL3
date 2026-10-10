@@ -401,6 +401,32 @@ Zero-allocation wide-input and exact/one-short deep-branch spill regressions
 cover both sides of this tradeoff. Removed AllocationUnits represent removed
 heap requests, not waived validation. Full acceptance remains separate.
 
+## Pure saved execution-scope derivation
+
+`ExecutionScope::child` polls the shared Budget, applies the heap-free pure
+transition in `suspension/execution/admission.rs`, and records a typed depth
+stop when derivation fails. Each saved child limit is the minimum of its
+parent and requested limits; depth is a checked increment bounded by the
+resulting depth ceiling. Child construction does not perform callback/resource
+admission. `ExecutionScope::run` retains that responsibility across Await.
+
+```sh
+CARGO_NET_OFFLINE=true cargo kani -p nepl3-suite --harness suspension::execution::verification::
+```
+
+The derivation harness checks arbitrary saved/requested u64 fields against a
+u128 depth reference and explicit field minima, including two-step ancestor
+composition. A separate harness calls the actual public child method with
+arbitrary observed Usage and all prior stop reasons, checking unchanged
+accounting and first-stop precedence. That wrapper harness uses unlimited
+current Budget ceilings and active depth zero; it does not prove arbitrary
+current Budget ceilings, active depth or private measurement state. Native
+boundary tests additionally cover active host depth four, overflow, exact and
+one-short depth ceilings. Existing scheduler/root integration tests remain
+required. Neither harness establishes scheduler correctness, authorization,
+callback execution, whole-runtime purity or physical memory bounds. T11/T12
+and the existing acceptance entries are not completed by this change.
+
 ## Pure resource-transition verification
 
 `Budget::charge` applies the pure scalar transition in `budget/charge.rs`.
