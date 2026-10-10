@@ -88,3 +88,14 @@ This is the local preservation/restoration boundary only. Authenticated remote
 artifact selection, advertised retention/expiry, clean-CI retrieval, the formal
 record bridge and independent scope review remain required. Unavailable logs
 must fail verification; local archive roundtrip success does not mark an acceptance group passed.
+
+## Committed input identity
+
+`cargo run --locked -p nepl3-tools -- evidence identity --commit <40-hex-commit>`
+reads locally available immutable Git objects through the current tool. It shares
+the checkout identity profile and exclusions; it does not check out or execute
+historical source, honor replacement objects, or fetch missing objects. Dirty
+working-tree/index inputs cannot silently replace the pinned commit's bytes.
+A matching profile is an input-identity comparison, not authentication of a CI
+run or acceptance of its results. Artifact selection, expiry, safe log restoration,
+and the formal-record bridge remain separate requirements.

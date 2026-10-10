@@ -1,6 +1,6 @@
 mod identity;
 
-pub(crate) use identity::{Identity, Snapshot, identity};
+pub(crate) use identity::{Identity, Snapshot, committed, identity};
 
 use crate::{Result, json, repository::local_path, task::unique};
 use serde::Deserialize;

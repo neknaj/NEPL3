@@ -128,9 +128,14 @@ scope付き証拠は `conformance/results/` 以下へ型付きJSONで保存す�
 
 ```sh
 cargo run --locked -p nepl3-tools -- evidence identity
+cargo run --locked -p nepl3-tools -- evidence identity --commit <40-hex-commit>
 ```
 
 identity profileは `nepl3.repository-inputs/1` です。Gitから見える非ignoreファイルをpathのUTF-8 byte順で並べ、implementation-status.json、conformance/results/、生成tasks/を除外します。source digestはこの集合全体、spec digestはそのうちdoc/spec/、interfaces/、design/を対象にします。各入力はdomain文字列 `nepl3.repository-inputs/1`、zero byte、`source` または `spec`、zero byteで開始し、各pathの長さ（u64 big-endian）・UTF-8 path・内容長（u64 big-endian）・元byte列を順にSHA-256へ入力します。
+
+`--commit` はローカルに存在する固定commitのGit blobを同じprofileで検査する。branch名・短縮ID・tag/tree/blobのIDは受け付けない。過去のsourceをcheckoutしたり実行したりせず、replace refとpartial cloneの自動取得を無効にする。working treeやindexの未保存変更は固定commitの結果へ混入しない。各blobは1 MiB以下、tree列挙は8 MiB以下、対象file数は16,384以下とし、symlink・submodule・不正なpathを拒否する。元byte列を直接読むため、clean checkoutとの照合には引き続き同じ属性・改行条件が必要になる。
+
+この操作は検査対象の同一性を求めるだけであり、CI実行事実の認証、artifact取得、log復元、受入状態の更新を行わない。保存先のlocator・期限検査と、同一identityの全必須targetの実行証拠は別途必要となる。
 
 CIと同じ.gitattributesに従うfresh checkoutで通常ファイルをLFにそろえ、実際に検査したtreeからidentityを取得します。digest処理自体は改行・BOM・Unicodeを正規化しません。source位置fixtureや保存資料の元byte列を変えてdigestを合わせることは禁止です。
 
