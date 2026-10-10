@@ -1,3 +1,4 @@
+mod artifact;
 mod identity;
 
 pub(crate) use identity::{Identity, Snapshot, committed, identity};
@@ -89,6 +90,8 @@ enum Run {
         environment: Environment,
         log: String,
         log_sha256: String,
+        #[serde(default, deserialize_with = "artifact::optional")]
+        artifact: Option<artifact::Locator>,
     },
     Review {
         target: String,
@@ -98,6 +101,8 @@ enum Run {
         scope: Vec<String>,
         log: String,
         log_sha256: String,
+        #[serde(default, deserialize_with = "artifact::optional")]
+        artifact: Option<artifact::Locator>,
     },
 }
 
@@ -138,7 +143,11 @@ impl Run {
                 environment,
                 log,
                 log_sha256,
+                artifact,
             } => {
+                if let Some(locator) = artifact {
+                    locator.validate()?;
+                }
                 if command.trim().is_empty() {
                     return Err(format!("{id}: missing execution command").into());
                 }
@@ -177,7 +186,11 @@ impl Run {
                 scope,
                 log,
                 log_sha256,
+                artifact,
             } => {
+                if let Some(locator) = artifact {
+                    locator.validate()?;
+                }
                 if reviewer.trim().is_empty() || !independent {
                     return Err(format!(
                         "{id}: review requires an identified independent reviewer"
@@ -416,6 +429,27 @@ mod tests {
     }
 
     #[test]
+    fn locator_does_not_replace_real_log_validation() -> Result<()> {
+        let (files, mut report) = fixture()?;
+        for run in report["runs"]
+            .as_array_mut()
+            .ok_or("fixture runs missing")?
+        {
+            run["artifact"] = artifact::tests::fixture();
+        }
+        files.json(REPORT, &report)?;
+        task::load(files.root())?;
+        let log = fs::read(files.root().join("dist/evidence/native.log"))?;
+        fs::remove_file(files.root().join("dist/evidence/native.log"))?;
+        assert!(task::load(files.root()).is_err());
+        files.write("dist/evidence/native.log", b"altered raw bytes")?;
+        assert!(task::load(files.root()).is_err());
+        files.write("dist/evidence/native.log", &log)?;
+        task::load(files.root())?;
+        Ok(())
+    }
+
+    #[test]
     fn logs_must_be_restored_from_artifacts_before_acceptance() -> Result<()> {
         let (files, mut report) = fixture()?;
         // Positive control exercises the same complete attempt before mutation.
@@ -500,12 +534,14 @@ mod tests {
     #[test]
     fn independent_review_is_typed_and_cannot_be_faked_as_a_process_run() -> Result<()> {
         let (files, mut report) = fixture()?;
-        let command = report["runs"][1].clone();
+        let mut command = report["runs"][1].clone();
+        command["artifact"] = artifact::tests::fixture();
         let mut policy: Value = crate::json(files.root(), "design/acceptance.json")?;
         policy["targets"]["browser"]["kind"] = json!("review");
         files.json("design/acceptance.json", &policy)?;
         report["identity"] = serde_json::to_value(identity(files.root())?.identity)?;
         report["runs"][1] = json!({"kind":"review","target":"browser","reviewer":"independent synthetic reviewer","independent":true,"decision":"approved","scope":["fixture semantic correspondence"],"log":command["log"],"log_sha256":command["log_sha256"]});
+        report["runs"][1]["artifact"] = artifact::tests::fixture();
         files.json(REPORT, &report)?;
         task::load(files.root())?;
         for (pointer, replacement) in [
