@@ -223,3 +223,71 @@ fn ceiling_scopes_restore_limits_but_preserve_callback_result_and_state() -> Res
     assert_eq!(b.observed_depth, 11);
     Ok(())
 }
+
+#[test]
+fn nested_measurement_retains_marks_before_returning_the_callback_error() -> Result<(), StopReason>
+{
+    #[derive(Debug, Eq, PartialEq)]
+    enum ValidationError {
+        Invalid,
+        Stopped(StopReason),
+    }
+    impl From<StopReason> for ValidationError {
+        fn from(reason: StopReason) -> Self {
+            Self::Stopped(reason)
+        }
+    }
+    let mut b = budget();
+    b.observe_depth(5)?;
+    let outer_limits = b.limits();
+    let result: Result<((), u64), ValidationError> = b.measure_depth(|b| {
+        let nested: Result<((), u64), ValidationError> = b.measure_depth(|b| {
+            b.observe_depth(8)?;
+            b.charge(Resource::Work, 3)?;
+            assert_eq!(b.charge(Resource::Work, 101), Err(StopReason::WorkLimit));
+            Err(ValidationError::Invalid)
+        });
+        assert_eq!(nested, Err(ValidationError::Invalid));
+        assert_eq!(b.observed_depth, 8);
+        Err(ValidationError::Invalid)
+    });
+    assert_eq!(result, Err(ValidationError::Invalid));
+    assert_eq!(b.poll(), Err(StopReason::WorkLimit));
+    assert_eq!(b.usage().work, 3);
+    assert_eq!(b.usage().depth, 8);
+    assert_eq!(b.observed_depth, 8);
+    assert_eq!(b.current_depth(), 0);
+    assert_eq!(b.limits(), outer_limits);
+    Ok(())
+}
+
+#[test]
+fn shallower_nested_measurements_retain_the_enclosing_peak() -> Result<(), StopReason> {
+    for inner_fails in [false, true] {
+        let mut b = budget();
+        let (_, measured) = b.measure_depth(|b| {
+            b.observe_depth(20)?;
+            let inner: Result<((), u64), StopReason> = b.measure_depth(|b| {
+                b.observe_depth(3)?;
+                if inner_fails {
+                    Err(StopReason::Cancelled)
+                } else {
+                    Ok(())
+                }
+            });
+            let expected = if inner_fails {
+                Err(StopReason::Cancelled)
+            } else {
+                Ok(((), 3))
+            };
+            assert_eq!(inner, expected);
+            assert_eq!(b.observed_depth, 20);
+            assert_eq!(b.usage().depth, 20);
+            assert_eq!(b.poll(), Ok(()));
+            Ok::<_, StopReason>(())
+        })?;
+        assert_eq!(measured, 20);
+        assert_eq!(b.observed_depth, 20);
+    }
+    Ok(())
+}

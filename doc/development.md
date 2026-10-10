@@ -478,3 +478,20 @@ are retained. Nested ceiling intersection cannot widen limits, but a callback
 that directly replaces its Budget is not constrained by that guarantee. Panic,
 unwind, divergence, generic error conversion and whole-runtime acceptance remain
 outside this proof.
+
+`Budget::measure_depth` completes its local observation through the pure
+`budget/depth/measurement.rs` function. Entry rejects a prior stop before the
+callback; otherwise the local mark starts at the caller's active depth. Every
+returning callback path merges the local mark into the saved enclosing mark
+before resolving the Result. A callback error takes precedence over a different
+sticky stop. A successful callback is followed by a stop check and returns the
+nonnegative difference from the saved base only when still running.
+The production-method Kani harness checks these rules, entry state, callback
+count and unchanged post-callback fields using arbitrary symbolic states. Its
+signed wider-integer difference is independent of production saturating_sub.
+The arbitrary post-state model probes the wrapper boundary and does not authorize
+Budget replacement: the public contract remains limited to pure validation
+callbacks that never replace the Budget. Ordinary nested tests also check a
+semantic validation error concurrent with resource exhaustion. This does not
+prove validation internals, generic error conversions, panic/unwind, divergence,
+or formal acceptance.

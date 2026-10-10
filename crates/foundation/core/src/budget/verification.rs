@@ -430,3 +430,71 @@ fn ceiling_scope_preserves_priority_and_restores_only_limits() {
         assert_eq!(budget.stopped, post_stopped);
     }
 }
+
+/// The callback is modeled by arbitrary post-state, not proved or authorized.
+/// In particular, this boundary model does not weaken the public restriction
+/// to pure validation callbacks that never replace the Budget.
+#[kani::proof]
+fn measurement_scope_merges_marks_and_preserves_error_priority() {
+    let mut budget = arbitrary_budget();
+    let limits = budget.limits;
+    let usage = budget.usage;
+    let base = budget.depth;
+    let previous = budget.observed_depth;
+    let stopped = budget.stopped;
+    let replacement = arbitrary_budget();
+    let post_limits = replacement.limits;
+    let post_usage = replacement.usage;
+    let post_active = replacement.depth;
+    let post_measured = replacement.observed_depth;
+    let post_stopped = replacement.stopped;
+    let callback_result: Result<u64, StopReason> = if kani::any() {
+        Ok(kani::any())
+    } else {
+        Err(reason())
+    };
+    let mut calls = 0u8;
+    let result = budget.measure_depth(|inner| {
+        assert_eq!(calls, 0);
+        calls += 1;
+        assert_eq!(stopped, None);
+        assert_eq!(inner.limits, limits);
+        assert_eq!(inner.usage, usage);
+        assert_eq!(inner.depth, base);
+        assert_eq!(inner.observed_depth, base);
+        assert_eq!(inner.stopped, None);
+        *inner = replacement;
+        callback_result
+    });
+    if let Some(reason) = stopped {
+        assert_eq!(calls, 0);
+        assert_eq!(result, Err(reason));
+        assert_eq!(budget.limits, limits);
+        assert_eq!(budget.usage, usage);
+        assert_eq!(budget.depth, base);
+        assert_eq!(budget.observed_depth, previous);
+        assert_eq!(budget.stopped, stopped);
+    } else {
+        assert_eq!(calls, 1);
+        assert_eq!(budget.limits, post_limits);
+        assert_eq!(budget.usage, post_usage);
+        assert_eq!(budget.depth, post_active);
+        assert_eq!(budget.stopped, post_stopped);
+        let merged = if previous > post_measured {
+            previous
+        } else {
+            post_measured
+        };
+        assert_eq!(budget.observed_depth, merged);
+        let difference = i128::from(post_measured) - i128::from(base);
+        let relative = if difference > 0 { difference as u64 } else { 0 };
+        let expected = match callback_result {
+            Err(reason) => Err(reason),
+            Ok(value) => match post_stopped {
+                Some(reason) => Err(reason),
+                None => Ok((value, relative)),
+            },
+        };
+        assert_eq!(result, expected);
+    }
+}
