@@ -11,6 +11,7 @@ fn fixture(id: u32) -> Option<&'static str> {
         0 => Some("\u{feff}日🙂\r\nx\ry\nz"),
         1 => Some(""),
         2 => Some("日\r\n"),
+        3 => Some("a𠮷b\r\n文書"),
         _ => None,
     }
 }
@@ -79,7 +80,7 @@ pub extern "C" fn abi_version() -> u32 {
 }
 #[unsafe(no_mangle)]
 pub extern "C" fn fixture_count() -> u32 {
-    3
+    4
 }
 #[unsafe(no_mangle)]
 pub extern "C" fn source_length(id: u32) -> u64 {
@@ -146,14 +147,14 @@ mod tests {
     #[test]
     fn adapter_discriminates_results_and_rejects_unknown_inputs() {
         assert_eq!(abi_version(), 1);
-        assert_eq!(fixture_count(), 3);
+        assert_eq!(fixture_count(), 4);
         assert_eq!(source_length(0), 17);
         for (offset, byte) in fixture(0).unwrap().bytes().enumerate() {
             assert_eq!(source_byte(0, offset as u64), u64::from(byte));
         }
         assert_eq!(source_byte(0, 17), ADAPTER_ERROR);
         assert_eq!(source_byte(0, u64::MAX), ADAPTER_ERROR);
-        assert_eq!(source_byte(3, 0), ADAPTER_ERROR);
+        assert_eq!(source_byte(4, 0), ADAPTER_ERROR);
         assert_eq!(source_position(0, 0, 1, 10), 4);
         assert_eq!(source_offset(0, 0, 1, 0, 4), 10);
         assert_eq!(source_offset(0, 0, 1, 0, 3), FAILURE | 2);
@@ -162,10 +163,28 @@ mod tests {
             assert_eq!(source_position(0, mismatch, 0, 0), FAILURE | 5);
             assert_eq!(source_offset(0, mismatch, 0, 0, 0), FAILURE | 5);
         }
-        assert_eq!(source_length(3), ADAPTER_ERROR);
-        assert_eq!(source_position(3, 0, 0, 0), ADAPTER_ERROR);
+        assert_eq!(source_length(4), ADAPTER_ERROR);
+        assert_eq!(source_position(4, 0, 0, 0), ADAPTER_ERROR);
         assert_eq!(source_position(0, 4, 0, 0), ADAPTER_ERROR);
         assert_eq!(source_position(0, 0, 3, 0), ADAPTER_ERROR);
         assert_eq!(source_offset(0, 0, 3, 0, 0), ADAPTER_ERROR);
+    }
+
+    #[test]
+    fn catalog_unicode_fixture_preserves_bytes_and_endpoints() {
+        assert_eq!(source_length(3), 14);
+        assert_eq!(source_lines(3), 2);
+        for (offset, byte) in b"a\xf0\xa0\xae\xb7b\r\n\xe6\x96\x87\xe6\x9b\xb8"
+            .iter()
+            .enumerate()
+        {
+            assert_eq!(source_byte(3, offset as u64), u64::from(*byte));
+        }
+        assert_eq!(source_position(3, 0, 1, 1), 1);
+        assert_eq!(source_position(3, 0, 1, 5), 3);
+        assert_eq!(source_offset(3, 0, 1, 0, 1), 1);
+        assert_eq!(source_offset(3, 0, 1, 0, 3), 5);
+        assert_eq!(source_position(3, 0, 2, 5), 2);
+        assert_eq!(source_offset(3, 0, 2, 0, 2), 5);
     }
 }

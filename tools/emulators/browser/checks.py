@@ -70,7 +70,7 @@ def oracle(value: JsonValue) -> Oracle:
     if integer(data["version"]) != 1:
         raise ValueError("oracle version")
     items = array(data["fixtures"])
-    if len(items) != 3:
+    if len(items) != 4:
         raise ValueError("fixture count")
     fixtures: list[Fixture] = []
     for index, item in enumerate(items):
@@ -88,7 +88,7 @@ def oracle(value: JsonValue) -> Oracle:
             raise ValueError("case identity")
         identifiers.add(name)
         fixture, mismatch, encoding = integer(c["fixture"]), integer(c["mismatch"]), integer(c["encoding"])
-        if not 0 <= fixture <= 2 or not 0 <= mismatch <= 3 or not 0 <= encoding <= 2:
+        if not 0 <= fixture < len(fixtures) or not 0 <= mismatch <= 3 or not 0 <= encoding <= 2:
             raise ValueError("case selector")
         operation = string(c["operation"])
         if operation not in ("position", "offset"):

@@ -6,7 +6,14 @@ formal E01 acceptance decision. It has no new production dependencies.
 
 The ABI version is 1. Fixture IDs 0, 1 and 2 identify respectively the fixed
 BOM/Japanese/emoji/mixed-line-ending input, empty input, and Japanese text ending
-in CRLF. Encoding IDs 0/1/2 mean UTF-8/UTF-16/UTF-32. Mismatch IDs 0/1/2/3 select
+in CRLF. Fixture 3 is the exact catalog `E-unicode` input `a𠮷b\r\n文書`:
+14 UTF-8 bytes on two lines. Its supplementary-plane character occupies bytes
+[1, 5), UTF-16 columns [1, 3), and UTF-32 columns [1, 2) on line zero.
+The shared 228-case oracle includes both conversion directions at its seven
+valid boundaries, CRLF/scalar/surrogate interior rejection, and all previous
+173 cases unchanged. The native/WASI test also checks that the named catalog
+source and range endpoints agree with these executed observations.
+Encoding IDs 0/1/2 mean UTF-8/UTF-16/UTF-32. Mismatch IDs 0/1/2/3 select
 the original snapshot or a changed revision/content/source ID. Unknown selectors
 return an adapter error rather than success.
 

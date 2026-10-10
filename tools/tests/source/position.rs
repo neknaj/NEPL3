@@ -38,8 +38,9 @@ fn objects<'de, D: Deserializer<'de>, T: Deserialize<'de>>(
 
 // This is fixed evidence input, never output generated through either conversion.
 const ORACLE: &str = include_str!("../../../conformance/inputs/browser/source-position.json");
-const TEXTS: [&str; 3] = ["\u{feff}日🙂\r\nx\ry\nz", "", "日\r\n"];
-const CASES: usize = 173;
+const TEXTS: [&str; 4] = ["\u{feff}日🙂\r\nx\ry\nz", "", "日\r\n", "a𠮷b\r\n文書"];
+const CASES: usize = 228;
+const CATALOG: &str = include_str!("../../../conformance/cases.json");
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -315,6 +316,134 @@ fn all_fixed_source_positions_execute() -> Result<(), String> {
     println!("source-position fixed oracle: {count} cases executed");
     Ok(())
 }
+
+fn catalog_matches_oracle(catalog: &str, oracle: &Oracle) -> Result<(), String> {
+    use serde_json::{Value, json};
+    let catalog: Value = serde_json::from_str(catalog).map_err(|error| error.to_string())?;
+    let cases = catalog["cases"].as_array().ok_or("catalog cases array")?;
+    let selected: Vec<_> = cases
+        .iter()
+        .filter(|case| case["id"] == "E-unicode")
+        .collect();
+    if selected.len() != 1 {
+        return Err("one E-unicode catalog case required".into());
+    }
+    let selected = selected[0];
+    // Independent byte/unit counts for a + supplementary-plane 𠮷 + b +
+    // CRLF + 文書. Lock the named catalog input to the executed fixed oracle.
+    let fixture = oracle.fixtures.get(3).ok_or("catalog fixture missing")?;
+    if selected["source"] != fixture.text
+        || selected["byte_range"] != json!([1, 5])
+        || selected["utf16_range"] != json!([[0, 1], [0, 3]])
+        || selected["utf32_range"] != json!([[0, 1], [0, 2]])
+        || fixture.length != 14
+        || fixture.lines != 2
+    {
+        return Err("E-unicode catalog and fixed fixture differ".into());
+    }
+    for (encoding, columns) in [
+        (PositionEncoding::Utf16, [1, 3]),
+        (PositionEncoding::Utf32, [1, 2]),
+    ] {
+        for (offset, character) in [1, 5].into_iter().zip(columns) {
+            let position = Expected::Position(Coordinate { line: 0, character });
+            let reverse = Expected::Offset(Offset { offset });
+            let bound = |case: &&Case| {
+                case.fixture == 3
+                    && matches!(case.mismatch, Mismatch::None)
+                    && case.encoding == encoding
+            };
+            let forward = oracle.cases.iter().filter(bound).any(|case| {
+                matches!(case.input, Input::Position(value) if value == offset)
+                    && case.expected == position
+            });
+            let backward = oracle.cases.iter().filter(bound).any(|case| {
+                matches!(case.input, Input::Offset(Position { line: 0, character: value }) if value == character)
+                    && case.expected == reverse
+            });
+            if !forward || !backward {
+                return Err("catalog range endpoint missing from a conversion direction".into());
+            }
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn catalog_unicode_range_is_executed_in_both_directions() -> Result<(), String> {
+    use serde_json::{Value, json};
+    let oracle = parse(ORACLE)?;
+    catalog_matches_oracle(CATALOG, &oracle)?;
+    let original: Value = serde_json::from_str(CATALOG).map_err(|error| error.to_string())?;
+    for (key, changed) in [
+        ("source", json!("a🙂b\r\n文書")),
+        ("byte_range", json!([1, 4])),
+        ("utf16_range", json!([[0, 1], [0, 2]])),
+        ("utf32_range", json!([[0, 1], [0, 3]])),
+    ] {
+        let mut changed_catalog = original.clone();
+        let cases = changed_catalog["cases"]
+            .as_array_mut()
+            .ok_or("catalog cases")?;
+        let case = cases
+            .iter_mut()
+            .find(|case| case["id"] == "E-unicode")
+            .ok_or("catalog case")?;
+        case[key] = changed;
+        assert!(catalog_matches_oracle(&changed_catalog.to_string(), &oracle).is_err());
+    }
+    let mut missing = parse(ORACLE)?;
+    missing.cases.retain(|case| case.fixture != 3);
+    assert!(catalog_matches_oracle(CATALOG, &missing).is_err());
+    for remove_forward in [true, false] {
+        let mut missing = parse(ORACLE)?;
+        missing.cases.retain(|case| {
+            case.fixture != 3 || matches!(case.input, Input::Position(_)) != remove_forward
+        });
+        assert!(catalog_matches_oracle(CATALOG, &missing).is_err());
+    }
+    for encoding in [PositionEncoding::Utf16, PositionEncoding::Utf32] {
+        for offset in [1, 5] {
+            for forward in [true, false] {
+                let mut missing = parse(ORACLE)?;
+                let character = match (encoding, offset) {
+                    (_, 1) => 1,
+                    (PositionEncoding::Utf16, _) => 3,
+                    _ => 2,
+                };
+                missing.cases.retain(|case| {
+                    let endpoint = match case.input {
+                        Input::Position(value) => forward && value == offset,
+                        Input::Offset(Position {
+                            line,
+                            character: value,
+                        }) => !forward && line == 0 && value == character,
+                    };
+                    !(case.fixture == 3 && case.encoding == encoding && endpoint)
+                });
+                assert!(catalog_matches_oracle(CATALOG, &missing).is_err());
+            }
+        }
+    }
+    for duplicate in [false, true] {
+        let mut changed_catalog = original.clone();
+        let cases = changed_catalog["cases"]
+            .as_array_mut()
+            .ok_or("catalog cases")?;
+        if duplicate {
+            let selected = cases
+                .iter()
+                .find(|case| case["id"] == "E-unicode")
+                .ok_or("catalog case")?
+                .clone();
+            cases.push(selected);
+        } else {
+            cases.retain(|case| case["id"] != "E-unicode");
+        }
+        assert!(catalog_matches_oracle(&changed_catalog.to_string(), &oracle).is_err());
+    }
+    Ok(())
+}
 #[test]
 fn malformed_inventory_and_schema_are_rejected() -> Result<(), String> {
     use serde_json::{Value, json};
@@ -327,7 +456,7 @@ fn malformed_inventory_and_schema_are_rejected() -> Result<(), String> {
         ("/cases", json!([])),
         ("/cases/1/id", json!("case-000")),
         ("/cases/0/id", json!("unknown")),
-        ("/cases/0/fixture", json!(3)),
+        ("/cases/0/fixture", json!(4)),
         ("/cases/0/mismatch", json!(4)),
         ("/cases/0/encoding", json!(3)),
         ("/cases/0/operation", json!("unknown")),
