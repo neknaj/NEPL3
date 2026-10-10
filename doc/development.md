@@ -559,3 +559,27 @@ one frame before a following Close. Only resume consumes the Reader slot.
 The Reader dependency is test-only. This is same-process I/O composition using a
 shared cumulative Budget, not a remote Reader implementation or authenticated
 cross-process usage accounting.
+
+### Source admission interruption coverage
+
+`cargo test --locked -p nepl3-core --lib source::tests::` exercises actual
+`SourceAdmission::admit_existing` calls using fixed valid UTF-8 snapshots. It
+sweeps each SourceBytes, Work and AllocationUnits ceiling from zero through an
+ample-budget baseline call's usage, checks all nine prior stop reasons, and
+preserves the first stop on a direct retry. The two-entry seed covers a fresh middle key,
+independently stored duplicates, shared-storage duplicates, digest conflicts
+and locator conflicts. Assertions check the admission order, sorted index,
+shared-storage membership/order, retained earlier entries and unchanged
+counters unrelated to admission. A late allocation-stop witness checks that an
+already charged SourceBytes amount is retained without publishing a partial ledger.
+The empty-ledger case has its own baseline-derived ceiling sweep. Fixture
+hashes and locators are checked independently by a normal test.
+
+This is native boundary-test evidence, not formal verification. Experimental
+Kani 0.68.0 checks of both the two-entry ledger and the reduced first-admission
+case reported out-of-memory failures; neither established a proof. Their
+experimental checkpoint is kept separately and no unverified harness is added to the CI
+proof gate. The tests do not establish arbitrary ledger/text bounds, exact
+Work/Allocation costs, physical allocation failure handling, remote usage
+authentication or complete runtime acceptance. The existing scoped resource
+proofs and the outstanding acceptance states are unchanged.
