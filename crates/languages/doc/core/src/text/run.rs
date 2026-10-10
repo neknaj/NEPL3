@@ -87,7 +87,18 @@ pub(super) fn execute<'a>(
             }
         }
     }
-    let doc = &prepared.document.value;
+    traverse(prepared.document, sentence, policy, resolved, b)
+}
+
+pub(super) fn traverse<'a>(
+    document: &'a DocumentSyntax,
+    sentence: SentenceRef,
+    policy: AnnotationPolicy,
+    resolved: &'a [ResolvedInlineText],
+    b: &mut Budget,
+) -> Result<String, Failure> {
+    b.poll()?;
+    let doc = &document.value;
     if !matches!(
         usize::try_from(sentence.0)
             .ok()

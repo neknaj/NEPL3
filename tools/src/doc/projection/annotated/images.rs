@@ -1,8 +1,8 @@
 //! Static registered images for the explicit footnote page-set profile.
 use super::*;
 use nepl3_doc_core::{
-    pages::PageSet,
-    text::{AnnotationPolicy, PlainTextOutcome, PreparedText},
+    pages::{CheckedPages, PageProjectionError, PageSet},
+    text::{AnnotationPolicy, PlainTextOutcome},
 };
 
 #[derive(Debug)]
@@ -65,8 +65,8 @@ impl<'a> Files<'a> {
 
     pub(super) fn resolve(
         &mut self,
-        document: &DocumentSyntax,
-        prepared: &PreparedText<'_>,
+        checked: &CheckedPages<'_>,
+        page: u64,
         route: &str,
         node: u64,
         asset: &AssetRef,
@@ -88,6 +88,11 @@ impl<'a> Files<'a> {
         if asset.digest.is_some_and(|expected| expected != digest) {
             return Err(Error::Invalid("SVG digest mismatch".into()));
         }
+        let document = usize::try_from(page)
+            .ok()
+            .and_then(|page| checked.set().pages.get(page))
+            .map(|page| &page.document)
+            .ok_or_else(|| Error::Invalid("missing checked image page".into()))?;
         let alt = match usize::try_from(node)
             .ok()
             .and_then(|n| document.value.nodes.get(n))
@@ -96,9 +101,12 @@ impl<'a> Files<'a> {
             Some(DocKind::Image { alt, .. } | DocKind::InlineImage { alt, .. }) => *alt,
             _ => return Err(Error::Unsupported { node }),
         };
-        let reply = prepared
-            .project(alt, AnnotationPolicy::BaseOnly, &[], b)
-            .map_err(|_| Error::Invalid("prepared text limits mismatch".into()))?;
+        let reply = checked
+            .project_unresolved_text(page, alt, AnnotationPolicy::BaseOnly, b)
+            .map_err(|error| match error {
+                PageProjectionError::Stopped(reason) => Error::Stopped(reason),
+                error => Error::Invalid(format!("checked page text: {error:?}")),
+            })?;
         let alt = match reply.outcome {
             PlainTextOutcome::Complete { text } => text,
             PlainTextOutcome::Stopped { reason } => return Err(Error::Stopped(reason)),

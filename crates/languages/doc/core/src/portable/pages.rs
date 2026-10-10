@@ -26,6 +26,32 @@ pub(crate) fn document_value<'a, E>(
     Ok(document)
 }
 
+/// Borrow exactly the encoded closure from a generated DocumentSyntax. The
+/// caller owns the validated PageSet; this accessor grants no raw-data proof.
+pub(crate) fn guest_value<'a, E>(
+    document: &'a NdfValue,
+    embed: usize,
+    b: &mut Budget,
+) -> Result<&'a NdfValue, PortableError<E>> {
+    b.charge(Resource::Work, 4)?;
+    let NdfValue::Record(document) = document else {
+        return Err(PortableError::Shape);
+    };
+    let [NdfValue::Record(value), _, _, _, _] = document.fields.as_slice() else {
+        return Err(PortableError::Shape);
+    };
+    let [_, _, NdfValue::List(embeds)] = value.fields.as_slice() else {
+        return Err(PortableError::Shape);
+    };
+    let Some(NdfValue::Record(embed)) = embeds.get(embed) else {
+        return Err(PortableError::Shape);
+    };
+    let [_, closure] = embed.fields.as_slice() else {
+        return Err(PortableError::Shape);
+    };
+    Ok(closure)
+}
+
 pub fn set_to_value<C: FoundationValueCodec>(
     set: &PageSet,
     r: &SchemaRegistry,

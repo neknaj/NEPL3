@@ -632,3 +632,27 @@ page cases retain exact/one-below limits, cancellation, elevated caller depth,
 invalid origin/unreachable node/unused embed rejection, and faithful output.
 These native checks do not complete formal acceptance or prove all rendering
 paths linear-time.
+
+### Checked PageSet preparation reuse
+
+PageSet resolution hashes the exact generated guest closure descendants together
+with the enclosing PageSet and document values. It keeps all native closure,
+source, environment and outer schema checks, and preserves independently
+separated digest domains. Standalone preparation still encodes/checks its input.
+Guest hash work now precedes label discovery, so competing failure order may
+change. Tests compare mixed empty/single/multiple guest pages with independent
+standalone closure identities and exact/one-short resource ceilings.
+
+The same operation retains immutable native document structures in CheckedPages.
+Selected Markdown Math preparation borrows these structures instead of repeating
+containing-Doc validation; guest selection, semantic checks, lowering and output
+preparation remain. The native unresolved-text entry shares the ordinary text
+traversal, but accepts no external resolutions and therefore needs no identity
+hashes for their verification. Encountered inline guests remain unresolved.
+This supplies image alt text without re-encoding and re-hashing its full owner.
+
+Both native entries check limits and active depth, preserve stopped budgets, and
+require continuation of the same cumulative Budget/registry/source admission.
+Matching bounds do not prove paid-usage identity. These are in-operation native
+proofs, not wire receipts, cache authorization, guest semantic proofs or complete
+runtime acceptance. No resource ceiling is raised or reset.

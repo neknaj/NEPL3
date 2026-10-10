@@ -379,6 +379,13 @@ body
         cons "[呼出側/よびだしがわ]はprepareから[同/おな]じ[累積/るいせき]Budgetを[継続/けいぞく]する。"
         cons "Limitsの[一致/いっち]を[検査/けんさ]し、[不一致/ふいっち]は[型付/かたつ]きLimitsMismatchを[返/かえ]すが、Limitsの[一致/いっち]だけで[使用量/しようりょう]の[継続/けいぞく]を[証明/しょうめい]しない。"
         cons "[直列化/ちょくれつか]したidentityからPreparedTextを[構築/こうちく]する[入口/いりぐち]は[設/もう]けない。" nil
+      cons paragraph
+        cons "CheckedPages::project_unresolved_textは、[同/おな]じPageSet[操作内/そうさない]で[検査済/けんさず]みの[文書/ぶんしょ]からSentenceを[投影/とうえい]するnative APIである。"
+        cons "[外部/がいぶ]の[解決済/かいけつず]みtextを[受/う]け[取/と]らないため、その[照合/しょうごう]に[使/つか]うdocument・guest identityの[再計算/さいけいさん]を[省/はぶ]ける。"
+        cons "[選択/せんたく]したannotation policyで[遭遇/そうぐう]するInlineMathはUnresolvedEmbedのままであり、[表示/ひょうじ]や[意味検査/いみけんさ]を[成功扱/せいこうあつか]いにしない。"
+        cons "[呼出側/よびだしがわ]は[同/おな]じ[累積/るいせき]Budgetを[継続/けいぞく]する。Limitsとactive depthの[不一致/ふいっち]はPageProjectionError::ScopeMismatch、[存在/そんざい]しないpageはMissingPage、[資源停止/しげんていし]はStoppedで[返/かえ]す。"
+        cons "[一致/いっち]する[上限/じょうげん]は[使用量/しようりょう]の[継続/けいぞく]を[証明/しょうめい]しない。entry・[出力/しゅつりょく]・[深/ふか]さは[毎回検査/まいかいけんさ]し、[累積/るいせき]Usageをreplyに[保持/ほじ]する。"
+        cons "[公開/こうかい]portable plain_textの[文書検査/ぶんしょけんさ]とidentity[計算/けいさん]は[従来/じゅうらい]どおり[各操作/かくそうさ]で[実行/じっこう]する。" nil
       nil
     cons section print "8.2. print の[実行契約/じっこうけいやく]" body
       cons paragraph

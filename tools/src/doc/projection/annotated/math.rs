@@ -37,8 +37,43 @@ fn check_scope(
     Ok(())
 }
 
+#[cfg(test)]
 pub(super) fn prepare<'a, C: FoundationValueCodec>(
     document: &'a DocumentSyntax,
+    surfaces: MathSurfaces<'_>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<Vec<MathEntry<'a>>, Error>
+where
+    C::Error: core::fmt::Debug,
+{
+    prepare_inner(document, None, surfaces, registry, codec, budget)
+}
+
+pub(super) fn prepare_checked<'a, C: FoundationValueCodec>(
+    checked: &nepl3_doc_core::check::ValidatedDocumentSyntax<'a>,
+    surfaces: MathSurfaces<'_>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<Vec<MathEntry<'a>>, Error>
+where
+    C::Error: core::fmt::Debug,
+{
+    prepare_inner(
+        checked.document(),
+        Some(checked),
+        surfaces,
+        registry,
+        codec,
+        budget,
+    )
+}
+
+fn prepare_inner<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    supplied: Option<&nepl3_doc_core::check::ValidatedDocumentSyntax<'a>>,
     surfaces: MathSurfaces<'_>,
     registry: &SchemaRegistry,
     codec: &mut C,
@@ -67,19 +102,27 @@ where
         check_scope(budget, limits, depth)?;
         // Validate the containing Doc once, without skipping unselected nodes
         // or embeds. Every selected guest is still independently checked below.
-        let checked = match &structure {
-            Some(checked) => checked,
-            None => {
-                let result =
-                    document.validate_structure(registry, budget, host.codec.source_admission());
-                // Match the public host boundary even when a stopped budget is
-                // wrapped in a nested structure/syntax error.
-                budget.poll()?;
-                structure.insert(
-                    result.map_err(|e| Error::Invalid(format!("Markdown Math document: {e:?}")))?,
-                )
-            }
-        };
+        let checked =
+            if let Some(checked) = supplied {
+                checked
+            } else {
+                match &structure {
+                    Some(checked) => checked,
+                    None => {
+                        let result = document.validate_structure(
+                            registry,
+                            budget,
+                            host.codec.source_admission(),
+                        );
+                        // Match the public host boundary even when a stopped budget is
+                        // wrapped in a nested structure/syntax error.
+                        budget.poll()?;
+                        structure.insert(result.map_err(|e| {
+                            Error::Invalid(format!("Markdown Math document: {e:?}"))
+                        })?)
+                    }
+                }
+            };
         let prepared = host
             .prepare_markdown_validated_node(checked, node as u64, budget)
             .map_err(|e| match e {
