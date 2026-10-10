@@ -4,6 +4,8 @@ use nepl3_reader::{model::*, plan::*, runtime::*};
 mod checkpoints;
 #[path = "runtime/diagnostics.rs"]
 mod diagnostics;
+#[path = "runtime/framed.rs"]
+mod framed;
 #[path = "runtime/read.rs"]
 mod read;
 #[path = "runtime/retry.rs"]
