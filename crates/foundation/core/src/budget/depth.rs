@@ -1,5 +1,6 @@
 //! Pure observation of one traversal depth and its two high-water marks.
 pub(super) mod entry;
+pub(super) mod measurement;
 use super::StopReason;
 
 /// Successful high-water marks, or a stop retaining both previous marks.

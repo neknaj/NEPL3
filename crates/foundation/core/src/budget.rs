@@ -259,11 +259,11 @@ impl Budget {
         let previous = self.observed_depth;
         self.observed_depth = base;
         let result = operation(self);
-        let measured = self.observed_depth;
-        self.observed_depth = previous.max(measured);
+        let completed = depth::measurement::finish(base, previous, self.observed_depth);
+        self.observed_depth = completed.merged;
         let value = result?;
         self.poll()?;
-        Ok((value, measured.saturating_sub(base)))
+        Ok((value, completed.relative))
     }
     /// Restores current depth on either normal success or failure; cumulative work remains charged.
     pub fn with_depth<T, E: From<StopReason>>(
