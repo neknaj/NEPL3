@@ -56,8 +56,8 @@ class Checks(unittest.TestCase):
 
     def test_complete_oracle_and_engine_set(self) -> None:
         self.assertEqual(ENGINES, ("chromium", "firefox", "webkit"))
-        self.assertEqual(len(self.expected.cases), 173)
-        self.assertEqual(self.check(record(self.expected)), 173)
+        self.assertEqual(len(self.expected.cases), 228)
+        self.assertEqual(self.check(record(self.expected)), 228)
         self.assertEqual(observed("position", str((1 << 63) | 1)), {"error": "Bounds"})
 
     def test_missing_duplicate_unknown_or_reordered_cases(self) -> None:

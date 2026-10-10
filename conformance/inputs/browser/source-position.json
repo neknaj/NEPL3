@@ -18,6 +18,12 @@
       "text": "日\r\n",
       "length": 5,
       "lines": 2
+    },
+    {
+      "id": 3,
+      "text": "a𠮷b\r\n文書",
+      "length": 14,
+      "lines": 2
     }
   ],
   "cases": [
@@ -2393,6 +2399,764 @@
       "args": [
         "0",
         "3"
+      ],
+      "expected": {
+        "error": "ScalarBoundary"
+      }
+    },
+    {
+      "id": "case-173",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "0"
+      ],
+      "expected": {
+        "line": 0,
+        "character": 0
+      }
+    },
+    {
+      "id": "case-174",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "0",
+        "0"
+      ],
+      "expected": {
+        "offset": 0
+      }
+    },
+    {
+      "id": "case-175",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "1"
+      ],
+      "expected": {
+        "line": 0,
+        "character": 1
+      }
+    },
+    {
+      "id": "case-176",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "0",
+        "1"
+      ],
+      "expected": {
+        "offset": 1
+      }
+    },
+    {
+      "id": "case-177",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "5"
+      ],
+      "expected": {
+        "line": 0,
+        "character": 5
+      }
+    },
+    {
+      "id": "case-178",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "0",
+        "5"
+      ],
+      "expected": {
+        "offset": 5
+      }
+    },
+    {
+      "id": "case-179",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "6"
+      ],
+      "expected": {
+        "line": 0,
+        "character": 6
+      }
+    },
+    {
+      "id": "case-180",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "0",
+        "6"
+      ],
+      "expected": {
+        "offset": 6
+      }
+    },
+    {
+      "id": "case-181",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "8"
+      ],
+      "expected": {
+        "line": 1,
+        "character": 0
+      }
+    },
+    {
+      "id": "case-182",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "1",
+        "0"
+      ],
+      "expected": {
+        "offset": 8
+      }
+    },
+    {
+      "id": "case-183",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "11"
+      ],
+      "expected": {
+        "line": 1,
+        "character": 3
+      }
+    },
+    {
+      "id": "case-184",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "1",
+        "3"
+      ],
+      "expected": {
+        "offset": 11
+      }
+    },
+    {
+      "id": "case-185",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "14"
+      ],
+      "expected": {
+        "line": 1,
+        "character": 6
+      }
+    },
+    {
+      "id": "case-186",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "1",
+        "6"
+      ],
+      "expected": {
+        "offset": 14
+      }
+    },
+    {
+      "id": "case-187",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "7"
+      ],
+      "expected": {
+        "error": "LineTerminator"
+      }
+    },
+    {
+      "id": "case-188",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "2"
+      ],
+      "expected": {
+        "error": "ScalarBoundary"
+      }
+    },
+    {
+      "id": "case-189",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "3"
+      ],
+      "expected": {
+        "error": "ScalarBoundary"
+      }
+    },
+    {
+      "id": "case-190",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 0,
+      "args": [
+        "4"
+      ],
+      "expected": {
+        "error": "ScalarBoundary"
+      }
+    },
+    {
+      "id": "case-191",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "0"
+      ],
+      "expected": {
+        "line": 0,
+        "character": 0
+      }
+    },
+    {
+      "id": "case-192",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "0",
+        "0"
+      ],
+      "expected": {
+        "offset": 0
+      }
+    },
+    {
+      "id": "case-193",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "1"
+      ],
+      "expected": {
+        "line": 0,
+        "character": 1
+      }
+    },
+    {
+      "id": "case-194",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "0",
+        "1"
+      ],
+      "expected": {
+        "offset": 1
+      }
+    },
+    {
+      "id": "case-195",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "5"
+      ],
+      "expected": {
+        "line": 0,
+        "character": 3
+      }
+    },
+    {
+      "id": "case-196",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "0",
+        "3"
+      ],
+      "expected": {
+        "offset": 5
+      }
+    },
+    {
+      "id": "case-197",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "6"
+      ],
+      "expected": {
+        "line": 0,
+        "character": 4
+      }
+    },
+    {
+      "id": "case-198",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "0",
+        "4"
+      ],
+      "expected": {
+        "offset": 6
+      }
+    },
+    {
+      "id": "case-199",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "8"
+      ],
+      "expected": {
+        "line": 1,
+        "character": 0
+      }
+    },
+    {
+      "id": "case-200",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "1",
+        "0"
+      ],
+      "expected": {
+        "offset": 8
+      }
+    },
+    {
+      "id": "case-201",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "11"
+      ],
+      "expected": {
+        "line": 1,
+        "character": 1
+      }
+    },
+    {
+      "id": "case-202",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "1",
+        "1"
+      ],
+      "expected": {
+        "offset": 11
+      }
+    },
+    {
+      "id": "case-203",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "14"
+      ],
+      "expected": {
+        "line": 1,
+        "character": 2
+      }
+    },
+    {
+      "id": "case-204",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "1",
+        "2"
+      ],
+      "expected": {
+        "offset": 14
+      }
+    },
+    {
+      "id": "case-205",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "7"
+      ],
+      "expected": {
+        "error": "LineTerminator"
+      }
+    },
+    {
+      "id": "case-206",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "2"
+      ],
+      "expected": {
+        "error": "ScalarBoundary"
+      }
+    },
+    {
+      "id": "case-207",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "3"
+      ],
+      "expected": {
+        "error": "ScalarBoundary"
+      }
+    },
+    {
+      "id": "case-208",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "4"
+      ],
+      "expected": {
+        "error": "ScalarBoundary"
+      }
+    },
+    {
+      "id": "case-209",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "0"
+      ],
+      "expected": {
+        "line": 0,
+        "character": 0
+      }
+    },
+    {
+      "id": "case-210",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "0",
+        "0"
+      ],
+      "expected": {
+        "offset": 0
+      }
+    },
+    {
+      "id": "case-211",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "1"
+      ],
+      "expected": {
+        "line": 0,
+        "character": 1
+      }
+    },
+    {
+      "id": "case-212",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "0",
+        "1"
+      ],
+      "expected": {
+        "offset": 1
+      }
+    },
+    {
+      "id": "case-213",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "5"
+      ],
+      "expected": {
+        "line": 0,
+        "character": 2
+      }
+    },
+    {
+      "id": "case-214",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "0",
+        "2"
+      ],
+      "expected": {
+        "offset": 5
+      }
+    },
+    {
+      "id": "case-215",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "6"
+      ],
+      "expected": {
+        "line": 0,
+        "character": 3
+      }
+    },
+    {
+      "id": "case-216",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "0",
+        "3"
+      ],
+      "expected": {
+        "offset": 6
+      }
+    },
+    {
+      "id": "case-217",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "8"
+      ],
+      "expected": {
+        "line": 1,
+        "character": 0
+      }
+    },
+    {
+      "id": "case-218",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "1",
+        "0"
+      ],
+      "expected": {
+        "offset": 8
+      }
+    },
+    {
+      "id": "case-219",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "11"
+      ],
+      "expected": {
+        "line": 1,
+        "character": 1
+      }
+    },
+    {
+      "id": "case-220",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "1",
+        "1"
+      ],
+      "expected": {
+        "offset": 11
+      }
+    },
+    {
+      "id": "case-221",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "14"
+      ],
+      "expected": {
+        "line": 1,
+        "character": 2
+      }
+    },
+    {
+      "id": "case-222",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "1",
+        "2"
+      ],
+      "expected": {
+        "offset": 14
+      }
+    },
+    {
+      "id": "case-223",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "7"
+      ],
+      "expected": {
+        "error": "LineTerminator"
+      }
+    },
+    {
+      "id": "case-224",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "2"
+      ],
+      "expected": {
+        "error": "ScalarBoundary"
+      }
+    },
+    {
+      "id": "case-225",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "3"
+      ],
+      "expected": {
+        "error": "ScalarBoundary"
+      }
+    },
+    {
+      "id": "case-226",
+      "operation": "position",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 2,
+      "args": [
+        "4"
+      ],
+      "expected": {
+        "error": "ScalarBoundary"
+      }
+    },
+    {
+      "id": "case-227",
+      "operation": "offset",
+      "fixture": 3,
+      "mismatch": 0,
+      "encoding": 1,
+      "args": [
+        "0",
+        "2"
       ],
       "expected": {
         "error": "ScalarBoundary"
