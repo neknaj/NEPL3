@@ -918,3 +918,71 @@ fn codec_mapping_scope_is_explicit_validated_and_cleared_on_rebind() -> TestResu
     assert_eq!(stopped.poll(), Err(StopReason::SourceLimit));
     Ok(())
 }
+
+#[test]
+fn warmed_codec_mapping_closure_work_is_independent_of_table_size() -> TestResult {
+    use nepl3_core::{
+        origin::{Mapping, MappingKind},
+        value_codec::FoundationCodecError,
+    };
+    use nepl3_wire::foundation::FoundationCodec;
+    let mut previous = None;
+    for count in [1, 128] {
+        let (_, registry, mut sources, token) = fixture()?;
+        let mut mappings = Vec::new();
+        for index in 0..count {
+            let target = SourceSnapshot::new(
+                SourceId(format!("{}-{index:04}", "x".repeat(1_000))),
+                0,
+                format!("memory:target-{index}"),
+                b"x".to_vec(),
+                &mut budget(),
+            )
+            .map_err(|e| format!("{e:?}"))?;
+            mappings.push(Mapping {
+                source: token.head.clone(),
+                target: target.span(0, 1).map_err(|e| format!("{e:?}"))?,
+                kind: MappingKind::Transformed,
+            });
+            sources.insert(target).map_err(|e| format!("{e:?}"))?;
+        }
+        let views = ViewBundle {
+            roots: vec![],
+            elements: vec![],
+        };
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&registry, &sources, &mut admission)
+            .map_err(|e| format!("{e:?}"))?;
+        let mut scoped = codec.scoped_with_mappings(&sources, &mappings);
+        let initial = scoped
+            .encode_shared_views(&views, &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+        let mut warm = budget();
+        let repeated = scoped
+            .encode_shared_views(&views, &mut warm)
+            .map_err(|e| format!("{e:?}"))?;
+        assert_eq!(initial, repeated);
+        if let Some((bytes, work)) = previous {
+            assert_eq!(repeated, bytes);
+            assert_eq!(warm.usage().work, work);
+        }
+        previous = Some((repeated, warm.usage().work));
+        let mut short_limits = budget().limits();
+        short_limits.work = warm.usage().work - 1;
+        let error = scoped
+            .encode_shared_views(&views, &mut Budget::new(short_limits))
+            .err()
+            .ok_or("expected one-short Work stop")?;
+        assert_eq!(error.stop_reason(), Some(StopReason::WorkLimit));
+        // Rebinding invalidates admission and the bound closure, even when
+        // both arguments happen to be the same slices as the previous scope.
+        let mut rebound = scoped.scoped_with_mappings(&sources, &mappings);
+        short_limits.work = warm.usage().work;
+        let error = rebound
+            .encode_shared_views(&views, &mut Budget::new(short_limits))
+            .err()
+            .ok_or("expected rebound Work stop")?;
+        assert_eq!(error.stop_reason(), Some(StopReason::WorkLimit));
+    }
+    Ok(())
+}

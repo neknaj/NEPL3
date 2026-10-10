@@ -118,7 +118,19 @@ fn long_origin_identity_is_budgeted_at_the_foundation_codec_boundary() -> TestRe
     .map_err(error)?;
     let origins = vec![Origin::Direct(source.span(0, 1).map_err(error)?)];
     let mut store = SourceStore::default();
-    store.insert(source).map_err(error)?;
+    // Independently decoded storage cannot use the pointer-equal key shortcut.
+    store
+        .insert(
+            SourceSnapshot::new(
+                SourceId("x".repeat(100_000)),
+                0,
+                "memory:origin".into(),
+                b"a".to_vec(),
+                &mut budget(),
+            )
+            .map_err(error)?,
+        )
+        .map_err(error)?;
     let mut admission = SourceAdmission::default();
     let mut codec = FoundationCodec::new(&registry, &store, &mut admission).map_err(error)?;
     // Two units cover the old entry/exit traversal. The fixed path must

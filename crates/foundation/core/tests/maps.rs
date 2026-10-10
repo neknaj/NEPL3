@@ -1,5 +1,5 @@
 use nepl3_core::{
-    budget::{Budget, Limits, StopReason},
+    budget::{Budget, Limits, Resource, StopReason},
     origin::{Mapping, MappingKind, OriginError, SourceMap},
     source::{SourceId, SourceSnapshot, SourceStore},
 };
@@ -33,8 +33,19 @@ fn shared_endpoint_identities_preserve_independent_graphs_and_cycle_rejection() 
         });
     }
     assert_eq!(shared, independent);
-    let mut shared_budget = budget();
-    let mut independent_budget = budget();
+    // First root/leaf lookups cost 6207 + 136. The remaining 127
+    // root hits cost 2 and ascending adjacent-leaf hits cost 3: 6978.
+    // Independent storage retains the previous 1214396 admission cost,
+    // plus two failed adjacent probes for each of 254 later endpoints.
+    // Keep source admission separate from the original graph allowance.
+    let shared_admission = if cfg!(target_has_atomic = "ptr") {
+        6_978
+    } else {
+        1_214_904
+    };
+    let independent_admission = 1_214_904;
+    let mut shared_budget = with_source_admission(shared_admission);
+    let mut independent_budget = with_source_admission(independent_admission);
     SourceMap::validate_mappings(&shared, &store, &mut shared_budget)
         .map_err(|e| format!("{e:?}"))?;
     SourceMap::validate_mappings(&independent, &store, &mut independent_budget)
@@ -51,14 +62,43 @@ fn shared_endpoint_identities_preserve_independent_graphs_and_cycle_rejection() 
     );
     #[cfg(target_has_atomic = "ptr")]
     assert!(shared_budget.usage().work < independent_budget.usage().work);
-    for maps in [&mut shared, &mut independent] {
+    #[cfg(target_has_atomic = "ptr")]
+    assert!(
+        shared_budget.usage().work - shared_admission
+            < independent_budget.usage().work - independent_admission
+    );
+    for (maps, admission, reverse_admission) in [
+        (
+            &mut shared,
+            shared_admission,
+            if cfg!(target_has_atomic = "ptr") {
+                142
+            } else {
+                9_528
+            },
+        ),
+        (&mut independent, independent_admission, 9_528),
+    ] {
+        // Recheck the admission component independently of cycle-graph work.
+        let proof =
+            SourceMap::validate_mappings(maps, &store, &mut with_source_admission(admission))
+                .map_err(|e| format!("{e:?}"))?;
+        let mut closure = with_source_admission(admission);
+        proof
+            .validate_sources(&store, &mut closure)
+            .map_err(|e| format!("{e:?}"))?;
+        assert_eq!(closure.usage().work, admission + 1 + 2 * maps.len() as u64);
         maps.push(Mapping {
             source: maps[0].target.clone(),
             target: maps[0].source.clone(),
             kind: MappingKind::Exact,
         });
         assert!(matches!(
-            SourceMap::validate_mappings(maps, &store, &mut budget()),
+            SourceMap::validate_mappings(
+                maps,
+                &store,
+                &mut with_source_admission(admission + reverse_admission)
+            ),
             Err(OriginError::Cycle)
         ));
     }
@@ -76,9 +116,17 @@ fn source_closure_proof_is_scoped_to_the_borrowed_store() -> TestResult {
         target: b.span(0, 3).map_err(|e| format!("{e:?}"))?,
         kind: MappingKind::Exact,
     }];
-    let proof = SourceMap::validate_mapping_parts(&[], &maps, &store, &mut budget())
-        .and_then(|proof| proof.bind_sources(&store, &mut budget()))
+    let mut ordinary = budget();
+    SourceMap::validate_mapping_parts(&[], &maps, &store, &mut ordinary)
         .map_err(|e| format!("{e:?}"))?;
+    let mut bound = budget();
+    let proof = SourceMap::validate_bound_mapping_parts(&[], &maps, &store, &mut bound)
+        .map_err(|e| format!("{e:?}"))?;
+    // Binding retains established closure and charges one publication step.
+    ordinary
+        .charge(Resource::Work, 1)
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(ordinary.usage(), bound.usage());
     // Reusing the very same immutable store needs only a stop/budget check,
     // independent of the number of mappings or subsequent token validations.
     let mut one = Budget::new(Limits {
@@ -98,7 +146,7 @@ fn source_closure_proof_is_scoped_to_the_borrowed_store() -> TestResult {
         .map_err(|e| format!("{e:?}"))?;
     assert!(check.usage().work > 1);
     let mut missing = SourceStore::default();
-    missing.insert(a).map_err(|e| format!("{e:?}"))?;
+    missing.insert(a.clone()).map_err(|e| format!("{e:?}"))?;
     assert!(proof.validate_sources(&missing, &mut budget()).is_err());
     // Matching IDs and revisions with changed bytes are not the bound store.
     missing
@@ -123,6 +171,32 @@ fn source_closure_proof_is_scoped_to_the_borrowed_store() -> TestResult {
     let unbound =
         SourceMap::validate_mappings(&maps, &store, &mut budget()).map_err(|e| format!("{e:?}"))?;
     assert!(unbound.bind_sources(&missing, &mut budget()).is_err());
+    assert!(SourceMap::validate_bound_mapping_parts(&[], &maps, &missing, &mut budget()).is_err());
+    let reverse = [Mapping {
+        source: maps[0].target.clone(),
+        target: maps[0].source.clone(),
+        kind: MappingKind::Exact,
+    }];
+    assert!(matches!(
+        SourceMap::validate_bound_mapping_parts(&maps, &reverse, &store, &mut budget()),
+        Err(OriginError::Cycle)
+    ));
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert!(matches!(
+        SourceMap::validate_bound_mapping_parts(&[], &maps, &store, &mut cancelled),
+        Err(OriginError::Stopped(StopReason::Cancelled))
+    ));
+    assert_eq!(cancelled.usage().work, 0);
+    let wrong_range = [Mapping {
+        source: a.span(0, 1).map_err(|e| format!("{e:?}"))?,
+        target: b.span(1, 2).map_err(|e| format!("{e:?}"))?,
+        kind: MappingKind::Exact,
+    }];
+    assert!(matches!(
+        SourceMap::validate_bound_mapping_parts(&[], &wrong_range, &store, &mut budget()),
+        Err(OriginError::Irreversible)
+    ));
     Ok(())
 }
 #[test]
@@ -148,12 +222,31 @@ fn repeated_ordered_snapshot_edges_reuse_neighbor_positions() -> TestResult {
     }
     // Duplicate edges preserve this 257-vertex star. Later ordered sweeps
     // should find neighboring existing identities without binary searches.
-    let mut b = budget();
-    SourceMap::validate_mappings(&mappings, &sources, &mut b).map_err(|e| format!("{e:?}"))?;
+    // Root: 129 first miss + 2047*2 cached hits. Leaves: 219 first
+    // lookup + 7*(220+2) wraparound misses + 8*255*3 adjacent hits.
+    // Total admission = 12116. Independent identities retain 876870
+    // plus 2*(4096-2) failed adjacent probes = 885058.
+    // Preserve the old graph-only bound rather than enlarging it.
+    let admission = if cfg!(target_has_atomic = "ptr") {
+        12_116
+    } else {
+        885_058
+    };
+    let mut b = with_source_admission(admission);
+    let proof =
+        SourceMap::validate_mappings(&mappings, &sources, &mut b).map_err(|e| format!("{e:?}"))?;
+    let mut closure = with_source_admission(admission);
+    proof
+        .validate_sources(&sources, &mut closure)
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        closure.usage().work,
+        admission + 1 + 2 * mappings.len() as u64
+    );
     assert_eq!(b.usage().nodes, 257);
     assert_eq!(b.usage().depth, 2);
     eprintln!("repeated ordered map work: {}", b.usage().work);
-    assert!(b.usage().work < 500_000);
+    assert!(b.usage().work - admission < 500_000);
     Ok(())
 }
 
@@ -390,6 +483,14 @@ fn borrowed_union_does_not_copy_source_id_payloads() -> TestResult {
         .map_err(|e| format!("{e:?}"))?;
     assert_eq!(b.usage().nodes, 3);
     Ok(())
+}
+// Only the two fixtures above need an explicit source-admission allowance.
+// Their existing graph allowance and all production limits remain unchanged.
+fn with_source_admission(work: u64) -> Budget {
+    Budget::new(Limits {
+        work: budget().limits().work + work,
+        ..budget().limits()
+    })
 }
 fn budget() -> Budget {
     Budget::new(Limits {
