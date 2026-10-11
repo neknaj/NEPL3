@@ -8,6 +8,8 @@ use nepl3_core::{
     value_codec::FoundationValueCodec,
     view::ViewBundle,
 };
+#[cfg(test)]
+mod tests;
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum DocumentLowerError<E> {
@@ -383,14 +385,11 @@ pub(super) fn append(
                         + 33,
                 )?;
                 if source.identity() == prior.identity() {
-                    b.charge(
-                        Resource::Work,
-                        (source.uri().len()
-                            + prior.uri().len()
-                            + source.text().len()
-                            + prior.text().len()) as u64,
-                    )?;
-                    if &source != prior {
+                    // Literal payloads retain the owner's immutable snapshot.
+                    // Use its shared-storage equality proof instead of charging
+                    // a full document scan for every sentence. Independently
+                    // decoded snapshots still undergo charged byte comparison.
+                    if !source.eq_with_budget(prior, b)? {
                         return Err(SyntaxError::Source(SourceError::IdentityConflict).into());
                     }
                     present = true;
