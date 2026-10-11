@@ -113,12 +113,12 @@ fn node(value: Value, b: &mut Budget) -> Result<Node, Error> {
     }
     Ok(out)
 }
-/// Consume already byte-bounded host JSON, validate every field and then the
-/// closed markup tree, and serialize the visual pair. Strings move without
+/// Consume already byte-bounded host JSON and validate its finite field schema.
+/// The returned tree still requires markup validation. Strings move without
 /// copying; output vectors and subsequent markup operations are budgeted.
 /// Unknown fields/kinds, malformed content and stops fail the entire operation.
 /// Class/asset binding, source identity and accessible MathML remain host duties.
-pub fn render(value: Value, policy: &Policy<'_>, b: &mut Budget) -> Result<Rendered, Error> {
+pub fn decode(value: Value, b: &mut Budget) -> Result<Fragment, Error> {
     b.poll()?;
     let mut f = fields(value, 2)?;
     if string(take(&mut f, "kind", b)?)? != "parsed-unchecked" {
@@ -134,7 +134,10 @@ pub fn render(value: Value, policy: &Policy<'_>, b: &mut Budget) -> Result<Rende
     for value in values {
         nodes.push(node(value, b)?);
     }
-    let fragment = Fragment { nodes };
+    Ok(Fragment { nodes })
+}
+pub fn render(value: Value, policy: &Policy<'_>, b: &mut Budget) -> Result<Rendered, Error> {
+    let fragment = decode(value, b)?;
     let map = |e| match e {
         fragment::Error::Stopped(reason) => Error::Stopped(reason),
         e => Error::Markup(e),

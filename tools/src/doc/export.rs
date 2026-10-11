@@ -1,6 +1,7 @@
 //! Script-free local Doc export, using the same production pipeline as tests.
 pub mod assets;
 mod code;
+mod katex;
 pub mod math;
 pub mod pages;
 mod stylesheet;
@@ -242,13 +243,21 @@ fn generate_impl(
             &mut output_budget,
         )?;
         let rendered = rendered.fragment;
-        let document_css =
+        let identity = format!(
+            "{}:{}:{}",
+            digest_hex(Digest::of(input.as_bytes())),
+            digest_hex(profile.digest()),
+            renderer.as_str()
+        );
+        let katex = katex::generate(&mut math, &identity, &mut output_budget)?;
+        let mut document_css =
             assets::document_css(&doc, assets.map(|(inputs, _)| inputs), &mut output_budget)?;
         let html = shell_with_assets(
             &rendered,
             css,
             assets.map(|(_, mode)| mode),
-            &document_css,
+            &mut document_css,
+            katex.as_ref(),
             &mut output_budget,
         )?;
         observe(StageMeasurement {
@@ -285,6 +294,7 @@ fn generate_impl(
             "renderer":"nepl3-doc-html local/1",
             "options":{"parallel":"Rows","css":css.as_str(),"math_renderer":renderer.as_str()},
             "math_diagnostics":math::diagnostics(&math),
+            "katex":katex.as_ref().map(|k| serde_json::json!({"version":"0.18.7","generation":"native pinned worker","identity":k.identity(),"viewer_scripts":false,"fonts":"all fixed fonts embedded in CSS","license":"complete original license embedded in CSS","host_internal_work":"unobserved","host_internal_allocation":"unobserved","visuals":k.visuals.iter().map(|v| serde_json::json!({"math_arena_root":v.root,"scope":v.scope})).collect::<Vec<_>>(),"resources":k.files.iter().map(|f|serde_json::json!({"path":f.path,"mime":f.mime,"sha256":digest(&f.bytes),"bytes":f.bytes.len(),"placement":"embedded stylesheet"})).collect::<Vec<_>>()})),
             "stylesheet":{"sha256":digest(document_css.as_bytes()),"license":"MIT"},
             "font":{"family":"Klee One","weights":[400,600],"stylesheet":stylesheet::FONT_STYLESHEET,"bundled":false,"offline":"system fallback"},
             "files":files,
@@ -408,25 +418,12 @@ pub fn write_with_renderer(
     Ok(())
 }
 
-fn shell(
-    rendered: &nepl3_doc_html::RenderedFragment,
-    output_budget: &mut nepl3_core::budget::Budget,
-) -> Result<String, String> {
-    shell_with_css(rendered, CssMode::External, output_budget)
-}
-
-fn shell_with_css(
-    rendered: &nepl3_doc_html::RenderedFragment,
-    css: CssMode,
-    output_budget: &mut nepl3_core::budget::Budget,
-) -> Result<String, String> {
-    shell_with_assets(rendered, css, None, CSS, output_budget)
-}
 fn shell_with_assets(
     rendered: &nepl3_doc_html::RenderedFragment,
     css: CssMode,
     assets: Option<nepl3_doc_html::assets::SvgMode>,
-    document_css: &str,
+    document_css: &mut String,
+    katex: Option<&katex::Generated>,
     output_budget: &mut nepl3_core::budget::Budget,
 ) -> Result<String, String> {
     let m = &rendered.markup;
@@ -440,9 +437,39 @@ fn shell_with_assets(
         })?;
     check_shell_depth(&m.fragment, output_budget)
         .map_err(|e| format!("{e}; phase=HTML shell depth"))?;
-    let fragment = nepl3_markup::html::serialize(&checked, output_budget)
-        .map_err(|e| format!("HTML serialization: {e:?}"))?;
+    let (fragment, precharged_css) = if let Some(katex) = katex {
+        let result = katex.compose(&checked, output_budget)?;
+        let fonts = katex.stylesheet(output_budget)?;
+        output_budget
+            .charge(
+                nepl3_core::budget::Resource::AllocationUnits,
+                (result.stylesheet.len() + fonts.len()) as u64,
+            )
+            .map_err(err)?;
+        let precharged_css = result.stylesheet.len();
+        document_css.push_str(&fonts);
+        document_css.push_str(&result.stylesheet);
+        (result.html, precharged_css)
+    } else {
+        (
+            nepl3_markup::html::serialize(&checked, output_budget)
+                .map_err(|e| format!("HTML serialization: {e:?}"))?,
+            0,
+        )
+    };
     let head = stylesheet::head_with_css(css, document_css, output_budget)?;
+    let head = if katex.is_some() {
+        let rule = "font-src data: https://fonts.gstatic.com; style-src-attr 'none'";
+        output_budget
+            .charge(
+                nepl3_core::budget::Resource::AllocationUnits,
+                (head.len() + rule.len()) as u64,
+            )
+            .map_err(err)?;
+        std::borrow::Cow::Owned(head.replace("font-src https://fonts.gstatic.com", rule))
+    } else {
+        head
+    };
     let head = if let Some(mode) = assets {
         use nepl3_doc_html::assets::SvgMode;
         let rule = match mode {
@@ -473,7 +500,8 @@ fn shell_with_assets(
                     document_css.len()
                 } else {
                     0
-                }) as u64,
+                }
+                - precharged_css) as u64,
         )
         .map_err(err)?;
     output_budget

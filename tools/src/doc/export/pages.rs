@@ -348,23 +348,82 @@ fn generate_selected(
         )?;
         file_kinds.insert(file.registration.route.clone(), "application/octet-stream");
     }
-    for (page, fragment) in request.set.pages.iter().zip(&rendered.fragments) {
+    let mut katex_pages = Vec::new();
+    let mut native_cache = None;
+    for (page_index, (page, fragment)) in request
+        .set
+        .pages
+        .iter()
+        .zip(&rendered.fragments)
+        .enumerate()
+    {
         let route = &page.registration.route;
         if !route.ends_with(".html") {
             return Err("HTML route must end in .html".into());
         }
-        let html = shell(fragment, output_budget).map_err(|e| {
+        let identity = format!(
+            "{}:{}:{}",
+            digest_hex(rendered.identity),
+            page.registration.id,
+            renderer.as_str()
+        );
+        let native = super::katex::generate_cached(
+            &mut page_math[page_index],
+            &identity,
+            native_cache.as_ref(),
+            output_budget,
+        )?;
+        let mut document_css = CSS.to_owned();
+        let html = shell_with_assets(
+            fragment,
+            CssMode::External,
+            None,
+            &mut document_css,
+            native.as_ref(),
+            output_budget,
+        )
+        .map_err(|e| {
             format!(
                 "page {route}: {e}; render completed usage={rendered_usage:?}; usage={:?}",
                 output_budget.usage()
             )
         })?;
+        let css_name = if native.is_some() {
+            format!("doc-{}.css", digest_hex(Digest::of(route.as_bytes())))
+        } else {
+            "doc.css".into()
+        };
+        let html = if native.is_some() {
+            output_budget
+                .charge(
+                    nepl3_core::budget::Resource::AllocationUnits,
+                    html.len() as u64 + css_name.len() as u64,
+                )
+                .map_err(err)?;
+            output_budget
+                .charge(nepl3_core::budget::Resource::Work, html.len() as u64)
+                .map_err(err)?;
+            output_budget
+                .charge(
+                    nepl3_core::budget::Resource::OutputBytes,
+                    (css_name.len() - "doc.css".len()) as u64,
+                )
+                .map_err(err)?;
+            html.replacen(
+                "href=\"assets/doc.css\"",
+                &format!("href=\"assets/{css_name}\""),
+                1,
+            )
+        } else {
+            html
+        };
         insert(&mut files, route.clone(), html.into_bytes())?;
         file_kinds.insert(route.clone(), "text/html; charset=utf-8");
         let css = match route.rsplit_once('/') {
-            Some((parent, _)) => format!("{parent}/assets/doc.css"),
-            None => "assets/doc.css".into(),
+            Some((parent, _)) => format!("{parent}/assets/{css_name}"),
+            None => format!("assets/{css_name}"),
         };
+        katex_pages.push(native.as_ref().map(|k| serde_json::json!({"version":"0.18.7","identity":k.identity(),"fonts":"all fixed fonts embedded in CSS","license":"complete original license embedded in CSS","visuals":k.visuals.iter().map(|v|serde_json::json!({"math_arena_root":v.root,"scope":v.scope})).collect::<Vec<_>>(),"host_internal_work":"unobserved","host_internal_allocation":"unobserved"})));
         if request
             .set
             .files
@@ -373,8 +432,11 @@ fn generate_selected(
         {
             return Err("registered file conflicts with generated stylesheet".into());
         }
-        insert(&mut files, css.clone(), CSS.as_bytes().to_vec())?;
+        insert(&mut files, css.clone(), document_css.into_bytes())?;
         file_kinds.insert(css, "text/css; charset=utf-8");
+        if native.is_some() {
+            native_cache = native;
+        }
     }
     // Reserve the completion marker before writing anything to disk.
     if files.keys().any(|path| conflict(path, "manifest.json")) {
@@ -401,6 +463,7 @@ fn generate_selected(
             "initial_usage":resources::usage(initial_usage),"usage":resources::usage(output_budget.usage())},
         "registered_files":file_origins,
         "renderer":"nepl3-doc-html pages/4","options":{"parallel":"Rows","math_renderer":renderer.as_str()},
+        "katex":katex_pages,
         "math_diagnostics":page_math.iter().map(|records| super::math::diagnostics(records)).collect::<Vec<_>>(),"viewer_scripts":false,
         "packages":"compiled checked bootstrap fixtures","scope":"Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Retained Code uses shared syntax-only highlighting without guest evaluation; Math uses independent MathML with explicit renderer fallback diagnostics; assets and other foreign kinds remain unsupported. Not Pages deployment evidence.",
         "budget_scope":"Each parse/lower separately bounded; one shared resolve/render/serialize output budget",

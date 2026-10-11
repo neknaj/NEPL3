@@ -6,7 +6,24 @@ import { render as preflight } from '../render.mjs';
 /** Run the shared call in a disposable Node realm. `renderer` is a trusted
  * host-configured file URL, never a document-supplied module. This is not an OS
  * sandbox or an artifact admission API. Resolve only after the realm exits. */
-export async function render(renderer, request, limits, { timeoutMillis, diagnosticBytes, signal } = {}) {
+export async function render(renderer, request, limits, options = {}) {
+  return run(renderer, request, limits, options, null);
+}
+
+/** Generate and parse visual HTML in the same cancellable realm. The finite
+ * tree is still unchecked; only the Rust validator can admit visual markup.
+ * Parser and renderer URLs are trusted host configuration, never Doc input. */
+export async function renderParsed(renderer, parser, request, limits, options = {}) {
+  if (options.signal?.aborted) return { result: { kind: 'stopped', reason: 'cancelled' } };
+  if (!(parser instanceof URL) || parser.protocol !== 'file:' || request?.output !== 'html' ||
+      !limits || ![limits.nodes, limits.depth, limits.transportBytes]
+        .every(n => Number.isSafeInteger(n) && n >= 0)) {
+    return { result: { kind: 'invalid-request' } };
+  }
+  return run(renderer, request, limits, options, parser);
+}
+
+async function run(renderer, request, limits, { timeoutMillis, diagnosticBytes, signal } = {}, parser) {
   if (signal?.aborted) return { result: { kind: 'stopped', reason: 'cancelled' } };
   if (!(renderer instanceof URL) || renderer.protocol !== 'file:' ||
       !Number.isSafeInteger(timeoutMillis) || timeoutMillis <= 0 || timeoutMillis > 2147483647 ||
@@ -21,8 +38,10 @@ export async function render(renderer, request, limits, { timeoutMillis, diagnos
     worker = new Worker(new URL('./worker.mjs', import.meta.url), {
       workerData: {
         renderer: renderer.href,
+        parser: parser?.href ?? null,
         request: { tex: request.tex, displayMode: request.displayMode, output: request.output },
-        limits: { inputBytes: limits.inputBytes, outputBytes: limits.outputBytes },
+        limits: { inputBytes: limits.inputBytes, outputBytes: limits.outputBytes,
+          ...(parser ? { nodes: limits.nodes, depth: limits.depth, transportBytes: limits.transportBytes } : {}) },
         diagnosticBytes,
       },
       // Do not inherit CLI preload hooks or write renderer output to the host.

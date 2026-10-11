@@ -6,6 +6,7 @@ use crate::text::is_xml_character;
 use alloc::{string::String, vec::Vec};
 use nepl3_core::budget::{Budget, Resource, StopReason};
 mod serialize;
+pub(crate) use serialize::serialize_at_depth;
 pub use serialize::{Rendered, serialize};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -102,6 +103,9 @@ pub struct Checked<'a> {
     scope: &'a str,
 }
 impl Checked<'_> {
+    pub fn scope(&self) -> &str {
+        self.scope
+    }
     pub fn fragment(&self) -> &Fragment {
         self.fragment
     }

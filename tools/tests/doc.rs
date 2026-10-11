@@ -1,5 +1,5 @@
-//! Actual standard Doc source compilation and prefix parsing. Facts signatures
-//! are compile-time declarations only; this parse-only host serves reader calls.
+//! Actual standard Doc source compilation, native export and prefix parsing.
+//! Facts signatures are compile-time declarations; reader calls use a parse host.
 #[path = "doc/annotated.rs"]
 mod annotated;
 #[path = "doc/annotated_blocks.rs"]
@@ -20,6 +20,8 @@ mod footnotes;
 mod html;
 #[path = "doc/input.rs"]
 mod input;
+#[path = "doc/katex_cli.rs"]
+mod katex_cli;
 #[path = "doc/labels.rs"]
 mod labels;
 #[path = "doc/markdown_math.rs"]

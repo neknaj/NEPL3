@@ -1,5 +1,5 @@
-//! Selected native Math display with retained source mappings. This host has no
-//! admitted KaTeX execution capability yet; fallback diagnostics stay explicit.
+//! Selected native Math display with retained source mappings. The export owner
+//! may admit native KaTeX later; optional absence remains an explicit diagnostic.
 use super::super::{
     annotations::MathRecord,
     math::{
@@ -19,6 +19,8 @@ use nepl3_markup::{html::HtmlRequest, mathml::Display};
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Fallback {
     HostCapabilityUnavailable,
+    ResourceUnavailable,
+    RendererParseError,
     UnsupportedTex {
         node: u64,
         reason: nepl3_math_tex::Unsupported,
@@ -26,9 +28,13 @@ pub enum Fallback {
 }
 pub struct Occurrence {
     pub embed: EmbedRef,
+    pub root: u64,
+    pub tex: TexPreparation,
+    pub display: Display,
     /// Final arena indices with the independent guest sources retained.
     pub output: MathRecord,
     pub fallback: Option<Fallback>,
+    pub fallback_detail: Option<String>,
 }
 pub struct DisplayHost<'a, C> {
     pub compiled: &'a Compiled,
@@ -71,11 +77,12 @@ where
             .prepare_guest(&guest.closure, display, self.preference, b)
             .map_err(err)?
             .into_parts();
-        let fallback = match tex {
+        let fallback = match &tex {
             TexPreparation::MathMLOnly => None,
-            TexPreparation::Unsupported { node, reason } => {
-                Some(Fallback::UnsupportedTex { node, reason })
-            }
+            TexPreparation::Unsupported { node, reason } => Some(Fallback::UnsupportedTex {
+                node: *node,
+                reason: *reason,
+            }),
             TexPreparation::Ready { .. } => Some(Fallback::HostCapabilityUnavailable),
         };
         if fallback.is_some() {
@@ -92,6 +99,9 @@ where
             .map_err(|_| err(b.stop(StopReason::AllocationLimit)))?;
         records.push(Occurrence {
             embed,
+            root: result.markup.fragment.root,
+            tex,
+            display,
             output: MathRecord {
                 syntax: result.syntax,
                 node_roots: result.node_roots,
@@ -99,6 +109,7 @@ where
                 annotations: result.annotations,
             },
             fallback,
+            fallback_detail: None,
         });
         Ok(result.markup)
     }
@@ -123,6 +134,13 @@ pub fn compose(
         if record.embed != placement.embed {
             return Err("MathPlacement".into());
         }
+        if record.root >= placement.elements {
+            return Err("MathPlacement".into());
+        }
+        record.root = placement
+            .first_element
+            .checked_add(record.root)
+            .ok_or("MathPlacement")?;
         record
             .output
             .remap(
@@ -148,7 +166,8 @@ pub fn compose(
 pub fn diagnostics(records: &[Occurrence]) -> Vec<serde_json::Value> {
     records.iter().enumerate().filter_map(|(occurrence, record)| record.fallback.map(|reason| {
   serde_json::json!({"occurrence":occurrence,"embed":record.embed.0,"renderer":"MathML",
+   "host_detail":record.fallback_detail,
    "detail":match reason { Fallback::UnsupportedTex {node, reason} => Some(serde_json::json!({"node":node,"reason":format!("{reason:?}")})), _ => None },
-   "reason":match reason { Fallback::HostCapabilityUnavailable => "KaTeXHostCapabilityUnavailable", Fallback::UnsupportedTex {..} => "FaithfulTexUnsupported" }})
+   "reason":match reason { Fallback::HostCapabilityUnavailable => "KaTeXHostCapabilityUnavailable", Fallback::ResourceUnavailable => "KaTeXResourceUnavailable", Fallback::RendererParseError => "KaTeXRendererParseError", Fallback::UnsupportedTex {..} => "FaithfulTexUnsupported" }})
  })).collect()
 }

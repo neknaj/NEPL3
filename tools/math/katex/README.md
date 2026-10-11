@@ -13,6 +13,15 @@ direct stdio or premature exit is a provider violation. A termination failure
 is recorded, and is not reported as a confirmed exit while the realm is alive.
 The deadline includes module loading, not only rendering. Cancellation before
 final resolution wins over output, including termination and stream drainage.
+`renderParsed` additionally loads a trusted host-configured parse5 module and
+runs HTML5 parsing, finite-tree conversion and JSON encoding before that same
+realm exits. Only visual `html` output is accepted. Node/depth limits bound the
+parsed tree; `transportBytes` bounds the UTF-8 JSON result (not the enclosing
+message or separately bounded diagnostics). No unchecked HTML string is returned
+on this path. Missing parser capability is explicit; parser/markup violations
+and resource stops stay distinct. This is still an unchecked finite tree, not
+Doc insertion or renderer identity verification.
+
 The owning document operation must still check its current
 source/revision and stop state before using any result.
 
@@ -109,10 +118,10 @@ geometry, and verifies `style-src-attr 'none'` blocks an injected style attribut
 The class inventory in the integration test comes from actual renderer output;
 production asset admission must independently bind the inventory to fixed CSS.
 
-The pair is visual-only (`aria-hidden=true`). Independent accessible MathML,
-complete source/resource identity, full Doc insertion and browser Worker
-transport remain unfinished. Do not publish this pair alone as an accessible
-document, or claim whole-artifact/fidelity acceptance from these scoped tests.
+The pair is visual-only (`aria-hidden=true`). Native Doc composition retains the
+independent MathML next to it as the accessible representation. The standalone
+pair is not an accessible document. Browser Worker integration remains separate;
+scoped parser tests alone do not establish whole-document visual fidelity.
 
 Run `node --test tools/audit/math/parse.test.mjs` and the regular Rust
 `katex_fragment` tests. The ignored production TeX integration test emits
@@ -120,3 +129,62 @@ Run `node --test tools/audit/math/parse.test.mjs` and the regular Rust
 `python tools/audit/math/browser.py --corpus <log>`. It uses the existing pinned
 Playwright requirements and all three engines by default; generated logs remain
 local/CI artifacts rather than source history.
+
+## Executable snapshot
+
+`node/execution.mjs` admits the fixed KaTeX, parse5 and entities executable
+closure using `execution.json` SHA-256/length pins. It reads bounded owned bytes,
+then creates a private snapshot and gives its entry URLs to an awaited callback.
+Workers must finish before the callback returns; cleanup runs afterward. This
+avoids verifying installed code and then importing changed installed files.
+It does not defend against a hostile OS user or provide an OS sandbox.
+The logical cap covers retained executable bytes, not total heap, I/O time or
+all filesystem overhead. I/O failures during snapshot construction propagate;
+they are not renderer success or document fallback.
+
+The inventory is generated from the reviewed locked npm packages with
+`node tools/generate/katex-host.mjs --write`; without `--write`, it verifies the
+existing inventory. The class inventory combines fixed CSS selectors (with the stylesheet digest)
+and explicitly reviewed structural atom/tight-layout/text and Unicode script-marker classes from the
+pinned renderer source, never classes harvested from the current output. This is a
+fixed-package inventory rather than a parser for arbitrary stylesheet policies.
+Document identity, resource packaging, typed visual insertion and admission
+remain separate obligations; this helper does not complete Doc KaTeX support.
+
+
+## Native Doc generation
+
+The native `doc-html export` and `doc-html pages` host can use the pinned closure
+at `NEPL3_KATEX_NODE_MODULES` (an absolute node_modules directory configured by
+its operator, never by Doc source). Install it using the checked-in audit/math
+lockfile and `npm ci --prefix tools/audit/math --ignore-scripts`. Node 24 or newer
+is required. Missing configuration, Node, or optional pinned files is reported
+as explicit independent MathML fallback; a digest mismatch is a hard failure.
+The generated document contains no KaTeX script or deferred renderer invocation.
+
+The owner copies its embedded host sources to a private directory, validates
+and snapshots the executable closure, renders and parses in disposable Workers,
+and re-admits the finite results in Rust. Request identity binds source, selected
+profile/options, actual TeX, converter source, adapter bytes and both pin sets.
+The manifest also records Node version. Worker deadlines (10 seconds) and the
+whole subprocess deadline (60 seconds) are host policies, not exact CPU or
+physical-memory measurements. Internal JS work/allocation are unobserved.
+Host deadline/overflow failures preserve their reason and cancel the enclosing
+budget as a fail-closed sentinel; this does not imply the owner requested cancel.
+
+All fixed KaTeX fonts and the complete license are embedded in the stylesheet.
+Unicode script fallback uses system fonts. The ordinary document font retains
+its existing separately declared online/system-fallback policy. Computed visual
+styles use unique occurrence scopes, author inline styles are prohibited, and
+independent MathML remains available to assistive technology.
+
+PageSet generation shares verified owned font/class resources within one export
+without resetting its output budget. Subsequent pages do not retransmit font
+hex; fallback-only pages do not transmit unused fonts. Fixed CSS font expansion
+is one pass over the original stylesheet rather than repeated replacement of a
+growing base64 stylesheet. Output stylesheets have page-specific names and
+retain each page's unique visual scopes.
+
+CI runs the ignored `katex_cli::pinned_native` test with the real pinned packages.
+This covers inline/external CSS, accessible MathML, complete fonts/license,
+three-page default-budget generation and explicit missing-resource fallback.
