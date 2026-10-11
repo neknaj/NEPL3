@@ -505,6 +505,62 @@ mod tests {
     use super::*;
     use crate::doc::source::budget;
     #[test]
+    fn composition_preserves_prior_depth_and_exact_output_limit() -> Result<(), String> {
+        use nepl3_markup::{html::*, mathml};
+        let tree = HtmlFragment {
+            root: 1,
+            nodes: vec![
+                HtmlNode::Text { text: "x".into() },
+                HtmlNode::MathElement {
+                    tag: mathml::Tag::Math,
+                    attributes: vec![mathml::Attribute::Display(Display::Inline)],
+                    children: vec![2],
+                },
+                HtmlNode::MathElement {
+                    tag: mathml::Tag::Identifier,
+                    attributes: vec![],
+                    children: vec![0],
+                },
+            ],
+        };
+        let policy = HtmlPolicy { classes: vec![] };
+        let proof = validate(&tree, HtmlSlot::Phrasing, &policy, &mut budget()).map_err(err)?;
+        let generated = Generated {
+            files: Arc::new(vec![]),
+            classes: Arc::new(vec!["katex".into()]),
+            node_version: "24.0.0".into(),
+            visuals: vec![Visual {
+                root: 1,
+                scope: "nepl-math-boundary".into(),
+                fragment: fragment::Fragment {
+                    nodes: vec![fragment::Node::Span {
+                        classes: "katex".into(),
+                        style: "height:1em;".into(),
+                        aria_hidden: None,
+                        children: vec![],
+                    }],
+                },
+            }],
+        };
+        let mut first = budget();
+        first.observe_depth(300).map_err(err)?;
+        let output = generated.compose(&proof, &mut first)?;
+        assert_eq!(first.usage().depth, 300);
+        let size = (output.html.len() + output.stylesheet.len()) as u64;
+        assert_eq!(first.usage().output_bytes, size);
+        for (limit, succeeds) in [(size, true), (size - 1, false)] {
+            let mut limits = budget().limits();
+            limits.output_bytes = limit;
+            let mut b = Budget::new(limits);
+            let result = generated.compose(&proof, &mut b);
+            assert_eq!(result.is_ok(), succeeds);
+            if !succeeds {
+                assert_eq!(b.poll(), Err(StopReason::OutputLimit));
+            }
+        }
+        Ok(())
+    }
+    #[test]
     fn response_identity_shape_and_sticky_budget() -> Result<(), String> {
         let response = br#"{"identity":"one","kind":"unavailable"}"#;
         assert!(matches!(
