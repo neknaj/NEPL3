@@ -488,14 +488,6 @@ pub(crate) fn render_prepared_with_foreign<E>(
                 .embeds
                 .get(syntax.0 as usize)
                 .ok_or(RenderError::InternalShape)?;
-            let depth =
-                w.b.current_depth()
-                    .saturating_add(w.depths[job.parent as usize]);
-            let result = w
-                .b
-                .with_depth_at_least(depth, |b| Ok::<_, RenderError>(adapter(embed, *syntax, b)))?;
-            w.b.poll()?;
-            let markup = result.map_err(ForeignRenderError::Foreign)?;
             let target = if matches!(kind, DocKind::Code { .. }) {
                 let figure = w.element(Some(job.parent), job.node, HtmlTag::Figure)?;
                 let pre = w.element(Some(figure), job.node, HtmlTag::Pre)?;
@@ -507,6 +499,15 @@ pub(crate) fn render_prepared_with_foreign<E>(
             } else {
                 job
             };
+            // Admit insertion ancestors before the guest enters their scope.
+            let depth =
+                w.b.current_depth()
+                    .saturating_add(w.depths[target.parent as usize]);
+            let result = w
+                .b
+                .with_depth_at_least(depth, |b| Ok::<_, RenderError>(adapter(embed, *syntax, b)))?;
+            w.b.poll()?;
+            let markup = result.map_err(ForeignRenderError::Foreign)?;
             let slot = if matches!(kind, DocKind::DisplayMath { .. }) {
                 HtmlSlot::Block
             } else {

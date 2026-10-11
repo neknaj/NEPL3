@@ -467,3 +467,101 @@ fn math_annotation_cannot_supply_hidden_outer_page_anchor() -> Result<(), String
     );
     Ok(())
 }
+
+#[test]
+fn code_callback_inherits_its_actual_html_insertion_depth() -> Result<(), String> {
+    use nepl3_doc_html::{ForeignRenderError, RenderError, display};
+    let c = compiled()?;
+    let source = r#"article en "Depth" body cons code Doc article en "Guest" body nil nil"#;
+    let request = request(&c, &[("a", source)], ParallelMode::Rows)?;
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let prepared = display::prepare_display(
+        &request.set.pages[0].document,
+        &request.options,
+        &c.doc.registry,
+        &mut codec,
+        &mut budget(),
+    )
+    .map_err(err)?;
+    for outer in [0, 3] {
+        let mut measured = budget();
+        let mut seen = Vec::new();
+        let rendered = measured
+            .with_depth_at_least(outer, |b| {
+                display::render_display(
+                    &prepared,
+                    &mut |embed, _, b| {
+                        seen.push(b.current_depth());
+                        echo(embed, None, b)
+                    },
+                    b,
+                )
+            })
+            .map_err(err)?;
+        // The actual tree is Article -> Figure -> Pre -> Code -> guest.
+        // Count the path independently rather than accepting an adapter value.
+        let fragment = &rendered.fragment.markup.fragment;
+        let mut pending = vec![(fragment.root, 1)];
+        let mut code_depths = Vec::new();
+        while let Some((node, depth)) = pending.pop() {
+            if let HtmlNode::Element { tag, children, .. } = &fragment.nodes[node as usize] {
+                if *tag == HtmlTag::Code {
+                    code_depths.push(outer + depth);
+                }
+                pending.extend(children.iter().map(|child| (*child, depth + 1)));
+            }
+        }
+        assert_eq!(code_depths, vec![outer + 4]);
+        assert_eq!(seen, code_depths);
+        assert_eq!(measured.current_depth(), 0);
+        let mut page_budget = budget();
+        let mut page_depths = Vec::new();
+        page_budget
+            .with_depth_at_least(outer, |b| {
+                render_pages_with_code(
+                    &request,
+                    &c.doc.registry,
+                    &mut codec,
+                    b,
+                    &mut |_, embed, _, b| {
+                        page_depths.push(b.current_depth());
+                        echo(embed, None, b)
+                    },
+                )
+            })
+            .map_err(err)?;
+        assert_eq!(page_depths, code_depths);
+        assert_eq!(page_budget.current_depth(), 0);
+        for code_allowance in [3, 4] {
+            let mut limits = budget().limits();
+            limits.depth = outer + code_allowance;
+            let mut limited = Budget::new(limits);
+            let mut calls = 0;
+            let result = limited.with_depth_at_least(outer, |b| {
+                display::render_display(
+                    &prepared,
+                    &mut |embed, _, b| {
+                        calls += 1;
+                        assert_eq!(b.current_depth(), outer + 4);
+                        echo(embed, None, b)
+                    },
+                    b,
+                )
+            });
+            // At depth3 the Code wrapper itself cannot be admitted, so the
+            // callback must not run. At depth4 it runs, but its child cannot fit.
+            assert!(matches!(
+                result,
+                Err(ForeignRenderError::Render(RenderError::Stopped(
+                    StopReason::DepthLimit
+                )))
+            ));
+            assert_eq!(calls, usize::from(code_allowance == 4));
+            assert_eq!(limited.poll(), Err(StopReason::DepthLimit));
+            assert_eq!(limited.current_depth(), 0);
+        }
+    }
+    Ok(())
+}
