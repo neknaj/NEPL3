@@ -23,6 +23,7 @@ cons paragraph cons "{[本文/ほんぶん]/body} & <script>window.untrusted=1</
 cons paragraph cons "{Please/依頼標識} {{create/V} {{an/Det} {issue/N}/NP O}/VP} {{on/P} {GitHub/N}/PP}" nil
 cons paragraph cons "{{{long_annotation_scope/N}/NP}/VP}" nil
 cons paragraph cons parallel cons variant en sentence cons text "The fraction " cons math Math frac 1 2 cons text " represents one of two equal parts of a whole." nil cons variant ja sentence cons text "分数 " cons math Math frac 1 2 cons text " は、全体を等しく二つに分けたうちの一つを表す。" nil nil nil
+cons paragraph cons sentence cons anchor reference text "参照位置" cons text " " cons link external "https://example.org/source?a=1&b=2" ruby text "出典" text "しゅってん" cons text " " cons ref reference text "参照位置へ" nil nil
 cons display Math label frac 3 4 Sentence "{[数/すう]/number}"
 cons rawcode some "text" "example code"
 cons rawcode none "long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_"
@@ -46,6 +47,10 @@ MEASURE = """() => {
   for (const text of document.querySelectorAll('mtext')) {
     if (getComputedStyle(text).fontFamily !== getComputedStyle(document.querySelector('.nepl-doc')).fontFamily) throw Error('Math annotation lost prose font');
   }
+  const external = document.querySelector('a[href^="https://example.org/source"]');
+  if (!external || external.getAttribute('href') !== 'https://example.org/source?a=1&b=2') throw Error('External URL lost or altered');
+  const local = document.querySelector('a[href="#n-7265666572656e6365"]');
+  if (!local || !document.getElementById('n-7265666572656e6365')) throw Error('Local reference lost');
   const ruby = document.querySelector('.nepl-ruby');
   for (const node of document.querySelectorAll('.nepl-ruby,.nepl-anno')) {
     const base = node.querySelector(':scope > .nepl-base').getBoundingClientRect();

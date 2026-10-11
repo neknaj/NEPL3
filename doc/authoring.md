@@ -88,3 +88,19 @@ Rubyは本文に読みを付与する構造である。日本語の振り仮名�
 RustのDoc APIで既存部分を組み替える場合は、正式にlowerした`DocumentSyntax`から親子参照を辿って対象を選び、`fragment(DocRoot, registry, budget, admission)`で抽出する。抽出は元文書全体を検証し、到達可能なnodeとembedを再配置する。共有参照とForeignClosureを保持し、Source・Origin・View・source mapは元identityのまま保持する。このため、費用と保持するsource集合は元文書全体に依存する。
 
 抽出後に型付きconstructorでListItemなどを構築し、既存printerへ渡す。sourceの局所編集には、元モデルが示すSpanと元byte列のdigestを持つ`TextEdit`を`SourceStore::apply`へ渡す。変更後の位置は新しいsnapshotの再parseで確定し、参照解決やprepareも改めて行う。実行例は[Doc printer統合試験](../tools/tests/doc/print.rs)の`paragraph_edit_uses_model_span_and_preserves_surrounding_source`にある。
+
+## URLと参照
+
+外部URLはDocの明示的なLinkとして記述する。literal内のURLは通常のTextであり、自動リンク化しない。
+
+```text
+sentence cons link external "https://example.org/docs?a=1&b=2" text "参考資料" nil
+```
+
+通常のHTML exportとSVG付きHTML exportで利用でき、labelにはRuby・AnnoなどのInlineを置ける。http・https・mailtoの共通URI規則に従い、危険なschemeや不正なescapeは生成前に拒否する。URLを取得したり、参照先の閲覧権限や公開可否を保証したりする機能ではない。
+
+同一文書内では `ref introduction text "はじめに"` の参照先を `section introduction` または `anchor introduction` で定義する。文書間参照は `link page "guide" some "usage" text "使い方"`、相対参照は `link relative "../guide.nepld" some "usage" text "使い方"` を用い、登録済みPageSetから生成する。未登録の文書や存在しないfragmentを推測して成功にしない。
+
+独立したSentence言語の外部リンク構文は `link "https://example.org/" text "参考資料"` であり、Docの `link external` と引数を混同しない。
+
+Markdownは出力profileごとに対応範囲が異なる。annotated・footnotesの外部Linkは既存対応であり、plain MarkdownのLinkと各Markdown profileのlocal ref/anchorは未対応のため明示エラーになる。HTMLでの対応をMarkdown全般の対応と読み替えない。

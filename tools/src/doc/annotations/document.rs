@@ -43,6 +43,9 @@ pub enum Error<E> {
     },
     NeedsResolution(DocPreparationPlan),
     LanguageOptions,
+    InvalidExternalUri {
+        node: u64,
+    },
     MissingVariant {
         node: u64,
     },
@@ -164,6 +167,7 @@ fn preparation_error<C: FoundationValueCodec>(
     match error {
         LocalPreparationError::Stopped(reason) => Error::Stopped(reason),
         LocalPreparationError::NeedsResolution(plan) => Error::NeedsResolution(plan),
+        LocalPreparationError::InvalidExternalUri { node } => Error::InvalidExternalUri { node },
         LocalPreparationError::Language => Error::LanguageOptions,
         LocalPreparationError::MissingVariant { node } => Error::MissingVariant { node },
         LocalPreparationError::ListStart { node, start } => Error::ListStart { node, start },

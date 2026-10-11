@@ -195,3 +195,60 @@ fn hidden_unsafe_links_are_rejected_and_other_requirements_remain() -> Result<()
     );
     Ok(())
 }
+
+#[test]
+fn display_external_links_preserve_hidden_validation_and_restricted_apis() -> Result<(), String> {
+    use nepl3_core::budget::{Budget, StopReason};
+    use nepl3_doc_html::{LocalPreparationError, code, display};
+    let (compiled, mut request) = request(
+        r#"article en "Links" body cons paragraph cons parallel cons variant en "Visible" cons variant ja sentence cons link external "https://example.org/" text "Hidden" nil nil nil nil"#,
+    )?;
+    let registry = &compiled.doc.registry;
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
+    let options = RenderOptions {
+        parallel: ParallelMode::Single {
+            language: "en".into(),
+            fallbacks: vec![],
+        },
+    };
+    let document = &request.set.pages[0].document;
+    assert!(
+        display::prepare_display(document, &options, registry, &mut codec, &mut budget()).is_ok()
+    );
+    assert!(matches!(
+        nepl3_doc_html::prepare_local(document, &options, registry, &mut codec, &mut budget()),
+        Err(LocalPreparationError::NeedsResolution(_))
+    ));
+    assert!(matches!(
+        code::prepare_code(document, &options, registry, &mut codec, &mut budget()),
+        Err(LocalPreparationError::NeedsResolution(_))
+    ));
+    let mut limits = budget().limits();
+    limits.work = 0;
+    let mut stopped = Budget::new(limits);
+    assert!(matches!(
+        display::prepare_display(document, &options, registry, &mut codec, &mut stopped),
+        Err(LocalPreparationError::Stopped(StopReason::WorkLimit))
+    ));
+    assert_eq!(stopped.poll(), Err(StopReason::WorkLimit));
+    let node = request.set.pages[0]
+        .document
+        .value
+        .nodes
+        .iter()
+        .position(|n| matches!(n.kind, DocKind::Link { .. }))
+        .ok_or("link")?;
+    if let DocKind::Link {
+        target: LinkTarget::External { uri },
+        ..
+    } = &mut request.set.pages[0].document.value.nodes[node].kind
+    {
+        *uri = "javascript:alert(1)".into();
+    }
+    assert!(
+        matches!(display::prepare_display(&request.set.pages[0].document, &options, registry, &mut codec, &mut budget()), Err(LocalPreparationError::InvalidExternalUri { node: n }) if n == node as u64)
+    );
+    Ok(())
+}
