@@ -113,6 +113,8 @@ fn operation_admission_meters_only_owner_catalog_growth() -> Result<(), String> 
             usages.push(b.usage());
         }
         let mut expected = usages[0];
+        // Each extra candidate compares padding.NN (10 bytes), owner (5),
+        // and the helper's fixed candidate/revision charge (9 Work).
         expected.work += 32 * (10 + 5 + 9);
         assert_eq!(usages[1], expected, "case {case}");
     }
@@ -187,6 +189,53 @@ fn operation_schema_identity_stops_and_failed_proofs_remain_explicit() -> Result
             )),
         }
         assert_eq!(stopped.poll(), Err(StopReason::WorkLimit));
+    }
+    Ok(())
+}
+
+#[test]
+fn operation_admission_accepts_exact_work_and_preserves_one_short_stop() -> Result<(), String> {
+    for case in 0..3 {
+        let (registry, request) = fixture(32).map_err(|e| format!("{e:?}"))?;
+        let sources = SourceStore::default();
+        let admit = |b: &mut Budget| -> Result<(), String> {
+            let result: OperationResult<TypedValue> = OperationResult::Invalid {
+                partial: None,
+                report: Report::default(),
+            };
+            match case {
+                0 => request
+                    .validate_input(&request.operation, &registry, b)
+                    .map_err(|e| format!("{e:?}")),
+                1 => result
+                    .validate_for(&request.operation, &registry, &sources, b)
+                    .map_err(|e| format!("{e:?}")),
+                _ => ValidatedResult::new(result, &request.operation, &registry, &sources, b)
+                    .map(|_| ())
+                    .map_err(|e| format!("{e:?}")),
+            }
+        };
+        let mut measured = budget();
+        admit(&mut measured)?;
+        let work = measured.usage().work;
+        assert!(work > 0);
+        let mut exact = Budget::new(Limits {
+            work,
+            ..budget().limits()
+        });
+        admit(&mut exact)?;
+        assert_eq!(exact.usage(), measured.usage());
+        assert_eq!(exact.poll(), Ok(()));
+        let mut short = Budget::new(Limits {
+            work: work - 1,
+            ..budget().limits()
+        });
+        assert!(admit(&mut short).is_err(), "case {case}");
+        assert_eq!(short.poll(), Err(StopReason::WorkLimit));
+        let prefix = short.usage();
+        assert!(admit(&mut short).is_err());
+        assert_eq!(short.usage(), prefix);
+        assert_eq!(short.poll(), Err(StopReason::WorkLimit));
     }
     Ok(())
 }
