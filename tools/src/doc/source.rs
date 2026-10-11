@@ -100,8 +100,21 @@ pub fn with_named_input_limits<T>(
     let packages: Vec<_> = std::iter::once(&compiled.doc.package)
         .chain(compiled.others.iter())
         .collect();
-    // Fixture implementation identity binds all code selected by this host.
-    let implementation_for = |_: &nepl3_core::value::OperationRef| host_identity();
+    // The requirements below come from packages. Registrations must instead
+    // come from this independently constructed host and its real callbacks.
+    let implementation = host_identity();
+    let mut b = Budget::new(parse_limits);
+    let mut a = SourceAdmission::default();
+    let source = SourceSnapshot::new(
+        SourceId(source_name.into()),
+        0,
+        format!("memory:{source_name}"),
+        input.as_bytes().to_vec(),
+        &mut b,
+    )
+    .map_err(err)?;
+    let (prefix, mut host) = host_for_source(&source, r, implementation, &mut b)?;
+    let providers = host.provider_catalog(&mut b).map_err(err)?;
     let mut operations = Vec::new();
     for operation in packages
         .iter()
@@ -111,21 +124,12 @@ pub fn with_named_input_limits<T>(
             operations.push(operation.clone());
         }
     }
-    let providers: Vec<_> = operations
-        .iter()
-        .map(|operation| ProviderImplementation {
-            provider: operation.name.clone(),
-            revision: 1,
-            implementation_digest: implementation_for(operation),
-            operations: vec![operation.clone()],
-        })
-        .collect();
     let requirements = operations
         .iter()
         .map(|operation| ProviderRequirement {
             provider: operation.name.clone(),
             revision: 1,
-            implementation_digest: implementation_for(operation),
+            implementation_digest: implementation,
             operation: operation.clone(),
         })
         .collect();
@@ -195,17 +199,18 @@ pub fn with_named_input_limits<T>(
             &mut budget(),
         )
         .map_err(err)?;
-    let mut b = Budget::new(parse_limits);
-    let mut a = SourceAdmission::default();
-    let source = SourceSnapshot::new(
-        SourceId(source_name.into()),
-        0,
-        format!("memory:{source_name}"),
-        input.as_bytes().to_vec(),
+    let tree = crate::source::driver::parse(
+        &source,
+        &resolved,
+        "Doc",
+        category,
         &mut b,
-    )
-    .map_err(err)?;
-    let tree = parse_source_route(&source, &resolved, "Doc", category, &mut b, &mut a, native)?;
+        &mut a,
+        native,
+        "doc-parse",
+        &prefix,
+        &mut host,
+    )?;
     let checked = tree
         .validate(&resolved, &mut b, &mut a)
         .map_err(|e| format!("tree validation: {e:?}; usage={:?}", b.usage()))?;
@@ -232,12 +237,7 @@ pub fn parse_source_route(
     a: &mut SourceAdmission,
     native: bool,
 ) -> Result<nepl3_engine::recovery::ParseTree, String> {
-    let prefix = crate::source::driver::reservation_prefix(source, b)?;
-    b.charge(Resource::AllocationUnits, prefix.len() as u64)
-        .map_err(err)?;
-    let mut host =
-        crate::doc::host::native(resolved.registry(), host_identity(), prefix.clone(), b)
-            .map_err(err)?;
+    let (prefix, mut host) = host_for_source(source, resolved.registry(), host_identity(), b)?;
     crate::source::driver::parse(
         source,
         resolved,
@@ -250,6 +250,20 @@ pub fn parse_source_route(
         &prefix,
         &mut host,
     )
+}
+
+fn host_for_source<'a>(
+    source: &SourceSnapshot,
+    registry: &'a nepl3_core::schema::SchemaRegistry,
+    implementation: Digest,
+    b: &mut Budget,
+) -> Result<(String, crate::source::host::NativeHost<'a>), String> {
+    let prefix = crate::source::driver::reservation_prefix(source, b)?;
+    b.charge(Resource::AllocationUnits, prefix.len() as u64)
+        .map_err(err)?;
+    let host =
+        crate::doc::host::native(registry, implementation, prefix.clone(), b).map_err(err)?;
+    Ok((prefix, host))
 }
 
 /// Desktop development-host allowance. `nodes` includes cumulative typed-value

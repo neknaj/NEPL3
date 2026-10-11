@@ -10,6 +10,8 @@ use nepl3_core::{
 use nepl3_engine::{profile::*, tree::ValidatedParseTree};
 use nepl3_grammar_core::compile::package::CompiledLanguage;
 use nepl3_reader::builtin::{BuiltinReader, provider};
+#[cfg(test)]
+mod tests;
 fn err(e: impl core::fmt::Debug) -> String {
     format!("{e:?}")
 }
@@ -49,7 +51,7 @@ pub fn with_tree<T>(
         },
     ];
     let mut host = NativeHost::new(r, implementation, prefix.clone(), readers, b).map_err(err)?;
-    let providers = host.providers().to_vec();
+    let providers = host.provider_catalog(b).map_err(err)?;
     let profile = ParseProfile {
         id: "sentence-source".into(),
         languages: vec![LanguageRegistration {
