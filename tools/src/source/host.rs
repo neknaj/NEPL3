@@ -61,18 +61,39 @@ impl<'a> NativeHost<'a> {
                     * (operation.name.len() + operation.schema.package.len() + 40) as u64,
             )?;
             let descriptor = registry
-                .descriptor(&operation.schema)
+                .descriptor_with_budget(&operation.schema, budget)?
                 .ok_or(ParseError::Context)?;
             budget.charge(
                 Resource::Work,
                 descriptor.operations.len() as u64 * (operation.name.len() as u64 + 1),
             )?;
-            if !descriptor
+            let signature = descriptor
                 .operations
                 .iter()
-                .any(|op| op.name == operation.name)
-            {
-                return Err(ParseError::Context);
+                .find(|op| op.name == operation.name)
+                .ok_or(ParseError::Context)?;
+            // This callback has the typed Reader ABI. A matching operation
+            // name alone cannot admit another request/reply envelope.
+            for (ty, expected) in [
+                (&signature.input, "ReadRequest"),
+                (&signature.output, "ReadReply"),
+            ] {
+                budget.charge(Resource::Work, 1)?;
+                let nepl3_core::schema::TypeDescriptor::Named(reference) = ty else {
+                    return Err(ParseError::Context);
+                };
+                budget.charge(
+                    Resource::Work,
+                    (reference.package.len() as u64)
+                        .saturating_add(reference.name.len() as u64)
+                        .saturating_add(9),
+                )?;
+                if reference.package != nepl3_reader::schema::PACKAGE
+                    || reference.revision != nepl3_reader::schema::REVISION
+                    || reference.name != expected
+                {
+                    return Err(ParseError::Context);
+                }
             }
             if providers
                 .iter()

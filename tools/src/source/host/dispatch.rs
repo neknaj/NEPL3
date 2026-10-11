@@ -218,3 +218,252 @@ fn explicit_dispatch_distinguishes_same_named_operations_and_rejects_forged_bind
     ));
     Ok(())
 }
+
+#[test]
+fn registration_meters_registry_search_and_preserves_schema_identity() -> Result<(), String> {
+    let registry = |padding: usize| -> Result<(SchemaRegistry, OperationRef), String> {
+        let mut r = SchemaRegistry::default();
+        for d in [
+            nepl3_core::schema::foundation::descriptor(&mut b()).map_err(err)?,
+            nepl3_reader::schema::descriptor(&mut b()).map_err(err)?,
+        ] {
+            r.register(d.reference(&mut b()).map_err(err)?, d, &mut b())
+                .map_err(err)?;
+        }
+        for i in 0..padding {
+            let d = SchemaDescriptor {
+                package: format!("test.padding.{i}"),
+                revision: 1,
+                types: vec![],
+                operations: vec![],
+            };
+            r.register(d.reference(&mut b()).map_err(err)?, d, &mut b())
+                .map_err(err)?;
+        }
+        let named = |name: &str| {
+            TypeDescriptor::Named(TypeRef {
+                package: "nepl3.reader".into(),
+                revision: 1,
+                name: name.into(),
+            })
+        };
+        let d = SchemaDescriptor {
+            package: "test.registration".into(),
+            revision: 1,
+            types: vec![],
+            operations: vec![OperationDescriptor {
+                name: "read".into(),
+                input: named("ReadRequest"),
+                output: named("ReadReply"),
+                pure: true,
+            }],
+        };
+        let schema = d.reference(&mut b()).map_err(err)?;
+        r.register(schema.clone(), d, &mut b()).map_err(err)?;
+        r.finalize(&mut b()).map_err(err)?;
+        Ok((
+            r,
+            OperationRef {
+                schema,
+                name: "read".into(),
+            },
+        ))
+    };
+    let (small, operation) = registry(0)?;
+    let (large, same_operation) = registry(32)?;
+    assert_eq!(operation, same_operation);
+    let make = |r: &SchemaRegistry, operation: OperationRef, budget: &mut Budget| {
+        NativeHost::new(
+            r,
+            Digest::of(b"registration-test"),
+            "registration:".into(),
+            vec![NativeReader {
+                operation,
+                read: first,
+            }],
+            budget,
+        )
+        .map(|_| ())
+    };
+    let mut small_budget = b();
+    make(&small, operation.clone(), &mut small_budget).map_err(err)?;
+    let mut large_budget = b();
+    make(&large, operation.clone(), &mut large_budget).map_err(err)?;
+    // Each added schema is examined before the target. The registry lookup
+    // charges both package lengths plus revision/comparison overhead (9).
+    let extra: u64 = (0..32)
+        .map(|i| {
+            format!("test.padding.{i}").len() as u64 + operation.schema.package.len() as u64 + 9
+        })
+        .sum();
+    assert_eq!(large_budget.usage().work - small_budget.usage().work, extra);
+    assert_eq!(
+        large_budget.usage().allocation_units,
+        small_budget.usage().allocation_units
+    );
+    let mut limited = Budget::new(Limits {
+        work: small_budget.usage().work,
+        ..b().limits()
+    });
+    assert!(matches!(
+        make(&large, operation.clone(), &mut limited),
+        Err(ParseError::Stopped(
+            nepl3_core::budget::StopReason::WorkLimit
+        ))
+    ));
+    assert_eq!(
+        limited.poll(),
+        Err(nepl3_core::budget::StopReason::WorkLimit)
+    );
+    assert_eq!(limited.usage().allocation_units, 0);
+    let mut forged = operation;
+    forged.schema.digest = Digest::of(b"different schema");
+    assert!(matches!(
+        make(&large, forged, &mut b()),
+        Err(ParseError::Context)
+    ));
+    Ok(())
+}
+
+#[test]
+fn registration_rejects_non_read_envelopes_without_restricting_purity() -> Result<(), String> {
+    let named = |package: &str, revision: u64, name: &str| {
+        TypeDescriptor::Named(TypeRef {
+            package: package.into(),
+            revision,
+            name: name.into(),
+        })
+    };
+    let input = named("nepl3.reader", 1, "ReadRequest");
+    let output = named("nepl3.reader", 1, "ReadReply");
+    let cases = [
+        (input.clone(), output.clone(), true, true),
+        (input.clone(), output.clone(), false, true),
+        (
+            named("test.other.reader", 1, "ReadRequest"),
+            output.clone(),
+            true,
+            false,
+        ),
+        (
+            input.clone(),
+            named("nepl3.reader", 2, "ReadReply"),
+            true,
+            false,
+        ),
+        (TypeDescriptor::Unit, output.clone(), true, false),
+        (input.clone(), TypeDescriptor::Unit, true, false),
+        (
+            named("nepl3.reader", 1, "TransformRequest"),
+            output.clone(),
+            true,
+            false,
+        ),
+        (
+            TypeDescriptor::Option(Box::new(input.clone())),
+            output.clone(),
+            true,
+            false,
+        ),
+        (
+            input.clone(),
+            TypeDescriptor::List(Box::new(output.clone())),
+            true,
+            false,
+        ),
+    ];
+    for (index, (input, output, pure, accepted)) in cases.into_iter().enumerate() {
+        let mut r = SchemaRegistry::default();
+        for d in [
+            nepl3_core::schema::foundation::descriptor(&mut b()).map_err(err)?,
+            nepl3_reader::schema::descriptor(&mut b()).map_err(err)?,
+        ] {
+            r.register(d.reference(&mut b()).map_err(err)?, d, &mut b())
+                .map_err(err)?;
+        }
+        for (package, revision) in [("test.other.reader", 1), ("nepl3.reader", 2)] {
+            let d = SchemaDescriptor {
+                package: package.into(),
+                revision,
+                types: ["ReadRequest", "ReadReply"]
+                    .into_iter()
+                    .map(|name| NamedType {
+                        name: name.into(),
+                        shape: TypeShape::Record { fields: vec![] },
+                        constraints: vec![],
+                    })
+                    .collect(),
+                operations: vec![],
+            };
+            r.register(d.reference(&mut b()).map_err(err)?, d, &mut b())
+                .map_err(err)?;
+        }
+        let descriptor = SchemaDescriptor {
+            package: format!("test.envelope.{index}"),
+            revision: 1,
+            types: vec![],
+            operations: vec![OperationDescriptor {
+                name: "custom-read".into(),
+                input,
+                output,
+                pure,
+            }],
+        };
+        let schema = descriptor.reference(&mut b()).map_err(err)?;
+        r.register(schema.clone(), descriptor, &mut b())
+            .map_err(err)?;
+        r.finalize(&mut b()).map_err(err)?;
+        let make = |budget: &mut Budget| {
+            NativeHost::new(
+                &r,
+                Digest::of(b"envelope-test"),
+                "envelope:".into(),
+                vec![NativeReader {
+                    operation: OperationRef {
+                        schema: schema.clone(),
+                        name: "custom-read".into(),
+                    },
+                    read: first,
+                }],
+                budget,
+            )
+        };
+        let mut budget = b();
+        let result = make(&mut budget);
+        if accepted {
+            let host = result.map_err(err)?;
+            assert_eq!(host.providers().len(), 1);
+            // With one provider, no later Work charge follows the envelope
+            // comparison. One less than success stops in the output check.
+            let mut limited = Budget::new(Limits {
+                work: budget.usage().work - 1,
+                ..b().limits()
+            });
+            assert!(matches!(
+                make(&mut limited),
+                Err(ParseError::Stopped(
+                    nepl3_core::budget::StopReason::WorkLimit
+                ))
+            ));
+            assert_eq!(limited.usage().allocation_units, 0);
+            assert_eq!(
+                limited.poll(),
+                Err(nepl3_core::budget::StopReason::WorkLimit)
+            );
+            let mut cancelled = b();
+            cancelled.cancel();
+            let before = cancelled.usage();
+            assert!(matches!(
+                make(&mut cancelled),
+                Err(ParseError::Stopped(
+                    nepl3_core::budget::StopReason::Cancelled
+                ))
+            ));
+            assert_eq!(cancelled.usage(), before);
+        } else {
+            assert!(matches!(result, Err(ParseError::Context)), "case {index}");
+            assert_eq!(budget.usage().allocation_units, 0);
+        }
+    }
+    Ok(())
+}
