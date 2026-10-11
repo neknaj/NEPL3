@@ -278,7 +278,7 @@ fn generate_impl(
         }
         let manifest = serde_json::to_string_pretty(&serde_json::json!({
             "format":"nepl3.local-doc-export/1",
-            "scope":"Doc with retained Code and Math display; unresolved external links and assets require explicit resolution",
+            "scope":"Doc with retained Code and Math display and validated external URLs; page/relative links and assets require explicit resolution",
             "source_sha256":digest(input.as_bytes()),
             "profile_sha256":digest_hex(profile.digest()),
             "doc_schema_sha256":digest_hex(compiled.doc.package.schema.digest),

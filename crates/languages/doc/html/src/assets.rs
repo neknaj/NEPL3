@@ -106,7 +106,13 @@ pub fn render_svg_display<E>(
     adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
     budget: &mut Budget,
 ) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
-    crate::build::render_prepared_with_foreign(&prepared.0, &[], adapter, budget, true)
+    crate::build::render_prepared_with_foreign(
+        &prepared.0,
+        &prepared.0.external_links,
+        adapter,
+        budget,
+        true,
+    )
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -145,9 +151,16 @@ fn prepare_svg_impl<'a, C: FoundationValueCodec>(
         }
     }
     let mut images = Vec::new();
+    let mut links = Vec::new();
     for req in &plan.requirements {
         budget.charge(Resource::Work, 1)?;
         if matches!(req, prepare::DocRequirement::Foreign { kind, .. } if display.is_some_and(|math| crate::display::selected(*kind, math)))
+        {
+            continue;
+        }
+        if display == Some(true)
+            && crate::display::admit_external(req, &mut links, budget)
+                .map_err(AssetError::Preparation)?
         {
             continue;
         }
@@ -209,6 +222,7 @@ fn prepare_svg_impl<'a, C: FoundationValueCodec>(
         crate::prepare::prepare_rendering(document, options, plan.document_digest, budget)
             .map_err(AssetError::Preparation)?;
     prepared.images = images;
+    prepared.external_links = links;
     Ok(prepared)
 }
 pub fn render_svg(

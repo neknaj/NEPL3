@@ -244,3 +244,47 @@ fn ordinary_math_cli_modes_and_failed_batch_are_atomic() -> Result<(), Box<dyn s
     fs::remove_dir_all(root)?;
     Ok(())
 }
+
+#[test]
+fn urls_export_from_the_cli_and_invalid_urls_publish_nothing()
+-> Result<(), Box<dyn std::error::Error>> {
+    let root = std::env::temp_dir().join(format!("nepl3-url-export-{}", std::process::id()));
+    fs::create_dir(&root)?;
+    let source = root.join("source.nepld");
+    let binary = env!("CARGO_BIN_EXE_nepl3-tools");
+    fs::write(
+        &source,
+        r#"article en "Links" body cons paragraph cons sentence cons link external "https://example.org/?a=1&b=2" anno text "Source" cons text "reference" nil cons text " " cons math Math frac 1 2 nil nil nil"#,
+    )?;
+    for css in ["external", "inline"] {
+        let output = root.join(css);
+        let run = Command::new(binary)
+            .args(["doc-html", "export", "--css", css])
+            .arg(&source)
+            .arg(&output)
+            .output()?;
+        assert!(
+            run.status.success(),
+            "{}",
+            String::from_utf8_lossy(&run.stderr)
+        );
+        let html = fs::read_to_string(output.join("document.html"))?;
+        assert!(html.contains("href=\"https://example.org/?a=1&amp;b=2\""));
+        assert!(html.contains("<mfrac>"));
+        assert!(html.contains("reference"));
+    }
+    fs::write(
+        &source,
+        r#"article en "Links" body cons paragraph cons sentence cons link external "javascript:alert(1)" text "label" nil nil nil"#,
+    )?;
+    let invalid = root.join("invalid");
+    let run = Command::new(binary)
+        .args(["doc-html", "export"])
+        .arg(&source)
+        .arg(&invalid)
+        .output()?;
+    assert!(!run.status.success());
+    assert!(!invalid.exists());
+    fs::remove_dir_all(root)?;
+    Ok(())
+}
