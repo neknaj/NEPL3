@@ -1,6 +1,6 @@
 # 複数言語・構造化文章・対象付き注釈の統合案
 
-識別子: `nepl3-multilanguage-hca-design-20260913-r7`。
+識別子: `nepl3-multilanguage-hca-design-20261011-r8`。
 状態: **設計草案、実装未着手**。文書のmergeは実装開始や受入完了を意味しない。
 2026-09-13の統合提案r1と、その後のコメント設計訂正を統合する。
 最後の訂正を優先し、対象を明示する`annotate Sentence target`を標準とする。
@@ -12,7 +12,10 @@ Sentence/Inlineは独立したNEPL3sentenceが所有し、Aの注釈とDの本�
 NEPL3h草案はPR #158の `8ff534b387d8c1f8eea439db65ed1b6759c353e2`。
 今回のローカル実装照合はmainの `d8ca89264ca17ebe6c4aba3874cac2775c15b98d` を用いた。
 この文書を置くbranchの元基準や、ユーザーが行った外部調査と混同しない。
-GHC/CircuitGameの再build・外部ソースの再監査は今回行っていない。
+GHCの再build・外部ソースの再監査は今回行っていない。
+2026-10-11のC方針訂正ではCircuitGameの公開source
+[`3359eff0b5e852f0321a3f101799bf5db2ddb57f`](https://github.com/neknaj/circuitgame/tree/3359eff0b5e852f0321a3f101799bf5db2ddb57f)
+を読取り確認した。CircuitGame自体のbuild・実行・binary size測定は行っていない。
 
 ## 1. NEPL3の目的・中核契約と各言語の責務
 
@@ -81,7 +84,7 @@ source全体の意味解析が完了するまでparseできない、という循
 | 用途別contract package / consumer / adapter | 個別producerの意味契約、生成slot、有限の型付き入出力 |
 | NEPL3h | 独立GHC frontend、Haskell固有の型・評価・module意味 |
 | 別のNEPLプログラミング言語 | その言語の意味論と、実装すると宣言したInterop操作 |
-| NEPL3c | typed signal bundle、primitive、部品合成、一般回路グラフ、帰還・伝搬 |
+| NEPL3c | CircuitGameの逐次回路モデルと小型VMを継承し、NEPL3記法・相互埋め込み・typed signal bundle・symmetryを扱う |
 | NEPL3sentence | 文書構造から独立したSentence/Inline、Ruby/Anno等の構造化文章 |
 | NEPL3a | NEPL3sentenceの文章を対象syntaxへ付与する注釈契約と共通surface pattern |
 | NEPL3d | Article/Section/Paragraph/Table等の文書構造 |
@@ -214,24 +217,74 @@ GHC build・第2言語・実descriptor digestは未選定で、架空の固定�
 | primitive | 通常packageの有限Boolean関数、完全真理値表。名前norだけで認証しない |
 | basis検査 | Entry内の明示dead instanceを含む実primitive closureを許可ID集合と照合 |
 | flatten | moduleを展開して使用primitiveを保存。別basisへの置換は別操作 |
-| 同値 | Boolean関数、gate構造、unit-delay traceの保証を分ける |
+| 同値 | Boolean関数、gate構造、順序付き実行trace、delay付き回路の観測等価を分ける |
 
 Signal<T>は接続、Value<T>は時点の観察値であり、Haskell Bool/list/recordと暗黙変換しない。
 このCのsource import制限は前方確定原則から導かれるNEPL3共通規則ではない。
 別言語は循環importをSCC等で解決する規則を持てるが、各出現のshapeは前方確定する必要がある。
 structの型identityと公開layout閉包は、別言語のSDKでも同じ契約packageに解決する。
 module/source unit/fileを区別し、manifestでnamespaceとsource集合を明示する。
-各fileを独立parseしてunit宣言を結合し、列挙順で意味を変えない。
+各fileを独立parseしてunit宣言を結合する。manifestのsource列挙順と、回路本体が
+意味として持つ実行順序を区別し、前者で後者を暗黙に並べ替えない。
 通常importとpublic/privateを用い、parser stateを引き継ぐtext includeを既定にしない。
 
-simulationは全primitiveが更新前snapshotを参照する同時unit-delayとする。
-wire/struct/module境界の遅延は0。初期値はLogic3のX、zeroedは明示seedだけである。
-X入力のBoolean補完が全て同じ出力なら既知、異なればX。未知値間の相関を追う保証はしない。
-observeは進めず、driveは保持入力を更新、advanceは段数だけ進める。
-settleはStableKnown/StableUnknown/PeriodicKnown/PeriodicUnknown/Limitを分け、
-内部stateを完全比較する。Limitを発振、X固定点を物理的安定と呼ばない。
-truth testは組合せ性を検査して安定出力を比較し、trace testはseedと操作列を明示する。
-analog遅延、metastability、FPGA合成の保証ではない。
+### 5.1 CircuitGameから継承するものと変更するもの
+
+2026-10-11のユーザー方針を優先する。NEPL3cはCircuitGameの記法をNEPL3の共通規律へ
+置き換え、再帰的な相互埋め込みとsymmetryの扱いを整えた言語とする。
+CircuitGameの旧source、binary format、APIに対する後方互換層は作らない。
+型検査、struct、部品合成、明示的なprimitive選択、Source/Originの追跡はこの方針と両立させる。
+
+通常の実行は、回路本体の順序付きprimitive列を上から下へ評価し、更新した値を
+後続primitiveが同じstep内で参照する。帰還を含む場合、実行順は意味の一部であり、
+graphが同じという理由だけで命令列を並べ替えない。module展開もこの順序を保存する。
+r7の「全primitiveを更新前snapshotから同時unit-delayで更新する」という既定方針と、
+全source順の変更に対するtrace不変条件は撤回する。順序が変わらない独立宣言の並べ替えと、
+実行列の並べ替えを同一視しない。
+例えば初期状態が`q = nq = 0`で、`q := NOR(nq,nq)`、`nq := NOR(q,q)`の順に
+評価すると一step後は`(q,nq) = (1,0)`となる。逆順なら`(0,1)`、同時snapshot更新なら
+`(1,1)`となる。この例は実行モデルを区別する受入例であり、新しいsource文法の定義ではない。
+
+symmetryは逐次実行と区別して、同時に扱う範囲・参照する状態・結果を反映する時点を
+明示する設計対象とする。通常の逐次区間まで同時更新へ変更する理由にしない。
+具体的なsurface form、区間の入れ子、外部への書込み、停止時の原子性、flatten時の
+境界保存は未決であり、正式schemaと実装を採用する前に契約と試験をそろえる。
+旧VMのsymmetry分岐が存在することを、これらの設計や互換性の証明に使わない。
+
+CircuitGameの確認済み実装では、VMはNOR入力番号の組とbit状態を持ち、逐次区間では
+その場で状態を更新する。symmetryのsnapshotは逐次区間の終了後に取得される。
+一方、compilerはsymmetry列を空で生成し、VMの混在時の書込み位置には重なりがある。
+この未接続部分や不整合をNEPL3cへ継承しない。
+確認箇所は[VM](https://github.com/neknaj/circuitgame/blob/3359eff0b5e852f0321a3f101799bf5db2ddb57f/src/rust/vm/mod.rs)と
+[compiler](https://github.com/neknaj/circuitgame/blob/3359eff0b5e852f0321a3f101799bf5db2ddb57f/src/rust/compiler/compile.rs)である。
+
+### 5.2 小型VMと準備処理の境界
+
+小さなVMで実行できる性質を設計要件とする。parse、名前・型・schemaの検査、
+埋め込みの解決、struct layout、部品展開、symmetryの実行準備はcompile/prepare側で行う。
+VMへは検査済みの小さな実行表現と明示状態を渡し、VM内でNEPL3 sourceを再parseしたり、
+汎用言語評価器やhost I/Oを暗黙に起動したりしない。任意のguest実行は明示したadapterと
+operationの境界に置く。相互埋め込みの存在を、回路VMの汎用化と同一視しない。
+
+二値の逐次実行を基準とし、初期状態・入力変更・reset・観測・stepの境界を明示する。
+r7のLogic3/Xを必須とするsimulation案は、現時点では小型VMの必須契約にしない。
+未知値解析、settleや周期検出、物理的な遅延解析が必要な場合は、独立した明示操作として
+必要性と意味を設計する。これらを通常の一stepごとに暗黙実行しない。
+VMの小型化を理由に、外部から受け取った実行表現のschema・identity・index範囲・
+Source/Origin参照の入場検査や、prepareから実行までのBudget・取消し・型付き停止を省略しない。入場検査と通常stepの
+責務を分け、同じ検査を各gateで無条件に繰り返す設計を避ける。
+小型という主張はVM本体とcompile/prepare・loader・hostを分け、依存・状態量・一stepの
+処理量・対象ごとのcode sizeを測って検証する。現時点で数値の達成を宣言しない。
+
+### 5.3 delay付き回路との対応
+
+逐次プログラムから適切なdelayを持つ回路へ対応付ける性質を継承する。
+Boolean関数の一致、構造保存、逐次stepのtrace、物理時間における観測等価は別の保証である。
+初期状態、入力を変更できる時点、delayの条件、観測点と観測時刻を明示して、
+逐次実行の観測値と変換先回路の観測値が一致する条件を検証する。
+任意の帰還回路に任意のdelayを与えれば等価になるとは要求も保証もしない。
+NEPL3hdlへの合成はこの対応とは別の明示変換であり、暗黙にstate/nextへ置き換えない。
+詳細な変換契約と受入例は未確定であり、現在のruntimeに実装済みとは扱わない。
 
 ## 6. NEPL3sentence・A・Dの所有境界と注釈構文
 
@@ -372,7 +425,7 @@ NEPL lexical commentとして一括置換しない。履歴の破壊やGit rewri
 | NEPL3sentence / A / Doc / Math | 文章と付与関係の所有、payload、printer、HTML準備、hover | literal/prefix同値、参照閉包、本文と著者注釈の分離 |
 | reader / foundation / wire | comment-as-trivia削除、schema版更新 | enum/descriptor/codec一致、旧revision拒否、#負例 |
 | 各host category | Annotated<T>の明示受理と意味射影 | parse treeに残る、寄与不変、annotation関係と位置保存 |
-| C / HDL | 新Cの型・graph・遅延と旧同期意味の分離 | struct往復、driver、basis、帰還trace、移行保証subset |
+| C / HDL | 新Cの順序付き実行・symmetry・小型VM・delay対応と同期RTLの分離 | struct往復、driver、basis、順序・区間境界・帰還trace、条件付き観測等価 |
 | operation/provider・用途別契約 | 中立操作とbinding、生成slot、権限 | 二つの独立言語、GHC不在、同時利用、slot不正拒否 |
 | runner / UI | 全identity・停止・失効・原子的採用 | cancel後旧応答拒否、continuation移送拒否、部分結果未採用 |
 | planning / docs | tasks/dependencies/acceptanceと正本整合 | catalog検査、生成projection差分、未実行状態維持 |
@@ -394,8 +447,10 @@ Hのbrowser完成をC/Aのbuild条件にしない。次の受入はすべて未�
 5. 同じ操作を二つの独立したNEPLプログラミング言語で実装し、同時利用とbinding差し替えを実証する。
    同じ実装を二つのwrapperで呼ぶ試験では代替しない。第2言語の選定は未決である。
 6. GHC不在のC/A・代替producer、hygiene、型identity、0/巨大整数/空束、原子的失敗を検査する。
-7. Cのlayout往復、重複driver、alias cycle、dead instance、source順不変trace、set/hold/reset、
-   X固定点・周期・Limit、Boolean/構造/trace保証の区別を検査する。
+7. Cのlayout往復、重複driver、alias cycle、dead instance、順序付き実行とmodule展開、
+   symmetryの参照・反映境界、初期状態・入力変更・reset・停止を検査する。
+   小型VMの範囲と測定条件、Boolean/構造/逐次trace/delay付き観測等価を区別し、
+   旧CircuitGame互換経路を追加しない。未決のsymmetryとdelay契約を実装前に確定する。
 8. Hの非正格性・recursive let、Cabal相互import、native/cross/browserを個別に実行する。
 9. compile・lazy serialization・decode/checkを含む非停止/巨大出力、権限・cache/epochを検査する。
 10. C/AからDへの保存済み結果の文書化ではproducerやsimulationを起動しない。
@@ -408,6 +463,11 @@ source snapshot複製は作らない。[ADR 0008](0008-evidence-and-publisher-bo
 今回、正式schema・runtime・tasks・acceptanceの状態は更新しない。
 
 ## 9. 今回の訂正の範囲
+
+2026-10-11のr8は第5節のC実行方針を訂正し、対応する責務表・移行台帳・受入案を更新する。
+C/HDLの2系統分離は維持する。現行の旧Circuit規範・schema・runtime・task完了状態を
+この草案だけで変更せず、正式採用時の同時更新義務は第8節に従う。
+
 
 統合提案r1のD09/D22、14章、19章の保存付きtrivia、AC22の#:/旧#互換は、
 第6–7節の対象付きannotateと完全撤去へ置き換える。続く独立Comment/Commented案も撤回する。
