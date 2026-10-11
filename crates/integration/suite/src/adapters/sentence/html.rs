@@ -338,7 +338,52 @@ pub fn render_with_foreign<'a, E: From<StopReason>>(
     b: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> Result<RenderedSentence<'a>, RenderFailure<E>> {
-    let output = build_with_foreign(input, registry, adapter, b, admission)?;
+    let checked = input
+        .validate(registry, b, admission)
+        .map_err(Error::from)?;
+    render_checked_with_foreign(&checked, adapter, b)
+}
+/// Render with one shared codec admission ledger, including recursive guests.
+/// Input validation occurs here at the current depth before any callback; no
+/// caller-supplied validation proof can skip this operation's checks.
+pub fn render_with_foreign_codec<
+    'a,
+    C: nepl3_core::value_codec::FoundationValueCodec,
+    E: From<StopReason>,
+>(
+    input: &'a SentenceSyntax,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    adapter: &mut impl FnMut(
+        &nepl3_core::syntax::ForeignClosure,
+        EmbedRef,
+        &mut C,
+        &mut Budget,
+    ) -> Result<HtmlRequest, E>,
+    b: &mut Budget,
+) -> Result<RenderedSentence<'a>, RenderFailure<E>> {
+    let checked = input
+        .validate(registry, b, codec.source_admission())
+        .map_err(Error::from)?;
+    render_checked_with_foreign(
+        &checked,
+        &mut |closure, embed, b| adapter(closure, embed, codec, b),
+        b,
+    )
+}
+/// Reuse an operation-local proof of the exact immutable Sentence. The host can
+/// release the admission borrow before recursively rendering foreign guests,
+/// while continuing to use the same source ledger and cumulative Budget.
+fn render_checked_with_foreign<'a, E: From<StopReason>>(
+    checked: &nepl3_sentence_core::syntax::CheckedSyntax<'a>,
+    adapter: &mut impl FnMut(
+        &nepl3_core::syntax::ForeignClosure,
+        EmbedRef,
+        &mut Budget,
+    ) -> Result<HtmlRequest, E>,
+    b: &mut Budget,
+) -> Result<RenderedSentence<'a>, RenderFailure<E>> {
+    let output = build_checked_with_foreign(checked, adapter, b)?;
     validate(
         &output.markup.fragment,
         output.markup.slot,
@@ -383,9 +428,22 @@ fn build_with_foreign<'a, E: From<StopReason>>(
     b: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> Result<RenderedSentence<'a>, RenderFailure<E>> {
-    input
+    let checked = input
         .validate(registry, b, admission)
         .map_err(Error::from)?;
+    build_checked_with_foreign(&checked, adapter, b)
+}
+fn build_checked_with_foreign<'a, E: From<StopReason>>(
+    checked: &nepl3_sentence_core::syntax::CheckedSyntax<'a>,
+    adapter: &mut impl FnMut(
+        &nepl3_core::syntax::ForeignClosure,
+        EmbedRef,
+        &mut Budget,
+    ) -> Result<HtmlRequest, E>,
+    b: &mut Budget,
+) -> Result<RenderedSentence<'a>, RenderFailure<E>> {
+    b.poll()?;
+    let input = checked.syntax();
     let root = match input.value.root {
         Root::Sentence(r) => r.0,
         Root::Inline(r) => r.0,

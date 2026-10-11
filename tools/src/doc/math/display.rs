@@ -14,13 +14,22 @@ pub enum Preference {
 }
 
 impl Preference {
- pub fn as_str(self) -> &'static str { match self { Self::KaTeXPreferred => "katex-preferred", Self::MathMLOnly => "mathml-only" } }
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::KaTeXPreferred => "katex-preferred",
+            Self::MathMLOnly => "mathml-only",
+        }
+    }
 }
 impl core::str::FromStr for Preference {
- type Err = &'static str;
- fn from_str(value: &str) -> Result<Self, Self::Err> {
-  match value { "katex-preferred" => Ok(Self::KaTeXPreferred), "mathml-only" => Ok(Self::MathMLOnly), _ => Err("expected katex-preferred or mathml-only") }
- }
+    type Err = &'static str;
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value {
+            "katex-preferred" => Ok(Self::KaTeXPreferred),
+            "mathml-only" => Ok(Self::MathMLOnly),
+            _ => Err("expected katex-preferred or mathml-only"),
+        }
+    }
 }
 /// Why TeX was omitted, or the input still requiring a generation-side renderer.
 /// Ready does not mean KaTeX ran or that its output passed markup validation.
@@ -84,8 +93,12 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
     }
 
     /// Prepare the selected retained closure without reparsing its source.
-    pub fn prepare_guest(&mut self, guest: &nepl3_core::syntax::ForeignClosure,
-        display: nepl3_markup::mathml::Display, preference: Preference, budget: &mut Budget,
+    pub fn prepare_guest(
+        &mut self,
+        guest: &nepl3_core::syntax::ForeignClosure,
+        display: nepl3_markup::mathml::Display,
+        preference: Preference,
+        budget: &mut Budget,
     ) -> Result<PreparedDisplay, Error<C::Error>> {
         let mathml = self.render(guest, display, budget)?;
         self.prepare_rendered(mathml, preference, budget)

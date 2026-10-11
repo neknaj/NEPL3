@@ -66,7 +66,14 @@ pub fn prepare_svg_code<'a, C: FoundationValueCodec>(
     budget: &mut Budget,
 ) -> Result<PreparedSvgCodeArticle<'a>, AssetError<'a, C::Error>> {
     prepare_svg_impl(
-        document, options, inputs, mode, registry, codec, budget, Some(false),
+        document,
+        options,
+        inputs,
+        mode,
+        registry,
+        codec,
+        budget,
+        Some(false),
     )
     .map(PreparedSvgCodeArticle)
 }
@@ -74,15 +81,32 @@ pub fn prepare_svg_code<'a, C: FoundationValueCodec>(
 /// Static SVG assets composed with selected Code and Math display adapters.
 pub struct PreparedSvgDisplayArticle<'a>(pub(crate) crate::prepare::PreparedRendering<'a>);
 pub fn prepare_svg_display<'a, C: FoundationValueCodec>(
- document: &'a DocumentSyntax, options: &'a RenderOptions, inputs: &[SvgInput<'_>],
- mode: SvgMode, registry: &SchemaRegistry, codec: &mut C, budget: &mut Budget,
+    document: &'a DocumentSyntax,
+    options: &'a RenderOptions,
+    inputs: &[SvgInput<'_>],
+    mode: SvgMode,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
 ) -> Result<PreparedSvgDisplayArticle<'a>, AssetError<'a, C::Error>> {
- prepare_svg_impl(document, options, inputs, mode, registry, codec, budget, Some(true)).map(PreparedSvgDisplayArticle)
+    prepare_svg_impl(
+        document,
+        options,
+        inputs,
+        mode,
+        registry,
+        codec,
+        budget,
+        Some(true),
+    )
+    .map(PreparedSvgDisplayArticle)
 }
-pub fn render_svg_display<E>(prepared: &PreparedSvgDisplayArticle<'_>,
- adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>, budget: &mut Budget,
+pub fn render_svg_display<E>(
+    prepared: &PreparedSvgDisplayArticle<'_>,
+    adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
+    budget: &mut Budget,
 ) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
- crate::build::render_prepared_with_foreign(&prepared.0, &[], adapter, budget, true)
+    crate::build::render_prepared_with_foreign(&prepared.0, &[], adapter, budget, true)
 }
 
 #[allow(clippy::too_many_arguments)]

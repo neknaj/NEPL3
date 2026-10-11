@@ -4,6 +4,7 @@ mod code;
 pub mod math;
 pub mod pages;
 mod stylesheet;
+pub use super::math::display::Preference as MathRenderer;
 use super::source::{Compiled, budget, compiled, err, with_input_route};
 use nepl3_core::source::{Digest, SourceAdmission, SourceStore};
 use nepl3_doc_core::{check::Category, lower};
@@ -12,7 +13,6 @@ use nepl3_wire::foundation::FoundationCodec;
 use std::time::{Duration, Instant};
 use std::{fs, io::Read, path::Path};
 pub use stylesheet::CssMode;
-pub use super::math::display::Preference as MathRenderer;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Stage {
@@ -82,10 +82,22 @@ pub fn generate_observed_with_css(
     css: CssMode,
     observe: &mut impl FnMut(StageMeasurement),
 ) -> Result<LocalDocument, String> {
-    generate_impl(compiled, input, css, None, MathRenderer::KaTeXPreferred, observe)
+    generate_impl(
+        compiled,
+        input,
+        css,
+        None,
+        MathRenderer::KaTeXPreferred,
+        observe,
+    )
 }
-pub fn generate_with_renderer(compiled: &Compiled, input: &str, css: CssMode, renderer: MathRenderer) -> Result<LocalDocument, String> {
- generate_impl(compiled, input, css, None, renderer, &mut |_| {})
+pub fn generate_with_renderer(
+    compiled: &Compiled,
+    input: &str,
+    css: CssMode,
+    renderer: MathRenderer,
+) -> Result<LocalDocument, String> {
+    generate_impl(compiled, input, css, None, renderer, &mut |_| {})
 }
 fn generate_impl(
     compiled: &Compiled,
@@ -199,33 +211,36 @@ fn generate_impl(
         });
         let render_start = Instant::now();
         let mut math = Vec::new();
-        let mut adapter = |embed: &nepl3_doc_core::model::DocEmbed, index, b: &mut nepl3_core::budget::Budget| {
-            if embed.kind == nepl3_doc_core::model::EmbedKind::Code {
-                code::render(embed, tree, profile, b)
-            } else {
-                math::DisplayHost { compiled, registry: profile.registry(), codec: &mut codec, preference: renderer }
+        let mut adapter =
+            |embed: &nepl3_doc_core::model::DocEmbed, index, b: &mut nepl3_core::budget::Budget| {
+                if embed.kind == nepl3_doc_core::model::EmbedKind::Code {
+                    code::render(embed, tree, profile, b)
+                } else {
+                    math::DisplayHost {
+                        compiled,
+                        registry: profile.registry(),
+                        codec: &mut codec,
+                        preference: renderer,
+                    }
                     .render(embed, index, &mut math, b)
-            }
-        };
+                }
+            };
         let rendered = match &prepared {
             Prepared::Local(p) => {
-                nepl3_doc_html::display::render_display(
-                    p,
-                    &mut adapter,
-                    &mut output_budget,
-                )
-                .map_err(err)?
+                nepl3_doc_html::display::render_display(p, &mut adapter, &mut output_budget)
+                    .map_err(err)?
             }
             Prepared::Svg(p) => {
-                nepl3_doc_html::assets::render_svg_display(
-                    p,
-                    &mut adapter,
-                    &mut output_budget,
-                )
-                .map_err(err)?
+                nepl3_doc_html::assets::render_svg_display(p, &mut adapter, &mut output_budget)
+                    .map_err(err)?
             }
         };
-        math::compose(&mut math, &rendered.foreign, &doc.value.embeds, &mut output_budget)?;
+        math::compose(
+            &mut math,
+            &rendered.foreign,
+            &doc.value.embeds,
+            &mut output_budget,
+        )?;
         let rendered = rendered.fragment;
         let document_css =
             assets::document_css(&doc, assets.map(|(inputs, _)| inputs), &mut output_budget)?;
@@ -283,7 +298,9 @@ fn generate_impl(
             html,
             manifest,
             stylesheet: document_css,
-            document: doc, math, rendered,
+            document: doc,
+            math,
+            rendered,
         })
     })
 }
@@ -366,8 +383,15 @@ pub fn write(input: &Path, output: &Path) -> crate::Result<()> {
 pub fn write_with_css(input: &Path, output: &Path, css: CssMode) -> crate::Result<()> {
     write_with_renderer(input, output, css, MathRenderer::KaTeXPreferred)
 }
-pub fn write_with_renderer(input: &Path, output: &Path, css: CssMode, renderer: MathRenderer) -> crate::Result<()> {
-    if output.exists() { return Err("output directory already exists".into()); }
+pub fn write_with_renderer(
+    input: &Path,
+    output: &Path,
+    css: CssMode,
+    renderer: MathRenderer,
+) -> crate::Result<()> {
+    if output.exists() {
+        return Err("output directory already exists".into());
+    }
     let source = read_source(input)?;
     let generated = generate_with_renderer(&compiled()?, &source, css, renderer)?;
     fs::create_dir(output)?;

@@ -161,3 +161,86 @@ fn css_modes_cli_and_failure_boundaries() -> Result<(), Box<dyn std::error::Erro
     fs::remove_dir_all(root)?;
     Ok(())
 }
+
+#[test]
+fn ordinary_math_cli_modes_and_failed_batch_are_atomic() -> Result<(), Box<dyn std::error::Error>> {
+    let root = std::env::temp_dir().join(format!("nepl3-math-cli-{}", std::process::id()));
+    fs::create_dir(&root)?;
+    let source = root.join("math.nepld");
+    let good = r#"article ja "Math" body cons paragraph cons parallel cons variant en sentence cons math Math frac 1 0 nil cons variant ja sentence cons math Math frac 1 0 nil nil nil cons display Math label frac 2 3 Sentence "[字/じ]" nil"#;
+    fs::write(&source, good)?;
+    let binary = env!("CARGO_BIN_EXE_nepl3-tools");
+    for renderer in ["katex-preferred", "mathml-only"] {
+        for css in ["external", "inline"] {
+            let out = root.join(format!("{renderer}-{css}"));
+            let run = Command::new(binary)
+                .args([
+                    "doc-html",
+                    "export",
+                    "--math-renderer",
+                    renderer,
+                    "--css",
+                    css,
+                ])
+                .arg(&source)
+                .arg(&out)
+                .output()?;
+            assert!(
+                run.status.success(),
+                "{}",
+                String::from_utf8_lossy(&run.stderr)
+            );
+            let html = fs::read_to_string(out.join("document.html"))?;
+            assert_eq!(html.matches("<mfrac>").count(), 3);
+            assert!(html.contains("nepl-ruby"));
+            assert!(!html.contains("<script"));
+            let manifest: serde_json::Value =
+                serde_json::from_slice(&fs::read(out.join("manifest.json"))?)?;
+            assert_eq!(manifest["options"]["math_renderer"], renderer);
+            assert_eq!(
+                manifest["math_diagnostics"]
+                    .as_array()
+                    .ok_or("diagnostics")?
+                    .is_empty(),
+                renderer == "mathml-only"
+            );
+        }
+    }
+    let manifest = root.join("pages.json");
+    fs::write(
+        &manifest,
+        serde_json::to_vec(&serde_json::json!({"version":1,"pages":[
+            {"id":"good","source":"math.nepld","route":"good/index.html"},
+            {"id":"bad","source":"bad.nepld","route":"bad/index.html"}
+        ]}))?,
+    )?;
+    fs::write(
+        root.join("bad.nepld"),
+        r#"article en "Bad" body cons display Math frac 1"#,
+    )?;
+    let out = root.join("pages");
+    let run = Command::new(binary)
+        .args(["doc-html", "pages", "--math-renderer", "mathml-only"])
+        .arg(&manifest)
+        .arg(&out)
+        .output()?;
+    assert!(!run.status.success());
+    assert!(
+        !out.exists(),
+        "a valid first page must not leak partial output"
+    );
+    fs::write(root.join("bad.nepld"), good)?;
+    let run = Command::new(binary)
+        .args(["doc-html", "pages", "--math-renderer", "mathml-only"])
+        .arg(&manifest)
+        .arg(&out)
+        .output()?;
+    assert!(
+        run.status.success(),
+        "{}",
+        String::from_utf8_lossy(&run.stderr)
+    );
+    assert!(out.join("good/index.html").exists());
+    fs::remove_dir_all(root)?;
+    Ok(())
+}

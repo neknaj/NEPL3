@@ -25,7 +25,7 @@ fn svg_modes_and_input_failures() -> Result<(), Box<dyn std::error::Error>> {
     fs::create_dir(&root)?;
     let source = "article ja \"SVG\" body cons image asset \"triangle\" none \"{[三角形/さんかくけい]/triangle}\" some \"図1\" cons paragraph cons sentence cons image asset \"triangle\" none \"文中の図\" nil nil nil";
     let source = format!(
-        "{}cons paragraph cons code Doc article en \"Guest\" body nil nil nil",
+        "{}cons paragraph cons code Doc article en \"Guest\" body nil cons sentence cons math Math frac 1 2 nil cons display Math frac 3 4 nil nil",
         source.strip_suffix("nil").ok_or("article end")?
     );
     fs::write(root.join("input.nepld"), source)?;
@@ -43,6 +43,9 @@ fn svg_modes_and_input_failures() -> Result<(), Box<dyn std::error::Error>> {
             );
             let html = fs::read_to_string(root.join(&dir).join("document.html"))?;
             assert_eq!(html.matches("<img ").count(), 3);
+            assert_eq!(html.matches("<mfrac>").count(), 2);
+            assert!(html.contains("display=\"inline\""));
+            assert!(html.contains("display=\"block\""));
             assert!(html.contains("class=\"nepl-code-marker\""));
             assert!(html.contains("alt=\"三角形\""));
             assert!(html.contains("<figcaption"));

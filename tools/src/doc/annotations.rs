@@ -264,22 +264,24 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
                 .map_err(|error| document_error(error, b))?;
         let mut document_position = 0usize;
         let mut foreign = Vec::new();
-        // Admission is local to this immutable HTML validation. Guest operations
-        // retain the codec's original ledger and cumulative Budget.
-        let mut admission = nepl3_core::source::SourceAdmission::default();
-        let rendered = html::render_with_foreign(
+        let registry = self.registry;
+        let surface = self.surface;
+        let math_surface = self.math_surface;
+        let doc_surface = self.doc_surface;
+        let rendered = html::render_with_foreign_codec(
             &sentence,
-            self.registry,
-            &mut |closure, embed, b| {
-                if let Some(surface) = self.doc_surface {
+            registry,
+            self.codec,
+            &mut |closure, embed, codec, b| {
+                if let Some(doc_schema) = doc_surface {
                     b.charge(
                         Resource::Work,
-                        (surface.package.len()
+                        (doc_schema.package.len()
                             + closure.syntax.schema.package.len()
                             + closure.syntax.category.len()) as u64
                             + 70,
                     )?;
-                    if &closure.syntax.schema == surface && closure.syntax.category == "Inline" {
+                    if &closure.syntax.schema == doc_schema && closure.syntax.category == "Inline" {
                         let selected = selected.get(document_position).ok_or(Error::Selection)?;
                         if selected.embed != embed {
                             return Err(Error::Selection);
@@ -287,7 +289,13 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
                         let (rendered, nested) = document::render_member(
                             &prepared,
                             nepl3_doc_core::labels::namespace::MemberId(document_position as u64),
-                            self,
+                            &mut SentenceAnnotationRenderer {
+                                registry,
+                                surface,
+                                math_surface,
+                                doc_surface,
+                                codec,
+                            },
                             b,
                         )
                         .map_err(|error| document_error(error, b))?;
@@ -307,13 +315,13 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
                         return Ok(markup);
                     }
                 }
-                let math_surface = self.math_surface.ok_or(Error::Selection)?;
+                let math_surface = math_surface.ok_or(Error::Selection)?;
                 let mut host = super::math::MathDisplayHost {
-                    registry: self.registry,
+                    registry,
                     math_surface,
-                    sentence_surface: Some(self.surface),
-                    doc_surface: self.doc_surface,
-                    codec: self.codec,
+                    sentence_surface: Some(surface),
+                    doc_surface,
+                    codec,
                 };
                 let result = host
                     .render(closure, nepl3_markup::mathml::Display::Inline, b)
@@ -344,7 +352,6 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
                 Ok::<_, Error<C::Error>>(result.markup)
             },
             b,
-            &mut admission,
         )
         .map_err(|error| match error {
             html::RenderFailure::Sentence(error) => Error::Render(error),

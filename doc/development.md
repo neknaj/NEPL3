@@ -702,3 +702,17 @@ runnerはclean checkoutに結び付いたbuild、u64/BigIntの型付き結果、
 CIは既存の`tools/evidence/runner.py`で各native targetとWasmtimeのfocused command・tool versions・host identity・raw logsを保存する。三つのintegration testsはlocal Linuxとchecksumを確認したWasmtime 44.0.1で成功し、focused Clippyも成功した。Windows・macOSの実行成功はそれぞれのCIログを確認するまで主張しない。これらはbounded sliceのcommand evidenceであり、E01七targetの正式受入やT01完了への自動昇格は行わない。
 
 Wasmtimeのdownload/extractionはCI runnerのtemporary directoryで行う。source checkoutへ未追跡の配布物を置くと、既存evidence runnerのclean-source gateが証拠採取前に拒否するためである。checksum検証とclean-source gateは維持する。
+
+### 通常Doc HTML内の数式
+
+`sentence cons math Math frac 1 2 nil` は文中の数式、`display Math frac 1 2` は別行のBlockを表す。
+通常のexport/pagesはこれらをMathMLとして表示できる。SVG化や生成後のHTML手修正は不要である。
+
+```sh
+cargo run --locked -p nepl3-tools -- doc-html export --css inline --math-renderer mathml-only input.nepld new-output
+cargo run --locked -p nepl3-tools -- doc-html pages --math-renderer mathml-only pages.json new-pages
+```
+
+省略時は `katex-preferred`。現native hostのKaTeX接続は未完了であり、利用不能の理由をmanifestの `math_diagnostics` に保持して独立MathMLへ移る。
+MathML成功をKaTeX成功として扱わない。明示的な `mathml-only` ではこの能力不足診断を出さない。
+数式中のRuby/Anno等をTeXへ忠実に写せない場合も、数式全体をMathMLに保ち注釈を落とさない。

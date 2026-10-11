@@ -393,3 +393,18 @@ Markdown集合の旧Work上限1,600,000,000では停止し、途中出力を採�
 既存17ページの本文は不変で、集合入力digestに伴うmetadataだけが更新される。
 停止診断にはpage・段階・Usageを加え、文書集合の停止と単体解析の停止を区別する。
 この移行はT07/T21全体や未移行の残り6章の完成を意味しない。
+
+## 通常HTMLのMath接続（native、実装中）
+
+通常の `doc-html export`、SVG付きexport、`doc-html pages` にInlineMath・DisplayMathの表示経路を追加した。
+既存のMath lower/check/MathMLとSentence annotation hostを共用し、分数等の構造を保ったままHTMLへ合成する。MathをSVGへ変換したり、式を暗黙評価したりする必要はない。
+Doc/Math core間の直接依存は追加していない。Code表示・Ruby/Anno・Parallel Rows・元sourceと要素対応を保持する。
+
+既定設定は `katex-preferred`。このnative hostではKaTeXの完全な資源・identity・アクセシビリティ付き実行接続がまだないため、`KaTeXHostCapabilityUnavailable` をmanifestへ記録して独立MathMLを表示する。
+忠実なTeXへ変換できない注釈付き数式では `FaithfulTexUnsupported` と具体的なnode/reasonを残す。
+`--math-renderer mathml-only` はKaTeXの準備を要求せず、明示的に独立MathMLを選ぶ。閲覧にJavaScriptは不要だが、MathML対応ブラウザは必要である。
+この接続はT24全体、KaTeX実行、Web Worker、全constructorのブラウザ受入の完了を意味しない。
+
+回帰試験は `tools/tests/doc/export/math.rs`、通常CLI・Code/PageSet試験、既存Sentence/Math再帰注釈試験に置く。
+source snapshotの共通admission、文中・別行slot、出現別局所ID、表示されない外側anchorの拒否、停止後の成功拒否、部分ページ未公開を検査する。
+描画検査は通常export/pagesの既存browser auditへ組み込み、実行結果と未実行のtargetを区別する。

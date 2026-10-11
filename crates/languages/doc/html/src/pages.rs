@@ -80,9 +80,16 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<RenderedPages, PagesRenderError<'a, C::Error>> {
-    type NoAdapter<C> =
-        fn(u64, &DocEmbed, EmbedRef, &mut C, &mut Budget) -> Result<HtmlRequest, core::convert::Infallible>;
-    match render_pages_impl::<C, core::convert::Infallible, NoAdapter<C>>(request, r, c, b, None, false) {
+    type NoAdapter<C> = fn(
+        u64,
+        &DocEmbed,
+        EmbedRef,
+        &mut C,
+        &mut Budget,
+    ) -> Result<HtmlRequest, core::convert::Infallible>;
+    match render_pages_impl::<C, core::convert::Infallible, NoAdapter<C>>(
+        request, r, c, b, None, false,
+    ) {
         Ok(result) => Ok(result.pages),
         Err(PagesCodeRenderError::Pages(error)) => Err(error),
         Err(PagesCodeRenderError::CodeId { .. }) => {
@@ -107,16 +114,26 @@ pub fn render_pages_with_code<'a, C: FoundationValueCodec, F>(
     b: &mut Budget,
     adapter: &mut impl FnMut(u64, &DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, F>,
 ) -> Result<RenderedCodePages, PagesCodeRenderError<'a, C::Error, F>> {
-    render_pages_impl(request, r, c, b, Some(&mut |page, embed, index, _: &mut C, b: &mut Budget| adapter(page, embed, index, b)), false)
+    render_pages_impl(
+        request,
+        r,
+        c,
+        b,
+        Some(&mut |page, embed, index, _: &mut C, b: &mut Budget| adapter(page, embed, index, b)),
+        false,
+    )
 }
 
 /// Selected Code/Math composition shares the operation's source-admission codec
 /// with the host adapter. Math-local IDs are scoped by output occurrence.
 pub fn render_pages_with_display<'a, C: FoundationValueCodec, F>(
- request: &'a PagesHtmlRequest, r: &SchemaRegistry, c: &mut C, b: &mut Budget,
- adapter: &mut impl FnMut(u64, &DocEmbed, EmbedRef, &mut C, &mut Budget) -> Result<HtmlRequest, F>,
+    request: &'a PagesHtmlRequest,
+    r: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+    adapter: &mut impl FnMut(u64, &DocEmbed, EmbedRef, &mut C, &mut Budget) -> Result<HtmlRequest, F>,
 ) -> Result<RenderedCodePages, PagesCodeRenderError<'a, C::Error, F>> {
- render_pages_impl(request, r, c, b, Some(adapter), true)
+    render_pages_impl(request, r, c, b, Some(adapter), true)
 }
 
 enum CodeAdapterError<E> {
@@ -243,7 +260,9 @@ where
                             for attribute in attributes {
                                 b.charge(Resource::Work, 1)
                                     .map_err(CodeAdapterError::Stopped)?;
-                                if embed.kind == nepl3_doc_core::model::EmbedKind::Code && matches!(attribute, HtmlAttribute::Id { .. }) {
+                                if embed.kind == nepl3_doc_core::model::EmbedKind::Code
+                                    && matches!(attribute, HtmlAttribute::Id { .. })
+                                {
                                     return Err(CodeAdapterError::Id(node as u64));
                                 }
                             }

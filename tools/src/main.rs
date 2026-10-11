@@ -53,13 +53,44 @@ fn run() -> nepl3_tools::Result<()> {
                 css,
             )
         }
-        ["doc-html", "export", "--math-renderer", renderer, input, output] => {
-            nepl3_tools::doc::export::write_with_renderer(std::path::Path::new(input), std::path::Path::new(output), nepl3_tools::doc::export::CssMode::External, renderer.parse()?)
-        }
-        ["doc-html", "export", "--css", css, "--math-renderer", renderer, input, output]
-        | ["doc-html", "export", "--math-renderer", renderer, "--css", css, input, output] => {
-            nepl3_tools::doc::export::write_with_renderer(std::path::Path::new(input), std::path::Path::new(output), css.parse()?, renderer.parse()?)
-        }
+        [
+            "doc-html",
+            "export",
+            "--math-renderer",
+            renderer,
+            input,
+            output,
+        ] => nepl3_tools::doc::export::write_with_renderer(
+            std::path::Path::new(input),
+            std::path::Path::new(output),
+            nepl3_tools::doc::export::CssMode::External,
+            renderer.parse()?,
+        ),
+        [
+            "doc-html",
+            "export",
+            "--css",
+            css,
+            "--math-renderer",
+            renderer,
+            input,
+            output,
+        ]
+        | [
+            "doc-html",
+            "export",
+            "--math-renderer",
+            renderer,
+            "--css",
+            css,
+            input,
+            output,
+        ] => nepl3_tools::doc::export::write_with_renderer(
+            std::path::Path::new(input),
+            std::path::Path::new(output),
+            css.parse()?,
+            renderer.parse()?,
+        ),
         [
             "doc-html",
             "svg",
@@ -77,8 +108,18 @@ fn run() -> nepl3_tools::Result<()> {
             css.parse()?,
             mode,
         ),
-        ["doc-html", "pages", "--math-renderer", renderer, manifest, output] =>
-            nepl3_tools::doc::export::pages::write_with_renderer(std::path::Path::new(manifest), std::path::Path::new(output), renderer.parse()?),
+        [
+            "doc-html",
+            "pages",
+            "--math-renderer",
+            renderer,
+            manifest,
+            output,
+        ] => nepl3_tools::doc::export::pages::write_with_renderer(
+            std::path::Path::new(manifest),
+            std::path::Path::new(output),
+            renderer.parse()?,
+        ),
         ["doc-html", "pages", manifest, output] => nepl3_tools::doc::export::pages::write(
             std::path::Path::new(manifest),
             std::path::Path::new(output),
