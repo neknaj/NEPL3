@@ -8,7 +8,7 @@ use nepl3_core::{
     value_codec::FoundationValueCodec,
 };
 use nepl3_doc_core::{
-    model::{DocEmbed, EmbedKind, EmbedRef, LinkTarget},
+    model::{DocEmbed, EmbedRef, LinkTarget},
     pages::{self, PageDestination, PageLinkPlan, PageSet},
     prepare,
 };
@@ -80,9 +80,9 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<RenderedPages, PagesRenderError<'a, C::Error>> {
-    type NoAdapter =
-        fn(u64, &DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, core::convert::Infallible>;
-    match render_pages_impl::<C, core::convert::Infallible, NoAdapter>(request, r, c, b, None) {
+    type NoAdapter<C> =
+        fn(u64, &DocEmbed, EmbedRef, &mut C, &mut Budget) -> Result<HtmlRequest, core::convert::Infallible>;
+    match render_pages_impl::<C, core::convert::Infallible, NoAdapter<C>>(request, r, c, b, None, false) {
         Ok(result) => Ok(result.pages),
         Err(PagesCodeRenderError::Pages(error)) => Err(error),
         Err(PagesCodeRenderError::CodeId { .. }) => {
@@ -107,7 +107,16 @@ pub fn render_pages_with_code<'a, C: FoundationValueCodec, F>(
     b: &mut Budget,
     adapter: &mut impl FnMut(u64, &DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, F>,
 ) -> Result<RenderedCodePages, PagesCodeRenderError<'a, C::Error, F>> {
-    render_pages_impl(request, r, c, b, Some(adapter))
+    render_pages_impl(request, r, c, b, Some(&mut |page, embed, index, _: &mut C, b: &mut Budget| adapter(page, embed, index, b)), false)
+}
+
+/// Selected Code/Math composition shares the operation's source-admission codec
+/// with the host adapter. Math-local IDs are scoped by output occurrence.
+pub fn render_pages_with_display<'a, C: FoundationValueCodec, F>(
+ request: &'a PagesHtmlRequest, r: &SchemaRegistry, c: &mut C, b: &mut Budget,
+ adapter: &mut impl FnMut(u64, &DocEmbed, EmbedRef, &mut C, &mut Budget) -> Result<HtmlRequest, F>,
+) -> Result<RenderedCodePages, PagesCodeRenderError<'a, C::Error, F>> {
+ render_pages_impl(request, r, c, b, Some(adapter), true)
 }
 
 enum CodeAdapterError<E> {
@@ -122,9 +131,10 @@ fn render_pages_impl<'a, C: FoundationValueCodec, F, A>(
     c: &mut C,
     b: &mut Budget,
     mut adapter: Option<&mut A>,
+    math: bool,
 ) -> Result<RenderedCodePages, PagesCodeRenderError<'a, C::Error, F>>
 where
-    A: FnMut(u64, &DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, F>,
+    A: FnMut(u64, &DocEmbed, EmbedRef, &mut C, &mut Budget) -> Result<HtmlRequest, F>,
 {
     let checked = pages::resolve(&request.set, r, c, b).map_err(|e| match e {
         pages::PageError::Stopped(s) => PagesRenderError::Stopped(s),
@@ -150,9 +160,9 @@ where
             && matches!(
                 pending.requirement,
                 prepare::DocRequirement::Foreign {
-                    kind: EmbedKind::Code,
+                    kind,
                     ..
-                }
+                } if crate::display::selected(kind, math)
             ))
         {
             unresolved = true;
@@ -225,7 +235,7 @@ where
                 &links,
                 &mut |embed, index, b| {
                     let markup =
-                        adapter(page as u64, embed, index, b).map_err(CodeAdapterError::Host)?;
+                        adapter(page as u64, embed, index, c, b).map_err(CodeAdapterError::Host)?;
                     for (node, value) in markup.fragment.nodes.iter().enumerate() {
                         b.charge(Resource::Work, 1)
                             .map_err(CodeAdapterError::Stopped)?;
@@ -233,7 +243,7 @@ where
                             for attribute in attributes {
                                 b.charge(Resource::Work, 1)
                                     .map_err(CodeAdapterError::Stopped)?;
-                                if matches!(attribute, HtmlAttribute::Id { .. }) {
+                                if embed.kind == nepl3_doc_core::model::EmbedKind::Code && matches!(attribute, HtmlAttribute::Id { .. }) {
                                     return Err(CodeAdapterError::Id(node as u64));
                                 }
                             }

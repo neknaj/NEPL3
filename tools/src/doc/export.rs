@@ -1,6 +1,7 @@
 //! Script-free local Doc export, using the same production pipeline as tests.
 pub mod assets;
 mod code;
+pub mod math;
 pub mod pages;
 mod stylesheet;
 use super::source::{Compiled, budget, compiled, err, with_input_route};
@@ -11,6 +12,7 @@ use nepl3_wire::foundation::FoundationCodec;
 use std::time::{Duration, Instant};
 use std::{fs, io::Read, path::Path};
 pub use stylesheet::CssMode;
+pub use super::math::display::Preference as MathRenderer;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Stage {
@@ -42,6 +44,9 @@ pub struct LocalDocument {
     pub html: String,
     pub manifest: String,
     pub stylesheet: String,
+    pub document: nepl3_doc_core::model::DocumentSyntax,
+    pub math: Vec<math::Occurrence>,
+    pub rendered: nepl3_doc_html::RenderedFragment,
 }
 
 pub fn generate(compiled: &Compiled, input: &str) -> Result<LocalDocument, String> {
@@ -77,7 +82,10 @@ pub fn generate_observed_with_css(
     css: CssMode,
     observe: &mut impl FnMut(StageMeasurement),
 ) -> Result<LocalDocument, String> {
-    generate_impl(compiled, input, css, None, observe)
+    generate_impl(compiled, input, css, None, MathRenderer::KaTeXPreferred, observe)
+}
+pub fn generate_with_renderer(compiled: &Compiled, input: &str, css: CssMode, renderer: MathRenderer) -> Result<LocalDocument, String> {
+ generate_impl(compiled, input, css, None, renderer, &mut |_| {})
 }
 fn generate_impl(
     compiled: &Compiled,
@@ -87,6 +95,7 @@ fn generate_impl(
         &[nepl3_doc_html::assets::SvgInput<'_>],
         nepl3_doc_html::assets::SvgMode,
     )>,
+    renderer: MathRenderer,
     observe: &mut impl FnMut(StageMeasurement),
 ) -> Result<LocalDocument, String> {
     if input.len() as u64 > MAX_SOURCE_BYTES {
@@ -155,12 +164,12 @@ fn generate_impl(
             parallel: ParallelMode::Rows,
         };
         enum Prepared<'a> {
-            Local(nepl3_doc_html::code::PreparedCodeArticle<'a>),
-            Svg(nepl3_doc_html::assets::PreparedSvgCodeArticle<'a>),
+            Local(nepl3_doc_html::display::PreparedDisplayArticle<'a>),
+            Svg(nepl3_doc_html::assets::PreparedSvgDisplayArticle<'a>),
         }
         let prepared = if let Some((inputs, mode)) = assets {
             Prepared::Svg(
-                nepl3_doc_html::assets::prepare_svg_code(
+                nepl3_doc_html::assets::prepare_svg_display(
                     &doc,
                     &options,
                     inputs,
@@ -173,7 +182,7 @@ fn generate_impl(
             )
         } else {
             Prepared::Local(
-                nepl3_doc_html::code::prepare_code(
+                nepl3_doc_html::display::prepare_display(
                     &doc,
                     &options,
                     profile.registry(),
@@ -189,26 +198,35 @@ fn generate_impl(
             usage: output_budget.usage(),
         });
         let render_start = Instant::now();
-        let rendered = match &prepared {
-            Prepared::Local(p) => {
-                nepl3_doc_html::code::render_code(
-                    p,
-                    &mut |embed, _, b| code::render(embed, tree, profile, b),
-                    &mut output_budget,
-                )
-                .map_err(err)?
-                .fragment
-            }
-            Prepared::Svg(p) => {
-                nepl3_doc_html::assets::render_svg_code(
-                    p,
-                    &mut |embed, _, b| code::render(embed, tree, profile, b),
-                    &mut output_budget,
-                )
-                .map_err(err)?
-                .fragment
+        let mut math = Vec::new();
+        let mut adapter = |embed: &nepl3_doc_core::model::DocEmbed, index, b: &mut nepl3_core::budget::Budget| {
+            if embed.kind == nepl3_doc_core::model::EmbedKind::Code {
+                code::render(embed, tree, profile, b)
+            } else {
+                math::DisplayHost { compiled, registry: profile.registry(), codec: &mut codec, preference: renderer }
+                    .render(embed, index, &mut math, b)
             }
         };
+        let rendered = match &prepared {
+            Prepared::Local(p) => {
+                nepl3_doc_html::display::render_display(
+                    p,
+                    &mut adapter,
+                    &mut output_budget,
+                )
+                .map_err(err)?
+            }
+            Prepared::Svg(p) => {
+                nepl3_doc_html::assets::render_svg_display(
+                    p,
+                    &mut adapter,
+                    &mut output_budget,
+                )
+                .map_err(err)?
+            }
+        };
+        math::compose(&mut math, &rendered.foreign, &doc.value.embeds, &mut output_budget)?;
+        let rendered = rendered.fragment;
         let document_css =
             assets::document_css(&doc, assets.map(|(inputs, _)| inputs), &mut output_budget)?;
         let html = shell_with_assets(
@@ -245,12 +263,13 @@ fn generate_impl(
         }
         let manifest = serde_json::to_string_pretty(&serde_json::json!({
             "format":"nepl3.local-doc-export/1",
-            "scope":"local Doc only; external pages, assets and foreign rendering require resolution",
+            "scope":"Doc with retained Code and Math display; unresolved external links and assets require explicit resolution",
             "source_sha256":digest(input.as_bytes()),
             "profile_sha256":digest_hex(profile.digest()),
             "doc_schema_sha256":digest_hex(compiled.doc.package.schema.digest),
             "renderer":"nepl3-doc-html local/1",
-            "options":{"parallel":"Rows","css":css.as_str()},
+            "options":{"parallel":"Rows","css":css.as_str(),"math_renderer":renderer.as_str()},
+            "math_diagnostics":math::diagnostics(&math),
             "stylesheet":{"sha256":digest(document_css.as_bytes()),"license":"MIT"},
             "font":{"family":"Klee One","weights":[400,600],"stylesheet":stylesheet::FONT_STYLESHEET,"bundled":false,"offline":"system fallback"},
             "files":files,
@@ -264,6 +283,7 @@ fn generate_impl(
             html,
             manifest,
             stylesheet: document_css,
+            document: doc, math, rendered,
         })
     })
 }
@@ -344,11 +364,12 @@ pub fn write(input: &Path, output: &Path) -> crate::Result<()> {
 
 /// Write the selected local export, preserving the no-overwrite contract.
 pub fn write_with_css(input: &Path, output: &Path, css: CssMode) -> crate::Result<()> {
-    if output.exists() {
-        return Err("output directory already exists".into());
-    }
+    write_with_renderer(input, output, css, MathRenderer::KaTeXPreferred)
+}
+pub fn write_with_renderer(input: &Path, output: &Path, css: CssMode, renderer: MathRenderer) -> crate::Result<()> {
+    if output.exists() { return Err("output directory already exists".into()); }
     let source = read_source(input)?;
-    let generated = generate_with_css(&compiled()?, &source, css)?;
+    let generated = generate_with_renderer(&compiled()?, &source, css, renderer)?;
     fs::create_dir(output)?;
     if css == CssMode::External {
         fs::create_dir(output.join("assets"))?;

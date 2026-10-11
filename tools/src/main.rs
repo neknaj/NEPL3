@@ -53,6 +53,13 @@ fn run() -> nepl3_tools::Result<()> {
                 css,
             )
         }
+        ["doc-html", "export", "--math-renderer", renderer, input, output] => {
+            nepl3_tools::doc::export::write_with_renderer(std::path::Path::new(input), std::path::Path::new(output), nepl3_tools::doc::export::CssMode::External, renderer.parse()?)
+        }
+        ["doc-html", "export", "--css", css, "--math-renderer", renderer, input, output]
+        | ["doc-html", "export", "--math-renderer", renderer, "--css", css, input, output] => {
+            nepl3_tools::doc::export::write_with_renderer(std::path::Path::new(input), std::path::Path::new(output), css.parse()?, renderer.parse()?)
+        }
         [
             "doc-html",
             "svg",
@@ -70,6 +77,8 @@ fn run() -> nepl3_tools::Result<()> {
             css.parse()?,
             mode,
         ),
+        ["doc-html", "pages", "--math-renderer", renderer, manifest, output] =>
+            nepl3_tools::doc::export::pages::write_with_renderer(std::path::Path::new(manifest), std::path::Path::new(output), renderer.parse()?),
         ["doc-html", "pages", manifest, output] => nepl3_tools::doc::export::pages::write(
             std::path::Path::new(manifest),
             std::path::Path::new(output),
@@ -126,7 +135,7 @@ fn run() -> nepl3_tools::Result<()> {
                 "nepl3-tools doc-markdown annotated <input.nepld> <aliases.json> <new-output.md>"
             );
             println!(
-                "nepl3-tools check | tasks --check | tasks --write | evidence identity [--commit <40-hex-commit>]\n  foundation --write | reader --write | engine --write | grammar --write | doc --write | math --write | sentence --write | markup --write | doc-html --write\n  doc-html export [--css external|inline] <input.nepld> <new-output-directory>\n  doc-html svg --css external|inline --svg external|embedded <input.nepld> <assets.json> <new-output-directory>\n  doc-html pages <manifest.json> <new-output-directory>\n  doc-inventory --write --commit <40-hex-commit> | doc-inventory --check | doc-inventory --check-current\nRepository checks do not establish runtime conformance."
+                "nepl3-tools check | tasks --check | tasks --write | evidence identity [--commit <40-hex-commit>]\n  foundation --write | reader --write | engine --write | grammar --write | doc --write | math --write | sentence --write | markup --write | doc-html --write\n  doc-html export [--css external|inline] [--math-renderer katex-preferred|mathml-only] <input.nepld> <new-output-directory>\n  doc-html svg --css external|inline --svg external|embedded <input.nepld> <assets.json> <new-output-directory>\n  doc-html pages [--math-renderer katex-preferred|mathml-only] <manifest.json> <new-output-directory>\n  doc-inventory --write --commit <40-hex-commit> | doc-inventory --check | doc-inventory --check-current\nRepository checks do not establish runtime conformance."
             );
             Ok(())
         }

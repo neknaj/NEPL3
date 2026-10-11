@@ -103,13 +103,13 @@ impl Builder<'_, '_> {
         self.attr(e, HtmlAttribute::Alt { value: alt })
     }
 
-    fn guest(&mut self, job: Job, embed: EmbedRef, markup: HtmlRequest) -> Result<(), RenderError> {
+    fn guest(&mut self, job: Job, embed: EmbedRef, mut markup: HtmlRequest, slot: HtmlSlot) -> Result<(), RenderError> {
         let depth = self
             .b
             .current_depth()
             .saturating_add(self.depths[job.parent as usize]);
         self.b.with_depth_at_least::<_, RenderError>(depth, |b| {
-            validate(&markup.fragment, HtmlSlot::Phrasing, &markup.policy, b)?;
+            validate(&markup.fragment, slot, &markup.policy, b)?;
             Ok(())
         })?;
         // Preserve the backend's output envelope across the guest boundary.
@@ -137,6 +137,29 @@ impl Builder<'_, '_> {
         }
         let offset = self.nodes.len() as u64;
         let count = markup.fragment.nodes.len() as u64;
+        // Bind an already-valid Math annotation's local namespace to this
+        // occurrence. Duplicate IDs inside the guest were rejected above.
+        // Host Doc anchors use n-..., never this reserved g-... prefix.
+        if matches!(self.prepared.document.value.embeds[embed.0 as usize].kind,
+            EmbedKind::InlineMath | EmbedKind::DisplayMath) {
+            for node in &mut markup.fragment.nodes {
+                self.b.charge(Resource::Work, 1)?;
+                if let HtmlNode::Element { attributes, .. } = node {
+                    for attribute in attributes {
+                        self.b.charge(Resource::Work, 1)?;
+                        let value = match attribute {
+                            HtmlAttribute::Id { value } => value,
+                            HtmlAttribute::Href { value: HtmlHref::Fragment { id } } => id,
+                            _ => continue,
+                        };
+                        let bytes = value.len().checked_add(32).ok_or(RenderError::InternalShape)?;
+                        self.b.charge(Resource::Work, bytes as u64)?;
+                        self.b.charge(Resource::AllocationUnits, bytes as u64)?;
+                        *value = alloc::format!("g-{offset}-{value}");
+                    }
+                }
+            }
+        }
         let root = offset
             .checked_add(markup.fragment.root)
             .ok_or(RenderError::InternalShape)?;
@@ -442,7 +465,7 @@ pub(crate) fn render_prepared_with_foreign<E>(
     while let Some(job) = w.jobs.pop() {
         w.b.charge(Resource::Work, 1)?;
         let kind = &prepared.document.value.nodes[job.node as usize].kind;
-        if let DocKind::InlineMath { syntax } | DocKind::Code { syntax } = kind {
+        if let DocKind::InlineMath { syntax } | DocKind::DisplayMath { syntax } | DocKind::Code { syntax } = kind {
             let embed = prepared
                 .document
                 .value
@@ -468,7 +491,8 @@ pub(crate) fn render_prepared_with_foreign<E>(
             } else {
                 job
             };
-            w.guest(target, *syntax, markup)?;
+            let slot = if matches!(kind, DocKind::DisplayMath { .. }) { HtmlSlot::Block } else { HtmlSlot::Phrasing };
+            w.guest(target, *syntax, markup, slot)?;
             continue;
         }
         if !w.block(job, kind)? {
