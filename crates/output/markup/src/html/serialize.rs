@@ -203,7 +203,7 @@ fn serialize_mode(
     b: &mut Budget,
 ) -> Result<String, HtmlError> {
     let mut out = Output::default();
-    fragment_into(proof.fragment, xml, &mut out, b)?;
+    fragment_into(proof.fragment, xml, 1, None, &mut out, b)?;
     Ok(out.finish())
 }
 /// Caller must own the composite structural and identity proof.
@@ -212,17 +212,19 @@ pub(crate) fn embedded(
     out: &mut Output,
     b: &mut Budget,
 ) -> Result<(), HtmlError> {
-    fragment_into(f, true, out, b)
+    fragment_into(f, true, 1, None, out, b)
 }
-fn fragment_into(
+pub(super) fn fragment_into(
     f: &HtmlFragment,
     xml: bool,
+    start_depth: u64,
+    mut math: Option<&mut super::math::Composition<'_>>,
     out: &mut Output,
     b: &mut Budget,
 ) -> Result<(), HtmlError> {
     b.poll()?;
     b.charge(Resource::AllocationUnits, 64)?;
-    let mut stack = vec![(f.root, 1_u64, false, false)];
+    let mut stack = vec![(f.root, start_depth, false, false)];
     while let Some((r, depth, exit, math_parent)) = stack.pop() {
         b.charge(Resource::Work, 1)?;
         b.observe_depth(depth)?;
@@ -237,6 +239,9 @@ fn fragment_into(
                 out.literal("</", b)?;
                 out.literal(tag.name(), b)?;
                 out.literal(">", b)?;
+                if let Some(math) = math.as_deref_mut() {
+                    math.close(r, out, b)?;
+                }
             }
             continue;
         }
@@ -248,6 +253,12 @@ fn fragment_into(
                 attributes,
                 children,
             } => {
+                let depth = if let Some(math) = math.as_deref_mut() {
+                    math.open(r, depth, out, b)?
+                } else {
+                    depth
+                };
+                b.observe_depth(depth)?;
                 out.literal("<", b)?;
                 out.literal(tag.name(), b)?;
                 if *tag == crate::mathml::Tag::Math {
@@ -267,7 +278,10 @@ fn fragment_into(
                 for c in children.iter().rev() {
                     b.charge(Resource::Work, 1)?;
                     b.charge(Resource::AllocationUnits, 64)?;
-                    stack.push((*c, depth.saturating_add(1), false, true));
+                    let next = depth
+                        .checked_add(1)
+                        .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
+                    stack.push((*c, next, false, true));
                 }
             }
             HtmlNode::Element {

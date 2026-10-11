@@ -1,5 +1,6 @@
 import { parentPort, workerData } from 'node:worker_threads';
-import { render } from '../render.mjs';
+import { render, byteLength } from '../render.mjs';
+import { parse } from '../parse.mjs';
 
 // This realm is dedicated to one invocation of a trusted, pinned renderer.
 // Capture before module loading; never patch the application's console.
@@ -31,6 +32,32 @@ try {
   // Loading the configured optional capability failed. Do not leak exception
   // text or let absence prevent the separately prepared MathML path.
   result = { kind: 'unavailable' };
+}
+if (result.kind === 'rendered-unchecked' && workerData.parser) {
+  let parser;
+  try { parser = await import(workerData.parser); }
+  catch { result = { kind: 'unavailable' }; }
+  if (parser) {
+    const rendered = result;
+    result = parse(parser.parseFragment, rendered.html, {
+      inputBytes: workerData.limits.outputBytes,
+      nodes: workerData.limits.nodes,
+      depth: workerData.limits.depth,
+    });
+    if (result.kind === 'parsed-unchecked') {
+      result = { ...result, version: rendered.version,
+        inputBytes: rendered.inputBytes, outputBytes: rendered.outputBytes };
+      // Parsing, finite-tree conversion and JSON encoding are all terminated
+      // by the same outer deadline. The cap bounds transport, not parser RSS.
+      const encoded = JSON.stringify(result);
+      const transportBytes = byteLength(encoded, workerData.limits.transportBytes);
+      if (transportBytes === null) {
+        result = { kind: 'provider-violation', reason: 'transport' };
+      } else if (transportBytes > workerData.limits.transportBytes) {
+        result = { kind: 'stopped', reason: 'transport-limit' };
+      }
+    }
+  }
 }
 if (overflow) result = { kind: 'stopped', reason: 'diagnostic-limit' };
 parentPort.postMessage({ result, diagnostics, diagnosticBytes });

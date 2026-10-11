@@ -13,6 +13,15 @@ direct stdio or premature exit is a provider violation. A termination failure
 is recorded, and is not reported as a confirmed exit while the realm is alive.
 The deadline includes module loading, not only rendering. Cancellation before
 final resolution wins over output, including termination and stream drainage.
+`renderParsed` additionally loads a trusted host-configured parse5 module and
+runs HTML5 parsing, finite-tree conversion and JSON encoding before that same
+realm exits. Only visual `html` output is accepted. Node/depth limits bound the
+parsed tree; `transportBytes` bounds the UTF-8 JSON result (not the enclosing
+message or separately bounded diagnostics). No unchecked HTML string is returned
+on this path. Missing parser capability is explicit; parser/markup violations
+and resource stops stay distinct. This is still an unchecked finite tree, not
+Doc insertion or renderer identity verification.
+
 The owning document operation must still check its current
 source/revision and stop state before using any result.
 
@@ -120,3 +129,24 @@ Run `node --test tools/audit/math/parse.test.mjs` and the regular Rust
 `python tools/audit/math/browser.py --corpus <log>`. It uses the existing pinned
 Playwright requirements and all three engines by default; generated logs remain
 local/CI artifacts rather than source history.
+
+## Executable snapshot
+
+`node/execution.mjs` admits the fixed KaTeX, parse5 and entities executable
+closure using `execution.json` SHA-256/length pins. It reads bounded owned bytes,
+then creates a private snapshot and gives its entry URLs to an awaited callback.
+Workers must finish before the callback returns; cleanup runs afterward. This
+avoids verifying installed code and then importing changed installed files.
+It does not defend against a hostile OS user or provide an OS sandbox.
+The logical cap covers retained executable bytes, not total heap, I/O time or
+all filesystem overhead. I/O failures during snapshot construction propagate;
+they are not renderer success or document fallback.
+
+The inventory is generated from the reviewed locked npm packages with
+`node tools/generate/katex-host.mjs --write`; without `--write`, it verifies the
+existing inventory. The class inventory combines fixed CSS selectors (with the stylesheet digest)
+and nine explicitly reviewed structural atom/tight-layout classes from the
+pinned renderer source, never classes harvested from the current output. This is a
+fixed-package inventory rather than a parser for arbitrary stylesheet policies.
+Document identity, resource packaging, typed visual insertion and admission
+remain separate obligations; this helper does not complete Doc KaTeX support.
