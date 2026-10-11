@@ -5,12 +5,378 @@ use nepl3_wire::foundation::FoundationCodec;
 #[test]
 fn terminal_read_replies_preserve_fields_and_reject_forged_cursor() -> Result<(), String> {
     for dependent in [false, true] {
-        terminal_replies(dependent)?;
+        terminal_replies(dependent, false)?;
     }
     Ok(())
 }
 
-fn terminal_replies(dependent: bool) -> Result<(), String> {
+#[test]
+fn terminal_source_closure_is_explicit_provisional_and_metered() -> Result<(), String> {
+    for dependent in [false, true] {
+        terminal_replies(dependent, true)?;
+    }
+    Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
+fn staged_source_roundtrip(
+    reply: &ReadReply,
+    value: &NdfValue,
+    receiving: &read::ReadReplyContext<'_>,
+    call: &ProviderCall,
+    signature: &ProviderSignature,
+    registry: &SchemaRegistry,
+    store: &SourceStore,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<ReadReply, String> {
+    use nepl3_core::{
+        operation::{Invoke, ProviderFrame},
+        value_codec::FoundationValueCodec,
+    };
+    use nepl3_reader::portable::{
+        PortableError,
+        dispatch::{DispatchContext, ProviderInput},
+    };
+    macro_rules! checked {
+        ($v:expr) => {
+            $v.map_err(|e| format!("{e:?}"))?
+        };
+    }
+    // Use the real session-issued call and selected signature. This is an
+    // in-process codec comparison; native execution supplied trustworthy usage.
+    // It does not authenticate a remote execution or transfer a continuation.
+    let (id, operation, input, request) = match call {
+        ProviderCall::Read {
+            call_id,
+            operation,
+            request,
+            ..
+        } => (
+            *call_id,
+            operation,
+            ProviderInput::Read(Box::new(request.clone())),
+            request,
+        ),
+        ProviderCall::Dependent {
+            call_id,
+            operation,
+            request,
+            ..
+        } => (
+            *call_id,
+            operation,
+            ProviderInput::Dependent(Box::new(request.clone())),
+            &request.request,
+        ),
+        _ => return Err("unexpected call".into()),
+    };
+    let context = DispatchContext {
+        signature,
+        sources: store,
+        mappings: &[],
+        registry,
+    };
+    let (invoke, operation_reply, closure) = {
+        let mut codec = checked!(FoundationCodec::new(registry, store, admission));
+        let input = checked!(nepl3_reader::portable::dispatch::to_value(
+            &input, &context, &mut codec, b
+        ));
+        let environment = checked!(codec.encode_environment(&request.context.environment, b));
+        let NdfValue::Record(environment) = &environment else {
+            return Err("environment".into());
+        };
+        let invoke = Invoke {
+            request_id: id,
+            operation: operation.clone(),
+            input,
+            environment: TypedValue::Record(environment.clone()),
+            sources: request.sources.clone(),
+            resources: vec![],
+            limits: b.limits(),
+        };
+        let operation_reply = checked!(read::operation::to_reply(reply, receiving, &mut codec, b));
+        let closure = checked!(read::reply_source_closure(value, receiving, &mut codec, b));
+        (invoke, operation_reply, closure)
+    };
+    let frame = ProviderFrame::Reply {
+        request_id: id,
+        reply: operation_reply,
+    };
+    let bytes = checked!(nepl3_wire::operation::encode_frame(
+        &frame, registry, &closure, admission, b
+    ));
+    // The outer diagnostic names the generated snapshot, absent from store.
+    assert!(
+        nepl3_wire::operation::decode_frame(&bytes, true, registry, store, admission, b).is_err()
+    );
+    let (pending, rest) = checked!(nepl3_wire::operation::decode_pending_reply_frame(
+        &bytes, true, registry, admission, b
+    ))
+    .ok_or("pending frame")?;
+    assert!(rest.is_empty());
+    assert_eq!(pending.request_id(), id);
+    let mut calls = 0;
+    let received = checked!(pending.finish_with(
+        &invoke,
+        store,
+        |payload, registry, original, admission, b| {
+            calls += 1;
+            let mut codec = FoundationCodec::new(registry, original, admission)
+                .map_err(PortableError::Boundary)?;
+            read::reply_source_closure(payload.value, receiving, &mut codec, b)
+        }
+    ));
+    assert_eq!(calls, 1);
+    assert_eq!(received, frame);
+    let ProviderFrame::Reply {
+        reply: received, ..
+    } = received
+    else {
+        return Err("Reply".into());
+    };
+    let mut codec = checked!(FoundationCodec::new(registry, store, admission));
+    let OperationResult::Complete {
+        value: accepted, ..
+    } = checked!(read::operation::from_reply(
+        &received, receiving, &mut codec, b
+    ))
+    else {
+        return Err("terminal".into());
+    };
+    assert_eq!(&accepted, reply);
+    // terminal_replies resumes the same still-pending native slot afterward.
+    Ok(accepted)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn source_closure_checks(
+    value: &NdfValue,
+    case: &str,
+    receiving: &read::ReadReplyContext<'_>,
+    registry: &SchemaRegistry,
+    store: &SourceStore,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<(), String> {
+    use nepl3_core::value_codec::FoundationValueCodec;
+    macro_rules! checked {
+        ($v:expr) => {
+            $v.map_err(|e| format!("{e:?}"))?
+        };
+    }
+    let mut codec = checked!(FoundationCodec::new(registry, store, admission));
+    let closure = checked!(read::reply_source_closure(value, receiving, &mut codec, b));
+    assert_eq!(
+        closure.snapshots().len(),
+        if case == "Matched" { 2 } else { 1 }
+    );
+    for saved in store.snapshots() {
+        assert!(closure.resolve(&saved.reference()).is_some());
+    }
+    for reason in [StopReason::WorkLimit, StopReason::AllocationLimit] {
+        let mut limits = budget().limits();
+        if reason == StopReason::WorkLimit {
+            limits.work = 0;
+        } else {
+            limits.allocation_units = 0;
+        }
+        let mut stopped = Budget::new(limits);
+        assert!(read::reply_source_closure(value, receiving, &mut codec, &mut stopped).is_err());
+        assert_eq!(stopped.poll(), Err(reason));
+    }
+    if case != "Matched" {
+        return Ok(());
+    }
+
+    // Valid source identities alone say nothing about cursor or mapping validity.
+    for field in [1, 6] {
+        let mut malformed = value.clone();
+        let NdfValue::Variant(v) = &mut malformed else {
+            return Err("reply".into());
+        };
+        v.fields[field] = if field == 1 {
+            NdfValue::U64(1)
+        } else {
+            NdfValue::List(vec![])
+        };
+        assert!(read::reply_source_closure(&malformed, receiving, &mut codec, b).is_ok());
+        assert!(read::reply_from_value(&malformed, receiving, &mut codec, b).is_err());
+    }
+    let mut forged_usage = value.clone();
+    let NdfValue::Variant(v) = &mut forged_usage else {
+        return Err("reply".into());
+    };
+    let NdfValue::Record(report) = &mut v.fields[7] else {
+        return Err("report".into());
+    };
+    let NdfValue::Record(usage) = &mut report.fields[3] else {
+        return Err("usage".into());
+    };
+    usage.fields[1] = NdfValue::U64(u64::MAX);
+    assert!(read::reply_source_closure(&forged_usage, receiving, &mut codec, b).is_ok());
+    assert!(read::reply_from_value(&forged_usage, receiving, &mut codec, b).is_err());
+
+    for defect in 0..5 {
+        let mut malformed = value.clone();
+        let NdfValue::Variant(v) = &mut malformed else {
+            return Err("reply".into());
+        };
+        match defect {
+            0 => v.schema.digest = nepl3_core::source::Digest::of(b"wrong reader"),
+            1 => {
+                v.variant = "Await".into();
+                v.fields.clear();
+            }
+            2..=4 => {
+                let NdfValue::List(entries) = &mut v.fields[5] else {
+                    return Err("sources".into());
+                };
+                if defect == 2 || defect == 4 {
+                    let NdfValue::Record(content) = &mut entries[0] else {
+                        return Err("source".into());
+                    };
+                    if defect == 4 {
+                        content.fields[1] = NdfValue::Text("memory:conflicting-locator".into());
+                    } else {
+                        let NdfValue::Record(reference) = &mut content.fields[0] else {
+                            return Err("reference".into());
+                        };
+                        reference.fields[2] = NdfValue::Bytes(vec![0; 32]);
+                    }
+                } else {
+                    entries.push(entries[0].clone());
+                }
+            }
+            _ => return Err("defect".into()),
+        }
+        assert!(read::reply_source_closure(&malformed, receiving, &mut codec, b).is_err());
+    }
+
+    // Construct a source only on the producer ledger; it has not been admitted
+    // to this receiving ledger by fixture setup or reply encoding.
+    let mut producer_budget = budget();
+    let extra = checked!(SourceSnapshot::new(
+        SourceId("zz-new".into()),
+        0,
+        "memory:zz-new".into(),
+        b"new".to_vec(),
+        &mut producer_budget
+    ));
+    let mut producer_admission = SourceAdmission::default();
+    let mut producer = checked!(FoundationCodec::new(
+        registry,
+        store,
+        &mut producer_admission
+    ));
+    let NdfValue::List(ref mut extra_entries) =
+        checked!(producer.encode_sources(core::slice::from_ref(&extra), &mut producer_budget))
+    else {
+        return Err("source list".into());
+    };
+    let entry = extra_entries.pop().ok_or("source entry")?;
+    let mut expanded = value.clone();
+    let NdfValue::Variant(v) = &mut expanded else {
+        return Err("reply".into());
+    };
+    let NdfValue::List(entries) = &mut v.fields[5] else {
+        return Err("sources".into());
+    };
+    entries.push(entry);
+    let before = b.usage();
+    let mut late_failure = expanded.clone();
+    let NdfValue::Variant(v) = &mut late_failure else {
+        return Err("reply".into());
+    };
+    let NdfValue::List(entries) = &mut v.fields[5] else {
+        return Err("sources".into());
+    };
+    let mut invalid = entries.last().cloned().ok_or("last source")?;
+    let NdfValue::Record(content) = &mut invalid else {
+        return Err("source".into());
+    };
+    let NdfValue::Record(reference) = &mut content.fields[0] else {
+        return Err("reference".into());
+    };
+    reference.fields[0] = NdfValue::Text("zzz-invalid".into());
+    reference.fields[2] = NdfValue::Bytes(vec![0; 32]);
+    entries.push(invalid);
+    assert!(read::reply_source_closure(&late_failure, receiving, &mut codec, b).is_err());
+    // The fresh valid prefix is retained despite the later digest rejection.
+    assert_eq!(b.usage().source_bytes, before.source_bytes + 3);
+    let after_failure = b.usage();
+    let expanded_closure = checked!(read::reply_source_closure(
+        &expanded, receiving, &mut codec, b
+    ));
+    assert!(expanded_closure.resolve(&extra.reference()).is_some());
+    assert_eq!(b.usage().source_bytes, after_failure.source_bytes);
+    let before = b.usage();
+    checked!(read::reply_source_closure(
+        &expanded, receiving, &mut codec, b
+    ));
+    assert_eq!(b.usage().source_bytes, before.source_bytes);
+    assert!(b.usage().work > before.work);
+    assert!(b.usage().allocation_units > before.allocation_units);
+
+    let mut reordered = expanded.clone();
+    let NdfValue::Variant(v) = &mut reordered else {
+        return Err("reply".into());
+    };
+    let NdfValue::List(entries) = &mut v.fields[5] else {
+        return Err("sources".into());
+    };
+    entries.swap(0, 1);
+    assert!(read::reply_source_closure(&reordered, receiving, &mut codec, b).is_err());
+
+    let total_bytes: u64 = expanded_closure
+        .snapshots()
+        .iter()
+        .map(|s| s.text().len() as u64)
+        .sum();
+    for exact in [false, true] {
+        let mut limits = budget().limits();
+        limits.source_bytes = total_bytes - u64::from(!exact);
+        let mut limited = Budget::new(limits);
+        let mut fresh = SourceAdmission::default();
+        let mut fresh_codec = checked!(FoundationCodec::new(registry, store, &mut fresh));
+        let result =
+            read::reply_source_closure(&expanded, receiving, &mut fresh_codec, &mut limited);
+        if exact {
+            assert_eq!(
+                checked!(result).snapshots().len(),
+                expanded_closure.snapshots().len()
+            );
+        } else {
+            assert!(result.is_err());
+            assert_eq!(limited.poll(), Err(StopReason::SourceLimit));
+        }
+    }
+
+    // A source in the codec's ambient store is not part of this saved dispatch.
+    let mut ambient = SourceStore::default();
+    for saved in store.snapshots() {
+        checked!(ambient.insert(saved.clone()));
+    }
+    checked!(ambient.insert(extra.clone()));
+    let mut ambient_admission = SourceAdmission::default();
+    let mut ambient_codec = checked!(FoundationCodec::new(
+        registry,
+        &ambient,
+        &mut ambient_admission
+    ));
+    let original = checked!(read::reply_source_closure(
+        value,
+        receiving,
+        &mut ambient_codec,
+        b
+    ));
+    assert!(original.resolve(&extra.reference()).is_none());
+    // The caller still owns the real pending slot and can fully accept a correction.
+    checked!(read::reply_from_value(value, receiving, &mut codec, b));
+    Ok(())
+}
+
+fn terminal_replies(dependent: bool, closure_checks: bool) -> Result<(), String> {
     macro_rules! checked {
         ($value:expr) => {
             $value.map_err(|e| format!("{e:?}"))?
@@ -71,7 +437,10 @@ fn terminal_replies(dependent: bool) -> Result<(), String> {
         &mut b,
         &mut admission
     ));
-    let ReadReply::Await { continuation, .. } = suspended else {
+    let ReadReply::Await {
+        continuation, call, ..
+    } = suspended
+    else {
         return Err("await".into());
     };
     let ProviderReply::Read(mut matched) = checked!(terminal("あ", 3, &mut b)) else {
@@ -115,6 +484,23 @@ fn terminal_replies(dependent: bool) -> Result<(), String> {
             relations: vec![],
         });
         view.roots.push(ViewRef(0));
+        if closure_checks {
+            checked!(b.charge(Resource::Diagnostics, 1));
+            report.diagnostics.push(Diagnostic {
+                schema: schema.clone(),
+                code: "Failure".into(),
+                severity: Severity::Warning,
+                stage: "read".into(),
+                arguments: TypedValue::Record(Record {
+                    schema: schema.clone(),
+                    kind: "Node".into(),
+                    fields: vec![],
+                }),
+                primary: Some(checked!(generated.span(0, 1))),
+                related: vec![],
+                fixes: vec![],
+            });
+        }
         report.usage = b.usage();
     }
     let report = Report {
@@ -193,6 +579,32 @@ fn terminal_replies(dependent: bool) -> Result<(), String> {
     ] {
         let mut codec = checked!(FoundationCodec::new(&registry, &store, &mut admission));
         let value = checked!(read::reply_to_value(&reply, &receiving, &mut codec, &mut b));
+        if closure_checks {
+            source_closure_checks(
+                &value,
+                case,
+                &receiving,
+                &registry,
+                &store,
+                &mut admission,
+                &mut b,
+            )?;
+            if case == "Matched" {
+                received_match = Some(staged_source_roundtrip(
+                    &reply,
+                    &value,
+                    &receiving,
+                    &call,
+                    p.providers.first().ok_or("provider")?,
+                    &registry,
+                    &store,
+                    &mut admission,
+                    &mut b,
+                )?);
+            }
+            continue;
+        }
+
         for reason in [StopReason::WorkLimit, StopReason::AllocationLimit] {
             let mut limits = budget().limits();
             match reason {

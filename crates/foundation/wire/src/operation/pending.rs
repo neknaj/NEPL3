@@ -51,6 +51,7 @@ pub struct PendingReplyFrame<'a> {
     value: crate::StructuralValue,
     request_id: u64,
     registry: &'a SchemaRegistry,
+    foundation: &'a SchemaRef,
     admission: &'a mut SourceAdmission,
     budget: &'a mut Budget,
 }
@@ -86,6 +87,7 @@ pub fn decode_pending_reply_frame<'input, 'context>(
             value,
             request_id,
             registry,
+            foundation: s,
             admission,
             budget,
         },
@@ -178,7 +180,9 @@ impl PendingReplyFrame<'_> {
             }
         }
         let selected = selected.ok_or(ReplyAdmissionError::UnknownOperation)?;
-        let s = schema(self.registry)?;
+        // The registry stays immutably borrowed across both stages. Reuse its
+        // initially selected identity instead of performing another linear scan.
+        let s = self.foundation;
         let (_, [_, response]) = variant_parts(self.value.value(), s, "ProviderFrame")? else {
             return Err(WireError::InvalidType.into());
         };
