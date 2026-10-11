@@ -109,6 +109,9 @@ jobs:
         run: cargo clippy --workspace --all-targets --locked --features nepl3-suite/sentence-html -- -D warnings
       - name: Tests
         run: cargo test --workspace --locked
+      - name: Native Doc KaTeX host portability
+        if: matrix.os != 'ubuntu-latest'
+        run: cargo test --locked -p nepl3-tools --test doc katex_cli::pinned_native -- --ignored --nocapture
       - name: Record native source-position oracle execution
         run: python tools/evidence/runner.py run tools/evidence/specs/source-position-native.json dist/source-position-native
       - name: Preserve native source-position evidence
