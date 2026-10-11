@@ -151,7 +151,7 @@ impl ViewBundle {
         }
         for element in &self.elements {
             budget.charge(Resource::Nodes, 1)?;
-            check_kind(&element.kind, registry)?;
+            check_kind(&element.kind, registry, budget)?;
             sources
                 .get_ref(element.span.snapshot_ref())
                 .ok_or(SourceError::MissingSnapshot)?
@@ -169,13 +169,21 @@ impl ViewBundle {
                 }
             }
             for role in &element.roles {
-                if role.name.is_empty() || registry.descriptor(&role.schema).is_none() {
+                if role.name.is_empty()
+                    || registry
+                        .descriptor_with_budget(&role.schema, budget)?
+                        .is_none()
+                {
                     return Err(ViewError::Presentation);
                 }
             }
             for relation in &element.relations {
                 self.element(relation.target)?;
-                if relation.kind.is_empty() || registry.descriptor(&relation.schema).is_none() {
+                if relation.kind.is_empty()
+                    || registry
+                        .descriptor_with_budget(&relation.schema, budget)?
+                        .is_none()
+                {
                     return Err(ViewError::Presentation);
                 }
             }
@@ -250,7 +258,7 @@ impl Token {
     ) -> Result<(), ViewError> {
         self.views
             .validate_with_maps(sources, registry, maps, budget)?;
-        check_kind(&self.kind, registry)?;
+        check_kind(&self.kind, registry, budget)?;
         sources
             .get_ref(self.head.snapshot_ref())
             .ok_or(SourceError::MissingSnapshot)?
@@ -292,12 +300,16 @@ impl Token {
         Ok(())
     }
 }
-fn check_kind(kind: &KindRef, registry: &SchemaRegistry) -> Result<(), ViewError> {
+fn check_kind(
+    kind: &KindRef,
+    registry: &SchemaRegistry,
+    budget: &mut Budget,
+) -> Result<(), ViewError> {
     if !registry.is_finalized() {
         return Err(SchemaError::Unfinalized.into());
     }
     let descriptor = registry
-        .descriptor(&kind.schema)
+        .descriptor_with_budget(&kind.schema, budget)?
         .ok_or(SchemaError::UnknownSchema)?;
     if kind.local_kind >= descriptor.types.len() as u64 {
         return Err(SchemaError::UnknownType.into());
