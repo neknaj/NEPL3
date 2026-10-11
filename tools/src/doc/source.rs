@@ -268,11 +268,16 @@ fn host_for_source<'a>(
 
 /// Desktop development-host allowance. `nodes` includes cumulative typed-value
 /// validation visits, not just the number of syntax nodes in the final tree.
-/// Every operation still keeps its own fixed, sticky Work/Allocation limits.
+/// View/Token owner admission is charged on every validation. The adopted
+/// Doc Pages chapter uses about 161 million Work with this accounting (including
+/// parse-tree validation); a 200 million host ceiling retains finite headroom.
+/// This default also supplies independent lower/output phase allowances.
+/// Core limits and caller-supplied ceilings are not raised or retried. Other
+/// resource limits remain independent and unchanged.
 pub fn budget() -> Budget {
     Budget::new(Limits {
         source_bytes: 10_000_000,
-        work: 100_000_000,
+        work: 200_000_000,
         depth: 1000,
         nodes: 10_000_000,
         allocation_units: 500_000_000,

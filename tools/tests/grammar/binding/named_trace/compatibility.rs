@@ -1,7 +1,9 @@
 use super::*;
 #[test]
 fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<(), String> {
-    let lambda_lookup = namespace_lookup_work("test.binding-execution");
+    let lambda_owner_lookup = namespace_lookup_work("test.binding-execution");
+    let lambda_lookup = 4 * lambda_owner_lookup;
+    let recovered_lookup = 3 * lambda_owner_lookup;
     let compiled = execution()?;
     with_input(&compiled, "lambda x x", |tree, profile, _, _| {
         for mode in [0, 1] {
@@ -80,7 +82,7 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
         }
         Ok(())
     })?;
-    let custom_lookup = 4 * namespace_lookup_work("test.binding-custom")
+    let custom_lookup = (4 + 12) * namespace_lookup_work("test.binding-custom")
         + 2 * lookup_work(
             "nepl3.engine",
             &["nepl3.foundation", "nepl3.reader", "nepl3.engine"],
@@ -152,7 +154,7 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
         ));
         assert_eq!(
             b.usage(),
-            expected(8, (2041, 6, 2, lambda_lookup), 5, 17, (5844, 2), 0, 0)
+            expected(8, (2041, 6, 2, recovered_lookup), 5, 17, (5844, 2), 0, 0)
         );
         let mut limits = budget().limits();
         limits.work = b.usage().work - 1;
@@ -170,7 +172,7 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
         ));
         assert_eq!(
             short.usage(),
-            expected(8, (1973, 6, 2, lambda_lookup), 5, 17, (5276, 2), 0, 0)
+            expected(8, (1973, 6, 2, recovered_lookup), 5, 17, (5276, 2), 0, 0)
         );
         Ok(())
     })
@@ -231,6 +233,11 @@ fn expected(
 // post-host existing facts, combined delta and final facts (4 * 273), and checks
 // engine metadata for the emitted diagnostic and event (2 * 157). The built-in
 // UndefinedName diagnostic only validates arguments, so adds no owner search.
+// View/Token owner admission additionally validates three token kinds at the
+// ordinary/traced lambda entry, two at recovered lambda entry, and six tokens
+// at each of analyze entry and FactsRequestView issue for the custom fixture.
+// Thus lambda has 1 namespace + 3 token searches; recovered has 1 + 2; custom
+// has 4 namespace + 12 token searches, in addition to its two metadata owners.
 // Full and one-short runs reach all of these searches; other counters and the
 // subsequent stop prefixes remain exact rather than allowing a tolerance.
 fn namespace_lookup_work(owner: &str) -> u64 {

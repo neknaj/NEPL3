@@ -571,7 +571,11 @@ fn html_output_allowance_is_explicit_independent_and_recorded() -> Result<()> {
     assert!(markdown(f.root(), "doc/canonical.json", &md).is_err());
     assert!(!md.exists());
 
-    explicit["html_output_limits"]["work"] = json!(200_000_000);
+    let higher_work = super::super::export::pages::resources::OutputLimits::default()
+        .work
+        .checked_add(1)
+        .ok_or("default Work limit must allow a distinct explicit ceiling")?;
+    explicit["html_output_limits"]["work"] = json!(higher_work);
     f.json("doc/canonical.json", &explicit)?;
     let higher = f.root().join("higher");
     html(f.root(), "doc/canonical.json", &higher)?;
@@ -579,7 +583,7 @@ fn html_output_allowance_is_explicit_independent_and_recorded() -> Result<()> {
         serde_json::from_slice(&fs::read(selected.join("manifest.json"))?)?;
     let after: serde_json::Value =
         serde_json::from_slice(&fs::read(higher.join("manifest.json"))?)?;
-    assert_eq!(after["output_budget"]["limits"]["work"], 200_000_000);
+    assert_eq!(after["output_budget"]["limits"]["work"], higher_work);
     assert_eq!(after["output_budget"]["initial_usage"]["work"], 0);
     assert_ne!(before["execution_identity"], after["execution_identity"]);
     assert_eq!(before["identity"], after["identity"]);
@@ -850,7 +854,7 @@ fn grouped_failures_and_sticky_limits_never_publish_partial_outputs() -> Result<
             // that bounded metadata difference instead of copying an exact
             // counter as an invariant across different configurations.
             "work" => limits.work = used.work - 1024,
-            "allocation" => limits.allocation_units = used.allocation_units - 1,
+            "allocation" => limits.allocation_units = used.allocation_units - 1024,
             "output" => limits.output_bytes = used.output_bytes - 1024,
             "nodes" => limits.nodes = used.nodes - 1,
             _ => (),
