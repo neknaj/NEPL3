@@ -156,11 +156,11 @@ fn view_schema_errors_and_lookup_stops_keep_their_priority() -> Result<(), ViewE
             );
             if mutation == 0 {
                 let lookup_work = 1 + (4 + 7 + 9) + 32 * (10 + 7 + 9) + (5 + 7 + 9);
-                let prefix = b
-                    .usage()
-                    .work
-                    .checked_sub(lookup_work)
-                    .expect("missing-schema search must charge the complete visited prefix");
+                assert!(
+                    b.usage().work >= lookup_work,
+                    "missing-schema search must charge the complete visited prefix"
+                );
+                let prefix = b.usage().work - lookup_work;
                 let mut stopped = Budget::new(Limits {
                     work: prefix,
                     ..budget().limits()
