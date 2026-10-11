@@ -43,6 +43,8 @@ struct RecursiveHost {
     stop_body: bool,
     portable: bool,
     check_claims: bool,
+    check_schema_admission: bool,
+    schema_checks: usize,
 }
 impl BindingHost for RecursiveHost {
     fn authorize(
@@ -173,6 +175,10 @@ impl RecursiveHost {
         let request = checked.request();
         match request.phase {
             FactsPhase::Body { header } => {
+                if self.check_schema_admission {
+                    check_schema_admission(checked)?;
+                    self.schema_checks += 1;
+                }
                 self.phases.push("body");
                 self.bodies.extend_from_slice(&header.entities);
                 if self.stop_body {
@@ -648,6 +654,102 @@ fn recursive_custom_rejects_header_references_and_id_reissue_but_preserves_disti
                     .map_err(err)?;
                 assert_eq!(reply.report.events.len(), if mode == 2 { 2 } else { 1 });
             }
+            Ok(())
+        },
+    )
+}
+
+fn check_schema_admission(checked: &CheckedFactsView<'_, '_>) -> Result<(), BindingError> {
+    let request = checked.request();
+    let profile = checked.profile();
+    let FactsPhase::Body { header } = request.phase else {
+        return Err(BindingError::Target);
+    };
+    let width = header.provider.provider.len() as u64;
+    assert!(width > 0);
+    let descriptor = profile
+        .registry()
+        .descriptor(&header.provider.operation.schema)
+        .ok_or(BindingError::Target)?;
+    assert!(descriptor.operations.len() * (header.provider.operation.name.len() + 1) > 1);
+    let mut provider = header.provider.clone();
+    provider.provider.clear();
+    let invalid = FactsPhase::Body {
+        header: Box::new(FactsHeader {
+            group: header.group,
+            provider,
+            target: header.target.clone(),
+            entities: header.entities.clone(),
+            exports: header.exports.clone(),
+        }),
+    };
+    let control = FactsRequestView {
+        phase: &invalid,
+        ..request
+    };
+    let mut b = budget();
+    assert!(matches!(
+        control.validate(profile, &mut b, &mut SourceAdmission::default()),
+        Err(FactsError::Phase)
+    ));
+    let before = b.usage();
+    let original = format!("{:?}", request.phase);
+    for entry in [0, 1] {
+        let mut b = Budget::new(Limits {
+            work: before.work + width + entry,
+            ..budget().limits()
+        });
+        assert!(matches!(
+            request.validate(profile, &mut b, &mut SourceAdmission::default()),
+            Err(FactsError::Stopped(StopReason::WorkLimit))
+        ));
+        assert_eq!(b.poll(), Err(StopReason::WorkLimit));
+        // The +1 case distinguishes admitted lookup entry from the old raw
+        // scan followed by a failing operation-table charge (>1 in this fixture).
+        assert_eq!(
+            b.usage(),
+            Usage {
+                work: before.work + width + entry,
+                ..before
+            }
+        );
+        assert_eq!(format!("{:?}", request.phase), original);
+    }
+    assert!(
+        request
+            .issue(profile, &mut budget(), &mut SourceAdmission::default())
+            .is_ok()
+    );
+    Ok(())
+}
+
+#[test]
+fn body_header_provider_schema_lookup_charges_before_registry_scan() -> Result<(), String> {
+    let compiled = compiled_recursive()?;
+    with_input(
+        &compiled,
+        "recursive cons customdecl x x nil x",
+        |tree, profile, _, _| {
+            let mut host = RecursiveHost {
+                check_schema_admission: true,
+                ..Default::default()
+            };
+            let reply = analyze_with_host(
+                "body-schema",
+                tree,
+                profile,
+                &mut host,
+                &mut budget(),
+                &mut SourceAdmission::default(),
+            );
+            assert!(
+                matches!(reply.outcome, BindingOutcome::Complete(_)),
+                "{reply:?}"
+            );
+            assert!(
+                host.schema_checks > 0,
+                "must validate an actual body request"
+            );
             Ok(())
         },
     )

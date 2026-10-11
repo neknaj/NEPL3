@@ -781,6 +781,25 @@ impl SchemaRegistry {
             .map(|ty| ty.name.as_str())
             .ok_or(SchemaError::UnknownType)
     }
+    /// Budgeted exact-identity lookup borrowing this registry. This neither
+    /// finalizes the registry nor creates a structural or semantic proof.
+    pub fn descriptor_with_budget(
+        &self,
+        reference: &SchemaRef,
+        budget: &mut Budget,
+    ) -> Result<Option<&SchemaDescriptor>, StopReason> {
+        let Some((selected, descriptor)) =
+            self.selected_descriptor_with_budget(&reference.package, reference.revision, budget)?
+        else {
+            return Ok(None);
+        };
+        budget.charge(
+            Resource::Work,
+            (reference.package.len() as u64).saturating_add(41),
+        )?;
+        Ok((selected == reference).then_some(descriptor))
+    }
+
     pub fn descriptor(&self, reference: &SchemaRef) -> Option<&SchemaDescriptor> {
         self.schemas
             .iter()
