@@ -124,6 +124,61 @@ impl<'a> NativeHost<'a> {
             sources: SourceStore::default(),
         })
     }
+    /// Copy the actual callback catalog for Profile resolution without borrowing
+    /// this mutable dispatch host for the entire resolved Profile lifetime.
+    pub fn provider_catalog(
+        &self,
+        b: &mut Budget,
+    ) -> Result<Vec<ProviderImplementation>, ParseError> {
+        b.poll()?;
+        b.charge(
+            Resource::Work,
+            (self.providers.len() as u64).saturating_add(1),
+        )?;
+        b.charge(
+            Resource::AllocationUnits,
+            (self.providers.len() as u64)
+                .saturating_mul(core::mem::size_of::<ProviderImplementation>() as u64),
+        )?;
+        let mut catalog = Vec::new();
+        catalog
+            .try_reserve_exact(self.providers.len())
+            .map_err(|_| b.stop(nepl3_core::budget::StopReason::AllocationLimit))?;
+        for provider in &self.providers {
+            b.charge(
+                Resource::Work,
+                (provider.provider.len() as u64).saturating_add(41),
+            )?;
+            b.charge(
+                Resource::AllocationUnits,
+                (provider.provider.len() as u64).saturating_add(
+                    (provider.operations.len() as u64)
+                        .saturating_mul(
+                            core::mem::size_of::<nepl3_core::value::OperationRef>() as u64
+                        ),
+                ),
+            )?;
+            let mut operations = Vec::new();
+            operations
+                .try_reserve_exact(provider.operations.len())
+                .map_err(|_| b.stop(nepl3_core::budget::StopReason::AllocationLimit))?;
+            for operation in &provider.operations {
+                let bytes = (operation.name.len() as u64)
+                    .saturating_add(operation.schema.package.len() as u64);
+                b.charge(Resource::Work, bytes.saturating_add(41))?;
+                b.charge(Resource::AllocationUnits, bytes)?;
+                operations.push(operation.clone());
+            }
+            catalog.push(ProviderImplementation {
+                provider: provider.provider.clone(),
+                revision: provider.revision,
+                implementation_digest: provider.implementation_digest,
+                operations,
+            });
+        }
+        Ok(catalog)
+    }
+
     pub fn providers(&self) -> &[ProviderImplementation] {
         &self.providers
     }
