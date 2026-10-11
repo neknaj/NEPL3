@@ -773,6 +773,60 @@ impl SchemaRegistry {
             .map(|i| i as u64)
             .ok_or(SchemaError::UnknownType)
     }
+    /// Resolve a canonical kind ID with metered exact schema and UTF-8 name
+    /// comparisons. Registration establishes the sorted type inventory; this
+    /// lookup neither finalizes nor structurally validates the registry.
+    pub fn kind_id_with_budget(
+        &self,
+        schema: &SchemaRef,
+        name: &str,
+        budget: &mut Budget,
+    ) -> Result<u64, SchemaError> {
+        let descriptor = self
+            .descriptor_with_budget(schema, budget)?
+            .ok_or(SchemaError::UnknownSchema)?;
+        Ok(Self::named_definition_index(descriptor, name, budget)? as u64)
+    }
+    fn named_definition_index(
+        descriptor: &SchemaDescriptor,
+        name: &str,
+        budget: &mut Budget,
+    ) -> Result<usize, SchemaError> {
+        let (mut lo, mut hi) = (0, descriptor.types.len());
+        while lo < hi {
+            let mid = lo + (hi - lo) / 2;
+            let definition = &descriptor.types[mid];
+            budget.charge(
+                Resource::Work,
+                (definition.name.len() as u64)
+                    .saturating_add(name.len() as u64)
+                    .saturating_add(1),
+            )?;
+            match definition.name.as_str().cmp(name) {
+                core::cmp::Ordering::Less => lo = mid + 1,
+                core::cmp::Ordering::Greater => hi = mid,
+                core::cmp::Ordering::Equal => return Ok(mid),
+            }
+        }
+        Err(SchemaError::UnknownType)
+    }
+    /// Resolve a numeric kind through metered exact schema admission, without
+    /// cloning the name or creating a validation proof.
+    pub fn kind_name_with_budget(
+        &self,
+        schema: &SchemaRef,
+        id: u64,
+        budget: &mut Budget,
+    ) -> Result<&str, SchemaError> {
+        let descriptor = self
+            .descriptor_with_budget(schema, budget)?
+            .ok_or(SchemaError::UnknownSchema)?;
+        usize::try_from(id)
+            .ok()
+            .and_then(|i| descriptor.types.get(i))
+            .map(|ty| ty.name.as_str())
+            .ok_or(SchemaError::UnknownType)
+    }
     pub fn kind_name(&self, schema: &SchemaRef, id: u64) -> Result<&str, SchemaError> {
         let descriptor = self.descriptor(schema).ok_or(SchemaError::UnknownSchema)?;
         usize::try_from(id)
