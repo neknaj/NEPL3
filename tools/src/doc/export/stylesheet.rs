@@ -79,9 +79,32 @@ fn check_inline_css(css: &str) -> Result<(), String> {
 
 /// RFC 4648 base64 of exactly one SHA-256 digest (32 bytes, one '=' padding).
 fn csp_digest(digest: Digest) -> String {
+    encode_base64(&digest.0, 44)
+}
+pub(super) fn font_data(bytes: &[u8], mime: &str, b: &mut Budget) -> Result<String, String> {
+    if !["font/woff2", "font/woff", "font/ttf"].contains(&mime) {
+        return Err("KaTeXFontMime".into());
+    }
+    let capacity = bytes
+        .len()
+        .div_ceil(3)
+        .checked_mul(4)
+        .ok_or("KaTeXFontSize")?;
+    b.charge(
+        Resource::AllocationUnits,
+        (capacity * 2 + mime.len() + 16) as u64,
+    )
+    .map_err(err)?;
+    b.charge(Resource::Work, capacity as u64).map_err(err)?;
+    Ok(format!(
+        "data:{mime};base64,{}",
+        encode_base64(bytes, capacity)
+    ))
+}
+fn encode_base64(bytes: &[u8], capacity: usize) -> String {
     const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut encoded = String::with_capacity(44);
-    for chunk in digest.0.chunks(3) {
+    let mut encoded = String::with_capacity(capacity);
+    for chunk in bytes.chunks(3) {
         match *chunk {
             [a, b, c] => {
                 for index in [
@@ -99,7 +122,12 @@ fn csp_digest(digest: Digest) -> String {
                 }
                 encoded.push('=');
             }
-            _ => unreachable!("32-byte SHA-256 chunks finish with two bytes"),
+            [a] => {
+                encoded.push(TABLE[(a >> 2) as usize] as char);
+                encoded.push(TABLE[((a & 3) << 4) as usize] as char);
+                encoded.push_str("==");
+            }
+            _ => unreachable!("chunks(3) yields one to three bytes"),
         }
     }
     encoded

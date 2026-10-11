@@ -40,7 +40,7 @@ test('reviewed CSS and structural inventory cover representative pinned output',
   const pins = JSON.parse(await readFile(new URL('../../math/katex/execution.json', import.meta.url)));
   const classes = new Set(pins.classes);
   await withExecution(root, 10000000, async ({ renderer, parser }) => {
-    for (const tex of ['x', String.raw`\frac{1}{2}`, String.raw`\sqrt{x}`, String.raw`\sum_{i=1}^{n} i`,
+    for (const tex of ['x', String.raw`\mathord{\textit{日本}}`, String.raw`\mathord{\textit{x}}`, String.raw`\frac{1}{2}`, String.raw`\sqrt{x}`, String.raw`\sum_{i=1}^{n} i`,
       String.raw`\begin{pmatrix}a&b\\c&d\end{pmatrix}`, String.raw`\int_0^1 x\,dx`,
       String.raw`\binom{n}{k}`, String.raw`\hat{x}`, String.raw`a\to b`, String.raw`\mathbb{R}`]) {
       const output = await renderParsed(renderer, parser, { tex, displayMode: true, output: 'html' }, limits,

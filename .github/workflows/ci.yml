@@ -282,6 +282,8 @@ jobs:
           node tools/generate/katex.mjs
           node tools/generate/katex-host.mjs
           node --test tools/audit/math/assets.test.mjs
+      - name: Check native Doc KaTeX integration
+        run: cargo test --locked -p nepl3-tools --test doc katex_cli::pinned_native -- --ignored --nocapture
       - name: Check production TeX against KaTeX
         run: |
           mkdir -p dist/math-visual
@@ -507,6 +509,13 @@ jobs:
         run: |
           cargo build --locked -p nepl3-tools
           python tools/audit/doc_html/export.py target/debug/nepl3-tools dist/doc-browser/export-modes > dist/doc-browser/export-modes.json
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.14.1'
+      - name: Check native KaTeX Doc offline in three browsers
+        run: |
+          npm ci --prefix tools/audit/math --ignore-scripts
+          python tools/audit/doc_html/katex.py target/debug/nepl3-tools dist/doc-browser/native-katex tools/audit/math/node_modules > dist/doc-browser/native-katex.json
       - name: Check SVG sizing and disclosures in three browsers
         run: python tools/audit/doc_html/svg.py target/debug/nepl3-tools dist/doc-browser/svg > dist/doc-browser/svg.json
       - name: Shared code highlighting and themes

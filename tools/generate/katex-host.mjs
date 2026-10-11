@@ -33,8 +33,11 @@ const stylesheetClasses = [...new Set([...css.matchAll(/([^{}]+)\{/g)]
   .flatMap(rule => [...rule[1].matchAll(/\.([A-Za-z_][A-Za-z0-9_-]*)/g)].map(match => match[1])))].sort();
 if (!stylesheetClasses.includes('katex') || !stylesheetClasses.includes('mfrac')) throw Error('CSS inventory incomplete');
 // Fixed atom classes in KaTeX src/buildHTML.ts and tight-layout marker from
-// src/buildCommon.ts. They carry structural meaning even without CSS rules.
-const structuralClasses = ['mbin', 'mclose', 'minner', 'mop', 'mopen', 'mord', 'mpunct', 'mrel', 'mtight'];
+// src/buildCommon.ts; text wrapper from src/functions/text.ts. They carry structural meaning even without CSS rules.
+const structuralClasses = ['mbin', 'mclose', 'minner', 'mop', 'mopen', 'mord', 'mpunct', 'mrel', 'mtight', 'text',
+  // domTree.ts script marker names from the fixed unicodeScripts.ts inventory.
+  'latin_fallback', 'cyrillic_fallback', 'armenian_fallback', 'brahmic_fallback',
+  'georgian_fallback', 'cjk_fallback', 'hangul_fallback'];
 const classes = [...new Set([...stylesheetClasses, ...structuralClasses])].sort();
 const value = { format: 'nepl3.katex-execution/1', packages: identities,
   stylesheetSha256: createHash('sha256').update(css).digest('hex'), stylesheetClasses, structuralClasses, classes, files };
