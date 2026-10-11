@@ -271,6 +271,7 @@ fn host_for_source<'a>(
 /// View/Token owner admission is charged on every validation. The adopted
 /// Doc Pages chapter uses about 161 million Work with this accounting (including
 /// parse-tree validation); a 200 million host ceiling retains finite headroom.
+/// This default also supplies independent lower/output phase allowances.
 /// Core limits and caller-supplied ceilings are not raised or retried. Other
 /// resource limits remain independent and unchanged.
 pub fn budget() -> Budget {
