@@ -43,6 +43,9 @@ MEASURE = """() => {
     const denominator = frac.children[1].getBoundingClientRect();
     if (numerator.bottom > denominator.top + 1) throw Error('Fraction layout missing');
   }
+  for (const text of document.querySelectorAll('mtext')) {
+    if (getComputedStyle(text).fontFamily !== getComputedStyle(document.querySelector('.nepl-doc')).fontFamily) throw Error('Math annotation lost prose font');
+  }
   const ruby = document.querySelector('.nepl-ruby');
   for (const node of document.querySelectorAll('.nepl-ruby,.nepl-anno')) {
     const base = node.querySelector(':scope > .nepl-base').getBoundingClientRect();
@@ -95,7 +98,8 @@ MEASURE = """() => {
   if (JSON.stringify(alignments) !== JSON.stringify(['left', 'center', 'right'])) throw Error('Column alignment changed');
   if (document.scripts.length) throw Error('Unexpected script');
   const selectors = ['.nepl-doc', 'h1', 'h2', '.nepl-paragraph', '.nepl-ruby',
-                     '.nepl-reading', '.nepl-anno', '.nepl-notes', 'figure', 'figcaption', 'pre', 'pre>code', 'table', 'th', 'td'];
+                     '.nepl-reading', '.nepl-anno', '.nepl-notes', 'figure', 'figcaption', 'pre', 'pre>code', 'table', 'th', 'td', 'math[display=inline]',
+                     'math[display=block]', 'mtext'];
   return JSON.stringify(selectors.map(selector => {
     const node = document.querySelector(selector);
     if (!node) throw Error('Missing ' + selector);
@@ -103,7 +107,7 @@ MEASURE = """() => {
     const box = node.getBoundingClientRect();
     return [selector, box.x, box.y, box.width, box.height, style.color,
             style.backgroundColor, style.fontSize, style.margin, style.padding,
-            style.display, style.borderTopWidth];
+            style.display, style.borderTopWidth, style.fontFamily];
   }));
 }"""
 
@@ -153,6 +157,7 @@ def main() -> None:
                             if not isinstance(value, str):
                                 raise TypeError("Expected serialized layout")
                             measurements.append(value)
+                            _ = (root / f"{implementation.name}-{width}-{mode}-layout.json").write_text(value, encoding="utf-8")
                             _ = page.screenshot(path=str(root / f"{implementation.name}-{width}-{mode}.png"), full_page=True, timeout=15000)
                             page.close()
                         if len(set(measurements)) != 1:
