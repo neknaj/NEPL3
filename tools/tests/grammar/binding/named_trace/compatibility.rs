@@ -1,6 +1,7 @@
 use super::*;
 #[test]
 fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<(), String> {
+    let lambda_lookup = namespace_lookup_work("test.binding-execution");
     let compiled = execution()?;
     with_input(&compiled, "lambda x x", |tree, profile, _, _| {
         for mode in [0, 1] {
@@ -28,9 +29,9 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
             assert_eq!(
                 b.usage(),
                 if mode == 0 {
-                    expected(10, (2223, 6, 2), 4, 21, (5819, 4), 0, 0)
+                    expected(10, (2223, 6, 2, lambda_lookup), 4, 21, (5819, 4), 0, 0)
                 } else {
-                    expected(10, (2340, 6, 2), 5, 21, (6369, 4), 0, 0)
+                    expected(10, (2340, 6, 2, lambda_lookup), 5, 21, (6369, 4), 0, 0)
                 }
             );
             let mut limits = budget().limits();
@@ -71,14 +72,19 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
             assert_eq!(
                 short.usage(),
                 if mode == 0 {
-                    expected(10, (2155, 6, 2), 4, 21, (5819, 4), 0, 0)
+                    expected(10, (2155, 6, 2, lambda_lookup), 4, 21, (5819, 4), 0, 0)
                 } else {
-                    expected(10, (2272, 6, 2), 5, 21, (6369, 4), 0, 0)
+                    expected(10, (2272, 6, 2, lambda_lookup), 5, 21, (6369, 4), 0, 0)
                 }
             );
         }
         Ok(())
     })?;
+    let custom_lookup = 4 * namespace_lookup_work("test.binding-custom")
+        + 2 * lookup_work(
+            "nepl3.engine",
+            &["nepl3.foundation", "nepl3.reader", "nepl3.engine"],
+        );
     let compiled = custom::compiled()?;
     with_input(&compiled, "early x z custom x x", |tree, profile, _, _| {
         let mut b = budget();
@@ -94,7 +100,7 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
         assert!(matches!(r.outcome, BindingOutcome::Complete(_)));
         assert_eq!(
             b.usage(),
-            expected(20, (8854, 36, 6), 8, 98, (22039, 22), 2, 1)
+            expected(20, (8854, 36, 6, custom_lookup), 8, 98, (22039, 22), 2, 1)
         );
         let mut limits = budget().limits();
         limits.work = b.usage().work - 1;
@@ -117,7 +123,7 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
         ));
         assert_eq!(
             short.usage(),
-            expected(20, (8789, 36, 6), 8, 98, (22039, 22), 2, 1)
+            expected(20, (8789, 36, 6, custom_lookup), 8, 98, (22039, 22), 2, 1)
         );
         Ok(())
     })?;
@@ -144,7 +150,10 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
             r.outcome,
             nepl3_engine::binding::probe::ProbeOutcome::Hit(_)
         ));
-        assert_eq!(b.usage(), expected(8, (2041, 6, 2), 5, 17, (5844, 2), 0, 0));
+        assert_eq!(
+            b.usage(),
+            expected(8, (2041, 6, 2, lambda_lookup), 5, 17, (5844, 2), 0, 0)
+        );
         let mut limits = budget().limits();
         limits.work = b.usage().work - 1;
         let mut short = Budget::new(limits);
@@ -161,7 +170,7 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
         ));
         assert_eq!(
             short.usage(),
-            expected(8, (1973, 6, 2), 5, 17, (5276, 2), 0, 0)
+            expected(8, (1973, 6, 2, lambda_lookup), 5, 17, (5276, 2), 0, 0)
         );
         Ok(())
     })
@@ -177,7 +186,8 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
 // other historical Usage field stays exact; this is not a broad tolerance.
 // Each shared binding-input table pays 3 for the first source lookup,
 // identity and geometry; later spans pay one pointer probe and one range check.
-// The work tuple is (historical Work, span count, independent table count).
+// The work tuple is (historical Work, span count, independent table count,
+// newly metered owner-schema searches).
 // The explicit 2*spans+tables addition preserves every other Usage field.
 // Lambda and recovered lambda each validate 3 Direct origins at the
 // entry tree and final facts boundaries (6). RecoveryMissing supplies the
@@ -188,7 +198,7 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
 // Both normal and one-short paths reach the same origin validations.
 fn expected(
     source_bytes: u64,
-    work: (u64, u64, u64),
+    work: (u64, u64, u64, u64),
     depth: u64,
     nodes: u64,
     allocation_units: (u64, u64),
@@ -197,7 +207,7 @@ fn expected(
 ) -> nepl3_core::budget::Usage {
     nepl3_core::budget::Usage {
         source_bytes,
-        work: work.0 + work.1 * 2 + work.2,
+        work: work.0 + work.1 * 2 + work.2 + work.3,
         depth,
         nodes,
         allocation_units: allocation_units.0
@@ -211,4 +221,35 @@ fn expected(
         diagnostics,
         events,
     }
+}
+
+// bootstrap::catalog registers foundation, reader, engine, grammar, then the
+// fixture language. These independent formulas charge one scan entry, each
+// candidate's two package names and revision comparison, and exact identity.
+// Ordinary, traced and recovered lambda each validate their final namespace
+// once (294 Work). The custom fixture validates its namespace at request issue,
+// post-host existing facts, combined delta and final facts (4 * 273), and checks
+// engine metadata for the emitted diagnostic and event (2 * 157). The built-in
+// UndefinedName diagnostic only validates arguments, so adds no owner search.
+// Full and one-short runs reach all of these searches; other counters and the
+// subsequent stop prefixes remain exact rather than allowing a tolerance.
+fn namespace_lookup_work(owner: &str) -> u64 {
+    lookup_work(
+        owner,
+        &[
+            "nepl3.foundation",
+            "nepl3.reader",
+            "nepl3.engine",
+            "nepl3.grammar",
+            owner,
+        ],
+    )
+}
+fn lookup_work(owner: &str, candidates: &[&str]) -> u64 {
+    1 + candidates
+        .iter()
+        .map(|candidate| (candidate.len() + owner.len()) as u64 + 9)
+        .sum::<u64>()
+        + owner.len() as u64
+        + 41
 }
