@@ -125,14 +125,39 @@ pub fn reply_to_value<C: FoundationValueCodec>(
     Ok(result)
 }
 
-/// Decode source declarations before source-bearing fields, then enforce the
-/// same saved-dispatch checks as native replies. The pending slot is retained.
-pub fn reply_from_value<C: FoundationValueCodec>(
+/// Admit only the terminal ReadReply's explicitly declared source closure.
+///
+/// The saved context supplies the original request and currently accepted
+/// sources. The returned store is codec context, not an execution grant or
+/// acceptance proof. Cursor, value, state, mappings, Report, outcome echo and
+/// request-ID-to-session correlation still require the full host checks.
+/// Admission and budget consumption are retained even if later checks fail;
+/// the pending ReaderSession slot is neither consumed nor changed.
+/// Await is not a terminal ReadReply and is rejected by this boundary.
+pub fn reply_source_closure<C: FoundationValueCodec>(
     value: &NdfValue,
     context: &ReadReplyContext<'_>,
     codec: &mut C,
     b: &mut Budget,
-) -> Result<ReadReply, PortableError<C::Error>> {
+) -> Result<SourceStore, PortableError<C::Error>> {
+    Ok(source_prefix(value, context, codec, b)?.sources)
+}
+
+struct SourcePrefix<'a> {
+    schema: &'a SchemaRef,
+    case: &'a str,
+    fields: &'a [NdfValue],
+    map_index: usize,
+    added: Vec<SourceSnapshot>,
+    sources: SourceStore,
+}
+
+fn source_prefix<'a, C: FoundationValueCodec>(
+    value: &'a NdfValue,
+    context: &'a ReadReplyContext<'_>,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<SourcePrefix<'a>, PortableError<C::Error>> {
     checked::<C>(value, context, b)?;
     let schema = context.schema().map_err(reader)?;
     let (case, fields) = super::transform::value::parts(value, schema, "ReadReply")?;
@@ -147,6 +172,32 @@ pub fn reply_from_value<C: FoundationValueCodec>(
         codec.source_admission(),
     )
     .map_err(reader)?;
+    Ok(SourcePrefix {
+        schema,
+        case,
+        fields,
+        map_index,
+        added,
+        sources,
+    })
+}
+
+/// Decode source declarations before source-bearing fields, then enforce the
+/// same saved-dispatch checks as native replies. The pending slot is retained.
+pub fn reply_from_value<C: FoundationValueCodec>(
+    value: &NdfValue,
+    context: &ReadReplyContext<'_>,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<ReadReply, PortableError<C::Error>> {
+    let SourcePrefix {
+        schema,
+        case,
+        fields,
+        map_index,
+        added,
+        sources,
+    } = source_prefix(value, context, codec, b)?;
     let maps = codec
         .scoped(&sources)
         .decode_mappings(&fields[map_index], b)

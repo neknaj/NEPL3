@@ -101,6 +101,11 @@ nativeの依存操作schedulerは `cargo test --locked -p nepl3-suite --test dis
 
 nativeの `cargo test --locked -p nepl3-provider --test process_protocol` は、実processのstdin/stdoutでschemaを取得し、Invoke・Await・Resumeの結果とUnicode診断をnative経路と比較する。schema不足・identity不一致・応答前EOFと、Await中のCancelも検査する。このtest targetは専用harnessを使い、protocol用stdoutへテストランナーの表示が混入することを防ぐ。WASIではOS process試験を明示的にskipする。一般的なhost scheduler、process間の総予算管理、全providerの互換性は継続する実装・受入範囲である。
 
+Readerのterminal応答については、`portable::read::reply_source_closure` が明示的なsource集合だけを先に検査する。
+`ReaderSession::pending_read` が発行するcontextと、同じBudget・SourceAdmissionを渡す。保存済み要求・現在の採用済みsource・応答の宣言を統合し、codecの無関係なambient sourceは取り込まない。
+この成功はcursor・state・mapping・Report・Usageや、transport要求IDとsession slotの対応の承認を意味しない。完全な `reply_from_value` / `operation::from_reply` とresume時の検査は引き続き必要である。
+失敗後も入場済みidentityと消費量を保持し、pending slotは消費しない。remote計測値の認証、producer側の変換、process接続全体は別の未完了範囲とする。
+
 Sentenceの統合経路は `cargo test --locked -p nepl3-tools --test sentence --target wasm32-wasip2 -- --test-threads=1` で実行します。独立LanguagePackageのsurface compile、ReaderSession/provider、literalのportable受渡し、位置付き診断・停止、Doc bridgeを対象とし、Sentence core単体試験と区別します。nativeではworkspace試験に含み、WASIでも同じ入口を実行します。
 
 Binding の fixture と Python seed adapter の一致確認は子processを起動する native host 専用試験です。native の通常試験で実行し、Wasm target ではその host 試験だけを型条件で除外します。同じ fixture を使う production compile・parse・analyze・portable codec の試験は `cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1` でも実行します。host 試験を WASI へ誤って含めた初回失敗は対象選択の失敗として記録し、後の runtime 試験成功へ読み替えません。
