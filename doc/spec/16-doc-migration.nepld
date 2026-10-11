@@ -246,7 +246,7 @@ body
       cons paragraph
         cons "version 1のregistry pathとrouteはASCII[英数字/えいすうじ]・hyphen・underscore・dotを[持/も]つcomponentをslashで[結/むす]ぶ。"
         cons "[空/から]component、[末尾/まつび]dot、Windows[予約名/よやくめい]を[拒否/きょひ]し、case-insensitiveに[重複/ちょうふく]を[検査/けんさ]する。"
-        cons "registryのファイルはdoc/[配下/はいか]とする。"
+        cons "[通常/つうじょう]のDoc pageのsource・projection・aliasはdoc/[配下/はいか]とする。passive fileとfootnotesの[別/べつ]の[許可範囲/きょかはんい]は[各/かく]profileの[規則/きそく]に[従/したが]う。"
         cons "これはrepositoryの[生成先/せいせいさき]と[入力名/にゅうりょくめい]を[複数/ふくすう]OSで[同/おな]じように[扱/あつか]うためのhost[側/がわ]の[制約/せいやく]であり、Doc[本文/ほんぶん]やfoundationのSource URIからUnicodeを[除/のぞ]く[規則/きそく]ではない。"
         cons "fragment/percent[表記/ひょうき]をphysical inputへ[混/ま]ぜず、Markdown[検査/けんさ]だけ[成功/せいこう]して[同/おな]じsourceのHTML[生成/せいせい]がpath[違反/いはん]になる[不整合/ふせいごう]を[防/ふせ]ぐ。"
         nil
@@ -343,12 +343,12 @@ body
           cons code "route"
           cons text "を"
           cons ruby text "持" text "も"
-          cons text "つpassive Markdownを"
+          cons text "つpassive Markdown・JSONを"
           cons ruby text "明示登録" text "めいじとうろく"
           cons text "できる。"
           nil
         cons sentence
-          cons text "sourceは "
+          cons text "Markdownのsourceは "
           cons code "doc/"
           cons text " "
           cons ruby text "以下" text "いか"
@@ -366,6 +366,13 @@ body
           cons ruby text "限定" text "げんてい"
           cons text "する。"
           nil
+        cons "JSONのsourceはdesign/[以下/いか]の.json、implementation-status.json、またはdoc/history/web-tea-import.jsonだけを[許可/きょか]し、HTML[配布/はいふ]routeはsources/[以下/いか]の.jsonに[限定/げんてい]する。"
+        cons "[履歴/りれき]JSONの[許可範囲/きょかはんい]はこの1ファイルに[限/かぎ]り、doc/history/[以下/いか]のJSON[全体/ぜんたい]や、その[本文/ほんぶん]に[記/しる]された[別/べつ]のファイルへ[広/ひろ]げない。"
+        cons "sourceとrouteの[拡張子/かくちょうし]を[対応/たいおう]させ、MarkdownとJSONの[種類/しゅるい]を[交差/こうさ]させた[指定/してい]を[拒否/きょひ]する。"
+        cons "JSONもUTF-8のpassiveなbyte[列/れつ]として[扱/あつか]い、[構文/こうぶん]・schemaの[検証/けんしょう]、[実行/じっこう]、[正規化/せいきか]は[行/おこな]わない。"
+        cons "[生成物/せいせいぶつ]のreceiptは[従来/じゅうらい]どおりapplication/octet-streamを[記録/きろく]するが、[配信/はいしん]serverのHTTP headerを[設定/せってい]・[保証/ほしょう]するものではない。"
+        cons "JSONをHTML projectionで[置換/ちかん]しない。Markdownの[生成/せいせい]ではJSONのbyte[列/れつ]を[出力/しゅつりょく]せず、[元/もと]の[論理/ろんり]sourceへのリンクを[保/たも]つ。"
+        cons "footnotesの[全/ぜん]ページ[集合/しゅうごう]ではstatic SVGだけを[許可/きょか]する[既存/きそん]の[条件/じょうけん]を[維持/いじ]し、JSONを[混在/こんざい]させない。"
         cons "[登録済/とうろくず]みDocのsource/projection/aliasや[他/ほか]の[登録/とうろく]と[衝突/しょうとつ]する[指定/してい]を[拒否/きょひ]する。"
         cons "[上限/じょうげん]は128[件/けん]、UTF-8で1[件/けん]256KiB・[合計/ごうけい]2MiBとし、[存在/そんざい]・[正規/せいき]file・byte[数/すう]を[生成/せいせい]と[検査/けんさ]の[両方/りょうほう]で[確認/かくにん]する。"
         cons "Markdown projectionは[論理/ろんり]sourceへの[相対/そうたい]リンクを[保/たも]ち、HTMLは[明示/めいじ]routeへ[元/もと]byte[列/れつ]を[配布/はいふ]する。"

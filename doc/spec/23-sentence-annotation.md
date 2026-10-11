@@ -366,3 +366,21 @@ targetのbinding/import/export/visibilityとdomain意味を保存し、構文と
 literal/prefixの意味一致、native/portable往復、Unicode境界、資源停止と不正入力を検査する。
 旧#消費、TriviaKind::Comment、wire/sidecar、各profile、再生成元、公式sourceを同じ移行で除去する。
 旧schema拒否と旧#負例を残し、互換decoder・flag・恒久移行runtimeは残さない。
+
+### Article・PageSetへのMath表示の合成
+
+nativeのDoc HTML hostは、Code表示とInlineMath・DisplayMathを同じ文書走査へ接続できる。
+InlineMathの返却markupはPhrasing、DisplayMathはBlockとして検査する。DisplayMathの前後ではparagraph内のsentence runを分ける。
+Code-only・local-onlyの既存入口は従来の選択範囲を維持し、追加のguestを暗黙に許可しない。
+Mathの表示は式の評価を要求せず、17章のrenderer選択と明示的なfallback診断を維持する。
+
+MathのSentence注釈に局所Doc namespaceがある場合、注釈内部で定義・参照の解決とID一意性を確定した後、Mathの表示出現ごとにそのHTML IDと局所fragment参照を束縛する。
+この束縛は外側Docの名前解決へ定義を導入しない。同じMathの独立した表示出現は区別できるが、同一注釈内の重複定義や、未選択の外側Doc anchorへの参照を救済しない。
+異なるMath出現や親Docと衝突するIDをそのまま採用せず、親Docの名前を偽装できない出現別prefixを使う。
+これは検査済みの局所namespaceの束縛であり、任意の重複HTMLを修復する処理ではない。
+
+hostの合成結果は、元Doc・Math・Sentenceと、対応先の実際の出力arenaを併せて保持する。
+Math node・注釈nodeの要素番号は各出現の移動先へ写像し、HTML文字列だけに元arenaの番号を添えて対応保持済みとはしない。
+PageSetは全ページの準備・描画・出力検査が成功するまで部分成果物を返さない。
+入力検査と再帰guest表示は同じ操作のsource admissionと累積Budgetを共有し、同じsnapshotの再検査でSourceBytesを二重計上しない。
+検査済み構文を使う内部の走査も、その公開入口で現在のdepth・source・closureを検査する。別操作や浅い位置のproofによって現在の入力検査を迂回する公開入口は設けない。

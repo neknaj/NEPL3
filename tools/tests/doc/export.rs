@@ -422,3 +422,9 @@ fn incomplete_code_or_host_never_completes_export() -> Result<(), String> {
     }
     Ok(())
 }
+
+#[path = "export/math.rs"]
+mod math;
+
+#[path = "export/links.rs"]
+mod links;

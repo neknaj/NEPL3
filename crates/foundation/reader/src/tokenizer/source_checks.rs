@@ -54,7 +54,10 @@ impl SourceChecks {
                 budget,
             )? {
                 budget.charge(Resource::Work, prior.uri().len() as u64 + 33)?;
-                if prior.identity() != added.identity() || prior.uri() != added.uri() {
+                // Lookup establishes source/revision; the remaining conflict
+                // checks are the prepaid digest and URI comparisons.
+                if prior.identity().digest != added.identity().digest || prior.uri() != added.uri()
+                {
                     return Err(SourceError::IdentityConflict);
                 }
             }

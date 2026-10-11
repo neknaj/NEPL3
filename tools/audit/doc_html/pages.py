@@ -12,6 +12,7 @@ GUESTS = [
 ]
 SOURCE = ('article en "Code page" body '
           + ''.join('cons paragraph cons code Doc ' + guest + ' nil\n' for guest in GUESTS)
+          + 'cons paragraph cons sentence cons math Math frac 1 2 nil nil cons display Math frac 3 4 '
           + 'cons paragraph cons sentence cons link page "target" some "target" text "Target" nil nil nil')
 TARGET = 'article en "Target" body cons section target "Target section" body cons paragraph cons sentence cons link page "code" none text "Back" nil nil nil nil'
 
@@ -53,6 +54,12 @@ def main() -> None:
                             for index, expected in enumerate(GUESTS):
                                 if blocks.nth(index).text_content() != expected:
                                     raise AssertionError(('Source changed', index))
+                            if page.locator('math[display="inline"]').count() != 1 or page.locator('math[display="block"]').count() != 1:
+                                raise AssertionError('Missing page Math')
+                            for math in page.locator('math').all():
+                                box = math.bounding_box()
+                                if box is None or box['width'] <= 0 or box['height'] <= 0:
+                                    raise AssertionError('Invisible page Math')
                             if page.locator('script').count():
                                 raise AssertionError('Code escaped its text context')
                             style: object = page.evaluate(  # pyright: ignore[reportAny]

@@ -2,6 +2,8 @@
 //! and CSS provenance are host preparation obligations, not inferred from paths.
 pub(crate) mod check;
 mod identity;
+mod math;
+pub use math::{MathBinding, MathHtml, serialize_with_math};
 mod ruby;
 pub(crate) mod serialize;
 pub mod svg;

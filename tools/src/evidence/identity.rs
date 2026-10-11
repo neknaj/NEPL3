@@ -1,3 +1,7 @@
+mod commit;
+
+pub(crate) use commit::committed;
+
 use crate::{
     Result, json,
     repository::{inventory, local_path},
@@ -48,10 +52,7 @@ fn update(hash: &mut Sha256, path: &str, bytes: &[u8]) -> Result<()> {
 
 pub(crate) fn identity(root: &Path) -> Result<Snapshot> {
     let task_file: TaskFile = json(root, "design/tasks.json")?;
-    let mut source = Sha256::new();
-    source.update(b"nepl3.repository-inputs/1\0source\0");
-    let mut spec = Sha256::new();
-    spec.update(b"nepl3.repository-inputs/1\0spec\0");
+    let mut inputs = Inputs::new();
     // Inventory comes from Git, never from an evidence author's supplied list.
     // Path and content lengths prevent ambiguous concatenations. Raw bytes keep
     // source fixtures lossless; .gitattributes fixes ordinary files to LF.
@@ -64,22 +65,47 @@ pub(crate) fn identity(root: &Path) -> Result<Snapshot> {
             return Err(format!("identity input exceeds 1 MiB: {path}").into());
         }
         let bytes = fs::read(&full)?;
-        update(&mut source, path, &bytes)?;
+        inputs.add(path, &bytes)?;
+    }
+    Ok(inputs.finish(task_file.design))
+}
+
+/// Both checkout and committed readers use exactly the same input profile.
+struct Inputs {
+    source: Sha256,
+    spec: Sha256,
+}
+
+impl Inputs {
+    fn new() -> Self {
+        let mut source = Sha256::new();
+        source.update(b"nepl3.repository-inputs/1\0source\0");
+        let mut spec = Sha256::new();
+        spec.update(b"nepl3.repository-inputs/1\0spec\0");
+        Self { source, spec }
+    }
+
+    fn add(&mut self, path: &str, bytes: &[u8]) -> Result<()> {
+        update(&mut self.source, path, bytes)?;
         if ["doc/spec/", "interfaces/", "design/"]
             .iter()
             .any(|prefix| path.starts_with(prefix))
         {
-            update(&mut spec, path, &bytes)?;
+            update(&mut self.spec, path, bytes)?;
+        }
+        Ok(())
+    }
+
+    fn finish(self, design_revision: String) -> Snapshot {
+        Snapshot {
+            design_revision,
+            identity: Identity {
+                profile: "nepl3.repository-inputs/1".into(),
+                source_sha256: hex(&self.source.finalize()),
+                spec_sha256: hex(&self.spec.finalize()),
+            },
         }
     }
-    Ok(Snapshot {
-        design_revision: task_file.design,
-        identity: Identity {
-            profile: "nepl3.repository-inputs/1".into(),
-            source_sha256: hex(&source.finalize()),
-            spec_sha256: hex(&spec.finalize()),
-        },
-    })
 }
 
 #[cfg(test)]

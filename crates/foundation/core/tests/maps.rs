@@ -1,5 +1,5 @@
 use nepl3_core::{
-    budget::{Budget, Limits, StopReason},
+    budget::{Budget, Limits, Resource, StopReason},
     origin::{Mapping, MappingKind, OriginError, SourceMap},
     source::{SourceId, SourceSnapshot, SourceStore},
 };
@@ -33,8 +33,19 @@ fn shared_endpoint_identities_preserve_independent_graphs_and_cycle_rejection() 
         });
     }
     assert_eq!(shared, independent);
-    let mut shared_budget = budget();
-    let mut independent_budget = budget();
+    // First root/leaf lookups cost 6207 + 136. The remaining 127
+    // root hits cost 2 and ascending adjacent-leaf hits cost 3: 6978.
+    // Independent storage retains the previous 1214396 admission cost,
+    // plus two failed adjacent probes for each of 254 later endpoints.
+    // Keep source admission separate from the original graph allowance.
+    let shared_admission = if cfg!(target_has_atomic = "ptr") {
+        6_978
+    } else {
+        1_214_904
+    };
+    let independent_admission = 1_214_904;
+    let mut shared_budget = with_source_admission(shared_admission);
+    let mut independent_budget = with_source_admission(independent_admission);
     SourceMap::validate_mappings(&shared, &store, &mut shared_budget)
         .map_err(|e| format!("{e:?}"))?;
     SourceMap::validate_mappings(&independent, &store, &mut independent_budget)
@@ -51,14 +62,43 @@ fn shared_endpoint_identities_preserve_independent_graphs_and_cycle_rejection() 
     );
     #[cfg(target_has_atomic = "ptr")]
     assert!(shared_budget.usage().work < independent_budget.usage().work);
-    for maps in [&mut shared, &mut independent] {
+    #[cfg(target_has_atomic = "ptr")]
+    assert!(
+        shared_budget.usage().work - shared_admission
+            < independent_budget.usage().work - independent_admission
+    );
+    for (maps, admission, reverse_admission) in [
+        (
+            &mut shared,
+            shared_admission,
+            if cfg!(target_has_atomic = "ptr") {
+                142
+            } else {
+                9_528
+            },
+        ),
+        (&mut independent, independent_admission, 9_528),
+    ] {
+        // Recheck the admission component independently of cycle-graph work.
+        let proof =
+            SourceMap::validate_mappings(maps, &store, &mut with_source_admission(admission))
+                .map_err(|e| format!("{e:?}"))?;
+        let mut closure = with_source_admission(admission);
+        proof
+            .validate_sources(&store, &mut closure)
+            .map_err(|e| format!("{e:?}"))?;
+        assert_eq!(closure.usage().work, admission + 1 + 2 * maps.len() as u64);
         maps.push(Mapping {
             source: maps[0].target.clone(),
             target: maps[0].source.clone(),
             kind: MappingKind::Exact,
         });
         assert!(matches!(
-            SourceMap::validate_mappings(maps, &store, &mut budget()),
+            SourceMap::validate_mappings(
+                maps,
+                &store,
+                &mut with_source_admission(admission + reverse_admission)
+            ),
             Err(OriginError::Cycle)
         ));
     }
@@ -76,9 +116,17 @@ fn source_closure_proof_is_scoped_to_the_borrowed_store() -> TestResult {
         target: b.span(0, 3).map_err(|e| format!("{e:?}"))?,
         kind: MappingKind::Exact,
     }];
-    let proof = SourceMap::validate_mapping_parts(&[], &maps, &store, &mut budget())
-        .and_then(|proof| proof.bind_sources(&store, &mut budget()))
+    let mut ordinary = budget();
+    SourceMap::validate_mapping_parts(&[], &maps, &store, &mut ordinary)
         .map_err(|e| format!("{e:?}"))?;
+    let mut bound = budget();
+    let proof = SourceMap::validate_bound_mapping_parts(&[], &maps, &store, &mut bound)
+        .map_err(|e| format!("{e:?}"))?;
+    // Binding retains established closure and charges one publication step.
+    ordinary
+        .charge(Resource::Work, 1)
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(ordinary.usage(), bound.usage());
     // Reusing the very same immutable store needs only a stop/budget check,
     // independent of the number of mappings or subsequent token validations.
     let mut one = Budget::new(Limits {
@@ -98,7 +146,7 @@ fn source_closure_proof_is_scoped_to_the_borrowed_store() -> TestResult {
         .map_err(|e| format!("{e:?}"))?;
     assert!(check.usage().work > 1);
     let mut missing = SourceStore::default();
-    missing.insert(a).map_err(|e| format!("{e:?}"))?;
+    missing.insert(a.clone()).map_err(|e| format!("{e:?}"))?;
     assert!(proof.validate_sources(&missing, &mut budget()).is_err());
     // Matching IDs and revisions with changed bytes are not the bound store.
     missing
@@ -123,6 +171,32 @@ fn source_closure_proof_is_scoped_to_the_borrowed_store() -> TestResult {
     let unbound =
         SourceMap::validate_mappings(&maps, &store, &mut budget()).map_err(|e| format!("{e:?}"))?;
     assert!(unbound.bind_sources(&missing, &mut budget()).is_err());
+    assert!(SourceMap::validate_bound_mapping_parts(&[], &maps, &missing, &mut budget()).is_err());
+    let reverse = [Mapping {
+        source: maps[0].target.clone(),
+        target: maps[0].source.clone(),
+        kind: MappingKind::Exact,
+    }];
+    assert!(matches!(
+        SourceMap::validate_bound_mapping_parts(&maps, &reverse, &store, &mut budget()),
+        Err(OriginError::Cycle)
+    ));
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert!(matches!(
+        SourceMap::validate_bound_mapping_parts(&[], &maps, &store, &mut cancelled),
+        Err(OriginError::Stopped(StopReason::Cancelled))
+    ));
+    assert_eq!(cancelled.usage().work, 0);
+    let wrong_range = [Mapping {
+        source: a.span(0, 1).map_err(|e| format!("{e:?}"))?,
+        target: b.span(1, 2).map_err(|e| format!("{e:?}"))?,
+        kind: MappingKind::Exact,
+    }];
+    assert!(matches!(
+        SourceMap::validate_bound_mapping_parts(&[], &wrong_range, &store, &mut budget()),
+        Err(OriginError::Irreversible)
+    ));
     Ok(())
 }
 #[test]
@@ -148,12 +222,31 @@ fn repeated_ordered_snapshot_edges_reuse_neighbor_positions() -> TestResult {
     }
     // Duplicate edges preserve this 257-vertex star. Later ordered sweeps
     // should find neighboring existing identities without binary searches.
-    let mut b = budget();
-    SourceMap::validate_mappings(&mappings, &sources, &mut b).map_err(|e| format!("{e:?}"))?;
+    // Root: 129 first miss + 2047*2 cached hits. Leaves: 219 first
+    // lookup + 7*(220+2) wraparound misses + 8*255*3 adjacent hits.
+    // Total admission = 12116. Independent identities retain 876870
+    // plus 2*(4096-2) failed adjacent probes = 885058.
+    // Preserve the old graph-only bound rather than enlarging it.
+    let admission = if cfg!(target_has_atomic = "ptr") {
+        12_116
+    } else {
+        885_058
+    };
+    let mut b = with_source_admission(admission);
+    let proof =
+        SourceMap::validate_mappings(&mappings, &sources, &mut b).map_err(|e| format!("{e:?}"))?;
+    let mut closure = with_source_admission(admission);
+    proof
+        .validate_sources(&sources, &mut closure)
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        closure.usage().work,
+        admission + 1 + 2 * mappings.len() as u64
+    );
     assert_eq!(b.usage().nodes, 257);
     assert_eq!(b.usage().depth, 2);
     eprintln!("repeated ordered map work: {}", b.usage().work);
-    assert!(b.usage().work < 500_000);
+    assert!(b.usage().work - admission < 500_000);
     Ok(())
 }
 
@@ -391,6 +484,14 @@ fn borrowed_union_does_not_copy_source_id_payloads() -> TestResult {
     assert_eq!(b.usage().nodes, 3);
     Ok(())
 }
+// Only the two fixtures above need an explicit source-admission allowance.
+// Their existing graph allowance and all production limits remain unchanged.
+fn with_source_admission(work: u64) -> Budget {
+    Budget::new(Limits {
+        work: budget().limits().work + work,
+        ..budget().limits()
+    })
+}
 fn budget() -> Budget {
     Budget::new(Limits {
         source_bytes: 1_000_000,
@@ -551,10 +652,18 @@ fn direct_mapped_ranges_do_not_allocate_per_byte() -> TestResult {
         }];
         let checked = SourceMap::validate_mappings(&maps, &sources, &mut budget())
             .map_err(|e| format!("{e:?}"))?;
-        // A direct range proof needs no copied IDs or per-byte pending stack.
+        // Two traversal charges plus three identity comparisons. The initial
+        // distinct snapshots cost 8 + 41; shared endpoint comparisons cost one
+        // each on Arc targets, and retain the byte bound on other targets.
+        // The range proof still needs no copied IDs or per-byte pending stack.
+        let work = if cfg!(target_has_atomic = "ptr") {
+            53
+        } else {
+            149
+        };
         let limits = Limits {
             allocation_units: 0,
-            work: 10,
+            work,
             nodes: 2,
             depth: 2,
             ..budget().limits()
@@ -566,6 +675,7 @@ fn direct_mapped_ranges_do_not_allocate_per_byte() -> TestResult {
                 .map_err(|e| format!("{e:?}"))?
         );
         assert_eq!(query.usage().allocation_units, 0);
+        assert_eq!(query.usage().work, work);
         assert_eq!(query.usage().depth, 2);
         for (limited, reason) in [
             (Limits { work: 1, ..limits }, StopReason::WorkLimit),
@@ -805,5 +915,247 @@ fn snapshot_dag_proves_large_transforms_without_enumerating_the_point_product() 
         SourceMap::validate_mappings(&cycle, &sources, &mut Budget::new(limits)),
         Err(OriginError::Cycle)
     ));
+    Ok(())
+}
+
+#[test]
+fn direct_containment_precharges_independent_long_identity_comparison() -> TestResult {
+    let name = "x".repeat(100_000);
+    let a = source(&name, "abc")?;
+    let b = source(&name, "abc")?;
+    let parent = a.span(0, 3).map_err(|e| format!("{e:?}"))?;
+    let child = b.span(1, 2).map_err(|e| format!("{e:?}"))?;
+    let mut sources = SourceStore::default();
+    sources.insert(a).map_err(|e| format!("{e:?}"))?;
+    let proof =
+        SourceMap::validate_mappings(&[], &sources, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    // Entry costs one, and the complete independent identity costs L + 41.
+    let exact = 100_042;
+    for work in [0, 1, exact - 1] {
+        let mut limited = Budget::new(Limits {
+            work,
+            ..budget().limits()
+        });
+        for _ in 0..2 {
+            assert_eq!(
+                proof.contains(&parent, &child, &mut limited),
+                Err(OriginError::Stopped(StopReason::WorkLimit))
+            );
+        }
+    }
+    let mut exact_budget = Budget::new(Limits {
+        work: exact,
+        ..budget().limits()
+    });
+    assert_eq!(proof.contains(&parent, &child, &mut exact_budget), Ok(true));
+    assert_eq!(exact_budget.usage().work, exact);
+    assert_eq!(exact_budget.usage().allocation_units, 0);
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert_eq!(
+        proof.contains(&parent, &child, &mut cancelled),
+        Err(OriginError::Stopped(StopReason::Cancelled))
+    );
+    assert_eq!(cancelled.usage().work, 0);
+    Ok(())
+}
+
+#[test]
+fn mapped_containment_prepays_each_independent_identity() -> TestResult {
+    let name_a = format!("{}a", "x".repeat(9_999));
+    let name_b = format!("{}b", "x".repeat(9_999));
+    let a = source(&name_a, "abc")?;
+    let b = source(&name_b, "abc")?;
+    let parent = source(&name_a, "abc")?
+        .span(0, 3)
+        .map_err(|e| format!("{e:?}"))?;
+    let child = source(&name_b, "abc")?
+        .span(1, 2)
+        .map_err(|e| format!("{e:?}"))?;
+    let mut store = SourceStore::default();
+    store.insert(a.clone()).map_err(|e| format!("{e:?}"))?;
+    store.insert(b.clone()).map_err(|e| format!("{e:?}"))?;
+    for kind in [MappingKind::Exact, MappingKind::Transformed] {
+        let mappings = [Mapping {
+            source: a.span(0, 3).map_err(|e| format!("{e:?}"))?,
+            target: b.span(0, 3).map_err(|e| format!("{e:?}"))?,
+            kind,
+        }];
+        let proof = SourceMap::validate_mappings(&mappings, &store, &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+        // Entry + map visit + three independent complete identities (L + 41).
+        let exact = 2 + 3 * (10_000 + 41);
+        let limits = Limits {
+            work: exact,
+            allocation_units: 0,
+            ..budget().limits()
+        };
+        let mut sufficient = Budget::new(limits);
+        assert_eq!(proof.contains(&parent, &child, &mut sufficient), Ok(true));
+        assert_eq!(sufficient.usage().work, exact);
+        assert_eq!(sufficient.usage().allocation_units, 0);
+        for work in [0, 1, exact - 1] {
+            let mut limited = Budget::new(Limits { work, ..limits });
+            assert_eq!(
+                proof.contains(&parent, &child, &mut limited),
+                Err(OriginError::Stopped(StopReason::WorkLimit))
+            );
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn pointwise_containment_prepays_independent_identity_on_every_hop() -> TestResult {
+    let names = [
+        format!("{}a", "x".repeat(999)),
+        format!("{}b", "x".repeat(999)),
+        format!("{}c", "x".repeat(999)),
+    ];
+    let mut store = SourceStore::default();
+    for name in &names {
+        store
+            .insert(source(name, "x")?)
+            .map_err(|e| format!("{e:?}"))?;
+    }
+    // Independently construct every endpoint, including both occurrences of B.
+    let span = |name: &str| -> Result<_, Box<dyn std::error::Error>> {
+        Ok(source(name, "x")?
+            .span(0, 1)
+            .map_err(|e| format!("{e:?}"))?)
+    };
+    let parent = span(&names[0])?;
+    let child = span(&names[2])?;
+    let mappings = [
+        Mapping {
+            source: span(&names[0])?,
+            target: span(&names[1])?,
+            kind: MappingKind::Exact,
+        },
+        Mapping {
+            source: span(&names[1])?,
+            target: span(&names[2])?,
+            kind: MappingKind::Exact,
+        },
+    ];
+    let proof = SourceMap::validate_mappings(&mappings, &store, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    // Fast path: four identity checks + three visits. Pointwise: three parent
+    // checks, four edge checks, three popped points, and four edge visits.
+    let exact = 11 * (1_000 + 41) + 10;
+    let limits = Limits {
+        work: exact,
+        ..budget().limits()
+    };
+    let mut sufficient = Budget::new(limits);
+    assert_eq!(proof.contains(&parent, &child, &mut sufficient), Ok(true));
+    assert_eq!(sufficient.usage().work, exact);
+    assert_eq!(sufficient.usage().nodes, 3);
+    for work in [1, exact - 1] {
+        let mut limited = Budget::new(Limits { work, ..limits });
+        assert_eq!(
+            proof.contains(&parent, &child, &mut limited),
+            Err(OriginError::Stopped(StopReason::WorkLimit))
+        );
+    }
+    Ok(())
+}
+
+#[test]
+#[cfg(target_has_atomic = "ptr")]
+fn point_cycle_fallback_reuses_canonical_long_identities() -> TestResult {
+    for name_len in [10, 10_000] {
+        for points in [1, 32] {
+            let name = "x".repeat(name_len);
+            let text = "a".repeat(points * 2);
+            let first = source(&name, &text)?;
+            let second = source(&name, &text)?;
+            let mut store = SourceStore::default();
+            store.insert(first.clone()).map_err(|e| format!("{e:?}"))?;
+            let maps = [Mapping {
+                source: first.span(0, points as u64).map_err(|e| format!("{e:?}"))?,
+                target: second
+                    .span(points as u64, (points * 2) as u64)
+                    .map_err(|e| format!("{e:?}"))?,
+                kind: MappingKind::Exact,
+            }];
+            // Source admission: shared endpoint 3; independent endpoint
+            // (2L + 1) + (L + 41) + 1. Validation entry/visit: 2; bytes: N.
+            // Coarse graph: L + 44; fallback index construction: 3.
+            // Point traversal: 7N (root, four pops, two edge visits).
+            // Total: 4L + 8N + 95. Traversal never compares variable-length IDs.
+            let exact = (4 * name_len + 8 * points + 95) as u64;
+            let limits = Limits {
+                work: exact,
+                ..budget().limits()
+            };
+            let mut sufficient = Budget::new(limits);
+            SourceMap::validate_mappings(&maps, &store, &mut sufficient)
+                .map_err(|e| format!("{e:?}"))?;
+            assert_eq!(sufficient.usage().work, exact);
+            assert_eq!(sufficient.usage().nodes, (2 * points) as u64);
+            assert_eq!(sufficient.usage().depth, 2);
+            for work in [0, exact - 1] {
+                let mut limited = Budget::new(Limits { work, ..limits });
+                assert!(matches!(
+                    SourceMap::validate_mappings(&maps, &store, &mut limited),
+                    Err(OriginError::Stopped(StopReason::WorkLimit))
+                ));
+                assert_eq!(
+                    limited.charge(Resource::Work, 0),
+                    Err(StopReason::WorkLimit)
+                );
+            }
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn cycle_endpoint_indices_precharge_allocation_and_keep_sticky_stop() -> TestResult {
+    let snapshot = source("endpoint-allocation", "aa")?;
+    let mut store = SourceStore::default();
+    store
+        .insert(snapshot.clone())
+        .map_err(|e| format!("{e:?}"))?;
+    let maps = [Mapping {
+        source: snapshot.span(0, 1).map_err(|e| format!("{e:?}"))?,
+        target: snapshot.span(1, 2).map_err(|e| format!("{e:?}"))?,
+        kind: MappingKind::Exact,
+    }];
+    // One coarse node, its ordered index/outgoing head, one edge, and
+    // incoming/depth arrays. The self-edge leaves the ready queue empty.
+    let coarse = (core::mem::size_of::<&nepl3_core::source::SnapshotId>()
+        + core::mem::size_of::<usize>()
+        + core::mem::size_of::<Option<usize>>()
+        + core::mem::size_of::<(usize, Option<usize>)>()
+        + core::mem::size_of::<usize>()
+        + core::mem::size_of::<u64>()) as u64;
+    let endpoint = core::mem::size_of::<(usize, usize)>() as u64;
+    for allocation_units in [coarse, coarse + endpoint - 1, coarse + endpoint] {
+        let mut limited = Budget::new(Limits {
+            allocation_units,
+            ..budget().limits()
+        });
+        assert!(matches!(
+            SourceMap::validate_mappings(&maps, &store, &mut limited),
+            Err(OriginError::Stopped(StopReason::AllocationLimit))
+        ));
+        // At the exact endpoint allowance, its allocation is admitted and
+        // the subsequent traversal stack allocation fails. This distinguishes
+        // endpoint precharging from a later failure with an uncharged Vec.
+        assert_eq!(
+            limited.usage().allocation_units,
+            if allocation_units == coarse + endpoint {
+                coarse + endpoint
+            } else {
+                coarse
+            }
+        );
+        assert_eq!(
+            limited.charge(Resource::Work, 0),
+            Err(StopReason::AllocationLimit)
+        );
+    }
     Ok(())
 }

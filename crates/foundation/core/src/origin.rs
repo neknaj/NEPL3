@@ -1,7 +1,7 @@
 //! Provenance DAGs and conservative reversible source mappings.
 use crate::{
     budget::{Budget, Resource, StopReason},
-    source::{SnapshotId, SourceError, SourceStore, Span},
+    source::{SnapshotId, SourceError, SourceSnapshot, SourceStore, Span},
     value::OperationRef,
 };
 use alloc::{collections::BTreeMap, string::String, vec::Vec};
@@ -78,6 +78,7 @@ impl OriginGraph {
             (origins.len() as u64).saturating_mul(8),
         )?;
         let mut heights = alloc::vec![0u64; origins.len()];
+        let mut source_slices = SourceSlices::new(sources);
         for root in 0..origins.len() {
             budget.charge(
                 Resource::AllocationUnits,
@@ -114,7 +115,9 @@ impl OriginGraph {
                 }
                 budget.charge(Resource::Nodes, 1)?;
                 let origin = &origins[index];
-                validate_spans(origin, sources)?;
+                if let Some(span) = origin_span(origin)? {
+                    source_slices.slice(span, budget)?;
+                }
                 state[index] = 1;
                 budget.charge(
                     Resource::AllocationUnits,
@@ -151,7 +154,7 @@ impl OriginGraph {
         budget: &mut Budget,
     ) -> Result<OriginId, OriginError> {
         budget.poll()?;
-        validate_spans(&origin, sources)?;
+        validate_spans(&origin, sources, budget)?;
         let mut height = 1u64;
         for parent in parents(&origin) {
             budget.charge(Resource::Work, 1)?;
@@ -194,8 +197,18 @@ fn parents(origin: &Origin) -> &[OriginId] {
         _ => &[],
     }
 }
-fn validate_spans(origin: &Origin, sources: &SourceStore) -> Result<(), OriginError> {
-    let span = match origin {
+fn validate_spans(
+    origin: &Origin,
+    sources: &SourceStore,
+    budget: &mut Budget,
+) -> Result<(), OriginError> {
+    if let Some(span) = origin_span(origin)? {
+        checked_source_slice(span, sources, budget)?;
+    }
+    Ok(())
+}
+fn origin_span(origin: &Origin) -> Result<Option<&Span>, OriginError> {
+    Ok(match origin {
         Origin::Direct(span) => Some(span),
         Origin::Composite(_) => None,
         Origin::Generated {
@@ -214,14 +227,82 @@ fn validate_spans(origin: &Origin, sources: &SourceStore) -> Result<(), OriginEr
             }
             anchor.as_ref()
         }
-    };
-    if let Some(span) = span {
-        sources
-            .get_ref(span.snapshot_ref())
-            .ok_or(SourceError::MissingSnapshot)?
-            .slice(span)?;
+    })
+}
+
+// Share prepaid source lookup and identity validation between provenance
+// graphs and source-map admission/closure checks. The returned slice borrows
+// the immutable store, not the caller's identity or budget.
+fn checked_source_slice<'a>(
+    span: &Span,
+    sources: &'a SourceStore,
+    budget: &mut Budget,
+) -> Result<&'a str, OriginError> {
+    let (_, snapshot) = checked_source_snapshot(span, sources, budget)?;
+    budget.charge(Resource::Work, 1)?;
+    Ok(snapshot.slice_range(span.start(), span.end())?)
+}
+fn checked_source_snapshot<'a>(
+    span: &Span,
+    sources: &'a SourceStore,
+    budget: &mut Budget,
+) -> Result<(usize, &'a SourceSnapshot), OriginError> {
+    let identity = span.snapshot_ref();
+    let (position, snapshot) = sources
+        .get_revision_position_with_budget(&identity.source, identity.revision, budget)?
+        .ok_or(SourceError::MissingSnapshot)?;
+    if snapshot.identity().compare_with_budget(identity, budget)? != core::cmp::Ordering::Equal {
+        return Err(SourceError::MissingSnapshot.into());
     }
-    Ok(())
+    Ok((position, snapshot))
+}
+// A local endpoint cursor retains a successfully resolved immutable snapshot.
+// The store borrow is part of the cursor, so reuse cannot cross source scopes.
+// Only an identical complete identity skips lookup; independently reconstructed
+// identities still take the fully metered path, even when their bytes agree.
+struct SourceSlices<'a> {
+    sources: &'a SourceStore,
+    previous: Option<(usize, &'a SourceSnapshot)>,
+}
+impl<'a> SourceSlices<'a> {
+    fn new(sources: &'a SourceStore) -> Self {
+        Self {
+            sources,
+            previous: None,
+        }
+    }
+    fn slice(&mut self, span: &Span, budget: &mut Budget) -> Result<&'a str, OriginError> {
+        if self.previous.is_some() {
+            budget.charge(Resource::Work, 1)?;
+        }
+        let mut resolved = self
+            .previous
+            .filter(|(_, previous)| core::ptr::eq(previous.identity(), span.snapshot_ref()));
+        if resolved.is_none()
+            && let Some((position, _)) = self.previous
+        {
+            // Ordered generated endpoints often advance to an adjacent source.
+            // These are identity-pointer probes, never unmetered byte checks.
+            for adjacent in [position.checked_add(1), position.checked_sub(1)] {
+                budget.charge(Resource::Work, 1)?;
+                if let Some(position) = adjacent
+                    && let Some(snapshot) = self.sources.snapshot_at_position(position)
+                    && core::ptr::eq(snapshot.identity(), span.snapshot_ref())
+                {
+                    resolved = Some((position, snapshot));
+                    break;
+                }
+            }
+        }
+        let (position, snapshot) = match resolved {
+            Some(resolved) => resolved,
+            None => checked_source_snapshot(span, self.sources, budget)?,
+        };
+        budget.charge(Resource::Work, 1)?;
+        let slice = snapshot.slice_range(span.start(), span.end())?;
+        self.previous = Some((position, snapshot));
+        Ok(slice)
+    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -261,6 +342,21 @@ impl SourceMap {
     ) -> Result<ValidatedSourceMap<'a>, OriginError> {
         Self::validate_mapping_parts(mappings, &[], sources, budget)
     }
+    /// Validate both mapping parts and retain the immutable source-store borrow.
+    /// The completed geometry checks establish closure for this exact store;
+    /// later reuse with another store still requires full source validation.
+    pub fn validate_bound_mapping_parts<'a>(
+        mappings: &'a [Mapping],
+        additional: &'a [Mapping],
+        sources: &'a SourceStore,
+        budget: &mut Budget,
+    ) -> Result<ValidatedSourceMap<'a>, OriginError> {
+        let mut mapped = Self::validate_mapping_parts(mappings, additional, sources, budget)?;
+        // Publish the scoped proof only after its final metered stop check.
+        budget.charge(Resource::Work, 1)?;
+        mapped.validated_sources = Some(sources);
+        Ok(mapped)
+    }
     /// Validate the full ordered union of two borrowed tables without cloning
     /// mappings or their source identities. Neither part is assumed valid:
     /// source geometry and cycles spanning both parts are checked together.
@@ -276,16 +372,12 @@ impl SourceMap {
             additional,
             validated_sources: None,
         };
+        let mut source_slices = SourceSlices::new(sources);
+        let mut target_slices = SourceSlices::new(sources);
         for mapping in mapped.iter() {
             budget.charge(Resource::Work, 1)?;
-            let source = sources
-                .get_ref(mapping.source.snapshot_ref())
-                .ok_or(SourceError::MissingSnapshot)?
-                .slice(&mapping.source)?;
-            let target = sources
-                .get_ref(mapping.target.snapshot_ref())
-                .ok_or(SourceError::MissingSnapshot)?
-                .slice(&mapping.target)?;
+            let source = source_slices.slice(&mapping.source, budget)?;
+            let target = target_slices.slice(&mapping.target, budget)?;
             if mapping.kind == MappingKind::Exact {
                 budget.charge(Resource::Work, source.len().min(target.len()) as u64)?;
                 if source != target {
@@ -325,14 +417,13 @@ impl<'a> ValidatedSourceMap<'a> {
         {
             return Ok(());
         }
+        let mut source_slices = SourceSlices::new(sources);
+        let mut target_slices = SourceSlices::new(sources);
         for mapping in self.iter() {
-            for span in [&mapping.source, &mapping.target] {
-                budget.charge(Resource::Work, 1)?;
-                sources
-                    .get_ref(span.snapshot_ref())
-                    .ok_or(SourceError::MissingSnapshot)?
-                    .slice(span)?;
-            }
+            budget.charge(Resource::Work, 1)?;
+            source_slices.slice(&mapping.source, budget)?;
+            budget.charge(Resource::Work, 1)?;
+            target_slices.slice(&mapping.target, budget)?;
         }
         Ok(())
     }
@@ -345,7 +436,13 @@ impl<'a> ValidatedSourceMap<'a> {
         budget: &mut Budget,
     ) -> Result<bool, OriginError> {
         budget.charge(Resource::Work, 1)?;
-        if parent.contains(child) {
+        if parent
+            .snapshot_ref()
+            .compare_with_budget(child.snapshot_ref(), budget)?
+            == core::cmp::Ordering::Equal
+            && parent.start() <= child.start()
+            && child.end() <= parent.end()
+        {
             return Ok(true);
         }
         if self.direct_cover(parent, child, budget)? {
@@ -360,13 +457,13 @@ impl<'a> ValidatedSourceMap<'a> {
                 budget.charge(Resource::Work, 1)?;
                 budget.charge(Resource::Nodes, 1)?;
                 budget.observe_depth(depth)?;
-                if point_within(current, parent) {
+                if point_within(current, parent, budget)? {
                     continue;
                 }
                 let mut found = false;
                 for mapping in self.iter() {
                     budget.charge(Resource::Work, 1)?;
-                    if !point_on(current, &mapping.target) {
+                    if !point_on(current, &mapping.target, budget)? {
                         continue;
                     }
                     found = true;
@@ -415,7 +512,10 @@ impl<'a> ValidatedSourceMap<'a> {
         for mapping in self.iter() {
             budget.charge(Resource::Work, 1)?;
             let target = &mapping.target;
-            if target.snapshot_ref() != child.snapshot_ref()
+            if target
+                .snapshot_ref()
+                .compare_with_budget(child.snapshot_ref(), budget)?
+                != core::cmp::Ordering::Equal
                 || (target.start() == target.end()) != anchor
                 || if anchor {
                     target.start() != child.start()
@@ -433,12 +533,22 @@ impl<'a> ValidatedSourceMap<'a> {
         let Some(mapping) = candidate else {
             return Ok(false);
         };
-        if !mapping.target.contains(child) || mapping.source.snapshot_ref() != parent.snapshot_ref()
+        // Candidate selection already established the target identity. Only
+        // range inclusion remains; the source identity is checked separately.
+        if mapping.target.start() > child.start()
+            || child.end() > mapping.target.end()
+            || mapping
+                .source
+                .snapshot_ref()
+                .compare_with_budget(parent.snapshot_ref(), budget)?
+                != core::cmp::Ordering::Equal
         {
             return Ok(false);
         }
         if mapping.kind == MappingKind::Transformed {
-            return Ok(parent.contains(&mapping.source));
+            return Ok(
+                parent.start() <= mapping.source.start() && mapping.source.end() <= parent.end()
+            );
         }
         // Exact mappings have equal lengths, already checked by construction.
         // Translate only the requested subrange, without cloning a Span/ID.
@@ -447,20 +557,26 @@ impl<'a> ValidatedSourceMap<'a> {
         Ok(parent.start() <= start && end <= parent.end())
     }
 }
-fn point_on(point: Point<'_>, span: &Span) -> bool {
-    point.snapshot == span.snapshot_ref()
+fn point_on(point: Point<'_>, span: &Span, budget: &mut Budget) -> Result<bool, StopReason> {
+    Ok(point
+        .snapshot
+        .compare_with_budget(span.snapshot_ref(), budget)?
+        == core::cmp::Ordering::Equal
         && point.anchor == (span.start() == span.end())
         && point.offset >= span.start()
-        && point.offset - span.start() < point_count(span)
+        && point.offset - span.start() < point_count(span))
 }
-fn point_within(point: Point<'_>, span: &Span) -> bool {
-    point.snapshot == span.snapshot_ref()
+fn point_within(point: Point<'_>, span: &Span, budget: &mut Budget) -> Result<bool, StopReason> {
+    Ok(point
+        .snapshot
+        .compare_with_budget(span.snapshot_ref(), budget)?
+        == core::cmp::Ordering::Equal
         && point.offset >= span.start()
         && if point.anchor {
             point.offset <= span.end()
         } else {
             point.offset < span.end()
-        }
+        })
 }
 impl SourceMap {
     pub fn insert(
@@ -469,14 +585,8 @@ impl SourceMap {
         sources: &SourceStore,
         budget: &mut Budget,
     ) -> Result<(), OriginError> {
-        let source = sources
-            .get_ref(mapping.source.snapshot_ref())
-            .ok_or(SourceError::MissingSnapshot)?
-            .slice(&mapping.source)?;
-        let target = sources
-            .get_ref(mapping.target.snapshot_ref())
-            .ok_or(SourceError::MissingSnapshot)?
-            .slice(&mapping.target)?;
+        let source = checked_source_slice(&mapping.source, sources, budget)?;
+        let target = checked_source_slice(&mapping.target, sources, budget)?;
         if mapping.kind == MappingKind::Exact {
             budget.charge(Resource::Work, source.len().min(target.len()) as u64)?;
             if source != target {
@@ -552,37 +662,57 @@ fn point(span: &Span, offset: u64) -> Point<'_> {
         anchor: span.start() == span.end(),
     }
 }
-fn push_point<'a>(
-    stack: &mut Vec<(Point<'a>, bool, u64)>,
-    point: Point<'a>,
+fn push_point<T>(
+    stack: &mut Vec<(T, bool, u64)>,
+    point: T,
     exiting: bool,
     depth: u64,
     budget: &mut Budget,
 ) -> Result<(), OriginError> {
     budget.charge(
         Resource::AllocationUnits,
-        core::mem::size_of::<(Point, bool, u64)>() as u64,
+        core::mem::size_of::<(T, bool, u64)>() as u64,
     )?;
     stack.push((point, exiting, depth));
     Ok(())
+}
+
+// Indices are canonical only inside this validation call. The coarse graph
+// establishes full SnapshotId equality with compare_with_budget before assigning
+// them. Point-state ordering and edge selection then compare fixed-size values,
+// without rescanning variable-length source names for every byte vertex.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
+struct CyclePoint {
+    snapshot: usize,
+    offset: u64,
+    anchor: bool,
+}
+impl CyclePoint {
+    fn new(snapshot: usize, span: &Span, offset: u64) -> Self {
+        Self {
+            snapshot,
+            offset: span.start() + offset,
+            anchor: span.start() == span.end(),
+        }
+    }
 }
 
 fn check_map_cycles<'a>(
     input: impl Iterator<Item = &'a Mapping> + Clone,
     budget: &mut Budget,
 ) -> Result<(), OriginError> {
-    if snapshot_dag(input.clone(), budget)? {
+    let Some(endpoints) = snapshot_dag(input.clone(), budget)? else {
         return Ok(());
-    }
+    };
     // Exact edges preserve byte displacement. Transformed fragments relate every source
     // byte to every target byte. Empty fragments use a distinct insertion-anchor vertex.
     // This finite graph can be expensive; exhaustion returns Stopped, never a false cycle.
-    let mappings = || input.clone();
-    let mut state: BTreeMap<Point, u8> = BTreeMap::new();
-    for mapping in mappings() {
+    let mappings = || input.clone().zip(endpoints.iter());
+    let mut state: BTreeMap<CyclePoint, u8> = BTreeMap::new();
+    for (mapping, &(source, _)) in mappings() {
         for offset in 0..point_count(&mapping.source) {
             budget.charge(Resource::Work, 1)?;
-            let root = point(&mapping.source, offset);
+            let root = CyclePoint::new(source, &mapping.source, offset);
             if state.get(&root) == Some(&2) {
                 continue;
             }
@@ -603,13 +733,13 @@ fn check_map_cycles<'a>(
                 budget.charge(Resource::Nodes, 1)?;
                 budget.charge(
                     Resource::AllocationUnits,
-                    core::mem::size_of::<(Point, u8)>() as u64,
+                    core::mem::size_of::<(CyclePoint, u8)>() as u64,
                 )?;
                 state.insert(current, 1);
                 push_point(&mut stack, current, true, depth, budget)?;
-                for edge in mappings() {
+                for (edge, &(source, target)) in mappings() {
                     budget.charge(Resource::Work, 1)?;
-                    if current.snapshot != edge.source.snapshot_ref()
+                    if current.snapshot != source
                         || current.anchor != (edge.source.start() == edge.source.end())
                     {
                         continue;
@@ -624,7 +754,7 @@ fn check_map_cycles<'a>(
                     if edge.kind == MappingKind::Exact {
                         push_point(
                             &mut stack,
-                            point(&edge.target, displacement),
+                            CyclePoint::new(target, &edge.target, displacement),
                             false,
                             next_depth,
                             budget,
@@ -634,7 +764,7 @@ fn check_map_cycles<'a>(
                             budget.charge(Resource::Work, 1)?;
                             push_point(
                                 &mut stack,
-                                point(&edge.target, offset),
+                                CyclePoint::new(target, &edge.target, offset),
                                 false,
                                 next_depth,
                                 budget,
@@ -654,7 +784,7 @@ fn check_map_cycles<'a>(
 fn snapshot_dag<'a>(
     input: impl Iterator<Item = &'a Mapping>,
     budget: &mut Budget,
-) -> Result<bool, OriginError> {
+) -> Result<Option<Vec<(usize, usize)>>, OriginError> {
     let mut nodes: Vec<&'a SnapshotId> = Vec::new();
     let mut ordered: Vec<usize> = Vec::new();
     // Linked adjacency lists retain duplicate edges without scanning unrelated
@@ -811,5 +941,27 @@ fn snapshot_dag<'a>(
             }
         }
     }
-    Ok(visited == nodes.len())
+    if visited == nodes.len() {
+        return Ok(None);
+    }
+    // Edges were appended in input order. Recover their canonical endpoints
+    // only for the pointwise fallback; the common DAG path allocates nothing
+    // extra. Walking each linked list once also preserves duplicate edges.
+    budget.charge(
+        Resource::AllocationUnits,
+        (edges.len() as u64).saturating_mul(core::mem::size_of::<(usize, usize)>() as u64),
+    )?;
+    budget.charge(Resource::Work, edges.len() as u64)?;
+    let mut endpoints = alloc::vec![(0, 0); edges.len()];
+    for (source, first) in outgoing.iter().enumerate() {
+        budget.charge(Resource::Work, 1)?;
+        let mut next = *first;
+        while let Some(edge) = next {
+            budget.charge(Resource::Work, 1)?;
+            let (target, following) = edges[edge];
+            endpoints[edge] = (source, target);
+            next = following;
+        }
+    }
+    Ok(Some(endpoints))
 }

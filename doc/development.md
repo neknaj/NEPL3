@@ -95,6 +95,8 @@ Awaitとpartialのない応答ではcallbackを呼ばず、元のclosureを使�
 Readerの意味検査、request lifetimeの確定、生成sourceの認可、remote Usageの検証、子processの終了・回収はhostの後続責務であり、このAPIでは実行しない。
 既存のreceive系APIは変更しない。局所試験は `cargo test --locked -p nepl3-wire --test operation pending::` と `cargo test --locked -p nepl3-provider --test transport reply::pending::` で実行する。
 
+Readerの生成sourceを持つReportの境界は `cargo test --locked -p nepl3-reader --test runtime framed::` で検査する。実際のReaderSessionが保存したRead要求に対し、Unicode生成sourceを参照する診断をframed CBORで受け取り、pending replyのsource入場、内外Reportの照合、ReaderSessionの再開までを同一process内で接続する。生成sourceを追加しない受信、payloadのsource宣言欠落、内外Reportの不一致は拒否し、Reader側のpending slotを保持する。これは共有Budget下のterminal Readの回帰であり、process間実行、transport Connection、remote Usageの認証、正式受入の完了を示すものではない。WASIでは同じコマンドへ `--target wasm32-wasip2 -- --test-threads=1` を追加する。
+
 nativeの依存操作schedulerは `cargo test --locked -p nepl3-suite --test dispatch` で検査する。WASIでは `--target wasm32-wasip2 -- --test-threads=1` を追加する。schedulerは明示的なframe列でInvoke・依存要求・Resumeを逐次実行し、同じ実行Budgetへ祖先の上限と深さを適用する。要求ごとのsource権限、循環検出、Invalidのpartialと診断、停止後のcallback抑止、取消を検査する。追加生成sourceの認可・登録とprocess間の総予算管理は後続の実装範囲である。T11・T12は段階実装中であり、正式受入の状態は `implementation-status.json` のacceptanceを参照する。
 
 nativeの `cargo test --locked -p nepl3-provider --test process_protocol` は、実processのstdin/stdoutでschemaを取得し、Invoke・Await・Resumeの結果とUnicode診断をnative経路と比較する。schema不足・identity不一致・応答前EOFと、Await中のCancelも検査する。このtest targetは専用harnessを使い、protocol用stdoutへテストランナーの表示が混入することを防ぐ。WASIではOS process試験を明示的にskipする。一般的なhost scheduler、process間の総予算管理、全providerの互換性は継続する実装・受入範囲である。
@@ -131,9 +133,14 @@ scope付き証拠は `conformance/results/` 以下へ型付きJSONで保存す�
 
 ```sh
 cargo run --locked -p nepl3-tools -- evidence identity
+cargo run --locked -p nepl3-tools -- evidence identity --commit <40-hex-commit>
 ```
 
 identity profileは `nepl3.repository-inputs/1` です。Gitから見える非ignoreファイルをpathのUTF-8 byte順で並べ、implementation-status.json、conformance/results/、生成tasks/を除外します。source digestはこの集合全体、spec digestはそのうちdoc/spec/、interfaces/、design/を対象にします。各入力はdomain文字列 `nepl3.repository-inputs/1`、zero byte、`source` または `spec`、zero byteで開始し、各pathの長さ（u64 big-endian）・UTF-8 path・内容長（u64 big-endian）・元byte列を順にSHA-256へ入力します。
+
+`--commit` はローカルに存在する固定commitのGit blobを同じprofileで検査する。branch名・短縮ID・tag/tree/blobのIDは受け付けない。過去のsourceをcheckoutしたり実行したりせず、replace refとpartial cloneの自動取得を無効にする。working treeやindexの未保存変更は固定commitの結果へ混入しない。各blobは1 MiB以下、tree列挙は8 MiB以下、対象file数は16,384以下とし、symlink・submodule・不正なpathを拒否する。元byte列を直接読むため、clean checkoutとの照合には引き続き同じ属性・改行条件が必要になる。
+
+この操作は検査対象の同一性を求めるだけであり、CI実行事実の認証、artifact取得、log復元、受入状態の更新を行わない。保存先のlocator・期限検査と、同一identityの全必須targetの実行証拠は別途必要となる。
 
 CIと同じ.gitattributesに従うfresh checkoutで通常ファイルをLFにそろえ、実際に検査したtreeからidentityを取得します。digest処理自体は改行・BOM・Unicodeを正規化しません。source位置fixtureや保存資料の元byte列を変えてdigestを合わせることは禁止です。
 
@@ -384,3 +391,333 @@ Reader/Engine全受入や実機試験の代わりにはしません。
 このCI整備をDoc HTML・文書移行・Pages公開の完成へ読み替えません。
 CIの区切り後はDoc生成を進め、意味・リンク・安定IDの対応を検証できたページから
 nepld正本へ移行し、検査済みの同じsite artifactを公開します。
+
+### Inline schema-validation frontier
+
+Structural validation retains up to eight borrowed sibling groups in a fixed
+inline array. Each group pairs a value slice with one expected type or an
+exactly aligned field-descriptor slice. A remainder reuses the slot freed by
+its current group; unary chains retain no empty ancestors. Wider lists no
+longer require storage proportional to their width, while deeply branching
+inputs spill with precharged fallible capacity sized for the actual group.
+The frontier retains overflow capacity for reuse.
+
+Traversal and schema checks remain forward depth-first. Every child is still
+charged individually for Work before any child Nodes/depth check, preserving
+partial Work usage and ordinary error order with Allocation nonbinding.
+Allocation-versus-Work stop precedence can change because the real storage
+requests change; larger groups may cost more for deeply branching inputs.
+Zero-allocation wide-input and exact/one-short deep-branch spill regressions
+cover both sides of this tradeoff. Removed AllocationUnits represent removed
+heap requests, not waived validation. Full acceptance remains separate.
+
+## Pure saved execution-scope derivation
+
+`ExecutionScope::child` polls the shared Budget, applies the heap-free pure
+transition in `suspension/execution/admission.rs`, and records a typed depth
+stop when derivation fails. Each saved child limit is the minimum of its
+parent and requested limits; depth is a checked increment bounded by the
+resulting depth ceiling. Child construction does not perform callback/resource
+admission. `ExecutionScope::run` retains that responsibility across Await.
+
+```sh
+CARGO_NET_OFFLINE=true cargo kani -p nepl3-suite --harness suspension::execution::verification::
+```
+
+The derivation harness checks arbitrary saved/requested u64 fields against a
+u128 depth reference and explicit field minima, including two-step ancestor
+composition. A separate harness calls the actual public child method with
+arbitrary observed Usage and all prior stop reasons, checking unchanged
+accounting and first-stop precedence. That wrapper harness uses unlimited
+current Budget ceilings and active depth zero; it does not prove arbitrary
+current Budget ceilings, active depth or private measurement state. Native
+boundary tests additionally cover active host depth four, overflow, exact and
+one-short depth ceilings. Existing scheduler/root integration tests remain
+required. Neither harness establishes scheduler correctness, authorization,
+callback execution, whole-runtime purity or physical memory bounds. T11/T12
+and the existing acceptance entries are not completed by this change.
+
+## Pure resource-transition verification
+
+`Budget::charge` applies the pure scalar transition in `budget/charge.rs`.
+The transition receives the prior counter, limit, amount and first stop and
+returns a typed charged/stopped outcome. Its mutable application boundary
+updates only the selected counter and stop. This is a bounded implementation
+scope, not a claim that every Budget operation or core API is pure.
+
+The Kani harness in `budget/verification.rs` calls that same production method.
+It admits all u64 fields, all seven resources and all nine current stop reasons,
+including overflow, zero charge, a counter above a lowered ceiling and an
+existing stop. A u128 specification checks the result and complete Usage;
+limits, active depth and observed depth must remain unchanged. The harness has
+no loops, recursion, input assumptions or alternate verification implementation.
+Its enum generators must be updated when resource or stop variants are added.
+
+`Budget::observe_depth` likewise applies the pure transition in `budget/depth.rs`.
+Its production harness admits arbitrary active depth, relative depth, ceiling,
+prior stop, historical Usage depth and current measurement depth. It checks the
+u128 absolute-depth sum, first-stop precedence, both independent high-water
+marks and every unrelated field. Old marks above a lowered ceiling are retained;
+only the newly observed absolute depth is checked here. This individual harness does not prove
+`measure_depth`, `with_depth`, `with_ceiling` or callback restoration.
+
+Use Kani 0.68.0 (CBMC 6.11.0, bundled nightly-2026-08-21) separately from the
+normal Rust 1.97 toolchain. Kani is a development tool and introduces no
+production dependency. Install it following its official installation guide:
+
+```sh
+cargo install --locked kani-verifier --version 0.68.0
+cargo kani setup
+cargo fetch --locked
+CARGO_NET_OFFLINE=true cargo kani -p nepl3-core --harness budget::verification::
+```
+
+Kani 0.68.0 does not accept `--locked`. Preserve and compare Cargo.lock before
+and after verification; a missing offline dependency is an execution failure,
+not a passed proof. Keep the exact source revision, lock hash, tool versions,
+command and raw output with the run evidence. Normal tests, Clippy and target
+builds remain separate checks. The harnesses cover the individual transitions
+and callback boundaries described here. They do not prove other Budget
+operations, schema traversal, physical memory bounds or the compiler/verifier's
+own correctness.
+
+`Budget::record_observed_usage` applies `budget/observed.rs` as a pure transition
+of Usage, measurement depth and sticky stop. Its production Kani harness checks
+all eight fields together using u128 reference sums: admission is atomic,
+field-error precedence is preserved, and admitted already-completed work is
+recorded even after an existing stop. Failed admission retains Usage and the
+measurement mark; limits and active depth are unchanged. This proof does not
+authenticate host observations or establish the saved grant that authorizes them.
+
+`Budget::with_depth` and `with_depth_at_least` share the pure entry transition
+in `budget/depth/entry.rs`. Two production-method harnesses check admission,
+first-stop precedence, independent high-water marks and callback suppression on
+rejection. A symbolic callback checks entry state and supplies an arbitrary
+terminating post-state and Result. The wrappers restore only saved active depth
+and preserve all other post-callback fields and the callback Result, even when
+that Result differs from the sticky stop. These proofs concern this boundary,
+not callback computations, generic error conversions, panic/unwind restoration,
+divergence or authorization to replace/reset a Budget. They do not establish
+Usage monotonicity across an arbitrary whole-Budget replacement.
+
+The required `resource-charge-proof` CI job runs the pinned verifier and keeps
+its raw output and source/lock identity for 14 days. The quality gate requires
+this job to succeed; the artifact is scoped proof evidence, not full acceptance.
+
+`Budget::with_ceiling` uses the pure admission function `budget/ceiling.rs`.
+The eight effective limits are component-wise minima. Admission checks cumulative
+usage in source/work/nodes/allocation/output/diagnostics/events order, then checks
+historical usage depth last; active and measurement depth are not admission inputs.
+The production-method Kani harness uses arbitrary fields and prior stops, checks
+callback suppression on rejection and entry state on admission, and models an
+arbitrary replacement Budget with an independent callback Result. Every returning
+path restores only the saved outer limits; other callback state and its Result
+are retained. Nested ceiling intersection cannot widen limits, but a callback
+that directly replaces its Budget is not constrained by that guarantee. Panic,
+unwind, divergence, generic error conversion and whole-runtime acceptance remain
+outside this proof.
+
+`Budget::measure_depth` completes its local observation through the pure
+`budget/depth/measurement.rs` function. Entry rejects a prior stop before the
+callback; otherwise the local mark starts at the caller's active depth. Every
+returning callback path merges the local mark into the saved enclosing mark
+before resolving the Result. A callback error takes precedence over a different
+sticky stop. A successful callback is followed by a stop check and returns the
+nonnegative difference from the saved base only when still running.
+The production-method Kani harness checks these rules, entry state, callback
+count and unchanged post-callback fields using arbitrary symbolic states. Its
+signed wider-integer difference is independent of production saturating_sub.
+The arbitrary post-state model probes the wrapper boundary and does not authorize
+Budget replacement: the public contract remains limited to pure validation
+callbacks that never replace the Budget. Ordinary nested tests also check a
+semantic validation error concurrent with resource exhaustion. This does not
+prove validation internals, generic error conversions, panic/unwind, divergence,
+or formal acceptance.
+
+Shape admission callers must also preserve depth overflow before calling Budget.
+The Math, Doc and Sentence graph validators use checked addition for caller base
+plus the live traversal stack and cached subtree height. Saturating these sums
+would hide an overflowing depth when the configured limit itself is u64::MAX.
+Their `--test shape absolute_depth_overflow` regressions cover one-node shapes
+and shared DAGs at exact-fit and overflowing bases, restored active depth,
+retained charges and a sticky DepthLimit. The DAG fixtures visit the shared child
+first on a shorter path, so the longest-path check cannot be replaced by the
+maximum live stack. This is a caller-side regression scope, not a proof of every
+rendering, lowering, evaluation or host depth calculation.
+
+The same overflow gate applies when a previously checked handle is reused at a
+higher caller depth: Math binding analysis and evaluation, Sentence plain-text
+rendering, foreign occurrence enumeration and foreign closure validation reject
+an overflowing absolute depth with sticky DepthLimit. These callers retain their
+existing charge order and restore the enclosing active depth through Budget.
+Regressions create each handle at base zero using the same Budget before testing
+the higher base. One-node exact-fit controls cover binding, evaluation, text and
+shape-only foreign enumeration; the foreign validation regression instead checks
+that overflow is rejected before an intentionally invalid guest is validated.
+These examples do not prove guest execution or all host-side depth calculations.
+
+
+A host-side Reader composition regression in `nepl3-provider --test reader`
+carries the saved terminal Read proof through Connection::send, fragmented
+Connection::receive_pending_reply, source admission, typed Report comparison and
+ReaderSession::resume. A source-policy failure closes the transport and preserves
+the Reader slot; subsequent send/receive attempts perform no I/O. A truncated
+Reader frame also preserves the slot. A later domain Report mismatch leaves the
+slot pending but does not retroactively close the successfully admitted transport.
+The successful path preserves the Unicode diagnostic/mapping and consumes exactly
+one frame before a following Close. Only resume consumes the Reader slot.
+The Reader dependency is test-only. This is same-process I/O composition using a
+shared cumulative Budget, not a remote Reader implementation or authenticated
+cross-process usage accounting.
+
+### Source admission interruption coverage
+
+`cargo test --locked -p nepl3-core --lib source::tests::` exercises actual
+`SourceAdmission::admit_existing` calls using fixed valid UTF-8 snapshots. It
+sweeps each SourceBytes, Work and AllocationUnits ceiling from zero through an
+ample-budget baseline call's usage, checks all nine prior stop reasons, and
+preserves the first stop on a direct retry. The two-entry seed covers a fresh middle key,
+independently stored duplicates, shared-storage duplicates, digest conflicts
+and locator conflicts. Assertions check the admission order, sorted index,
+shared-storage membership/order, retained earlier entries and unchanged
+counters unrelated to admission. A late allocation-stop witness checks that an
+already charged SourceBytes amount is retained without publishing a partial ledger.
+The empty-ledger case has its own baseline-derived ceiling sweep. Fixture
+hashes and locators are checked independently by a normal test.
+
+This is native boundary-test evidence, not formal verification. Experimental
+Kani 0.68.0 checks of both the two-entry ledger and the reduced first-admission
+case reported out-of-memory failures; neither established a proof. Their
+experimental checkpoint is kept separately and no unverified harness is added to the CI
+proof gate. The tests do not establish arbitrary ledger/text bounds, exact
+Work/Allocation costs, physical allocation failure handling, remote usage
+authentication or complete runtime acceptance. The existing scoped resource
+proofs and the outstanding acceptance states are unchanged.
+
+### Saved execution-scope re-entry coverage
+
+The suite's `suspension::execution::tests::` native regressions cover the actual
+`ExecutionScope::root` and `run` composition. A saved frame whose Work ceiling
+has already been exceeded is rejected before observing its saved depth: the
+callback is suppressed and the full Usage value is unchanged. This distinguishes
+the required ceiling-before-depth wrapper order from the reversed order, even
+though each Budget wrapper has separate scoped proofs. A later zero-depth ceiling
+also rejects a saved frame without callback execution or a new depth observation.
+Further cases retain a temporary capture ceiling after the outer ceiling is
+restored, and preserve a typed callback error and charged work while restoring
+outer limits and a nonzero active host depth. Root construction intentionally
+defers cumulative resource admission until `run`.
+
+These are native composition regressions, not additional formal proofs or a
+claim that a production defect was found. They do not establish scheduler or
+remote-host correctness, panic/unwind restoration, or complete runtime acceptance.
+
+### Markdown batch validation reuse
+
+The annotated Math preparation loop validates its immutable containing Doc once
+when it encounters the first Math node. Crate-private host helpers reuse that
+native `ValidatedDocumentSyntax` only inside the same registry, source-admission
+ledger, cumulative Budget and active-depth scope. Each selected Math guest still
+passes the existing schema/foreign-closure validation, lowering, shape checking,
+MathML and structural TeX preparation. Public single-node entry points continue
+validating arbitrary input. This is not a portable or cross-operation paid-work
+proof. Full Doc validation still includes unselected nodes and embeds.
+The loop rejects changed limits or active depth before reuse and after every
+guest preparation, including the last guest. This guard does not detect an
+arbitrary custom codec replacing the Budget with another value having identical
+bounds; preserving cumulative usage remains the codec's contract.
+
+The SVG page profile prepares plain text lazily at the first image requirement
+and reuses it for that page's later images. Image-free pages retain complete
+PageSet admission without redundant alt-text preparation. Static SVG validation,
+asset resolution and rejection of unused assets remain in place. All phases use
+the original cumulative Budget; stops are not reset and limits are not raised.
+Math preparation now precedes lazy image preparation, so competing failures can
+be reported in a different order; byte-identical error strings are not promised.
+
+Regression coverage compares multiple Math fragments with the independently
+validating public path and requires lower Work and AllocationUnits. Image-free
+pages must match the plain page profile's complete Usage and output. Multi-Math
+page cases retain exact/one-below limits, cancellation, elevated caller depth,
+invalid origin/unreachable node/unused embed rejection, and faithful output.
+These native checks do not complete formal acceptance or prove all rendering
+paths linear-time.
+
+### Checked PageSet preparation reuse
+
+PageSet resolution hashes the exact generated guest closure descendants together
+with the enclosing PageSet and document values. It keeps all native closure,
+source, environment and outer schema checks, and preserves independently
+separated digest domains. Standalone preparation still encodes/checks its input.
+Guest hash work now precedes label discovery, so competing failure order may
+change. Tests compare mixed empty/single/multiple guest pages with independent
+standalone closure identities and exact/one-short resource ceilings.
+
+The same operation retains immutable native document structures in CheckedPages.
+Selected Markdown Math preparation borrows these structures instead of repeating
+containing-Doc validation; guest selection, semantic checks, lowering and output
+preparation remain. The native unresolved-text entry shares the ordinary text
+traversal, but accepts no external resolutions and therefore needs no identity
+hashes for their verification. Encountered inline guests remain unresolved.
+This supplies image alt text without re-encoding and re-hashing its full owner.
+
+Both native entries check limits and active depth, preserve stopped budgets, and
+require continuation of the same cumulative Budget/registry/source admission.
+Matching bounds do not prove paid-usage identity. These are in-operation native
+proofs, not wire receipts, cache authorization, guest semantic proofs or complete
+runtime acceptance. No resource ceiling is raised or reset.
+
+### Digest request lookup probes
+
+A batch node visit finds the first matching immutable-reference request with one
+charged lower-bound search, then scans equal requests in their existing order.
+Every run candidate and one terminal probe are charged, including end-of-index;
+completed requests consume the probe but do not restart hashes. This replaces a
+second binary search without tying Usage to address rank. The domain, encoding,
+active hash scopes, insertion shifts and request-order results are unchanged.
+Direct regressions cover missing addresses and duplicate runs at different ranks,
+all short Work ceilings, sticky stops and completed matches. No universal CPU
+speedup is claimed for duplicate-heavy inputs; the deterministic Work change and
+actual encoding/hash outputs are separate measurements.
+
+### PageSet guest digest の mapping scope 回帰確認（2026-10-10）
+
+`nepl3-doc-core` の `foreign` integration test に、外部 codec・親 DocumentSyntax・ForeignClosure 自身の mapping を分けた native fixture を追加した。外部 mapping の変更は closure bytes・document digest・PageSet identity を変えず、親文書の mapping の変更は guest identity を保持する。closure 自身の mapping の変更は guest・document・PageSet identity を変える。guest digest は `GUEST_DOMAIN` と独立した wire encoding の連結から照合し、PageSet 内の closure 値・standalone preparation・fresh codec での portable reconstruction とも比較する。
+
+closure-owned source endpoint を欠かした場合は、同じ endpoint が文書と外部 store にあっても standalone/batch とも拒否する。これは native FoundationCodec の所有境界を確認する回帰試験であり、任意の custom codec の文脈非依存性や全受入群の完了を主張しない。guest view に必須の mapping 自体を除去する別ケースは、この追加試験の範囲外である。
+
+### source position の独立期待値（2026-10-10）
+
+`nepl3-core` の `contracts` integration test は、BOM・日本語・補助Unicode scalar・CRLF・単独CR/LFを含む固定入力について、UTF-8/16/32の期待位置を明示する。変換に成功した位置だけの往復確認から、全ての表現可能な位置を両方向で要求する確認へ変更した。scalar内部・CRLF内部・範囲外のoffsetとpositionも区別して拒否を確認する。BOM直後の正しいbyte offset 3を誤って拒否する一時的なmutationは、この試験を失敗させた。production sourceを復元した後、contractsの35試験が成功した。
+
+これはT01/E01に関係する固定oracleの補強であり、実ブラウザーでのfoundation Wasm実行や七target分の正式受入証拠を追加したものではない。E01を含む受入状態は変更しない。
+
+### Browser foundation source-position slice（2026-10-10）
+
+`conformance/targets/browser` は production の `SourceSnapshot` / `LineIndex` を呼ぶ test-only cdylib を Wasm 化する。固定した173ケースを Chromium・Firefox・WebKit の全てで照合する runner を `tools/emulators/browser` に追加した。期待値は変換器から生成せず、BOM・日本語・補助scalar・改行・空入力・末尾CRLF・snapshot mismatchのbyte/column表から固定する。fixtureの正確なUTF-8 bytesもWasmから読み出し、同じbyte幅の文字への置換を検出する。
+
+runnerはclean checkoutに結び付いたbuild、u64/BigIntの型付き結果、各engineのraw observations、version、input/binary hashesを保存する。Linuxのdescendant trackingはdetached browserとreparentingを扱い、timeout時にTERM/KILLと終了確認を行う。trusted test runnerの範囲であり、敵対的processの隔離や暗号学的実行証明ではない。十個のPython失敗系試験とadapterのhost試験・clippy・Wasm build、basedpyright all-modeがlocalで成功した。三engineの実行結果は対応するCI artifactで別途確認する。
+
+これはE01全七targetのAcceptanceEvidenceを組み立てる処理ではない。`design/acceptance.json`、LKG、publication identityの状態は変更しない。
+
+### Native / WASI source-position oracle（2026-10-10）
+
+`tools/tests/source/position.rs` はbrowser sliceと同じ173ケースのJSONを`include_str!`で読み、privateな型付きschemaで検証してからproductionの`SourceSnapshot` / `LineIndex`を直接呼ぶ。empty input・末尾CRLF・三種類のsnapshot mismatch・canonical u64・invalid positionを含む固定inventoryを全件実行する。余分なfield、重複field、未知のcase/selector/error、欠損fixture、不正な引数を拒否し、期待座標やerrorを変更した場合は実行照合が失敗する。nativeの三OSとWASIは同じ入力を使い、別の期待値生成器を追加しない。
+
+CIは既存の`tools/evidence/runner.py`で各native targetとWasmtimeのfocused command・tool versions・host identity・raw logsを保存する。三つのintegration testsはlocal Linuxとchecksumを確認したWasmtime 44.0.1で成功し、focused Clippyも成功した。Windows・macOSの実行成功はそれぞれのCIログを確認するまで主張しない。これらはbounded sliceのcommand evidenceであり、E01七targetの正式受入やT01完了への自動昇格は行わない。
+
+Wasmtimeのdownload/extractionはCI runnerのtemporary directoryで行う。source checkoutへ未追跡の配布物を置くと、既存evidence runnerのclean-source gateが証拠採取前に拒否するためである。checksum検証とclean-source gateは維持する。
+
+### 通常Doc HTML内の数式
+
+`sentence cons math Math frac 1 2 nil` は文中の数式、`display Math frac 1 2` は別行のBlockを表す。
+通常のexport/pagesはこれらをMathMLとして表示できる。SVG化や生成後のHTML手修正は不要である。
+
+```sh
+cargo run --locked -p nepl3-tools -- doc-html export --css inline --math-renderer mathml-only input.nepld new-output
+cargo run --locked -p nepl3-tools -- doc-html pages --math-renderer mathml-only pages.json new-pages
+```
+
+省略時は `katex-preferred`。現native hostのKaTeX接続は未完了であり、利用不能の理由をmanifestの `math_diagnostics` に保持して独立MathMLへ移る。
+MathML成功をKaTeX成功として扱わない。明示的な `mathml-only` ではこの能力不足診断を出さない。
+数式中のRuby/Anno等をTeXへ忠実に写せない場合も、数式全体をMathMLに保ち注釈を落とさない。

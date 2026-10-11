@@ -78,8 +78,8 @@ fn portable_path(name: &str) -> bool {
 pub struct Registry {
     pub version: u32,
     pub pages: Vec<Page>,
-    /// Passive Markdown destinations, or static SVG files in an all-footnotes
-    /// batch. Neither kind is promoted to a semantic Doc page.
+    /// Passive Markdown or explicitly scoped JSON destinations, or static SVG
+    /// files in an all-footnotes batch. None becomes a semantic Doc page.
     #[serde(default)]
     pub files: Vec<ReferenceFile>,
     /// Markdown batch allowance; old-only checks keep per-page limits.
@@ -107,6 +107,24 @@ pub struct ReferenceFile {
     pub id: String,
     pub source: String,
     pub route: String,
+}
+
+fn passive_paths(file: &ReferenceFile, svg: bool) -> bool {
+    if svg {
+        return file.source.ends_with(".svg") && file.route.ends_with(".svg");
+    }
+    if !file.route.starts_with("sources/") {
+        return false;
+    }
+    let markdown = file.source.starts_with("doc/")
+        && file.source.ends_with(".md")
+        && file.route.ends_with(".md");
+    let json = (file.source.starts_with("design/")
+        || file.source == "implementation-status.json"
+        || file.source == "doc/history/web-tea-import.json")
+        && file.source.ends_with(".json")
+        && file.route.ends_with(".json");
+    markdown || json
 }
 
 fn reference_inputs(
@@ -258,12 +276,9 @@ fn parse_registry(raw: &[u8]) -> Result<Registry> {
                 .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'-')
             || !ids.insert(&file.id)
             || !portable_path(&file.source)
-            || (!svg && !file.source.starts_with("doc/"))
-            || !file.source.ends_with(if svg { ".svg" } else { ".md" })
+            || !passive_paths(file, svg)
             || !paths.insert(file.source.to_ascii_lowercase())
             || !portable_path(&file.route)
-            || (!svg && !file.route.starts_with("sources/"))
-            || !file.route.ends_with(if svg { ".svg" } else { ".md" })
             || !routes.insert(file.route.to_ascii_lowercase())
         {
             return Err("invalid or colliding registered file".into());
@@ -377,6 +392,7 @@ pub fn markdown(root: &Path, manifest: &str, output: &Path) -> Result<()> {
     )?;
     super::export::pages::write_generated(
         super::export::pages::GeneratedPages {
+            provenance: None,
             files: generated
                 .files
                 .into_iter()

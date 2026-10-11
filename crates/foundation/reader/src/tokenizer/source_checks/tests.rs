@@ -308,3 +308,49 @@ fn partial_cache_growth_only_retains_checked_prefix() -> Result<(), SourceError>
     checks.check(&incoming, &store, &mut budget())?;
     Ok(())
 }
+
+#[test]
+fn shared_source_lookup_preserves_digest_uri_conflicts_and_failed_check_state()
+-> Result<(), SourceError> {
+    let id = "x".repeat(100_000);
+    let original = source(&id, "memory:x", "a")?;
+    let mut store = SourceStore::default();
+    store.insert(original.clone())?;
+    let mut limits = budget().limits();
+    limits.work = 45;
+    #[cfg(target_has_atomic = "ptr")]
+    {
+        // Visit + shared-key lookup + digest/URI + two shared snapshot clones.
+        let mut checks = SourceChecks::default();
+        let mut exact = Budget::new(limits);
+        checks.check(core::slice::from_ref(&original), &store, &mut exact)?;
+        assert_eq!(exact.usage().work, 45);
+    }
+    let independent = source(&id, "memory:x", "a")?;
+    let mut checks = SourceChecks::default();
+    assert_eq!(
+        checks.check(
+            core::slice::from_ref(&independent),
+            &store,
+            &mut Budget::new(limits)
+        ),
+        Err(SourceError::Stopped(StopReason::WorkLimit))
+    );
+    assert!(checks.checked.is_empty());
+    assert!(checks.environment.is_empty());
+    for conflicting in [source(&id, "memory:x", "b")?, source(&id, "memory:y", "a")?] {
+        assert_eq!(
+            checks.check(core::slice::from_ref(&conflicting), &store, &mut budget()),
+            Err(SourceError::IdentityConflict)
+        );
+        assert!(checks.checked.is_empty());
+        assert!(checks.environment.is_empty());
+    }
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert_eq!(
+        checks.check(core::slice::from_ref(&original), &store, &mut cancelled),
+        Err(SourceError::Stopped(StopReason::Cancelled))
+    );
+    Ok(())
+}

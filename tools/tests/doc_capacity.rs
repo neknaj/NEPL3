@@ -26,10 +26,12 @@ fn observing_export_preserves_artifacts_and_stage_order() -> Result<(), String> 
 #[test]
 fn failed_export_reports_only_completed_stages() -> Result<(), String> {
     let compiled = compiled()?;
+    // External links now resolve during preparation. An unsafe URI must still
+    // fail there, without reporting an uncompleted Prepare stage.
     for (source, expected) in [
         ("unknown", vec![]),
         (
-            "article en \"T\" body cons paragraph cons sentence cons link external \"https://example.test/\" text \"L\" nil nil nil",
+            "article en \"T\" body cons paragraph cons sentence cons link external \"javascript:alert(1)\" text \"L\" nil nil nil",
             vec![export::Stage::ParseAndValidate, export::Stage::Lower],
         ),
     ] {

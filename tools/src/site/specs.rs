@@ -127,10 +127,11 @@ mod tests {
         fixture.write("doc/spec/04-grammar.md", "# Grammar\n\n日本語の本文")?;
         fixture.write("doc/spec/05-document.md", "GENERATED MUST NOT BE RENDERED")?;
         fixture.write("doc/other.md", "Other")?;
+        fixture.write("design/tasks.json", "{\"passive\":true}\n")?;
         fixture.write("doc/spec/doc-signatures.md", "Generated signature table")?;
         crate::command(fixture.root(), "git", &["add", "."])?;
         let registry = serde_json::from_str(
-            r#"{"version":1,"pages":[{"id":"doc","source":"doc.nepld","projection":"doc/spec/05-document.md","aliases":"aliases.json","route":"docs/moved.html","renderer":"test"}],"files":[{"id":"reader","source":"doc/spec/03-reader.md","route":"sources/03-reader.md"}]}"#,
+            r#"{"version":1,"pages":[{"id":"doc","source":"doc.nepld","projection":"doc/spec/05-document.md","aliases":"aliases.json","route":"docs/moved.html","renderer":"test"}],"files":[{"id":"reader","source":"doc/spec/03-reader.md","route":"sources/03-reader.md"},{"id":"tasks","source":"design/tasks.json","route":"sources/tasks.json"}]}"#,
         )?;
         for base in ["/NEPL3/", "/acceptance/project/"] {
             let files = generate(fixture.root(), &registry, base, "fixture")?;

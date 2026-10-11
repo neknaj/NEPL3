@@ -42,10 +42,11 @@ pub fn analyze(shape: &ValidatedMathShape<'_>, b: &mut Budget) -> Result<MathBin
     loop {
         b.charge(Resource::Work, 1)?;
         if let Some(node) = pending.take() {
-            b.with_depth_at_least::<_, StopReason>(
-                caller.saturating_add(frames.len() as u64).saturating_add(1),
-                |_| Ok(()),
-            )?;
+            let absolute = caller
+                .checked_add(frames.len() as u64)
+                .and_then(|depth| depth.checked_add(1))
+                .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
+            b.with_depth_at_least::<_, StopReason>(absolute, |_| Ok(()))?;
             b.charge(Resource::Nodes, 1)?;
             b.charge(Resource::AllocationUnits, 64)?;
             let id = occurrence;

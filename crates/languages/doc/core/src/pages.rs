@@ -8,7 +8,7 @@ use crate::{
 };
 use alloc::{string::String, vec::Vec};
 use nepl3_core::{
-    budget::{Budget, Resource, StopReason},
+    budget::{Budget, Limits, Resource, StopReason},
     schema::SchemaRegistry,
     source::Digest,
     value_codec::{CanonicalDigestInput, FoundationCodecError, FoundationValueCodec},
@@ -119,12 +119,74 @@ impl<E> From<portable::PortableError<E>> for PageError<'_, E> {
         }
     }
 }
+/// Checked native projection errors; this is not a portable proof format.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PageProjectionError {
+    Stopped(StopReason),
+    ScopeMismatch,
+    MissingPage,
+}
+
+impl From<StopReason> for PageProjectionError {
+    fn from(reason: StopReason) -> Self {
+        Self::Stopped(reason)
+    }
+}
+
 pub struct CheckedPages<'a> {
     set: &'a PageSet,
     plan: PageLinkPlan,
     document_digests: Vec<Digest>,
+    limits: Limits,
+    depth: u64,
+    structures: Vec<crate::check::ValidatedDocumentSyntax<'a>>,
 }
 impl<'a> CheckedPages<'a> {
+    /// Project a sentence without supplying any external guest resolutions.
+    /// Reuse this operation's immutable admission under its cumulative Budget.
+    /// Bounds are checked; equality cannot establish paid-usage identity.
+    /// Encountered inline guests remain unresolved, including inside alt text.
+    pub fn project_unresolved_text(
+        &self,
+        page: u64,
+        sentence: SentenceRef,
+        policy: crate::text::AnnotationPolicy,
+        b: &mut Budget,
+    ) -> Result<crate::text::PlainTextReply, PageProjectionError> {
+        b.charge(Resource::Work, 10)
+            .map_err(PageProjectionError::Stopped)?;
+        if b.limits() != self.limits || b.current_depth() != self.depth {
+            return Err(PageProjectionError::ScopeMismatch);
+        }
+        let document = usize::try_from(page)
+            .ok()
+            .and_then(|page| self.set.pages.get(page))
+            .ok_or(PageProjectionError::MissingPage)?;
+        Ok(crate::text::project_unresolved(
+            &document.document,
+            sentence,
+            policy,
+            b,
+        ))
+    }
+
+    /// Borrow this operation's native document proof for a selected projection.
+    /// Continue the same cumulative Budget, registry and admission ledger.
+    pub fn document_structure(
+        &self,
+        page: u64,
+        b: &mut Budget,
+    ) -> Result<&crate::check::ValidatedDocumentSyntax<'a>, PageProjectionError> {
+        b.charge(Resource::Work, 10)
+            .map_err(PageProjectionError::Stopped)?;
+        if b.limits() != self.limits || b.current_depth() != self.depth {
+            return Err(PageProjectionError::ScopeMismatch);
+        }
+        usize::try_from(page)
+            .ok()
+            .and_then(|page| self.structures.get(page))
+            .ok_or(PageProjectionError::MissingPage)
+    }
     pub fn set(&self) -> &'a PageSet {
         self.set
     }
@@ -290,6 +352,8 @@ pub fn resolve<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<CheckedPages<'a>, PageError<'a, C::Error>> {
+    let limits = b.limits();
+    let depth = b.current_depth();
     registrations(set, b)?;
     let (value, structures) = portable::pages::set_to_value_with_structures(set, registry, c, b)?;
     let mut digest_inputs = Vec::new();
@@ -311,6 +375,17 @@ pub fn resolve<'a, C: FoundationValueCodec>(
             },
             b,
         )?;
+        for embed in 0..set.pages[page].document.value.embeds.len() {
+            let guest = portable::pages::guest_value(document, embed, b)?;
+            push(
+                &mut digest_inputs,
+                CanonicalDigestInput {
+                    domain: prepare::GUEST_DOMAIN,
+                    value: guest,
+                },
+                b,
+            )?;
+        }
     }
     // The enclosing PageSet owns the exact document values. A codec can encode
     // these once while feeding the independently domain-separated hashes.
@@ -341,13 +416,21 @@ pub fn resolve<'a, C: FoundationValueCodec>(
         let document_digest = digests
             .next()
             .ok_or(PageError::Boundary(portable::PortableError::Shape))?;
-        let requirements = prepare::requirements(&labels, c, b).map_err(|error| match error {
-            PreparationError::Stopped(s) => PageError::Stopped(s),
-            error => PageError::Input {
-                page: page as u64,
-                error,
-            },
-        })?;
+        let mut guest_digests = Vec::new();
+        for _ in &set.pages[page].document.value.embeds {
+            let digest = digests
+                .next()
+                .ok_or(PageError::Boundary(portable::PortableError::Shape))?;
+            push(&mut guest_digests, digest, b)?;
+        }
+        let requirements =
+            prepare::requirements(&labels, &guest_digests, c, b).map_err(|error| match error {
+                PreparationError::Stopped(s) => PageError::Stopped(s),
+                error => PageError::Input {
+                    page: page as u64,
+                    error,
+                },
+            })?;
         let plan = prepare::DocPreparationPlan {
             document_digest,
             requirements,
@@ -472,7 +555,13 @@ pub fn resolve<'a, C: FoundationValueCodec>(
             )?;
         }
     }
+    if b.limits() != limits || b.current_depth() != depth {
+        return Err(PageError::Boundary(portable::PortableError::Shape));
+    }
     Ok(CheckedPages {
+        structures,
+        limits,
+        depth,
         set,
         document_digests,
         plan: PageLinkPlan {

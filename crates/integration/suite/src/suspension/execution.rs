@@ -1,6 +1,12 @@
 //! Saved ancestor ceilings for host frames sharing one execution Budget.
 use nepl3_core::budget::{Budget, Limits, StopReason};
 
+mod admission;
+#[cfg(test)]
+mod tests;
+#[cfg(kani)]
+mod verification;
+
 /// Immutable execution bounds retained across Await. Hosts keep using the same
 /// mutable Budget for the entire root operation; this value contains no Usage
 /// and cannot reset accounting. It is host scheduling data, not a wire grant.
@@ -39,13 +45,7 @@ impl ExecutionScope {
     /// A failed depth admission stops the shared execution Budget.
     pub fn child(&self, requested: Limits, budget: &mut Budget) -> Result<Self, StopReason> {
         budget.poll()?;
-        let limits = intersection(self.limits, requested);
-        let depth = self
-            .depth
-            .checked_add(1)
-            .filter(|depth| *depth <= limits.depth)
-            .ok_or_else(|| budget.stop(StopReason::DepthLimit))?;
-        Ok(Self { limits, depth })
+        admission::transition(*self, requested).map_err(|reason| budget.stop(reason))
     }
 
     /// Restore this frame for one Invoke or Resume callback. Ancestor ceilings

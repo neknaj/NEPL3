@@ -68,6 +68,13 @@ fn class(out: &mut Output, scope: &str, id: usize, b: &mut Budget) -> Result<(),
 /// O(N + E + output bytes), O(N + output bytes) storage. No partial pair escapes
 /// on failure; the caller's stopped budget is never recovered into a result.
 pub fn serialize(checked: &Checked<'_>, b: &mut Budget) -> Result<Rendered, Error> {
+    serialize_at_depth(checked, 1, b)
+}
+pub(crate) fn serialize_at_depth(
+    checked: &Checked<'_>,
+    depth: u64,
+    b: &mut Budget,
+) -> Result<Rendered, Error> {
     b.poll()?;
     let nodes = &checked.fragment.nodes;
     let count = nodes
@@ -78,12 +85,18 @@ pub fn serialize(checked: &Checked<'_>, b: &mut Budget) -> Result<Rendered, Erro
     pending.clear();
     let mut html = Output::default();
     let mut css = Output::default();
-    b.observe_depth(1)?;
+    b.observe_depth(depth)?;
     b.charge(Resource::Nodes, 1)?;
     html.literal("<span", b)?;
     attr(&mut html, "class", checked.scope, b)?;
     html.literal(" aria-hidden=\"true\">", b)?;
-    pending.push((nodes.len() - 1, false, 2));
+    pending.push((
+        nodes.len() - 1,
+        false,
+        depth
+            .checked_add(1)
+            .ok_or_else(|| b.stop(StopReason::DepthLimit))?,
+    ));
     while let Some((id, close, depth)) = pending.pop() {
         b.charge(Resource::Work, 1)?;
         let node = &nodes[id];

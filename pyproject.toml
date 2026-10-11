@@ -15,6 +15,7 @@ executionEnvironments = [
   { root = "tools/audit/doc_html", extraPaths = ["tools/audit/doc_html", "."] },
   { root = "tools/audit", extraPaths = ["tools/audit", "."] },
   { root = "tools/bootstrap", extraPaths = ["tools/bootstrap", "."] },
+  { root = "tools/emulators/browser", extraPaths = ["tools/emulators/browser", "."] },
   { root = "tools/emulators/wasmtime", extraPaths = ["tools/emulators/wasmtime", "."] },
   { root = "tools/emulators/rp2040js", extraPaths = ["tools/emulators/rp2040js", "."] },
   { root = "." },

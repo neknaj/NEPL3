@@ -88,3 +88,206 @@ fn measurement_cannot_hide_prior_usage_from_a_lower_ceiling() -> Result<(), Stop
     assert_eq!(b.poll(), Err(StopReason::DepthLimit));
     Ok(())
 }
+
+/// A real stop/cancel before depth observation retains prior resource charges.
+/// Returning Err from a callback is a separate contract from setting this stop.
+#[test]
+fn prior_stop_and_cancel_preserve_observation_prefix() -> Result<(), StopReason> {
+    for reason in [
+        StopReason::Cancelled,
+        StopReason::SourceLimit,
+        StopReason::WorkLimit,
+        StopReason::DepthLimit,
+        StopReason::NodeLimit,
+        StopReason::AllocationLimit,
+        StopReason::OutputLimit,
+        StopReason::DiagnosticLimit,
+        StopReason::EventLimit,
+    ] {
+        let mut b = budget();
+        b.charge(Resource::Work, 3)?;
+        b.observe_depth(5)?;
+        let before = b.usage();
+        assert_eq!(b.stop(reason), reason);
+        b.cancel();
+        assert_eq!(b.observe_depth(u64::MAX), Err(reason));
+        assert_eq!(b.usage(), before);
+        assert_eq!(b.current_depth(), 0);
+        assert_eq!(b.observed_depth, 5);
+    }
+    let mut b = budget();
+    b.observe_depth(7)?;
+    b.cancel();
+    assert_eq!(b.observe_depth(0), Err(StopReason::Cancelled));
+    assert_eq!(b.usage().depth, 7);
+    Ok(())
+}
+
+/// Depth scopes restore the saved caller depth, not a decremented callback
+/// depth. Callback Result and sticky stop intentionally remain distinct.
+#[test]
+fn depth_scopes_preserve_callback_result_and_replacement() -> Result<(), StopReason> {
+    fn scope(
+        b: &mut Budget,
+        restored: bool,
+        callback: impl FnOnce(&mut Budget) -> Result<(), StopReason>,
+    ) -> Result<(), StopReason> {
+        if restored {
+            b.with_depth_at_least(9, callback)
+        } else {
+            b.with_depth(callback)
+        }
+    }
+    for restored in [false, true] {
+        let mut b = budget();
+        b.with_depth_at_least(4, |b| {
+            assert_eq!(
+                scope(b, restored, |b| {
+                    b.charge(Resource::Work, 3)?;
+                    Err(StopReason::Cancelled)
+                }),
+                Err(StopReason::Cancelled)
+            );
+            assert_eq!(b.current_depth(), 4);
+            assert_eq!(b.usage().work, 3);
+            assert_eq!(b.poll(), Ok(()));
+            assert_eq!(
+                scope(b, restored, |b| {
+                    b.cancel();
+                    Ok(())
+                }),
+                Ok(())
+            );
+            assert_eq!(b.current_depth(), 4);
+            assert_eq!(b.poll(), Err(StopReason::Cancelled));
+            Ok::<_, StopReason>(())
+        })?;
+        assert_eq!(b.current_depth(), 0);
+        let mut b = budget();
+        b.with_depth_at_least(4, |b| {
+            scope(b, restored, |b| {
+                *b = budget();
+                b.charge(Resource::Work, 6)?;
+                Ok(())
+            })?;
+            assert_eq!(b.current_depth(), 4);
+            assert_eq!(b.usage().work, 6);
+            Ok::<_, StopReason>(())
+        })?;
+        assert_eq!(b.current_depth(), 0);
+        assert_eq!(b.usage().work, 6);
+    }
+    Ok(())
+}
+
+#[test]
+fn ceiling_scopes_restore_limits_but_preserve_callback_result_and_state() -> Result<(), StopReason>
+{
+    let mut b = budget();
+    let outer = b.limits();
+    let narrow = Limits { work: 10, ..outer };
+    b.with_ceiling(narrow, |b| {
+        assert_eq!(b.limits(), narrow);
+        let failed: Result<(), StopReason> = b.with_ceiling(outer, |b| {
+            assert_eq!(b.limits(), narrow);
+            b.charge(Resource::Work, 3)?;
+            Err(StopReason::OutputLimit)
+        });
+        assert_eq!(failed, Err(StopReason::OutputLimit));
+        assert_eq!(b.limits(), narrow);
+        assert_eq!(b.poll(), Ok(()));
+        b.with_ceiling(outer, |b| {
+            b.cancel();
+            Ok::<_, StopReason>(())
+        })?;
+        assert_eq!(b.poll(), Err(StopReason::Cancelled));
+        Ok::<_, StopReason>(())
+    })?;
+    assert_eq!(b.limits(), outer);
+    assert_eq!(b.usage().work, 3);
+    assert_eq!(b.poll(), Err(StopReason::Cancelled));
+    let mut b = budget();
+    b.with_ceiling(narrow, |b| {
+        *b = Budget::new(Limits {
+            work: 200,
+            depth: 200,
+            ..outer
+        });
+        b.charge(Resource::Work, 6)?;
+        b.observe_depth(11)?;
+        Ok::<_, StopReason>(())
+    })?;
+    assert_eq!(b.limits(), outer);
+    assert_eq!(b.usage().work, 6);
+    assert_eq!(b.usage().depth, 11);
+    assert_eq!(b.observed_depth, 11);
+    Ok(())
+}
+
+#[test]
+fn nested_measurement_retains_marks_before_returning_the_callback_error() -> Result<(), StopReason>
+{
+    #[derive(Debug, Eq, PartialEq)]
+    enum ValidationError {
+        Invalid,
+        Stopped(StopReason),
+    }
+    impl From<StopReason> for ValidationError {
+        fn from(reason: StopReason) -> Self {
+            Self::Stopped(reason)
+        }
+    }
+    let mut b = budget();
+    b.observe_depth(5)?;
+    let outer_limits = b.limits();
+    let result: Result<((), u64), ValidationError> = b.measure_depth(|b| {
+        let nested: Result<((), u64), ValidationError> = b.measure_depth(|b| {
+            b.observe_depth(8)?;
+            b.charge(Resource::Work, 3)?;
+            assert_eq!(b.charge(Resource::Work, 101), Err(StopReason::WorkLimit));
+            Err(ValidationError::Invalid)
+        });
+        assert_eq!(nested, Err(ValidationError::Invalid));
+        assert_eq!(b.observed_depth, 8);
+        Err(ValidationError::Invalid)
+    });
+    assert_eq!(result, Err(ValidationError::Invalid));
+    assert_eq!(b.poll(), Err(StopReason::WorkLimit));
+    assert_eq!(b.usage().work, 3);
+    assert_eq!(b.usage().depth, 8);
+    assert_eq!(b.observed_depth, 8);
+    assert_eq!(b.current_depth(), 0);
+    assert_eq!(b.limits(), outer_limits);
+    Ok(())
+}
+
+#[test]
+fn shallower_nested_measurements_retain_the_enclosing_peak() -> Result<(), StopReason> {
+    for inner_fails in [false, true] {
+        let mut b = budget();
+        let (_, measured) = b.measure_depth(|b| {
+            b.observe_depth(20)?;
+            let inner: Result<((), u64), StopReason> = b.measure_depth(|b| {
+                b.observe_depth(3)?;
+                if inner_fails {
+                    Err(StopReason::Cancelled)
+                } else {
+                    Ok(())
+                }
+            });
+            let expected = if inner_fails {
+                Err(StopReason::Cancelled)
+            } else {
+                Ok(((), 3))
+            };
+            assert_eq!(inner, expected);
+            assert_eq!(b.observed_depth, 20);
+            assert_eq!(b.usage().depth, 20);
+            assert_eq!(b.poll(), Ok(()));
+            Ok::<_, StopReason>(())
+        })?;
+        assert_eq!(measured, 20);
+        assert_eq!(b.observed_depth, 20);
+    }
+    Ok(())
+}

@@ -13,6 +13,9 @@ nepl3-core.workspace = true
 nepl3-wire.workspace = true
 nepl3-suite = { path = "../../crates/integration/suite" }
 
+[dev-dependencies]
+nepl3-reader.workspace = true
+
 [lints]
 workspace = true
 

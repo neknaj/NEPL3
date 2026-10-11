@@ -182,22 +182,14 @@ where
     let mut page_links = checked.plan().links.as_slice();
     for (page, input) in set.pages.iter().enumerate() {
         budget.charge(Resource::Work, 1)?;
-        let prepared = if svg {
-            Some(
-                nepl3_doc_core::text::prepare(&input.document, registry, codec, budget).map_err(
-                    |error| match error {
-                        nepl3_doc_core::portable::PortableError::Stopped(reason) => {
-                            Error::Stopped(reason)
-                        }
-                        error => Error::Invalid(format!("{error:?}")),
-                    },
-                )?,
-            )
-        } else {
-            None
-        };
         let page_math = if let Some(surfaces) = math_surfaces {
-            math::prepare(&input.document, surfaces, registry, codec, budget)?
+            let structure = checked
+                .document_structure(page as u64, budget)
+                .map_err(|error| match error {
+                    domain::PageProjectionError::Stopped(reason) => Error::Stopped(reason),
+                    error => Error::Invalid(format!("checked Math page: {error:?}")),
+                })?;
+            math::prepare_checked(structure, surfaces, registry, codec, budget)?
         } else {
             Vec::new()
         };
@@ -209,12 +201,12 @@ where
             if requirement.page != page as u64 {
                 break;
             }
-            if let (Some(files), Some(prepared), prepare::DocRequirement::Asset { node, asset }) =
-                (&mut files, &prepared, &requirement.requirement)
+            if let (Some(files), prepare::DocRequirement::Asset { node, asset }) =
+                (&mut files, &requirement.requirement)
             {
                 let (image, dependency) = files.resolve(
-                    &input.document,
-                    prepared,
+                    &checked,
+                    page as u64,
                     &input.registration.route,
                     *node,
                     asset,

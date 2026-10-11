@@ -190,7 +190,7 @@ body
         cons "manifestは[入力/にゅうりょく]、Profile、Doc schema、[生成/せいせい]HTML/CSSのdigestと[表示/ひょうじ]optionsを[保持/ほじ]する。"
         cons "[現在/げんざい]の[形式/けいしき]はlocal export[用/よう]の[記録/きろく]であり、17[章/しょう]のKaTeX[資源/しげん]bundleや[汎用/はんよう]Artifactの[境界検査/きょうかいけんさ]を[代行/だいこう]しない。"
         cons "HTTPの[非/ひ]root pathとJavaScript[無効/むこう]の[実/じつ]browserで、[生成物/せいせいぶつ]を[検査/けんさ]する。"
-        cons "[外部/がいぶ]page/asset/foreignが[必要/ひつよう]な[文書/ぶんしょ]はNeedsResolutionのまま[拒否/きょひ]し、リンクや[埋/う]め[込/こ]みを[落/お]としたHTMLを[書/か]き[出/だ]さない。"
+        cons "[未解決/みかいけつ]のpage・relative・asset、および[明示選択/めいじせんたく]していないforeignは[拒否/きょひ]し、リンクや[埋/う]め[込/こ]みを[落/お]としたHTMLを[書/か]き[出/だ]さない。[通常/つうじょう]hostで[選択/せんたく]したCode・Math・SVGと[検査済/けんさず]みExternal URLは[後述/こうじゅつ]の[合成経路/ごうせいけいろ]で[扱/あつか]う。"
         nil
       nil
   cons section typography "[文字組/もじぐ]みと[書体/しょたい]"
@@ -321,6 +321,17 @@ body
     cons paragraph cons "Code装飾のDOM IdはDocの意味anchorではない。言語選択で非表示になったanchorをCodeのIdで代用できないよう、このPages profileではCode出力内のId属性を拒否する。表示分類の完全なidentityはDataIdで保持できる。ページ間linkと同一文書内Referenceの双方に適用する。" nil
     cons paragraph cons "開発hostのdoc-html pagesは、元のParseTreeとprofileが有効なparse・lower処理内でCodeの共有highlightを準備する。入力ページ・EmbedRef・guestのcanonical digestを照合して出力へ渡し、guestを再parse・意味lower・評価しない。共有embedの各出現を保持し、複製のWorkとAllocationUnitsを累積output Budgetへ計上する。" nil
     cons paragraph cons "本文、Code、参照、markup検査、書出しが完了するまで出力を公開しない。adapterが停止後に別のエラーを返してもBudgetのStoppedを優先する。source欠落・別ページのguest・不正markup・表示されない参照先は成功や部分成果物にしない。" nil
-    cons paragraph cons "native APIはページごとのforeign placementを返す。hostのexportは文書の元情報をmanifestに保持するが、この合成を公開portable Code操作、reader-fact対応、runtime受入の完了へ読み替えない。PagesのImage・SVG描画とCode以外のforeignは引き続き未対応である。" nil
+    cons paragraph cons "native APIはページごとのforeign placementを返す。hostのexportは文書の元情報をmanifestに保持するが、この合成を公開portable Code操作、reader-fact対応、runtime受入の完了へ読み替えない。PagesのImage・SVG描画と、明示選択していないforeignは未対応である。通常hostのMath表示は次の合成経路で扱う。" nil
+    nil
+  cons section math_composition "埋め込み数式の通常HTML合成"
+    body
+    cons paragraph cons "通常のdoc-html export・SVG付きexport・pagesは、Codeに加えてInlineMathとDisplayMathを選択したMath hostへ渡す。文中はPhrasing、別行はBlockとして検査し、paragraphの文列の間にも別行数式を置ける。Code-onlyとlocal-onlyのAPIは従来の制限を維持する。" nil
+    cons paragraph cons "既存のMath lower・check・MathMLとSentence注釈の処理を共用し、数式を暗黙評価しない。Doc・Math・Sentenceの元構文と出力arenaを保持し、nodeと要素の対応を表示出現ごとに移す。局所注釈namespaceは内部の重複定義を検査後、Math出現の範囲へ束縛し、外側Docの非表示anchorを代用しない。" nil
+    cons paragraph cons "生成時の既定はKaTeXPreferredである。現native hostにはKaTeX実行の完全な接続がないため、能力不足の診断をmanifestに保持して独立MathMLへ移る。忠実なTeXへ変換できない注釈は理由を保持し、数式全体をMathMLで表示する。明示的なmathml-onlyも選択できる。これはKaTeX実行やT24全体の完成ではない。" nil
+    nil
+  cons section external_links "通常HTMLのURLと文書内参照"
+    body
+    cons paragraph cons "通常のdisplay合成とSVG付きdisplay合成は、External Linkを共通markupのURI検査に通し、不変の文書nodeに結び付いたhrefとして準備する。全variantのURIを検査し、表示されないvariantの不正URLも拒否する。URLの通信・到達性検査・公開可否の判定は行わない。labelのRuby・Annoと元nodeの対応は既存の表示経路で保持する。" nil
+    cons paragraph cons "http・https・mailtoの既存URI規則を共用し、属性はserializerがescapeする。任意の文字列をURLへ推測変換しない。Page・Relativeは登録したPageSetによる解決を要求する。文書内anchor・refは従来どおり定義と表示先を検査する。local-only・Code-only・namespace・portable操作の対応範囲は拡張しない。" nil
     nil
   nil

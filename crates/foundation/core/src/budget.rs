@@ -1,5 +1,12 @@
 //! Shared, monotonic logical resource accounting. This does not intercept physical OOM.
 
+mod ceiling;
+mod charge;
+mod depth;
+mod observed;
+#[cfg(kani)]
+mod verification;
+
 /// Logical limits for one operation and every nested operation.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct Limits {
@@ -72,16 +79,8 @@ impl Budget {
         base: u64,
         operation: impl FnOnce(&mut Self) -> Result<T, E>,
     ) -> Result<T, E> {
-        self.poll()?;
         let previous = self.depth;
-        let target = previous.max(base);
-        if target > self.limits.depth {
-            self.stopped = Some(StopReason::DepthLimit);
-            return Err(StopReason::DepthLimit.into());
-        }
-        self.depth = target;
-        self.usage.depth = self.usage.depth.max(target);
-        self.observed_depth = self.observed_depth.max(target);
+        self.enter_depth(depth::entry::Target::AtLeast(base))?;
         let result = operation(self);
         self.depth = previous;
         result
@@ -109,35 +108,12 @@ impl Budget {
         ceiling: Limits,
         operation: impl FnOnce(&mut Self) -> Result<T, E>,
     ) -> Result<T, E> {
-        self.poll()?;
         let outer = self.limits;
-        self.limits = Limits {
-            source_bytes: outer.source_bytes.min(ceiling.source_bytes),
-            work: outer.work.min(ceiling.work),
-            depth: outer.depth.min(ceiling.depth),
-            nodes: outer.nodes.min(ceiling.nodes),
-            allocation_units: outer.allocation_units.min(ceiling.allocation_units),
-            output_bytes: outer.output_bytes.min(ceiling.output_bytes),
-            diagnostics: outer.diagnostics.min(ceiling.diagnostics),
-            events: outer.events.min(ceiling.events),
-        };
-        let result = (|| {
-            for resource in [
-                Resource::SourceBytes,
-                Resource::Work,
-                Resource::Nodes,
-                Resource::AllocationUnits,
-                Resource::OutputBytes,
-                Resource::Diagnostics,
-                Resource::Events,
-            ] {
-                self.charge(resource, 0)?;
-            }
-            if self.usage.depth > self.limits.depth {
-                return Err(self.stop(StopReason::DepthLimit).into());
-            }
-            operation(self)
-        })();
+        match ceiling::enter(outer, ceiling, self.usage, self.stopped) {
+            Ok(limits) => self.limits = limits,
+            Err(reason) => return Err(self.stop(reason).into()),
+        }
+        let result = operation(self);
         self.limits = outer;
         result
     }
@@ -147,71 +123,19 @@ impl Budget {
     /// a remote claim. The caller must verify the saved grant and observation.
     /// All bounds are checked before recording; an existing stop is preserved.
     pub fn record_observed_usage(&mut self, observed: Usage) -> Result<(), StopReason> {
-        fn sum(a: u64, b: u64, limit: u64, reason: StopReason) -> Result<u64, StopReason> {
-            a.checked_add(b).filter(|v| *v <= limit).ok_or(reason)
-        }
-        let next = (|| {
-            Ok(Usage {
-                source_bytes: sum(
-                    self.usage.source_bytes,
-                    observed.source_bytes,
-                    self.limits.source_bytes,
-                    StopReason::SourceLimit,
-                )?,
-                work: sum(
-                    self.usage.work,
-                    observed.work,
-                    self.limits.work,
-                    StopReason::WorkLimit,
-                )?,
-                depth: {
-                    let depth = self.usage.depth.max(observed.depth);
-                    if depth > self.limits.depth {
-                        return Err(StopReason::DepthLimit);
-                    }
-                    depth
-                },
-                nodes: sum(
-                    self.usage.nodes,
-                    observed.nodes,
-                    self.limits.nodes,
-                    StopReason::NodeLimit,
-                )?,
-                allocation_units: sum(
-                    self.usage.allocation_units,
-                    observed.allocation_units,
-                    self.limits.allocation_units,
-                    StopReason::AllocationLimit,
-                )?,
-                output_bytes: sum(
-                    self.usage.output_bytes,
-                    observed.output_bytes,
-                    self.limits.output_bytes,
-                    StopReason::OutputLimit,
-                )?,
-                diagnostics: sum(
-                    self.usage.diagnostics,
-                    observed.diagnostics,
-                    self.limits.diagnostics,
-                    StopReason::DiagnosticLimit,
-                )?,
-                events: sum(
-                    self.usage.events,
-                    observed.events,
-                    self.limits.events,
-                    StopReason::EventLimit,
-                )?,
-            })
-        })();
-        match next {
-            Ok(next) => {
-                self.usage = next;
-                self.observed_depth = self.observed_depth.max(observed.depth);
-                self.poll()
-            }
-            Err(reason) => Err(self.stop(reason)),
-        }
+        let next = observed::record(
+            self.usage,
+            observed,
+            self.limits,
+            self.observed_depth,
+            self.stopped,
+        );
+        self.usage = next.usage;
+        self.observed_depth = next.measured;
+        self.stopped = next.stopped;
+        self.poll()
     }
+
     /// Records a validated nested operation's stop without replacing an earlier cause.
     pub fn stop(&mut self, reason: StopReason) -> StopReason {
         *self.stopped.get_or_insert(reason)
@@ -229,7 +153,6 @@ impl Budget {
     }
     /// Overflow is treated as exceeding the corresponding limit. Failed charges do not mutate usage.
     pub fn charge(&mut self, resource: Resource, amount: u64) -> Result<(), StopReason> {
-        self.poll()?;
         let (used, limit, reason) = match resource {
             Resource::SourceBytes => (
                 &mut self.usage.source_bytes,
@@ -267,27 +190,62 @@ impl Budget {
                 StopReason::EventLimit,
             ),
         };
-        let Some(next) = used.checked_add(amount).filter(|v| *v <= limit) else {
-            self.stopped = Some(reason);
-            return Err(reason);
-        };
-        *used = next;
-        Ok(())
+        match charge::transition(*used, limit, amount, self.stopped, reason) {
+            charge::Charge::Charged { used: next } => {
+                *used = next;
+                Ok(())
+            }
+            charge::Charge::Stopped { reason } => {
+                self.stopped = Some(reason);
+                Err(reason)
+            }
+        }
     }
     /// Checks an iterative traversal depth relative to the active caller, recording its high-water mark.
     pub fn observe_depth(&mut self, relative: u64) -> Result<(), StopReason> {
-        self.poll()?;
-        let Some(depth) = self
-            .depth
-            .checked_add(relative)
-            .filter(|v| *v <= self.limits.depth)
-        else {
-            self.stopped = Some(StopReason::DepthLimit);
-            return Err(StopReason::DepthLimit);
-        };
-        self.usage.depth = self.usage.depth.max(depth);
-        self.observed_depth = self.observed_depth.max(depth);
-        Ok(())
+        match depth::observe(
+            self.depth,
+            relative,
+            self.limits.depth,
+            self.usage.depth,
+            self.observed_depth,
+            self.stopped,
+        ) {
+            depth::Observation::Observed { usage, measured } => {
+                self.usage.depth = usage;
+                self.observed_depth = measured;
+                Ok(())
+            }
+            depth::Observation::Stopped { reason } => {
+                self.stopped = Some(reason);
+                Err(reason)
+            }
+        }
+    }
+    fn enter_depth(&mut self, target: depth::entry::Target) -> Result<(), StopReason> {
+        match depth::entry::enter(
+            self.depth,
+            target,
+            self.limits.depth,
+            self.usage.depth,
+            self.observed_depth,
+            self.stopped,
+        ) {
+            depth::entry::Entry::Entered {
+                active,
+                usage,
+                measured,
+            } => {
+                self.depth = active;
+                self.usage.depth = usage;
+                self.observed_depth = measured;
+                Ok(())
+            }
+            depth::entry::Entry::Stopped(reason) => {
+                self.stopped = Some(reason);
+                Err(reason)
+            }
+        }
     }
     /// Measure a validation operation's relative depth without resetting Usage.
     /// Nested measurements contribute to their enclosing measurement. Callers
@@ -301,23 +259,19 @@ impl Budget {
         let previous = self.observed_depth;
         self.observed_depth = base;
         let result = operation(self);
-        let measured = self.observed_depth;
-        self.observed_depth = previous.max(measured);
+        let completed = depth::measurement::finish(base, previous, self.observed_depth);
+        self.observed_depth = completed.merged;
         let value = result?;
         self.poll()?;
-        Ok((value, measured.saturating_sub(base)))
+        Ok((value, completed.relative))
     }
     /// Restores current depth on either normal success or failure; cumulative work remains charged.
     pub fn with_depth<T, E: From<StopReason>>(
         &mut self,
         operation: impl FnOnce(&mut Self) -> Result<T, E>,
     ) -> Result<T, E> {
-        self.poll()?;
-        self.observe_depth(1)?;
         let previous = self.depth;
-        let next = previous.checked_add(1).ok_or(StopReason::DepthLimit)?;
-        self.depth = next;
-        self.usage.depth = self.usage.depth.max(next);
+        self.enter_depth(depth::entry::Target::Next)?;
         let result = operation(self);
         // A host callback can replace the budget. Restore the caller's depth
         // rather than subtracting from an untrusted post-callback value.

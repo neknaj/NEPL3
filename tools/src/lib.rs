@@ -113,6 +113,15 @@ pub fn evidence_identity(root: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Print the same input profile from immutable Git objects, without checkout or execution.
+pub fn evidence_committed_identity(root: &Path, commit: &str) -> Result<()> {
+    println!(
+        "{}",
+        serde_json::to_string_pretty(&evidence::committed(root, commit)?)?
+    );
+    Ok(())
+}
+
 /// Regenerate the registered engine package descriptor projection.
 pub fn engine(root: &Path) -> Result<()> {
     contract::engine::write(root)

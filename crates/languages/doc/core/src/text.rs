@@ -163,3 +163,28 @@ pub fn prepare<'a, C: FoundationValueCodec>(
         },
     })
 }
+
+/// Internal checked-page path with no external text resolutions. Because no
+/// supplied identity can be consumed, document/guest hashes are unnecessary.
+/// The caller must retain the exact native PageSet admission and its Budget.
+pub(crate) fn project_unresolved(
+    document: &DocumentSyntax,
+    sentence: SentenceRef,
+    policy: AnnotationPolicy,
+    b: &mut Budget,
+) -> PlainTextReply {
+    let outcome = match run::traverse(document, sentence, policy, &[], b) {
+        Ok(text) => PlainTextOutcome::Complete { text },
+        Err(run::Failure::Invalid(error)) => PlainTextOutcome::Invalid { error },
+        Err(run::Failure::Stopped(reason)) => PlainTextOutcome::Stopped {
+            reason: b.stop(reason),
+        },
+    };
+    PlainTextReply {
+        outcome,
+        report: nepl3_core::diagnostic::Report {
+            usage: b.usage(),
+            ..Default::default()
+        },
+    }
+}

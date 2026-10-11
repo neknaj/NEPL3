@@ -3,6 +3,43 @@ use nepl3_tools::doc::projection::annotated::pages::render_footnotes_svg;
 
 const SVG: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M0 0 L10 10" stroke="#000" fill="none"/></svg>"##;
 
+#[test]
+fn image_free_pages_do_not_prepare_image_alt_text() -> Result<(), String> {
+    let c = compiled()?;
+    let text = format!(
+        "article en \"Plain\" body {} nil",
+        "cons paragraph cons \"No image needs a plain-text preparation.\" nil ".repeat(16)
+    );
+    let set = PageSet {
+        pages: vec![page(&c, "plain", "plain.nepld", "plain.md", &text)?],
+        files: vec![],
+    };
+    let run = |svg: bool| -> Result<(_, Usage), String> {
+        let store = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+        let mut b = budget();
+        let result = if svg {
+            render_footnotes_svg(&set, &c.doc.registry, &mut codec, &mut b, &[&[]])
+        } else {
+            render(&set, &c.doc.registry, &mut codec, &mut b, &[&[]])
+        }
+        .map_err(err)?;
+        Ok((result, b.usage()))
+    };
+    let (plain, plain_usage) = run(false)?;
+    let (svg, svg_usage) = run(true)?;
+    assert_eq!(svg.identity, plain.identity);
+    assert_eq!(svg.pages[0].document_digest, plain.pages[0].document_digest);
+    assert_eq!(svg.pages[0].markdown, plain.pages[0].markdown);
+    assert!(svg.image_dependencies[0].is_empty());
+    // With no annotations or image requirements, the two writers do identical
+    // work; the image capability must not re-encode/hash the entire document.
+    assert_eq!(svg_usage, plain_usage);
+    Ok(())
+}
+
 fn fixture(c: &Compiled, source: &str) -> Result<PageSet, String> {
     Ok(PageSet {
         pages: vec![page(c, "a", "a.nepld", "nested/a.md", source)?],

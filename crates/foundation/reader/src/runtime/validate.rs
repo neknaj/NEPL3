@@ -216,7 +216,7 @@ fn artifacts(
     } else {
         &machine.current.source_maps
     };
-    let mapped = SourceMap::validate_mapping_parts(prior, maps, sources, budget)?;
+    let mapped = SourceMap::validate_bound_mapping_parts(prior, maps, sources, budget)?;
     view.validate_with_maps(sources, machine.registry, &mapped, budget)?;
     for element in &view.elements {
         if !mapped.contains(&consumed, &element.span, budget)? {

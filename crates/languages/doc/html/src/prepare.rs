@@ -15,6 +15,7 @@ pub enum LocalPreparationError<'a, E> {
     Stopped(StopReason),
     NeedsResolution(DocPreparationPlan),
     Language,
+    InvalidExternalUri { node: u64 },
     MissingVariant { node: u64 },
     ListStart { node: u64, start: u64 },
 }
@@ -36,6 +37,7 @@ pub(crate) struct PreparedRendering<'a> {
     pub(crate) options: &'a RenderOptions,
     pub(crate) selections: Vec<Option<VariantRef>>,
     pub(crate) identity: Digest,
+    pub(crate) external_links: Vec<(u64, nepl3_markup::html::HtmlHref)>,
     pub(crate) images: Vec<(u64, nepl3_markup::html::HtmlAttribute, String)>,
 }
 /// Prepare the local-only subset. Any external requirement is returned intact,
@@ -189,5 +191,6 @@ pub(crate) fn prepare_rendering<'a, E>(
         selections,
         identity,
         images: Vec::new(),
+        external_links: Vec::new(),
     })
 }

@@ -101,7 +101,7 @@ fn math_tables_keep_cells_and_reject_pipe_fences() -> Result<(), String> {
 #[test]
 fn math_page_rejects_orphans_and_preserves_cumulative_budget() -> Result<(), String> {
     let c = compiled()?;
-    let source = r#"article en "Math" body cons display Math frac 1 0 nil"#;
+    let source = r#"article en "Math" body cons display Math frac 1 0 cons display Math add x y cons display Math mul x y nil"#;
     let set = PageSet {
         pages: vec![page(&c, "a", "a.nepld", "a.md", source)?],
         files: vec![],
@@ -126,6 +126,13 @@ fn math_page_rejects_orphans_and_preserves_cumulative_budget() -> Result<(), Str
     };
     let mut measured = budget();
     let expected = render(&set, &mut measured).map_err(err)?;
+    let mut at_host_depth = budget();
+    let elevated = at_host_depth
+        .with_depth_at_least(5, |b| render(&set, b))
+        .map_err(err)?;
+    assert_eq!(elevated.pages[0].markdown, expected.pages[0].markdown);
+    assert_eq!(at_host_depth.current_depth(), 0);
+    assert!(at_host_depth.usage().depth >= measured.usage().depth + 5);
     for reason in [
         StopReason::WorkLimit,
         StopReason::AllocationLimit,
@@ -193,6 +200,10 @@ fn math_page_rejects_orphans_and_preserves_cumulative_budget() -> Result<(), Str
         .clone();
     unreachable.pages[0].document.value.nodes.push(math);
     assert!(render(&unreachable, &mut budget()).is_err());
+    let mut bad_origin = set.clone();
+    bad_origin.pages[0].document.value.nodes[0].origin =
+        Some(nepl3_core::origin::OriginId(u64::MAX));
+    assert!(render(&bad_origin, &mut budget()).is_err());
     Ok(())
 }
 
@@ -260,5 +271,257 @@ fn math_capability_preserves_non_math_svg_output() -> Result<(), String> {
         math: &c.others[0].schema, sentence: Some(&c.others[3].schema), doc: Some(&c.doc.package.schema),
     }), Err(Error::Unsupported { node }) if node == hidden_node)
     );
+    Ok(())
+}
+
+#[test]
+fn page_guest_batch_preserves_standalone_guest_identities_and_stops() -> Result<(), String> {
+    use nepl3_core::{budget::StopReason, value_codec::FoundationValueCodec};
+    use nepl3_doc_core::{pages, prepare};
+    let c = compiled()?;
+    let set = PageSet {
+        pages: vec![
+            page(
+                &c,
+                "empty",
+                "empty.nepld",
+                "empty.md",
+                r#"article en "Empty" body nil"#,
+            )?,
+            page(
+                &c,
+                "one",
+                "one.nepld",
+                "one.md",
+                r#"article en "One" body cons display Math frac 5 6 nil"#,
+            )?,
+            page(
+                &c,
+                "first",
+                "first.nepld",
+                "first.md",
+                r#"article en "First" body cons display Math frac 1 2 cons display Math add x y nil"#,
+            )?,
+            page(
+                &c,
+                "second",
+                "second.nepld",
+                "second.md",
+                r#"article en "Second" body cons display Math mul x y cons display Math frac 3 4 nil"#,
+            )?,
+        ],
+        files: vec![],
+    };
+    let run = |input: &PageSet, b: &mut Budget| {
+        let store = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+        pages::resolve(input, &c.doc.registry, &mut codec, b)
+            .map(|checked| checked.into_plan())
+            .map_err(err)
+    };
+    let mut measured = budget();
+    let plan = run(&set, &mut measured)?;
+    let mut actual = plan.remaining.iter();
+    for (page_index, page) in set.pages.iter().enumerate() {
+        let mut store = SourceStore::default();
+        for snapshot in &page.document.sources {
+            store
+                .insert_with_budget(snapshot.clone(), &mut budget())
+                .map_err(err)?;
+        }
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+        for (index, embed) in page.document.value.embeds.iter().enumerate() {
+            assert!(!embed.closure.owner_sources.is_empty());
+            let value = codec
+                .encode_foreign_closure(&embed.closure, &mut budget())
+                .map_err(err)?;
+            let expected = codec
+                .canonical_value_digest(prepare::GUEST_DOMAIN, &value, &mut budget())
+                .map_err(err)?;
+            let entry = actual.next().ok_or("missing guest requirement")?;
+            assert_eq!(entry.page, page_index as u64);
+            assert_eq!(
+                entry.requirement,
+                prepare::DocRequirement::Foreign {
+                    embed: nepl3_doc_core::model::EmbedRef(index as u64),
+                    kind: embed.kind,
+                    guest_digest: expected,
+                }
+            );
+        }
+    }
+    assert!(actual.next().is_none());
+    for (resource, used) in [
+        (Resource::Work, measured.usage().work),
+        (Resource::AllocationUnits, measured.usage().allocation_units),
+        (Resource::OutputBytes, measured.usage().output_bytes),
+    ] {
+        let mut limits = budget().limits();
+        match resource {
+            Resource::Work => limits.work = used,
+            Resource::AllocationUnits => limits.allocation_units = used,
+            Resource::OutputBytes => limits.output_bytes = used,
+            _ => return Err("unexpected resource".into()),
+        }
+        assert_eq!(run(&set, &mut Budget::new(limits))?, plan);
+        match resource {
+            Resource::Work => limits.work -= 1,
+            Resource::AllocationUnits => limits.allocation_units -= 1,
+            Resource::OutputBytes => limits.output_bytes -= 1,
+            _ => return Err("unexpected resource".into()),
+        }
+        let mut limited = Budget::new(limits);
+        assert!(run(&set, &mut limited).is_err());
+        let reason = match resource {
+            Resource::Work => StopReason::WorkLimit,
+            Resource::AllocationUnits => StopReason::AllocationLimit,
+            Resource::OutputBytes => StopReason::OutputLimit,
+            _ => return Err("unexpected resource".into()),
+        };
+        assert_eq!(limited.poll(), Err(reason));
+        let usage = limited.usage();
+        assert!(run(&set, &mut limited).is_err());
+        assert_eq!(limited.usage(), usage);
+    }
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert!(run(&set, &mut cancelled).is_err());
+    assert_eq!(cancelled.poll(), Err(StopReason::Cancelled));
+    Ok(())
+}
+
+#[test]
+fn checked_page_alt_text_reuses_admission_without_external_resolutions() -> Result<(), String> {
+    use nepl3_core::budget::StopReason;
+    use nepl3_doc_core::{model::DocKind, pages, text};
+    let c = compiled()?;
+    let set = PageSet {
+        pages: vec![page(
+            &c,
+            "alt",
+            "alt.nepld",
+            "alt.md",
+            r#"article en "Image" body cons image asset "figure" none sentence cons anno text "Alt" cons math Math frac 1 2 nil nil none nil"#,
+        )?],
+        files: vec![],
+    };
+    let original = set.clone();
+    let document = &set.pages[0].document;
+    let alt = document
+        .value
+        .nodes
+        .iter()
+        .find_map(|node| match node.kind {
+            DocKind::Image { alt, .. } => Some(alt),
+            _ => None,
+        })
+        .ok_or("image alt")?;
+    for policy in [
+        text::AnnotationPolicy::BaseOnly,
+        text::AnnotationPolicy::WithReadings,
+        text::AnnotationPolicy::WithAllNotes,
+    ] {
+        let store = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+        let mut b = budget();
+        let checked = pages::resolve(&set, &c.doc.registry, &mut codec, &mut b).map_err(err)?;
+        assert!(core::ptr::eq(
+            checked
+                .document_structure(0, &mut b)
+                .map_err(err)?
+                .document(),
+            document
+        ));
+        assert!(matches!(
+            checked.document_structure(u64::MAX, &mut b),
+            Err(pages::PageProjectionError::MissingPage)
+        ));
+        let mismatch = b.with_depth_at_least(1, |b| checked.document_structure(0, b).map(|_| ()));
+        assert_eq!(mismatch, Err(pages::PageProjectionError::ScopeMismatch));
+        let reply = checked
+            .project_unresolved_text(0, alt, policy, &mut b)
+            .map_err(err)?;
+        let mut standalone = budget();
+        let expected = text::plain_text_borrowed(
+            document,
+            alt,
+            policy,
+            &[],
+            &c.doc.registry,
+            &mut codec,
+            &mut standalone,
+        )
+        .map_err(err)?;
+        assert_eq!(reply.outcome, expected.outcome);
+        assert_eq!(reply.report.usage, b.usage());
+        let invalid_sentence = checked
+            .project_unresolved_text(
+                0,
+                nepl3_doc_core::model::SentenceRef(u64::MAX),
+                policy,
+                &mut b,
+            )
+            .map_err(err)?;
+        assert!(matches!(
+            invalid_sentence.outcome,
+            text::PlainTextOutcome::Invalid {
+                error: text::PlainTextFailure::ExpectedSentence { .. }
+            }
+        ));
+        if policy == text::AnnotationPolicy::WithAllNotes {
+            assert!(matches!(
+                reply.outcome,
+                text::PlainTextOutcome::Invalid {
+                    error: text::PlainTextFailure::UnresolvedEmbed { .. }
+                }
+            ));
+        }
+        if policy == text::AnnotationPolicy::BaseOnly {
+            assert_eq!(
+                reply.outcome,
+                text::PlainTextOutcome::Complete { text: "Alt".into() }
+            );
+        }
+        assert_eq!(
+            checked.project_unresolved_text(u64::MAX, alt, policy, &mut b),
+            Err(pages::PageProjectionError::MissingPage)
+        );
+        let mismatch =
+            b.with_depth_at_least(1, |b| checked.project_unresolved_text(0, alt, policy, b));
+        assert_eq!(mismatch, Err(pages::PageProjectionError::ScopeMismatch));
+        let mut limits = b.limits();
+        limits.work -= 1;
+        let mismatch = b.with_ceiling(limits, |b| {
+            checked.project_unresolved_text(0, alt, policy, b)
+        });
+        assert_eq!(mismatch, Err(pages::PageProjectionError::ScopeMismatch));
+        b.cancel();
+        assert_eq!(
+            checked.project_unresolved_text(0, alt, policy, &mut b),
+            Err(pages::PageProjectionError::Stopped(StopReason::Cancelled))
+        );
+    }
+    let mut invalid = set.clone();
+    invalid.pages[0].document.value.embeds[0]
+        .closure
+        .owner_environment
+        .digest = nepl3_core::source::Digest([0; 32]);
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    assert!(pages::resolve(&invalid, &c.doc.registry, &mut codec, &mut budget()).is_err());
+    let mut invalid = set.clone();
+    invalid.pages[0].document.value.embeds[0]
+        .closure
+        .owner_sources
+        .clear();
+    assert!(pages::resolve(&invalid, &c.doc.registry, &mut codec, &mut budget()).is_err());
+    assert_eq!(set, original);
     Ok(())
 }

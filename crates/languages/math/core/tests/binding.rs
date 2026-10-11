@@ -376,3 +376,27 @@ fn shared_binder_visits_are_distinct_and_do_not_leak_to_siblings() -> Result<(),
     );
     Ok(())
 }
+
+#[test]
+fn checked_binding_rejects_overflowing_caller_depth() -> Result<(), String> {
+    let value = value(vec![symbol("x")]);
+    for base in [u64::MAX - 1, u64::MAX] {
+        let mut b = Budget::new(Limits {
+            depth: u64::MAX,
+            ..budget().limits()
+        });
+        let shape = value.validate_shape(&mut b).map_err(|e| format!("{e:?}"))?;
+        let before = b.usage();
+        let result = b.with_depth_at_least(base, |b| binding::analyze(&shape, b));
+        assert_eq!(b.current_depth(), 0);
+        assert!(b.usage().work > before.work);
+        if base == u64::MAX {
+            assert_eq!(result, Err(StopReason::DepthLimit));
+            assert_eq!(b.poll(), Err(StopReason::DepthLimit));
+        } else {
+            assert_eq!(result.map_err(|e| format!("{e:?}"))?.uses.len(), 1);
+            assert_eq!(b.poll(), Ok(()));
+        }
+    }
+    Ok(())
+}

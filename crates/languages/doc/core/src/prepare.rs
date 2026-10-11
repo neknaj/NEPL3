@@ -121,7 +121,7 @@ pub fn inspect<'a, C: FoundationValueCodec>(
         .map_err(boundary)?;
     Ok(DocPreparationPlan {
         document_digest,
-        requirements: requirements(&checked, c, b)?,
+        requirements: discover(checked.document(), None, c, b)?,
     })
 }
 
@@ -141,7 +141,7 @@ pub fn inspect_sentence<'a, C: FoundationValueCodec>(
         .map_err(boundary)?;
     Ok(DocPreparationPlan {
         document_digest,
-        requirements: discover(checked.document(), c, b)?,
+        requirements: discover(checked.document(), None, c, b)?,
     })
 }
 
@@ -160,7 +160,7 @@ pub fn inspect_inline<'a, C: FoundationValueCodec>(
         .map_err(boundary)?;
     Ok(DocPreparationPlan {
         document_digest,
-        requirements: discover(checked.document(), c, b)?,
+        requirements: discover(checked.document(), None, c, b)?,
     })
 }
 
@@ -168,10 +168,14 @@ pub fn inspect_inline<'a, C: FoundationValueCodec>(
 /// the canonical boundary value and its digest; external plans are never proofs.
 pub(crate) fn requirements<'a, C: FoundationValueCodec>(
     checked: &labels::CheckedLabels<'a>,
+    guest_digests: &[Digest],
     c: &mut C,
     b: &mut Budget,
 ) -> Result<Vec<DocRequirement>, PreparationError<'a, C::Error>> {
-    discover(checked.document(), c, b)
+    if guest_digests.len() != checked.document().value.embeds.len() {
+        return Err(PortableError::Shape.into());
+    }
+    discover(checked.document(), Some(guest_digests), c, b)
 }
 /// Discover all members of one resolved namespace in its exact occurrence order.
 /// Each document is rechecked against this codec/registry and shared source
@@ -201,7 +205,7 @@ pub fn inspect_namespace<'a, C: FoundationValueCodec>(
         let document_digest = c
             .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
             .map_err(boundary)?;
-        let requirements = discover(document, c, b)?;
+        let requirements = discover(document, None, c, b)?;
         plans.push(DocPreparationPlan {
             document_digest,
             requirements,
@@ -211,6 +215,7 @@ pub fn inspect_namespace<'a, C: FoundationValueCodec>(
 }
 fn discover<'a, C: FoundationValueCodec>(
     document: &'a DocumentSyntax,
+    guest_digests: Option<&[Digest]>,
     c: &mut C,
     b: &mut Budget,
 ) -> Result<Vec<DocRequirement>, PreparationError<'a, C::Error>> {
@@ -239,12 +244,16 @@ fn discover<'a, C: FoundationValueCodec>(
     }
     for (index, embed) in document.value.embeds.iter().enumerate() {
         b.charge(Resource::Work, 1)?;
-        let guest = c
-            .encode_foreign_closure(&embed.closure, b)
-            .map_err(boundary)?;
-        let guest_digest = c
-            .canonical_value_digest(GUEST_DOMAIN, &guest, b)
-            .map_err(boundary)?;
+        let guest_digest = match guest_digests {
+            Some(digests) => digests[index],
+            None => {
+                let guest = c
+                    .encode_foreign_closure(&embed.closure, b)
+                    .map_err(boundary)?;
+                c.canonical_value_digest(GUEST_DOMAIN, &guest, b)
+                    .map_err(boundary)?
+            }
+        };
         push(
             &mut requirements,
             DocRequirement::Foreign {

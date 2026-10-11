@@ -247,3 +247,95 @@ fn enclosing_request_encodes_large_child_once_without_a_byte_buffer() -> Result<
     assert_eq!(batch.usage().nodes, 2);
     Ok(())
 }
+
+fn enter_fixture(
+    selected: &[usize],
+    query: usize,
+    work: u64,
+    completed: bool,
+) -> (Result<bool, WireError>, nepl3_core::budget::Usage) {
+    let values: [NdfValue; 7] = core::array::from_fn(|_| NdfValue::Unit);
+    let inputs: Vec<_> = selected
+        .iter()
+        .map(|&i| CanonicalDigestInput {
+            domain: b"x",
+            value: &values[i],
+        })
+        .collect();
+    let mut index: Vec<_> = inputs
+        .iter()
+        .enumerate()
+        .map(|(i, input)| (core::ptr::from_ref(input.value).addr(), i))
+        .collect();
+    // Lower-bound insertion places later duplicate requests first.
+    index.sort_unstable_by_key(|&(address, request)| (address, usize::MAX - request));
+    let mut batch = Batch {
+        inputs: &inputs,
+        index,
+        states: (0..inputs.len())
+            .map(|_| State {
+                hash: None,
+                digest: completed.then_some(Digest([0; 32])),
+            })
+            .collect(),
+        active: Vec::with_capacity(inputs.len()),
+        scopes: Vec::with_capacity(inputs.len()),
+    };
+    let mut limits = budget().limits();
+    limits.work = work;
+    let mut b = Budget::new(limits);
+    let result = batch.enter(&values[query], &mut b);
+    if result.is_err() {
+        let used = b.usage();
+        assert_eq!(b.poll(), Err(StopReason::WorkLimit));
+        assert_eq!(
+            batch.enter(&values[query], &mut b),
+            Err(WireError::Stopped(StopReason::WorkLimit))
+        );
+        assert_eq!(b.usage(), used);
+    }
+    (result, b.usage())
+}
+
+#[test]
+fn absent_lookup_terminal_probe_is_independent_of_address_rank() {
+    // Below, between and above all selected addresses, including end-of-index.
+    // n=3: lower-bound charge=2, exactly one terminal probe=1.
+    for work in 0..=3 {
+        let reference = enter_fixture(&[1, 3, 5], 0, work, false);
+        for query in [2, 4, 6] {
+            assert_eq!(enter_fixture(&[1, 3, 5], query, work, false), reference);
+        }
+        if work == 3 {
+            assert_eq!(reference.0, Ok(false));
+        } else {
+            assert_eq!(reference.0, Err(WireError::Stopped(StopReason::WorkLimit)));
+        }
+    }
+}
+
+#[test]
+fn duplicate_runs_and_completed_matches_charge_the_terminal_probe() {
+    let layouts: [(&[usize], usize); 3] =
+        [(&[1, 1, 3, 5], 1), (&[1, 3, 3, 5], 3), (&[1, 3, 5, 5], 5)];
+    for completed in [false, true] {
+        // n=4 lower bound=3; two run entries + terminal=3; live
+        // states also pay two domain bytes and one scope push, total9.
+        let exact = if completed { 6 } else { 9 };
+        for work in 0..=exact {
+            let reference = enter_fixture(layouts[0].0, layouts[0].1, work, completed);
+            for &(selected, query) in &layouts[1..] {
+                assert_eq!(enter_fixture(selected, query, work, completed), reference);
+            }
+            if work == exact {
+                assert_eq!(reference.0, Ok(!completed));
+            } else {
+                assert_eq!(reference.0, Err(WireError::Stopped(StopReason::WorkLimit)));
+            }
+        }
+    }
+    // A batch consisting entirely of equal references still advances each
+    // already-completed match instead of restarting its hash or looping.
+    assert_eq!(enter_fixture(&[3, 3, 3, 3], 3, 8, true).0, Ok(false));
+    assert_eq!(enter_fixture(&[3, 3, 3, 3], 3, 13, false).0, Ok(true));
+}
