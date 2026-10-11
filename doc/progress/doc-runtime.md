@@ -408,3 +408,7 @@ Doc/Math core間の直接依存は追加していない。Code表示・Ruby/Anno
 回帰試験は `tools/tests/doc/export/math.rs`、通常CLI・Code/PageSet試験、既存Sentence/Math再帰注釈試験に置く。
 source snapshotの共通admission、文中・別行slot、出現別局所ID、表示されない外側anchorの拒否、停止後の成功拒否、部分ページ未公開を検査する。
 描画検査は通常export/pagesの既存browser auditへ組み込み、実行結果と未実行のtargetを区別する。
+
+### Canonical HTML corpus allowance for native Math documentation
+
+The pre-change canonical site consumed 2,299,455,662 allocation units under an explicit 2,300,000,000-unit HTML corpus limit (only 544,338 units of headroom). The added Math composition and renderer-identity documentation increased admitted source bytes from 1,246,201 to 1,247,640 and the next full site stopped during serialization. The registry selects 2,400,000,000 allocation units for this corpus before a new operation starts. Core/default budgets, allocation charging, cancellation and sticky Stop semantics are unchanged; no stopped budget is resumed and no automatic budget-increase fallback is introduced. The full build must record its actual final usage and remain within this finite allowance.
