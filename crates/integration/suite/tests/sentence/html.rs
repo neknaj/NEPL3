@@ -915,6 +915,60 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
     ));
     assert_eq!(calls, 1);
     assert_eq!(cancelled.poll(), Err(StopReason::Cancelled));
+    // Shared sticky stops take precedence over an ordinary callback error.
+    // Without a stop, preserve the foreign error on both public routes.
+    for pending in [false, true] {
+        for reason in [
+            None,
+            Some(StopReason::Cancelled),
+            Some(StopReason::WorkLimit),
+        ] {
+            let mut measured = b();
+            let mut calls = 0;
+            let mut adapter = |_: &ForeignClosure, _, budget: &mut Budget| {
+                calls += 1;
+                if let Some(reason) = reason {
+                    budget.stop(reason);
+                }
+                Err::<HtmlRequest, Error>(Error::InternalShape)
+            };
+            let result = measured.with_depth_at_least(3, |budget| {
+                if pending {
+                    html::render_part_with_foreign(
+                        &shared,
+                        &r,
+                        &mut adapter,
+                        budget,
+                        &mut SourceAdmission::default(),
+                    )
+                    .map(|_| ())
+                } else {
+                    html::render_with_foreign(
+                        &shared,
+                        &r,
+                        &mut adapter,
+                        budget,
+                        &mut SourceAdmission::default(),
+                    )
+                    .map(|_| ())
+                }
+            });
+            if let Some(reason) = reason {
+                assert!(matches!(result,
+                    Err(html::RenderFailure::Sentence(Error::Stopped(actual))) if actual == reason));
+                assert_eq!(measured.poll(), Err(reason));
+            } else {
+                assert!(matches!(
+                    result,
+                    Err(html::RenderFailure::Foreign(Error::InternalShape))
+                ));
+                assert_eq!(measured.poll(), Ok(()));
+            }
+            assert_eq!(calls, 1);
+            assert_eq!(measured.current_depth(), 0);
+            assert!(measured.usage().work > 0);
+        }
+    }
     let mut invalid = |_: &ForeignClosure, _, _: &mut Budget| {
         Ok::<_, Error>(HtmlRequest {
             fragment: HtmlFragment {
