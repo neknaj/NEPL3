@@ -51,7 +51,7 @@ impl Invoke {
             return Err(SchemaError::Unfinalized.into());
         }
         let descriptor = registry
-            .descriptor(&selected.schema)
+            .descriptor_with_budget(&selected.schema, budget)?
             .ok_or(SchemaError::UnknownSchema)?;
         for candidate in &descriptor.operations {
             budget.charge(
