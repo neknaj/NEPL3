@@ -94,7 +94,7 @@ jobs:
         run: python -m unittest tools.audit.test_clean
       - name: Node renderer host toolchain
         if: matrix.os != 'ubuntu-latest'
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24.14.1'
       - name: Node renderer Worker lifecycle portability
@@ -116,7 +116,7 @@ jobs:
         run: python tools/evidence/runner.py run tools/evidence/specs/source-position-native.json dist/source-position-native
       - name: Preserve native source-position evidence
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: source-position-${{ matrix.os }}-${{ github.sha }}
           path: dist/source-position-native/
@@ -154,7 +154,7 @@ jobs:
           cargo test --locked --manifest-path "$RUNNER_TEMP/doc-language/Cargo.toml" --workspace
       - name: Preserve external consumer evidence
         if: always() && matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: external-consumer-${{ matrix.os }}
           path: |
@@ -177,7 +177,7 @@ jobs:
           cargo run --locked -p nepl3-tools -- doc-markdown doc/migration/00-contract.nepld dist/00-contract.view.md
       - name: Upload the Doc migration candidate
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: NEPL3-doc-migration-${{ github.sha }}
           path: dist/doc-migration/
@@ -185,7 +185,7 @@ jobs:
           retention-days: 14
       - name: Upload Markdown compatibility view
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: NEPL3-doc-markdown-${{ github.sha }}
           path: dist/00-contract.view.md
@@ -193,7 +193,7 @@ jobs:
           retention-days: 14
       - name: Upload generated local document
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: NEPL3-local-doc-${{ github.sha }}
           path: dist/doc-example/
@@ -213,7 +213,7 @@ jobs:
         run: cargo run --release --locked -p nepl3-tools -- doc-canonical html dist/doc-canonical
       - name: Preserve canonical Doc snapshot
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: NEPL3-canonical-doc-${{ github.sha }}
           path: dist/doc-canonical/
@@ -271,7 +271,7 @@ jobs:
         run: cargo run --locked -p nepl3-tools -- tasks --check
       - name: Check repository contracts
         run: cargo run --locked -p nepl3-tools -- check
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24.14.1'
           cache: npm
@@ -292,7 +292,7 @@ jobs:
           mkdir -p dist/math-visual
           cargo test --locked -p nepl3-tools --test math tex::pinned_katex -- --ignored --nocapture > dist/math-visual/corpus.log
       - name: Pass actual visual corpus and fixed assets to browser checks
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: math-visual-${{ github.sha }}
           path: |
@@ -320,7 +320,7 @@ jobs:
         run: python -m tools.evidence.runner run tools/evidence/specs/site-tests.json dist/site-tests
       - name: Preserve raw results (not a publication proof)
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: site-host-tests-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist/site-tests/
@@ -377,7 +377,7 @@ jobs:
         run: python tools/evidence/runner.py run tools/evidence/specs/source-position-wasi.json dist/source-position-wasi
       - name: Preserve WASI source-position evidence
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: source-position-wasi-${{ github.sha }}
           path: dist/source-position-wasi/
@@ -394,7 +394,7 @@ jobs:
           python tools/emulators/wasmtime/compare.py --begin
           cargo test --locked --release -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine --target wasm32-wasip2 -- --test-threads=1
           python tools/emulators/wasmtime/compare.py --check-results
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ always() }}
         with:
           name: pulley-execution-${{ github.sha }}
@@ -423,7 +423,7 @@ jobs:
           cargo fmt --manifest-path conformance/targets/rp2040/Cargo.toml -- --check
       - name: Build production foundation firmware and record identity
         run: python tools/emulators/rp2040js/firmware.py build conformance/targets/rp2040/target/bundle
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: rp2040-firmware-${{ github.sha }}
           path: conformance/targets/rp2040/target/bundle/
@@ -439,7 +439,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24.14.1'
           cache: npm
@@ -447,7 +447,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.13'
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: rp2040-firmware-${{ github.sha }}
           path: conformance/targets/rp2040/target/bundle/
@@ -458,7 +458,7 @@ jobs:
           npm test
       - name: Execute the build job's exact UF2 with an outer deadline
         run: python tools/emulators/rp2040js/firmware.py execute conformance/targets/rp2040/target/bundle
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ always() }}
         with:
           name: rp2040-execution-${{ github.sha }}
@@ -489,7 +489,7 @@ jobs:
           CARGO_TARGET_DIR=dist/browser-host-target cargo test --locked --manifest-path conformance/targets/browser/Cargo.toml
           python -m unittest discover -s tools/emulators/browser -p 'test_*.py'
           python tools/emulators/browser/run.py --repository . --output dist/browser-foundation
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ always() }}
         with:
           name: browser-foundation-${{ github.sha }}
@@ -512,7 +512,7 @@ jobs:
         run: |
           cargo build --locked -p nepl3-tools
           python tools/audit/doc_html/export.py target/debug/nepl3-tools dist/doc-browser/export-modes > dist/doc-browser/export-modes.json
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24.14.1'
       - name: Check native KaTeX Doc offline in three browsers
@@ -529,7 +529,7 @@ jobs:
         run: |
           cargo test --locked -p nepl3-tools --lib doc::source::tests::math_sentence_math_printing_preserves_recursive_source -- --exact --nocapture > dist/doc-browser/math-annotations.log
           python tools/audit/math/annotations.py --corpus dist/doc-browser/math-annotations.log --css crates/languages/doc/html/assets/doc.css > dist/doc-browser/math-annotations.json
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: math-visual-${{ github.sha }}
           path: dist/math-visual-input
@@ -548,7 +548,7 @@ jobs:
         run: |
           SITE_MANIFEST=$(python -c 'import json; print(json.load(open("dist/doc-browser/site-results.json"))["manifest_sha256"])')
           python tools/site/payload.py dist/doc-browser/site dist/doc-browser/pages.tar --manifest-sha256 "$SITE_MANIFEST" > dist/doc-browser/pages-receipt.json
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ always() }}
         with:
           name: doc-browser-${{ github.sha }}
@@ -587,7 +587,7 @@ jobs:
           cmp dist/resource-charge-proof/lock-before.txt dist/resource-charge-proof/lock-after.txt
           git diff --exit-code
       - name: Preserve scoped verification output
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ always() }}
         with:
           name: resource-charge-proof-${{ github.sha }}
