@@ -4,6 +4,7 @@ mod ceiling;
 mod charge;
 mod depth;
 mod observed;
+mod scope;
 #[cfg(kani)]
 mod verification;
 
@@ -81,9 +82,11 @@ impl Budget {
     ) -> Result<T, E> {
         let previous = self.depth;
         self.enter_depth(depth::entry::Target::AtLeast(base))?;
-        let result = operation(self);
-        self.depth = previous;
-        result
+        let guard = scope::Depth {
+            budget: self,
+            previous,
+        };
+        operation(guard.budget)
     }
     pub fn new(limits: Limits) -> Self {
         Self {
@@ -101,8 +104,8 @@ impl Budget {
         self.limits
     }
     /// Temporarily lower resource ceilings without changing observed Usage.
-    /// Nested calls cannot widen the current ceiling. Every Result path restores
-    /// the outer limits, while a stop remains sticky and is never rolled back.
+    /// Nested calls cannot widen the current ceiling. Result paths and Rust
+    /// unwinding restore outer limits; stops and charges are never rolled back.
     pub fn with_ceiling<T, E: From<StopReason>>(
         &mut self,
         ceiling: Limits,
@@ -113,9 +116,11 @@ impl Budget {
             Ok(limits) => self.limits = limits,
             Err(reason) => return Err(self.stop(reason).into()),
         }
-        let result = operation(self);
-        self.limits = outer;
-        result
+        let guard = scope::Ceiling {
+            budget: self,
+            previous: outer,
+        };
+        operation(guard.budget)
     }
     /// Record already completed work observed by an authorized host, including
     /// a delegated operation that finished after this budget stopped locally.
@@ -258,25 +263,32 @@ impl Budget {
         let base = self.depth;
         let previous = self.observed_depth;
         self.observed_depth = base;
-        let result = operation(self);
-        let completed = depth::measurement::finish(base, previous, self.observed_depth);
-        self.observed_depth = completed.merged;
+        let guard = scope::Measurement {
+            budget: self,
+            base,
+            previous,
+        };
+        let result = operation(guard.budget);
+        let completed = depth::measurement::finish(base, previous, guard.budget.observed_depth);
+        drop(guard);
         let value = result?;
         self.poll()?;
         Ok((value, completed.relative))
     }
-    /// Restores current depth on either normal success or failure; cumulative work remains charged.
+    /// Restores current depth on success, failure, or Rust unwinding; work remains charged.
     pub fn with_depth<T, E: From<StopReason>>(
         &mut self,
         operation: impl FnOnce(&mut Self) -> Result<T, E>,
     ) -> Result<T, E> {
         let previous = self.depth;
         self.enter_depth(depth::entry::Target::Next)?;
-        let result = operation(self);
         // A host callback can replace the budget. Restore the caller's depth
         // rather than subtracting from an untrusted post-callback value.
-        self.depth = previous;
-        result
+        let guard = scope::Depth {
+            budget: self,
+            previous,
+        };
+        operation(guard.budget)
     }
 }
 

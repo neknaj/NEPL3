@@ -716,3 +716,7 @@ cargo run --locked -p nepl3-tools -- doc-html pages --math-renderer mathml-only 
 省略時は `katex-preferred`。現native hostのKaTeX接続は未完了であり、利用不能の理由をmanifestの `math_diagnostics` に保持して独立MathMLへ移る。
 MathML成功をKaTeX成功として扱わない。明示的な `mathml-only` ではこの能力不足診断を出さない。
 数式中のRuby/Anno等をTeXへ忠実に写せない場合も、数式全体をMathMLに保ち注釈を落とさない。
+
+## BudgetのscopeとRust unwinding
+
+`Budget::with_depth`、`with_depth_at_least`、`with_ceiling`、`measure_depth` は、通常のResult経路とRust unwindingでscopeを復元する。累積Usageとsticky stopは保持し、入れ子の深さ測定は内外の最大値を統合する。復元はstack上のDrop guardで行い、純粋なcharge・depth・ceiling遷移と停止理由の優先順位は維持する。`cargo test --locked -p nepl3-core --test budget unwind_scopes` は、内側で捕捉したunwind、取消・超過後のunwind、測定の内外peak、preflightのerror変換中のunwindを検査する。panic=abortやWasmでdestructorの実行を保証するものではなく、panicを成功Resultへ変換しない。
