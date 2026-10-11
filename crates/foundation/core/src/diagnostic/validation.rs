@@ -316,7 +316,8 @@ pub fn validate_diagnostic_metadata(
     b: &mut Budget,
 ) -> Result<(), ReportValidationError> {
     b.charge(Resource::Work, schema.package.len() as u64 + 34)?;
-    if code.is_empty() || stage.is_empty() || registry.descriptor(schema).is_none() {
+    if code.is_empty() || stage.is_empty() || registry.descriptor_with_budget(schema, b)?.is_none()
+    {
         return Err(ReportValidationError::Metadata);
     }
     registry.validate_typed(arguments, b)?;
@@ -331,7 +332,7 @@ pub fn validate_event_metadata(
     b: &mut Budget,
 ) -> Result<(), ReportValidationError> {
     b.charge(Resource::Work, schema.package.len() as u64 + 34)?;
-    if kind.is_empty() || registry.descriptor(schema).is_none() {
+    if kind.is_empty() || registry.descriptor_with_budget(schema, b)?.is_none() {
         return Err(ReportValidationError::Metadata);
     }
     registry.validate_typed(payload, b)?;
