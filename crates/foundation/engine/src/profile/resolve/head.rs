@@ -40,7 +40,7 @@ impl<'a> ResolvedParseProfile<'a> {
                 self.provider(operation, budget)?;
                 let descriptor = self
                     .registry
-                    .descriptor(&operation.schema)
+                    .descriptor_with_budget(&operation.schema, budget)?
                     .ok_or(ProfileError::MissingSchema)?;
                 lookup(budget, descriptor.operations.len(), operation.name.len())?;
                 let signature = descriptor
