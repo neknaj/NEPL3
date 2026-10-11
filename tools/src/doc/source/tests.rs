@@ -1425,3 +1425,53 @@ fn math_annotation_uses_registered_sentence_on_both_reader_routes() -> Result<()
     }
     Ok(())
 }
+
+#[cfg(target_has_atomic = "ptr")]
+#[test]
+fn literal_lowering_does_not_rescan_owner_for_every_sentence() -> Result<(), String> {
+    let compiled = compiled()?;
+    let mut usages = Vec::new();
+    for count in [16, 32] {
+        let mut input = String::from("article en \"Scaling\" body ");
+        for _ in 0..count {
+            input.push_str("cons paragraph cons parallel cons variant en \"English.\" cons variant ja \"日本語。\" nil nil ");
+        }
+        input.push_str("nil");
+        // Same document bytes at both sizes isolates per-literal work: the old
+        // append path charged two full-owner scans per sentence despite sharing
+        // the immutable owner. This is a synthetic source, not user material.
+        input.extend(core::iter::repeat_n(' ', 100_000 - input.len()));
+        with_input_route(true, &compiled, &input, "Article", |tree, profile, _, _| {
+            let store = SourceStore::default();
+            let mut admission = SourceAdmission::default();
+            let mut codec =
+                FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
+            let mut lower_budget = budget();
+            let doc = lower::document(
+                tree.syntax(),
+                &compiled.doc.package.schema,
+                Category::Article,
+                profile.registry(),
+                &mut lower_budget,
+                &mut codec,
+            )
+            .map_err(err)?;
+            assert_eq!(doc.sources.len(), 1);
+            assert_eq!(doc.sources[0].text(), input);
+            assert_eq!(
+                doc.value
+                    .nodes
+                    .iter()
+                    .filter(|n| matches!(n.kind, DocKind::Parallel { .. }))
+                    .count(),
+                count
+            );
+            usages.push(lower_budget.usage().work);
+            Ok(())
+        })?;
+    }
+    // Not an exact golden count: reserve plenty of room for legitimate schema,
+    // source admission and provenance validation, while rejecting N full scans.
+    assert!(usages[1] < 3_000_000, "lowering work: {usages:?}");
+    Ok(())
+}
