@@ -662,37 +662,57 @@ fn point(span: &Span, offset: u64) -> Point<'_> {
         anchor: span.start() == span.end(),
     }
 }
-fn push_point<'a>(
-    stack: &mut Vec<(Point<'a>, bool, u64)>,
-    point: Point<'a>,
+fn push_point<T>(
+    stack: &mut Vec<(T, bool, u64)>,
+    point: T,
     exiting: bool,
     depth: u64,
     budget: &mut Budget,
 ) -> Result<(), OriginError> {
     budget.charge(
         Resource::AllocationUnits,
-        core::mem::size_of::<(Point, bool, u64)>() as u64,
+        core::mem::size_of::<(T, bool, u64)>() as u64,
     )?;
     stack.push((point, exiting, depth));
     Ok(())
+}
+
+// Indices are canonical only inside this validation call. The coarse graph
+// establishes full SnapshotId equality with compare_with_budget before assigning
+// them. Point-state ordering and edge selection then compare fixed-size values,
+// without rescanning variable-length source names for every byte vertex.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
+struct CyclePoint {
+    snapshot: usize,
+    offset: u64,
+    anchor: bool,
+}
+impl CyclePoint {
+    fn new(snapshot: usize, span: &Span, offset: u64) -> Self {
+        Self {
+            snapshot,
+            offset: span.start() + offset,
+            anchor: span.start() == span.end(),
+        }
+    }
 }
 
 fn check_map_cycles<'a>(
     input: impl Iterator<Item = &'a Mapping> + Clone,
     budget: &mut Budget,
 ) -> Result<(), OriginError> {
-    if snapshot_dag(input.clone(), budget)? {
+    let Some(endpoints) = snapshot_dag(input.clone(), budget)? else {
         return Ok(());
-    }
+    };
     // Exact edges preserve byte displacement. Transformed fragments relate every source
     // byte to every target byte. Empty fragments use a distinct insertion-anchor vertex.
     // This finite graph can be expensive; exhaustion returns Stopped, never a false cycle.
-    let mappings = || input.clone();
-    let mut state: BTreeMap<Point, u8> = BTreeMap::new();
-    for mapping in mappings() {
+    let mappings = || input.clone().zip(endpoints.iter());
+    let mut state: BTreeMap<CyclePoint, u8> = BTreeMap::new();
+    for (mapping, &(source, _)) in mappings() {
         for offset in 0..point_count(&mapping.source) {
             budget.charge(Resource::Work, 1)?;
-            let root = point(&mapping.source, offset);
+            let root = CyclePoint::new(source, &mapping.source, offset);
             if state.get(&root) == Some(&2) {
                 continue;
             }
@@ -713,13 +733,13 @@ fn check_map_cycles<'a>(
                 budget.charge(Resource::Nodes, 1)?;
                 budget.charge(
                     Resource::AllocationUnits,
-                    core::mem::size_of::<(Point, u8)>() as u64,
+                    core::mem::size_of::<(CyclePoint, u8)>() as u64,
                 )?;
                 state.insert(current, 1);
                 push_point(&mut stack, current, true, depth, budget)?;
-                for edge in mappings() {
+                for (edge, &(source, target)) in mappings() {
                     budget.charge(Resource::Work, 1)?;
-                    if current.snapshot != edge.source.snapshot_ref()
+                    if current.snapshot != source
                         || current.anchor != (edge.source.start() == edge.source.end())
                     {
                         continue;
@@ -734,7 +754,7 @@ fn check_map_cycles<'a>(
                     if edge.kind == MappingKind::Exact {
                         push_point(
                             &mut stack,
-                            point(&edge.target, displacement),
+                            CyclePoint::new(target, &edge.target, displacement),
                             false,
                             next_depth,
                             budget,
@@ -744,7 +764,7 @@ fn check_map_cycles<'a>(
                             budget.charge(Resource::Work, 1)?;
                             push_point(
                                 &mut stack,
-                                point(&edge.target, offset),
+                                CyclePoint::new(target, &edge.target, offset),
                                 false,
                                 next_depth,
                                 budget,
@@ -764,7 +784,7 @@ fn check_map_cycles<'a>(
 fn snapshot_dag<'a>(
     input: impl Iterator<Item = &'a Mapping>,
     budget: &mut Budget,
-) -> Result<bool, OriginError> {
+) -> Result<Option<Vec<(usize, usize)>>, OriginError> {
     let mut nodes: Vec<&'a SnapshotId> = Vec::new();
     let mut ordered: Vec<usize> = Vec::new();
     // Linked adjacency lists retain duplicate edges without scanning unrelated
@@ -921,5 +941,27 @@ fn snapshot_dag<'a>(
             }
         }
     }
-    Ok(visited == nodes.len())
+    if visited == nodes.len() {
+        return Ok(None);
+    }
+    // Edges were appended in input order. Recover their canonical endpoints
+    // only for the pointwise fallback; the common DAG path allocates nothing
+    // extra. Walking each linked list once also preserves duplicate edges.
+    budget.charge(
+        Resource::AllocationUnits,
+        (edges.len() as u64).saturating_mul(core::mem::size_of::<(usize, usize)>() as u64),
+    )?;
+    budget.charge(Resource::Work, edges.len() as u64)?;
+    let mut endpoints = alloc::vec![(0, 0); edges.len()];
+    for (source, first) in outgoing.iter().enumerate() {
+        budget.charge(Resource::Work, 1)?;
+        let mut next = *first;
+        while let Some(edge) = next {
+            budget.charge(Resource::Work, 1)?;
+            let (target, following) = edges[edge];
+            endpoints[edge] = (source, target);
+            next = following;
+        }
+    }
+    Ok(Some(endpoints))
 }

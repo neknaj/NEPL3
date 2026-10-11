@@ -1060,3 +1060,102 @@ fn pointwise_containment_prepays_independent_identity_on_every_hop() -> TestResu
     }
     Ok(())
 }
+
+#[test]
+#[cfg(target_has_atomic = "ptr")]
+fn point_cycle_fallback_reuses_canonical_long_identities() -> TestResult {
+    for name_len in [10, 10_000] {
+        for points in [1, 32] {
+            let name = "x".repeat(name_len);
+            let text = "a".repeat(points * 2);
+            let first = source(&name, &text)?;
+            let second = source(&name, &text)?;
+            let mut store = SourceStore::default();
+            store.insert(first.clone()).map_err(|e| format!("{e:?}"))?;
+            let maps = [Mapping {
+                source: first.span(0, points as u64).map_err(|e| format!("{e:?}"))?,
+                target: second
+                    .span(points as u64, (points * 2) as u64)
+                    .map_err(|e| format!("{e:?}"))?,
+                kind: MappingKind::Exact,
+            }];
+            // Source admission: shared endpoint 3; independent endpoint
+            // (2L + 1) + (L + 41) + 1. Validation entry/visit: 2; bytes: N.
+            // Coarse graph: L + 44; fallback index construction: 3.
+            // Point traversal: 7N (root, four pops, two edge visits).
+            // Total: 4L + 8N + 95. Traversal never compares variable-length IDs.
+            let exact = (4 * name_len + 8 * points + 95) as u64;
+            let limits = Limits {
+                work: exact,
+                ..budget().limits()
+            };
+            let mut sufficient = Budget::new(limits);
+            SourceMap::validate_mappings(&maps, &store, &mut sufficient)
+                .map_err(|e| format!("{e:?}"))?;
+            assert_eq!(sufficient.usage().work, exact);
+            assert_eq!(sufficient.usage().nodes, (2 * points) as u64);
+            assert_eq!(sufficient.usage().depth, 2);
+            for work in [0, exact - 1] {
+                let mut limited = Budget::new(Limits { work, ..limits });
+                assert!(matches!(
+                    SourceMap::validate_mappings(&maps, &store, &mut limited),
+                    Err(OriginError::Stopped(StopReason::WorkLimit))
+                ));
+                assert_eq!(
+                    limited.charge(Resource::Work, 0),
+                    Err(StopReason::WorkLimit)
+                );
+            }
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn cycle_endpoint_indices_precharge_allocation_and_keep_sticky_stop() -> TestResult {
+    let snapshot = source("endpoint-allocation", "aa")?;
+    let mut store = SourceStore::default();
+    store
+        .insert(snapshot.clone())
+        .map_err(|e| format!("{e:?}"))?;
+    let maps = [Mapping {
+        source: snapshot.span(0, 1).map_err(|e| format!("{e:?}"))?,
+        target: snapshot.span(1, 2).map_err(|e| format!("{e:?}"))?,
+        kind: MappingKind::Exact,
+    }];
+    // One coarse node, its ordered index/outgoing head, one edge, and
+    // incoming/depth arrays. The self-edge leaves the ready queue empty.
+    let coarse = (core::mem::size_of::<&nepl3_core::source::SnapshotId>()
+        + core::mem::size_of::<usize>()
+        + core::mem::size_of::<Option<usize>>()
+        + core::mem::size_of::<(usize, Option<usize>)>()
+        + core::mem::size_of::<usize>()
+        + core::mem::size_of::<u64>()) as u64;
+    let endpoint = core::mem::size_of::<(usize, usize)>() as u64;
+    for allocation_units in [coarse, coarse + endpoint - 1, coarse + endpoint] {
+        let mut limited = Budget::new(Limits {
+            allocation_units,
+            ..budget().limits()
+        });
+        assert!(matches!(
+            SourceMap::validate_mappings(&maps, &store, &mut limited),
+            Err(OriginError::Stopped(StopReason::AllocationLimit))
+        ));
+        // At the exact endpoint allowance, its allocation is admitted and
+        // the subsequent traversal stack allocation fails. This distinguishes
+        // endpoint precharging from a later failure with an uncharged Vec.
+        assert_eq!(
+            limited.usage().allocation_units,
+            if allocation_units == coarse + endpoint {
+                coarse + endpoint
+            } else {
+                coarse
+            }
+        );
+        assert_eq!(
+            limited.charge(Resource::Work, 0),
+            Err(StopReason::AllocationLimit)
+        );
+    }
+    Ok(())
+}
