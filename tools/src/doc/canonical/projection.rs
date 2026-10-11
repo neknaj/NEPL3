@@ -1,4 +1,6 @@
 //! Frozen repository inputs and an explicitly selected page-context projection.
+#[path = "receipt.rs"]
+mod receipt;
 use super::*;
 use crate::doc::{
     projection::annotated,
@@ -356,7 +358,6 @@ fn generate_batch(
 ) -> Result<Generated> {
     budget.poll().map_err(err)?;
     let initial_usage = budget.usage();
-    let limits = budget.limits();
     charge(budget, Resource::Work, 1)?;
     let (raw, inputs, references, needs_group) = capture(root, raw)?;
     let compiled = crate::doc::source::compiled()?;
@@ -522,84 +523,14 @@ fn generate_batch(
         records.push(serde_json::json!({"path":path,"sha256":hex(Digest::of(text.as_bytes())),"bytes":text.len(),"kind":"static-svg"}));
         files.push((path, text));
     }
-    // Reserve before json! copies the records and before serialization. Each
-    // portable path is <=4096 bytes; 32 KiB covers escaped path, fields, digest
-    // and pretty-print spacing. Both copies are included in this allowance.
-    let dependency_allowance = group.as_ref().map_or(Ok(0usize), |g| {
-        g.dependencies
-            .iter()
-            .flatten()
-            .try_fold(0usize, |total, link| {
-                let size = link
-                    .target_id
-                    .len()
-                    .checked_add(link.route.len())
-                    .and_then(|n| n.checked_add(link.fragment.as_ref().map_or(0, String::len)))
-                    .and_then(|n| n.checked_mul(6))
-                    .and_then(|n| n.checked_add(512))
-                    .ok_or("ContextLimit")?;
-                total.checked_add(size).ok_or("ContextLimit")
-            })
-    })?;
-    let image_allowance = group.as_ref().map_or(Ok(0usize), |g| {
-        g.image_dependencies
-            .iter()
-            .flatten()
-            .try_fold(0usize, |total, image| {
-                let size = image
-                    .asset_id
-                    .len()
-                    .checked_add(image.route.len())
-                    .and_then(|n| n.checked_mul(6))
-                    .and_then(|n| n.checked_add(512))
-                    .ok_or("ContextLimit")?;
-                total.checked_add(size).ok_or("ContextLimit")
-            })
-    })?;
-    let math_allowance = group.as_ref().map_or(Ok(0usize), |g| {
-        g.math_dependencies.iter().try_fold(0usize, |total, page| {
-            page.len()
-                .checked_mul(256)
-                .and_then(|n| total.checked_add(n))
-                .ok_or("ContextLimit")
-        })
-    })?;
-    let receipt_allowance = (files.len() * 32768 + 1024)
-        .checked_add(dependency_allowance)
-        .and_then(|n| n.checked_add(image_allowance))
-        .and_then(|n| n.checked_add(math_allowance))
-        .and_then(|n| n.checked_mul(2))
-        .ok_or("ContextLimit")?;
-    charge(budget, Resource::Work, receipt_allowance)?;
-    charge(budget, Resource::AllocationUnits, receipt_allowance)?;
-    // This final receipt is not an input to the next generation.
-    let usage = |u: nepl3_core::budget::Usage| {
-        serde_json::json!({
-        "source_bytes":u.source_bytes,"work":u.work,"depth":u.depth,"nodes":u.nodes,
-        "allocation_units":u.allocation_units,"output_bytes":u.output_bytes,
-        "diagnostics":u.diagnostics,"events":u.events})
-    };
-    let receipt = serde_json::json!({"format":"nepl3.canonical-markdown-stage/2",
-        "input_context":identity.map(hex),"input_pageset":group.as_ref().map(|g| hex(g.identity)),
-        "page_dependencies":group.as_ref().map(|g| inputs.iter().zip(&g.dependencies).enumerate().map(|(index, (input, dependencies))| {
-            let mut page = serde_json::json!({"path":input.page.projection,"links":dependencies});
-            if has_svg {
-                page["images"] = serde_json::Value::Array(g.image_dependencies[index].iter().map(|image|
-                    serde_json::json!({"node":image.node,"asset_id":image.asset_id,"route":image.route,"sha256":hex(image.digest)})).collect());
-            }
-            if !g.math_dependencies[index].is_empty() {
-                page["math"] = serde_json::Value::Array(g.math_dependencies[index].iter().map(|math|
-                    serde_json::json!({"embed":math.embed,"guest_sha256":hex(math.guest_digest)})).collect());
-            }
-            page
-        }).collect::<Vec<_>>()),
-        "files":records,
-        "output_budget":{"limits":{"source_bytes":limits.source_bytes,"work":limits.work,
-            "depth":limits.depth,"nodes":limits.nodes,"allocation_units":limits.allocation_units,
-            "output_bytes":limits.output_bytes,"diagnostics":limits.diagnostics,"events":limits.events},
-            "initial_usage":usage(initial_usage),"usage_before_receipt_serialization":usage(budget.usage())}});
-    let manifest = serde_json::to_string_pretty(&receipt)? + "\n";
-    charge(budget, Resource::Work, manifest.len())?;
-    charge(budget, Resource::OutputBytes, manifest.len())?;
+    let manifest = receipt::render(
+        &inputs,
+        group.as_ref(),
+        has_svg,
+        identity,
+        &records,
+        initial_usage,
+        budget,
+    )?;
     Ok(Generated { files, manifest })
 }
