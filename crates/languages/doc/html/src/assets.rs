@@ -47,7 +47,7 @@ pub fn prepare_svg<'a, C: FoundationValueCodec>(
     budget: &mut Budget,
 ) -> Result<PreparedSvgArticle<'a>, AssetError<'a, C::Error>> {
     prepare_svg_impl(
-        document, options, inputs, mode, registry, codec, budget, false,
+        document, options, inputs, mode, registry, codec, budget, None,
     )
     .map(PreparedSvgArticle)
 }
@@ -66,9 +66,47 @@ pub fn prepare_svg_code<'a, C: FoundationValueCodec>(
     budget: &mut Budget,
 ) -> Result<PreparedSvgCodeArticle<'a>, AssetError<'a, C::Error>> {
     prepare_svg_impl(
-        document, options, inputs, mode, registry, codec, budget, true,
+        document,
+        options,
+        inputs,
+        mode,
+        registry,
+        codec,
+        budget,
+        Some(false),
     )
     .map(PreparedSvgCodeArticle)
+}
+
+/// Static SVG assets composed with selected Code and Math display adapters.
+pub struct PreparedSvgDisplayArticle<'a>(pub(crate) crate::prepare::PreparedRendering<'a>);
+pub fn prepare_svg_display<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    options: &'a RenderOptions,
+    inputs: &[SvgInput<'_>],
+    mode: SvgMode,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<PreparedSvgDisplayArticle<'a>, AssetError<'a, C::Error>> {
+    prepare_svg_impl(
+        document,
+        options,
+        inputs,
+        mode,
+        registry,
+        codec,
+        budget,
+        Some(true),
+    )
+    .map(PreparedSvgDisplayArticle)
+}
+pub fn render_svg_display<E>(
+    prepared: &PreparedSvgDisplayArticle<'_>,
+    adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
+    budget: &mut Budget,
+) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
+    crate::build::render_prepared_with_foreign(&prepared.0, &[], adapter, budget, true)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -80,7 +118,7 @@ fn prepare_svg_impl<'a, C: FoundationValueCodec>(
     registry: &SchemaRegistry,
     codec: &mut C,
     budget: &mut Budget,
-    code: bool,
+    display: Option<bool>,
 ) -> Result<crate::prepare::PreparedRendering<'a>, AssetError<'a, C::Error>> {
     let plan = prepare::inspect(document, registry, codec, budget)
         .map_err(|e| AssetError::Preparation(LocalPreparationError::Input(e)))?;
@@ -109,14 +147,7 @@ fn prepare_svg_impl<'a, C: FoundationValueCodec>(
     let mut images = Vec::new();
     for req in &plan.requirements {
         budget.charge(Resource::Work, 1)?;
-        if code
-            && matches!(
-                req,
-                prepare::DocRequirement::Foreign {
-                    kind: EmbedKind::Code,
-                    ..
-                }
-            )
+        if matches!(req, prepare::DocRequirement::Foreign { kind, .. } if display.is_some_and(|math| crate::display::selected(*kind, math)))
         {
             continue;
         }

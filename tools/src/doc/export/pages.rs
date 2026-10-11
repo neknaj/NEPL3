@@ -2,7 +2,7 @@
 //! page set renders; the final manifest is the completion marker, not a deploy.
 use super::*;
 use nepl3_doc_core::pages::{FileBytes, PageDocument, PageFile, PageRegistration, PageSet};
-use nepl3_doc_html::pages::{PagesHtmlRequest, render_pages_with_code};
+use nepl3_doc_html::pages::{PagesHtmlRequest, render_pages_with_display};
 pub(crate) mod aliases;
 mod code;
 use serde::Deserialize;
@@ -52,6 +52,12 @@ fn input_path(entry: &Entry) -> Result<&str, String> {
 pub struct GeneratedPages {
     pub files: BTreeMap<String, Vec<u8>>,
     pub manifest: String,
+    pub provenance: Option<DisplayProvenance>,
+}
+pub struct DisplayProvenance {
+    pub pages: PageSet,
+    pub math: Vec<Vec<super::math::Occurrence>>,
+    pub rendered: nepl3_doc_html::pages::RenderedPages,
 }
 
 /// In-memory host input pairs. Paths are logical names, not filesystem access.
@@ -103,6 +109,40 @@ pub(crate) fn generate_with_aliases(
     phases: resources::PhaseLimits,
     output_budget: &mut Budget,
     aliases: &[aliases::PageAliases],
+) -> Result<GeneratedPages, String> {
+    generate_selected(
+        compiled,
+        inputs,
+        resources,
+        phases,
+        output_budget,
+        aliases,
+        super::MathRenderer::KaTeXPreferred,
+    )
+}
+pub fn generate_with_renderer(
+    compiled: &Compiled,
+    inputs: &[(Entry, String)],
+    renderer: super::MathRenderer,
+) -> Result<GeneratedPages, String> {
+    generate_selected(
+        compiled,
+        inputs,
+        &[],
+        resources::PhaseLimits::default(),
+        &mut budget(),
+        &[],
+        renderer,
+    )
+}
+fn generate_selected(
+    compiled: &Compiled,
+    inputs: &[(Entry, String)],
+    resources: &[(Entry, Vec<u8>)],
+    phases: resources::PhaseLimits,
+    output_budget: &mut Budget,
+    aliases: &[aliases::PageAliases],
+    renderer: super::MathRenderer,
 ) -> Result<GeneratedPages, String> {
     output_budget.poll().map_err(err)?;
     let initial_usage = output_budget.usage();
@@ -220,21 +260,57 @@ pub(crate) fn generate_with_aliases(
     let empty = SourceStore::default();
     let mut a = SourceAdmission::default();
     let mut c = FoundationCodec::new(r, &empty, &mut a).map_err(err)?;
-    let mut rendered = render_pages_with_code(
+    let mut page_math = Vec::new();
+    for _ in &request.set.pages {
+        output_budget
+            .charge(
+                nepl3_core::budget::Resource::AllocationUnits,
+                core::mem::size_of::<Vec<super::math::Occurrence>>() as u64,
+            )
+            .map_err(err)?;
+        page_math.try_reserve_exact(1).map_err(|_| {
+            err(output_budget.stop(nepl3_core::budget::StopReason::AllocationLimit))
+        })?;
+        page_math.push(Vec::new());
+    }
+    let displayed = render_pages_with_display(
         &request,
         r,
         &mut c,
         output_budget,
-        &mut |page, embed, index, b| {
+        &mut |page, embed, index, codec, b| {
             let code = usize::try_from(page)
                 .ok()
                 .and_then(|page| page_code.get(page))
                 .ok_or("CodePageMissing")?;
-            code.render(embed, index, r, b)
+            if embed.kind == nepl3_doc_core::model::EmbedKind::Code {
+                code.render(embed, index, r, b)
+            } else {
+                let records = page_math.get_mut(page as usize).ok_or("MathPageMissing")?;
+                super::math::DisplayHost {
+                    compiled,
+                    registry: r,
+                    codec,
+                    preference: renderer,
+                }
+                .render(embed, index, records, b)
+            }
         },
     )
-    .map_err(|e| format!("resolve/render: {e:?}; usage={:?}", output_budget.usage()))?
-    .pages;
+    .map_err(|e| format!("resolve/render: {e:?}; usage={:?}", output_budget.usage()))?;
+    for ((records, placements), page) in page_math
+        .iter_mut()
+        .zip(&displayed.foreign)
+        .zip(&request.set.pages)
+    {
+        super::math::compose(
+            records,
+            placements,
+            &page.document.value.embeds,
+            output_budget,
+        )?;
+    }
+    let mut rendered = displayed.pages;
     for (page, fragment) in request.set.pages.iter().zip(&mut rendered.fragments) {
         for input in aliases {
             output_budget
@@ -311,21 +387,34 @@ pub(crate) fn generate_with_aliases(
         "mime":file_kinds[path],"license":if path.ends_with(".css") {Some("MIT")} else {None}})
         })
         .collect::<Vec<_>>();
-    let output_identity =
-        resources::execution_identity(rendered.identity, output_budget.limits(), initial_usage);
+    let output_identity = resources::execution_identity(
+        rendered.identity,
+        output_budget.limits(),
+        initial_usage,
+        renderer,
+    );
     let manifest = serde_json::to_string_pretty(&serde_json::json!({
         "format":"nepl3.local-doc-pages/1","identity":digest_hex(rendered.identity),"pages":origins,"files":records,
         "execution_identity":digest_hex(output_identity),
         "phase_execution":{"contract":"nepl3.local-doc-pages.phases/1","identity":digest_hex(resources::phase_identity(output_identity,&profiles,phases))},
-        "output_budget":{"contract":"nepl3.local-doc-pages.execution/1","limits":resources::limits(output_budget.limits()),
+        "output_budget":{"contract":"nepl3.local-doc-pages.execution/2","limits":resources::limits(output_budget.limits()),
             "initial_usage":resources::usage(initial_usage),"usage":resources::usage(output_budget.usage())},
         "registered_files":file_origins,
-        "renderer":"nepl3-doc-html pages/4","options":{"parallel":"Rows"},"viewer_scripts":false,
-        "packages":"compiled checked bootstrap fixtures","scope":"Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Retained Code uses shared syntax-only highlighting without guest evaluation; assets and other foreign rendering remain unsupported. Not Pages deployment evidence.",
+        "renderer":"nepl3-doc-html pages/4","options":{"parallel":"Rows","math_renderer":renderer.as_str()},
+        "math_diagnostics":page_math.iter().map(|records| super::math::diagnostics(records)).collect::<Vec<_>>(),"viewer_scripts":false,
+        "packages":"compiled checked bootstrap fixtures","scope":"Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Retained Code uses shared syntax-only highlighting without guest evaluation; Math uses independent MathML with explicit renderer fallback diagnostics; assets and other foreign kinds remain unsupported. Not Pages deployment evidence.",
         "budget_scope":"Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
         "output_usage":{"work":output_budget.usage().work,"allocation_units":output_budget.usage().allocation_units,"output_bytes":output_budget.usage().output_bytes}
     })).map_err(err)? + "\n";
-    let mut generated = GeneratedPages { files, manifest };
+    let mut generated = GeneratedPages {
+        files,
+        manifest,
+        provenance: Some(DisplayProvenance {
+            pages: request.set,
+            math: page_math,
+            rendered,
+        }),
+    };
     aliases::record(&mut generated, aliases)?;
     Ok(generated)
 }
@@ -376,6 +465,13 @@ fn insert(
     Ok(())
 }
 pub fn write(manifest: &Path, output: &Path) -> crate::Result<()> {
+    write_with_renderer(manifest, output, super::MathRenderer::KaTeXPreferred)
+}
+pub fn write_with_renderer(
+    manifest: &Path,
+    output: &Path,
+    renderer: super::MathRenderer,
+) -> crate::Result<()> {
     if output.exists() {
         return Err("output directory already exists".into());
     }
@@ -425,7 +521,7 @@ pub fn write(manifest: &Path, output: &Path) -> crate::Result<()> {
         }
         resources.push((entry, content));
     }
-    let generated = generate_with_resources(
+    let generated = generate_selected(
         &compiled()?,
         &inputs,
         &resources,
@@ -434,6 +530,8 @@ pub fn write(manifest: &Path, output: &Path) -> crate::Result<()> {
             lower: manifest_data.lower_limits.budget().limits(),
         },
         &mut manifest_data.output_limits.budget(),
+        &[],
+        renderer,
     )?;
     write_generated(generated, output)
 }

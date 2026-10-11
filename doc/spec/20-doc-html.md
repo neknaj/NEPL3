@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/20&#45;doc&#45;html.nepld; renderer nepl3-tools.markdown-annotated/4; source SHA-256 bda3f351334e67fe936a869ddaa77f45fe36c044da5d6839e4d2ba4563282e73; alias input SHA-256 a89d4b749408c5f6e9ccc8ed5749c8203bf1a66d788d81725b0d44b7af3c82d5. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/20&#45;doc&#45;html.nepld; renderer nepl3-tools.markdown-annotated/4; source SHA-256 3306135811e93774366ceff1e2cb135eb67e44137c1f1cc506af3e43391f8a75; alias input SHA-256 a89d4b749408c5f6e9ccc8ed5749c8203bf1a66d788d81725b0d44b7af3c82d5. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="20-docのhtml変換"></a>
 
@@ -96,4 +96,14 @@ Code装飾のDOM IdはDocの意味anchorではない。言語選択で非表示�
 
 本文、Code、参照、markup検査、書出しが完了するまで出力を公開しない。adapterが停止後に別のエラーを返してもBudgetのStoppedを優先する。source欠落・別ページのguest・不正markup・表示されない参照先は成功や部分成果物にしない。
 
-native APIはページごとのforeign placementを返す。hostのexportは文書の元情報をmanifestに保持するが、この合成を公開portable Code操作、reader\-fact対応、runtime受入の完了へ読み替えない。PagesのImage・SVG描画とCode以外のforeignは引き続き未対応である。
+native APIはページごとのforeign placementを返す。hostのexportは文書の元情報をmanifestに保持するが、この合成を公開portable Code操作、reader\-fact対応、runtime受入の完了へ読み替えない。PagesのImage・SVG描画と、明示選択していないforeignは未対応である。通常hostのMath表示は次の合成経路で扱う。
+
+<a name="n-6d6174685f636f6d706f736974696f6e"></a>
+
+## 埋め込み数式の通常HTML合成
+
+通常のdoc\-html export・SVG付きexport・pagesは、Codeに加えてInlineMathとDisplayMathを選択したMath hostへ渡す。文中はPhrasing、別行はBlockとして検査し、paragraphの文列の間にも別行数式を置ける。Code\-onlyとlocal\-onlyのAPIは従来の制限を維持する。
+
+既存のMath lower・check・MathMLとSentence注釈の処理を共用し、数式を暗黙評価しない。Doc・Math・Sentenceの元構文と出力arenaを保持し、nodeと要素の対応を表示出現ごとに移す。局所注釈namespaceは内部の重複定義を検査後、Math出現の範囲へ束縛し、外側Docの非表示anchorを代用しない。
+
+生成時の既定はKaTeXPreferredである。現native hostにはKaTeX実行の完全な接続がないため、能力不足の診断をmanifestに保持して独立MathMLへ移る。忠実なTeXへ変換できない注釈は理由を保持し、数式全体をMathMLで表示する。明示的なmathml\-onlyも選択できる。これはKaTeX実行やT24全体の完成ではない。

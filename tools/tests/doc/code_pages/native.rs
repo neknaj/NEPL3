@@ -329,3 +329,141 @@ fn explicit_code_api_keeps_plain_page_output_identical() -> Result<(), String> {
     assert!(new.foreign[0].is_empty());
     Ok(())
 }
+
+#[test]
+fn math_occurrences_scope_local_ids_but_reject_duplicates_and_wrong_slots() -> Result<(), String> {
+    use nepl3_doc_html::pages::render_pages_with_display;
+    let c = compiled()?;
+    let input = r#"article en "Math" body cons paragraph cons sentence cons math Math frac 1 2 cons math Math frac 1 2 nil nil nil"#;
+    let request = request(&c, &[("a", input)], ParallelMode::Rows)?;
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    for bad in [false, true] {
+        let result = render_pages_with_display(
+            &request,
+            &c.doc.registry,
+            &mut codec,
+            &mut budget(),
+            &mut |_, embed, _, _, b| {
+                let mut markup = echo(
+                    embed,
+                    Some(HtmlAttribute::Id {
+                        value: "n-local".into(),
+                    }),
+                    b,
+                )?;
+                markup.fragment.nodes.push(HtmlNode::Element {
+                    tag: HtmlTag::A,
+                    attributes: vec![if bad {
+                        HtmlAttribute::Id {
+                            value: "n-local".into(),
+                        }
+                    } else {
+                        HtmlAttribute::Href {
+                            value: HtmlHref::Fragment {
+                                id: "n-local".into(),
+                            },
+                        }
+                    }],
+                    children: vec![],
+                });
+                let HtmlNode::Element { children, .. } = &mut markup.fragment.nodes[1] else {
+                    return Err("shape".into());
+                };
+                children.push(2);
+                Ok::<_, String>(markup)
+            },
+        );
+        if bad {
+            assert!(result.is_err());
+        } else {
+            let result = result.map_err(err)?;
+            assert_eq!(result.foreign[0].len(), 2);
+            let markup = &result.pages.fragments[0].markup;
+            let html = serialize(
+                &validate(&markup.fragment, markup.slot, &markup.policy, &mut budget())
+                    .map_err(err)?,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            assert_eq!(html.matches("id=\"g-").count(), 2);
+            assert_eq!(html.matches("href=\"#g-").count(), 2);
+        }
+    }
+    let result = render_pages_with_display(
+        &request,
+        &c.doc.registry,
+        &mut codec,
+        &mut budget(),
+        &mut |_, embed, _, _, b| {
+            let mut markup = echo(embed, None, b)?;
+            let HtmlNode::Element { tag, .. } = &mut markup.fragment.nodes[1] else {
+                return Err("shape".into());
+            };
+            *tag = HtmlTag::Div;
+            markup.slot = HtmlSlot::Block;
+            Ok::<_, String>(markup)
+        },
+    );
+    assert!(result.is_err(), "inline Math must not accept block markup");
+    let mut stopped = budget();
+    let result = render_pages_with_display(
+        &request,
+        &c.doc.registry,
+        &mut codec,
+        &mut stopped,
+        &mut |_, embed, _, _, b| {
+            let markup = echo(embed, None, b)?;
+            b.cancel();
+            Ok::<_, String>(markup)
+        },
+    );
+    assert!(result.is_err());
+    assert_eq!(stopped.poll(), Err(StopReason::Cancelled));
+    Ok(())
+}
+
+#[test]
+fn math_annotation_cannot_supply_hidden_outer_page_anchor() -> Result<(), String> {
+    use nepl3_doc_html::pages::render_pages_with_display;
+    let c = compiled()?;
+    let from = r#"article en "From" body cons paragraph cons sentence cons link page "to" some "hidden" text "go" nil nil nil"#;
+    let to = r#"article ja "To" body cons paragraph cons parallel cons variant ja sentence cons anchor hidden text "対象" nil cons variant en "Translation" nil cons sentence cons math Math frac 1 2 nil nil nil"#;
+    let request = request(
+        &c,
+        &[("from", from), ("to", to)],
+        ParallelMode::Single {
+            language: "en".into(),
+            fallbacks: vec![],
+        },
+    )?;
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let result = render_pages_with_display(
+        &request,
+        &c.doc.registry,
+        &mut codec,
+        &mut budget(),
+        &mut |_, embed, _, _, b| {
+            echo(
+                embed,
+                Some(HtmlAttribute::Id {
+                    value: "n-68696464656e".into(),
+                }),
+                b,
+            )
+        },
+    );
+    assert!(
+        matches!(
+            result,
+            Err(PagesCodeRenderError::Pages(
+                PagesRenderError::MissingOutputAnchor { .. }
+            ))
+        ),
+        "{result:?}"
+    );
+    Ok(())
+}

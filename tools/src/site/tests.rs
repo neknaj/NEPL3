@@ -69,6 +69,7 @@ fn composition_preserves_doc_bytes_and_identifies_every_payload() -> Result<()> 
         r#"{"version":1,"pages":[{"id":"intro","source":"intro.nepld","projection":"intro.md","aliases":"intro.json","route":"docs/intro.html","renderer":"test"}]}"#,
     )?;
     let input = || GeneratedPages {
+        provenance: None,
         files: BTreeMap::from([("docs/intro.html".into(), b"<h1>Source output</h1>".to_vec())]),
         manifest: "{\"doc\":true}".into(),
     };

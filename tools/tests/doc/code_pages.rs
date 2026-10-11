@@ -49,7 +49,7 @@ fn code_page_reuses_frontend_and_keeps_cross_page_links() -> Result<(), String> 
 }
 
 #[test]
-fn code_pages_reject_other_guests_and_preserve_output_stops() -> Result<(), String> {
+fn code_pages_compose_math_and_preserve_output_stops() -> Result<(), String> {
     let c = compiled()?;
     let code = input(
         "a",
@@ -90,7 +90,10 @@ fn code_pages_reject_other_guests_and_preserve_output_stops() -> Result<(), Stri
         "b",
         r#"article en "Math" body cons display Math frac 1 0 nil"#,
     );
-    assert!(pages::generate(&c, &[code, math]).is_err_and(|e| e.contains("NeedsResolution")));
+    let generated = pages::generate(&c, &[code, math])?;
+    let html = String::from_utf8(generated.files["b/index.html"].clone()).map_err(super::err)?;
+    assert!(html.contains("<mfrac>"));
+    assert!(html.contains("<mn>0</mn>"));
     Ok(())
 }
 

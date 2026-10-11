@@ -100,9 +100,18 @@ pub(super) fn usage(value: Usage) -> serde_json::Value {
         "diagnostics":value.diagnostics,"events":value.events})
 }
 /// Fixed-order big-endian u64 records, independent of JSON property ordering.
-pub(super) fn execution_identity(content: Digest, limits: Limits, initial: Usage) -> Digest {
-    let mut bytes = Vec::from(b"nepl3.local-doc-pages.execution/1\0".as_slice());
+pub(super) fn execution_identity(
+    content: Digest,
+    limits: Limits,
+    initial: Usage,
+    renderer: crate::doc::export::MathRenderer,
+) -> Digest {
+    let mut bytes = Vec::from(b"nepl3.local-doc-pages.execution/2\0".as_slice());
     bytes.extend_from_slice(&content.0);
+    bytes.push(match renderer {
+        crate::doc::export::MathRenderer::KaTeXPreferred => 0,
+        crate::doc::export::MathRenderer::MathMLOnly => 1,
+    });
     for value in [
         limits.source_bytes,
         limits.work,

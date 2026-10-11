@@ -22,12 +22,30 @@ cons section layout "[見出/みだ]し" body
 cons paragraph cons "{[本文/ほんぶん]/body} & <script>window.untrusted=1</script>" nil
 cons paragraph cons "{Please/依頼標識} {{create/V} {{an/Det} {issue/N}/NP O}/VP} {{on/P} {GitHub/N}/PP}" nil
 cons paragraph cons "{{{long_annotation_scope/N}/NP}/VP}" nil
+cons paragraph cons parallel cons variant en sentence cons text "The fraction " cons math Math frac 1 2 cons text " represents one of two equal parts of a whole." nil cons variant ja sentence cons text "分数 " cons math Math frac 1 2 cons text " は、全体を等しく二つに分けたうちの一つを表す。" nil nil nil
+cons display Math label frac 3 4 Sentence "{[数/すう]/number}"
 cons rawcode some "text" "example code"
 cons rawcode none "long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_long_code_token_"
 cons table cons left cons center cons right nil some row cons "Left" cons "Center" cons "Right" nil cons row cons "A" cons "B" cons "C" nil nil
 nil nil'''
 
 MEASURE = """() => {
+  const maths = [...document.querySelectorAll('math')];
+  if (maths.length !== 3) throw Error('Missing embedded Math');
+  if (document.querySelectorAll('math[display="inline"]').length !== 2 || document.querySelectorAll('math[display="block"]').length !== 1) throw Error('Wrong Math placement');
+  if (document.querySelector('p math[display="block"]')) throw Error('Display Math inside paragraph sentence run');
+  for (const math of maths) {
+    const box = math.getBoundingClientRect();
+    if (box.width <= 0 || box.height <= 0) throw Error('Invisible Math');
+  }
+  for (const frac of document.querySelectorAll('mfrac')) {
+    const numerator = frac.children[0].getBoundingClientRect();
+    const denominator = frac.children[1].getBoundingClientRect();
+    if (numerator.bottom > denominator.top + 1) throw Error('Fraction layout missing');
+  }
+  for (const text of document.querySelectorAll('mtext')) {
+    if (getComputedStyle(text).fontFamily !== getComputedStyle(document.querySelector('.nepl-doc')).fontFamily) throw Error('Math annotation lost prose font');
+  }
   const ruby = document.querySelector('.nepl-ruby');
   for (const node of document.querySelectorAll('.nepl-ruby,.nepl-anno')) {
     const base = node.querySelector(':scope > .nepl-base').getBoundingClientRect();
@@ -80,7 +98,8 @@ MEASURE = """() => {
   if (JSON.stringify(alignments) !== JSON.stringify(['left', 'center', 'right'])) throw Error('Column alignment changed');
   if (document.scripts.length) throw Error('Unexpected script');
   const selectors = ['.nepl-doc', 'h1', 'h2', '.nepl-paragraph', '.nepl-ruby',
-                     '.nepl-reading', '.nepl-anno', '.nepl-notes', 'figure', 'figcaption', 'pre', 'pre>code', 'table', 'th', 'td'];
+                     '.nepl-reading', '.nepl-anno', '.nepl-notes', 'figure', 'figcaption', 'pre', 'pre>code', 'table', 'th', 'td', 'math[display=inline]',
+                     'math[display=block]', 'mtext'];
   return JSON.stringify(selectors.map(selector => {
     const node = document.querySelector(selector);
     if (!node) throw Error('Missing ' + selector);
@@ -88,7 +107,7 @@ MEASURE = """() => {
     const box = node.getBoundingClientRect();
     return [selector, box.x, box.y, box.width, box.height, style.color,
             style.backgroundColor, style.fontSize, style.margin, style.padding,
-            style.display, style.borderTopWidth];
+            style.display, style.borderTopWidth, style.fontFamily];
   }));
 }"""
 
@@ -138,6 +157,7 @@ def main() -> None:
                             if not isinstance(value, str):
                                 raise TypeError("Expected serialized layout")
                             measurements.append(value)
+                            _ = (root / f"{implementation.name}-{width}-{mode}-layout.json").write_text(value, encoding="utf-8")
                             _ = page.screenshot(path=str(root / f"{implementation.name}-{width}-{mode}.png"), full_page=True, timeout=15000)
                             page.close()
                         if len(set(measurements)) != 1:

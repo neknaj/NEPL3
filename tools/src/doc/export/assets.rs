@@ -91,6 +91,7 @@ pub fn write(
         &source,
         css,
         Some((&inputs, mode)),
+        super::MathRenderer::KaTeXPreferred,
         &mut |_| {},
     )?;
     let mut files = BTreeMap::new();

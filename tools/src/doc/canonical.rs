@@ -392,6 +392,7 @@ pub fn markdown(root: &Path, manifest: &str, output: &Path) -> Result<()> {
     )?;
     super::export::pages::write_generated(
         super::export::pages::GeneratedPages {
+            provenance: None,
             files: generated
                 .files
                 .into_iter()
