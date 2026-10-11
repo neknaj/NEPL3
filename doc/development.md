@@ -725,3 +725,30 @@ MathML成功をKaTeX成功として扱わない。明示的な `mathml-only` で
 ## BudgetのscopeとRust unwinding
 
 `Budget::with_depth`、`with_depth_at_least`、`with_ceiling`、`measure_depth` は、通常のResult経路とRust unwindingでscopeを復元する。累積Usageとsticky stopは保持し、入れ子の深さ測定は内外の最大値を統合する。復元はstack上のDrop guardで行い、純粋なcharge・depth・ceiling遷移と停止理由の優先順位は維持する。`cargo test --locked -p nepl3-core --test budget unwind_scopes` は、内側で捕捉したunwind、取消・超過後のunwind、測定の内外peak、preflightのerror変換中のunwindを検査する。panic=abortやWasmでdestructorの実行を保証するものではなく、panicを成功Resultへ変換しない。
+
+### Exact saved Invoke comparison before settlement
+
+`Invoke::check_saved` compares request ID, operation identity, input, environment,
+Limits and ordered source/resource tables against the host's retained Invoke.
+It uses the existing budgeted TypedValue and SourceSnapshot comparisons and
+charges resource IDs/digests/bytes before comparison. This comparison admits no
+source bytes and grants no authority. Even equally malformed values may compare
+equal; ordinary schema validation and authorization are still required.
+
+`IssuedInvocation::settle_saved_request` optionally runs that check under the
+actual parent's unreserved local ceiling before the existing identity checks and
+one-time settlement. Successful comparison costs stay charged on mismatch or
+stop. A failed request/identity check or an observation exceeding the grant records
+no remote Usage;
+the unresolved guard cancels its parent without replacing an earlier stop.
+The new entry has a separate `SavedSettlementError`; the existing `Error` enum
+is unchanged. The unchanged `settle` entry remains available for an independently verified
+observation after a parent stop. The new entry cannot perform fresh comparison
+on an already stopped parent, and does not silently bypass that verification.
+
+Exact content equality does not connect that content to a trusted measurement
+channel or distinguish repeated identical requests, reconnections or attempts.
+The host must establish those associations and terminal cleanup independently.
+The context digest retains its existing cycle-detection semantics; no wire
+record, remote inherited Budget transport, task status or formal acceptance
+result changes in this slice.

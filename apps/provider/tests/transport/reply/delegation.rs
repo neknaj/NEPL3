@@ -1,4 +1,6 @@
 use super::*;
+#[path = "delegation/binding.rs"]
+mod binding;
 use nepl3_core::budget::{Limits, Usage};
 use nepl3_provider::delegation::{Error, IssuedInvocation};
 

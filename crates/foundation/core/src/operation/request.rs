@@ -1,6 +1,8 @@
 //! Input admission against an operation selected independently by the host.
+mod binding;
 use super::*;
 use crate::schema::{SchemaError, SchemaRegistry};
+pub use binding::RequestBindingError;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum InputValidationError {

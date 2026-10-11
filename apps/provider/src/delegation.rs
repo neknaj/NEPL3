@@ -1,7 +1,10 @@
 //! Request-bound host reservation for an explicitly selected provider.
 use nepl3_core::{
     budget::{Budget, StopReason, Usage},
-    operation::{Invoke, request::InputValidationError},
+    operation::{
+        Invoke,
+        request::{InputValidationError, RequestBindingError},
+    },
     schema::SchemaRegistry,
     source::Digest,
 };
@@ -17,6 +20,15 @@ pub enum Error {
     Context(nepl3_wire::WireError),
     ObservationBinding,
     Settlement(SettlementError),
+}
+
+/// Failure from the optional complete-request settlement entry.
+/// The existing `Error` returned by legacy issuance/settlement is unchanged.
+#[derive(Debug)]
+pub enum SavedSettlementError {
+    Stopped(StopReason),
+    RequestBinding(RequestBindingError),
+    Settlement(Error),
 }
 
 /// Immutable request/grant binding retained by the authorized host. The host
@@ -76,6 +88,37 @@ impl<'request, 'budget> IssuedInvocation<'request, 'budget> {
         operation: impl FnOnce(&mut Budget) -> Result<T, StopReason>,
     ) -> Result<T, LocalFailure<T>> {
         self.budget.run_local(operation)
+    }
+
+    /// Compare an independently associated observed request to the complete
+    /// saved Invoke, then settle its trusted terminal observation. Comparison
+    /// uses the actual parent's unreserved local capacity; failed comparisons
+    /// retain charges and drop the unsettled reservation (cancelling its parent).
+    /// Unlike `settle`, this entry cannot validate after the parent has stopped.
+    ///
+    /// Request equality does not authenticate a received measurement or identify
+    /// a distinct execution attempt. The host still establishes that provenance,
+    /// terminal cleanup and same-attempt association independently. Source and
+    /// resource table order is significant; context_digest remains unchanged.
+    pub fn settle_saved_request(
+        mut self,
+        observed_request: &Invoke,
+        implementation: Digest,
+        context: Digest,
+        observed: Usage,
+    ) -> Result<(), SavedSettlementError> {
+        let saved = self.authorized.request();
+        self.budget
+            .run_local(|b| Ok(observed_request.check_saved(saved, b)))
+            .map_err(|failure| SavedSettlementError::Stopped(failure.reason))?
+            .map_err(SavedSettlementError::RequestBinding)?;
+        self.settle(
+            observed_request.request_id,
+            implementation,
+            context,
+            observed,
+        )
+        .map_err(SavedSettlementError::Settlement)
     }
 
     /// Settle the measurement of this exact host-issued request. Identity
