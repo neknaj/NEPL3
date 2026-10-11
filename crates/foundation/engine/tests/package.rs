@@ -17,6 +17,8 @@ mod portable;
 mod profile_head;
 #[path = "package/profile_schema.rs"]
 mod profile_schema;
+#[path = "package/recovery.rs"]
+mod recovery;
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 fn budget() -> Budget {
     Budget::new(Limits {
