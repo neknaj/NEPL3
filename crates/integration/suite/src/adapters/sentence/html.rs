@@ -539,9 +539,11 @@ fn build_checked_with_foreign<'a, E: From<StopReason>>(
                     .saturating_add(builder.depths[parent as usize]);
                 let markup = builder
                     .b
-                    .with_depth_at_least(depth, |b| adapter(closure, *syntax, b))
-                    .map_err(RenderFailure::Foreign)?;
+                    .with_depth_at_least(depth, |b| adapter(closure, *syntax, b));
+                // Preserve an earlier shared stop even if the guest returns
+                // an ordinary error after stopping its budget.
                 builder.b.poll().map_err(Error::from)?;
+                let markup = markup.map_err(RenderFailure::Foreign)?;
                 builder.guest(parent, node, *syntax, markup)?;
             }
         }
