@@ -850,7 +850,7 @@ fn grouped_failures_and_sticky_limits_never_publish_partial_outputs() -> Result<
             // that bounded metadata difference instead of copying an exact
             // counter as an invariant across different configurations.
             "work" => limits.work = used.work - 1024,
-            "allocation" => limits.allocation_units = used.allocation_units - 1,
+            "allocation" => limits.allocation_units = used.allocation_units - 1024,
             "output" => limits.output_bytes = used.output_bytes - 1024,
             "nodes" => limits.nodes = used.nodes - 1,
             _ => (),
