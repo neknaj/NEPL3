@@ -1476,3 +1476,119 @@ fn literal_lowering_does_not_rescan_owner_for_every_sentence() -> Result<(), Str
     assert!(usages[1] < 3_000_000, "lowering work: {usages:?}");
     Ok(())
 }
+
+#[test]
+fn terminal_parse_observations_preserve_failure_usage_and_phase_boundary() -> Result<(), String> {
+    let compiled = compiled()?;
+    let input = r#"article en "Observation" body nil"#;
+    let mut observations = Vec::new();
+    let limits = budget().limits();
+    let result = with_named_input_limits_observed(
+        true,
+        &compiled,
+        input,
+        "observed",
+        "Article",
+        limits,
+        |value| observations.push(value),
+        |_, _, b, _| {
+            // Later callback work/failure must not be misreported as failed parsing.
+            b.charge(Resource::Work, 17).map_err(err)?;
+            Err::<(), _>("later phase failed".into())
+        },
+    );
+    assert_eq!(result, Err("later phase failed".into()));
+    assert_eq!(observations.len(), 1);
+    let complete = observations[0];
+    assert_eq!(complete.outcome, ParseObservationOutcome::Complete);
+    assert_eq!(complete.limits, limits);
+    assert!(complete.usage.work > 0);
+    assert!(complete.profile.is_some());
+    let mut success = None;
+    let usage_at_boundary = with_named_input_limits_observed(
+        true,
+        &compiled,
+        input,
+        "observed",
+        "Article",
+        limits,
+        |value| success = Some(value),
+        |_, _, b, _| Ok(b.usage()),
+    )?;
+    assert_eq!(success, Some(complete));
+    assert_eq!(usage_at_boundary, complete.usage);
+    for work in [0, 7, 100] {
+        let mut stopped = Vec::new();
+        let low = Limits { work, ..limits };
+        let result = with_named_input_limits_observed(
+            true,
+            &compiled,
+            input,
+            "observed",
+            "Article",
+            low,
+            |value| stopped.push(value),
+            |_, _, _, _| Err::<(), _>("must not reach callback".into()),
+        );
+        assert!(result.is_err());
+        assert_eq!(stopped.len(), 1);
+        assert_eq!(
+            stopped[0].outcome,
+            ParseObservationOutcome::Stopped(StopReason::WorkLimit)
+        );
+        assert_eq!(stopped[0].limits, low);
+        assert!(stopped[0].usage.work <= work);
+    }
+    let mut source_stop = None;
+    let result = with_named_input_limits_observed(
+        true,
+        &compiled,
+        input,
+        "observed",
+        "Article",
+        Limits {
+            source_bytes: 0,
+            ..limits
+        },
+        |value| source_stop = Some(value),
+        |_, _, _, _| Ok(()),
+    );
+    assert!(result.is_err());
+    assert_eq!(
+        source_stop.ok_or("missing source observation")?.outcome,
+        ParseObservationOutcome::Stopped(StopReason::SourceLimit)
+    );
+    let mut invalid = None;
+    let result = with_named_input_limits_observed(
+        true,
+        &compiled,
+        "not-an-article",
+        "observed",
+        "Article",
+        limits,
+        |value| invalid = Some(value),
+        |_, _, _, _| Ok(()),
+    );
+    assert!(result.is_err());
+    let invalid = invalid.ok_or("missing invalid observation")?;
+    assert_eq!(invalid.outcome, ParseObservationOutcome::Failed);
+    assert!(invalid.profile.is_some());
+    let mut broken = super::compiled()?;
+    broken.doc.package.schema.digest.0[0] ^= 1;
+    let mut setup_failure = None;
+    let result = with_named_input_limits_observed(
+        true,
+        &broken,
+        input,
+        "observed",
+        "Article",
+        limits,
+        |value| setup_failure = Some(value),
+        |_, _, _, _| Ok(()),
+    );
+    assert!(result.is_err());
+    let setup_failure = setup_failure.ok_or("missing setup failure")?;
+    assert_eq!(setup_failure.outcome, ParseObservationOutcome::Failed);
+    assert!(setup_failure.profile.is_none());
+    Ok(())
+}

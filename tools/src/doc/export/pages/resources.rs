@@ -1,4 +1,5 @@
 //! Explicit development-host phase limits and execution provenance.
+pub mod job;
 use nepl3_core::{
     budget::{Budget, Limits, Usage},
     source::Digest,
