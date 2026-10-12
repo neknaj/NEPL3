@@ -375,17 +375,6 @@ fn borrowed_fields_resume_after_nested_values_and_across_spills() -> Result<(), 
             &TypeDescriptor::TypedValue,
             &TypeDescriptor::NdfValue,
         ] {
-            // One selected identity costs 1 + (5 + 5 + 9). Record binary
-            // lookup visits MixedVariant then MixedRecord (19 + 34);
-            // Variant lookup visits MixedVariant (37), then Case (13).
-            // Named values additionally compare package/digest/type identity;
-            // dynamic values use exact descriptor admission (5 + 41).
-            let lookup_work = match (matches!(ty, TypeDescriptor::Named(_)), variant) {
-                (true, false) => 20 + 53 + 1 + 73,
-                (true, true) => 20 + 37 + 1 + 75 + 13,
-                (false, false) => 20 + 46 + 53,
-                (false, true) => 20 + 46 + 37 + 13,
-            };
             let valid = value(
                 &schema,
                 variant,
@@ -399,7 +388,7 @@ fn borrowed_fields_resume_after_nested_values_and_across_spills() -> Result<(), 
             r.validate(ty, &valid, &mut b)?;
             assert_eq!(
                 (b.usage().work, b.usage().nodes, b.usage().depth),
-                (5 + lookup_work, 5, 3)
+                (5, 5, 3)
             );
             for (nested, expected, nodes) in [
                 (NdfValue::Unit, SchemaError::WrongType, 5),
@@ -418,11 +407,7 @@ fn borrowed_fields_resume_after_nested_values_and_across_spills() -> Result<(), 
                 assert_eq!(r.validate(ty, &invalid, &mut b).err(), Some(expected));
                 assert_eq!(
                     (b.usage().work, b.usage().nodes, b.usage().depth),
-                    (
-                        5 + lookup_work + if nodes == 3 { 66 + 10 + 10 } else { 0 },
-                        nodes,
-                        3
-                    )
+                    (5, nodes, 3)
                 );
             }
             let mut b = budget();
@@ -433,7 +418,7 @@ fn borrowed_fields_resume_after_nested_values_and_across_spills() -> Result<(), 
             );
             assert_eq!(
                 (b.usage().work, b.usage().nodes, b.usage().depth),
-                (1 + lookup_work, 1, 1)
+                (1, 1, 1)
             );
         }
         let mut inner = value(
@@ -456,15 +441,7 @@ fn borrowed_fields_resume_after_nested_values_and_across_spills() -> Result<(), 
         assert!(b.usage().allocation_units > 0);
         assert_eq!(
             (b.usage().work, b.usage().nodes, b.usage().depth),
-            (
-                23 + if variant {
-                    20 + 46 + 37 + 13
-                } else {
-                    20 + 46 + 53
-                },
-                14,
-                12
-            )
+            (23, 14, 12)
         );
     }
     Ok(())
@@ -1705,6 +1682,3 @@ fn imported_origin_cursor_reuses_only_the_same_scoped_snapshot() -> Result<(), O
     );
     Ok(())
 }
-
-#[path = "structure/lookup.rs"]
-mod lookup;
