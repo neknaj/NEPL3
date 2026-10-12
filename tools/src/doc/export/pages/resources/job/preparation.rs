@@ -1,6 +1,7 @@
 //! In-memory page preparation checkpoints. Prepared is not cross-page
 //! validation, rendering, publication, or persistence across process exit.
 //! Setup, retained host containers and I/O are outside measured phase usage.
+pub mod rendering;
 use super::{
     Attempt, Cancelled, Limits, Meter, Paused, Running, StopReason, Usage, covers, remaining,
 };
@@ -70,7 +71,7 @@ pub struct RejectedResume<'a> {
 }
 pub struct PreparedPages<'a> {
     data: Data<'a>,
-    usage: Usage,
+    account: Running,
 }
 pub struct CancelledPreparation {
     pub accounting: Cancelled,
@@ -197,10 +198,7 @@ impl<'a> Preparation<'a> {
                 }
             }
         }
-        Progress::Prepared(PreparedPages {
-            data,
-            usage: account.usage(),
-        })
+        Progress::Prepared(PreparedPages { data, account })
     }
     pub fn cancel(self) -> CancelledPreparation {
         CancelledPreparation {
@@ -261,7 +259,7 @@ impl PreparedPages<'_> {
         self.data.prepared.len()
     }
     pub fn usage(&self) -> Usage {
-        self.usage
+        self.account.usage()
     }
     pub fn attempts(&self) -> &[PageAttempt] {
         &self.data.attempts

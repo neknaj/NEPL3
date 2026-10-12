@@ -2,6 +2,7 @@
 //! Domain constraint IDs remain obligations for the domain checker.
 pub mod foundation;
 mod frontier;
+mod lookup;
 mod siblings;
 use crate::{
     budget::{Budget, Resource, StopReason},
@@ -559,22 +560,16 @@ impl SchemaRegistry {
             crate::value::TypedValue::Record(v) => (&v.schema, &v.kind),
             crate::value::TypedValue::Variant(v) => (&v.schema, &v.type_name),
         };
-        let descriptor = self.descriptor(schema).ok_or(SchemaError::UnknownSchema)?;
-        let definition = descriptor
-            .types
-            .iter()
-            .find(|ty| &ty.name == name)
-            .ok_or(SchemaError::UnknownType)?;
+        let descriptor = self
+            .descriptor_with_budget(schema, budget)?
+            .ok_or(SchemaError::UnknownSchema)?;
+        let definition = Self::named_definition(descriptor, name, budget)?;
         let (fields, values) = match (&definition.shape, value) {
             (TypeShape::Record { fields }, crate::value::TypedValue::Record(v)) => {
                 (fields, &v.fields)
             }
             (TypeShape::Variant { variants }, crate::value::TypedValue::Variant(v)) => (
-                &variants
-                    .iter()
-                    .find(|variant| variant.name == v.variant)
-                    .ok_or(SchemaError::UnknownVariant)?
-                    .fields,
+                &Self::variant_definition(variants, &v.variant, budget)?.fields,
                 &v.fields,
             ),
             _ => return Err(SchemaError::WrongType),
@@ -648,26 +643,21 @@ impl SchemaRegistry {
     fn fields_for<'a>(
         &'a self,
         value: &'a NdfValue,
+        budget: &mut Budget,
     ) -> Result<(&'a [FieldDescriptor], &'a [NdfValue]), SchemaError> {
         let (schema, name) = match value {
             NdfValue::Record(v) => (&v.schema, &v.kind),
             NdfValue::Variant(v) => (&v.schema, &v.type_name),
             _ => return Err(SchemaError::WrongType),
         };
-        let descriptor = self.descriptor(schema).ok_or(SchemaError::UnknownSchema)?;
-        let definition = descriptor
-            .types
-            .iter()
-            .find(|t| &t.name == name)
-            .ok_or(SchemaError::UnknownType)?;
+        let descriptor = self
+            .descriptor_with_budget(schema, budget)?
+            .ok_or(SchemaError::UnknownSchema)?;
+        let definition = Self::named_definition(descriptor, name, budget)?;
         match (&definition.shape, value) {
             (TypeShape::Record { fields }, NdfValue::Record(v)) => Ok((fields, &v.fields)),
             (TypeShape::Variant { variants }, NdfValue::Variant(v)) => Ok((
-                &variants
-                    .iter()
-                    .find(|variant| variant.name == v.variant)
-                    .ok_or(SchemaError::UnknownVariant)?
-                    .fields,
+                &Self::variant_definition(variants, &v.variant, budget)?.fields,
                 &v.fields,
             )),
             _ => Err(SchemaError::WrongType),
@@ -694,10 +684,14 @@ impl SchemaRegistry {
                     depth = depth.checked_add(1).ok_or(StopReason::DepthLimit)?;
                 }
                 TypeDescriptor::Named(reference) => {
-                    let schema = self
-                        .selected(&reference.package, reference.revision)
+                    let (_, descriptor) = self
+                        .selected_descriptor_with_budget(
+                            &reference.package,
+                            reference.revision,
+                            budget,
+                        )?
                         .ok_or(SchemaError::UnknownSchema)?;
-                    self.kind_id(schema, &reference.name)?;
+                    Self::named_definition(descriptor, &reference.name, budget)?;
                     return Ok(());
                 }
                 _ => return Ok(()),
@@ -787,6 +781,49 @@ impl SchemaRegistry {
             .ok_or(SchemaError::UnknownSchema)?;
         Ok(Self::named_definition_index(descriptor, name, budget)? as u64)
     }
+    // Registration normalizes these borrowed definition tables by name.
+    fn named_definition<'a>(
+        descriptor: &'a SchemaDescriptor,
+        name: &str,
+        budget: &mut Budget,
+    ) -> Result<&'a NamedType, SchemaError> {
+        let index = Self::named_definition_index(descriptor, name, budget)?;
+        Ok(&descriptor.types[index])
+    }
+    fn variant_definition<'a>(
+        variants: &'a [VariantDescriptor],
+        name: &str,
+        budget: &mut Budget,
+    ) -> Result<&'a VariantDescriptor, SchemaError> {
+        let (mut lo, mut hi) = (0, variants.len());
+        while lo < hi {
+            let mid = lo + (hi - lo) / 2;
+            let variant = &variants[mid];
+            match lookup::compare(variant.name.as_str(), name, budget)? {
+                core::cmp::Ordering::Less => lo = mid + 1,
+                core::cmp::Ordering::Greater => hi = mid,
+                core::cmp::Ordering::Equal => return Ok(variant),
+            }
+        }
+        Err(SchemaError::UnknownVariant)
+    }
+    fn named_identity_matches(
+        selected: &SchemaRef,
+        expected_name: &str,
+        actual: &SchemaRef,
+        actual_name: &str,
+        budget: &mut Budget,
+    ) -> Result<bool, StopReason> {
+        budget.charge(
+            Resource::Work,
+            (selected.package.len() as u64)
+                .saturating_add(actual.package.len() as u64)
+                .saturating_add(expected_name.len() as u64)
+                .saturating_add(actual_name.len() as u64)
+                .saturating_add(41),
+        )?;
+        Ok(selected == actual && expected_name == actual_name)
+    }
     fn named_definition_index(
         descriptor: &SchemaDescriptor,
         name: &str,
@@ -796,13 +833,7 @@ impl SchemaRegistry {
         while lo < hi {
             let mid = lo + (hi - lo) / 2;
             let definition = &descriptor.types[mid];
-            budget.charge(
-                Resource::Work,
-                (definition.name.len() as u64)
-                    .saturating_add(name.len() as u64)
-                    .saturating_add(1),
-            )?;
-            match definition.name.as_str().cmp(name) {
+            match lookup::compare(definition.name.as_str(), name, budget)? {
                 core::cmp::Ordering::Less => lo = mid + 1,
                 core::cmp::Ordering::Greater => hi = mid,
                 core::cmp::Ordering::Equal => return Ok(mid),
@@ -879,8 +910,8 @@ impl SchemaRegistry {
     /// Traversal time is linear in visited values and admitted siblings, plus
     /// descriptor lookup and string-comparison costs. All siblings are charged
     /// before the first child is visited, including on an early child error.
-    /// Registry/type/variant lookups are currently
-    /// linear scans. Pending storage is proportional to the maximum number of
+    /// Registry lookup scans selected identities; normalized type/variant
+    /// tables use metered binary search. Pending storage is proportional to the maximum number of
     /// simultaneously pending branching ancestors plus a constant current frame,
     /// with eight inline frames and budgeted heap overflow;
     /// values and descriptors are borrowed. These are implementation details,
@@ -915,6 +946,7 @@ impl SchemaRegistry {
         budget.charge(Resource::Work, 1)?;
         let mut pending =
             frontier::Frontier::new(Siblings::uniform(expected, core::slice::from_ref(value), 1));
+        let mut definitions = lookup::Definitions::new(self);
         while let Some(group) = pending.pop() {
             let Some((ty, value, depth, rest)) = group.split_first()? else {
                 continue;
@@ -927,7 +959,6 @@ impl SchemaRegistry {
             budget.charge(Resource::Nodes, 1)?;
             budget.observe_depth(depth)?;
             let next_depth = depth.checked_add(1).ok_or(StopReason::DepthLimit)?;
-            let mut push = |group| siblings::enqueue(&mut pending, group, budget);
             match (ty, value) {
                 (
                     TypeDescriptor::NdfValue
@@ -955,17 +986,29 @@ impl SchemaRegistry {
                         return Err(SchemaError::WrongType);
                     }
                     match value {
-                        NdfValue::Some(value) => push(Siblings::uniform(
-                            ty,
-                            core::slice::from_ref(value.as_ref()),
-                            next_depth,
-                        ))?,
+                        NdfValue::Some(value) => siblings::enqueue(
+                            &mut pending,
+                            Siblings::uniform(
+                                ty,
+                                core::slice::from_ref(value.as_ref()),
+                                next_depth,
+                            ),
+                            budget,
+                        )?,
                         NdfValue::List(values) => {
-                            push(Siblings::uniform(ty, values, next_depth))?;
+                            siblings::enqueue(
+                                &mut pending,
+                                Siblings::uniform(ty, values, next_depth),
+                                budget,
+                            )?;
                         }
                         NdfValue::Record(_) | NdfValue::Variant(_) => {
-                            let (fields, values) = self.fields_for(value)?;
-                            push(Siblings::fields(fields, values, next_depth)?)?;
+                            let (fields, values) = self.fields_for(value, budget)?;
+                            siblings::enqueue(
+                                &mut pending,
+                                Siblings::fields(fields, values, next_depth)?,
+                                budget,
+                            )?;
                         }
                         _ => {}
                     }
@@ -980,46 +1023,56 @@ impl SchemaRegistry {
                 (TypeDescriptor::Natural, NdfValue::Integer(number)) if !number.is_negative() => {}
                 (TypeDescriptor::Bytes32, NdfValue::Bytes(bytes)) if bytes.len() == 32 => {}
                 (TypeDescriptor::Option(_), NdfValue::None) => {}
-                (TypeDescriptor::Option(inner), NdfValue::Some(value)) => push(Siblings::uniform(
-                    inner,
-                    core::slice::from_ref(value.as_ref()),
-                    next_depth,
-                ))?,
+                (TypeDescriptor::Option(inner), NdfValue::Some(value)) => siblings::enqueue(
+                    &mut pending,
+                    Siblings::uniform(inner, core::slice::from_ref(value.as_ref()), next_depth),
+                    budget,
+                )?,
                 (TypeDescriptor::List(inner), NdfValue::List(values)) => {
-                    push(Siblings::uniform(inner, values, next_depth))?;
+                    siblings::enqueue(
+                        &mut pending,
+                        Siblings::uniform(inner, values, next_depth),
+                        budget,
+                    )?;
                 }
                 (TypeDescriptor::Named(name), value) => {
-                    let (reference, descriptor) = self
-                        .schemas
-                        .iter()
-                        .find(|(r, _)| r.package == name.package && r.revision == name.revision)
-                        .ok_or(SchemaError::UnknownSchema)?;
-                    let definition = descriptor
-                        .types
-                        .iter()
-                        .find(|t| t.name == name.name)
-                        .ok_or(SchemaError::UnknownType)?;
+                    let (reference, definition) = definitions.resolve(name, budget)?;
                     let (fields, values) = match (&definition.shape, value) {
-                        (TypeShape::Record { fields }, NdfValue::Record(record))
-                            if &record.schema == reference && record.kind == name.name =>
-                        {
+                        (TypeShape::Record { fields }, NdfValue::Record(record)) => {
+                            if !Self::named_identity_matches(
+                                reference,
+                                &name.name,
+                                &record.schema,
+                                &record.kind,
+                                budget,
+                            )? {
+                                return Err(SchemaError::WrongType);
+                            }
                             (fields, &record.fields)
                         }
-                        (TypeShape::Variant { variants }, NdfValue::Variant(variant))
-                            if &variant.schema == reference && variant.type_name == name.name =>
-                        {
+                        (TypeShape::Variant { variants }, NdfValue::Variant(variant)) => {
+                            if !Self::named_identity_matches(
+                                reference,
+                                &name.name,
+                                &variant.schema,
+                                &variant.type_name,
+                                budget,
+                            )? {
+                                return Err(SchemaError::WrongType);
+                            }
                             (
-                                &variants
-                                    .iter()
-                                    .find(|v| v.name == variant.variant)
-                                    .ok_or(SchemaError::UnknownVariant)?
+                                &Self::variant_definition(variants, &variant.variant, budget)?
                                     .fields,
                                 &variant.fields,
                             )
                         }
                         _ => return Err(SchemaError::WrongType),
                     };
-                    push(Siblings::fields(fields, values, next_depth)?)?;
+                    siblings::enqueue(
+                        &mut pending,
+                        Siblings::fields(fields, values, next_depth)?,
+                        budget,
+                    )?;
                 }
                 _ => return Err(SchemaError::WrongType),
             }
