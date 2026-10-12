@@ -1,3 +1,4 @@
+mod graph;
 use super::*;
 use alloc::vec::Vec;
 use nepl3_core::{
@@ -30,7 +31,28 @@ pub(super) fn check(
     budget: &mut Budget,
     subject: &mut Option<PackageSubject>,
 ) -> Result<(), PackageError> {
-    check_graph(package, budget, subject)?;
+    let mut at = None;
+    let result = graph::Cache::new(package, budget, &mut at);
+    let mut cache = result.inspect_err(|_| {
+        *subject = Some(PackageSubject::Binding {
+            owner: None,
+            binding: at,
+        });
+    })?;
+    graph::walk(
+        package,
+        (0..package.bindings.len()).map(|i| BindingId(i as u64)),
+        &mut cache,
+        budget,
+        &mut at,
+        |_, _| Ok(()),
+    )
+    .inspect_err(|_| {
+        *subject = Some(PackageSubject::Binding {
+            owner: None,
+            binding: at,
+        });
+    })?;
     for owner in (0..package.forms.len())
         .map(|i| BindingOwner::Form(i as u64))
         .chain((0..package.leaves.len()).map(|i| BindingOwner::Leaf(i as u64)))
@@ -39,7 +61,9 @@ pub(super) fn check(
             owner: Some(owner),
             binding: None,
         });
-        if let Err(failure) = package.check_binding_owner(owner, registry, budget) {
+        if let Err(failure) =
+            package.check_binding_owner_cached(owner, registry, budget, Some(&mut cache))
+        {
             *subject = Some(PackageSubject::Binding {
                 owner: Some(owner),
                 binding: failure.binding,
@@ -49,104 +73,6 @@ pub(super) fn check(
     }
     Ok(())
 }
-/// A completed node retains its maximum descendant depth. Reusing only a
-/// visited bit would hide deep paths when a shared child was checked earlier.
-#[derive(Clone, Copy)]
-enum GraphState {
-    Unseen,
-    Active,
-    Complete(u64),
-}
-struct GraphFrame {
-    index: usize,
-    next_child: usize,
-    height: u64,
-}
-fn check_graph(
-    package: &LanguagePackage,
-    budget: &mut Budget,
-    subject: &mut Option<PackageSubject>,
-) -> Result<(), PackageError> {
-    // Validate every declaration, including unused nodes. Each arena node and
-    // direct edge is visited once; repeated paths are never expanded.
-    let mut states = Vec::new();
-    for index in 0..package.bindings.len() {
-        *subject = Some(PackageSubject::Binding {
-            owner: None,
-            binding: Some(BindingId(index as u64)),
-        });
-        budget.charge(Resource::Work, 1)?;
-        push(&mut states, GraphState::Unseen, budget)?;
-    }
-    let mut stack: Vec<GraphFrame> = Vec::new();
-    for root in 0..package.bindings.len() {
-        let mut pending = Some(BindingId(root as u64));
-        loop {
-            if let Some(id) = pending.take() {
-                *subject = Some(PackageSubject::Binding {
-                    owner: None,
-                    binding: Some(id),
-                });
-                budget.charge(Resource::Work, 1)?;
-                budget.observe_depth(stack.len() as u64 + 1)?;
-                let index = usize::try_from(id.0)
-                    .ok()
-                    .filter(|i| *i < states.len())
-                    .ok_or(PackageError::InvalidBinding)?;
-                match states[index] {
-                    GraphState::Active => return Err(PackageError::DirectCycle),
-                    // Admit a cached subtree atomically. A depth stop names this
-                    // entry, not a descendant that was never traversed here.
-                    GraphState::Complete(height) => {
-                        budget.observe_depth(stack.len() as u64 + height)?;
-                        if let Some(parent) = stack.last_mut() {
-                            parent.height = parent.height.max(height + 1);
-                        }
-                    }
-                    GraphState::Unseen => {
-                        push(
-                            &mut stack,
-                            GraphFrame {
-                                index,
-                                next_child: 0,
-                                height: 1,
-                            },
-                            budget,
-                        )?;
-                        states[index] = GraphState::Active;
-                    }
-                }
-            }
-            let Some(frame) = stack.last_mut() else {
-                break;
-            };
-            *subject = Some(PackageSubject::Binding {
-                owner: None,
-                binding: Some(BindingId(frame.index as u64)),
-            });
-            budget.charge(Resource::Work, 1)?;
-            let child = match &package.bindings[frame.index] {
-                Binding::Group(children) | Binding::Scope(children) => {
-                    children.get(frame.next_child).copied()
-                }
-                _ => None,
-            };
-            if let Some(child) = child {
-                frame.next_child += 1;
-                pending = Some(child);
-            } else {
-                let height = frame.height;
-                states[frame.index] = GraphState::Complete(height);
-                stack.pop();
-                if let Some(parent) = stack.last_mut() {
-                    parent.height = parent.height.max(height + 1);
-                }
-            }
-        }
-    }
-    Ok(())
-}
-
 /// The concrete declaration whose existing binding rules are being checked.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BindingOwner {
@@ -193,11 +119,23 @@ impl LanguagePackage {
     }
     /// Run the same binding validator used by `check`, retaining the failing
     /// binding arena index so source compilers can attribute their own AST.
+    /// Only the selected root is traversed. Shared descendants are validated
+    /// once for this owner; active cycles return DirectCycle and the common
+    /// caller-relative depth ceiling applies even without prior package checks.
     pub fn check_binding_owner(
         &self,
         owner: BindingOwner,
         registry: &SchemaRegistry,
         budget: &mut Budget,
+    ) -> Result<(), BindingFailure> {
+        self.check_binding_owner_cached(owner, registry, budget, None)
+    }
+    fn check_binding_owner_cached(
+        &self,
+        owner: BindingOwner,
+        registry: &SchemaRegistry,
+        budget: &mut Budget,
+        cache: Option<&mut graph::Cache>,
     ) -> Result<(), BindingFailure> {
         let selected = match owner {
             BindingOwner::Form(index) => self
@@ -231,7 +169,10 @@ impl LanguagePackage {
             error: PackageError::InvalidBinding,
             binding: None,
         })?;
-        detailed(self, selected, registry, budget)
+        match cache {
+            Some(cache) => detailed_cached(self, selected, registry, budget, cache),
+            None => detailed(self, selected, registry, budget),
+        }
     }
 }
 fn detailed(
@@ -241,7 +182,19 @@ fn detailed(
     budget: &mut Budget,
 ) -> Result<(), BindingFailure> {
     let mut binding = None;
-    owner_inner(package, owner, registry, budget, &mut binding)
+    let mut cache = graph::Cache::new(package, budget, &mut binding)
+        .map_err(|error| BindingFailure { error, binding })?;
+    detailed_cached(package, owner, registry, budget, &mut cache)
+}
+fn detailed_cached(
+    package: &LanguagePackage,
+    owner: Owner<'_>,
+    registry: &SchemaRegistry,
+    budget: &mut Budget,
+    cache: &mut graph::Cache,
+) -> Result<(), BindingFailure> {
+    let mut binding = None;
+    owner_inner(package, owner, registry, budget, &mut binding, cache)
         .map_err(|error| BindingFailure { error, binding })
 }
 pub(super) fn owner(
@@ -273,6 +226,7 @@ fn owner_inner(
     registry: &SchemaRegistry,
     budget: &mut Budget,
     at: &mut Option<BindingId>,
+    cache: &mut graph::Cache,
 ) -> Result<(), PackageError> {
     let Owner {
         fields,
@@ -283,76 +237,72 @@ fn owner_inner(
     } = owner;
     budget.charge(Resource::AllocationUnits, fields.len() as u64)?;
     let mut visited = alloc::vec![false;fields.len()];
-    let mut pending = Vec::new();
-    push(&mut pending, root, budget)?;
-    while let Some(id) = pending.pop() {
-        *at = Some(id);
-        budget.charge(Resource::Work, 1)?;
-        let binding = usize::try_from(id.0)
-            .ok()
-            .and_then(|i| package.bindings.get(i))
-            .ok_or(PackageError::InvalidBinding)?;
-        match binding {
-            Binding::None => {}
-            Binding::Group(children) | Binding::Scope(children) => {
-                for child in children.iter().rev() {
-                    push(&mut pending, *child, budget)?;
+    graph::walk(
+        package,
+        core::iter::once(root),
+        cache,
+        budget,
+        at,
+        |binding, budget| {
+            match binding {
+                Binding::None => {}
+                Binding::Group(_) | Binding::Scope(_) => {}
+                Binding::Visit(name) | Binding::Import(name) | Binding::Propagate(name) => {
+                    let (i, _) = field(fields, name, budget)?;
+                    visited[i] = true;
                 }
-            }
-            Binding::Visit(name) | Binding::Import(name) | Binding::Propagate(name) => {
-                let (i, _) = field(fields, name, budget)?;
-                visited[i] = true;
-            }
-            Binding::Bind { namespace, name }
-            | Binding::Reference { namespace, name }
-            | Binding::Export { namespace, name } => {
-                budget.charge(Resource::Work, package.namespaces.len() as u64 + 1)?;
-                if !package.namespaces.iter().any(|v| &v.name == namespace) {
-                    return Err(PackageError::MissingNamespace);
-                }
-                match name {
-                    NameSelector::SelfValue => {
-                        if self_type != Some(&TypeDescriptor::Text) {
-                            return Err(PackageError::InvalidBinding);
+                Binding::Bind { namespace, name }
+                | Binding::Reference { namespace, name }
+                | Binding::Export { namespace, name } => {
+                    budget.charge(Resource::Work, package.namespaces.len() as u64 + 1)?;
+                    if !package.namespaces.iter().any(|v| &v.name == namespace) {
+                        return Err(PackageError::MissingNamespace);
+                    }
+                    match name {
+                        NameSelector::SelfValue => {
+                            if self_type != Some(&TypeDescriptor::Text) {
+                                return Err(PackageError::InvalidBinding);
+                            }
+                        }
+                        NameSelector::Field(name) => {
+                            let (i, field) = field(fields, name, budget)?;
+                            if !super::shape::name_read(package, field.read, budget)? {
+                                return Err(PackageError::InvalidBinding);
+                            }
+                            visited[i] = true;
                         }
                     }
-                    NameSelector::Field(name) => {
-                        let (i, field) = field(fields, name, budget)?;
-                        if !super::shape::name_read(package, field.read, budget)? {
-                            return Err(PackageError::InvalidBinding);
-                        }
-                        visited[i] = true;
+                }
+                Binding::Sequential { declarations, body }
+                | Binding::Recursive { declarations, body } => {
+                    let (i, decl) = field(fields, declarations, budget)?;
+                    let (j, _) = field(fields, body, budget)?;
+                    if i == j
+                        || !matches!(
+                            super::shape::terminal(package, decl.read, budget)?,
+                            ReadSpec::ListOf { .. }
+                        )
+                    {
+                        return Err(PackageError::InvalidBinding);
                     }
+                    visited[i] = true;
+                    visited[j] = true;
+                }
+                Binding::Custom(operation) => {
+                    budget.charge(Resource::Work, package.extensions.len() as u64 + 1)?;
+                    if !package
+                        .extensions
+                        .iter()
+                        .any(|v| &v.operation == operation && v.signature == "facts/v1")
+                    {
+                        return Err(PackageError::MissingExtension);
+                    }
+                    visited.fill(true);
                 }
             }
-            Binding::Sequential { declarations, body }
-            | Binding::Recursive { declarations, body } => {
-                let (i, decl) = field(fields, declarations, budget)?;
-                let (j, _) = field(fields, body, budget)?;
-                if i == j
-                    || !matches!(
-                        super::shape::terminal(package, decl.read, budget)?,
-                        ReadSpec::ListOf { .. }
-                    )
-                {
-                    return Err(PackageError::InvalidBinding);
-                }
-                visited[i] = true;
-                visited[j] = true;
-            }
-            Binding::Custom(operation) => {
-                budget.charge(Resource::Work, package.extensions.len() as u64 + 1)?;
-                if !package
-                    .extensions
-                    .iter()
-                    .any(|v| &v.operation == operation && v.signature == "facts/v1")
-                {
-                    return Err(PackageError::MissingExtension);
-                }
-                visited.fill(true);
-            }
-        }
-    }
+            Ok(())
+        },
+    )?;
     *at = None;
     for (i, field) in fields.iter().enumerate() {
         if !visited[i] && !super::shape::literal(package, field.read, budget)? {

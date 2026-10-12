@@ -184,3 +184,93 @@ fn cached_depth_stop_names_the_admitted_entry_without_fabricated_traversal() -> 
     assert_eq!(b.usage().depth, 3);
     Ok(())
 }
+
+#[test]
+fn used_shared_binding_dag_does_not_expand_owner_validation_paths() -> TestResult {
+    let (mut package, registry) = shared(18)?;
+    let (original, _) = fixture()?;
+    package.leaves = original.leaves;
+    package.leaves[0].binding = BindingId(17);
+    let mut b = Budget::new(Limits {
+        work: 100_000,
+        ..budget().limits()
+    });
+    package
+        .check_binding_owner(BindingOwner::Leaf(0), &registry, &mut b)
+        .map_err(|e| format!("{e:?}"))?;
+    let mut full = Budget::new(Limits {
+        work: 100_000,
+        ..budget().limits()
+    });
+    package
+        .check_detailed(&registry, &mut full)
+        .map_err(|e| format!("{e:?}"))?;
+    Ok(())
+}
+
+#[test]
+fn standalone_owner_rejects_active_cycles_but_ignores_unreachable_invalid_edges() -> TestResult {
+    let (mut package, registry) = fixture()?;
+    package
+        .bindings
+        .push(Binding::Group(vec![BindingId(u64::MAX)]));
+    package
+        .check_binding_owner(BindingOwner::Leaf(0), &registry, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    package.bindings[3] = Binding::Scope(vec![BindingId(3)]);
+    let Err(failure) = package.check_binding_owner(BindingOwner::Leaf(0), &registry, &mut budget())
+    else {
+        return Err("cycle accepted".into());
+    };
+    assert_eq!(failure.error, PackageError::DirectCycle);
+    assert_eq!(failure.binding, Some(BindingId(3)));
+    Ok(())
+}
+
+#[test]
+fn package_owner_cache_does_not_reuse_previous_owner_semantics() -> TestResult {
+    let (mut package, registry) = fixture()?;
+    let mut second = package.forms[0].clone();
+    second.spelling = "other".into();
+    second.fields[0].read = ReadSpecId(1); // Local Expr cannot provide a name.
+    package.forms.push(second);
+    let Err(failure) = package.check_detailed(&registry, &mut budget()) else {
+        return Err("invalid second owner accepted".into());
+    };
+    assert_eq!(failure.error, PackageError::InvalidBinding);
+    assert_eq!(
+        failure.subject,
+        Some(PackageSubject::Binding {
+            owner: Some(BindingOwner::Form(1)),
+            binding: Some(BindingId(0))
+        })
+    );
+    Ok(())
+}
+
+#[test]
+fn standalone_owner_observes_caller_depth_and_preserves_ordered_failure() -> TestResult {
+    use nepl3_core::budget::StopReason;
+    let (mut package, registry) = fixture()?;
+    package.bindings[3] = Binding::Group(vec![BindingId(0), BindingId(u64::MAX)]);
+    let Err(failure) = package.check_binding_owner(BindingOwner::Leaf(0), &registry, &mut budget())
+    else {
+        return Err("missing field accepted".into());
+    };
+    assert_eq!(failure.error, PackageError::InvalidSelector);
+    assert_eq!(failure.binding, Some(BindingId(0)));
+    package.bindings[0] = Binding::None;
+    package.bindings[3] = Binding::Group(vec![BindingId(0), BindingId(0)]);
+    let mut b = Budget::new(Limits {
+        depth: 3,
+        ..budget().limits()
+    });
+    let result = b.with_depth_at_least(2, |b| {
+        package
+            .check_binding_owner(BindingOwner::Leaf(0), &registry, b)
+            .map_err(|f| f.error)
+    });
+    assert_eq!(result, Err(PackageError::Stopped(StopReason::DepthLimit)));
+    assert_eq!(b.current_depth(), 0);
+    Ok(())
+}
