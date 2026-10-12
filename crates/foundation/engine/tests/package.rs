@@ -9,6 +9,8 @@ use nepl3_reader::{
     plan::ReaderPlan,
     tokenizer::{ReaderMode, TakeRule, TokenReader},
 };
+#[path = "package/extension_validation.rs"]
+mod extension_validation;
 #[path = "package/head.rs"]
 mod head;
 #[path = "package/portable.rs"]
