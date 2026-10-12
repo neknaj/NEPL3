@@ -5,6 +5,7 @@ use nepl3_doc_core::pages::{FileBytes, PageDocument, PageFile, PageRegistration,
 use nepl3_doc_html::pages::{PagesHtmlRequest, render_pages_with_display};
 pub(crate) mod aliases;
 mod code;
+pub mod interactive;
 mod render;
 use serde::Deserialize;
 use std::{collections::BTreeMap, io::Write};
@@ -333,6 +334,25 @@ pub fn write_with_renderer(
     if output.exists() {
         return Err("output directory already exists".into());
     }
+    let loaded = load(manifest)?;
+    let generated = generate_selected(
+        &compiled()?,
+        &loaded.inputs,
+        &loaded.files,
+        loaded.phases,
+        &mut loaded.output.budget(),
+        &[],
+        renderer,
+    )?;
+    write_generated(generated, output)
+}
+struct LoadedManifest {
+    inputs: Vec<(Entry, String)>,
+    files: Vec<(Entry, Vec<u8>)>,
+    phases: resources::PhaseLimits,
+    output: resources::OperationLimits,
+}
+fn load(manifest: &Path) -> crate::Result<LoadedManifest> {
     let mut bytes = Vec::new();
     fs::File::open(manifest)?
         .take(65_537)
@@ -379,19 +399,15 @@ pub fn write_with_renderer(
         }
         resources.push((entry, content));
     }
-    let generated = generate_selected(
-        &compiled()?,
-        &inputs,
-        &resources,
-        resources::PhaseLimits {
+    Ok(LoadedManifest {
+        inputs,
+        files: resources,
+        phases: resources::PhaseLimits {
             parse: manifest_data.parse_limits.budget().limits(),
             lower: manifest_data.lower_limits.budget().limits(),
         },
-        &mut manifest_data.output_limits.budget(),
-        &[],
-        renderer,
-    )?;
-    write_generated(generated, output)
+        output: manifest_data.output_limits,
+    })
 }
 
 // Only call with the complete output of this module's checked generator.

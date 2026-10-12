@@ -205,7 +205,7 @@ fn add(a: Usage, b: Usage) -> Usage {
         events: a.events + b.events,
     }
 }
-fn covers(a: Limits, b: Limits) -> bool {
+pub(crate) fn covers(a: Limits, b: Limits) -> bool {
     a.source_bytes >= b.source_bytes
         && a.work >= b.work
         && a.depth >= b.depth

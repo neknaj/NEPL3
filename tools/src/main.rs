@@ -166,6 +166,35 @@ fn run() -> nepl3_tools::Result<()> {
             std::path::Path::new(output),
             renderer.parse()?,
         ),
+        ["doc-html", "retry-limits"] => nepl3_tools::doc::export::pages::interactive::defaults(),
+        [
+            "doc-html",
+            "pages",
+            "--interactive-limits",
+            limits,
+            manifest,
+            output,
+        ] => nepl3_tools::doc::export::pages::interactive::write(
+            std::path::Path::new(manifest),
+            std::path::Path::new(limits),
+            std::path::Path::new(output),
+            nepl3_tools::doc::export::MathRenderer::KaTeXPreferred,
+        ),
+        [
+            "doc-html",
+            "pages",
+            "--interactive-limits",
+            limits,
+            "--math-renderer",
+            renderer,
+            manifest,
+            output,
+        ] => nepl3_tools::doc::export::pages::interactive::write(
+            std::path::Path::new(manifest),
+            std::path::Path::new(limits),
+            std::path::Path::new(output),
+            renderer.parse()?,
+        ),
         ["doc-html", "pages", manifest, output] => nepl3_tools::doc::export::pages::write(
             std::path::Path::new(manifest),
             std::path::Path::new(output),
@@ -228,6 +257,10 @@ fn run() -> nepl3_tools::Result<()> {
         ["--help"] | ["-h"] => {
             println!("nepl3-tools signatures --check | signatures --write");
             println!("nepl3-tools site build <site-config.json> <new-output-directory>");
+            println!("nepl3-tools doc-html retry-limits");
+            println!(
+                "nepl3-tools doc-html pages --interactive-limits <limits.json> [--math-renderer katex-preferred|mathml-only] <manifest.json> <new-output-directory>"
+            );
             println!("nepl3-tools doc-canonical --check");
             println!(
                 "nepl3-tools doc-html export --limits <limits.json> [--css <external|inline>] [--math-renderer <katex-preferred|mathml-only>] <input.nepld> <new-output-directory>"

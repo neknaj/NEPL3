@@ -383,3 +383,119 @@ fn configurable_single_document_limits_cli() -> Result<(), Box<dyn std::error::E
     fs::remove_dir_all(root)?;
     Ok(())
 }
+
+#[test]
+fn interactive_limits_resume_real_cli_and_cancel_without_output()
+-> Result<(), Box<dyn std::error::Error>> {
+    use nepl3_tools::doc::export::pages::interactive::RetryLimits;
+    use std::{io::Write, process::Stdio};
+    let root =
+        std::env::temp_dir().join(format!("nepl3 interactive resume {}", std::process::id()));
+    fs::create_dir(&root)?;
+    let binary = env!("CARGO_BIN_EXE_nepl3-tools");
+    let defaults = Command::new(binary)
+        .args(["doc-html", "retry-limits"])
+        .output()?;
+    assert!(defaults.status.success());
+    let full: RetryLimits = serde_json::from_slice(&defaults.stdout)?;
+    let mut initial = full;
+    initial.parse_limits.work = 0;
+    initial.output_limits.work = 0;
+    let mut middle = full;
+    middle.output_limits.work = 0;
+    let mut smaller = initial;
+    smaller.job_limits.work -= 1;
+    for (name, value) in [
+        ("initial.json", initial),
+        ("middle.json", middle),
+        ("full.json", full),
+        ("smaller.json", smaller),
+    ] {
+        fs::write(root.join(name), serde_json::to_vec(&value)?)?;
+    }
+    fs::write(root.join("invalid.json"), b"{ invalid")?;
+    fs::write(
+        root.join("page.nepld"),
+        r#"article en "Retained" body cons paragraph cons "Unchanged source." nil nil"#,
+    )?;
+    let manifest = root.join("pages.json");
+    fs::write(
+        &manifest,
+        serde_json::to_vec(&serde_json::json!({"version":1,"pages":[
+            {"id":"page","source":"page.nepld","route":"page.html"}
+        ]}))?,
+    )?;
+    let cancelled = root.join("cancelled");
+    let result = Command::new(binary)
+        .args(["doc-html", "pages", "--interactive-limits"])
+        .arg(root.join("initial.json"))
+        .args(["--math-renderer", "mathml-only"])
+        .arg(&manifest)
+        .arg(&cancelled)
+        .stdin(Stdio::null())
+        .output()?;
+    assert!(!result.status.success());
+    assert!(!cancelled.exists());
+    assert!(String::from_utf8_lossy(&result.stderr).contains("Cancelled"));
+    let output = root.join("complete");
+    let mut child = Command::new(binary)
+        .args(["doc-html", "pages", "--interactive-limits"])
+        .arg(root.join("initial.json"))
+        .args(["--math-renderer", "mathml-only"])
+        .arg(&manifest)
+        .arg(&output)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()?;
+    let mut stdin = child.stdin.take().ok_or("stdin")?;
+    for name in ["smaller.json", "invalid.json", "middle.json", "full.json"] {
+        writeln!(stdin, "resume {}", root.join(name).display())?;
+    }
+    drop(stdin);
+    let result = child.wait_with_output()?;
+    assert!(
+        result.status.success(),
+        "{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    let messages = String::from_utf8_lossy(&result.stderr);
+    assert!(messages.contains("Paused preparation"));
+    assert!(messages.contains("Paused render"));
+    assert!(messages.contains("nondecreasing"));
+    assert!(messages.contains("Cannot read limits"));
+    assert!(output.join("page.html").is_file());
+    let receipt: serde_json::Value =
+        serde_json::from_slice(&fs::read(output.join("manifest.json"))?)?;
+    assert_eq!(
+        receipt["phase_execution"]["evidence"]["attempts"]
+            .as_array()
+            .ok_or("preparation attempts")?
+            .len(),
+        2
+    );
+    assert_eq!(
+        receipt["job_execution"]["render_attempts"]
+            .as_array()
+            .ok_or("render attempts")?
+            .len(),
+        2
+    );
+    assert_eq!(
+        receipt["job_execution"]["limits"]["work"],
+        full.job_limits.work
+    );
+    // A completed destination is never reused or overwritten.
+    let before = fs::read(output.join("manifest.json"))?;
+    let repeated = Command::new(binary)
+        .args(["doc-html", "pages", "--interactive-limits"])
+        .arg(root.join("full.json"))
+        .arg(&manifest)
+        .arg(&output)
+        .stdin(Stdio::null())
+        .output()?;
+    assert!(!repeated.status.success());
+    assert_eq!(before, fs::read(output.join("manifest.json"))?);
+    fs::remove_dir_all(root)?;
+    Ok(())
+}

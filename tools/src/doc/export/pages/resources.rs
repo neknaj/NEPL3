@@ -36,17 +36,7 @@ pub struct ExecutionLimits {
 
 impl ExecutionLimits {
     pub fn read(path: &std::path::Path) -> crate::Result<Self> {
-        use std::io::Read;
-        let mut bytes = Vec::new();
-        std::fs::File::open(path)?
-            .take(65_537)
-            .read_to_end(&mut bytes)?;
-        if bytes.len() > 65_536 {
-            return Err("limit configuration exceeds 65536 bytes".into());
-        }
-        let text = std::str::from_utf8(&bytes)?;
-        crate::repository::json::validate(text)?;
-        Ok(serde_json::from_str(text)?)
+        read_configuration(path)
     }
     pub fn phases(self) -> PhaseLimits {
         PhaseLimits {
@@ -54,6 +44,21 @@ impl ExecutionLimits {
             lower: self.lower_limits.budget().limits(),
         }
     }
+}
+pub(crate) fn read_configuration<T: serde::de::DeserializeOwned>(
+    path: &std::path::Path,
+) -> crate::Result<T> {
+    use std::io::Read;
+    let mut bytes = Vec::new();
+    std::fs::File::open(path)?
+        .take(65_537)
+        .read_to_end(&mut bytes)?;
+    if bytes.len() > 65_536 {
+        return Err("limit configuration exceeds 65536 bytes".into());
+    }
+    let text = std::str::from_utf8(&bytes)?;
+    crate::repository::json::validate(text)?;
+    Ok(serde_json::from_str(text)?)
 }
 impl Default for OperationLimits {
     fn default() -> Self {

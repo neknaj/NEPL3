@@ -473,8 +473,18 @@ body
       cons paragraph
         cons "[準備済/じゅんびず]み[文書/ぶんしょ]からの[描画/びょうが]は、[既存/きそん]の[集合/しゅうごう]rendererを[借用/しゃくよう]されたPageSetとCode[証拠/しょうこ]に[適用/てきよう]する。[停止時/ていしじ]は[不完全/ふかんぜん]な[出力/しゅつりょく]を[破棄/はき]し、[再開時/さいかいじ]に[描画/びょうが]を[再試行/さいしこう]するが、[準備済/じゅんびず]みページを[再解析/さいかいせき]しない。"
         cons "[初回描画前/しょかいびょうがまえ]に[選択/せんたく]したrendererは[再開/さいかい]で[変更/へんこう]しない。[全体/ぜんたい]の[参照検証/さんしょうけんしょう]・[描画/びょうが]・[直列化/ちょくれつか]の[成功後/せいこうご]だけにGeneratedPagesを[返/かえ]す。[準備完了/じゅんびかんりょう]だけでは[全体/ぜんたい]の[妥当性/だとうせい]を[主張/しゅちょう]しない。"
-        cons "[現段階/げんだんかい]の[再開/さいかい]entryは[文書/ぶんしょ]ページのみを[受/う]け[取/と]り、[登録/とうろく]fileと[互換/ごかん]aliasの[引数/ひきすう]を[持/も]たない。CLIの[再開操作/さいかいそうさ]・process[終了後/しゅうりょうご]の[永続復旧/えいぞくふっきゅう]・[書込/かきこ]み[途中/とちゅう]の[再開/さいかい]は[未対応/みたいおう]である。"
+        cons "[現段階/げんだんかい]の[再開/さいかい]entryは[文書/ぶんしょ]ページのみを[受/う]け[取/と]り、[登録/とうろく]fileと[互換/ごかん]aliasの[引数/ひきすう]を[持/も]たない。process[終了後/しゅうりょうご]の[永続復旧/えいぞくふっきゅう]・[書込/かきこ]み[途中/とちゅう]の[再開/さいかい]は[未対応/みたいおう]である。"
         cons "[失敗/しっぱい]・cancelも[試行/しこう]の[要求上限/ようきゅうじょうげん]・[実効上限/じっこうじょうげん]・usage・[停止理由/ていしりゆう]を[残/のこ]す。hostの[保持/ほじ]container・receipt JSON・KaTeX[内部/ないぶ]・I/Oは[論理/ろんり]ledgerの[計測外/けいそくがい]として[区別/くべつ]する。"
+        nil
+      cons paragraph
+        cons sentence cons code "doc-html retry-limits" cons text " はRetryLimitsのJSONをstdoutへ" cons ruby text "出力" text "しゅつりょく" cons text "する。" nil
+        cons sentence cons code "doc-html pages --interactive-limits limits.json --math-renderer mathml-only pages.json new-output" cons text " は、" cons ruby text "同一" text "どういつ" cons text "processでの" cons ruby text "再開" text "さいかい" cons text "を" cons ruby text "明示選択" text "めいじせんたく" cons text "する。" nil
+        cons "math-rendererは[省略可能/しょうりゃくかのう]であり、[省略時/しょうりゃくじ]はKaTeXPreferredを[選択/せんたく]する。[通常/つうじょう]のpages entryは[対話入力/たいわにゅうりょく]を[待/ま]たない。"
+        cons "RetryLimitsはjob_limits・parse_limits・lower_limits・code_limits・output_limitsを[持/も]つ。[省略/しょうりゃく]した[組/くみ]は[一般/いっぱん]hostの[有限/ゆうげん]な[既定値/きていち]とし、[指定/してい]した[組/くみ]では8[資源/しげん]すべてを[記述/きじゅつ]する。null・[未知/みち]field・[重複/じゅうふく]field・[負数/ふすう]は[拒否/きょひ]し、[設定/せってい]fileは65536byteまでとする。"
+        cons "[対話/たいわ]entryの[上限/じょうげん]はRetryLimitsを[正本/せいほん]とし、pages manifestのparse_limits・lower_limits・output_limitsを[併用/へいよう]しない。CI[用設定/ようせってい]への[自動切替/じどうきりかえ]や[自動増額/じどうぞうがく]は[行/おこな]わない。"
+        cons sentence cons ruby text "停止時" text "ていしじ" cons text "はstderrへ" cons ruby text "理由" text "りゆう" cons text "と" cons ruby text "累積" text "るいせき" cons text "usageを" cons ruby text "示" text "しめ" cons text "し、stdinの " cons code "resume <limits.json>" cons text " で" cons ruby text "新" text "あたら" cons text "しい" cons ruby text "設定" text "せってい" cons text "を" cons ruby text "読" text "よ" cons text "み、" cons code "cancel" cons text " またはEOFで" cons ruby text "終了" text "しゅうりょう" cons text "する。" nil
+        cons "[不正/ふせい]な[設定/せってい]fileや[旧設定/きゅうせってい]のどれかを[下回/したまわ]る[上限/じょうげん]は[拒否/きょひ]して[停止状態/ていしじょうたい]を[維持/いじ]する。[命令/めいれい]は1[行/ぎょう]4096byteまでとし、[超過/ちょうか]やI/O[失敗/しっぱい]は[記録/きろく]を[伴/ともな]う[失敗/しっぱい]として[終了/しゅうりょう]する。"
+        cons "[再開/さいかい]で[読/よ]み[直/なお]すのは[指定/してい]した[上限/じょうげん]fileだけである。[文書/ぶんしょ]・manifest・renderer・[出力先/しゅつりょくさき]は[開始時/かいしじ]の[値/あたい]を[保持/ほじ]し、[生成完了前/せいせいかんりょうまえ]に[出力/しゅつりょく]directoryを[作/つく]らない。[既存/きそん]の[出力先/しゅつりょくさき]は[上書/うわが]きしない。"
         nil
       cons paragraph
         cons "[再開/さいかい]receiptのJ(x)はUTF-8のcompact JSONとし、object keyを[辞書順/じしょじゅん]、arrayを[記録順/きろくじゅん]で[直列化/ちょくれつか]する。[整数/せいすう]は10[進数/しんすう]、[文字列/もじれつ]はJSON escapeを[用/もち]い、[余分/よぶん]な[空白/くうはく]を[加/くわ]えない。[現在/げんざい]のserde_json::to_vecの[出力/しゅつりょく]を[規範/きはん]とする。"
