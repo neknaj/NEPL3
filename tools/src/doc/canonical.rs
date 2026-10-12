@@ -77,6 +77,11 @@ fn portable_path(name: &str) -> bool {
 #[serde(deny_unknown_fields)]
 pub struct Registry {
     pub version: u32,
+    /// Per-page parse and lower allowances, selected before starting work.
+    #[serde(default)]
+    pub parse_limits: super::export::pages::resources::OperationLimits,
+    #[serde(default)]
+    pub lower_limits: super::export::pages::resources::OperationLimits,
     pub pages: Vec<Page>,
     /// Passive Markdown or explicitly scoped JSON destinations, or static SVG
     /// files in an all-footnotes batch. None becomes a semantic Doc page.
@@ -88,6 +93,15 @@ pub struct Registry {
     /// Separate HTML output allowance, selected before generating the PageSet.
     #[serde(default)]
     pub html_output_limits: super::export::pages::resources::OutputLimits,
+}
+
+impl Registry {
+    fn phases(&self) -> super::export::pages::resources::PhaseLimits {
+        super::export::pages::resources::PhaseLimits {
+            parse: self.parse_limits.budget().limits(),
+            lower: self.lower_limits.budget().limits(),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -318,6 +332,7 @@ fn parse_registry(raw: &[u8]) -> Result<Registry> {
 pub fn check(root: &Path, manifest: &str) -> Result<()> {
     let raw = bounded(root, manifest, MAX_REGISTRY)?;
     let registry = parse_registry(&raw)?;
+    let phases = registry.phases();
     // Keep the existing per-page operation and memory policy for old-only
     // registries. A page-context profile explicitly opts into the batch limit.
     if registry.pages.iter().all(|p| p.renderer == RENDERER) {
@@ -335,14 +350,16 @@ pub fn check(root: &Path, manifest: &str) -> Result<()> {
                 &mut budget,
             )
             .map_err(super::source::err)?;
-            let expected = host::generate_with_budget(
+            let expected = host::generate_with_phase_limits(
                 &compiled,
                 &page.source,
                 std::str::from_utf8(&source)?,
                 &aliases,
                 Some(&href),
                 &mut budget,
-            )?;
+                phases,
+            )?
+            .0;
             if bounded(root, &page.projection, 2_097_152)? != expected.as_bytes() {
                 return Err(format!(
                     "stale generated Markdown: {} (edit {})",
@@ -430,6 +447,7 @@ pub(crate) fn generate_html_with_projections(
     projections: &[references::Projection],
 ) -> Result<super::export::pages::GeneratedPages> {
     let registry = load(root, manifest)?;
+    let phases = registry.phases();
     if registry
         .pages
         .iter()
@@ -476,7 +494,7 @@ pub(crate) fn generate_html_with_projections(
         &super::source::compiled()?,
         &inputs,
         &resources,
-        super::export::pages::resources::PhaseLimits::default(),
+        phases,
         &mut output_budget,
         &aliases,
     )?;

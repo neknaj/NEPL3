@@ -1,6 +1,7 @@
 //! File and compilation adapter for the explicitly selected viewing profile.
 use super::*;
-use crate::doc::source::{Compiled, budget, err, with_input_route};
+use crate::doc::export::pages::resources::PhaseLimits;
+use crate::doc::source::{Compiled, budget, err, with_named_input_limits};
 use nepl3_core::source::{SourceAdmission, SourceStore};
 use nepl3_doc_core::{check::Category, lower};
 use nepl3_wire::foundation::FoundationCodec;
@@ -26,7 +27,14 @@ fn from_source_with_budget(
     aliases: &[Alias],
     output_budget: &mut Budget,
 ) -> Result<Artifact, String> {
-    from_source_profile(compiled, source, aliases, output_budget, NotesMode::Inline)
+    from_source_profile(
+        compiled,
+        source,
+        aliases,
+        output_budget,
+        NotesMode::Inline,
+        PhaseLimits::default(),
+    )
 }
 pub fn from_source_footnotes(
     compiled: &Compiled,
@@ -39,6 +47,7 @@ pub fn from_source_footnotes(
         aliases,
         &mut budget(),
         NotesMode::Footnotes,
+        PhaseLimits::default(),
     )
 }
 fn from_source_profile(
@@ -47,16 +56,19 @@ fn from_source_profile(
     aliases: &[Alias],
     output_budget: &mut Budget,
     mode: NotesMode,
+    phases: PhaseLimits,
 ) -> Result<Artifact, String> {
     output_budget.poll().map_err(err)?;
     if source.len() as u64 > crate::doc::export::MAX_SOURCE_BYTES {
         return Err("SourceLimit".into());
     }
-    with_input_route(
+    with_named_input_limits(
         true,
         compiled,
         source,
+        "doc-input",
         "Article",
+        phases.parse,
         |tree, profile, _b, _a| {
             let store = SourceStore::default();
             let mut admission = SourceAdmission::default();
@@ -67,7 +79,7 @@ fn from_source_profile(
                 &compiled.doc.package.schema,
                 Category::Article,
                 profile.registry(),
-                &mut budget(),
+                &mut Budget::new(phases.lower),
                 &mut codec,
             )
             .map_err(err)?;
@@ -117,6 +129,7 @@ fn write_profile(
         None,
         &mut budget(),
         mode,
+        PhaseLimits::default(),
     )?;
     let mut file = std::fs::OpenOptions::new()
         .write(true)
@@ -176,8 +189,31 @@ pub(crate) fn generate_with_receipt(
         source_href,
         output_budget,
         NotesMode::Inline,
+        PhaseLimits::default(),
     )
 }
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn generate_with_phase_limits(
+    compiled: &Compiled,
+    path: &str,
+    source: &str,
+    alias_bytes: &[u8],
+    source_href: Option<&str>,
+    output_budget: &mut Budget,
+    phases: PhaseLimits,
+) -> crate::Result<(String, Digest)> {
+    generate_receipt_profile(
+        compiled,
+        path,
+        source,
+        alias_bytes,
+        source_href,
+        output_budget,
+        NotesMode::Inline,
+        phases,
+    )
+}
+#[allow(clippy::too_many_arguments)]
 fn generate_receipt_profile(
     compiled: &Compiled,
     path: &str,
@@ -186,6 +222,7 @@ fn generate_receipt_profile(
     source_href: Option<&str>,
     output_budget: &mut Budget,
     mode: NotesMode,
+    phases: PhaseLimits,
 ) -> crate::Result<(String, Digest)> {
     output_budget.poll().map_err(err)?;
     if path.len() > 4096 || path.chars().any(char::is_control) {
@@ -201,7 +238,8 @@ fn generate_receipt_profile(
         .charge(Resource::AllocationUnits, alias_bytes.len() as u64 * 32)
         .map_err(err)?;
     let options: Vec<Alias> = serde_json::from_slice(alias_bytes)?;
-    let mut artifact = from_source_profile(compiled, source, &options, output_budget, mode)?;
+    let mut artifact =
+        from_source_profile(compiled, source, &options, output_budget, mode, phases)?;
     if let Some(href) = source_href {
         artifact.source_link(href, output_budget).map_err(err)?;
     }

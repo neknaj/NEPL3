@@ -1179,12 +1179,13 @@ fn check_context_drafts(
     let compiled = super::super::source::compiled()?;
     for &(name, path) in paths {
         let text = fs::read_to_string(repository.join(path))?;
-        // Adopted chapters must remain usable with normal page limits; other
-        // drafts keep their explicit cap.
-        let phase_limits = if path.starts_with("doc/spec/") {
-            super::super::source::budget().limits()
+        // Repository CI selects its own fixed policy. User defaults are not
+        // the resource contract for this growing reference corpus.
+        let configured = load(repository, "doc/canonical.json")?.phases();
+        let (parse_limits, lower_limits) = if path.starts_with("doc/spec/") {
+            (configured.parse, configured.lower)
         } else {
-            phase_limits
+            (phase_limits, phase_limits)
         };
         super::super::source::with_named_input_limits(
             true,
@@ -1192,13 +1193,13 @@ fn check_context_drafts(
             &text,
             name,
             "Article",
-            phase_limits,
+            parse_limits,
             |tree, profile, parse_budget, _| {
                 let store = SourceStore::default();
                 let mut admission = SourceAdmission::default();
                 let mut codec = FoundationCodec::new(profile.registry(), &store, &mut admission)
                     .map_err(super::super::source::err)?;
-                let mut lower_budget = nepl3_core::budget::Budget::new(phase_limits);
+                let mut lower_budget = nepl3_core::budget::Budget::new(lower_limits);
                 let document = nepl3_doc_core::lower::document(
                     tree.syntax(),
                     &compiled.doc.package.schema,
@@ -1208,7 +1209,7 @@ fn check_context_drafts(
                     &mut codec,
                 )
                 .map_err(super::super::source::err)?;
-                let mut check_budget = nepl3_core::budget::Budget::new(phase_limits);
+                let mut check_budget = nepl3_core::budget::Budget::new(lower_limits);
                 nepl3_doc_core::labels::check(
                     &document,
                     profile.registry(),
@@ -1393,5 +1394,126 @@ fn canonical_late_invalid_alias_does_not_write_partial_pages() -> Result<()> {
     // A name is document-local, so reuse on a different page is valid.
     fixture.write("doc/second.json", r#"[{"name":"same"}]"#)?;
     html(fixture.root(), "doc/canonical.json", &output)?;
+    Ok(())
+}
+
+#[test]
+fn explicit_phase_limits_reach_markdown_renderers() -> Result<()> {
+    use super::super::export::pages::resources::OperationLimits;
+    for renderer in [
+        RENDERER,
+        projection::RENDERER,
+        projection::FOOTNOTES_RENDERER,
+    ] {
+        for phase in ["parse_limits", "lower_limits"] {
+            for (resource, reason) in [
+                ("work", "WorkLimit"),
+                ("nodes", "NodeLimit"),
+                ("depth", "DepthLimit"),
+                ("allocation_units", "AllocationLimit"),
+            ] {
+                let f = Fixture::new()?;
+                f.write("doc/sample.nepld", r#"article en "A" body nil"#)?;
+                f.write("doc/aliases.json", b"[]")?;
+                let mut value = registry();
+                value["pages"][0]["renderer"] = json!(renderer);
+                if renderer == projection::FOOTNOTES_RENDERER {
+                    value["pages"][0]["route"] = value["pages"][0]["projection"].clone();
+                }
+                value[phase] = serde_json::to_value(OperationLimits::default())?;
+                value[phase][resource] = json!(0);
+                f.json("doc/canonical.json", &value)?;
+                let output = f.root().join("stopped");
+                let error = markdown(f.root(), "doc/canonical.json", &output)
+                    .err()
+                    .ok_or("must stop")?;
+                assert!(
+                    error.to_string().contains(reason),
+                    "{renderer} {phase} {resource}: {error}"
+                );
+                assert!(!output.exists());
+                let error = check(f.root(), "doc/canonical.json")
+                    .err()
+                    .ok_or("check must stop")?;
+                assert!(
+                    error.to_string().contains(reason),
+                    "{renderer} {phase} {resource}: {error}"
+                );
+            }
+        }
+    }
+    let f = Fixture::new()?;
+    let mut value = mixed(&f)?;
+    let baseline = f.root().join("default-phases");
+    markdown(f.root(), "doc/canonical.json", &baseline)?;
+    let limits = OperationLimits {
+        work: 321_000_000,
+        ..Default::default()
+    };
+    value["parse_limits"] = serde_json::to_value(limits)?;
+    value["lower_limits"] = serde_json::to_value(limits)?;
+    f.json("doc/canonical.json", &value)?;
+    let output = f.root().join("explicit");
+    markdown(f.root(), "doc/canonical.json", &output)?;
+    let receipt: serde_json::Value =
+        serde_json::from_slice(&fs::read(output.join("manifest.json"))?)?;
+    assert_eq!(receipt["parse_limits"], serde_json::to_value(limits)?);
+    assert_eq!(receipt["lower_limits"], serde_json::to_value(limits)?);
+    for page in value["pages"].as_array().ok_or("pages")? {
+        let path = page["projection"].as_str().ok_or("projection")?;
+        assert_eq!(fs::read(baseline.join(path))?, fs::read(output.join(path))?);
+    }
+    for field in ["parse_limits", "lower_limits"] {
+        for invalid in [json!(null), json!({"work": 1})] {
+            let mut bad = value.clone();
+            bad[field] = invalid;
+            assert!(parse_registry(&serde_json::to_vec(&bad)?).is_err());
+        }
+        for invalid in [json!(-1), json!(1.5), json!("200000000"), json!(null)] {
+            let mut bad = value.clone();
+            bad[field]["work"] = invalid;
+            assert!(parse_registry(&serde_json::to_vec(&bad)?).is_err());
+        }
+        let mut bad = value.clone();
+        bad[field]["unknown"] = json!(1);
+        assert!(parse_registry(&serde_json::to_vec(&bad)?).is_err());
+    }
+    Ok(())
+}
+
+#[test]
+fn explicit_phase_limits_reach_html_and_preserve_document_bytes() -> Result<()> {
+    let f = Fixture::new()?;
+    let mut value = registry();
+    f.write("doc/sample.nepld", r#"article en "A" body nil"#)?;
+    f.write("doc/aliases.json", b"[]")?;
+    f.json("doc/canonical.json", &value)?;
+    let baseline = f.root().join("baseline");
+    html(f.root(), "doc/canonical.json", &baseline)?;
+    let defaults =
+        serde_json::to_value(super::super::export::pages::resources::OperationLimits::default())?;
+    for phase in ["parse_limits", "lower_limits"] {
+        value[phase] = defaults.clone();
+        value[phase]["work"] = json!(0);
+        f.json("doc/canonical.json", &value)?;
+        let output = f.root().join(phase);
+        let error = html(f.root(), "doc/canonical.json", &output)
+            .err()
+            .ok_or("must stop")?;
+        assert!(error.to_string().contains("WorkLimit"), "{error}");
+        assert!(!output.exists());
+        value[phase]["work"] = json!(321_000_000);
+    }
+    f.json("doc/canonical.json", &value)?;
+    let output = f.root().join("configured");
+    html(f.root(), "doc/canonical.json", &output)?;
+    assert_eq!(
+        fs::read(baseline.join("docs/sample.html"))?,
+        fs::read(output.join("docs/sample.html"))?
+    );
+    let receipt: serde_json::Value =
+        serde_json::from_slice(&fs::read(output.join("manifest.json"))?)?;
+    assert_eq!(receipt["pages"][0]["parse_limits"]["work"], 321_000_000);
+    assert_eq!(receipt["pages"][0]["lower_limits"]["work"], 321_000_000);
     Ok(())
 }

@@ -21,6 +21,15 @@ fn run() -> nepl3_tools::Result<()> {
         ["doc-canonical", "--check"] => {
             nepl3_tools::doc::canonical::check(&root, "doc/canonical.json")
         }
+        ["doc-canonical", "--registry", registry, "--check"] => {
+            nepl3_tools::doc::canonical::check(&root, registry)
+        }
+        ["doc-canonical", "--registry", registry, "markdown", output] => {
+            nepl3_tools::doc::canonical::markdown(&root, registry, std::path::Path::new(output))
+        }
+        ["doc-canonical", "--registry", registry, "html", output] => {
+            nepl3_tools::doc::canonical::html(&root, registry, std::path::Path::new(output))
+        }
         ["doc-canonical", "markdown", output] => nepl3_tools::doc::canonical::markdown(
             &root,
             "doc/canonical.json",
@@ -163,6 +172,13 @@ fn run() -> nepl3_tools::Result<()> {
             println!("nepl3-tools signatures --check | signatures --write");
             println!("nepl3-tools site build <site-config.json> <new-output-directory>");
             println!("nepl3-tools doc-canonical --check");
+            println!("nepl3-tools doc-canonical --registry <repository-relative.json> --check");
+            println!(
+                "nepl3-tools doc-canonical --registry <repository-relative.json> markdown <new-output-directory>"
+            );
+            println!(
+                "nepl3-tools doc-canonical --registry <repository-relative.json> html <new-output-directory>"
+            );
             println!("nepl3-tools doc-canonical markdown <new-output-directory>");
             println!("nepl3-tools doc-canonical html <new-output-directory>");
             println!("nepl3-tools doc-markdown <input.nepld> <new-output.md>");

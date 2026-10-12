@@ -350,5 +350,25 @@
     "output_bytes": 10000000,
     "diagnostics": 1000,
     "events": 1000
+  },
+  "parse_limits": {
+    "source_bytes": 10000000,
+    "work": 200000000,
+    "depth": 1000,
+    "nodes": 10000000,
+    "allocation_units": 500000000,
+    "output_bytes": 10000000,
+    "diagnostics": 1000,
+    "events": 1000
+  },
+  "lower_limits": {
+    "source_bytes": 10000000,
+    "work": 200000000,
+    "depth": 1000,
+    "nodes": 10000000,
+    "allocation_units": 500000000,
+    "output_bytes": 10000000,
+    "diagnostics": 1000,
+    "events": 1000
   }
 }
