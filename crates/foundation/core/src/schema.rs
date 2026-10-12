@@ -2,6 +2,7 @@
 //! Domain constraint IDs remain obligations for the domain checker.
 pub mod foundation;
 mod frontier;
+mod lookup;
 mod siblings;
 use crate::{
     budget::{Budget, Resource, StopReason},
@@ -798,13 +799,7 @@ impl SchemaRegistry {
         while lo < hi {
             let mid = lo + (hi - lo) / 2;
             let variant = &variants[mid];
-            budget.charge(
-                Resource::Work,
-                (variant.name.len() as u64)
-                    .saturating_add(name.len() as u64)
-                    .saturating_add(1),
-            )?;
-            match variant.name.as_str().cmp(name) {
+            match lookup::compare(variant.name.as_str(), name, budget)? {
                 core::cmp::Ordering::Less => lo = mid + 1,
                 core::cmp::Ordering::Greater => hi = mid,
                 core::cmp::Ordering::Equal => return Ok(variant),
@@ -838,13 +833,7 @@ impl SchemaRegistry {
         while lo < hi {
             let mid = lo + (hi - lo) / 2;
             let definition = &descriptor.types[mid];
-            budget.charge(
-                Resource::Work,
-                (definition.name.len() as u64)
-                    .saturating_add(name.len() as u64)
-                    .saturating_add(1),
-            )?;
-            match definition.name.as_str().cmp(name) {
+            match lookup::compare(definition.name.as_str(), name, budget)? {
                 core::cmp::Ordering::Less => lo = mid + 1,
                 core::cmp::Ordering::Greater => hi = mid,
                 core::cmp::Ordering::Equal => return Ok(mid),
@@ -957,6 +946,7 @@ impl SchemaRegistry {
         budget.charge(Resource::Work, 1)?;
         let mut pending =
             frontier::Frontier::new(Siblings::uniform(expected, core::slice::from_ref(value), 1));
+        let mut definitions = lookup::Definitions::new(self);
         while let Some(group) = pending.pop() {
             let Some((ty, value, depth, rest)) = group.split_first()? else {
                 continue;
@@ -1046,10 +1036,7 @@ impl SchemaRegistry {
                     )?;
                 }
                 (TypeDescriptor::Named(name), value) => {
-                    let (reference, descriptor) = self
-                        .selected_descriptor_with_budget(&name.package, name.revision, budget)?
-                        .ok_or(SchemaError::UnknownSchema)?;
-                    let definition = Self::named_definition(descriptor, &name.name, budget)?;
+                    let (reference, definition) = definitions.resolve(name, budget)?;
                     let (fields, values) = match (&definition.shape, value) {
                         (TypeShape::Record { fields }, NdfValue::Record(record)) => {
                             if !Self::named_identity_matches(

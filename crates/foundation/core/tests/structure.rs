@@ -376,15 +376,15 @@ fn borrowed_fields_resume_after_nested_values_and_across_spills() -> Result<(), 
             &TypeDescriptor::NdfValue,
         ] {
             // One selected identity costs 1 + (5 + 5 + 9). Record binary
-            // lookup visits MixedVariant then MixedRecord (24 + 23);
-            // Variant lookup visits MixedVariant (25), then Case (9).
+            // lookup visits MixedVariant then MixedRecord (19 + 34);
+            // Variant lookup visits MixedVariant (37), then Case (13).
             // Named values additionally compare package/digest/type identity;
             // dynamic values use exact descriptor admission (5 + 41).
             let lookup_work = match (matches!(ty, TypeDescriptor::Named(_)), variant) {
-                (true, false) => 20 + 47 + 73,
-                (true, true) => 20 + 25 + 75 + 9,
-                (false, false) => 20 + 46 + 47,
-                (false, true) => 20 + 46 + 25 + 9,
+                (true, false) => 20 + 53 + 1 + 73,
+                (true, true) => 20 + 37 + 1 + 75 + 13,
+                (false, false) => 20 + 46 + 53,
+                (false, true) => 20 + 46 + 37 + 13,
             };
             let valid = value(
                 &schema,
@@ -419,7 +419,7 @@ fn borrowed_fields_resume_after_nested_values_and_across_spills() -> Result<(), 
                 assert_eq!(
                     (b.usage().work, b.usage().nodes, b.usage().depth),
                     (
-                        5 + lookup_work + if nodes == 3 { 66 + 20 + 19 } else { 0 },
+                        5 + lookup_work + if nodes == 3 { 66 + 10 + 10 } else { 0 },
                         nodes,
                         3
                     )
@@ -458,9 +458,9 @@ fn borrowed_fields_resume_after_nested_values_and_across_spills() -> Result<(), 
             (b.usage().work, b.usage().nodes, b.usage().depth),
             (
                 23 + if variant {
-                    20 + 46 + 25 + 9
+                    20 + 46 + 37 + 13
                 } else {
-                    20 + 46 + 47
+                    20 + 46 + 53
                 },
                 14,
                 12

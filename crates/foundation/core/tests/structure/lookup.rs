@@ -104,8 +104,8 @@ fn structural_lookup_charges_schema_type_and_variant_candidates() -> Result<(), 
                 0 => (0..32)
                     .map(|i| format!("padding.{i}").len() as u64 + 6 + 9)
                     .sum(),
-                1 => 4 * (3 + 7 + 1),
-                _ => 4 * (3 + 5 + 1),
+                1 => 4 * (1 + 3),
+                _ => 4 * (1 + 3),
             };
             for expected in expectations() {
                 let mut baseline = budget();
@@ -263,8 +263,8 @@ fn borrowed_lookup_meters_candidates_without_cloning_the_payload() -> Result<(),
                 0 => (0..32)
                     .map(|i| format!("padding.{i}").len() as u64 + 6 + 9)
                     .sum(),
-                1 => 4 * (3 + 7 + 1),
-                _ => 4 * (3 + 5 + 1),
+                1 => 4 * (1 + 3),
+                _ => 4 * (1 + 3),
             };
             let mut baseline = budget();
             small.validate_typed(&value, &mut baseline)?;
@@ -494,17 +494,17 @@ fn long_utf8_lookup_has_calculated_exact_and_one_short_boundaries() -> Result<()
         let p = package.len() as u64;
         let t = name.len() as u64;
         let v = if variant {
-            2 * case.len() as u64 + 1
+            3 * case.len() as u64 + 1
         } else {
             0
         };
         // One schema candidate, one type candidate, one optional variant.
         // Counts are derived from UTF-8 byte lengths, not a measured baseline.
         let selected = 1 + 2 * p + 9;
-        let definition = 2 * t + 1;
+        let definition = 3 * t + 1;
         let type_work = 1 + selected + definition;
         let dynamic_work = 1 + selected + p + 41 + definition + v;
-        let named_work = 1 + selected + definition + 2 * p + 2 * t + 41 + v;
+        let named_work = 1 + selected + definition + 1 + 2 * p + 2 * t + 41 + v;
         let as_work = type_work + 2 * p + 2 * t + 1 + dynamic_work;
         for (route, work) in [
             (0, dynamic_work),
@@ -564,7 +564,7 @@ fn long_utf8_lookup_has_calculated_exact_and_one_short_boundaries() -> Result<()
             }
             let identity =
                 p + actual_schema.package.len() as u64 + t + actual_name.len() as u64 + 41;
-            let before_identity = 1 + selected + definition;
+            let before_identity = 1 + selected + definition + 1;
             let mut short = Budget::new(Limits {
                 work: before_identity + identity - 1,
                 ..budget().limits()
@@ -720,5 +720,74 @@ fn empty_catalogs_and_wrong_shapes_keep_lookup_error_order() -> Result<(), Schem
         populated.validate_typed(&typed(invalid)?, &mut budget()),
         Err(SchemaError::UnknownSchema)
     );
+    Ok(())
+}
+
+#[test]
+fn repeated_expected_resolution_never_caches_actual_validation() -> Result<(), SchemaError> {
+    let (r, _, good) = fixture([32, 32, 32], true)?;
+    let expected = TypeDescriptor::List(Box::new(expectations()[0].clone()));
+    let mut one = budget();
+    r.validate(&expected, &NdfValue::List(vec![good.clone()]), &mut one)?;
+    let mut two = budget();
+    r.validate(
+        &expected,
+        &NdfValue::List(vec![good.clone(), good.clone()]),
+        &mut two,
+    )?;
+    // A repeated expected ref costs one cache comparison; actual identity and
+    // variant lookup still run for the second value. Four first-byte misses
+    // and the exact five-byte ZCase match comprise the variant lookup.
+    let second = 1 + 1 + (6 + 6 + 7 + 7 + 41) + (4 * 4 + 1 + 3 * 5);
+    assert_eq!(two.usage().work - one.usage().work, second);
+    assert_eq!(two.usage().nodes - one.usage().nodes, 1);
+    assert_eq!(two.usage().allocation_units, 0);
+    for case in 0..4 {
+        let mut bad = good.clone();
+        let NdfValue::Variant(v) = &mut bad else {
+            return Err(SchemaError::WrongType);
+        };
+        let error = match case {
+            0 => {
+                v.schema.digest = Digest::of(b"different");
+                SchemaError::WrongType
+            }
+            1 => {
+                v.type_name = "Different".into();
+                SchemaError::WrongType
+            }
+            2 => {
+                v.variant = "Absent".into();
+                SchemaError::UnknownVariant
+            }
+            _ => {
+                v.fields.push(NdfValue::Unit);
+                SchemaError::FieldCount
+            }
+        };
+        assert_eq!(
+            r.validate(
+                &expected,
+                &NdfValue::List(vec![good.clone(), bad]),
+                &mut budget()
+            )
+            .err(),
+            Some(error)
+        );
+    }
+    let mut short = Budget::new(Limits {
+        work: two.usage().work - 1,
+        ..budget().limits()
+    });
+    assert_eq!(
+        r.validate(
+            &expected,
+            &NdfValue::List(vec![good.clone(), good]),
+            &mut short
+        )
+        .err(),
+        Some(SchemaError::Stopped(StopReason::WorkLimit))
+    );
+    assert_eq!(short.poll(), Err(StopReason::WorkLimit));
     Ok(())
 }

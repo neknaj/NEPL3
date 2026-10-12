@@ -64,7 +64,15 @@ fn named_kind_lookup_charges_exact_schema_and_binary_probes() -> Result<(), Sche
                 + 46
                 + probes
                     .iter()
-                    .map(|p| (p.len() + name.len() + 1) as u64)
+                    .map(|p| {
+                        let common = p
+                            .bytes()
+                            .zip(name.bytes())
+                            .take_while(|(a, b)| a == b)
+                            .count();
+                        let visited = (common + 1).min(p.len().min(name.len()));
+                        1 + 3 * visited as u64
+                    })
                     .sum::<u64>();
             let mut b = work_budget(expected);
             assert_eq!(registry.kind_id_with_budget(&schema, name, &mut b)?, id);
@@ -140,9 +148,9 @@ fn named_kind_lookup_accounts_for_type_inventory_and_utf8_width() -> Result<(), 
         let (r, s) = fixture(0, &names)?;
         // One type probes the long target directly. Three types first probe Z.
         let expected = 66
-            + (long.len() * 2 + 1) as u64
+            + (long.len() * 3 + 1) as u64
             + if names.len() == 3 {
-                (1 + long.len() + 1) as u64
+                4 // Z differs from the first UTF-8 byte of 界.
             } else {
                 0
             };
