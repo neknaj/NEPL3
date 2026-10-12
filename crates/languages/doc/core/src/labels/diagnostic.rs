@@ -235,7 +235,9 @@ impl namespace::Error<'_> {
                 }
                 .diagnostic_in(doc, Some(related), registry, codec, b)
             }
-            Self::Input(_) | Self::Root(_) => Err(LabelDiagnosticError::NotSemantic),
+            Self::Input(_) | Self::Root(_) | Self::Order(_) => {
+                Err(LabelDiagnosticError::NotSemantic)
+            }
         }
     }
 }

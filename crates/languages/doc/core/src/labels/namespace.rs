@@ -1,6 +1,8 @@
 //! Explicit composition of document-owned label scopes. Foreign closures are
 //! not traversed: the host selects and lowers each participating Doc fragment.
 use super::*;
+mod interleaved;
+pub use interleaved::{DefinitionIndex, OrderError, ReferenceIndex, SiteKind, resolve_interleaved};
 #[cfg(test)]
 mod tests;
 
@@ -27,6 +29,7 @@ pub struct NamespaceReference<'a> {
 pub enum Error<'a> {
     Stopped(StopReason),
     Input(LabelError<'a>),
+    Order(OrderError),
     Root(crate::check::Category),
     Duplicate {
         definition: NamespaceSite<'a>,
@@ -57,6 +60,12 @@ pub struct Member<'a> {
     references: Vec<LabelSite<'a>>,
 }
 impl<'a> Member<'a> {
+    pub fn definitions(&self) -> &[LabelSite<'a>] {
+        &self.definitions
+    }
+    pub fn references(&self) -> &[LabelSite<'a>] {
+        &self.references
+    }
     pub fn document(&self) -> &'a DocumentSyntax {
         self.document
     }
@@ -128,7 +137,7 @@ pub fn inspect<'a>(
         references,
     })
 }
-/// Proof for exactly the selected immutable member sequence. This is a name
+/// Proof for the selected immutable members and checked site order. This is a name
 /// resolution proof, not a foreign-operation or HTML safety proof.
 pub struct CheckedNamespace<'m, 'a> {
     members: &'m [&'m Member<'a>],
@@ -161,21 +170,41 @@ pub fn resolve<'m, 'a>(
     b: &mut Budget,
 ) -> Result<CheckedNamespace<'m, 'a>, Error<'a>> {
     b.poll()?;
-    let mut definitions = Vec::new();
-    for (number, input) in members.iter().enumerate() {
-        b.charge(Resource::Work, 1)?;
-        let member = MemberId(number as u64);
-        for site in &input.definitions {
-            b.charge(Resource::Work, 1)?;
-            push(
-                &mut definitions,
-                NamespaceSite {
-                    member,
+    // Empty members still participate in both traversals.
+    b.charge(Resource::Work, members.len() as u64)?;
+    b.charge(Resource::Work, members.len() as u64)?;
+    resolve_sites(
+        members,
+        members.iter().enumerate().flat_map(|(number, member)| {
+            member.definitions.iter().map(move |site| {
+                Ok(NamespaceSite {
+                    member: MemberId(number as u64),
                     site: *site,
-                },
-                b,
-            )?;
-        }
+                })
+            })
+        }),
+        members.iter().enumerate().flat_map(|(number, member)| {
+            member.references.iter().map(move |site| {
+                Ok(NamespaceSite {
+                    member: MemberId(number as u64),
+                    site: *site,
+                })
+            })
+        }),
+        b,
+    )
+}
+fn resolve_sites<'m, 'a>(
+    members: &'m [&'m Member<'a>],
+    definition_sites: impl Iterator<Item = Result<NamespaceSite<'a>, Error<'a>>>,
+    reference_sites: impl Iterator<Item = Result<NamespaceSite<'a>, Error<'a>>>,
+    b: &mut Budget,
+) -> Result<CheckedNamespace<'m, 'a>, Error<'a>> {
+    b.poll()?;
+    let mut definitions = Vec::new();
+    for site in definition_sites {
+        b.charge(Resource::Work, 1)?;
+        push(&mut definitions, site?, b)?;
     }
     let names = index::build_for(&definitions, b).map_err(|error| match error {
         index::IndexError::Stopped(reason) => Error::Stopped(reason),
@@ -185,19 +214,12 @@ pub fn resolve<'m, 'a>(
         },
     })?;
     let mut references = Vec::new();
-    for (number, input) in members.iter().enumerate() {
+    for site in reference_sites {
         b.charge(Resource::Work, 1)?;
-        let member = MemberId(number as u64);
-        for site in &input.references {
-            b.charge(Resource::Work, 1)?;
-            let reference = NamespaceSite {
-                member,
-                site: *site,
-            };
-            let target = index::find(&names, &definitions, site.name, b)?
-                .ok_or(Error::Unresolved { reference })?;
-            push(&mut references, NamespaceReference { reference, target }, b)?;
-        }
+        let reference = site?;
+        let target = index::find(&names, &definitions, reference.site.name, b)?
+            .ok_or(Error::Unresolved { reference })?;
+        push(&mut references, NamespaceReference { reference, target }, b)?;
     }
     Ok(CheckedNamespace {
         members,
