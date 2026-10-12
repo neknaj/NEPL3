@@ -1,5 +1,5 @@
 use super::*;
-use nepl3_doc_core::{check::Category, lower};
+use nepl3_doc_core::check::Category;
 use nepl3_doc_html::{ParallelMode, RenderOptions, prepare_local, render};
 
 fn html(source: &str, options: RenderOptions) -> Result<String, String> {
@@ -14,7 +14,7 @@ fn html(source: &str, options: RenderOptions) -> Result<String, String> {
         let mut admission = SourceAdmission::default();
         let mut codec =
             FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
-        let doc = lower::document(
+        let doc = nepl3_suite::adapters::sentence::literal::lower(
             &checked,
             &compiled.doc.package.schema,
             Category::Article,
@@ -75,7 +75,7 @@ fn standalone_sentence_renders_annotation_without_fabricated_article() -> Result
                 .map_err(err)?;
             let empty = SourceStore::default();
             let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
-            let doc = lower::document(
+            let doc = nepl3_suite::adapters::sentence::literal::lower(
                 &syntax,
                 &compiled.doc.package.schema,
                 Category::Sentence,
@@ -351,7 +351,7 @@ fn real_source_html_roundtrip(compiled: &Compiled) -> Result<(), String> {
         let mut admitted = SourceAdmission::default();
         let mut codec = FoundationCodec::new(r, &empty, &mut admitted).map_err(err)?;
         let request = LocalHtmlRequest {
-            document: lower::document(
+            document: nepl3_suite::adapters::sentence::literal::lower(
                 &checked,
                 &compiled.doc.package.schema,
                 Category::Article,

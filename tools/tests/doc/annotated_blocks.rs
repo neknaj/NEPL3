@@ -300,7 +300,7 @@ fn annotated_tables_keep_header_only_and_reject_unrepresentable_shapes() -> Resu
 
 #[test]
 fn annotated_blocks_preserve_consumed_budget_and_sticky_stop() -> Result<(), String> {
-    use nepl3_doc_core::{check::Category, lower};
+    use nepl3_doc_core::check::Category;
     use nepl3_tools::doc::projection::{Error, annotated::render};
     let source = r#"article en "T" body
       cons list ordered 999999999 cons item checked body cons paragraph cons "[A/a]" nil nil nil
@@ -312,7 +312,7 @@ fn annotated_blocks_preserve_consumed_budget_and_sticky_stop() -> Result<(), Str
         let mut admission = SourceAdmission::default();
         let mut codec =
             FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
-        let document = lower::document(
+        let document = nepl3_suite::adapters::sentence::literal::lower(
             tree.syntax(),
             &compiled.doc.package.schema,
             Category::Article,

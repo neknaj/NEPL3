@@ -3,7 +3,7 @@ use super::*;
 use crate::doc::export::pages::resources::{ExecutionLimits, PhaseLimits};
 use crate::doc::source::{Compiled, budget, err, with_named_input_limits};
 use nepl3_core::source::{SourceAdmission, SourceStore};
-use nepl3_doc_core::{check::Category, lower};
+use nepl3_doc_core::check::Category;
 use nepl3_wire::foundation::FoundationCodec;
 use std::{
     io::{Read, Write},
@@ -74,7 +74,7 @@ fn from_source_profile(
             let mut admission = SourceAdmission::default();
             let mut codec =
                 FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
-            let document = lower::document(
+            let document = nepl3_suite::adapters::sentence::literal::lower(
                 tree.syntax(),
                 &compiled.doc.package.schema,
                 Category::Article,

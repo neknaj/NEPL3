@@ -3,7 +3,7 @@
 //! this boundary checks the graph again with the operation's current resources.
 mod forms;
 mod literal;
-pub use literal::{Decoder as LiteralDecoder, DocumentLowerError};
+pub use literal::Decoder as LiteralDecoder;
 mod operands;
 use crate::{
     check::{Category, ShapeError, StructureError},
@@ -143,26 +143,6 @@ pub fn prefix(
         registry,
         b,
         &mut literal::PrefixOnly(admission),
-    )
-}
-/// Lower prefix constructors and accepted SentenceLiteral payloads together.
-/// The codec's shared admission owns both the host graph and decoded payload
-/// declarations. Payload failures retain their typed codec causes.
-pub fn document<C: nepl3_core::value_codec::FoundationValueCodec>(
-    input: &ValidatedSyntaxBundle<'_>,
-    surface: &SchemaRef,
-    category: Category,
-    registry: &SchemaRegistry,
-    b: &mut Budget,
-    codec: &mut C,
-) -> Result<DocumentSyntax, DocumentLowerError<C::Error>> {
-    run(
-        input,
-        surface,
-        category,
-        registry,
-        b,
-        &mut literal::Portable(codec),
     )
 }
 /// Lower using an explicitly selected, typed literal decoder. The host owns

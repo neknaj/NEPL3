@@ -1,6 +1,6 @@
 use super::*;
 use nepl3_core::value_codec::FoundationValueCodec;
-use nepl3_doc_core::{check::Category, lower, model::*, portable, prepare::*};
+use nepl3_doc_core::{check::Category, model::*, portable, prepare::*};
 
 // Both Math guests contain division by zero. Code display must retain the
 // guest's syntax; discovering requirements must not evaluate either guest.
@@ -41,7 +41,7 @@ fn sentence_preparation_preserves_requirements_and_local_label_failures() -> Res
             let mut admission = SourceAdmission::default();
             let mut c =
                 FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
-            let doc = lower::document(
+            let doc = nepl3_suite::adapters::sentence::literal::lower(
                 &syntax,
                 &compiled.doc.package.schema,
                 Category::Sentence,
@@ -214,7 +214,7 @@ fn source_preparation_retains_code_and_identifies_each_foreign_closure() -> Resu
         let mut admission = SourceAdmission::default();
         let mut c =
             FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
-        let doc = lower::document(
+        let doc = nepl3_suite::adapters::sentence::literal::lower(
             &checked,
             &compiled.doc.package.schema,
             Category::Article,

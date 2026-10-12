@@ -1,5 +1,5 @@
 use super::*;
-use nepl3_doc_core::{check::Category, lower, model::DocKind};
+use nepl3_doc_core::{check::Category, model::DocKind};
 use nepl3_tools::doc::math::{
     MathDisplayHost,
     markdown::{EmitError, Placement, PrepareError},
@@ -14,7 +14,7 @@ fn markdown_math_prepares_real_source_and_rejects_loss_or_substitution() -> Resu
         let mut admission = SourceAdmission::default();
         let mut codec =
             FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
-        let document = lower::document(
+        let document = nepl3_suite::adapters::sentence::literal::lower(
             tree.syntax(),
             &compiled.doc.package.schema,
             Category::Article,
@@ -128,7 +128,7 @@ fn markdown_math_preserves_table_fences_and_sticky_budget_stops() -> Result<(), 
         let mut admission = SourceAdmission::default();
         let mut codec =
             FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
-        let document = lower::document(
+        let document = nepl3_suite::adapters::sentence::literal::lower(
             tree.syntax(),
             &compiled.doc.package.schema,
             Category::Article,
@@ -235,7 +235,7 @@ fn markdown_math_does_not_emit_empty_delimiter_runs() -> Result<(), String> {
         let mut admission = SourceAdmission::default();
         let mut codec =
             FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
-        let document = lower::document(
+        let document = nepl3_suite::adapters::sentence::literal::lower(
             tree.syntax(),
             &compiled.doc.package.schema,
             Category::Article,
@@ -286,7 +286,7 @@ fn markdown_math_preserves_literal_payload_through_independent_markdown_parser()
         let mut admission = SourceAdmission::default();
         let mut codec =
             FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
-        let document = lower::document(
+        let document = nepl3_suite::adapters::sentence::literal::lower(
             tree.syntax(),
             &compiled.doc.package.schema,
             Category::Article,

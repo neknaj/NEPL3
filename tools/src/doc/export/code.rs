@@ -265,7 +265,7 @@ mod tests {
             let mut admission = SourceAdmission::default();
             let mut codec =
                 FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
-            let doc = nepl3_doc_core::lower::document(
+            let doc = nepl3_suite::adapters::sentence::literal::lower(
                 tree.syntax(),
                 &compiled.doc.package.schema,
                 nepl3_doc_core::check::Category::Article,

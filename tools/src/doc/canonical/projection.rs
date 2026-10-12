@@ -13,7 +13,6 @@ use nepl3_core::{
 };
 use nepl3_doc_core::{
     check::Category,
-    lower,
     pages::{FileBytes, PageDocument, PageFile, PageRegistration, PageSet},
 };
 use nepl3_wire::foundation::FoundationCodec;
@@ -219,7 +218,7 @@ fn grouped(
                 let mut codec = FoundationCodec::new(profile.registry(), &store, &mut admission)
                     .map_err(err)?;
                 let mut lower_budget = Budget::new(phases.lower);
-                lower::document(
+                nepl3_suite::adapters::sentence::literal::lower(
                     tree.syntax(),
                     &compiled.doc.package.schema,
                     Category::Article,

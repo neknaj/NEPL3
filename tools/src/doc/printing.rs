@@ -19,7 +19,7 @@ pub enum Error<E> {
     MathLower(nepl3_math_core::lower::LowerError),
     MathShape(nepl3_math_core::check::ShapeError),
     MathPrint(Box<nepl3_math_core::print::PrintError<Error<E>>>),
-    DocLower(nepl3_doc_core::lower::DocumentLowerError<E>),
+    DocLower(nepl3_suite::adapters::sentence::literal::Error<E>),
     DocShape(nepl3_doc_core::check::ShapeError),
     DocPortable(nepl3_doc_core::portable::PortableError<E>),
     DocPrint(nepl3_doc_core::print::PrintFailure),
@@ -230,7 +230,7 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
         closure: &ForeignClosure,
         b: &mut Budget,
     ) -> Result<String, Error<C::Error>> {
-        use nepl3_doc_core::{check, lower, model::GuestLanguage, print};
+        use nepl3_doc_core::{check, model::GuestLanguage, print};
         closure
             .validate(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
@@ -239,7 +239,7 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
             .bundle
             .validate_with_sources(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
-        let document = lower::document(
+        let document = nepl3_suite::adapters::sentence::literal::lower(
             &input,
             &closure.syntax.schema,
             check::Category::Inline,

@@ -1,7 +1,6 @@
 use super::*;
 use nepl3_doc_core::{
     check::Category,
-    lower,
     model::{DocEmbed, DocKind},
     pages::{PageDocument, PageRegistration, PageSet},
 };
@@ -29,7 +28,7 @@ fn request(
                 let mut admission = SourceAdmission::default();
                 let mut codec = FoundationCodec::new(profile.registry(), &store, &mut admission)
                     .map_err(err)?;
-                lower::document(
+                nepl3_suite::adapters::sentence::literal::lower(
                     tree.syntax(),
                     &c.doc.package.schema,
                     Category::Article,

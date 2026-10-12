@@ -13,7 +13,7 @@ use nepl3_core::{
     budget::Budget,
     source::{Digest, SourceAdmission, SourceStore},
 };
-use nepl3_doc_core::{check::Category, lower, model::DocumentSyntax};
+use nepl3_doc_core::{check::Category, model::DocumentSyntax};
 use nepl3_wire::foundation::FoundationCodec;
 
 /// Independent per-page preparation allowances, additionally bounded by the
@@ -379,7 +379,7 @@ fn prepare(
                 profile.digest(),
                 records,
                 |budget| {
-                    lower::document(
+                    nepl3_suite::adapters::sentence::literal::lower(
                         tree.syntax(),
                         &compiled.doc.package.schema,
                         Category::Article,

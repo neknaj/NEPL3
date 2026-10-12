@@ -44,7 +44,7 @@ mod projection;
 mod resources;
 #[path = "doc/text.rs"]
 mod text;
-use nepl3_core::{budget::*, source::*};
+use nepl3_core::{budget::*, source::*, value_codec::FoundationValueCodec};
 use nepl3_core::{
     syntax::{Environment, EnvironmentEntry},
     value::NdfValue,
@@ -563,12 +563,19 @@ fn doc_sentence_provider_payload_and_prefix_share_the_actual_normal_form() -> Re
                 .iter()
                 .find(|s| s.identity() == token.head.snapshot_ref())
                 .ok_or("owner source")?;
-            let value = nepl3_doc_core::portable::sentence::from_value(
+            let sentence = nepl3_sentence_core::portable::literal::from_value(
                 &token.payload,
                 owner,
                 profile.registry(),
                 &mut codec,
                 b,
+            )
+            .map_err(err)?;
+            let value = nepl3_suite::adapters::sentence::document(
+                &sentence,
+                profile.registry(),
+                b,
+                codec.source_admission(),
             )
             .map_err(err)?;
             assert_eq!(value.views[0].head, token.head);
@@ -655,12 +662,12 @@ fn doc_sentence_provider_failures_have_typed_report_positions_and_stops() -> Res
             value,
         },
     };
-    let operation = nepl3_tools::doc::reader::signature(r, &mut b)
+    let operation = nepl3_tools::sentence::reader::signature(r, &mut b)
         .map_err(err)?
         .operation;
     let descriptor = r.descriptor(&operation.schema).ok_or("reader descriptor")?;
     assert_eq!(descriptor.operations.len(), 1);
-    assert_eq!(descriptor.operations[0].name, "sentenceReferenced");
+    assert_eq!(descriptor.operations[0].name, "literal");
     let mut codec = FoundationCodec::new(r, &store, &mut a).map_err(err)?;
     let checked = context.check(&mut codec, &store, r, &mut b).map_err(err)?;
     let mut obsolete = operation.clone();
@@ -676,7 +683,7 @@ fn doc_sentence_provider_failures_have_typed_report_positions_and_stops() -> Res
     assert_ne!(stale.schema, operation.schema);
     for obsolete in [obsolete, stale] {
         assert!(matches!(
-            nepl3_tools::doc::reader::read(
+            nepl3_tools::sentence::reader::read(
                 &obsolete,
                 ReadRequest {
                     snapshot: &source,
@@ -694,7 +701,7 @@ fn doc_sentence_provider_failures_have_typed_report_positions_and_stops() -> Res
             Err(nepl3_reader::runtime::ReaderError::ProviderContract)
         ));
     }
-    let reply = nepl3_tools::doc::reader::read(
+    let reply = nepl3_tools::sentence::reader::read(
         &operation,
         ReadRequest {
             snapshot: &source,
@@ -728,7 +735,7 @@ fn doc_sentence_provider_failures_have_typed_report_positions_and_stops() -> Res
         ..budget().limits()
     });
     assert!(matches!(
-        nepl3_tools::doc::reader::read(
+        nepl3_tools::sentence::reader::read(
             &operation,
             ReadRequest {
                 snapshot: &source,

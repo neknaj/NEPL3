@@ -360,7 +360,7 @@
         "E01",
         "A01"
       ],
-      "deliverable": "既存parser/lower::document/labelsを使い、完全な文書prepare、明示page/asset、markup/doc-html、安全なserializer、suiteとapps/cliの実入口を実装する。実文書の表/list/link/image/Ruby/Anno/Parallelをbrowserで検証し、未対応embedを型付き拒否する。",
+      "deliverable": "既存parser・suiteのSentence literal adapter・Doc lower/labelsを使い、完全な文書prepare、明示page/asset、markup/doc-html、安全なserializer、suiteとapps/cliの実入口を実装する。実文書の表/list/link/image/Ruby/Anno/Parallelをbrowserで検証し、未対応embedを型付き拒否する。",
       "spec": "doc/spec/18-html-delivery.md"
     },
     {

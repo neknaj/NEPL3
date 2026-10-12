@@ -101,9 +101,45 @@ fn referenced_literal_rejects_wrong_owner_even_when_ambient_source_is_correct() 
     let mut admission = SourceAdmission::default();
     let mut codec = FoundationCodec::new(&r, &ambient, &mut admission).map_err(err)?;
     let raw = payload::to_value(&v.syntax, &r, &mut codec, &mut b()).map_err(err)?;
-    // Same id/revision and same literal, different document bytes.
-    let wrong = source("\"[漢/かん]\" fail")?;
-    assert!(payload::from_value(&raw, &wrong, &r, &mut codec, &mut b()).is_err());
+    let bytes = nepl3_wire::encode(&raw, &mut b()).map_err(err)?;
+    let raw = nepl3_wire::decode(&bytes, &mut b()).map_err(err)?;
+    // The first receiver must use complete owner identity even when ambient
+    // contains the correct source. Neither revision nor digest is repairable.
+    let wrong_revision = SourceSnapshot::new(
+        SourceId("sentence".into()),
+        2,
+        "memory:sentence".into(),
+        v.syntax.sources[0].text().as_bytes().to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    for wrong in [source("\"[漢/かん]\" fail")?, wrong_revision] {
+        let mut receiving = SourceAdmission::default();
+        let mut receiver = FoundationCodec::new(&r, &ambient, &mut receiving).map_err(err)?;
+        assert!(payload::from_value(&raw, &wrong, &r, &mut receiver, &mut b()).is_err());
+    }
+    // Fresh admission pays the complete explicit owner exactly once, not just
+    // the token bytes and not again for every semantic/view reference.
+    let source_bytes = v.syntax.sources[0].text().len() as u64;
+    for allowed in [source_bytes, source_bytes - 1] {
+        let mut receiving = SourceAdmission::default();
+        let mut receiver = FoundationCodec::new(&r, &ambient, &mut receiving).map_err(err)?;
+        let mut limits = b().limits();
+        limits.source_bytes = allowed;
+        let mut budget = Budget::new(limits);
+        let result =
+            payload::from_value(&raw, &v.syntax.sources[0], &r, &mut receiver, &mut budget);
+        if allowed == source_bytes {
+            assert_eq!(result.map_err(err)?, v.syntax);
+            assert_eq!(budget.usage().source_bytes, source_bytes);
+        } else {
+            assert_eq!(
+                result,
+                Err(portable::Error::Stopped(StopReason::SourceLimit))
+            );
+            assert_eq!(budget.poll(), Err(StopReason::SourceLimit));
+        }
+    }
     let mut wrong_kind = v.syntax.clone();
     wrong_kind.value.nodes[0] = Kind::Code { text: "漢".into() };
     assert!(matches!(

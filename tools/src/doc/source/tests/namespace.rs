@@ -47,7 +47,7 @@ fn namespace_diagnostic_keeps_separate_source_owners() -> Result<(), String> {
                     let mut codec =
                         FoundationCodec::new(profile.registry(), &store, &mut admission)
                             .map_err(err)?;
-                    let document = lower::document(
+                    let document = nepl3_suite::adapters::sentence::literal::lower(
                         &input,
                         &compiled.doc.package.schema,
                         if shared_source {
@@ -231,7 +231,7 @@ fn foreign_namespace_parts_preserve_refs_and_guest_boundaries() -> Result<(), St
                         FoundationCodec::new(profile.registry(), &store, &mut admission)
                             .map_err(err)?;
                     documents.push(
-                        lower::document(
+                        nepl3_suite::adapters::sentence::literal::lower(
                             &input,
                             &compiled.doc.package.schema,
                             category,

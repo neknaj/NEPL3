@@ -1,6 +1,6 @@
 use super::*;
 use nepl3_core::value_codec::FoundationValueCodec;
-use nepl3_doc_core::{check::Category, lower, model::DocKind};
+use nepl3_doc_core::{check::Category, model::DocKind};
 use nepl3_sentence_core::model::Kind;
 use nepl3_wire::foundation::FoundationCodec;
 
@@ -34,7 +34,7 @@ fn composed_doc_namespace_keeps_fragment_source_identity() -> Result<(), String>
                     let mut admission = SourceAdmission::default();
                     let mut codec =
                         FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
-                    let document = lower::document(
+                    let document = nepl3_suite::adapters::sentence::literal::lower(
                         &input,
                         &compiled.doc.package.schema,
                         Category::Inline,
@@ -247,7 +247,7 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
                     let mut admission = SourceAdmission::default();
                     let mut codec =
                         FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
-                    let doc = lower::document(
+                    let doc = nepl3_suite::adapters::sentence::literal::lower(
                         &input,
                         &compiled.doc.package.schema,
                         Category::Article,
@@ -577,7 +577,7 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
                 let mut admission = SourceAdmission::default();
                 let mut codec =
                     FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
-                let document = lower::document(
+                let document = nepl3_suite::adapters::sentence::literal::lower(
                     &input,
                     &compiled.doc.package.schema,
                     Category::Article,
@@ -976,7 +976,7 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                 let mut admission = SourceAdmission::default();
                 let mut codec =
                     FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
-                let document = lower::document(
+                let document = nepl3_suite::adapters::sentence::literal::lower(
                     &input,
                     &compiled.doc.package.schema,
                     Category::Article,
@@ -1070,7 +1070,7 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                     .bundle
                     .validate_with_sources(registry, b, codec.source_admission())
                     .map_err(err)?;
-                let inline = lower::document(
+                let inline = nepl3_suite::adapters::sentence::literal::lower(
                     &input,
                     &compiled.doc.package.schema,
                     Category::Inline,
@@ -1230,7 +1230,7 @@ fn math_sentence_math_printing_preserves_recursive_source() -> Result<(), String
                 let mut admission = SourceAdmission::default();
                 let mut codec = FoundationCodec::new(profile.registry(), &empty, &mut admission)
                     .map_err(err)?;
-                let document = lower::document(
+                let document = nepl3_suite::adapters::sentence::literal::lower(
                     &checked,
                     &compiled.doc.package.schema,
                     Category::Article,
@@ -1355,7 +1355,7 @@ fn math_annotation_uses_registered_sentence_on_both_reader_routes() -> Result<()
                 let mut admission = SourceAdmission::default();
                 let mut codec = FoundationCodec::new(profile.registry(), &empty, &mut admission)
                     .map_err(err)?;
-                let document = lower::document(
+                let document = nepl3_suite::adapters::sentence::literal::lower(
                     &checked,
                     &compiled.doc.package.schema,
                     Category::Article,
@@ -1433,47 +1433,69 @@ fn literal_lowering_does_not_rescan_owner_for_every_sentence() -> Result<(), Str
     let compiled = compiled()?;
     let mut usages = Vec::new();
     for count in [16, 32] {
-        let mut input = String::from("article en \"Scaling\" body ");
-        for _ in 0..count {
-            input.push_str("cons paragraph cons parallel cons variant en \"English.\" cons variant ja \"日本語。\" nil nil ");
+        for owner_bytes in [100_000, 200_000] {
+            let mut input = String::from("article en \"Scaling\" body ");
+            for _ in 0..count {
+                input.push_str("cons paragraph cons parallel cons variant en \"English.\" cons variant ja \"日本語。\" nil nil ");
+            }
+            input.push_str("nil");
+            // Same document bytes at both sizes isolates per-literal work: the old
+            // append path charged two full-owner scans per sentence despite sharing
+            // the immutable owner. This is a synthetic source, not user material.
+            input.extend(core::iter::repeat_n(' ', owner_bytes - input.len()));
+            with_input_route(true, &compiled, &input, "Article", |tree, profile, _, _| {
+                let store = SourceStore::default();
+                let mut admission = SourceAdmission::default();
+                let mut codec = FoundationCodec::new(profile.registry(), &store, &mut admission)
+                    .map_err(err)?;
+                let mut lower_budget = budget();
+                let doc = nepl3_suite::adapters::sentence::literal::lower(
+                    tree.syntax(),
+                    &compiled.doc.package.schema,
+                    Category::Article,
+                    profile.registry(),
+                    &mut lower_budget,
+                    &mut codec,
+                )
+                .map_err(err)?;
+                assert_eq!(doc.sources.len(), 1);
+                assert_eq!(doc.sources[0].text(), input);
+                assert_eq!(
+                    doc.value
+                        .nodes
+                        .iter()
+                        .filter(|n| matches!(n.kind, DocKind::Parallel { .. }))
+                        .count(),
+                    count
+                );
+                assert_eq!(lower_budget.usage().source_bytes, owner_bytes as u64);
+                usages.push(lower_budget.usage().work);
+                Ok(())
+            })?;
         }
-        input.push_str("nil");
-        // Same document bytes at both sizes isolates per-literal work: the old
-        // append path charged two full-owner scans per sentence despite sharing
-        // the immutable owner. This is a synthetic source, not user material.
-        input.extend(core::iter::repeat_n(' ', 100_000 - input.len()));
-        with_input_route(true, &compiled, &input, "Article", |tree, profile, _, _| {
-            let store = SourceStore::default();
-            let mut admission = SourceAdmission::default();
-            let mut codec =
-                FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
-            let mut lower_budget = budget();
-            let doc = lower::document(
-                tree.syntax(),
-                &compiled.doc.package.schema,
-                Category::Article,
-                profile.registry(),
-                &mut lower_budget,
-                &mut codec,
-            )
-            .map_err(err)?;
-            assert_eq!(doc.sources.len(), 1);
-            assert_eq!(doc.sources[0].text(), input);
-            assert_eq!(
-                doc.value
-                    .nodes
-                    .iter()
-                    .filter(|n| matches!(n.kind, DocKind::Parallel { .. }))
-                    .count(),
-                count
-            );
-            usages.push(lower_budget.usage().work);
-            Ok(())
-        })?;
     }
-    // Not an exact golden count: reserve plenty of room for legitimate schema,
-    // source admission and provenance validation, while rejecting N full scans.
-    assert!(usages[1] < 3_000_000, "lowering work: {usages:?}");
+    // Compare padding slope at both literal counts. Extra local validation is
+    // legitimate per-literal work, but must not rescan N copies of the owner.
+    // Each document has 2*count+1 literals; an N-owner scan would add millions
+    // of work units for 100k extra padding, and double its slope at 32 blocks.
+    let small_padding = usages[1]
+        .checked_sub(usages[0])
+        .ok_or("padding work decreased")?;
+    let large_padding = usages[3]
+        .checked_sub(usages[2])
+        .ok_or("padding work decreased")?;
+    assert!(
+        small_padding <= 200_000 && large_padding <= 200_000,
+        "owner padding work: {usages:?}"
+    );
+    assert!(
+        large_padding <= small_padding + 10_000,
+        "per-literal owner scan: {usages:?}"
+    );
+    assert!(
+        usages[2] < usages[0] * 3 && usages[3] < usages[1] * 3,
+        "superlinear literal work: {usages:?}"
+    );
     Ok(())
 }
 
