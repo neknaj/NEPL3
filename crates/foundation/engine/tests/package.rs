@@ -11,6 +11,8 @@ use nepl3_reader::{
 };
 #[path = "package/binding_dag.rs"]
 mod binding_dag;
+#[path = "package/binding_names.rs"]
+mod binding_names;
 #[path = "package/extension_validation.rs"]
 mod extension_validation;
 #[path = "package/head.rs"]
