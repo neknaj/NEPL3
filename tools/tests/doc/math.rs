@@ -1,5 +1,5 @@
 use super::*;
-use nepl3_doc_core::{check::Category, lower, model::DocKind};
+use nepl3_doc_core::{check::Category, model::DocKind};
 use nepl3_tools::doc::math::display::{Preference, TexPreparation};
 use nepl3_tools::doc::math::{Error, MathDisplayHost};
 
@@ -17,7 +17,7 @@ fn article_math_nodes_select_display_without_evaluating_code() -> Result<(), Str
         let mut fresh = SourceAdmission::default();
         let mut codec =
             FoundationCodec::new(profile.registry(), &empty, &mut fresh).map_err(err)?;
-        let document = lower::document(
+        let document = nepl3_suite::adapters::sentence::literal::lower(
             &checked,
             &compiled.doc.package.schema,
             Category::Article,

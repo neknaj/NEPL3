@@ -7,6 +7,5 @@ pub mod host;
 pub mod math;
 pub mod printing;
 pub mod projection;
-pub mod reader;
 pub mod signatures;
 pub mod source;

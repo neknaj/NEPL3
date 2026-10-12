@@ -30,7 +30,7 @@ pub fn compile(
         nepl3_grammar_core::schema::descriptor(budget),
         nepl3_doc_core::schema::descriptor(budget),
         nepl3_sentence_core::schema::descriptor(budget),
-        super::reader::descriptor(budget),
+        crate::sentence::reader::descriptor(budget),
     ] {
         let descriptor = descriptor.map_err(|e| format!("{e:?}"))?;
         let reference = descriptor.reference(budget).map_err(|e| format!("{e:?}"))?;
@@ -59,15 +59,16 @@ pub fn compile(
             signature,
         });
     }
-    let signature = super::reader::signature(&registry, budget).map_err(|e| format!("{e:?}"))?;
+    let signature =
+        crate::sentence::reader::signature(&registry, budget).map_err(|e| format!("{e:?}"))?;
     extensions.push(extension(
         &registry,
-        "doc.reader/sentence-v2",
+        "sentence.reader/literal-v1",
         "reader/v1",
         signature.operation.clone(),
     )?);
     imports.push(ReaderImport {
-        provider: "doc.reader/sentence-v2".into(),
+        provider: "sentence.reader/literal-v1".into(),
         signature,
     });
     let engine = registry

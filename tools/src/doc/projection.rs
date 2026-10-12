@@ -312,7 +312,7 @@ impl<'a> Writer<'a, '_> {
 pub fn from_source(compiled: &super::source::Compiled, source: &str) -> Result<String, String> {
     use super::source::{budget, err, with_input_route};
     use nepl3_core::source::{SourceAdmission, SourceStore};
-    use nepl3_doc_core::{check::Category, lower};
+    use nepl3_doc_core::check::Category;
     use nepl3_wire::foundation::FoundationCodec;
     if source.len() as u64 > super::export::MAX_SOURCE_BYTES {
         return Err("SourceLimit".into());
@@ -328,7 +328,7 @@ pub fn from_source(compiled: &super::source::Compiled, source: &str) -> Result<S
             let mut admission = SourceAdmission::default();
             let mut codec =
                 FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
-            let document = lower::document(
+            let document = nepl3_suite::adapters::sentence::literal::lower(
                 checked,
                 &compiled.doc.package.schema,
                 Category::Article,

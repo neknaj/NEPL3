@@ -1,55 +1,17 @@
 //! Accepted literal payloads join the host arena without changing the original
 //! host Origin IDs or the owner-local ID spaces inside ForeignClosure.
 use super::*;
-use crate::portable::PortableError;
 use nepl3_core::{
     origin::{Mapping, Origin, SourceMap},
     source::{SourceError, SourceSnapshot},
-    value_codec::FoundationValueCodec,
     view::ViewBundle,
 };
 #[cfg(test)]
 mod tests;
 
-#[derive(Debug, Eq, PartialEq)]
-pub enum DocumentLowerError<E> {
-    Stopped(StopReason),
-    Lower(LowerError),
-    Payload {
-        node: NodeRef,
-        error: PortableError<E>,
-    },
-}
-impl<E> From<LowerError> for DocumentLowerError<E> {
-    fn from(e: LowerError) -> Self {
-        match e {
-            LowerError::Stopped(s) => Self::Stopped(s),
-            e => Self::Lower(e),
-        }
-    }
-}
-impl<E> From<StopReason> for DocumentLowerError<E> {
-    fn from(e: StopReason) -> Self {
-        Self::Stopped(e)
-    }
-}
-impl<E> From<SyntaxError> for DocumentLowerError<E> {
-    fn from(e: SyntaxError) -> Self {
-        LowerError::from(e).into()
-    }
-}
-impl<E> From<ShapeError> for DocumentLowerError<E> {
-    fn from(e: ShapeError) -> Self {
-        LowerError::from(e).into()
-    }
-}
-impl<E> From<StructureError> for DocumentLowerError<E> {
-    fn from(e: StructureError) -> Self {
-        LowerError::from(e).into()
-    }
-}
-
-pub(super) trait Decoder {
+/// Typed integration boundary for independently owned Sentence payloads.
+/// Returned syntax is revalidated locally before any arena indices are rebased.
+pub trait Decoder {
     type Error: From<LowerError>
         + From<StopReason>
         + From<SyntaxError>
@@ -80,57 +42,6 @@ impl Decoder for PrefixOnly<'_> {
         _b: &mut Budget,
     ) -> Result<DocumentSyntax, LowerError> {
         Err(LowerError::Unsupported { node: id })
-    }
-}
-pub(super) struct Portable<'a, C>(pub &'a mut C);
-impl<C: FoundationValueCodec> Decoder for Portable<'_, C> {
-    type Error = DocumentLowerError<C::Error>;
-    fn admission(&mut self) -> &mut SourceAdmission {
-        self.0.source_admission()
-    }
-    fn read(
-        &mut self,
-        id: NodeRef,
-        node: &SyntaxNode,
-        bundle: &nepl3_core::syntax::SyntaxBundle,
-        registry: &SchemaRegistry,
-        b: &mut Budget,
-    ) -> Result<DocumentSyntax, Self::Error> {
-        let token = node
-            .token
-            .and_then(|id| bundle.tokens.get(id.0 as usize))
-            .ok_or(LowerError::LiteralPayload { node: id })?;
-        b.charge(Resource::Work, 1)?;
-        let referenced = match &token.payload {
-            nepl3_core::value::NdfValue::Record(record) => {
-                b.charge(Resource::Work, record.kind.len() as u64)?;
-                record.kind == "SentencePayload"
-            }
-            _ => false,
-        };
-        let decoded = if referenced {
-            let mut owner = None;
-            for source in &bundle.sources {
-                b.charge(
-                    Resource::Work,
-                    (source.identity().source.0.len() + token.head.snapshot_ref().source.0.len())
-                        as u64
-                        + 40,
-                )?;
-                if source.identity() == token.head.snapshot_ref() {
-                    owner = Some(source);
-                    break;
-                }
-            }
-            let owner = owner.ok_or(LowerError::LiteralPayload { node: id })?;
-            crate::portable::sentence::from_value(&token.payload, owner, registry, self.0, b)
-        } else {
-            crate::portable::from_value(&token.payload, registry, self.0, b)
-        };
-        decoded.map_err(|error| match error {
-            PortableError::Stopped(s) => DocumentLowerError::Stopped(s),
-            error => DocumentLowerError::Payload { node: id, error },
-        })
     }
 }
 pub(super) struct Presentation {
@@ -211,7 +122,10 @@ impl Adapter<'_, '_> {
         node: &SyntaxNode,
         decoder: &mut D,
     ) -> Result<(), D::Error> {
-        let mut doc = decoder.read(id, node, self.checked.bundle(), self.registry, self.b)?;
+        let decoded = decoder.read(id, node, self.checked.bundle(), self.registry, self.b);
+        self.b.poll()?;
+        let mut doc = decoded?;
+        doc.validate_structure(self.registry, self.b, decoder.admission())?;
         let DocRoot::Sentence(root) = doc.value.root else {
             return Err(LowerError::LiteralPayload { node: id }.into());
         };

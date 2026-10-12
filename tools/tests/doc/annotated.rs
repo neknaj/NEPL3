@@ -163,7 +163,7 @@ fn authored_chapter_thirteen_generates_annotations_without_rewriting() -> Result
 
 #[test]
 fn annotated_projection_keeps_sticky_limits_and_heading_depth() -> Result<(), String> {
-    use nepl3_doc_core::{check::Category, lower};
+    use nepl3_doc_core::check::Category;
     use nepl3_tools::doc::projection::{Error, annotated::render};
     let compiled = compiled()?;
     for count in [5, 6] {
@@ -183,7 +183,7 @@ fn annotated_projection_keeps_sticky_limits_and_heading_depth() -> Result<(), St
             let mut admission = SourceAdmission::default();
             let mut codec =
                 FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
-            let document = lower::document(
+            let document = nepl3_suite::adapters::sentence::literal::lower(
                 tree.syntax(),
                 &compiled.doc.package.schema,
                 Category::Article,

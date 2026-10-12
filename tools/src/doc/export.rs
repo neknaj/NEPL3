@@ -8,7 +8,7 @@ mod stylesheet;
 pub use super::math::display::Preference as MathRenderer;
 use super::source::{Compiled, budget, compiled, err, with_named_input_limits};
 use nepl3_core::source::{Digest, SourceAdmission, SourceStore};
-use nepl3_doc_core::{check::Category, lower};
+use nepl3_doc_core::check::Category;
 use nepl3_doc_html::{ParallelMode, RenderOptions};
 use nepl3_wire::foundation::FoundationCodec;
 use pages::resources::ExecutionLimits;
@@ -148,7 +148,7 @@ fn generate_impl(
             let mut codec =
                 FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
             let mut lower_budget = limits.lower_limits.budget();
-            let doc = lower::document(
+            let doc = nepl3_suite::adapters::sentence::literal::lower(
                 checked,
                 &compiled.doc.package.schema,
                 Category::Article,

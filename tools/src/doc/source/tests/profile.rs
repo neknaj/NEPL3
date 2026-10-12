@@ -83,7 +83,8 @@ fn actual_doc_catalog_supports_both_routes_and_rejects_changed_implementation() 
         &mut budget(),
     )
     .map_err(err)?;
-    assert_eq!(host.providers().len(), 5);
+    // Name, Number, Trivia, and the shared Sentence literal provider.
+    assert_eq!(host.providers().len(), 4);
     let mut exported = host.provider_catalog(&mut budget()).map_err(err)?;
     assert_eq!(exported, host.providers());
     let first = exported[0].clone();
@@ -270,6 +271,7 @@ fn doc_host_preparation_and_catalog_copy_stop_without_finishing_parse() -> Resul
         ))
     ));
     assert_eq!(b.usage(), prefix);
-    assert_eq!(host.providers().len(), 5);
+    // Name, Number, Trivia, and the shared Sentence literal provider.
+    assert_eq!(host.providers().len(), 4);
     Ok(())
 }

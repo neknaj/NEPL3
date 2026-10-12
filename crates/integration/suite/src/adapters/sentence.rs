@@ -7,3 +7,5 @@ pub use document::{Error, document};
 pub mod document_guests;
 #[cfg(feature = "sentence-html")]
 pub mod html;
+#[cfg(feature = "doc-sentence")]
+pub mod literal;

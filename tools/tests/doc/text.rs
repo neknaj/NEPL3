@@ -4,7 +4,6 @@ mod native;
 use nepl3_core::value_codec::FoundationValueCodec;
 use nepl3_doc_core::{
     check::Category,
-    lower,
     model::*,
     portable::text as wire,
     text::{
@@ -28,7 +27,7 @@ fn with_document<T>(
         let mut admission = SourceAdmission::default();
         let mut codec =
             FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
-        let doc = lower::document(
+        let doc = nepl3_suite::adapters::sentence::literal::lower(
             &checked,
             &compiled.doc.package.schema,
             Category::Sentence,

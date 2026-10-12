@@ -212,7 +212,7 @@ fn generate_selected(
                     let mut c = FoundationCodec::new(profile.registry(), &empty, &mut admission)
                         .map_err(err)?;
                     let mut lower_budget = Budget::new(phases.lower);
-                    let doc = lower::document(
+                    let doc = nepl3_suite::adapters::sentence::literal::lower(
                         checked,
                         &compiled.doc.package.schema,
                         Category::Article,

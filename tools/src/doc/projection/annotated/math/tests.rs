@@ -1,7 +1,7 @@
 use super::*;
 use crate::doc::source::{budget, compiled, err};
 use nepl3_core::source::{SourceAdmission, SourceStore};
-use nepl3_doc_core::{check::Category, lower};
+use nepl3_doc_core::check::Category;
 use nepl3_wire::foundation::FoundationCodec;
 
 #[test]
@@ -61,7 +61,7 @@ fn math_batch_reuses_document_validation_without_changing_fragments() -> Result<
                 let mut admission = SourceAdmission::default();
                 let mut codec = FoundationCodec::new(profile.registry(), &store, &mut admission)
                     .map_err(err)?;
-                lower::document(
+                nepl3_suite::adapters::sentence::literal::lower(
                     tree.syntax(),
                     &c.doc.package.schema,
                     Category::Article,

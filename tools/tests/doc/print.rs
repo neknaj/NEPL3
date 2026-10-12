@@ -106,7 +106,6 @@ fn host_request(
 }
 use nepl3_doc_core::{
     check::{Category, ShapeError},
-    lower,
     model::*,
 };
 
@@ -152,7 +151,7 @@ fn prefix_and_compact_print_reparse_real_doc_annotation_and_explicit_break() -> 
             let mut admission = SourceAdmission::default();
             let mut codec =
                 FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
-            let original = lower::document(
+            let original = nepl3_suite::adapters::sentence::literal::lower(
                 &checked,
                 &compiled.doc.package.schema,
                 Category::Article,
@@ -188,7 +187,7 @@ fn prefix_and_compact_print_reparse_real_doc_annotation_and_explicit_break() -> 
                     let mut codec =
                         FoundationCodec::new(profile.registry(), &empty, &mut admission)
                             .map_err(err)?;
-                    let actual = lower::document(
+                    let actual = nepl3_suite::adapters::sentence::literal::lower(
                         &checked,
                         &compiled.doc.package.schema,
                         category,
@@ -291,7 +290,7 @@ fn every_form_prints_through_real_parser_and_typed_first_receiver() -> Result<()
             let mut admission = SourceAdmission::default();
             let mut codec =
                 FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
-            let doc = lower::document(
+            let doc = nepl3_suite::adapters::sentence::literal::lower(
                 &checked,
                 &compiled.doc.package.schema,
                 entry(chosen).1,
@@ -365,7 +364,7 @@ fn every_form_prints_through_real_parser_and_typed_first_receiver() -> Result<()
                         let mut codec =
                             FoundationCodec::new(profile.registry(), &empty, &mut admission)
                                 .map_err(err)?;
-                        let result = lower::document(
+                        let result = nepl3_suite::adapters::sentence::literal::lower(
                             &checked,
                             &compiled.doc.package.schema,
                             entry(chosen).1,
@@ -421,7 +420,7 @@ fn printer_rejects_unprintable_source_less_names_and_languages_without_changing_
             let mut admission = SourceAdmission::default();
             let mut codec =
                 FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
-            let mut doc = lower::document(
+            let mut doc = nepl3_suite::adapters::sentence::literal::lower(
                 &checked,
                 &compiled.doc.package.schema,
                 Category::Article,
@@ -545,7 +544,7 @@ fn printer_stops_preserve_request_and_report_at_preparation_and_output_boundarie
             let mut admission = SourceAdmission::default();
             let mut codec =
                 FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
-            let doc = lower::document(
+            let doc = nepl3_suite::adapters::sentence::literal::lower(
                 &checked,
                 &compiled.doc.package.schema,
                 Category::Sentence,
@@ -701,7 +700,7 @@ fn standalone_guest_fragments_keep_concrete_entry_and_foreign_syntax() -> Result
             let mut admission = SourceAdmission::default();
             let mut codec =
                 FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
-            let doc = lower::document(
+            let doc = nepl3_suite::adapters::sentence::literal::lower(
                 &checked,
                 &compiled.doc.package.schema,
                 category,
@@ -788,7 +787,7 @@ fn printer_requires_explicit_current_guest_print_and_binding_at_first_receiver()
             let mut admission = SourceAdmission::default();
             let mut codec =
                 FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
-            let doc = lower::document(
+            let doc = nepl3_suite::adapters::sentence::literal::lower(
                 &checked,
                 &compiled.doc.package.schema,
                 Category::Sentence,
@@ -1030,7 +1029,7 @@ fn fragment_preserves_shared_foreign_syntax_and_rejects_invalid_inputs() -> Resu
             let mut admission = SourceAdmission::default();
             let mut codec =
                 FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
-            let mut doc = lower::document(
+            let mut doc = nepl3_suite::adapters::sentence::literal::lower(
                 &checked,
                 &compiled.doc.package.schema,
                 Category::Sentence,
@@ -1210,7 +1209,7 @@ fn paragraph_edit_uses_model_span_and_preserves_surrounding_source() -> Result<(
         let mut admission = SourceAdmission::default();
         let mut codec =
             FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
-        let original = lower::document(
+        let original = nepl3_suite::adapters::sentence::literal::lower(
             &checked,
             &compiled.doc.package.schema,
             Category::Article,
@@ -1347,7 +1346,7 @@ fn paragraph_edit_uses_model_span_and_preserves_surrounding_source() -> Result<(
                 &mut SourceAdmission::default(),
             )
             .map_err(err)?;
-        let actual = lower::document(
+        let actual = nepl3_suite::adapters::sentence::literal::lower(
             &parsed,
             &compiled.doc.package.schema,
             Category::Article,
@@ -1521,7 +1520,7 @@ fn typed_list_construction_preserves_order_and_inline_structure() -> Result<(), 
                 let mut admission = SourceAdmission::default();
                 let mut codec = FoundationCodec::new(profile.registry(), &empty, &mut admission)
                     .map_err(err)?;
-                let actual = lower::document(
+                let actual = nepl3_suite::adapters::sentence::literal::lower(
                     &checked,
                     &compiled.doc.package.schema,
                     category,

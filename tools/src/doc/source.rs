@@ -16,13 +16,13 @@ pub fn host_identity() -> Digest {
             include_str!("host.rs"),
             include_str!("../source/host.rs"),
             include_str!("../source/driver.rs"),
-            include_str!("reader.rs"),
             include_str!("../sentence/reader.rs"),
             include_str!("../sentence/reader/descriptor.rs"),
             include_str!("../sentence/catalog.rs"),
             include_str!("../bootstrap/runtime.rs"),
             include_str!("../bootstrap/runtime/host.rs"),
             include_str!("../../../crates/integration/suite/src/adapters/sentence/document.rs"),
+            include_str!("../../../crates/integration/suite/src/adapters/sentence/literal.rs"),
             include_str!("../../../crates/foundation/reader/src/builtin/provider.rs")
         )
         .as_bytes(),
@@ -197,7 +197,6 @@ pub fn with_named_input_limits_observed<T>(
                     "nepl3.reader",
                     "nepl3.engine",
                     "nepl3.doc",
-                    "nepl3.doc.reader",
                     "nepl3.sentence.reader",
                     "nepl3.grammar",
                 ]

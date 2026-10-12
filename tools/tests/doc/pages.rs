@@ -1,5 +1,5 @@
 use super::*;
-use nepl3_doc_core::{check::Category, lower, pages::*, portable};
+use nepl3_doc_core::{check::Category, pages::*, portable};
 
 #[test]
 fn real_two_page_sources_resolve_without_ambient_documents() -> Result<(), String> {
@@ -56,7 +56,7 @@ cons link relative "../intro.nepld" some "start" text "入門へ戻る" nil nil 
                 let mut admission = SourceAdmission::default();
                 let mut c = FoundationCodec::new(profile.registry(), &empty, &mut admission)
                     .map_err(err)?;
-                lower::document(
+                nepl3_suite::adapters::sentence::literal::lower(
                     &checked,
                     &compiled.doc.package.schema,
                     Category::Article,
@@ -223,7 +223,7 @@ fn page_output_rejects_an_anchor_hidden_by_language_selection() -> Result<(), St
                 let mut admission = SourceAdmission::default();
                 let mut c = FoundationCodec::new(profile.registry(), &empty, &mut admission)
                     .map_err(err)?;
-                lower::document(
+                nepl3_suite::adapters::sentence::literal::lower(
                     &checked,
                     &compiled.doc.package.schema,
                     Category::Article,
@@ -298,7 +298,7 @@ fn legacy_html_pages_require_resolution_for_code_without_evaluating_guests() -> 
         let mut admission = SourceAdmission::default();
         let mut codec =
             FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
-        let document = lower::document(
+        let document = nepl3_suite::adapters::sentence::literal::lower(
             tree.syntax(),
             &compiled.doc.package.schema,
             Category::Article,

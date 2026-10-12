@@ -1,6 +1,6 @@
 use super::*;
 use crate::doc::source::{budget, compiled, err, with_input_route};
-use nepl3_doc_core::{check, lower};
+use nepl3_doc_core::check;
 
 fn sections(doc: &DocumentSyntax) -> Result<Vec<(&str, BodyRef, SentenceRef)>> {
     let DocRoot::Article(root) = doc.value.root else {
@@ -131,7 +131,7 @@ fn typed_tables_preserve_fields_and_survive_the_real_reader() -> Result<()> {
         let mut admission = SourceAdmission::default();
         let mut codec =
             FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
-        lower::document(
+        nepl3_suite::adapters::sentence::literal::lower(
             tree.syntax(),
             &compiled.doc.package.schema,
             check::Category::Article,

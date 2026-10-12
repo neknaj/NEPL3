@@ -76,6 +76,13 @@ ownerにcoverがある場合のhead包含、およびhead内の全ViewElementを
 意味nodeへ正規化する場合はownerを明示的に再対応させ、元のViewRefを別ViewBundleへ流用しない。
 coverがない生成nodeでも、明示Source/Originと対応させた元表記のViewは保持できる。
 
+owner.coverからView.headへの包含が成立しない場合、両者の完全なsnapshot identityが異なるときに限り、
+View.headからowner.coverへの明示SourceMapによる包含も認める。全byte・anchorの全incoming pathを
+検査し、一経路だけの一致や未被覆部分は認めない。同snapshotの過大なView.headはこの例外で許可しない。
+これは生成nodeと原表記の来歴対応であり、最小の原文範囲や意味・文字列の同値性を保証しない。
+NodeLocation自身のhead/cover包含、ViewElementのView.head内包含、source閉包検査は変更しない。
+Doc等のhostは、さらに自身のtokenとView.headとの対応を検査する。
+
 native検査とportable::syntaxの両方向で、重複snapshot revision、未宣言source、古いsnapshotへのSpan、
 Origin参照、SourceMap、View閉包、foreignの合成深さを検査する。portable受信はpayload自身のsourceで
 codecをscopeし、ambient sourceを欠落閉包の代わりにしない。UTF-8 byte位置を保持し、editorで必要な
@@ -100,7 +107,7 @@ Sentence coreの`literal::read`は、明示SourceSnapshotのUTF-8 windowから�
 成功時はSentenceSyntaxに元source、denseな位置表、Direct Origin、元綴りのViewを残す。
 このnative helperはLanguagePackageやreader/provider包絡そのものではなく、その解析本体である。
 Doc coreへの依存なしで動作する。Doc本文もこのreaderを明示adapter経由で使用し、
-Doc coreの重複したSentence parsing APIは撤去した。Docの意味schema・payloadの所有移行は別の残件である。
+Doc coreの重複したSentence parsing APIは撤去した。Doc consumerの意味arenaの所有移行は別の残件である。
 
 `[base/reading]`はRuby、`{base/note/...}`は文章内部のInlineAnnoへ対応する。入れ子を許し、
 空のbase/reading/note、余分なRuby区切り、不正な括弧対応を型付き失敗とする。literal内の
@@ -258,9 +265,9 @@ Mathの文章注釈では、内側Mathのnode対応と注釈対応をSentenceの
 
 ## Doc本文readerへの接続
 
-この節はconsumer所有移行中のadapter契約である。Sentenceの恒久的な意味モデルと、現在のDoc payloadへの変換を区別する。移行完了後も必要なforeign adapterと、旧所有を除去するまでの互換変換を同じ完成条件にしない。
+この節はconsumer所有移行中のadapter契約である。Sentenceの恒久的な意味モデルと、現在のDoc consumer arenaへの変換を区別する。移行完了後も必要なforeign adapterと、旧所有を除去するまでの互換変換を同じ完成条件にしない。
 
-Doc readerは独立Sentence coreのliteral読取りを使用し、suiteの`doc-sentence` featureで公開する
+Docの標準文法は独立Sentenceのliteral readerを使用し、suiteの`doc-sentence` featureで公開する
 `nepl3_suite::adapters::sentence::document`を通して現在のDoc consumerへ渡す。
 adapterは`no_std + alloc`で動作し、DocとSentenceの公開型・検査を接続する。
 suiteの既定featureはこのdomain依存を有効にしない。開発hostはfeatureを明示して利用する。
@@ -271,13 +278,15 @@ foreign CodeやDoc固有のpage参照へ読み替えない。foreign-inlineは�
 Source/Origin/SourceMapとViewを保持し、元SentenceSyntaxのdense位置・View ownerも呼出側で保持できる。
 入力の共有・source-less Syntheticを展開や架空Spanで置き換えず、失敗・停止時は部分Doc値を返さない。
 
-Doc catalogはSentenceの実descriptorを登録する。Doc readerの現在の出力は明示変換後の
-Doc SentencePayloadであり、同じschema identityで独立Sentence payloadを装わない。
-本文の意味を保持し、出力Viewの所有schemaをDoc schemaへ対応させる。文書の内部identityは
-生成manifestに記録する。Markdownの出自はページ固有のsourceと実際の参照入力に対応する。
-正本から生成し、本文・リンク・注釈の一致とmanifestの整合を確認する。
-この接続はDoc本文の解析を独立Sentenceへ移す段階である。重複parserの撤去後も、Doc意味schemaの
-Sentence所有と、現行lowerが受信するDoc SentencePayloadは残る。
+Doc catalogは独立Sentenceのdescriptorと標準literal readerを登録する。readerは
+SentenceLiteralPayloadを返し、Doc固有のreader descriptor・SentencePayload codecを持たない。
+suiteのliteral adapterがSentenceLiteralPayloadまたはSentenceSyntaxを一度だけ検査し、
+既存の型付きSentence→Doc bridgeへ渡す。旧Doc payloadへのfallbackは行わない。
+Doc lowerの公開decoder境界はcallbackの停止を優先して伝播し、返却された局所Doc構造を
+参照の再配置前に検査する。その後で外tokenのhead/Viewと全位置の所属を検査する。
+生成されたrootのcoverと原Viewは、前述の全経路SourceMap条件で保持できる。
+文書の内部identityは生成manifestへ記録し、Markdownの出自は実際のsourceと参照入力に対応する。
+この段階はreader/payloadの所有移行であり、Doc consumerの意味arenaにあるSentence/Inline表現は残る。
 DocのInlineMath・DisplayMathをMath表示へ接続するadapterも引き続き必要である。
 Mathの文章注釈は独立Sentenceを直接使用する。Doc本文の二重所有は後続のconsumer所有移行で整理する。
 

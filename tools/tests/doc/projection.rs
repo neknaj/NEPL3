@@ -274,7 +274,7 @@ fn projection_refuses_lossy_or_unsupported_doc_shapes() -> Result<(), String> {
 
 #[test]
 fn projection_stops_without_returning_partial_markdown() -> Result<(), String> {
-    use nepl3_doc_core::{check::Category, lower};
+    use nepl3_doc_core::check::Category;
     use nepl3_tools::doc::projection::{self, Error};
     let compiled = compiled()?;
     with_input(
@@ -291,7 +291,7 @@ fn projection_stops_without_returning_partial_markdown() -> Result<(), String> {
             let mut admission = SourceAdmission::default();
             let mut codec =
                 FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
-            let doc = lower::document(
+            let doc = nepl3_suite::adapters::sentence::literal::lower(
                 &checked,
                 &compiled.doc.package.schema,
                 Category::Article,

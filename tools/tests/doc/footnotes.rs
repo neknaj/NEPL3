@@ -45,14 +45,14 @@ fn footnotes_preserve_ruby_order_nested_notes_and_literal_markers() -> Result<()
 
 #[test]
 fn footnotes_keep_cumulative_limits_and_original_nesting_depth() -> Result<(), String> {
-    use nepl3_doc_core::{check::Category, lower};
+    use nepl3_doc_core::check::Category;
     let source = r#"article en "T" body cons paragraph cons sentence cons anno text "base" cons anno text "middle" cons anno text "inner" cons text "last" nil nil nil nil nil nil"#;
     let compiled = compiled()?;
     with_input(&compiled, source, "Article", |tree, profile, _, _| {
         let store = SourceStore::default();
         let mut a = SourceAdmission::default();
         let mut codec = FoundationCodec::new(profile.registry(), &store, &mut a).map_err(err)?;
-        let document = lower::document(
+        let document = nepl3_suite::adapters::sentence::literal::lower(
             tree.syntax(),
             &compiled.doc.package.schema,
             Category::Article,
@@ -118,7 +118,7 @@ fn footnotes_keep_cumulative_limits_and_original_nesting_depth() -> Result<(), S
 
 #[test]
 fn legacy_footnotes_reject_unresolved_math_without_erasing_it() -> Result<(), String> {
-    use nepl3_doc_core::{check::Category, lower};
+    use nepl3_doc_core::check::Category;
     let compiled = compiled()?;
     // Display syntax is not code evaluation, and the legacy entry point has no
     // Math resolver. None of these positions may silently lose its guest.
@@ -134,7 +134,7 @@ fn legacy_footnotes_reject_unresolved_math_without_erasing_it() -> Result<(), St
             let mut admission = SourceAdmission::default();
             let mut codec =
                 FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
-            let document = lower::document(
+            let document = nepl3_suite::adapters::sentence::literal::lower(
                 tree.syntax(),
                 &compiled.doc.package.schema,
                 Category::Article,

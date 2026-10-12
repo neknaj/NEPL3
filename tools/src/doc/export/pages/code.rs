@@ -174,7 +174,7 @@ mod tests {
                     let mut codec =
                         FoundationCodec::new(profile.registry(), &store, &mut admission)
                             .map_err(err)?;
-                    let document = lower::document(
+                    let document = nepl3_suite::adapters::sentence::literal::lower(
                         tree.syntax(),
                         &compiled.doc.package.schema,
                         Category::Article,

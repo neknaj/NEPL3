@@ -8,7 +8,7 @@ use nepl3_core::{
     value::SchemaRef,
     value_codec::FoundationValueCodec,
 };
-use nepl3_doc_core::{check::Category, lower, model::DocumentSyntax};
+use nepl3_doc_core::{check::Category, model::DocumentSyntax};
 use nepl3_sentence_core::{model::EmbedRef, syntax::SentenceSyntax};
 
 #[derive(Debug)]
@@ -17,7 +17,7 @@ pub enum Error<E> {
     Sentence(nepl3_sentence_core::syntax::Error),
     Shape(nepl3_sentence_core::check::Error),
     Closure(SyntaxError),
-    Lower(lower::DocumentLowerError<E>),
+    Lower(super::literal::Error<E>),
 }
 impl<E> From<StopReason> for Error<E> {
     fn from(reason: StopReason) -> Self {
@@ -148,8 +148,15 @@ fn collect_inner<C: FoundationValueCodec>(
                         .bundle
                         .validate_with_sources(registry, b, codec.source_admission())
                         .map_err(Error::Closure)?;
-                    lower::document(&input, surface, Category::Inline, registry, b, codec)
-                        .map_err(Error::Lower)
+                    crate::adapters::sentence::literal::lower(
+                        &input,
+                        surface,
+                        Category::Inline,
+                        registry,
+                        b,
+                        codec,
+                    )
+                    .map_err(Error::Lower)
                 })?;
                 let id = DocumentId(selected.documents.len());
                 push(&mut selected.documents, document, b)?;

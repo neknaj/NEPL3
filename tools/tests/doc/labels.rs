@@ -3,7 +3,6 @@ use nepl3_core::{schema::SchemaRegistry, value_codec::FoundationValueCodec};
 use nepl3_doc_core::{
     check::Category,
     labels::{self, LabelError},
-    lower,
     model::*,
 };
 
@@ -25,7 +24,7 @@ fn with_document<T>(
             .map_err(err)?;
         let empty = SourceStore::default();
         let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
-        let doc = lower::document(
+        let doc = nepl3_suite::adapters::sentence::literal::lower(
             &checked,
             &compiled.doc.package.schema,
             Category::Article,
@@ -59,7 +58,7 @@ fn sentence_labels_keep_preorder_ids_and_first_duplicate_diagnostic() -> Result<
                 .map_err(err)?;
             let empty = SourceStore::default();
             let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
-            let doc = lower::document(
+            let doc = nepl3_suite::adapters::sentence::literal::lower(
                 &checked,
                 &compiled.doc.package.schema,
                 Category::Sentence,

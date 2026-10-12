@@ -21,7 +21,11 @@ parser全体の実時間・実メモリは未測定であり、単体文書の�
 
 Doc coreの重複Sentence parserと公開parsing APIは撤去した。literalの意味・診断位置は
 独立Sentenceで、Doc normalizationとの一致はhost bridgeで検査する。Doc portable試験は
-source・Origin・Viewを持つ型付きfixtureを使い、現行のSentencePayload境界を保持する。
+source・Origin・Viewを持つ型付きfixtureを使う。Doc専用SentencePayload/readerは撤去し、
+独立SentenceLiteralPayload/SentenceSyntaxをsuiteの型付きadapterで受信する。
+Doc lowerはcallbackの停止と局所構造を再配置前に検査し、元tokenとの所属を保持する。
+生成rootのcoverと原Viewは、異なるsnapshot間の明示SourceMapによる全経路対応で保存する。
+Doc消費用arenaのSentence/Inline表現は残っており、意味所有全体の移行完了ではない。
 Sentence consumerの所有移行、NEPL3a、旧lexical commentの全面撤去、T07/T21全体は
 未完了のままである。HTML/rustdocの高度化をこれらの本体開発の前提にしない。
 
@@ -246,13 +250,13 @@ WASI31件が成功した。差はhost processを使用するnative専用seed検�
 
 `nepl3-doc-core` は `no_std` + `alloc`、production 依存は `nepl3-core` だけ。DocValue は型付き arena であり、構造検査・正規化・source/Origin/View 閉包検査と明示 NDF adapter を提供する。深い入力は平坦な参照と反復処理を使い、共有 DAG の最大経路と guest 内部検査の Depth を合成する。
 
-sentence recognizer は元 SourceSnapshot を借用し、Matched / NoMatch / NeedMore / 位置付き Failed を返す。tools の明示 provider がこれを ReadRequest → ReadReply の正式包絡へ接続する。失敗は型付き Diagnostic と Report、停止は元 StopReason を保持する。literal の token payload は `nepl3.doc.DocumentSyntax`、内部 View は外側 prefix parser の子 arity にならない。
+sentence recognizer は元 SourceSnapshot を借用し、Matched / NoMatch / NeedMore / 位置付き Failed を返す。tools の明示 provider がこれを ReadRequest → ReadReply の正式包絡へ接続する。失敗は型付き Diagnostic と Report、停止は元 StopReason を保持する。literal の token payload は独立 Sentence の `SentenceLiteralPayload`、内部 View は外側 prefix parser の子 arity にならない。
 
-正式な Doc/Math/Circuit/Grammar の文法 source から保存した seed を実 compiler へ渡し、4 alias と各 checked environment を明示した Profile で ParseSession を実行する。runtime provider 登録は実 Name/Trivia/Number と Doc sentence のみ。Facts 拡張は compile 時の署名登録であり、未実装の Doc Facts callback を runtime 実装として広告しない。
+正式な Doc/Math/Circuit/Grammar の文法 source から保存した seed を実 compiler へ渡し、4 alias と各 checked environment を明示した Profile で ParseSession を実行する。runtime provider 登録は実 Name/Trivia/Number と独立 Sentence literal のみ。Facts 拡張は compile 時の署名登録であり、未実装の Doc Facts callback を runtime 実装として広告しない。
 
 `lower::prefix` は host が選択を検査した SyntaxBundle と明示 surface SchemaRef/category を受け、現在の Budget/SourceAdmission で再検査して Doc arena へ変換する。構造 proof は PreparedArticle や guest の意味 proof ではない。prefix constructor と sentence recognizer は同じ正規化を使う。実 ParseSession の literal payload と prefix lower の正常例は同じ意味正規形となる。
 
-`lower::document` は同じ変換へ実FoundationValueCodecを渡し、prefixと受理済みSentenceLiteralを一括lowerする。payload自身のsource閉包、外tokenのhead/View完全一致、意味Span/Originのtoken内包含（明示SourceMapを含む）を検査する。元hostのOrigin列と各token-local Viewを維持し、payload Originのみ末尾へ再配置する。各snapshotのSourceBytesを操作内で一度だけ計上し、停止時は入力構文木を変更しない。従来のcodec不要な`lower::prefix`はliteral leafに対して明示Unsupportedを維持する。
+suite の `adapters::sentence::literal::lower` は独立 Sentence codec と既存の Sentence → Doc adapter を `lower::document_with_decoder` へ渡し、prefix と受理済み SentenceLiteral を一括 lower する。callback 後の停止検査と、結合前の payload 局所閉包検査を行う。payload自身のsource閉包、外tokenのhead/View完全一致、意味Span/Originのtoken内包含（明示SourceMapを含む）を検査する。元hostのOrigin列と各token-local Viewを維持し、payload Originのみ末尾へ再配置する。各snapshotのSourceBytesを操作内で一度だけ計上し、停止時は入力構文木を変更しない。従来のcodec不要な`lower::prefix`はliteral leafに対して明示Unsupportedを維持する。
 
 補助 constructor は独立 fragment として lower/codec でき、親 operand では型付き enum/Option へ取り込む。取り込んだ wrapper を意味的な子に残さず、元 View/Origin/source 宣言を保存する。Code の DocGuest は `foreign Doc Article` で、同 alias でも独立 bundle/environment を保持する。構文は正しいが注釈が意味的に不正な guest も Code の表示準備のために意味 lower しない。host への復帰を実 parse で検査する。
 

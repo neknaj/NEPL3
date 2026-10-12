@@ -35,7 +35,7 @@ fn canonical_document_preparation_work_breakdown() -> Result<()> {
                 let mut admission = SourceAdmission::default();
                 let mut codec = FoundationCodec::new(profile.registry(), &store, &mut admission)
                     .map_err(super::super::source::err)?;
-                let document = nepl3_doc_core::lower::document(
+                let document = nepl3_suite::adapters::sentence::literal::lower(
                     tree.syntax(),
                     &compiled.doc.package.schema,
                     nepl3_doc_core::check::Category::Article,
@@ -1200,7 +1200,7 @@ fn check_context_drafts(
                 let mut codec = FoundationCodec::new(profile.registry(), &store, &mut admission)
                     .map_err(super::super::source::err)?;
                 let mut lower_budget = nepl3_core::budget::Budget::new(lower_limits);
-                let document = nepl3_doc_core::lower::document(
+                let document = nepl3_suite::adapters::sentence::literal::lower(
                     tree.syntax(),
                     &compiled.doc.package.schema,
                     nepl3_doc_core::check::Category::Article,

@@ -1,5 +1,5 @@
 use super::*;
-use nepl3_doc_core::{check::Category, lower, model::*, pages::*};
+use nepl3_doc_core::{check::Category, model::*, pages::*};
 use nepl3_doc_html::{ParallelMode, RenderOptions, pages::*};
 
 fn request(source: &str) -> Result<(Compiled, PagesHtmlRequest), String> {
@@ -30,7 +30,7 @@ fn request(source: &str) -> Result<(Compiled, PagesHtmlRequest), String> {
         let mut admission = SourceAdmission::default();
         let mut codec =
             FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
-        lower::document(
+        nepl3_suite::adapters::sentence::literal::lower(
             &checked,
             &compiled.doc.package.schema,
             Category::Article,

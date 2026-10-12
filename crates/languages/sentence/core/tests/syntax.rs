@@ -397,3 +397,173 @@ fn closure_validation_and_codec_stops_are_sticky() -> Result<(), String> {
     }
     Ok(())
 }
+
+fn generated_root(r: &SchemaRegistry) -> Result<SentenceSyntax, String> {
+    let mut v = fixture(r)?;
+    let generated = SourceSnapshot::new(
+        SourceId("generated".into()),
+        1,
+        "memory:generated".into(),
+        "漢𝄞".as_bytes().to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    let cover = generated.span(0, 7).map_err(err)?;
+    // The generated node has its own real spelling; the View retains the
+    // original quoted spelling. Neither head nor cover is fabricated/dropped.
+    v.locations[0].head = Some(cover.clone());
+    v.locations[0].cover = Some(cover.clone());
+    v.source_maps.push(Mapping {
+        source: v.views[0].head.clone(),
+        target: cover,
+        kind: MappingKind::Transformed,
+    });
+    v.sources.push(generated);
+    Ok(v)
+}
+
+#[test]
+fn generated_owner_retains_original_view_in_native_and_first_receiver() -> Result<(), String> {
+    let r = registry()?;
+    let v = generated_root(&r)?;
+    checked(&v, &r).map_err(err)?;
+    let bytes = nepl3_wire::encode(&encode(&v, &r)?, &mut b()).map_err(err)?;
+    let raw = nepl3_wire::decode(&bytes, &mut b()).map_err(err)?;
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let mut budget = b();
+    let actual = portable::syntax::from_value(&raw, &r, &mut codec, &mut budget).map_err(err)?;
+    assert_eq!(actual.value, v.value);
+    assert_eq!(actual.locations, v.locations);
+    assert_eq!(actual.views, v.views);
+    assert_eq!(actual.origins, v.origins);
+    assert_eq!(actual.source_maps, v.source_maps);
+    assert_eq!(budget.usage().source_bytes, 16);
+    let mut missing = raw.clone();
+    let NdfValue::Record(record) = &mut missing else {
+        return Err("syntax record".into());
+    };
+    record.fields[5] = NdfValue::List(vec![]);
+    let mut fresh = SourceAdmission::default();
+    let mut receiver = FoundationCodec::new(&r, &empty, &mut fresh).map_err(err)?;
+    assert!(portable::syntax::from_value(&missing, &r, &mut receiver, &mut b()).is_err());
+    Ok(())
+}
+
+#[test]
+fn generated_owner_requires_complete_exclusive_provenance() -> Result<(), String> {
+    let r = registry()?;
+    let v = generated_root(&r)?;
+    let mut bad = v.clone();
+    bad.source_maps.clear();
+    assert_eq!(checked(&bad, &r), Err(Error::ViewOwner(0)));
+    let mut bad = v.clone();
+    bad.source_maps[0].target = bad.sources[1].span(0, 3).map_err(err)?;
+    assert_eq!(checked(&bad, &r), Err(Error::ViewOwner(0)));
+    let unrelated = SourceSnapshot::new(
+        SourceId("unrelated".into()),
+        1,
+        "memory:unrelated".into(),
+        b"other".to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    let mut bad = v.clone();
+    bad.source_maps.push(Mapping {
+        source: unrelated.span(0, 5).map_err(err)?,
+        target: bad.sources[1].span(0, 7).map_err(err)?,
+        kind: MappingKind::Transformed,
+    });
+    bad.sources.push(unrelated);
+    assert_eq!(checked(&bad, &r), Err(Error::ViewOwner(0)));
+    let mut bad = v.clone();
+    let outside = SourceSnapshot::new(
+        SourceId("outside-view".into()),
+        1,
+        "memory:outside-view".into(),
+        b"outside".to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    bad.views[0].view.elements[0].span = outside.span(0, 7).map_err(err)?;
+    bad.sources.push(outside);
+    // Owner association succeeds; the independent ViewElement boundary fails.
+    assert_eq!(checked(&bad, &r), Err(Error::ViewOwner(0)));
+    let mut bad = v.clone();
+    bad.sources.pop();
+    assert!(checked(&bad, &r).is_err());
+    let mut bad = v;
+    bad.locations[0].head = Some(bad.views[0].head.clone());
+    assert_eq!(checked(&bad, &r), Err(Error::HeadCover(0)));
+    Ok(())
+}
+
+#[test]
+fn original_view_does_not_expand_same_snapshot_owner() -> Result<(), String> {
+    let r = registry()?;
+    let mut v = generated_root(&r)?;
+    let smaller = v.sources[0].span(1, 8).map_err(err)?;
+    v.locations[0].head = Some(smaller.clone());
+    v.locations[0].cover = Some(smaller);
+    assert_eq!(checked(&v, &r), Err(Error::ViewOwner(0)));
+    Ok(())
+}
+
+#[test]
+fn generated_owner_transitive_mapping_preserves_stops_and_depth() -> Result<(), String> {
+    let r = registry()?;
+    let mut v = generated_root(&r)?;
+    let target = v.source_maps[0].target.clone();
+    let intermediate = SourceSnapshot::new(
+        SourceId("intermediate".into()),
+        1,
+        "memory:intermediate".into(),
+        b"middle".to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    let middle = intermediate.span(0, 6).map_err(err)?;
+    v.source_maps[0].target = middle.clone();
+    v.source_maps.push(Mapping {
+        source: middle,
+        target,
+        kind: MappingKind::Transformed,
+    });
+    v.sources.push(intermediate);
+    let mut measured = b();
+    v.validate(&r, &mut measured, &mut SourceAdmission::default())
+        .map_err(err)?;
+    let mut nested = b();
+    nested
+        .with_depth_at_least(7, |budget| {
+            let before = budget.current_depth();
+            v.validate(&r, budget, &mut SourceAdmission::default())?;
+            assert_eq!(budget.current_depth(), before);
+            Ok::<_, Error>(())
+        })
+        .map_err(err)?;
+    assert_eq!(nested.current_depth(), 0);
+    for reason in [
+        StopReason::WorkLimit,
+        StopReason::NodeLimit,
+        StopReason::DepthLimit,
+    ] {
+        let mut limits = b().limits();
+        match reason {
+            StopReason::WorkLimit => limits.work = measured.usage().work - 1,
+            StopReason::NodeLimit => limits.nodes = measured.usage().nodes - 1,
+            StopReason::DepthLimit => limits.depth = measured.usage().depth - 1,
+            _ => return Err("unexpected stop".into()),
+        }
+        let mut limited = Budget::new(limits);
+        assert_eq!(
+            v.validate(&r, &mut limited, &mut SourceAdmission::default())
+                .err(),
+            Some(Error::Stopped(reason))
+        );
+        assert_eq!(limited.poll(), Err(reason));
+        assert_eq!(limited.current_depth(), 0);
+    }
+    Ok(())
+}

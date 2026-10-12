@@ -37,11 +37,11 @@ body
         cons "sentence recognizer は[元/もと] SourceSnapshot を[借用/しゃくよう]し、Matched / NoMatch / NeedMore / [位置付/いちつ]き Failed を[返/かえ]す。"
         cons "tools の[明示/めいじ] provider がこれを ReadRequest → ReadReply の[正式包絡/せいしきほうらく]へ[接続/せつぞく]する。"
         cons "[失敗/しっぱい]は[型付/かたつ]き Diagnostic と Report、[停止/ていし]は[元/もと] StopReason を[保持/ほじ]する。"
-        cons sentence cons text "literal の token payload は " cons code "nepl3.doc.DocumentSyntax" cons text "、" cons ruby text "内部" text "ないぶ" cons text " View は" cons ruby text "外側" text "そとがわ" cons text " prefix parser の" cons ruby text "子" text "こ" cons text " arity にならない。" nil
+        cons sentence cons text "literal の token payload は " cons code "nepl3.sentence.SentenceLiteralPayload" cons text "、" cons ruby text "内部" text "ないぶ" cons text " View は" cons ruby text "外側" text "そとがわ" cons text " prefix parser の" cons ruby text "子" text "こ" cons text " arity にならない。" nil
         nil
       cons paragraph
         cons "[正式/せいしき]な Doc/Math/Circuit/Grammar の[文法/ぶんぽう] source から[保存/ほぞん]した seed を[実/じつ] compiler へ[渡/わた]し、4 alias と[各/かく] checked environment を[明示/めいじ]した Profile で ParseSession を[実行/じっこう]する。"
-        cons "runtime provider [登録/とうろく]は[実/じつ] Name/Trivia/Number と Doc sentence のみ。"
+        cons "runtime provider [登録/とうろく]は[実/じつ] Name/Trivia/Number と Sentence literal のみ。"
         cons "Facts [拡張/かくちょう]は compile [時/じ]の[署名登録/しょめいとうろく]であり、[未実装/みじっそう]の Doc Facts callback を runtime [実装/じっそう]として[広告/こうこく]しない。"
         nil
       cons paragraph
@@ -51,7 +51,7 @@ body
         cons "[実/じつ] ParseSession の literal payload と prefix lower の[正常例/せいじょうれい]は[同/おな]じ[意味正規形/いみせいきけい]となる。"
         nil
       cons paragraph
-        cons sentence cons code "lower::document" cons text " は" cons ruby text "同" text "おな" cons text "じ" cons ruby text "変換" text "へんかん" cons text "へ" cons ruby text "実" text "じつ" cons text "FoundationValueCodecを" cons ruby text "渡" text "わた" cons text "し、prefixと" cons ruby text "受理済" text "じゅりず" cons text "みSentenceLiteralを" cons ruby text "一括" text "いっかつ" cons text "lowerする。" nil
+        cons "suite の adapters::sentence::literal::lower は[独立/どくりつ] Sentence codec と Sentence → Doc adapter を lower::document_with_decoder へ[渡/わた]し、prefix と SentenceLiteral を[一括/いっかつ] lower する。"
         cons "payload[自身/じしん]のsource[閉包/へいほう]、[外/そと]tokenのhead/View[完全一致/かんぜんいっち]、[意味/いみ]Span/Originのtoken[内包含/ないほうがん]（[明示/めいじ]SourceMapを[含/ふく]む）を[検査/けんさ]する。"
         cons "[元/もと]hostのOrigin[列/れつ]と[各/かく]token-local Viewを[維持/いじ]し、payload Originのみ[末尾/まつび]へ[再配置/さいはいち]する。"
         cons "[各/かく]snapshotのSourceBytesを[操作内/そうさない]で[一度/いちど]だけ[計上/けいじょう]し、[停止時/ていしじ]は[入力構文木/にゅうりょくこうぶんぎ]を[変更/へんこう]しない。"

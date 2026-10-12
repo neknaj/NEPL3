@@ -2,8 +2,315 @@ use super::*;
 use nepl3_core::value_codec::FoundationValueCodec;
 use nepl3_doc_core::{
     check::Category,
-    lower::{self, DocumentLowerError, LowerError},
+    lower::{self, LowerError},
 };
+
+struct UntrustedDecoder<'a, C> {
+    codec: &'a mut C,
+    mutation: usize,
+}
+
+#[test]
+fn independent_sentence_payload_lowers_through_doc_consumer() -> Result<(), String> {
+    let compiled = compiled()?;
+    with_input(
+        &compiled,
+        "paragraph cons \"literal [漢/かん]\" cons \"other\" nil",
+        "Block",
+        |tree, profile, b, a| {
+            let original = &tree.tree().bundle;
+            for case in 0..4 {
+                let mut raw = original.clone();
+                let mut literal_tokens = Vec::new();
+                let empty = SourceStore::default();
+                let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
+                for node in &raw.nodes {
+                    if node.kind != "Leaf:SentenceLiteral" {
+                        continue;
+                    }
+                    literal_tokens.push(node.token.ok_or("token")?.0 as usize);
+                    let token = raw
+                        .tokens
+                        .get_mut(node.token.ok_or("token")?.0 as usize)
+                        .ok_or("token index")?;
+                    let owner = raw
+                        .sources
+                        .iter()
+                        .find(|s| s.identity() == token.head.snapshot_ref())
+                        .ok_or("owner")?;
+                    let read = nepl3_sentence_core::literal::read(
+                        owner,
+                        token.head.start(),
+                        token.head.end(),
+                        true,
+                        profile.registry(),
+                        b,
+                        codec.source_admission(),
+                    )
+                    .map_err(err)?;
+                    let nepl3_sentence_core::literal::SentenceOutcome::Matched(literal) =
+                        read.outcome
+                    else {
+                        return Err("literal".into());
+                    };
+                    let mut syntax = literal.syntax;
+                    if case >= 2 {
+                        let generated = SourceSnapshot::new(
+                            SourceId(format!("generated-{}", token.head.start())),
+                            1,
+                            format!("memory:generated-{}", token.head.start()),
+                            b"generated".to_vec(),
+                            b,
+                        )
+                        .map_err(err)?;
+                        let cover = generated.span(0, 9).map_err(err)?;
+                        let nepl3_sentence_core::model::Root::Sentence(root) = syntax.value.root
+                        else {
+                            return Err("sentence root".into());
+                        };
+                        syntax.locations[root.0 as usize].head = Some(cover.clone());
+                        syntax.locations[root.0 as usize].cover = Some(cover.clone());
+                        syntax.source_maps.push(nepl3_core::origin::Mapping {
+                            source: token.head.clone(),
+                            target: cover,
+                            kind: nepl3_core::origin::MappingKind::Transformed,
+                        });
+                        syntax.sources.push(generated);
+                    }
+                    token.payload = if case == 0 {
+                        nepl3_sentence_core::portable::literal::to_value(
+                            &syntax,
+                            profile.registry(),
+                            &mut codec,
+                            b,
+                        )
+                    } else {
+                        nepl3_sentence_core::portable::syntax::to_value(
+                            &syntax,
+                            profile.registry(),
+                            &mut codec,
+                            b,
+                        )
+                    }
+                    .map_err(err)?;
+                }
+                if case == 3 {
+                    let first = *literal_tokens.first().ok_or("first literal")?;
+                    let last = *literal_tokens.last().ok_or("last literal")?;
+                    if first == last {
+                        return Err("need two literals".into());
+                    }
+                    raw.tokens[first].payload = raw.tokens[last].payload.clone();
+                }
+                let checked = raw
+                    .validate_with_sources(profile.registry(), b, codec.source_admission())
+                    .map_err(err)?;
+                let result = nepl3_suite::adapters::sentence::literal::lower(
+                    &checked,
+                    &compiled.doc.package.schema,
+                    Category::Block,
+                    profile.registry(),
+                    b,
+                    &mut codec,
+                );
+                if case == 3 {
+                    assert!(
+                        matches!(
+                            result,
+                            Err(nepl3_suite::adapters::sentence::literal::Error::Lower(
+                                LowerError::LiteralPayload { .. }
+                            ))
+                        ),
+                        "wrong token: {result:?}"
+                    );
+                    continue;
+                }
+                let doc = result.map_err(err)?;
+                assert_eq!(
+                    &doc.origins[..original.origins.len()],
+                    original.origins.as_slice()
+                );
+                assert_eq!(doc.views.len(), original.tokens.len());
+                if case < 2 {
+                    assert_eq!(doc.sources, original.sources);
+                } else {
+                    assert_eq!(
+                        doc.sources.len(),
+                        original.sources.len() + literal_tokens.len()
+                    );
+                }
+                // The legacy Doc payload is not a fallback accepted by the new adapter.
+                let mut retired = original.clone();
+                for node in &retired.nodes {
+                    if node.kind != "Leaf:SentenceLiteral" {
+                        continue;
+                    }
+                    let token = retired
+                        .tokens
+                        .get_mut(node.token.ok_or("legacy token")?.0 as usize)
+                        .ok_or("legacy token index")?;
+                    let NdfValue::Record(record) = &mut token.payload else {
+                        return Err("legacy payload".into());
+                    };
+                    record.schema = profile
+                        .registry()
+                        .selected("nepl3.doc", 1)
+                        .ok_or("Doc schema")?
+                        .clone();
+                    record.kind = "SentencePayload".into();
+                }
+                assert!(
+                    retired
+                        .validate_with_sources(profile.registry(), b, codec.source_admission())
+                        .is_err()
+                );
+            }
+            Ok(())
+        },
+    )
+}
+impl<C: FoundationValueCodec> lower::LiteralDecoder for UntrustedDecoder<'_, C> {
+    type Error = LowerError;
+    fn admission(&mut self) -> &mut SourceAdmission {
+        self.codec.source_admission()
+    }
+    fn read(
+        &mut self,
+        id: nepl3_core::syntax::NodeRef,
+        node: &nepl3_core::syntax::SyntaxNode,
+        bundle: &nepl3_core::syntax::SyntaxBundle,
+        registry: &nepl3_core::schema::SchemaRegistry,
+        b: &mut Budget,
+    ) -> Result<nepl3_doc_core::model::DocumentSyntax, Self::Error> {
+        use nepl3_doc_core::model::*;
+        let token = node
+            .token
+            .and_then(|t| bundle.tokens.get(t.0 as usize))
+            .ok_or(LowerError::LiteralPayload { node: id })?;
+        let owner = bundle
+            .sources
+            .iter()
+            .find(|s| s.identity() == token.head.snapshot_ref())
+            .ok_or(LowerError::LiteralPayload { node: id })?;
+        let syntax = nepl3_sentence_core::portable::literal::from_value(
+            &token.payload,
+            owner,
+            registry,
+            self.codec,
+            b,
+        )
+        .map_err(|_| LowerError::LiteralPayload { node: id })?;
+        let mut doc = nepl3_suite::adapters::sentence::document(
+            &syntax,
+            registry,
+            b,
+            self.codec.source_admission(),
+        )
+        .map_err(|_| LowerError::LiteralPayload { node: id })?;
+        match self.mutation {
+            0 => doc.value.root = DocRoot::Sentence(SentenceRef(doc.value.nodes.len() as u64)),
+            1 => {
+                doc.value.nodes[0].kind = DocKind::Concat {
+                    inlines: vec![InlineRef(doc.value.nodes.len() as u64)],
+                }
+            }
+            2 => {
+                doc.value.nodes[0].origin =
+                    Some(nepl3_core::origin::OriginId(doc.origins.len() as u64))
+            }
+            3 => doc.sources.clear(),
+            4 => {
+                b.stop(StopReason::Cancelled);
+            }
+            6 => {
+                b.stop(StopReason::WorkLimit);
+                return Err(LowerError::LiteralPayload { node: id });
+            }
+            _ => {}
+        }
+        Ok(doc)
+    }
+}
+
+#[test]
+fn public_literal_decoder_success_does_not_bypass_local_closure_or_stop() -> Result<(), String> {
+    let compiled = compiled()?;
+    with_input(
+        &compiled,
+        "paragraph cons sentence cons text \"prefix\" nil cons \"literal\" nil",
+        "Block",
+        |tree, profile, b, a| {
+            let checked = tree
+                .tree()
+                .bundle
+                .validate_with_sources(profile.registry(), b, a)
+                .map_err(err)?;
+            for mutation in 0..7 {
+                let empty = SourceStore::default();
+                let mut admission = SourceAdmission::default();
+                let mut codec = FoundationCodec::new(profile.registry(), &empty, &mut admission)
+                    .map_err(err)?;
+                let mut operation = budget();
+                let mut decoder = UntrustedDecoder {
+                    codec: &mut codec,
+                    mutation,
+                };
+                let result = operation.with_depth_at_least(5, |b| {
+                    let caller_depth = b.current_depth();
+                    let result = lower::document_with_decoder(
+                        &checked,
+                        &compiled.doc.package.schema,
+                        Category::Block,
+                        profile.registry(),
+                        b,
+                        &mut decoder,
+                    );
+                    assert_eq!(b.current_depth(), caller_depth);
+                    result
+                });
+                if mutation == 5 {
+                    result.map_err(err)?;
+                    assert_eq!(
+                        operation.usage().source_bytes,
+                        tree.tree()
+                            .bundle
+                            .sources
+                            .iter()
+                            .map(|s| s.text().len() as u64)
+                            .sum::<u64>()
+                    );
+                } else if mutation == 4 || mutation == 6 {
+                    let reason = if mutation == 4 {
+                        StopReason::Cancelled
+                    } else {
+                        StopReason::WorkLimit
+                    };
+                    assert_eq!(result.err(), Some(LowerError::Stopped(reason)));
+                    assert_eq!(operation.poll(), Err(reason));
+                } else if mutation == 1 {
+                    assert!(
+                        matches!(
+                            result,
+                            Err(LowerError::Structure(
+                                nepl3_doc_core::check::StructureError::Shape(
+                                    nepl3_doc_core::check::ShapeError::Reference(_)
+                                )
+                            ))
+                        ),
+                        "forged child: {result:?}"
+                    );
+                } else {
+                    assert!(
+                        matches!(result, Err(LowerError::Structure(_))),
+                        "mutation {mutation}: {result:?}"
+                    );
+                }
+                assert_eq!(operation.current_depth(), 0);
+            }
+            Ok(())
+        },
+    )
+}
 
 #[test]
 fn referenced_sentence_payloads_cross_the_owned_syntax_boundary_without_source_copies()
@@ -32,7 +339,7 @@ fn referenced_sentence_payloads_cross_the_owned_syntax_boundary_without_source_c
                     let nepl3_core::value::NdfValue::Record(record) = &token.payload else {
                         return Err("record".into());
                     };
-                    assert_eq!(record.kind, "SentencePayload");
+                    assert_eq!(record.kind, "SentenceLiteralPayload");
                     // Independent of the surrounding 64 KiB source, a short
                     // sentence must not serialize that source as its own payload.
                     {
@@ -62,7 +369,7 @@ fn referenced_sentence_payloads_cross_the_owned_syntax_boundary_without_source_c
                 let checked = raw
                     .validate_with_sources(profile.registry(), &mut budget(), &mut admitted)
                     .map_err(err)?;
-                let doc = lower::document(
+                let doc = nepl3_suite::adapters::sentence::literal::lower(
                     &checked,
                     &compiled.doc.package.schema,
                     Category::Article,
@@ -132,7 +439,7 @@ fn literal_and_prefix_share_one_lower_with_source_and_local_view_retention() -> 
                 let mut admission = SourceAdmission::default();
                 let mut codec = FoundationCodec::new(profile.registry(), &empty, &mut admission)
                     .map_err(err)?;
-                let doc = lower::document(
+                let doc = nepl3_suite::adapters::sentence::literal::lower(
                     &checked,
                     &compiled.doc.package.schema,
                     Category::Article,
@@ -214,7 +521,7 @@ fn mixed_lower_rejects_other_token_view_and_semantic_positions_without_mutation(
                     .iter()
                     .find(|s| s.identity() == raw.tokens[first].head.snapshot_ref())
                     .ok_or("owner source")?;
-                let mut doc = nepl3_doc_core::portable::sentence::from_value(
+                let mut doc = nepl3_sentence_core::portable::literal::from_value(
                     &raw.tokens[first].payload,
                     owner,
                     profile.registry(),
@@ -227,7 +534,10 @@ fn mixed_lower_rejects_other_token_view_and_semantic_positions_without_mutation(
                         raw.tokens[first].payload = raw.tokens[second].payload.clone();
                     }
                     1 => {
-                        doc.value.nodes[0].span = Some(raw.tokens[second].head.clone());
+                        doc.locations[0].cover = Some(raw.tokens[second].head.clone());
+                        if doc.locations[0].head.is_some() {
+                            doc.locations[0].head = doc.locations[0].cover.clone();
+                        }
                     }
                     2 => {
                         doc.origins[0] =
@@ -248,9 +558,12 @@ fn mixed_lower_rejects_other_token_view_and_semantic_positions_without_mutation(
                             b,
                         )
                         .map_err(err)?;
-                        let at = doc.value.nodes[0].span.as_ref().ok_or("span")?;
-                        doc.value.nodes[0].span =
+                        let at = doc.locations[0].cover.as_ref().ok_or("span")?;
+                        doc.locations[0].cover =
                             Some(other.span(at.start(), at.end()).map_err(err)?);
+                        if doc.locations[0].head.is_some() {
+                            doc.locations[0].head = doc.locations[0].cover.clone();
+                        }
                         if case >= 5 {
                             // A declared transformed map is evidence of the
                             // generated position, but must lead to this token.
@@ -258,7 +571,7 @@ fn mixed_lower_rejects_other_token_view_and_semantic_positions_without_mutation(
                                 source: raw.tokens[if case == 5 { first } else { second }]
                                     .head
                                     .clone(),
-                                target: doc.value.nodes[0].span.clone().ok_or("generated span")?,
+                                target: doc.locations[0].cover.clone().ok_or("generated span")?,
                                 kind: nepl3_core::origin::MappingKind::Transformed,
                             });
                         }
@@ -266,9 +579,13 @@ fn mixed_lower_rejects_other_token_view_and_semantic_positions_without_mutation(
                     }
                 }
                 if case != 0 {
-                    raw.tokens[first].payload =
-                        nepl3_doc_core::portable::to_value(&doc, profile.registry(), &mut codec, b)
-                            .map_err(err)?;
+                    raw.tokens[first].payload = nepl3_sentence_core::portable::syntax::to_value(
+                        &doc,
+                        profile.registry(),
+                        &mut codec,
+                        b,
+                    )
+                    .map_err(err)?;
                 }
                 if case == 7 {
                     // The ambient host store has this snapshot. It must not
@@ -276,12 +593,12 @@ fn mixed_lower_rejects_other_token_view_and_semantic_positions_without_mutation(
                     let NdfValue::Record(record) = &mut raw.tokens[first].payload else {
                         return Err("document record".into());
                     };
-                    record.fields[1] = NdfValue::List(vec![]);
+                    record.fields[2] = NdfValue::List(vec![]);
                 }
                 let checked = raw
                     .validate_with_sources(profile.registry(), b, codec.source_admission())
                     .map_err(err)?;
-                let result = lower::document(
+                let result = nepl3_suite::adapters::sentence::literal::lower(
                     &checked,
                     &compiled.doc.package.schema,
                     Category::Block,
@@ -291,7 +608,10 @@ fn mixed_lower_rejects_other_token_view_and_semantic_positions_without_mutation(
                 );
                 if case == 7 {
                     assert!(
-                        matches!(result, Err(DocumentLowerError::Payload { .. })),
+                        matches!(
+                            result,
+                            Err(nepl3_suite::adapters::sentence::literal::Error::Payload { .. })
+                        ),
                         "missing declaration: {result:?}"
                     );
                 } else if case == 5 {
@@ -300,7 +620,9 @@ fn mixed_lower_rejects_other_token_view_and_semantic_positions_without_mutation(
                     assert!(
                         matches!(
                             result,
-                            Err(DocumentLowerError::Lower(LowerError::LiteralPayload { .. }))
+                            Err(nepl3_suite::adapters::sentence::literal::Error::Lower(
+                                LowerError::LiteralPayload { .. }
+                            ))
                         ),
                         "case {case}: {result:?}"
                     );
@@ -310,7 +632,7 @@ fn mixed_lower_rejects_other_token_view_and_semantic_positions_without_mutation(
                 .validate_with_sources(profile.registry(), b, a)
                 .map_err(err)?;
             let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
-            lower::document(
+            nepl3_suite::adapters::sentence::literal::lower(
                 &checked,
                 &compiled.doc.package.schema,
                 Category::Block,
@@ -371,7 +693,7 @@ fn mixed_lower_stops_keep_original_tree_and_caller_depth() -> Result<(), String>
                         FoundationCodec::new(profile.registry(), &empty, &mut admission)
                             .map_err(err)?;
                     let result = operation.with_depth_at_least(7, |b| {
-                        lower::document(
+                        nepl3_suite::adapters::sentence::literal::lower(
                             &checked,
                             &compiled.doc.package.schema,
                             Category::Block,
@@ -390,7 +712,7 @@ fn mixed_lower_stops_keep_original_tree_and_caller_depth() -> Result<(), String>
                             )
                             .map_err(err)?;
                         }
-                        Err(DocumentLowerError::Stopped(reason)) => {
+                        Err(nepl3_suite::adapters::sentence::literal::Error::Stopped(reason)) => {
                             stops += 1;
                             assert_eq!(reason, expected);
                             assert_eq!(operation.poll(), Err(expected));
@@ -408,7 +730,7 @@ fn mixed_lower_stops_keep_original_tree_and_caller_depth() -> Result<(), String>
             cancelled.cancel();
             let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
             assert!(matches!(
-                lower::document(
+                nepl3_suite::adapters::sentence::literal::lower(
                     &checked,
                     &compiled.doc.package.schema,
                     Category::Block,
@@ -416,7 +738,9 @@ fn mixed_lower_stops_keep_original_tree_and_caller_depth() -> Result<(), String>
                     &mut cancelled,
                     &mut codec
                 ),
-                Err(DocumentLowerError::Stopped(StopReason::Cancelled))
+                Err(nepl3_suite::adapters::sentence::literal::Error::Stopped(
+                    StopReason::Cancelled
+                ))
             ));
             Ok(())
         },
@@ -436,7 +760,7 @@ fn mixed_lower_keeps_doc_guest_syntax_without_meaning_check() -> Result<(), Stri
             .map_err(err)?;
         let empty = SourceStore::default();
         let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
-        let doc = lower::document(
+        let doc = nepl3_suite::adapters::sentence::literal::lower(
             &checked,
             &compiled.doc.package.schema,
             Category::Block,
@@ -459,7 +783,7 @@ fn mixed_lower_keeps_doc_guest_syntax_without_meaning_check() -> Result<(), Stri
             .validate_with_sources(profile.registry(), b, codec.source_admission())
             .map_err(err)?;
         assert!(matches!(
-            lower::document(
+            nepl3_suite::adapters::sentence::literal::lower(
                 &guest,
                 &compiled.doc.package.schema,
                 Category::Article,
@@ -467,9 +791,9 @@ fn mixed_lower_keeps_doc_guest_syntax_without_meaning_check() -> Result<(), Stri
                 b,
                 &mut codec
             ),
-            Err(DocumentLowerError::Lower(LowerError::Shape(
-                ShapeError::EmptyAnnotationPart(_)
-            )))
+            Err(nepl3_suite::adapters::sentence::literal::Error::Lower(
+                LowerError::Shape(ShapeError::EmptyAnnotationPart(_))
+            ))
         ));
         let wire = nepl3_doc_core::portable::to_value(&doc, profile.registry(), &mut codec, b)
             .map_err(err)?;

@@ -38,7 +38,7 @@ Docで例や解説を書く際は、[文書の執筆指針](authoring.md)のsent
 | [design/tasks.json](../design/tasks.json) | タスクID、依存、成果物、受入条件の正本 |
 | [interfaces/model.json](../interfaces/model.json)、[contracts.json](../interfaces/contracts.json) | 言語中立の意味モデル・操作schema |
 | [interfaces/foundation.json](../interfaces/foundation.json) | contractsから生成しproduction registryで検査する共通package descriptor |
-| [interfaces/doc.json](../interfaces/doc.json)、[doc-reader.json](../interfaces/doc-reader.json) | Doc arena値と、domain coreから分離したsentence reader adapterの実schema |
+| [interfaces/doc.json](../interfaces/doc.json)、[sentence.json](../interfaces/sentence.json)、[sentence-reader.json](../interfaces/sentence-reader.json) | Doc consumerのarena値と、独立Sentenceの値・readerの実schema |
 | [interfaces/math.json](../interfaces/math.json) | Mathの表記を保持するarenaとsource閉包の実schema。構造proofと式の評価を分離する |
 | `languages/*/syntax.neplg` | 各LanguagePackageの文法source |
 | [conformance/cases.json](../conformance/cases.json)、[examples/](../examples/) | 受入条件と検証入力 |
