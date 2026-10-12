@@ -30,38 +30,7 @@ pub(super) fn check(
     budget: &mut Budget,
     subject: &mut Option<PackageSubject>,
 ) -> Result<(), PackageError> {
-    // Reject every direct binding cycle, including currently unused declarations.
-    for root in 0..package.bindings.len() {
-        let mut pending = Vec::new();
-        let mut path = Vec::new();
-        push(&mut pending, (BindingId(root as u64), false), budget)?;
-        while let Some((id, exit)) = pending.pop() {
-            *subject = Some(PackageSubject::Binding {
-                owner: None,
-                binding: Some(id),
-            });
-            budget.charge(Resource::Work, path.len() as u64 + 1)?;
-            if exit {
-                path.pop();
-                continue;
-            }
-            budget.observe_depth(path.len() as u64 + 1)?;
-            if path.contains(&id) {
-                return Err(PackageError::DirectCycle);
-            }
-            let binding = usize::try_from(id.0)
-                .ok()
-                .and_then(|i| package.bindings.get(i))
-                .ok_or(PackageError::InvalidBinding)?;
-            push(&mut path, id, budget)?;
-            push(&mut pending, (id, true), budget)?;
-            if let Binding::Group(children) | Binding::Scope(children) = binding {
-                for child in children.iter().rev() {
-                    push(&mut pending, (*child, false), budget)?;
-                }
-            }
-        }
-    }
+    check_graph(package, budget, subject)?;
     for owner in (0..package.forms.len())
         .map(|i| BindingOwner::Form(i as u64))
         .chain((0..package.leaves.len()).map(|i| BindingOwner::Leaf(i as u64)))
@@ -80,6 +49,104 @@ pub(super) fn check(
     }
     Ok(())
 }
+/// A completed node retains its maximum descendant depth. Reusing only a
+/// visited bit would hide deep paths when a shared child was checked earlier.
+#[derive(Clone, Copy)]
+enum GraphState {
+    Unseen,
+    Active,
+    Complete(u64),
+}
+struct GraphFrame {
+    index: usize,
+    next_child: usize,
+    height: u64,
+}
+fn check_graph(
+    package: &LanguagePackage,
+    budget: &mut Budget,
+    subject: &mut Option<PackageSubject>,
+) -> Result<(), PackageError> {
+    // Validate every declaration, including unused nodes. Each arena node and
+    // direct edge is visited once; repeated paths are never expanded.
+    let mut states = Vec::new();
+    for index in 0..package.bindings.len() {
+        *subject = Some(PackageSubject::Binding {
+            owner: None,
+            binding: Some(BindingId(index as u64)),
+        });
+        budget.charge(Resource::Work, 1)?;
+        push(&mut states, GraphState::Unseen, budget)?;
+    }
+    let mut stack: Vec<GraphFrame> = Vec::new();
+    for root in 0..package.bindings.len() {
+        let mut pending = Some(BindingId(root as u64));
+        loop {
+            if let Some(id) = pending.take() {
+                *subject = Some(PackageSubject::Binding {
+                    owner: None,
+                    binding: Some(id),
+                });
+                budget.charge(Resource::Work, 1)?;
+                budget.observe_depth(stack.len() as u64 + 1)?;
+                let index = usize::try_from(id.0)
+                    .ok()
+                    .filter(|i| *i < states.len())
+                    .ok_or(PackageError::InvalidBinding)?;
+                match states[index] {
+                    GraphState::Active => return Err(PackageError::DirectCycle),
+                    // Admit a cached subtree atomically. A depth stop names this
+                    // entry, not a descendant that was never traversed here.
+                    GraphState::Complete(height) => {
+                        budget.observe_depth(stack.len() as u64 + height)?;
+                        if let Some(parent) = stack.last_mut() {
+                            parent.height = parent.height.max(height + 1);
+                        }
+                    }
+                    GraphState::Unseen => {
+                        push(
+                            &mut stack,
+                            GraphFrame {
+                                index,
+                                next_child: 0,
+                                height: 1,
+                            },
+                            budget,
+                        )?;
+                        states[index] = GraphState::Active;
+                    }
+                }
+            }
+            let Some(frame) = stack.last_mut() else {
+                break;
+            };
+            *subject = Some(PackageSubject::Binding {
+                owner: None,
+                binding: Some(BindingId(frame.index as u64)),
+            });
+            budget.charge(Resource::Work, 1)?;
+            let child = match &package.bindings[frame.index] {
+                Binding::Group(children) | Binding::Scope(children) => {
+                    children.get(frame.next_child).copied()
+                }
+                _ => None,
+            };
+            if let Some(child) = child {
+                frame.next_child += 1;
+                pending = Some(child);
+            } else {
+                let height = frame.height;
+                states[frame.index] = GraphState::Complete(height);
+                stack.pop();
+                if let Some(parent) = stack.last_mut() {
+                    parent.height = parent.height.max(height + 1);
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
 /// The concrete declaration whose existing binding rules are being checked.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BindingOwner {
