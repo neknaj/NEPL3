@@ -1,7 +1,7 @@
 use super::{check::unique, *};
 use nepl3_core::{
     budget::{Budget, Resource},
-    schema::{FieldDescriptor, SchemaRegistry, TypeDescriptor, TypeShape},
+    schema::{FieldDescriptor, SchemaError, SchemaRegistry, TypeDescriptor, TypeShape},
     value::KindRef,
 };
 use nepl3_reader::{builtin::BuiltinReader, tokenizer::TokenReader};
@@ -11,16 +11,16 @@ pub(super) fn record_kind<'a>(
     registry: &'a SchemaRegistry,
     budget: &mut Budget,
 ) -> Result<&'a [FieldDescriptor], PackageError> {
-    let name = registry.kind_name(&kind.schema, kind.local_kind)?;
     let descriptor = registry
-        .descriptor(&kind.schema)
-        .ok_or(PackageError::KindShape)?;
-    budget.charge(Resource::Work, descriptor.types.len() as u64 + 1)?;
-    let ty = descriptor
-        .types
-        .iter()
-        .find(|v| v.name == name)
-        .ok_or(PackageError::KindShape)?;
+        .descriptor_with_budget(&kind.schema, budget)?
+        .ok_or(SchemaError::UnknownSchema)?;
+    // Kind IDs already use the registry's canonical type order. Admit the
+    // indexed access, rather than resolving its name and scanning it again.
+    budget.charge(Resource::Work, 1)?;
+    let ty = usize::try_from(kind.local_kind)
+        .ok()
+        .and_then(|index| descriptor.types.get(index))
+        .ok_or(SchemaError::UnknownType)?;
     match &ty.shape {
         TypeShape::Record { fields } => Ok(fields),
         _ => Err(PackageError::KindShape),
@@ -262,3 +262,6 @@ pub(super) fn check(
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests;
