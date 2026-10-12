@@ -107,7 +107,7 @@ Sentence coreの`literal::read`は、明示SourceSnapshotのUTF-8 windowから�
 成功時はSentenceSyntaxに元source、denseな位置表、Direct Origin、元綴りのViewを残す。
 このnative helperはLanguagePackageやreader/provider包絡そのものではなく、その解析本体である。
 Doc coreへの依存なしで動作する。Doc本文もこのreaderを明示adapter経由で使用し、
-Doc coreの重複したSentence parsing APIは撤去した。Docの意味schema・payloadの所有移行は別の残件である。
+Doc coreの重複したSentence parsing APIは撤去した。Doc consumerの意味arenaの所有移行は別の残件である。
 
 `[base/reading]`はRuby、`{base/note/...}`は文章内部のInlineAnnoへ対応する。入れ子を許し、
 空のbase/reading/note、余分なRuby区切り、不正な括弧対応を型付き失敗とする。literal内の
@@ -265,9 +265,9 @@ Mathの文章注釈では、内側Mathのnode対応と注釈対応をSentenceの
 
 ## Doc本文readerへの接続
 
-この節はconsumer所有移行中のadapter契約である。Sentenceの恒久的な意味モデルと、現在のDoc payloadへの変換を区別する。移行完了後も必要なforeign adapterと、旧所有を除去するまでの互換変換を同じ完成条件にしない。
+この節はconsumer所有移行中のadapter契約である。Sentenceの恒久的な意味モデルと、現在のDoc consumer arenaへの変換を区別する。移行完了後も必要なforeign adapterと、旧所有を除去するまでの互換変換を同じ完成条件にしない。
 
-Doc readerは独立Sentence coreのliteral読取りを使用し、suiteの`doc-sentence` featureで公開する
+Docの標準文法は独立Sentenceのliteral readerを使用し、suiteの`doc-sentence` featureで公開する
 `nepl3_suite::adapters::sentence::document`を通して現在のDoc consumerへ渡す。
 adapterは`no_std + alloc`で動作し、DocとSentenceの公開型・検査を接続する。
 suiteの既定featureはこのdomain依存を有効にしない。開発hostはfeatureを明示して利用する。
