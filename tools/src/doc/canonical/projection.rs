@@ -2,6 +2,7 @@
 #[path = "receipt.rs"]
 mod receipt;
 use super::*;
+use crate::doc::export::pages::resources::PhaseLimits;
 use crate::doc::{
     projection::annotated,
     source::{Compiled, err},
@@ -132,8 +133,17 @@ fn page_context(
 
 type ReferenceInputs = Vec<(super::super::export::pages::Entry, Vec<u8>)>;
 
-fn capture(root: &Path, raw: Vec<u8>) -> Result<(Vec<u8>, Vec<Input>, ReferenceInputs, bool)> {
+struct Captured {
+    raw: Vec<u8>,
+    inputs: Vec<Input>,
+    references: ReferenceInputs,
+    needs_group: bool,
+    phases: PhaseLimits,
+}
+
+fn capture(root: &Path, raw: Vec<u8>) -> Result<Captured> {
     let registry = parse_registry(&raw)?;
+    let phases = registry.phases();
     let grouped = registry
         .pages
         .iter()
@@ -164,13 +174,20 @@ fn capture(root: &Path, raw: Vec<u8>) -> Result<(Vec<u8>, Vec<Input>, ReferenceI
             aliases,
         });
     }
-    Ok((raw, inputs, references, grouped))
+    Ok(Captured {
+        raw,
+        inputs,
+        references,
+        needs_group: grouped,
+        phases,
+    })
 }
 
 fn grouped(
     compiled: &Compiled,
     inputs: &[Input],
     references: ReferenceInputs,
+    phases: PhaseLimits,
     budget: &mut Budget,
 ) -> Result<(annotated::pages::PagesArtifact, Vec<PageFile>)> {
     let footnotes = inputs
@@ -195,13 +212,13 @@ fn grouped(
             &input.source,
             &page.id,
             "Article",
-            crate::doc::source::budget().limits(),
+            phases.parse,
             |tree, profile, _, _| {
                 let store = SourceStore::default();
                 let mut admission = SourceAdmission::default();
                 let mut codec = FoundationCodec::new(profile.registry(), &store, &mut admission)
                     .map_err(err)?;
-                let mut lower_budget = crate::doc::source::budget();
+                let mut lower_budget = Budget::new(phases.lower);
                 lower::document(
                     tree.syntax(),
                     &compiled.doc.package.schema,
@@ -359,10 +376,16 @@ fn generate_batch(
     budget.poll().map_err(err)?;
     let initial_usage = budget.usage();
     charge(budget, Resource::Work, 1)?;
-    let (raw, inputs, references, needs_group) = capture(root, raw)?;
+    let Captured {
+        raw,
+        inputs,
+        references,
+        needs_group,
+        phases,
+    } = capture(root, raw)?;
     let compiled = crate::doc::source::compiled()?;
     let (mut group, svg_files) = if needs_group {
-        let (group, files) = grouped(&compiled, &inputs, references, budget)?;
+        let (group, files) = grouped(&compiled, &inputs, references, phases, budget)?;
         (Some(group), files)
     } else {
         (None, Vec::new())
@@ -431,13 +454,14 @@ fn generate_batch(
         let (text, document_digest) = if page.renderer == host::RENDERER {
             let href = annotated::pages::relative(&page.projection, &page.source, None, budget)
                 .map_err(err)?;
-            let (legacy, document_digest) = host::generate_with_receipt(
+            let (legacy, document_digest) = host::generate_with_phase_limits(
                 &compiled,
                 &page.source,
                 &input.source,
                 &input.aliases,
                 Some(&href),
                 budget,
+                phases,
             )?;
             if let Some(group) = &group {
                 charge(
@@ -530,6 +554,7 @@ fn generate_batch(
         identity,
         &records,
         initial_usage,
+        phases,
         budget,
     )?;
     Ok(Generated { files, manifest })

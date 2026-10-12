@@ -168,6 +168,8 @@ struct Receipt<'a> {
     input_context: Option<Hex>,
     input_pageset: Option<Hex>,
     output_budget: OutputBudget,
+    parse_limits: Counters,
+    lower_limits: Counters,
     page_dependencies: Option<Pages<'a>>,
 }
 
@@ -219,7 +221,7 @@ fn admit_scans(
     records: &[serde_json::Value],
     budget: &mut Budget,
 ) -> Result<()> {
-    charge(budget, Resource::Work, 2048)?; // root keys, 24 counters, two digests
+    charge(budget, Resource::Work, 2048)?; // root keys, 40 counters, two digests
     for record in records {
         charge(budget, Resource::Work, 256)?;
         let fields = record
@@ -263,6 +265,7 @@ fn admit_scans(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(super) fn render(
     inputs: &[Input],
     group: Option<&annotated::pages::PagesArtifact>,
@@ -270,6 +273,7 @@ pub(super) fn render(
     identity: Option<Digest>,
     records: &[serde_json::Value],
     initial: Usage,
+    phases: PhaseLimits,
     budget: &mut Budget,
 ) -> Result<String> {
     budget.poll().map_err(err)?;
@@ -288,6 +292,8 @@ pub(super) fn render(
     let limits = budget.limits();
     let make = |usage| Receipt {
         files: records,
+        parse_limits: phases.parse.into(),
+        lower_limits: phases.lower.into(),
         format: "nepl3.canonical-markdown-stage/2",
         input_context: identity.map(Hex),
         input_pageset: group.map(|g| Hex(g.identity)),
@@ -435,6 +441,7 @@ mod tests {
                     Some(Digest([0x01; 32])),
                     &records,
                     Usage::default(),
+                    PhaseLimits::default(),
                     &mut b,
                 )?;
                 let mut actual: Value = serde_json::from_str(&text)?;
@@ -446,6 +453,8 @@ mod tests {
                 // Independent legacy shape, including null and omitted values.
                 let expected = json!({"format":"nepl3.canonical-markdown-stage/2",
                     "input_context":hex(Digest([1;32])),"input_pageset":grouped.map(|g| hex(g.identity)),
+                    "parse_limits": crate::doc::export::pages::resources::OperationLimits::default(),
+                    "lower_limits": crate::doc::export::pages::resources::OperationLimits::default(),
                     "files":records,"page_dependencies":grouped.map(|g| inputs.iter().enumerate().map(|(index,input)| {
                         let mut p = json!({"path":input.page.projection,"links":g.dependencies[index]});
                         if has_svg { p["images"] = Value::Array(g.image_dependencies[index].iter().map(|i|
@@ -501,6 +510,7 @@ mod tests {
                 None,
                 &records,
                 Usage::default(),
+                PhaseLimits::default(),
                 &mut b,
             )?;
             let actual: Value = serde_json::from_str(&text)?;
@@ -543,10 +553,34 @@ mod tests {
             if reason == StopReason::Cancelled {
                 b.cancel();
             }
-            assert!(render(&[], None, false, None, &[], Usage::default(), &mut b).is_err());
+            assert!(
+                render(
+                    &[],
+                    None,
+                    false,
+                    None,
+                    &[],
+                    Usage::default(),
+                    PhaseLimits::default(),
+                    &mut b
+                )
+                .is_err()
+            );
             let used = b.usage();
             assert_eq!(b.poll(), Err(reason));
-            assert!(render(&[], None, false, None, &[], Usage::default(), &mut b).is_err());
+            assert!(
+                render(
+                    &[],
+                    None,
+                    false,
+                    None,
+                    &[],
+                    Usage::default(),
+                    PhaseLimits::default(),
+                    &mut b
+                )
+                .is_err()
+            );
             assert_eq!(b.usage(), used);
             if reason != StopReason::OutputLimit {
                 assert_eq!(used.allocation_units, 0);
@@ -574,19 +608,61 @@ mod tests {
             let seed = u64::MAX - 1_000_000;
             let mut baseline = budget();
             baseline.charge(resource, seed).map_err(err)?;
-            render(&[], None, false, None, &[], Usage::default(), &mut baseline)?;
+            render(
+                &[],
+                None,
+                false,
+                None,
+                &[],
+                Usage::default(),
+                PhaseLimits::default(),
+                &mut baseline,
+            )?;
             let cost = used(&baseline, resource) - seed;
             assert!(cost > 0 && cost < 1_000_000);
             let mut exact = budget();
             exact.charge(resource, u64::MAX - cost).map_err(err)?;
-            render(&[], None, false, None, &[], Usage::default(), &mut exact)?;
+            render(
+                &[],
+                None,
+                false,
+                None,
+                &[],
+                Usage::default(),
+                PhaseLimits::default(),
+                &mut exact,
+            )?;
             assert_eq!(used(&exact, resource), u64::MAX);
             let mut short = budget();
             short.charge(resource, u64::MAX - cost + 1).map_err(err)?;
-            assert!(render(&[], None, false, None, &[], Usage::default(), &mut short).is_err());
+            assert!(
+                render(
+                    &[],
+                    None,
+                    false,
+                    None,
+                    &[],
+                    Usage::default(),
+                    PhaseLimits::default(),
+                    &mut short
+                )
+                .is_err()
+            );
             assert_eq!(short.poll(), Err(reason));
             let usage = short.usage();
-            assert!(render(&[], None, false, None, &[], Usage::default(), &mut short).is_err());
+            assert!(
+                render(
+                    &[],
+                    None,
+                    false,
+                    None,
+                    &[],
+                    Usage::default(),
+                    PhaseLimits::default(),
+                    &mut short
+                )
+                .is_err()
+            );
             assert_eq!(short.usage(), usage);
         }
         Ok(())
@@ -594,7 +670,16 @@ mod tests {
     #[test]
     fn receipt_positive_work_exhaustion_at_sizing_and_final_admission() -> Result<()> {
         let mut baseline = budget();
-        let text = render(&[], None, false, None, &[], Usage::default(), &mut baseline)?;
+        let text = render(
+            &[],
+            None,
+            false,
+            None,
+            &[],
+            Usage::default(),
+            PhaseLimits::default(),
+            &mut baseline,
+        )?;
         let metadata: Value = serde_json::from_str(&text)?;
         let admitted = metadata["output_budget"]["usage_before_receipt_serialization"]["work"]
             .as_u64()
@@ -605,7 +690,19 @@ mod tests {
             let mut b = budget();
             b.charge(Resource::Work, u64::MAX - allowance)
                 .map_err(err)?;
-            assert!(render(&[], None, false, None, &[], Usage::default(), &mut b).is_err());
+            assert!(
+                render(
+                    &[],
+                    None,
+                    false,
+                    None,
+                    &[],
+                    Usage::default(),
+                    PhaseLimits::default(),
+                    &mut b
+                )
+                .is_err()
+            );
             assert_eq!(b.poll(), Err(StopReason::WorkLimit));
             assert_eq!(b.usage().work, u64::MAX);
             assert_eq!(b.usage().allocation_units, 0);
@@ -641,6 +738,7 @@ mod tests {
                 None,
                 &[],
                 Usage::default(),
+                PhaseLimits::default(),
                 &mut b
             )
             .is_err()

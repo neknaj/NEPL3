@@ -92,6 +92,7 @@ pub fn write(
         css,
         Some((&inputs, mode)),
         super::MathRenderer::KaTeXPreferred,
+        ExecutionLimits::default(),
         &mut |_| {},
     )?;
     let mut files = BTreeMap::new();
