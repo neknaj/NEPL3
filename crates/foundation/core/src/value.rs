@@ -1,6 +1,7 @@
 //! NDF logical values. Numeric constructors preserve canonical wire invariants.
 mod compare;
 pub mod decimal;
+mod identity;
 use crate::source::Digest;
 use alloc::{boxed::Box, string::String, vec::Vec};
 use num_bigint::{BigInt, BigUint, Sign};

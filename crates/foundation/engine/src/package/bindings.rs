@@ -295,12 +295,16 @@ fn owner_inner(
                     visited[j] = true;
                 }
                 Binding::Custom(operation) => {
-                    budget.charge(Resource::Work, package.extensions.len() as u64 + 1)?;
-                    if !package
-                        .extensions
-                        .iter()
-                        .any(|v| &v.operation == operation && v.signature == "facts/v1")
-                    {
+                    let mut found = false;
+                    for extension in &package.extensions {
+                        if extension.operation.equal_with_budget(operation, budget)?
+                            && equal_with_budget(&extension.signature, "facts/v1", budget)?
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if !found {
                         return Err(PackageError::MissingExtension);
                     }
                     visited.fill(true);
