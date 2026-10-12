@@ -56,23 +56,7 @@ impl<'r, 't> Definitions<'r, 't> {
     }
 }
 
-/// Lexicographic UTF-8 byte order equals Rust str order. Admit each byte pair
-/// before reading it; mismatching prefixes do not scan the untouched suffix.
-pub(super) fn compare(
-    left: &str,
-    right: &str,
-    budget: &mut Budget,
-) -> Result<core::cmp::Ordering, StopReason> {
-    budget.charge(Resource::Work, 1)?;
-    for index in 0..left.len().min(right.len()) {
-        budget.charge(Resource::Work, 3)?;
-        let order = left.as_bytes()[index].cmp(&right.as_bytes()[index]);
-        if order != core::cmp::Ordering::Equal {
-            return Ok(order);
-        }
-    }
-    Ok(left.len().cmp(&right.len()))
-}
+pub(super) use crate::lexical::compare_with_budget as compare;
 
 #[cfg(test)]
 mod tests {
@@ -86,60 +70,6 @@ mod tests {
             depth: 100,
             ..Default::default()
         })
-    }
-    #[test]
-    fn comparison_admits_only_visited_pairs_with_exact_sticky_boundaries() -> Result<(), StopReason>
-    {
-        let huge = "界".repeat(1024);
-        let tail = alloc::format!("{huge}x");
-        let mismatch = alloc::format!("{huge}y");
-        for (a, b, pairs) in [
-            ("", "", 0),
-            ("", huge.as_str(), 0),
-            ("a", "ab", 1),
-            ("x", huge.as_str(), 1),
-            (huge.as_str(), huge.as_str(), huge.len()),
-            (tail.as_str(), mismatch.as_str(), huge.len() + 1),
-        ] {
-            let work = 1 + 3 * pairs as u64;
-            let mut exact = budget(work);
-            assert_eq!(compare(a, b, &mut exact)?, a.cmp(b));
-            assert_eq!(exact.usage().work, work);
-            for limit in [0, work - 1] {
-                let mut short = budget(limit);
-                assert_eq!(compare(a, b, &mut short), Err(StopReason::WorkLimit));
-                assert_eq!(
-                    short.usage().work,
-                    if limit == 0 {
-                        0
-                    } else {
-                        1 + 3 * ((limit - 1) / 3)
-                    }
-                );
-                let used = short.usage();
-                assert_eq!(compare("", "", &mut short), Err(StopReason::WorkLimit));
-                assert_eq!(short.usage(), used);
-            }
-        }
-        for reason in [
-            StopReason::Cancelled,
-            StopReason::SourceLimit,
-            StopReason::WorkLimit,
-            StopReason::DepthLimit,
-            StopReason::NodeLimit,
-            StopReason::AllocationLimit,
-            StopReason::OutputLimit,
-            StopReason::DiagnosticLimit,
-            StopReason::EventLimit,
-        ] {
-            let mut b = budget(100);
-            b.charge(Resource::Work, 7)?;
-            b.stop(reason);
-            let before = b.usage();
-            assert_eq!(compare("a", "b", &mut b), Err(reason));
-            assert_eq!(b.usage(), before);
-        }
-        Ok(())
     }
     #[test]
     fn resolution_cache_uses_exact_borrows_and_has_bounded_eviction() -> Result<(), SchemaError> {

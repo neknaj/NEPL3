@@ -3,6 +3,7 @@ use super::*;
 use alloc::vec::Vec;
 use nepl3_core::{
     budget::{Budget, Resource},
+    lexical::equal_with_budget,
     schema::{SchemaRegistry, TypeDescriptor},
 };
 use nepl3_reader::plan::ReaderExpr;
@@ -13,8 +14,7 @@ fn field<'a>(
     budget: &mut Budget,
 ) -> Result<(usize, &'a FieldSpec), PackageError> {
     for (index, field) in fields.iter().enumerate() {
-        budget.charge(Resource::Work, (field.name.len() + name.len()) as u64 + 1)?;
-        if field.name == name {
+        if equal_with_budget(&field.name, name, budget)? {
             return Ok((index, field));
         }
     }
@@ -254,8 +254,14 @@ fn owner_inner(
                 Binding::Bind { namespace, name }
                 | Binding::Reference { namespace, name }
                 | Binding::Export { namespace, name } => {
-                    budget.charge(Resource::Work, package.namespaces.len() as u64 + 1)?;
-                    if !package.namespaces.iter().any(|v| &v.name == namespace) {
+                    let mut found = false;
+                    for candidate in &package.namespaces {
+                        if equal_with_budget(&candidate.name, namespace, budget)? {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if !found {
                         return Err(PackageError::MissingNamespace);
                     }
                     match name {

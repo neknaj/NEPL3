@@ -2,6 +2,8 @@
 //! Name uses Unicode 16.0 XID tables, with the NEPL underscore-start extension.
 //! Lang checks RFC 5646 section 2.1 grammar, not language registry validity.
 use crate::budget::{Budget, Resource, StopReason};
+mod compare;
+pub use compare::{compare_with_budget, equal_with_budget};
 pub mod language;
 
 /// Constant-cost character predicate shared with the Name reader and CharClass.
