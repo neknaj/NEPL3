@@ -96,125 +96,194 @@ pub fn with_named_input_limits<T>(
         &mut SourceAdmission,
     ) -> Result<T, String>,
 ) -> Result<T, String> {
-    let r = &compiled.doc.registry;
-    let packages: Vec<_> = std::iter::once(&compiled.doc.package)
-        .chain(compiled.others.iter())
-        .collect();
-    // The requirements below come from packages. Registrations must instead
-    // come from this independently constructed host and its real callbacks.
-    let implementation = host_identity();
-    let mut b = Budget::new(parse_limits);
-    let mut a = SourceAdmission::default();
-    let source = SourceSnapshot::new(
-        SourceId(source_name.into()),
-        0,
-        format!("memory:{source_name}"),
-        input.as_bytes().to_vec(),
-        &mut b,
+    with_named_input_limits_observed(
+        native,
+        compiled,
+        input,
+        source_name,
+        category,
+        parse_limits,
+        |_| {},
+        finish,
     )
-    .map_err(err)?;
-    let (prefix, mut host) = host_for_source(&source, r, implementation, &mut b)?;
-    let providers = host.provider_catalog(&mut b).map_err(err)?;
-    let mut operations = Vec::new();
-    for operation in packages
-        .iter()
-        .flat_map(|p| p.reader.providers.iter().map(|v| &v.operation))
-    {
-        if !operations.contains(operation) {
-            operations.push(operation.clone());
-        }
-    }
-    let requirements = operations
-        .iter()
-        .map(|operation| ProviderRequirement {
-            provider: operation.name.clone(),
-            revision: 1,
-            implementation_digest: implementation,
-            operation: operation.clone(),
-        })
-        .collect();
-    let mut schemas = packages
-        .iter()
-        .map(|p| p.schema.clone())
-        .collect::<Vec<_>>();
-    for schema in packages
-        .iter()
-        .flat_map(|p| p.payload_schemas.iter())
-        .chain(
-            [
-                "nepl3.foundation",
-                "nepl3.reader",
-                "nepl3.engine",
-                "nepl3.doc",
-                "nepl3.doc.reader",
-                "nepl3.sentence.reader",
-                "nepl3.grammar",
-            ]
-            .iter()
-            .filter_map(|name| r.selected(name, 1)),
-        )
-    {
-        if !schemas.contains(schema) {
-            schemas.push(schema.clone());
-        }
-    }
-    let profile = ParseProfile {
-        id: "doc-prefix".into(),
-        languages: packages
-            .iter()
-            .zip([
-                ("Doc", "Article"),
-                ("Math", "Expr"),
-                ("Circuit", "Design"),
-                ("Grammar", "Root"),
-                ("Sentence", "Sentence"),
-            ])
-            .map(|(p, (alias, category))| {
-                Ok(LanguageRegistration {
-                    alias: alias.into(),
-                    package: p
-                        .check(r, &mut budget())
-                        .and_then(|c| c.semantic_identity(&mut budget()))
-                        .map_err(err)?,
-                    default_category: category.into(),
-                })
-            })
-            .collect::<Result<Vec<_>, String>>()?,
-        schemas,
-        head_providers: vec![],
-        category_modes: vec![],
-        providers: requirements,
-        allowlist: operations,
-        resources: vec![],
-        limits: parse_limits,
-    };
-    let resolved = profile
-        .resolve(
-            &RuntimeCatalog {
-                packages: &packages,
-                providers: &providers,
-                resources: &[],
-            },
-            r,
-            &mut budget(),
+}
+
+/// Terminal observation of the parsing/validation budget, not the entire host.
+/// Complete describes this phase only; a later callback may still fail.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ParseObservation {
+    pub outcome: ParseObservationOutcome,
+    pub limits: Limits,
+    pub usage: Usage,
+    pub profile: Option<Digest>,
+}
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ParseObservationOutcome {
+    Complete,
+    Stopped(StopReason),
+    /// A context, provider, or input failure without a stop in this budget.
+    Failed,
+}
+
+/// Report terminal usage once on success or ordinary failure. The successful
+/// snapshot precedes the caller callback, which may use a different phase or
+/// even the same budget. Package/profile setup has separate existing budgets.
+#[allow(clippy::too_many_arguments)]
+pub fn with_named_input_limits_observed<T>(
+    native: bool,
+    compiled: &Compiled,
+    input: &str,
+    source_name: &str,
+    category: &str,
+    parse_limits: Limits,
+    observe: impl FnOnce(ParseObservation),
+    finish: impl FnOnce(
+        &ValidatedParseTree<'_>,
+        &ResolvedParseProfile<'_>,
+        &mut Budget,
+        &mut SourceAdmission,
+    ) -> Result<T, String>,
+) -> Result<T, String> {
+    let mut b = Budget::new(parse_limits);
+    let mut terminal = None;
+    let mut profile_identity = None;
+    let result = (|| {
+        let r = &compiled.doc.registry;
+        let packages: Vec<_> = std::iter::once(&compiled.doc.package)
+            .chain(compiled.others.iter())
+            .collect();
+        // The requirements below come from packages. Registrations must instead
+        // come from this independently constructed host and its real callbacks.
+        let implementation = host_identity();
+        let mut a = SourceAdmission::default();
+        let source = SourceSnapshot::new(
+            SourceId(source_name.into()),
+            0,
+            format!("memory:{source_name}"),
+            input.as_bytes().to_vec(),
+            &mut b,
         )
         .map_err(err)?;
-    let tree = crate::source::driver::parse(
-        &source,
-        &resolved,
-        "Doc",
-        category,
-        &mut b,
-        &mut a,
-        native,
-        "doc-parse",
-        &prefix,
-        &mut host,
-    )?;
-    let checked = tree
-        .validate(&resolved, &mut b, &mut a)
-        .map_err(|e| format!("tree validation: {e:?}; usage={:?}", b.usage()))?;
-    finish(&checked, &resolved, &mut b, &mut a)
+        let (prefix, mut host) = host_for_source(&source, r, implementation, &mut b)?;
+        let providers = host.provider_catalog(&mut b).map_err(err)?;
+        let mut operations = Vec::new();
+        for operation in packages
+            .iter()
+            .flat_map(|p| p.reader.providers.iter().map(|v| &v.operation))
+        {
+            if !operations.contains(operation) {
+                operations.push(operation.clone());
+            }
+        }
+        let requirements = operations
+            .iter()
+            .map(|operation| ProviderRequirement {
+                provider: operation.name.clone(),
+                revision: 1,
+                implementation_digest: implementation,
+                operation: operation.clone(),
+            })
+            .collect();
+        let mut schemas = packages
+            .iter()
+            .map(|p| p.schema.clone())
+            .collect::<Vec<_>>();
+        for schema in packages
+            .iter()
+            .flat_map(|p| p.payload_schemas.iter())
+            .chain(
+                [
+                    "nepl3.foundation",
+                    "nepl3.reader",
+                    "nepl3.engine",
+                    "nepl3.doc",
+                    "nepl3.doc.reader",
+                    "nepl3.sentence.reader",
+                    "nepl3.grammar",
+                ]
+                .iter()
+                .filter_map(|name| r.selected(name, 1)),
+            )
+        {
+            if !schemas.contains(schema) {
+                schemas.push(schema.clone());
+            }
+        }
+        let profile = ParseProfile {
+            id: "doc-prefix".into(),
+            languages: packages
+                .iter()
+                .zip([
+                    ("Doc", "Article"),
+                    ("Math", "Expr"),
+                    ("Circuit", "Design"),
+                    ("Grammar", "Root"),
+                    ("Sentence", "Sentence"),
+                ])
+                .map(|(p, (alias, category))| {
+                    Ok(LanguageRegistration {
+                        alias: alias.into(),
+                        package: p
+                            .check(r, &mut budget())
+                            .and_then(|c| c.semantic_identity(&mut budget()))
+                            .map_err(err)?,
+                        default_category: category.into(),
+                    })
+                })
+                .collect::<Result<Vec<_>, String>>()?,
+            schemas,
+            head_providers: vec![],
+            category_modes: vec![],
+            providers: requirements,
+            allowlist: operations,
+            resources: vec![],
+            limits: parse_limits,
+        };
+        let resolved = profile
+            .resolve(
+                &RuntimeCatalog {
+                    packages: &packages,
+                    providers: &providers,
+                    resources: &[],
+                },
+                r,
+                &mut budget(),
+            )
+            .map_err(err)?;
+        profile_identity = Some(resolved.digest());
+        let tree = crate::source::driver::parse(
+            &source,
+            &resolved,
+            "Doc",
+            category,
+            &mut b,
+            &mut a,
+            native,
+            "doc-parse",
+            &prefix,
+            &mut host,
+        )?;
+        let checked = tree
+            .validate(&resolved, &mut b, &mut a)
+            .map_err(|e| format!("tree validation: {e:?}; usage={:?}", b.usage()))?;
+        terminal = Some(ParseObservation {
+            outcome: ParseObservationOutcome::Complete,
+            limits: b.limits(),
+            usage: b.usage(),
+            profile: Some(resolved.digest()),
+        });
+        finish(&checked, &resolved, &mut b, &mut a)
+    })();
+    observe(terminal.unwrap_or_else(|| ParseObservation {
+        outcome: match b.poll() {
+            Err(reason) => ParseObservationOutcome::Stopped(reason),
+            Ok(()) => ParseObservationOutcome::Failed,
+        },
+        limits: b.limits(),
+        usage: b.usage(),
+        profile: profile_identity,
+    }));
+    result
 }
 
 pub fn parse_source_as(
