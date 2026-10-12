@@ -19,6 +19,8 @@ mod profile_head;
 mod profile_schema;
 #[path = "package/recovery.rs"]
 mod recovery;
+#[path = "package/schema_admission.rs"]
+mod schema_admission;
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 fn budget() -> Budget {
     Budget::new(Limits {
