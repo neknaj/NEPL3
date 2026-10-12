@@ -1,6 +1,8 @@
 //! Host-owned cumulative allowance across explicitly admitted atomic attempts.
 //! This retains accounting, not a parser/renderer continuation. A caller must
 //! separately retain a valid phase checkpoint and rerun interrupted work.
+pub mod preparation;
+
 use nepl3_core::budget::{Budget, Limits, Resource, StopReason, Usage};
 
 /// Unique running authority. No Clone or caller-supplied usage restoration.

@@ -1,6 +1,8 @@
 //! Host presentation of already parsed Code guests. No guest parser, lowerer,
 //! evaluator or LSP server is invoked here.
-use super::super::source::{budget, err};
+#[cfg(test)]
+use super::super::source::budget;
+use super::super::source::err;
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     source::{SourceAdmission, SourceStore},
@@ -107,7 +109,7 @@ pub(super) fn render(
         "doc-code",
         tree.tree(),
         BindingOptions,
-        budget().limits(),
+        profile.profile().limits,
         profile,
         &mut codec,
         b,
