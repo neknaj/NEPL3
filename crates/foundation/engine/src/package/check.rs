@@ -309,17 +309,15 @@ impl LanguagePackage {
             {
                 return Err(PackageError::SignatureMismatch);
             }
-            let descriptor = registry
-                .descriptor_with_budget(&extension.operation.schema, budget)?
+            let operation = registry
+                .operation_with_budget(&extension.operation, budget)?
                 .ok_or(PackageError::MissingExtension)?;
-            budget.charge(Resource::Work, descriptor.operations.len() as u64)?;
-            let operation = descriptor
-                .operations
-                .iter()
-                .find(|op| op.name == extension.operation.name)
-                .ok_or(PackageError::MissingExtension)?;
-            if operation.input != extension.input
-                || operation.output != extension.output
+            if !operation
+                .input
+                .equal_with_budget(&extension.input, budget)?
+                || !operation
+                    .output
+                    .equal_with_budget(&extension.output, budget)?
                 || operation.pure != extension.pure
             {
                 return Err(PackageError::SignatureMismatch);

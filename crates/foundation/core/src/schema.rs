@@ -3,6 +3,7 @@
 pub mod foundation;
 mod frontier;
 mod lookup;
+mod operation;
 mod siblings;
 use crate::{
     budget::{Budget, Resource, StopReason},
