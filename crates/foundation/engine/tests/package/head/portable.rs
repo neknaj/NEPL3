@@ -39,16 +39,46 @@ fn delegated_grant_and_real_framing_share_the_original_work_cap() -> TestResult 
         let source_table = [source];
         let mut cap = budget().limits();
         cap.work = 500_000;
+        // The former 20,000 transport partition is genuinely too small once
+        // structural comparisons are admitted. Preserve its failure boundary:
+        // no encoded packet escapes and no unobserved child grant is settled.
+        {
+            let mut short_parent = Budget::new(cap);
+            let mut short_admission = SourceAdmission::default();
+            let mut short = IssuedHeadDelegation::issue(
+                &call,
+                profile,
+                &[&source_table],
+                HeadTransportReserve {
+                    work: 20_000,
+                    ..transport_reserve()
+                },
+                &mut short_parent,
+                &mut short_admission,
+            )
+            .map_err(error)?;
+            let empty = SourceStore::default();
+            let mut codec = FoundationCodec::new(profile.registry(), &empty, &mut short_admission)
+                .map_err(error)?;
+            assert!(matches!(
+                short.to_value(&mut codec),
+                Err(PortableError::Stopped(StopReason::WorkLimit))
+            ));
+            drop(short);
+            assert_eq!(short_parent.limits(), cap);
+            assert_eq!(short_parent.poll(), Err(StopReason::WorkLimit));
+            assert!(short_parent.usage().work <= cap.work);
+        }
         let mut parent = Budget::new(cap);
         let mut admission = SourceAdmission::default();
         let mut issued = IssuedHeadDelegation::issue(
             &call,
             profile,
             &[&source_table],
-            HeadTransportReserve {
-                work: 20_000,
-                ..transport_reserve()
-            },
+            // Structural identity lookup now consumes real transport Work.
+            // Allocate the normal reserve from the same 500,000 parent cap;
+            // this reduces the child grant rather than widening the total.
+            transport_reserve(),
             &mut parent,
             &mut admission,
         )
@@ -56,14 +86,17 @@ fn delegated_grant_and_real_framing_share_the_original_work_cap() -> TestResult 
         let empty = SourceStore::default();
         let mut codec =
             FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(error)?;
-        let packet = issued.to_value(&mut codec).map_err(error)?;
+        let packet = issued
+            .to_value(&mut codec)
+            .map_err(|e| format!("packet: {e:?}"))?;
         let bytes = issued
             .transport(|b| nepl3_wire::encode(&packet, b))
             .map_err(error)?;
         // This receiver cap is the authenticated host-issued grant. A raw
         // network packet's claimed Limits are not an execution authorization.
         let mut framing = Budget::new(issued.limits());
-        let value = nepl3_wire::decode(&bytes, &mut framing).map_err(error)?;
+        let value =
+            nepl3_wire::decode(&bytes, &mut framing).map_err(|e| format!("framing: {e:?}"))?;
         let mut receiver_admission = SourceAdmission::default();
         let mut receiver_codec =
             FoundationCodec::new(profile.registry(), &empty, &mut receiver_admission)
@@ -77,8 +110,8 @@ fn delegated_grant_and_real_framing_share_the_original_work_cap() -> TestResult 
         .map_err(error)?;
         assert_eq!(grant, issued.limits());
         let mut remote = Budget::new(receiver_limits(grant, framing.usage()).map_err(error)?);
-        let received =
-            delegation_decode(&value, profile, &mut receiver_codec, &mut remote).map_err(error)?;
+        let received = delegation_decode(&value, profile, &mut receiver_codec, &mut remote)
+            .map_err(|e| format!("delegation: {e:?}"))?;
         let mut iterations = 0;
         loop {
             match received.call.validate_projection(profile, &mut remote) {

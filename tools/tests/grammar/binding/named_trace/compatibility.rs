@@ -86,7 +86,8 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
         + 2 * lookup_work(
             "nepl3.engine",
             &["nepl3.foundation", "nepl3.reader", "nepl3.engine"],
-        );
+        )
+        + diagnostic_payload_lookup_work();
     let compiled = custom::compiled()?;
     with_input(&compiled, "early x z custom x x", |tree, profile, _, _| {
         let mut b = budget();
@@ -232,7 +233,9 @@ fn expected(
 // once (294 Work). The custom fixture validates its namespace at request issue,
 // post-host existing facts, combined delta and final facts (4 * 273), and checks
 // engine metadata for the emitted diagnostic and event (2 * 157). The built-in
-// UndefinedName diagnostic only validates arguments, so adds no owner search.
+// UndefinedName diagnostic validates only arguments. Structural validation now
+// charges the engine schema and argument definition for it and both custom
+// metadata payloads, independently of the two outer metadata owner searches.
 // View/Token owner admission additionally validates three token kinds at the
 // ordinary/traced lambda entry, two at recovered lambda entry, and six tokens
 // at each of analyze entry and FactsRequestView issue for the custom fixture.
@@ -259,4 +262,28 @@ fn lookup_work(owner: &str, candidates: &[&str]) -> u64 {
         .sum::<u64>()
         + owner.len() as u64
         + 41
+}
+
+// Three BindingDiagnosticArguments payloads are validated: built-in
+// UndefinedName, CustomNote, and CustomVisit. Each exact engine schema search
+// costs 157 (derived by lookup_work). Binary definition lookup visits
+// ParseProfile, ExpectedReadReply, CandidateError, BindingOptions,
+// BindingBundleScope, BindingFailure, BindingDiagnosticArguments. Their
+// compared UTF-8 pair counts are respectively 1, 1, 1, 8, 8, 8, 26;
+// each comparison charges one entry plus three per visited byte pair.
+// Total added Work is 3 * (157 + 166) = 969. Text children do not use
+// Named resolution, so no definition-cache probe/insert belongs here.
+// All three validations precede the final facts boundary in both full and
+// one-short runs. This independently derived charge preserves the historical
+// non-Work counters and exact stopping prefix.
+fn diagnostic_payload_lookup_work() -> u64 {
+    let schema = lookup_work(
+        "nepl3.engine",
+        &["nepl3.foundation", "nepl3.reader", "nepl3.engine"],
+    );
+    let definition = [1u64, 1, 1, 8, 8, 8, 26]
+        .into_iter()
+        .map(|pairs| 1 + 3 * pairs)
+        .sum::<u64>();
+    3 * (schema + definition)
 }
