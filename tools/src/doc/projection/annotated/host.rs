@@ -1,6 +1,6 @@
 //! File and compilation adapter for the explicitly selected viewing profile.
 use super::*;
-use crate::doc::export::pages::resources::PhaseLimits;
+use crate::doc::export::pages::resources::{ExecutionLimits, PhaseLimits};
 use crate::doc::source::{Compiled, budget, err, with_named_input_limits};
 use nepl3_core::source::{SourceAdmission, SourceStore};
 use nepl3_doc_core::{check::Category, lower};
@@ -98,16 +98,43 @@ fn from_source_profile(
 
 /// Explicit all-notes view; aliases is a JSON array of {section, name} values.
 pub fn write(input: &Path, aliases: &Path, output: &Path) -> crate::Result<()> {
-    write_profile(input, aliases, output, NotesMode::Inline)
+    write_profile(
+        input,
+        aliases,
+        output,
+        NotesMode::Inline,
+        ExecutionLimits::default(),
+    )
 }
 pub fn write_footnotes(input: &Path, aliases: &Path, output: &Path) -> crate::Result<()> {
-    write_profile(input, aliases, output, NotesMode::Footnotes)
+    write_profile(
+        input,
+        aliases,
+        output,
+        NotesMode::Footnotes,
+        ExecutionLimits::default(),
+    )
+}
+pub fn write_with_limits(
+    input: &Path,
+    aliases: &Path,
+    output: &Path,
+    mode: &str,
+    limits: ExecutionLimits,
+) -> crate::Result<()> {
+    let mode = match mode {
+        "annotated" => NotesMode::Inline,
+        "footnotes" => NotesMode::Footnotes,
+        _ => return Err("expected annotated or footnotes".into()),
+    };
+    write_profile(input, aliases, output, mode, limits)
 }
 fn write_profile(
     input: &Path,
     aliases: &Path,
     output: &Path,
     mode: NotesMode,
+    limits: ExecutionLimits,
 ) -> crate::Result<()> {
     if output.exists() {
         return Err("output already exists".into());
@@ -127,9 +154,9 @@ fn write_profile(
         &source,
         &alias_bytes,
         None,
-        &mut budget(),
+        &mut limits.output_limits.budget(),
         mode,
-        PhaseLimits::default(),
+        limits.phases(),
     )?;
     let mut file = std::fs::OpenOptions::new()
         .write(true)

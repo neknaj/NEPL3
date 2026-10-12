@@ -288,3 +288,98 @@ fn urls_export_from_the_cli_and_invalid_urls_publish_nothing()
     fs::remove_dir_all(root)?;
     Ok(())
 }
+
+#[test]
+fn configurable_single_document_limits_cli() -> Result<(), Box<dyn std::error::Error>> {
+    use nepl3_tools::doc::export::pages::resources::ExecutionLimits;
+    let root = std::env::temp_dir().join(format!("nepl3-limits-cli-{}", std::process::id()));
+    fs::create_dir(&root)?;
+    let source = root.join("input.nepld");
+    let aliases = root.join("aliases.json");
+    let config = root.join("limits.json");
+    fs::write(
+        &source,
+        r#"article en "Limits" body cons paragraph cons "Hello." nil nil"#,
+    )?;
+    fs::write(&aliases, "[]")?;
+    let binary = env!("CARGO_BIN_EXE_nepl3-tools");
+    let defaults = serde_json::to_value(ExecutionLimits::default())?;
+    for phase in ["parse_limits", "lower_limits", "output_limits"] {
+        let mut limits = defaults.clone();
+        limits[phase]["work"] = serde_json::json!(0);
+        fs::write(&config, serde_json::to_vec(&limits)?)?;
+        for mode in ["html", "annotated", "footnotes"] {
+            let output = root.join(format!("{phase}-{mode}"));
+            let mut command = Command::new(binary);
+            if mode == "html" {
+                command.args(["doc-html", "export"]);
+            } else {
+                command.args(["doc-markdown", mode]);
+            }
+            command.arg("--limits").arg(&config).arg(&source);
+            if mode != "html" {
+                command.arg(&aliases);
+            }
+            let result = command.arg(&output).output()?;
+            assert!(!result.status.success());
+            assert!(
+                String::from_utf8_lossy(&result.stderr).contains("WorkLimit"),
+                "{}",
+                String::from_utf8_lossy(&result.stderr)
+            );
+            assert!(!output.exists());
+        }
+    }
+    fs::write(&config, serde_json::to_vec(&defaults)?)?;
+    let cases: &[&[&str]] = &[
+        &[],
+        &["--css", "inline"],
+        &["--math-renderer", "mathml-only"],
+        &["--css", "inline", "--math-renderer", "mathml-only"],
+        &["--math-renderer", "mathml-only", "--css", "inline"],
+    ];
+    for (index, options) in cases.iter().enumerate() {
+        let baseline = root.join(format!("baseline-{index}"));
+        let selected = root.join(format!("selected-{index}"));
+        for (output, explicit) in [(&baseline, false), (&selected, true)] {
+            let mut command = Command::new(binary);
+            command.args(["doc-html", "export"]);
+            if explicit {
+                command.arg("--limits").arg(&config);
+            }
+            let result = command.args(*options).arg(&source).arg(output).output()?;
+            assert!(
+                result.status.success(),
+                "{}",
+                String::from_utf8_lossy(&result.stderr)
+            );
+        }
+        assert_eq!(
+            fs::read(baseline.join("document.html"))?,
+            fs::read(selected.join("document.html"))?
+        );
+        let receipt: serde_json::Value =
+            serde_json::from_slice(&fs::read(selected.join("manifest.json"))?)?;
+        assert_eq!(receipt["limits"], defaults);
+    }
+    for mode in ["annotated", "footnotes"] {
+        let baseline = root.join(format!("baseline-{mode}.md"));
+        let selected = root.join(format!("selected-{mode}.md"));
+        for (output, explicit) in [(&baseline, false), (&selected, true)] {
+            let mut command = Command::new(binary);
+            command.args(["doc-markdown", mode]);
+            if explicit {
+                command.arg("--limits").arg(&config);
+            }
+            let result = command.arg(&source).arg(&aliases).arg(output).output()?;
+            assert!(
+                result.status.success(),
+                "{}",
+                String::from_utf8_lossy(&result.stderr)
+            );
+        }
+        assert_eq!(fs::read(baseline)?, fs::read(selected)?);
+    }
+    fs::remove_dir_all(root)?;
+    Ok(())
+}

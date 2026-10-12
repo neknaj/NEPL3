@@ -19,6 +19,41 @@ pub struct OperationLimits {
 }
 /// Kept for existing output-only callers.
 pub type OutputLimits = OperationLimits;
+
+/// User-selected limits for a single-document operation. Repository CI does
+/// not read this file; omission selects the ordinary finite host defaults.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct ExecutionLimits {
+    #[serde(default)]
+    pub parse_limits: OperationLimits,
+    #[serde(default)]
+    pub lower_limits: OperationLimits,
+    #[serde(default)]
+    pub output_limits: OperationLimits,
+}
+
+impl ExecutionLimits {
+    pub fn read(path: &std::path::Path) -> crate::Result<Self> {
+        use std::io::Read;
+        let mut bytes = Vec::new();
+        std::fs::File::open(path)?
+            .take(65_537)
+            .read_to_end(&mut bytes)?;
+        if bytes.len() > 65_536 {
+            return Err("limit configuration exceeds 65536 bytes".into());
+        }
+        let text = std::str::from_utf8(&bytes)?;
+        crate::repository::json::validate(text)?;
+        Ok(serde_json::from_str(text)?)
+    }
+    pub fn phases(self) -> PhaseLimits {
+        PhaseLimits {
+            parse: self.parse_limits.budget().limits(),
+            lower: self.lower_limits.budget().limits(),
+        }
+    }
+}
 impl Default for OperationLimits {
     fn default() -> Self {
         let value = crate::doc::source::budget().limits();
@@ -138,6 +173,42 @@ pub(super) fn execution_identity(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn configuration_file_is_bounded_and_strict() -> crate::Result<()> {
+        let f = crate::testing::Fixture::new()?;
+        let path = f.root().join("limits.json");
+        f.write("limits.json", "{}")?;
+        assert_eq!(
+            ExecutionLimits::read(&path)?.parse_limits,
+            OperationLimits::default()
+        );
+        let defaults = serde_json::to_value(ExecutionLimits::default())?;
+        for field in ["parse_limits", "lower_limits", "output_limits"] {
+            for invalid in [serde_json::json!(null), serde_json::json!({"work":1})] {
+                let mut value = defaults.clone();
+                value[field] = invalid;
+                f.json("limits.json", &value)?;
+                assert!(ExecutionLimits::read(&path).is_err());
+            }
+            for invalid in [
+                serde_json::json!(-1),
+                serde_json::json!(1.5),
+                serde_json::json!("1"),
+            ] {
+                let mut value = defaults.clone();
+                value[field]["work"] = invalid;
+                f.json("limits.json", &value)?;
+                assert!(ExecutionLimits::read(&path).is_err());
+            }
+        }
+        for invalid in [r#"{"extra":1}"#, r#"{"parse_limits":{},"parse_limits":{}}"#] {
+            f.write("limits.json", invalid)?;
+            assert!(ExecutionLimits::read(&path).is_err());
+        }
+        f.write("limits.json", " ".repeat(65_537))?;
+        assert!(ExecutionLimits::read(&path).is_err());
+        Ok(())
+    }
     #[test]
     fn phase_digest_matches_independent_fixed_big_endian_vector() {
         let phases = PhaseLimits {

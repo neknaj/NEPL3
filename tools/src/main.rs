@@ -1,5 +1,41 @@
 use std::{env, path::PathBuf, process::ExitCode};
 
+fn configured_html(config: &str, args: &[&str]) -> nepl3_tools::Result<()> {
+    use nepl3_tools::doc::export::{
+        self, CssMode, MathRenderer, pages::resources::ExecutionLimits,
+    };
+    let (css, renderer, input, output) = match args {
+        [input, output] => (
+            CssMode::External,
+            MathRenderer::KaTeXPreferred,
+            *input,
+            *output,
+        ),
+        ["--css", css, input, output] => {
+            (css.parse()?, MathRenderer::KaTeXPreferred, *input, *output)
+        }
+        ["--math-renderer", renderer, input, output] => {
+            (CssMode::External, renderer.parse()?, *input, *output)
+        }
+        ["--css", css, "--math-renderer", renderer, input, output]
+        | ["--math-renderer", renderer, "--css", css, input, output] => {
+            (css.parse()?, renderer.parse()?, *input, *output)
+        }
+        _ => {
+            return Err(
+                "expected optional --css and --math-renderer followed by input and output".into(),
+            );
+        }
+    };
+    export::write_with_limits(
+        std::path::Path::new(input),
+        std::path::Path::new(output),
+        css,
+        renderer,
+        ExecutionLimits::read(std::path::Path::new(config))?,
+    )
+}
+
 fn run() -> nepl3_tools::Result<()> {
     let arguments: Vec<String> = env::args().skip(1).collect();
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -54,6 +90,7 @@ fn run() -> nepl3_tools::Result<()> {
             std::path::Path::new(input),
             std::path::Path::new(output),
         ),
+        ["doc-html", "export", "--limits", config, tail @ ..] => configured_html(config, tail),
         ["doc-html", "export", "--css", mode, input, output] => {
             let css = mode.parse::<nepl3_tools::doc::export::CssMode>()?;
             nepl3_tools::doc::export::write_with_css(
@@ -144,6 +181,26 @@ fn run() -> nepl3_tools::Result<()> {
                 std::path::Path::new(output),
             )
         }
+        [
+            "doc-markdown",
+            mode,
+            "--limits",
+            config,
+            input,
+            aliases,
+            output,
+        ] if matches!(*mode, "annotated" | "footnotes") => {
+            use nepl3_tools::doc::projection::annotated::host;
+            host::write_with_limits(
+                std::path::Path::new(input),
+                std::path::Path::new(aliases),
+                std::path::Path::new(output),
+                mode,
+                nepl3_tools::doc::export::pages::resources::ExecutionLimits::read(
+                    std::path::Path::new(config),
+                )?,
+            )
+        }
         ["doc-markdown", "footnotes-pages", manifest, output] => {
             nepl3_tools::doc::canonical::footnotes_manifest(
                 std::path::Path::new(manifest),
@@ -172,6 +229,12 @@ fn run() -> nepl3_tools::Result<()> {
             println!("nepl3-tools signatures --check | signatures --write");
             println!("nepl3-tools site build <site-config.json> <new-output-directory>");
             println!("nepl3-tools doc-canonical --check");
+            println!(
+                "nepl3-tools doc-html export --limits <limits.json> [--css <external|inline>] [--math-renderer <katex-preferred|mathml-only>] <input.nepld> <new-output-directory>"
+            );
+            println!(
+                "nepl3-tools doc-markdown <annotated|footnotes> --limits <limits.json> <input.nepld> <aliases.json> <new-output.md>"
+            );
             println!("nepl3-tools doc-canonical --registry <repository-relative.json> --check");
             println!(
                 "nepl3-tools doc-canonical --registry <repository-relative.json> markdown <new-output-directory>"

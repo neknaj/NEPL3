@@ -333,7 +333,7 @@
   ],
   "output_limits": {
     "source_bytes": 10000000,
-    "work": 1900000000,
+    "work": 3500000000,
     "depth": 1000,
     "nodes": 72000000,
     "allocation_units": 4000000000,
@@ -353,7 +353,7 @@
   },
   "parse_limits": {
     "source_bytes": 10000000,
-    "work": 200000000,
+    "work": 600000000,
     "depth": 1000,
     "nodes": 10000000,
     "allocation_units": 500000000,
@@ -363,7 +363,7 @@
   },
   "lower_limits": {
     "source_bytes": 10000000,
-    "work": 200000000,
+    "work": 600000000,
     "depth": 1000,
     "nodes": 10000000,
     "allocation_units": 500000000,
