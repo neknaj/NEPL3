@@ -76,6 +76,13 @@ ownerにcoverがある場合のhead包含、およびhead内の全ViewElementを
 意味nodeへ正規化する場合はownerを明示的に再対応させ、元のViewRefを別ViewBundleへ流用しない。
 coverがない生成nodeでも、明示Source/Originと対応させた元表記のViewは保持できる。
 
+owner.coverからView.headへの包含が成立しない場合、両者の完全なsnapshot identityが異なるときに限り、
+View.headからowner.coverへの明示SourceMapによる包含も認める。全byte・anchorの全incoming pathを
+検査し、一経路だけの一致や未被覆部分は認めない。同snapshotの過大なView.headはこの例外で許可しない。
+これは生成nodeと原表記の来歴対応であり、最小の原文範囲や意味・文字列の同値性を保証しない。
+NodeLocation自身のhead/cover包含、ViewElementのView.head内包含、source閉包検査は変更しない。
+Doc等のhostは、さらに自身のtokenとView.headとの対応を検査する。
+
 native検査とportable::syntaxの両方向で、重複snapshot revision、未宣言source、古いsnapshotへのSpan、
 Origin参照、SourceMap、View閉包、foreignの合成深さを検査する。portable受信はpayload自身のsourceで
 codecをscopeし、ambient sourceを欠落閉包の代わりにしない。UTF-8 byte位置を保持し、editorで必要な

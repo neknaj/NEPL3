@@ -49,7 +49,9 @@ impl<E> From<StructureError> for DocumentLowerError<E> {
     }
 }
 
-pub(super) trait Decoder {
+/// Typed integration boundary for independently owned Sentence payloads.
+/// Returned syntax is revalidated locally before any arena indices are rebased.
+pub trait Decoder {
     type Error: From<LowerError>
         + From<StopReason>
         + From<SyntaxError>
@@ -211,7 +213,10 @@ impl Adapter<'_, '_> {
         node: &SyntaxNode,
         decoder: &mut D,
     ) -> Result<(), D::Error> {
-        let mut doc = decoder.read(id, node, self.checked.bundle(), self.registry, self.b)?;
+        let decoded = decoder.read(id, node, self.checked.bundle(), self.registry, self.b);
+        self.b.poll()?;
+        let mut doc = decoded?;
+        doc.validate_structure(self.registry, self.b, decoder.admission())?;
         let DocRoot::Sentence(root) = doc.value.root else {
             return Err(LowerError::LiteralPayload { node: id }.into());
         };

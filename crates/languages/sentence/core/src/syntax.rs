@@ -190,6 +190,11 @@ impl SentenceSyntax {
             span(&view.head, &store, b)?;
             if let Some(cover) = &owner.cover
                 && !maps.contains(cover, &view.head, b)?
+                && (cover
+                    .snapshot_ref()
+                    .compare_with_budget(view.head.snapshot_ref(), b)?
+                    == core::cmp::Ordering::Equal
+                    || !maps.contains(&view.head, cover, b)?)
             {
                 return Err(Error::ViewOwner(view.owner));
             }
