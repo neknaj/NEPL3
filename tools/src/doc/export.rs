@@ -6,11 +6,12 @@ pub mod math;
 pub mod pages;
 mod stylesheet;
 pub use super::math::display::Preference as MathRenderer;
-use super::source::{Compiled, budget, compiled, err, with_input_route};
+use super::source::{Compiled, budget, compiled, err, with_named_input_limits};
 use nepl3_core::source::{Digest, SourceAdmission, SourceStore};
 use nepl3_doc_core::{check::Category, lower};
 use nepl3_doc_html::{ParallelMode, RenderOptions};
 use nepl3_wire::foundation::FoundationCodec;
+use pages::resources::ExecutionLimits;
 use std::time::{Duration, Instant};
 use std::{fs, io::Read, path::Path};
 pub use stylesheet::CssMode;
@@ -89,6 +90,7 @@ pub fn generate_observed_with_css(
         css,
         None,
         MathRenderer::KaTeXPreferred,
+        ExecutionLimits::default(),
         observe,
     )
 }
@@ -98,7 +100,16 @@ pub fn generate_with_renderer(
     css: CssMode,
     renderer: MathRenderer,
 ) -> Result<LocalDocument, String> {
-    generate_impl(compiled, input, css, None, renderer, &mut |_| {})
+    generate_with_limits(compiled, input, css, renderer, ExecutionLimits::default())
+}
+pub fn generate_with_limits(
+    compiled: &Compiled,
+    input: &str,
+    css: CssMode,
+    renderer: MathRenderer,
+    limits: ExecutionLimits,
+) -> Result<LocalDocument, String> {
+    generate_impl(compiled, input, css, None, renderer, limits, &mut |_| {})
 }
 fn generate_impl(
     compiled: &Compiled,
@@ -109,111 +120,120 @@ fn generate_impl(
         nepl3_doc_html::assets::SvgMode,
     )>,
     renderer: MathRenderer,
+    limits: ExecutionLimits,
     observe: &mut impl FnMut(StageMeasurement),
 ) -> Result<LocalDocument, String> {
     if input.len() as u64 > MAX_SOURCE_BYTES {
         return Err("SourceLimit".into());
     }
     let parse_start = Instant::now();
-    with_input_route(true, compiled, input, "Article", |tree, profile, b, _a| {
-        let checked = tree.syntax();
-        let parse_usage = b.usage();
-        observe(StageMeasurement {
-            stage: Stage::ParseAndValidate,
-            elapsed: parse_start.elapsed(),
-            usage: parse_usage,
-        });
-        let lower_start = Instant::now();
-        let empty = SourceStore::default();
-        let mut admission = SourceAdmission::default();
-        let mut codec =
-            FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
-        let mut lower_budget = budget();
-        let doc = lower::document(
-            checked,
-            &compiled.doc.package.schema,
-            Category::Article,
-            profile.registry(),
-            &mut lower_budget,
-            &mut codec,
-        )
-        .map_err(err)?;
-        observe(StageMeasurement {
-            stage: Stage::Lower,
-            elapsed: lower_start.elapsed(),
-            usage: lower_budget.usage(),
-        });
-        let mut output_budget = budget();
-        if let Some((inputs, nepl3_doc_html::assets::SvgMode::External)) = assets {
-            for (index, asset) in inputs.iter().enumerate() {
-                let mut duplicate = false;
-                for prior in &inputs[..index] {
-                    output_budget
-                        .charge(
-                            nepl3_core::budget::Resource::Work,
-                            asset.svg.len().min(prior.svg.len()) as u64 + 1,
-                        )
-                        .map_err(err)?;
-                    duplicate |= asset.svg == prior.svg;
-                }
-                if !duplicate {
-                    output_budget
-                        .charge(
-                            nepl3_core::budget::Resource::OutputBytes,
-                            asset.svg.len() as u64,
-                        )
-                        .map_err(err)?;
-                    output_budget
-                        .charge(
-                            nepl3_core::budget::Resource::AllocationUnits,
-                            asset.svg.len() as u64,
-                        )
-                        .map_err(err)?;
+    with_named_input_limits(
+        true,
+        compiled,
+        input,
+        "doc-input",
+        "Article",
+        limits.phases().parse,
+        |tree, profile, b, _a| {
+            let checked = tree.syntax();
+            let parse_usage = b.usage();
+            observe(StageMeasurement {
+                stage: Stage::ParseAndValidate,
+                elapsed: parse_start.elapsed(),
+                usage: parse_usage,
+            });
+            let lower_start = Instant::now();
+            let empty = SourceStore::default();
+            let mut admission = SourceAdmission::default();
+            let mut codec =
+                FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
+            let mut lower_budget = limits.lower_limits.budget();
+            let doc = lower::document(
+                checked,
+                &compiled.doc.package.schema,
+                Category::Article,
+                profile.registry(),
+                &mut lower_budget,
+                &mut codec,
+            )
+            .map_err(err)?;
+            observe(StageMeasurement {
+                stage: Stage::Lower,
+                elapsed: lower_start.elapsed(),
+                usage: lower_budget.usage(),
+            });
+            let mut output_budget = limits.output_limits.budget();
+            if let Some((inputs, nepl3_doc_html::assets::SvgMode::External)) = assets {
+                for (index, asset) in inputs.iter().enumerate() {
+                    let mut duplicate = false;
+                    for prior in &inputs[..index] {
+                        output_budget
+                            .charge(
+                                nepl3_core::budget::Resource::Work,
+                                asset.svg.len().min(prior.svg.len()) as u64 + 1,
+                            )
+                            .map_err(err)?;
+                        duplicate |= asset.svg == prior.svg;
+                    }
+                    if !duplicate {
+                        output_budget
+                            .charge(
+                                nepl3_core::budget::Resource::OutputBytes,
+                                asset.svg.len() as u64,
+                            )
+                            .map_err(err)?;
+                        output_budget
+                            .charge(
+                                nepl3_core::budget::Resource::AllocationUnits,
+                                asset.svg.len() as u64,
+                            )
+                            .map_err(err)?;
+                    }
                 }
             }
-        }
-        let prepare_start = Instant::now();
-        let options = RenderOptions {
-            parallel: ParallelMode::Rows,
-        };
-        enum Prepared<'a> {
-            Local(nepl3_doc_html::display::PreparedDisplayArticle<'a>),
-            Svg(nepl3_doc_html::assets::PreparedSvgDisplayArticle<'a>),
-        }
-        let prepared = if let Some((inputs, mode)) = assets {
-            Prepared::Svg(
-                nepl3_doc_html::assets::prepare_svg_display(
-                    &doc,
-                    &options,
-                    inputs,
-                    mode,
-                    profile.registry(),
-                    &mut codec,
-                    &mut output_budget,
+            let prepare_start = Instant::now();
+            let options = RenderOptions {
+                parallel: ParallelMode::Rows,
+            };
+            enum Prepared<'a> {
+                Local(nepl3_doc_html::display::PreparedDisplayArticle<'a>),
+                Svg(nepl3_doc_html::assets::PreparedSvgDisplayArticle<'a>),
+            }
+            let prepared = if let Some((inputs, mode)) = assets {
+                Prepared::Svg(
+                    nepl3_doc_html::assets::prepare_svg_display(
+                        &doc,
+                        &options,
+                        inputs,
+                        mode,
+                        profile.registry(),
+                        &mut codec,
+                        &mut output_budget,
+                    )
+                    .map_err(err)?,
                 )
-                .map_err(err)?,
-            )
-        } else {
-            Prepared::Local(
-                nepl3_doc_html::display::prepare_display(
-                    &doc,
-                    &options,
-                    profile.registry(),
-                    &mut codec,
-                    &mut output_budget,
+            } else {
+                Prepared::Local(
+                    nepl3_doc_html::display::prepare_display(
+                        &doc,
+                        &options,
+                        profile.registry(),
+                        &mut codec,
+                        &mut output_budget,
+                    )
+                    .map_err(err)?,
                 )
-                .map_err(err)?,
-            )
-        };
-        observe(StageMeasurement {
-            stage: Stage::Prepare,
-            elapsed: prepare_start.elapsed(),
-            usage: output_budget.usage(),
-        });
-        let render_start = Instant::now();
-        let mut math = Vec::new();
-        let mut adapter =
-            |embed: &nepl3_doc_core::model::DocEmbed, index, b: &mut nepl3_core::budget::Budget| {
+            };
+            observe(StageMeasurement {
+                stage: Stage::Prepare,
+                elapsed: prepare_start.elapsed(),
+                usage: output_budget.usage(),
+            });
+            let render_start = Instant::now();
+            let mut math = Vec::new();
+            let mut adapter = |embed: &nepl3_doc_core::model::DocEmbed,
+                               index,
+                               b: &mut nepl3_core::budget::Budget| {
                 if embed.kind == nepl3_doc_core::model::EmbedKind::Code {
                     code::render(embed, tree, profile, b)
                 } else {
@@ -226,66 +246,66 @@ fn generate_impl(
                     .render(embed, index, &mut math, b)
                 }
             };
-        let rendered = match &prepared {
-            Prepared::Local(p) => {
-                nepl3_doc_html::display::render_display(p, &mut adapter, &mut output_budget)
-                    .map_err(err)?
+            let rendered = match &prepared {
+                Prepared::Local(p) => {
+                    nepl3_doc_html::display::render_display(p, &mut adapter, &mut output_budget)
+                        .map_err(err)?
+                }
+                Prepared::Svg(p) => {
+                    nepl3_doc_html::assets::render_svg_display(p, &mut adapter, &mut output_budget)
+                        .map_err(err)?
+                }
+            };
+            math::compose(
+                &mut math,
+                &rendered.foreign,
+                &doc.value.embeds,
+                &mut output_budget,
+            )?;
+            let rendered = rendered.fragment;
+            let identity = format!(
+                "{}:{}:{}",
+                digest_hex(Digest::of(input.as_bytes())),
+                digest_hex(profile.digest()),
+                renderer.as_str()
+            );
+            let katex = katex::generate(&mut math, &identity, &mut output_budget)?;
+            let mut document_css =
+                assets::document_css(&doc, assets.map(|(inputs, _)| inputs), &mut output_budget)?;
+            let html = shell_with_assets(
+                &rendered,
+                css,
+                assets.map(|(_, mode)| mode),
+                &mut document_css,
+                katex.as_ref(),
+                &mut output_budget,
+            )?;
+            observe(StageMeasurement {
+                stage: Stage::RenderAndSerialize,
+                elapsed: render_start.elapsed(),
+                usage: output_budget.usage(),
+            });
+            let digest = |bytes: &[u8]| {
+                Digest::of(bytes)
+                    .0
+                    .iter()
+                    .map(|b| format!("{b:02x}"))
+                    .collect::<String>()
+            };
+            let usage = |u: nepl3_core::budget::Usage| {
+                serde_json::json!({
+                    "work":u.work,"source_bytes":u.source_bytes,"allocation_units":u.allocation_units,
+                    "nodes":u.nodes,"depth":u.depth,"output_bytes":u.output_bytes,
+                    "diagnostics":u.diagnostics,"events":u.events
+                })
+            };
+            let mut files = vec![
+                serde_json::json!({"path":"document.html","mime":"text/html; charset=utf-8","sha256":digest(html.as_bytes())}),
+            ];
+            if css == CssMode::External {
+                files.push(serde_json::json!({"path":"assets/doc.css","mime":"text/css; charset=utf-8","license":"MIT","sha256":digest(document_css.as_bytes())}));
             }
-            Prepared::Svg(p) => {
-                nepl3_doc_html::assets::render_svg_display(p, &mut adapter, &mut output_budget)
-                    .map_err(err)?
-            }
-        };
-        math::compose(
-            &mut math,
-            &rendered.foreign,
-            &doc.value.embeds,
-            &mut output_budget,
-        )?;
-        let rendered = rendered.fragment;
-        let identity = format!(
-            "{}:{}:{}",
-            digest_hex(Digest::of(input.as_bytes())),
-            digest_hex(profile.digest()),
-            renderer.as_str()
-        );
-        let katex = katex::generate(&mut math, &identity, &mut output_budget)?;
-        let mut document_css =
-            assets::document_css(&doc, assets.map(|(inputs, _)| inputs), &mut output_budget)?;
-        let html = shell_with_assets(
-            &rendered,
-            css,
-            assets.map(|(_, mode)| mode),
-            &mut document_css,
-            katex.as_ref(),
-            &mut output_budget,
-        )?;
-        observe(StageMeasurement {
-            stage: Stage::RenderAndSerialize,
-            elapsed: render_start.elapsed(),
-            usage: output_budget.usage(),
-        });
-        let digest = |bytes: &[u8]| {
-            Digest::of(bytes)
-                .0
-                .iter()
-                .map(|b| format!("{b:02x}"))
-                .collect::<String>()
-        };
-        let usage = |u: nepl3_core::budget::Usage| {
-            serde_json::json!({
-                "work":u.work,"source_bytes":u.source_bytes,"allocation_units":u.allocation_units,
-                "nodes":u.nodes,"depth":u.depth,"output_bytes":u.output_bytes,
-                "diagnostics":u.diagnostics,"events":u.events
-            })
-        };
-        let mut files = vec![
-            serde_json::json!({"path":"document.html","mime":"text/html; charset=utf-8","sha256":digest(html.as_bytes())}),
-        ];
-        if css == CssMode::External {
-            files.push(serde_json::json!({"path":"assets/doc.css","mime":"text/css; charset=utf-8","license":"MIT","sha256":digest(document_css.as_bytes())}));
-        }
-        let manifest = serde_json::to_string_pretty(&serde_json::json!({
+            let manifest = serde_json::to_string_pretty(&serde_json::json!({
             "format":"nepl3.local-doc-export/1",
             "scope":"Doc with retained Code and Math display and validated external URLs; page/relative links and assets require explicit resolution",
             "source_sha256":digest(input.as_bytes()),
@@ -300,19 +320,21 @@ fn generate_impl(
             "files":files,
             "operations":{"parse_and_validate":usage(parse_usage),"lower":usage(lower_budget.usage()),
                 "prepare_render_serialize":usage(output_budget.usage())},
+            "limits":limits,
             "budget_scope":"Separate bounded operations; not a single end-to-end budget",
             "packages":"compiled checked bootstrap fixtures",
             "viewer_scripts":false
         })).map_err(err)? + "\n";
-        Ok(LocalDocument {
-            html,
-            manifest,
-            stylesheet: document_css,
-            document: doc,
-            math,
-            rendered,
-        })
-    })
+            Ok(LocalDocument {
+                html,
+                manifest,
+                stylesheet: document_css,
+                document: doc,
+                math,
+                rendered,
+            })
+        },
+    )
 }
 
 /// Called only after fragment validation; account for html/body ancestors.
@@ -399,11 +421,20 @@ pub fn write_with_renderer(
     css: CssMode,
     renderer: MathRenderer,
 ) -> crate::Result<()> {
+    write_with_limits(input, output, css, renderer, ExecutionLimits::default())
+}
+pub fn write_with_limits(
+    input: &Path,
+    output: &Path,
+    css: CssMode,
+    renderer: MathRenderer,
+    limits: ExecutionLimits,
+) -> crate::Result<()> {
     if output.exists() {
         return Err("output directory already exists".into());
     }
     let source = read_source(input)?;
-    let generated = generate_with_renderer(&compiled()?, &source, css, renderer)?;
+    let generated = generate_with_limits(&compiled()?, &source, css, renderer, limits)?;
     fs::create_dir(output)?;
     if css == CssMode::External {
         fs::create_dir(output.join("assets"))?;
