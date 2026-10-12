@@ -13,6 +13,8 @@ use nepl3_reader::{
 mod binding_dag;
 #[path = "package/binding_names.rs"]
 mod binding_names;
+#[path = "package/custom_binding.rs"]
+mod custom_binding;
 #[path = "package/extension_validation.rs"]
 mod extension_validation;
 #[path = "package/head.rs"]
