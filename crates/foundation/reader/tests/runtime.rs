@@ -2904,3 +2904,6 @@ fn provider_overflow_rejects_read_failed_map_decode_without_consuming_slot()
     }
     Ok(())
 }
+
+#[path = "runtime/native.rs"]
+mod native;

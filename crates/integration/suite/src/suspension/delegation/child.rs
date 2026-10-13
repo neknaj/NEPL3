@@ -1,7 +1,7 @@
 //! Terminal trusted local execution in a separately admitted child context.
 use super::{IssuedBudget, SettlementError, fits};
 use nepl3_core::{
-    budget::{Budget, Limits, StopReason, Usage},
+    budget::{Budget, StopReason, Usage},
     source::SourceAdmission,
 };
 
@@ -51,50 +51,6 @@ impl<T> Execution<T> {
     }
 }
 
-fn ceiling(base: Usage, grant: Limits, outer: Limits) -> Result<Limits, StopReason> {
-    fn add(a: u64, b: u64, max: u64, reason: StopReason) -> Result<u64, StopReason> {
-        a.checked_add(b).filter(|v| *v <= max).ok_or(reason)
-    }
-    if base.depth > grant.depth || grant.depth > outer.depth {
-        return Err(StopReason::DepthLimit);
-    }
-    Ok(Limits {
-        source_bytes: add(
-            base.source_bytes,
-            grant.source_bytes,
-            outer.source_bytes,
-            StopReason::SourceLimit,
-        )?,
-        work: add(base.work, grant.work, outer.work, StopReason::WorkLimit)?,
-        depth: grant.depth,
-        nodes: add(base.nodes, grant.nodes, outer.nodes, StopReason::NodeLimit)?,
-        allocation_units: add(
-            base.allocation_units,
-            grant.allocation_units,
-            outer.allocation_units,
-            StopReason::AllocationLimit,
-        )?,
-        output_bytes: add(
-            base.output_bytes,
-            grant.output_bytes,
-            outer.output_bytes,
-            StopReason::OutputLimit,
-        )?,
-        diagnostics: add(
-            base.diagnostics,
-            grant.diagnostics,
-            outer.diagnostics,
-            StopReason::DiagnosticLimit,
-        )?,
-        events: add(
-            base.events,
-            grant.events,
-            outer.events,
-            StopReason::EventLimit,
-        )?,
-    })
-}
-
 fn difference(after: Usage, before: Usage) -> Option<Usage> {
     if after.depth < before.depth {
         return None;
@@ -139,7 +95,9 @@ impl IssuedBudget<'_> {
         let basis = self.parent.usage();
         let depth = saved_depth.max(self.parent.current_depth());
         let setup = self.parent.poll().and_then(|()| {
-            let limits = ceiling(basis, self.allowance, self.parent.limits())?;
+            let limits = self
+                .allowance
+                .cumulative_ceiling(basis, self.parent.limits())?;
             if depth > limits.depth {
                 return Err(StopReason::DepthLimit);
             }
@@ -235,6 +193,7 @@ impl IssuedBudget<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nepl3_core::budget::Limits;
     #[test]
     fn cumulative_ceilings_check_all_additive_fields_and_overflow() {
         let base = Usage {
@@ -267,7 +226,7 @@ mod tests {
             diagnostics: 7,
             events: 7,
         };
-        assert_eq!(ceiling(base, grant, outer), Ok(outer));
+        assert_eq!(grant.cumulative_ceiling(base, outer), Ok(outer));
         for excess in [8, u64::MAX] {
             for (field, reason) in [
                 StopReason::SourceLimit,
@@ -291,12 +250,12 @@ mod tests {
                     5 => bad.diagnostics = excess,
                     _ => bad.events = excess,
                 }
-                assert_eq!(ceiling(base, bad, outer), Err(reason));
+                assert_eq!(bad.cumulative_ceiling(base, outer), Err(reason));
             }
         }
         for depth in [6, 11] {
             assert_eq!(
-                ceiling(base, Limits { depth, ..grant }, outer),
+                Limits { depth, ..grant }.cumulative_ceiling(base, outer),
                 Err(StopReason::DepthLimit)
             );
         }

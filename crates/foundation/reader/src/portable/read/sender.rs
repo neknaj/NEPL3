@@ -164,8 +164,8 @@ pub fn execute_name<'a, C: FoundationValueCodec>(
     Ok(issued(reply, registry, local, execution))
 }
 
-// Construct only after executing the real builtin in this module.
-fn issued<'a>(
+// Only trusted native dispatch paths call this after executing the real builtin.
+pub(super) fn issued<'a>(
     reply: ReadReply,
     registry: &'a SchemaRegistry,
     sources: SourceStore,

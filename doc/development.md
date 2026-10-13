@@ -902,3 +902,27 @@ Measured-child hosts remain responsible for request binding, depth, admission
 and settlement; they must not settle the sender's cumulative execution Usage a
 second time. Focused checks:
 `cargo test --locked -p nepl3-reader --test portable sender::`.
+
+### Native saved builtinName on the existing operation ledger
+
+`ReaderSession::execute_pending_name` borrows the session's private pending Read
+and dispatches only the selected builtinName operation. It retains the actual
+parent Budget and codec SourceAdmission, checks saved limits and monotone usage,
+and prepares typed sources/context before starting its relative additive grant.
+Counter equality is only consistency checking; it does not prove ledger identity.
+
+`ReadReplyContext::saved_depth` exposes the private saved Read/Dependent depth.
+It grants no execution or reply authority. Native dispatch uses the larger of
+saved and currently active depth. Its absolute depth cap must also cover the
+historical peak. Limits/active depth restore on return; charges and sticky stops
+remain. `Limits::cumulative_ceiling` is the shared pure checked conversion used
+by both this path and measured-child setup, avoiding a second grant arithmetic
+implementation. It neither reserves work nor settles usage.
+
+The pending slot is unchanged by execution. `ExecutedName::into_reply` feeds
+ordinary saved-session validation/resume; invoking execution again reruns and
+charges the pure builtin. Encoding retries instead reuse the immutable result
+with fresh encoding admission. This same-ledger helper is not inserted into the
+separately admitted measured-child route. NeedMore remains terminal for that
+immutable snapshot; a larger revision starts a new read rather than reviving the
+consumed continuation. Resource Stop is not converted to resumable Await.
