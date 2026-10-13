@@ -10,7 +10,16 @@ use nepl3_markup::html::{
 #[test]
 fn namespace_diagnostic_keeps_separate_source_owners() -> Result<(), String> {
     let compiled = compiled()?;
-    for (native, shared_source) in [(false, false), (true, false), (false, true), (true, true)] {
+    for (native, shared_source, reversed) in [
+        (false, false, false),
+        (true, false, false),
+        (false, true, false),
+        (true, true, false),
+        (false, false, true),
+        (true, false, true),
+        (false, true, true),
+        (true, true, true),
+    ] {
         let mut documents = Vec::new();
         let combined =
             "sentence cons anchor target text \"最初\" cons anchor target text \"後続\" nil";
@@ -102,7 +111,26 @@ fn namespace_diagnostic_keeps_separate_source_owners() -> Result<(), String> {
                 let first = namespace::inspect(&documents[0], registry, b, a).map_err(err)?;
                 let second = namespace::inspect(&documents[1], registry, b, a).map_err(err)?;
                 let members = [&first, &second];
-                let failure = match namespace::resolve(&members, b) {
+                let resolution = if reversed {
+                    namespace::resolve_interleaved(
+                        &members,
+                        &[
+                            namespace::DefinitionIndex {
+                                member: MemberId(1),
+                                index: 0,
+                            },
+                            namespace::DefinitionIndex {
+                                member: MemberId(0),
+                                index: 0,
+                            },
+                        ],
+                        &[],
+                        b,
+                    )
+                } else {
+                    namespace::resolve(&members, b)
+                };
+                let failure = match resolution {
                     Err(error @ namespace::Error::Duplicate { .. }) => error,
                     _ => return Err("duplicate label required".into()),
                 };
@@ -130,9 +158,14 @@ fn namespace_diagnostic_keeps_separate_source_owners() -> Result<(), String> {
                 } else {
                     [7, 7]
                 };
+                let (current, prior) = if reversed { (0, 1) } else { (1, 0) };
+                assert!(
+                    matches!(&failure, namespace::Error::Duplicate {definition, previous}
+                    if definition.member == MemberId(current as u64) && previous.member == MemberId(prior as u64))
+                );
                 for (span, source, start) in [
-                    (primary, sources[1], starts[1]),
-                    (previous, sources[0], starts[0]),
+                    (primary, sources[current], starts[current]),
+                    (previous, sources[prior], starts[prior]),
                 ] {
                     assert_eq!((span.start(), span.end()), (start, start + 6));
                     assert_eq!(span.snapshot_ref().digest, Digest::of(source.as_bytes()));
@@ -516,6 +549,139 @@ fn foreign_namespace_parts_preserve_refs_and_guest_boundaries() -> Result<(), St
                         ..
                     }]
                 ));
+                Ok(())
+            },
+        )?;
+    }
+    Ok(())
+}
+
+#[test]
+fn interleaved_namespace_prepares_and_renders_original_member_owners() -> Result<(), String> {
+    let compiled = compiled()?;
+    for native in [false, true] {
+        let mut documents = Vec::new();
+        for (name, source) in [
+            (
+                "structural-sites",
+                "concat cons anchor first text \"前\" cons anchor last text \"後\" cons ref middle text \"参照\" nil",
+            ),
+            ("guest-site", "anchor middle text \"中\""),
+        ] {
+            with_named_input(
+                native,
+                &compiled,
+                source,
+                name,
+                "Inline",
+                |tree, profile, b, a| {
+                    let input = tree
+                        .tree()
+                        .bundle
+                        .validate_with_sources(profile.registry(), b, a)
+                        .map_err(err)?;
+                    let store = SourceStore::default();
+                    let mut admission = SourceAdmission::default();
+                    let mut codec =
+                        FoundationCodec::new(profile.registry(), &store, &mut admission)
+                            .map_err(err)?;
+                    documents.push(
+                        nepl3_suite::adapters::sentence::literal::lower(
+                            &input,
+                            &compiled.doc.package.schema,
+                            Category::Inline,
+                            profile.registry(),
+                            b,
+                            &mut codec,
+                        )
+                        .map_err(err)?,
+                    );
+                    Ok(())
+                },
+            )?;
+        }
+        with_input_route(
+            native,
+            &compiled,
+            "text \"context\"",
+            "Inline",
+            |_, profile, b, a| {
+                let registry = profile.registry();
+                let first = namespace::inspect(&documents[0], registry, b, a).map_err(err)?;
+                let second = namespace::inspect(&documents[1], registry, b, a).map_err(err)?;
+                let members = [&first, &second];
+                let checked = namespace::resolve_interleaved(
+                    &members,
+                    &[
+                        namespace::DefinitionIndex {
+                            member: MemberId(0),
+                            index: 0,
+                        },
+                        namespace::DefinitionIndex {
+                            member: MemberId(1),
+                            index: 0,
+                        },
+                        namespace::DefinitionIndex {
+                            member: MemberId(0),
+                            index: 1,
+                        },
+                    ],
+                    &[namespace::ReferenceIndex {
+                        member: MemberId(0),
+                        index: 0,
+                    }],
+                    b,
+                )
+                .map_err(err)?;
+                assert_eq!(
+                    checked.references()[0].target,
+                    nepl3_doc_core::labels::DocLabelId(1)
+                );
+                let store = SourceStore::default();
+                let mut admission = SourceAdmission::default();
+                let mut codec =
+                    FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+                let plans =
+                    nepl3_doc_core::prepare::inspect_namespace(&checked, registry, &mut codec, b)
+                        .map_err(err)?;
+                let options = nepl3_doc_html::RenderOptions {
+                    parallel: nepl3_doc_html::ParallelMode::Rows,
+                };
+                let prepared =
+                    html::prepare(&checked, &options, registry, &mut codec, b).map_err(err)?;
+                // Request reverse member rendering order: site IDs must not change
+                // which original document or source owns a rendered part.
+                for index in [1, 0] {
+                    let part =
+                        html::render_part(&prepared, MemberId(index as u64), b).map_err(err)?;
+                    let (member, digest, request, origins) = part.into_parts();
+                    assert_eq!(member, MemberId(index as u64));
+                    assert_eq!(digest, plans[index].document_digest);
+                    assert!(!origins.is_empty());
+                    let document = checked.document(member).ok_or("member owner")?;
+                    assert!(core::ptr::eq(document, &documents[index]));
+                    for origin in origins {
+                        assert!(origin.element < request.fragment.nodes.len() as u64);
+                        let node = document
+                            .value
+                            .nodes
+                            .get(origin.node as usize)
+                            .ok_or("origin node")?;
+                        let span = node.span.as_ref().ok_or("source-backed origin")?;
+                        assert!(
+                            document
+                                .sources
+                                .iter()
+                                .any(|source| source.identity() == span.snapshot_ref())
+                        );
+                        assert!(
+                            documents[1 - index]
+                                .sources
+                                .iter()
+                                .all(|source| source.identity() != span.snapshot_ref())
+                        );
+                    }
+                }
                 Ok(())
             },
         )?;

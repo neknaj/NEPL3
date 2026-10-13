@@ -159,7 +159,9 @@ pub fn resolution_error<C: FoundationValueCodec>(
                 _ => Error::Selection,
             }
         }
-        labels::Error::Input(_) | labels::Error::Root(_) => Error::Selection,
+        labels::Error::Input(_) | labels::Error::Root(_) | labels::Error::Order(_) => {
+            Error::Selection
+        }
     }
 }
 pub fn prepare<'a, C: FoundationValueCodec>(

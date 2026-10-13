@@ -328,6 +328,12 @@ guestのHTMLもDoc出力の深さ上限256と、呼出元の累積Budgetに従�
 検査結果は各定義・参照のmember、Doc node、元source位置を保持し、選択した全memberの定義を収集してから前方参照を解決する。
 同じ定義を持つmemberの複数出現とmember間の名前重複を拒否する。未選択の断片やforeign closure内部の定義は自動導入しない。
 名前索引は宣言順のidentityを保持し、比較・確保を共通Budgetへ計上する。名前解決のproofは選択した不変のmember列へ束縛する。
+native APIの`resolve_interleaved`は、定義と参照を別々の型付きindex列で指定し、member間の順序を交互に構成できる。
+各indexは元member列の出現IDと、そのmemberが収集した局所site indexを持つ。同じ文書を複数回選択しても出現IDを統合しない。
+各member内部のconstructor順を保ち、定義・参照それぞれについて全siteを一度ずつ列挙しなければならない。
+欠落・重複・範囲外・局所順の反転を型付きorder errorとして拒否してから名前解決する。order errorを未解決labelの診断へ読み替えない。
+このproofは選択したmemberと明示site順での名前解決だけを保証する。hostが実際のArticle走査順を供給した証明でも、既存rendererがその順に出力する保証でもない。
+従来の`resolve`はmemberごとの連続順を維持する。両入口は同じ名前解決処理を使い、空memberの走査とschedule検査も累積Budgetへ計上する。
 Doc HTMLの`namespace::prepare`はこのproofから全memberを取得し、共通codec・registry・source admissionで再検査する。
 `namespace::render`はmember順にHTMLを合成し、全体のID・参照・構造と深さ上限を検査してから出力する。
 出力はmemberごとの文書digestとDoc node・HTML要素の対応を保持する。合成用wrapperへ架空のDoc ownerを割り当てない。
