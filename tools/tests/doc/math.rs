@@ -196,7 +196,14 @@ fn article_math_nodes_select_display_without_evaluating_code() -> Result<(), Str
                         DocKind::InlineMath { syntax } | DocKind::DisplayMath { syntax } => syntax,
                         _ => return Err("Math kind".into()),
                     };
-                    let mut bad_closure = document.value.embeds[embed.0 as usize].closure.clone();
+                    let mut bad_closure = document
+                        .value
+                        .embeds
+                        .get(embed.0 as usize)
+                        .ok_or("embed")?
+                        .closure
+                        .materialize(&mut budget())
+                        .map_err(err)?;
                     bad_closure.syntax.category = "Sentence".into();
                     assert!(matches!(
                         host.render(

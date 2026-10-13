@@ -5,7 +5,11 @@ use crate::model::{EmbedRef, InlineRef, Kind, Root, SentenceValue};
 use alloc::{vec, vec::Vec};
 pub use content::ContentError;
 use nepl3_core::budget::{Budget, Resource, StopReason};
-use nepl3_core::{schema::SchemaRegistry, source::SourceAdmission, syntax::SyntaxError};
+use nepl3_core::{
+    schema::SchemaRegistry,
+    source::SourceAdmission,
+    syntax::{SyntaxError, group::GroupError},
+};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Category {
@@ -25,6 +29,15 @@ pub enum Error {
     Embed(u64),
     UnusedEmbed(u64),
     Foreign(SyntaxError),
+    ForeignGroup(GroupError),
+}
+impl From<GroupError> for Error {
+    fn from(e: GroupError) -> Self {
+        match e.stop_reason() {
+            Some(s) => Self::Stopped(s),
+            None => Self::ForeignGroup(e),
+        }
+    }
 }
 impl From<StopReason> for Error {
     fn from(value: StopReason) -> Self {
@@ -130,16 +143,21 @@ impl<'a> CheckedShape<'a> {
         admission: &mut SourceAdmission,
     ) -> Result<(), Error> {
         let embeds = self.foreign_depths(b)?;
-        let base = b.current_depth();
-        for (closure, depth) in self.value.embeds.iter().zip(embeds) {
-            let absolute = base
-                .checked_add(depth)
+        // Preserve the receiving-depth gate before inspecting guest schemas.
+        for depth in &embeds {
+            b.charge(Resource::Work, 1)?;
+            b.current_depth()
+                .checked_add(*depth)
                 .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
-            b.with_depth_at_least::<_, Error>(absolute, |b| {
-                closure.validate(registry, b, admission)?;
-                Ok(())
-            })?;
         }
+        // No foreign boundary exists for a truly empty closure. Hidden owner
+        // tables are deliberately excluded from this fast path.
+        if self.value.embeds.is_empty() {
+            return Ok(());
+        }
+        self.value
+            .embeds
+            .validate_at_depths(&embeds, registry, b, admission)?;
         Ok(())
     }
 
@@ -167,8 +185,11 @@ impl<'a> CheckedShape<'a> {
             let mut index = 0;
             while let Some(child) = self.value.nodes[node].child(index) {
                 b.charge(Resource::Work, 1)?;
-                depths[child.0 as usize] =
-                    depths[child.0 as usize].max(depths[node].saturating_add(1));
+                depths[child.0 as usize] = depths[child.0 as usize].max(
+                    depths[node]
+                        .checked_add(1)
+                        .ok_or_else(|| b.stop(StopReason::DepthLimit))?,
+                );
                 index += 1;
             }
             if let Kind::ForeignInline { syntax } = self.value.nodes[node] {

@@ -1042,3 +1042,6 @@ fn grouped_wire_rejects_forged_references_digests_and_exact_stops() -> TestResul
 
 #[path = "group/identity.rs"]
 mod identity;
+
+#[path = "group/consumers.rs"]
+mod consumers;

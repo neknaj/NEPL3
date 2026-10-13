@@ -122,7 +122,7 @@ fn sentence_surface_compiles_from_production_grammar_with_own_root_and_payload()
     let escaped = "[not ruby]{not anno}/\"\\\n\r\t\0\u{85}😀";
     let value = SentenceValue {
         root: Root::Sentence(SentenceRef(10)),
-        embeds: vec![],
+        embeds: Default::default(),
         nodes: vec![
             Kind::Text {
                 text: escaped.into(),

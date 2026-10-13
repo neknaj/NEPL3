@@ -314,7 +314,14 @@ fn foreign_namespace_parts_preserve_refs_and_guest_boundaries() -> Result<(), St
                     MemberId(0),
                     &mut |guest, embed, b| {
                         calls += 1;
-                        assert_eq!(guest, &documents[0].value.embeds[embed.0 as usize]);
+                        assert_eq!(
+                            guest,
+                            &documents[0]
+                                .value
+                                .embeds
+                                .get(embed.0 as usize)
+                                .ok_or("embed")?
+                        );
                         assert_eq!(guest.kind, nepl3_doc_core::model::EmbedKind::InlineMath);
                         let mut host = crate::doc::math::MathDisplayHost {
                             registry,
@@ -324,11 +331,15 @@ fn foreign_namespace_parts_preserve_refs_and_guest_boundaries() -> Result<(), St
                             codec: &mut codec,
                         };
                         Ok::<_, String>(
-                            host.render(&guest.closure, nepl3_markup::mathml::Display::Inline, b)
-                                .map_err(err)?
-                                .into_html(b)
-                                .map_err(err)?
-                                .markup,
+                            host.render_view(
+                                &guest.closure,
+                                nepl3_markup::mathml::Display::Inline,
+                                b,
+                            )
+                            .map_err(err)?
+                            .into_html(b)
+                            .map_err(err)?
+                            .markup,
                         )
                     },
                     &mut measured,
@@ -365,10 +376,11 @@ fn foreign_namespace_parts_preserve_refs_and_guest_boundaries() -> Result<(), St
                     Err(HtmlError::MissingFragment(_))
                 ));
                 let mut calls = 0;
-                let mut forbidden = |_: &nepl3_doc_core::model::DocEmbed, _, _: &mut Budget| {
-                    calls += 1;
-                    Err::<HtmlRequest, _>("unexpected callback")
-                };
+                let mut forbidden =
+                    |_: &nepl3_doc_core::model::DocEmbedView<'_>, _, _: &mut Budget| {
+                        calls += 1;
+                        Err::<HtmlRequest, _>("unexpected callback")
+                    };
                 assert!(matches!(
                     html::render_part_with_foreign(&prepared, MemberId(2), &mut forbidden, b),
                     Err(ForeignPartError::Member(MemberId(2)))
@@ -422,18 +434,19 @@ fn foreign_namespace_parts_preserve_refs_and_guest_boundaries() -> Result<(), St
                 .map_err(err)?;
 
                 let mut measured = budget();
-                let mut text_guest = |_: &nepl3_doc_core::model::DocEmbed, _, _: &mut Budget| {
-                    Ok::<_, ()>(HtmlRequest {
-                        fragment: HtmlFragment {
-                            root: 0,
-                            nodes: vec![HtmlNode::Text {
-                                text: "guest".into(),
-                            }],
-                        },
-                        slot: HtmlSlot::Phrasing,
-                        policy: HtmlPolicy { classes: vec![] },
-                    })
-                };
+                let mut text_guest =
+                    |_: &nepl3_doc_core::model::DocEmbedView<'_>, _, _: &mut Budget| {
+                        Ok::<_, ()>(HtmlRequest {
+                            fragment: HtmlFragment {
+                                root: 0,
+                                nodes: vec![HtmlNode::Text {
+                                    text: "guest".into(),
+                                }],
+                            },
+                            slot: HtmlSlot::Phrasing,
+                            policy: HtmlPolicy { classes: vec![] },
+                        })
+                    };
                 html::render_part_with_foreign(
                     &prepared,
                     MemberId(0),
@@ -687,4 +700,124 @@ fn interleaved_namespace_prepares_and_renders_original_member_owners() -> Result
         )?;
     }
     Ok(())
+}
+
+#[test]
+fn repeated_doc_inline_revalidates_owner_at_actual_html_depth() -> Result<(), String> {
+    use nepl3_core::origin::{Origin, OriginId};
+    use nepl3_sentence_core::model::EmbedRef;
+    let compiled =
+        compiled_with_sentence_forms(&[nepl3_grammar_core::compile::package::ForeignForm {
+            kind: "DocumentInline",
+            category: "Inline",
+            spelling: "doc",
+            field: "syntax",
+            alias: "Doc",
+            guest_category: "Inline",
+            origin_reason: "callback owner depth test",
+        }])?;
+    let source = r#"article en "A" body cons display Math label x Sentence sentence cons doc text "a" cons ruby doc text "b" text "reading" nil nil"#;
+    with_input_route(true, &compiled, source, "Article", |tree, profile, b, a| {
+        let registry = profile.registry();
+        let checked = tree
+            .tree()
+            .bundle
+            .validate_with_sources(registry, b, a)
+            .map_err(err)?;
+        let store = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+        let document = nepl3_suite::adapters::sentence::literal::lower(
+            &checked,
+            &compiled.doc.package.schema,
+            Category::Article,
+            registry,
+            b,
+            &mut codec,
+        )
+        .map_err(err)?;
+        let node = document
+            .value
+            .nodes
+            .iter()
+            .position(|n| matches!(n.kind, DocKind::DisplayMath { .. }))
+            .ok_or("Math node")?;
+        let sentence_surface = &compiled.others.last().ok_or("Sentence")?.schema;
+        let mut math = crate::doc::math::MathDisplayHost {
+            registry,
+            math_surface: &compiled.others[0].schema,
+            sentence_surface: Some(sentence_surface),
+            doc_surface: Some(&compiled.doc.package.schema),
+            codec: &mut codec,
+        };
+        let mut rendered = math
+            .render_node(&document, node as u64, &mut budget())
+            .map_err(err)?;
+        if rendered.annotations.len() != 1 {
+            return Err("one annotation".into());
+        }
+        let mut sentence = rendered.annotations.remove(0).sentence;
+        sentence.value.embeds = sentence
+            .value
+            .embeds
+            .validate(registry, &mut budget(), &mut SourceAdmission::default())
+            .map_err(err)?
+            .select(
+                &[0],
+                registry,
+                &mut budget(),
+                &mut SourceAdmission::default(),
+            )
+            .map_err(err)?;
+        for node in &mut sentence.value.nodes {
+            if let Kind::ForeignInline { syntax } = node {
+                *syntax = EmbedRef(0);
+            }
+        }
+        // Deep unused owner metadata must remain part of every receiving
+        // boundary even though the actual Doc content is a shallow Text node.
+        let origins = &mut sentence.value.embeds.provenances[0].origins;
+        let start = origins.len();
+        origins.push(Origin::Synthetic {
+            reason: "deep owner".into(),
+            anchor: None,
+        });
+        for offset in 1..45 {
+            origins.push(Origin::Composite(vec![OriginId(
+                (start + offset - 1) as u64,
+            )]));
+        }
+        let mut semantic = budget();
+        sentence
+            .validate(registry, &mut semantic, &mut SourceAdmission::default())
+            .map_err(err)?;
+        let semantic_depth = semantic.usage().depth;
+        let mut host = crate::doc::annotations::SentenceAnnotationRenderer {
+            registry,
+            surface: sentence_surface,
+            math_surface: Some(&compiled.others[0].schema),
+            doc_surface: Some(&compiled.doc.package.schema),
+            codec: &mut codec,
+        };
+        let mut full = budget();
+        host.render_syntax(sentence.clone(), &mut full)
+            .map_err(err)?;
+        assert!(full.usage().depth > semantic_depth);
+        let mut limits = budget().limits();
+        // One extra level permits render_syntax's wrapper but not the deeper
+        // Ruby HTML insertion. This bound is derived from semantic admission,
+        // independently of whether the callback actually validates its owner.
+        limits.depth = semantic_depth + 1;
+        let mut limited = Budget::new(limits);
+        let result = host.render_syntax(sentence, &mut limited);
+        assert!(matches!(
+            result,
+            Err(crate::doc::annotations::Error::Stopped(
+                StopReason::DepthLimit
+            ))
+        ));
+        assert_eq!(limited.poll(), Err(StopReason::DepthLimit));
+        assert_eq!(limited.current_depth(), 0);
+        Ok(())
+    })
 }

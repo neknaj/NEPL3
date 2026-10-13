@@ -20,7 +20,7 @@ fn value(nodes: Vec<Kind>) -> SentenceValue {
     SentenceValue {
         root: Root::Sentence(SentenceRef(0)),
         nodes,
-        embeds: vec![],
+        embeds: Default::default(),
     }
 }
 fn checked(v: &SentenceValue, b: &mut Budget) -> Result<(), Error> {
@@ -254,7 +254,7 @@ fn foreign_indices_are_checked_without_claiming_closure_validity() -> Result<(),
         nodes: vec![Kind::ForeignInline {
             syntax: EmbedRef(0),
         }],
-        embeds: vec![closure.clone()],
+        embeds: group(vec![closure.clone()]),
     };
     checked(&v, &mut budget())?;
     // A real arena embed reference reaches the printer's adapter boundary.
@@ -295,7 +295,7 @@ fn foreign_indices_are_checked_without_claiming_closure_validity() -> Result<(),
         })
     );
     v.root = Root::Sentence(SentenceRef(0));
-    v.embeds.push(closure);
+    v.embeds = group(vec![closure.clone(), closure]);
     assert_eq!(checked(&v, &mut budget()), Err(Error::UnusedEmbed(1)));
     v.nodes[1] = Kind::ForeignInline {
         syntax: EmbedRef(2),
@@ -309,7 +309,7 @@ fn foreign_occurrences_keep_order_sharing_notes_and_budget_boundaries() -> Resul
     use nepl3_sentence_core::check::ForeignOccurrence;
     let v = SentenceValue {
         root: Root::Sentence(SentenceRef(4)),
-        embeds: vec![invalid_guest(), invalid_guest()],
+        embeds: group(vec![invalid_guest(), invalid_guest()]),
         nodes: vec![
             Kind::ForeignInline {
                 syntax: EmbedRef(1),
@@ -391,7 +391,7 @@ fn foreign_occurrences_keep_order_sharing_notes_and_budget_boundaries() -> Resul
     // Exponential display expansion of a finite DAG is still bounded by Work.
     let mut dag = SentenceValue {
         root: Root::Inline(InlineRef(40)),
-        embeds: vec![invalid_guest()],
+        embeds: group(vec![invalid_guest()]),
         nodes: vec![Kind::ForeignInline {
             syntax: EmbedRef(0),
         }],
@@ -523,7 +523,7 @@ fn checked_foreign_occurrences_reject_overflowing_caller_depth() -> Result<(), E
         nodes: vec![Kind::ForeignInline {
             syntax: EmbedRef(0),
         }],
-        embeds: vec![invalid_guest()],
+        embeds: group(vec![invalid_guest()]),
     };
     for base in [u64::MAX - 1, u64::MAX] {
         let mut b = Budget::new(Limits {
@@ -553,7 +553,7 @@ fn checked_foreign_validation_rejects_overflow_before_guest_validation() -> Resu
         nodes: vec![Kind::ForeignInline {
             syntax: EmbedRef(0),
         }],
-        embeds: vec![invalid_guest()],
+        embeds: group(vec![invalid_guest()]),
     };
     let mut b = Budget::new(Limits {
         depth: u64::MAX,
@@ -610,7 +610,7 @@ fn selected_guest_content_propagates_without_invalidating_empty_standalone_guest
                 text: "reading".into(),
             },
         ]);
-        v.embeds.push(invalid_guest());
+        v.embeds = group(vec![invalid_guest()]);
         let proof = v
             .validate_shape(&mut budget())
             .map_err(|error| format!("{error:?}"))?;
@@ -628,7 +628,7 @@ fn selected_guest_content_propagates_without_invalidating_empty_standalone_guest
         nodes: vec![Kind::ForeignInline {
             syntax: EmbedRef(0),
         }],
-        embeds: vec![invalid_guest()],
+        embeds: group(vec![invalid_guest()]),
     };
     let proof = v
         .validate_shape(&mut budget())
@@ -659,7 +659,7 @@ fn content_callbacks_preserve_deepest_occurrence_and_sticky_stops() -> Result<()
                 inline: InlineRef(1),
             },
         ],
-        embeds: vec![invalid_guest()],
+        embeds: group(vec![invalid_guest()]),
     };
     let proof = v
         .validate_shape(&mut budget())
@@ -760,7 +760,7 @@ fn cancellation_stops_later_content_callbacks_and_restores_caller_depth() -> Res
                 syntax: EmbedRef(1),
             },
         ],
-        embeds: vec![invalid_guest(), invalid_guest()],
+        embeds: group(vec![invalid_guest(), invalid_guest()]),
     };
     let proof = v
         .validate_shape(&mut budget())
@@ -790,4 +790,28 @@ fn cancellation_stops_later_content_callbacks_and_restores_caller_depth() -> Res
     assert_eq!(b.current_depth(), 0);
     assert_eq!(b.poll(), Err(StopReason::Cancelled));
     Ok(())
+}
+
+fn group(
+    closures: Vec<nepl3_core::syntax::ForeignClosure>,
+) -> nepl3_core::syntax::group::ForeignClosureGroup {
+    use nepl3_core::syntax::group::*;
+    let mut result = ForeignClosureGroup::default();
+    for closure in closures {
+        let i = result.entries.len() as u64;
+        result.provenances.push(ForeignProvenance {
+            origins: closure.owner_origins,
+            sources: closure.owner_sources,
+            source_maps: closure.owner_source_maps,
+        });
+        result.environments.push(ForeignOwnerEnvironment {
+            provenance: ProvenanceRef(i),
+            environment: closure.owner_environment,
+        });
+        result.entries.push(ForeignGroupEntry {
+            owner: OwnerEnvironmentRef(i),
+            syntax: closure.syntax,
+        });
+    }
+    result
 }

@@ -16,6 +16,9 @@ impl DocValue {
         require_all: bool,
     ) -> Result<ValidatedDocShape<'a>, ShapeError> {
         budget.poll()?;
+        if self.embeds.kinds.len() != self.embeds.group.entries.len() {
+            return Err(ShapeError::EmbedCount);
+        }
         let count = self.nodes.len() as u64;
         budget.charge(Resource::Work, count)?;
         budget.charge(Resource::Nodes, count)?;
@@ -219,7 +222,7 @@ impl DocValue {
     }
     fn embed(&self, index: u64, expected: EmbedKind, used: &mut [bool]) -> Result<(), ShapeError> {
         let i = usize::try_from(index).map_err(|_| ShapeError::Embed(index))?;
-        if self.embeds.get(i).is_none_or(|v| v.kind != expected) {
+        if self.embeds.kinds.get(i).is_none_or(|v| *v != expected) {
             return Err(ShapeError::Embed(index));
         }
         *used.get_mut(i).ok_or(ShapeError::Embed(index))? = true;

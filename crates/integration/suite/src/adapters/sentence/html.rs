@@ -331,7 +331,7 @@ pub fn render_with_foreign<'a, E: From<StopReason>>(
     input: &'a SentenceSyntax,
     registry: &SchemaRegistry,
     adapter: &mut impl FnMut(
-        &nepl3_core::syntax::ForeignClosure,
+        &nepl3_core::syntax::ForeignClosureView<'_>,
         EmbedRef,
         &mut Budget,
     ) -> Result<HtmlRequest, E>,
@@ -355,7 +355,7 @@ pub fn render_with_foreign_codec<
     registry: &SchemaRegistry,
     codec: &mut C,
     adapter: &mut impl FnMut(
-        &nepl3_core::syntax::ForeignClosure,
+        &nepl3_core::syntax::ForeignClosureView<'_>,
         EmbedRef,
         &mut C,
         &mut Budget,
@@ -377,7 +377,7 @@ pub fn render_with_foreign_codec<
 fn render_checked_with_foreign<'a, E: From<StopReason>>(
     checked: &nepl3_sentence_core::syntax::CheckedSyntax<'a>,
     adapter: &mut impl FnMut(
-        &nepl3_core::syntax::ForeignClosure,
+        &nepl3_core::syntax::ForeignClosureView<'_>,
         EmbedRef,
         &mut Budget,
     ) -> Result<HtmlRequest, E>,
@@ -400,7 +400,7 @@ pub fn render_part_with_foreign<'a, E: From<StopReason>>(
     input: &'a SentenceSyntax,
     registry: &SchemaRegistry,
     adapter: &mut impl FnMut(
-        &nepl3_core::syntax::ForeignClosure,
+        &nepl3_core::syntax::ForeignClosureView<'_>,
         EmbedRef,
         &mut Budget,
     ) -> Result<HtmlRequest, E>,
@@ -421,7 +421,7 @@ fn build_with_foreign<'a, E: From<StopReason>>(
     input: &'a SentenceSyntax,
     registry: &SchemaRegistry,
     adapter: &mut impl FnMut(
-        &nepl3_core::syntax::ForeignClosure,
+        &nepl3_core::syntax::ForeignClosureView<'_>,
         EmbedRef,
         &mut Budget,
     ) -> Result<HtmlRequest, E>,
@@ -436,7 +436,7 @@ fn build_with_foreign<'a, E: From<StopReason>>(
 fn build_checked_with_foreign<'a, E: From<StopReason>>(
     checked: &nepl3_sentence_core::syntax::CheckedSyntax<'a>,
     adapter: &mut impl FnMut(
-        &nepl3_core::syntax::ForeignClosure,
+        &nepl3_core::syntax::ForeignClosureView<'_>,
         EmbedRef,
         &mut Budget,
     ) -> Result<HtmlRequest, E>,
@@ -532,14 +532,18 @@ fn build_checked_with_foreign<'a, E: From<StopReason>>(
                 builder.job(base.0, base_target)?;
             }
             Kind::ForeignInline { syntax } => {
-                let closure = &input.value.embeds[syntax.0 as usize];
+                let closure = input
+                    .value
+                    .embeds
+                    .entry(syntax.0 as usize)
+                    .ok_or(Error::InternalShape)?;
                 let depth = builder
                     .b
                     .current_depth()
                     .saturating_add(builder.depths[parent as usize]);
                 let markup = builder
                     .b
-                    .with_depth_at_least(depth, |b| adapter(closure, *syntax, b));
+                    .with_depth_at_least(depth, |b| adapter(&closure, *syntax, b));
                 // Preserve an earlier shared stop even if the guest returns
                 // an ordinary error after stopping its budget.
                 builder.b.poll().map_err(Error::from)?;

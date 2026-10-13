@@ -5,6 +5,7 @@ extern crate alloc;
 pub mod check;
 mod copy;
 mod fragment;
+mod identity;
 pub mod labels;
 pub mod lower;
 pub mod model;

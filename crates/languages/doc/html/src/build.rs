@@ -147,7 +147,13 @@ impl Builder<'_, '_> {
         // occurrence. Duplicate IDs inside the guest were rejected above.
         // Host Doc anchors use n-..., never this reserved g-... prefix.
         if matches!(
-            self.prepared.document.value.embeds[embed.0 as usize].kind,
+            self.prepared
+                .document
+                .value
+                .embeds
+                .get(embed.0 as usize)
+                .ok_or(RenderError::InternalShape)?
+                .kind,
             EmbedKind::InlineMath | EmbedKind::DisplayMath
         ) {
             for node in &mut markup.fragment.nodes {
@@ -391,7 +397,7 @@ pub(crate) fn render_prepared(
 /// malformed/non-phrasing output and unresolved non-guest requirements fail.
 pub fn render_inline_with_foreign<E>(
     prepared: &PreparedInlineWithForeign<'_>,
-    adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
+    adapter: &mut impl FnMut(&DocEmbedView<'_>, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
     budget: &mut Budget,
 ) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
     render_prepared_with_foreign(&prepared.0, &[], adapter, budget, true)
@@ -417,7 +423,7 @@ pub(super) fn namespace_member(
 }
 pub(super) fn namespace_member_with_foreign<E>(
     prepared: &crate::prepare::PreparedRendering<'_>,
-    adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
+    adapter: &mut impl FnMut(&DocEmbedView<'_>, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
     budget: &mut Budget,
 ) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
     render_prepared_with_foreign(prepared, &[], adapter, budget, false)
@@ -426,7 +432,7 @@ pub(super) fn namespace_member_with_foreign<E>(
 pub(crate) fn render_prepared_with_foreign<E>(
     prepared: &crate::prepare::PreparedRendering<'_>,
     links: &[(u64, HtmlHref)],
-    adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
+    adapter: &mut impl FnMut(&DocEmbedView<'_>, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
     budget: &mut Budget,
     validate_final: bool,
 ) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
@@ -503,9 +509,9 @@ pub(crate) fn render_prepared_with_foreign<E>(
             let depth =
                 w.b.current_depth()
                     .saturating_add(w.depths[target.parent as usize]);
-            let result = w
-                .b
-                .with_depth_at_least(depth, |b| Ok::<_, RenderError>(adapter(embed, *syntax, b)))?;
+            let result = w.b.with_depth_at_least(depth, |b| {
+                Ok::<_, RenderError>(adapter(&embed, *syntax, b))
+            })?;
             w.b.poll()?;
             let markup = result.map_err(ForeignRenderError::Foreign)?;
             let slot = if matches!(kind, DocKind::DisplayMath { .. }) {

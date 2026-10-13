@@ -1,7 +1,7 @@
 use super::*;
 use nepl3_doc_core::{
     check::Category,
-    model::{DocEmbed, DocKind},
+    model::{DocEmbedView, DocKind},
     pages::{PageDocument, PageRegistration, PageSet},
 };
 use nepl3_doc_html::{
@@ -58,20 +58,20 @@ fn request(
 }
 
 fn echo(
-    embed: &DocEmbed,
+    embed: &DocEmbedView<'_>,
     attribute: Option<HtmlAttribute>,
     b: &mut Budget,
 ) -> Result<HtmlRequest, String> {
     let root = embed
         .closure
-        .syntax
+        .syntax()
         .bundle
-        .node(embed.closure.syntax.bundle.root)
+        .node(embed.closure.syntax().bundle.root)
         .map_err(err)?;
     let cover = root.cover.as_ref().ok_or("missing cover")?;
     let source = embed
         .closure
-        .syntax
+        .syntax()
         .bundle
         .sources
         .iter()
@@ -118,7 +118,14 @@ fn native_code_callback_binds_exact_page_and_shared_embed_occurrences() -> Resul
     }
     // Both Code nodes deliberately share the first closure; remove the now
     // unused second closure to keep the input shape valid.
-    request.set.pages[1].document.value.embeds.truncate(1);
+    request.set.pages[1].document.value.embeds.kinds.truncate(1);
+    request.set.pages[1]
+        .document
+        .value
+        .embeds
+        .group
+        .entries
+        .truncate(1);
     let store = SourceStore::default();
     let mut admission = SourceAdmission::default();
     let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
@@ -130,8 +137,14 @@ fn native_code_callback_binds_exact_page_and_shared_embed_occurrences() -> Resul
         &mut budget(),
         &mut |page, embed, index, b| {
             assert!(core::ptr::eq(
-                embed,
-                &request.set.pages[page as usize].document.value.embeds[index.0 as usize]
+                embed.closure.syntax(),
+                &request.set.pages[page as usize]
+                    .document
+                    .value
+                    .embeds
+                    .group
+                    .entries[index.0 as usize]
+                    .syntax
             ));
             calls.push((page, index));
             echo(

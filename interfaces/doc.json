@@ -1087,31 +1087,6 @@
       ],
       "constraints": []
     },
-    "DocEmbed": {
-      "record": [
-        [
-          "kind",
-          {
-            "named": {
-              "package": "nepl3.doc",
-              "revision": 1,
-              "name": "EmbedKind"
-            }
-          }
-        ],
-        [
-          "closure",
-          {
-            "named": {
-              "package": "nepl3.foundation",
-              "revision": 1,
-              "name": "ForeignClosure"
-            }
-          }
-        ]
-      ],
-      "constraints": []
-    },
     "DocValue": {
       "record": [
         [
@@ -1139,12 +1114,10 @@
         [
           "embeds",
           {
-            "list": {
-              "named": {
-                "package": "nepl3.doc",
-                "revision": 1,
-                "name": "DocEmbed"
-              }
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "DocEmbeds"
             }
           }
         ]
@@ -2341,6 +2314,33 @@
           ]
         ]
       },
+      "constraints": []
+    },
+    "DocEmbeds": {
+      "record": [
+        [
+          "kinds",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "EmbedKind"
+              }
+            }
+          }
+        ],
+        [
+          "group",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "ForeignClosureGroup"
+            }
+          }
+        ]
+      ],
       "constraints": []
     }
   },

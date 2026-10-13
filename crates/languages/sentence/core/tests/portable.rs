@@ -71,7 +71,7 @@ fn sentence() -> SentenceValue {
                 label: InlineRef(1),
             },
         ],
-        embeds: vec![],
+        embeds: Default::default(),
     }
 }
 fn encode(v: &SentenceValue, r: &SchemaRegistry) -> Result<NdfValue, String> {
@@ -143,7 +143,7 @@ fn first_cbor_receiver_retains_all_local_forms_order_unicode_and_sharing() -> Re
         nodes: vec![Kind::Text {
             text: String::new(),
         }],
-        embeds: vec![],
+        embeds: Default::default(),
     };
     assert_eq!(
         decode(&encode(&empty, &r)?, &r, &mut budget()).map_err(err)?,
@@ -362,7 +362,7 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
                 syntax: EmbedRef(0),
             },
         ],
-        embeds: vec![closure],
+        embeds: group(vec![closure]),
     };
     {
         use nepl3_sentence_core::text::{self, AnnotationPolicy::BaseOnly, Error};
@@ -422,11 +422,11 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
     assert_eq!(actual, value);
     assert_eq!(b.usage().source_bytes, 7);
     assert_ne!(
-        actual.embeds[0].owner_origins,
-        actual.embeds[0].syntax.bundle.origins
+        actual.embeds.provenances[0].origins,
+        actual.embeds.entries[0].syntax.bundle.origins
     );
     let mut bad_native = value.clone();
-    bad_native.embeds[0].owner_sources.clear();
+    bad_native.embeds.provenances[0].sources.clear();
     assert!(encode(&bad_native, &r).is_err());
     {
         use nepl3_sentence_core::text::{self, AnnotationPolicy::*, Error};
@@ -479,7 +479,7 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
             Err(Error::Unresolved(EmbedRef(0)))
         );
         // Even a reading excluded from output must have a valid source closure.
-        annotated.embeds[0].owner_sources.clear();
+        annotated.embeds.provenances[0].sources.clear();
         assert!(matches!(
             text::prepare(
                 &annotated,
@@ -496,16 +496,25 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
         let NdfValue::Record(record) = &mut bad else {
             return Err("record".into());
         };
-        let NdfValue::List(embeds) = &mut record.fields[2] else {
-            return Err("embeds".into());
-        };
-        let NdfValue::Record(closure) = &mut embeds[0] else {
-            return Err("closure".into());
+        let NdfValue::Record(group) = &mut record.fields[2] else {
+            return Err("group".into());
         };
         if remove_source {
-            closure.fields[3] = NdfValue::List(vec![]);
+            let NdfValue::List(provenances) = &mut group.fields[0] else {
+                return Err("provenances".into());
+            };
+            let NdfValue::Record(provenance) = &mut provenances[0] else {
+                return Err("provenance".into());
+            };
+            provenance.fields[1] = NdfValue::List(vec![]);
         } else {
-            let NdfValue::Record(env) = &mut closure.fields[1] else {
+            let NdfValue::List(environments) = &mut group.fields[1] else {
+                return Err("environments".into());
+            };
+            let NdfValue::Record(owner) = &mut environments[0] else {
+                return Err("owner".into());
+            };
+            let NdfValue::Record(env) = &mut owner.fields[1] else {
                 return Err("environment".into());
             };
             env.fields[1] = NdfValue::Bytes(vec![0; 32]);
@@ -542,7 +551,7 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
     nested.nodes.push(Kind::ForeignInline {
         syntax: EmbedRef(0),
     });
-    let guest = &mut nested.embeds[0].syntax.bundle;
+    let guest = &mut nested.embeds.entries[0].syntax.bundle;
     let template = guest.nodes[0].clone();
     for i in 0..29 {
         guest.nodes[i].fields = vec![FieldValue::Child(NodeRef(i as u64 + 1))];
@@ -557,7 +566,10 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
     nested
         .validate_shape(&mut Budget::new(limits))
         .map_err(err)?;
-    nested.embeds[0]
+    nested
+        .embeds
+        .entry(0)
+        .ok_or("embed")?
         .validate(
             &r,
             &mut Budget::new(limits),
@@ -620,7 +632,7 @@ fn deep_flat_wire_arena_does_not_hide_semantic_depth() -> Result<(), String> {
     let v = SentenceValue {
         root: Root::Inline(InlineRef(0)),
         nodes,
-        embeds: vec![],
+        embeds: Default::default(),
     };
     let raw = encode(&v, &r)?;
     let bytes = nepl3_wire::encode(&raw, &mut budget()).map_err(err)?;
@@ -710,7 +722,18 @@ fn independently_authored_wire_preserves_ordered_annotation_fields() -> Result<(
                 vec![reference("SentenceRef", 0)],
             ),
             NdfValue::List(nodes),
-            NdfValue::List(vec![]),
+            NdfValue::Record(Record {
+                schema: r
+                    .selected("nepl3.foundation", 1)
+                    .ok_or("foundation")?
+                    .clone(),
+                kind: "ForeignClosureGroup".into(),
+                fields: vec![
+                    NdfValue::List(vec![]),
+                    NdfValue::List(vec![]),
+                    NdfValue::List(vec![]),
+                ],
+            }),
         ],
     });
     let bytes = nepl3_wire::encode(&wire, &mut budget()).map_err(err)?;
@@ -765,4 +788,28 @@ fn nonzero_work_exhaustion_during_boundary_processing_never_returns_partial_succ
         }
     }
     Ok(())
+}
+
+fn group(
+    closures: Vec<nepl3_core::syntax::ForeignClosure>,
+) -> nepl3_core::syntax::group::ForeignClosureGroup {
+    use nepl3_core::syntax::group::*;
+    let mut result = ForeignClosureGroup::default();
+    for closure in closures {
+        let i = result.entries.len() as u64;
+        result.provenances.push(ForeignProvenance {
+            origins: closure.owner_origins,
+            sources: closure.owner_sources,
+            source_maps: closure.owner_source_maps,
+        });
+        result.environments.push(ForeignOwnerEnvironment {
+            provenance: ProvenanceRef(i),
+            environment: closure.owner_environment,
+        });
+        result.entries.push(ForeignGroupEntry {
+            owner: OwnerEnvironmentRef(i),
+            syntax: closure.syntax,
+        });
+    }
+    result
 }

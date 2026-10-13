@@ -4,7 +4,7 @@ use alloc::{string::String, vec::Vec};
 use nepl3_core::{
     origin::{Mapping, Origin, OriginId},
     source::{Digest, SourceSnapshot, Span},
-    syntax::ForeignClosure,
+    syntax::{ForeignClosureView, group::ForeignClosureGroup},
     view::ViewBundle,
 };
 macro_rules! references {
@@ -292,16 +292,37 @@ pub struct DocNode {
 }
 /// Code embeds, including Doc-to-Doc, retain the parsed guest source. This data
 /// never implies that the guest has been lowered, compiled or evaluated.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DocEmbed {
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct DocEmbedView<'a> {
     pub kind: EmbedKind,
-    pub closure: ForeignClosure,
+    pub closure: ForeignClosureView<'a>,
+}
+/// Role slots and group entries have exactly the same length and order.
+/// Raw public fields are checked at every consuming boundary.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct DocEmbeds {
+    pub kinds: Vec<EmbedKind>,
+    pub group: ForeignClosureGroup,
+}
+impl DocEmbeds {
+    pub fn len(&self) -> usize {
+        self.kinds.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.kinds.is_empty() && self.group.is_empty()
+    }
+    pub fn get(&self, number: usize) -> Option<DocEmbedView<'_>> {
+        Some(DocEmbedView {
+            kind: *self.kinds.get(number)?,
+            closure: self.group.entry(number)?,
+        })
+    }
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DocValue {
     pub root: DocRoot,
     pub nodes: Vec<DocNode>,
-    pub embeds: Vec<DocEmbed>,
+    pub embeds: DocEmbeds,
 }
 /// ViewRef values and relations remain local to this original owner head.
 #[derive(Clone, Debug, Eq, PartialEq)]

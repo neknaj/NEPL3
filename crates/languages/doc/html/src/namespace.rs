@@ -34,7 +34,7 @@ pub fn render_part_with_foreign<E>(
     prepared: &PreparedForeignNamespace<'_>,
     member: MemberId,
     adapter: &mut impl FnMut(
-        &nepl3_doc_core::model::DocEmbed,
+        &nepl3_doc_core::model::DocEmbedView<'_>,
         nepl3_doc_core::model::EmbedRef,
         &mut Budget,
     ) -> Result<HtmlRequest, E>,

@@ -27,7 +27,7 @@ fn value(root: DocRoot, kinds: Vec<DocKind>) -> DocValue {
                 span: None,
             })
             .collect(),
-        embeds: vec![],
+        embeds: Default::default(),
     }
 }
 

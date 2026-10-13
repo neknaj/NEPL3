@@ -186,8 +186,16 @@ fn math_page_rejects_orphans_and_preserves_cumulative_budget() -> Result<(), Str
         assert_eq!(stopped.poll(), Err(reason));
     }
     let mut unused = set.clone();
-    let duplicate = unused.pages[0].document.value.embeds[0].clone();
-    unused.pages[0].document.value.embeds.push(duplicate);
+    let duplicate = unused.pages[0].document.value.embeds.group.entries[0].clone();
+    let kind = unused.pages[0].document.value.embeds.kinds[0];
+    unused.pages[0]
+        .document
+        .value
+        .embeds
+        .group
+        .entries
+        .push(duplicate);
+    unused.pages[0].document.value.embeds.kinds.push(kind);
     assert!(render(&unused, &mut budget()).is_err());
     let mut unreachable = set.clone();
     let math = unreachable.pages[0]
@@ -334,11 +342,13 @@ fn page_guest_batch_preserves_standalone_guest_identities_and_stops() -> Result<
         let mut admission = SourceAdmission::default();
         let mut codec =
             FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
-        for (index, embed) in page.document.value.embeds.iter().enumerate() {
-            assert!(!embed.closure.owner_sources.is_empty());
-            let value = codec
-                .encode_foreign_closure(&embed.closure, &mut budget())
-                .map_err(err)?;
+        let components = codec
+            .foreign_group_entry_digests(&page.document.value.embeds.group, &mut budget())
+            .map_err(err)?;
+        for (index, component) in components.into_iter().enumerate() {
+            let embed = page.document.value.embeds.get(index).ok_or("embed")?;
+            assert!(!embed.closure.owner_sources().is_empty());
+            let value = nepl3_core::value::NdfValue::Bytes(component.0.to_vec());
             let expected = codec
                 .canonical_value_digest(prepare::GUEST_DOMAIN, &value, &mut budget())
                 .map_err(err)?;
@@ -508,18 +518,16 @@ fn checked_page_alt_text_reuses_admission_without_external_resolutions() -> Resu
         );
     }
     let mut invalid = set.clone();
-    invalid.pages[0].document.value.embeds[0]
-        .closure
-        .owner_environment
+    invalid.pages[0].document.value.embeds.group.environments[0]
+        .environment
         .digest = nepl3_core::source::Digest([0; 32]);
     let store = SourceStore::default();
     let mut admission = SourceAdmission::default();
     let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
     assert!(pages::resolve(&invalid, &c.doc.registry, &mut codec, &mut budget()).is_err());
     let mut invalid = set.clone();
-    invalid.pages[0].document.value.embeds[0]
-        .closure
-        .owner_sources
+    invalid.pages[0].document.value.embeds.group.provenances[0]
+        .sources
         .clear();
     assert!(pages::resolve(&invalid, &c.doc.registry, &mut codec, &mut budget()).is_err());
     assert_eq!(set, original);

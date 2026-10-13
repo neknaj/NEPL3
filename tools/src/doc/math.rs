@@ -4,7 +4,7 @@ use super::annotations::{RenderedAnnotation, SentenceAnnotationRenderer};
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::SchemaRegistry,
-    syntax::{ForeignClosure, SyntaxError},
+    syntax::{ForeignClosure, ForeignClosureView, SyntaxError},
     value::SchemaRef,
     value_codec::FoundationValueCodec,
 };
@@ -202,7 +202,7 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
                 .embeds
                 .get(embed.0 as usize)
                 .ok_or(Error::Node(node))?;
-            self.render(&guest.closure, display, b)
+            self.render_view(&guest.closure, display, b)
         })();
         b.poll()?;
         result
@@ -215,31 +215,39 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
         display: Display,
         b: &mut Budget,
     ) -> Result<RenderedMath, Error<C::Error>> {
+        self.render_view(&guest.view(), display, b)
+    }
+    pub fn render_view(
+        &mut self,
+        guest: &ForeignClosureView<'_>,
+        display: Display,
+        b: &mut Budget,
+    ) -> Result<RenderedMath, Error<C::Error>> {
         let result = b.with_depth(|b| self.expression(guest, display, b));
         b.poll()?;
         result
     }
     fn expression(
         &mut self,
-        guest: &ForeignClosure,
+        guest: &ForeignClosureView<'_>,
         display: Display,
         b: &mut Budget,
     ) -> Result<RenderedMath, Error<C::Error>> {
         b.charge(
             Resource::Work,
-            (guest.syntax.schema.package.len() as u64)
+            (guest.syntax().schema.package.len() as u64)
                 .saturating_add(self.math_surface.package.len() as u64)
-                .saturating_add(guest.syntax.category.len() as u64)
+                .saturating_add(guest.syntax().category.len() as u64)
                 .saturating_add(64),
         )?;
-        if &guest.syntax.schema != self.math_surface || guest.syntax.category != "Expr" {
+        if &guest.syntax().schema != self.math_surface || guest.syntax().category != "Expr" {
             return Err(Error::Selection);
         }
         guest
             .validate(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
         let input = guest
-            .syntax
+            .syntax()
             .bundle
             .validate_with_sources(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;

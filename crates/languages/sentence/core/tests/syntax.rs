@@ -64,7 +64,7 @@ fn fixture(r: &SchemaRegistry) -> Result<SentenceSyntax, String> {
                     text: "漢𝄞".into()
                 },
             ],
-            embeds: vec![],
+            embeds: Default::default(),
         },
         locations: vec![
             NodeLocation {
@@ -204,7 +204,7 @@ fn generated_values_require_real_origins_but_no_invented_spans() -> Result<(), S
         value: SentenceValue {
             root: Root::Inline(InlineRef(0)),
             nodes: vec![Kind::Break],
-            embeds: vec![],
+            embeds: Default::default(),
         },
         locations: vec![NodeLocation {
             origin: OriginId(0),

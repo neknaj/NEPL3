@@ -7,16 +7,25 @@ pub(crate) fn foreign_value(
     admission: &mut SourceAdmission,
     b: &mut Budget,
 ) -> Result<NdfValue, WireError> {
+    foreign_view_value(&value.view(), schema, registry, admission, b)
+}
+pub(crate) fn foreign_view_value(
+    value: &ForeignClosureView<'_>,
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<NdfValue, WireError> {
     value.validate(registry, b, admission)?;
     record(
         schema,
         "ForeignClosure",
         [
-            syntax_value(&value.syntax, schema, registry, admission, b)?,
-            entry_value(&value.owner_environment, schema, registry, b)?,
-            sequence(&value.owner_origins, b, |v, b| origin_value(v, schema, b))?,
-            sources_value(&value.owner_sources, schema, admission, b)?,
-            sequence(&value.owner_source_maps, b, |v, b| {
+            syntax_value(value.syntax(), schema, registry, admission, b)?,
+            entry_value(value.owner_environment(), schema, registry, b)?,
+            sequence(value.owner_origins(), b, |v, b| origin_value(v, schema, b))?,
+            sources_value(value.owner_sources(), schema, admission, b)?,
+            sequence(value.owner_source_maps(), b, |v, b| {
                 mapping_value(v, schema, b)
             })?,
         ],

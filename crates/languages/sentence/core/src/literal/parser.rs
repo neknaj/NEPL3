@@ -371,7 +371,7 @@ impl Parser<'_> {
                 let value = SentenceValue {
                     root: Root::Sentence(SentenceRef(root.0)),
                     nodes: core::mem::take(&mut self.nodes),
-                    embeds: vec![],
+                    embeds: Default::default(),
                 };
                 let head = self
                     .source

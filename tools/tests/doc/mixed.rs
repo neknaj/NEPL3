@@ -477,7 +477,7 @@ fn literal_and_prefix_share_one_lower_with_source_and_local_view_retention() -> 
                     &mut budget(),
                 )
                 .map_err(err)?;
-                assert_doc_retention(&doc, &received);
+                assert_doc_retention(&doc, &received)?;
                 Ok(doc.value)
             },
         )?);
@@ -776,9 +776,13 @@ fn mixed_lower_keeps_doc_guest_syntax_without_meaning_check() -> Result<(), Stri
                 .iter()
                 .any(|n| matches!(&n.kind,DocKind::Text{text} if text=="host-tail"))
         );
-        let guest = doc.value.embeds[0]
+        let guest = doc
+            .value
+            .embeds
+            .get(0)
+            .ok_or("embed")?
             .closure
-            .syntax
+            .syntax()
             .bundle
             .validate_with_sources(profile.registry(), b, codec.source_admission())
             .map_err(err)?;
@@ -803,7 +807,7 @@ fn mixed_lower_keeps_doc_guest_syntax_without_meaning_check() -> Result<(), Stri
         let received =
             nepl3_doc_core::portable::from_value(&wire, profile.registry(), &mut receiver, b)
                 .map_err(err)?;
-        assert_doc_retention(&doc, &received);
+        assert_doc_retention(&doc, &received)?;
         Ok(())
     })
 }

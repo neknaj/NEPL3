@@ -9,8 +9,8 @@ use nepl3_core::{
     schema::SchemaRegistry,
     source::SourceAdmission,
     syntax::{
-        FieldValue, ForeignClosure, NodeRef, SyntaxBundle, SyntaxError, SyntaxNode,
-        ValidatedSyntaxBundle,
+        FieldValue, NodeRef, SyntaxBundle, SyntaxError, SyntaxNode, ValidatedSyntaxBundle,
+        group::{CaptureField, ForeignClosureGroup, GroupError},
     },
     value::{NdfValue, SchemaRef},
 };
@@ -19,9 +19,18 @@ use nepl3_core::{
 pub enum Error {
     Stopped(StopReason),
     Syntax(SyntaxError),
+    Group(GroupError),
     Shape(check::Error),
     Unsupported(NodeRef),
     Operand { node: NodeRef, field: usize },
+}
+impl From<GroupError> for Error {
+    fn from(e: GroupError) -> Self {
+        match e.stop_reason() {
+            Some(s) => Self::Stopped(s),
+            None => Self::Group(e),
+        }
+    }
 }
 impl From<StopReason> for Error {
     fn from(e: StopReason) -> Self {
@@ -294,9 +303,13 @@ pub fn prefix_with_foreign(
                     field: 0,
                 });
             }
-            let closure = ForeignClosure::capture_at(&checked, *id, 0, registry, b, admission)?;
+            let selection = CaptureField {
+                owner: 0,
+                node: *id,
+                field: 0,
+            };
             let embed = EmbedRef(embeds.len() as u64);
-            push(&mut embeds, closure, b)?;
+            push(&mut embeds, selection, b)?;
             let index = a.nodes.len() as u64;
             b.charge(Resource::Nodes, 1)?;
             push(&mut a.nodes, Kind::ForeignInline { syntax: embed }, b)?;
@@ -333,12 +346,19 @@ pub fn prefix_with_foreign(
     } else {
         Root::Inline(InlineRef(root))
     };
+    let embeds = if embeds.is_empty() {
+        ForeignClosureGroup::default()
+    } else {
+        ForeignClosureGroup::capture(&[&checked], &embeds, registry, b, admission)?
+    };
     let value = SentenceValue {
         root,
         nodes: a.nodes,
         embeds,
     };
-    value.validate_shape(b)?;
+    value
+        .validate_shape(b)?
+        .validate_foreign(registry, b, admission)?;
     Ok(Projection {
         value,
         syntax_to_meaning: a.mapping,

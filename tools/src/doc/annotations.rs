@@ -286,15 +286,23 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
                     b.charge(
                         Resource::Work,
                         (doc_schema.package.len()
-                            + closure.syntax.schema.package.len()
-                            + closure.syntax.category.len()) as u64
+                            + closure.syntax().schema.package.len()
+                            + closure.syntax().category.len()) as u64
                             + 70,
                     )?;
-                    if &closure.syntax.schema == doc_schema && closure.syntax.category == "Inline" {
+                    if &closure.syntax().schema == doc_schema
+                        && closure.syntax().category == "Inline"
+                    {
                         let selected = selected.get(document_position).ok_or(Error::Selection)?;
                         if selected.embed != embed {
                             return Err(Error::Selection);
                         }
+                        // Namespace collection checked semantic occurrences earlier.
+                        // The HTML insertion ancestors can be deeper: re-admit the
+                        // borrowed owner at this callback's active depth/ceiling.
+                        closure
+                            .validate(registry, b, codec.source_admission())
+                            .map_err(Error::Syntax)?;
                         let (rendered, nested) = document::render_member(
                             &prepared,
                             nepl3_doc_core::labels::namespace::MemberId(document_position as u64),
@@ -333,7 +341,7 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
                     codec,
                 };
                 let result = host
-                    .render(closure, nepl3_markup::mathml::Display::Inline, b)
+                    .render_view(closure, nepl3_markup::mathml::Display::Inline, b)
                     .map_err(|error| {
                         match b.charge(
                             Resource::AllocationUnits,

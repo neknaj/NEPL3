@@ -65,7 +65,32 @@ impl ForeignClosureGroup {
         b: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<Self, GroupError> {
+        Self::capture_inner(owners, fields, None, registry, b, admission)
+    }
+    /// Capture with caller-relative depths for the selected source occurrences.
+    /// Final normalized consumer occurrences still require their own check.
+    pub fn capture_at_depths(
+        owners: &[&ValidatedSyntaxBundle<'_>],
+        fields: &[CaptureField],
+        depths: &[u64],
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<Self, GroupError> {
+        Self::capture_inner(owners, fields, Some(depths), registry, b, admission)
+    }
+    fn capture_inner(
+        owners: &[&ValidatedSyntaxBundle<'_>],
+        fields: &[CaptureField],
+        depths: Option<&[u64]>,
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<Self, GroupError> {
         b.poll()?;
+        if depths.is_some_and(|d| d.len() != fields.len()) {
+            return Err(GroupError::DepthCount);
+        }
         // Pointer identity is used only to reject aliases within this live call.
         // No pointer, ordering by address, or ambient ownership enters the output.
         let sorted = crate::syntax::environment::sorted(
@@ -172,7 +197,11 @@ impl ForeignClosureGroup {
                 b,
             )?;
         }
-        group.validate(registry, b, admission)?;
+        if let Some(depths) = depths {
+            group.validate_at_depths(depths, registry, b, admission)?;
+        } else {
+            group.validate(registry, b, admission)?;
+        }
         Ok(group)
     }
 }

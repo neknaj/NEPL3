@@ -235,7 +235,7 @@ fn doc_auxiliary_fragments_and_parent_operands_have_typed_boundaries() -> Result
                 &mut budget(),
             )
             .map_err(err)?;
-            assert_doc_retention(&doc, &received);
+            assert_doc_retention(&doc, &received)?;
             assert_eq!(
                 nepl3_doc_core::portable::to_value(
                     &received,
@@ -326,13 +326,13 @@ fn doc_code_same_alias_keeps_invalid_guest_meaning_and_restores_host() -> Result
                 .any(|n| matches!(&n.kind,DocKind::Text{text} if text=="host-tail"))
         );
         assert_eq!(doc.value.embeds.len(), 1);
-        let embed = &doc.value.embeds[0];
+        let embed = &doc.value.embeds.get(0).ok_or("embed")?;
         assert_eq!(embed.kind, EmbedKind::Code);
-        assert_eq!(embed.closure.syntax.schema, compiled.doc.package.schema);
-        assert_eq!(embed.closure.syntax.category, "Article");
+        assert_eq!(embed.closure.syntax().schema, compiled.doc.package.schema);
+        assert_eq!(embed.closure.syntax().category, "Article");
         let guest = embed
             .closure
-            .syntax
+            .syntax()
             .bundle
             .validate_with_sources(profile.registry(), b, a)
             .map_err(err)?;
@@ -354,7 +354,7 @@ fn doc_code_same_alias_keeps_invalid_guest_meaning_and_restores_host() -> Result
         let received =
             nepl3_doc_core::portable::from_value(&value, profile.registry(), &mut codec, b)
                 .map_err(err)?;
-        assert_doc_retention(&doc, &received);
+        assert_doc_retention(&doc, &received)?;
         assert_eq!(
             nepl3_doc_core::portable::to_value(&received, profile.registry(), &mut codec, b)
                 .map_err(err)?,
@@ -367,7 +367,7 @@ fn doc_code_same_alias_keeps_invalid_guest_meaning_and_restores_host() -> Result
 fn assert_doc_retention(
     before: &nepl3_doc_core::model::DocumentSyntax,
     after: &nepl3_doc_core::model::DocumentSyntax,
-) {
+) -> Result<(), String> {
     // Source tables and guest graph coordinates have the common canonical wire
     // order. Domain nodes and their original provenance are unchanged.
     assert_eq!(before.value.root, after.value.root);
@@ -380,18 +380,24 @@ fn assert_doc_retention(
         assert!(after.sources.iter().any(|other| other == source));
     }
     assert_eq!(before.value.embeds.len(), after.value.embeds.len());
-    for (before, after) in before.value.embeds.iter().zip(&after.value.embeds) {
+    for index in 0..before.value.embeds.len() {
+        let before = before.value.embeds.get(index).ok_or("embed")?;
+        let after = after.value.embeds.get(index).ok_or("embed")?;
         assert_eq!(before.kind, after.kind);
         assert_eq!(
-            before.closure.owner_environment,
-            after.closure.owner_environment
+            before.closure.owner_environment(),
+            after.closure.owner_environment()
         );
-        assert_eq!(before.closure.owner_origins, after.closure.owner_origins);
         assert_eq!(
-            before.closure.owner_source_maps,
-            after.closure.owner_source_maps
+            before.closure.owner_origins(),
+            after.closure.owner_origins()
+        );
+        assert_eq!(
+            before.closure.owner_source_maps(),
+            after.closure.owner_source_maps()
         );
     }
+    Ok(())
 }
 
 #[test]

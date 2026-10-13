@@ -186,6 +186,7 @@ impl Adapter<'_, '_> {
         kind: EmbedKind,
         admission: &mut SourceAdmission,
     ) -> Result<EmbedRef, LowerError> {
+        let _ = admission; // Admission occurs once for the collected owner group.
         let child = self.child(id, n, f)?;
         let node = self
             .checked
@@ -210,10 +211,18 @@ impl Adapter<'_, '_> {
                 field: 0,
             });
         };
-        let closure =
-            ForeignClosure::capture_at(self.checked, child, 0, self.registry, self.b, admission)?;
+        let field = CaptureField {
+            owner: 0,
+            node: child,
+            field: 0,
+        };
+        let depth = self.b.current_depth();
         let index = EmbedRef(self.embeds.len() as u64);
-        push(&mut self.embeds, DocEmbed { kind, closure }, self.b)?;
+        push(
+            &mut self.embeds,
+            CapturedEmbed { kind, field, depth },
+            self.b,
+        )?;
         Ok(index)
     }
 }

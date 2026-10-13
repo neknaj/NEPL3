@@ -10,7 +10,7 @@ use nepl3_core::{
     diagnostic::Report,
     origin::{Mapping, MappingKind, OriginId},
     source::{Digest, Span},
-    syntax::ForeignClosure,
+    syntax::group::ForeignClosureGroup,
     value::{NdfValue, Record, SchemaRef, Variant},
     value_codec::FoundationValueCodec,
     view::ViewBundle,
@@ -371,9 +371,9 @@ impl Value for StopReason {
 }
 foundation!(ViewBundle, encode_views, decode_views);
 foundation!(
-    ForeignClosure,
-    encode_foreign_closure,
-    decode_foreign_closure
+    ForeignClosureGroup,
+    encode_foreign_group,
+    decode_foreign_group
 );
 impl Value for OriginId {
     fn put<C: FoundationValueCodec>(

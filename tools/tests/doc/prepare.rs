@@ -242,13 +242,14 @@ fn source_preparation_retains_code_and_identifies_each_foreign_closure() -> Resu
             .into_iter()
             .enumerate()
         {
-            // Independent digest calculation uses actual CBOR bytes and the
-            // specified domain, rather than calling inspect's digest helper.
-            let closure = c
-                .encode_foreign_closure(&doc.value.embeds[index].closure, &mut budget())
+            // Verify operation-domain wrapping separately from inspect; the
+            // Foundation component framing has its own independent byte oracle.
+            let components = c
+                .foreign_group_entry_digests(&doc.value.embeds.group, &mut budget())
                 .map_err(err)?;
-            let mut bytes = b"NEPL3.Doc.Prepare.Guest.v1\0".to_vec();
-            bytes.extend(nepl3_wire::encode(&closure, &mut budget()).map_err(err)?);
+            let value = NdfValue::Bytes(components[index].0.to_vec());
+            let mut bytes = nepl3_doc_core::prepare::GUEST_DOMAIN.to_vec();
+            bytes.extend(nepl3_wire::encode(&value, &mut budget()).map_err(err)?);
             assert_eq!(
                 plan.requirements[2 + index],
                 DocRequirement::Foreign {
@@ -297,19 +298,16 @@ fn source_preparation_retains_code_and_identifies_each_foreign_closure() -> Resu
         assert_eq!(doc, original);
         assert_eq!(received.value.root, doc.value.root);
         assert_eq!(received.value.nodes, doc.value.nodes);
-        for (index, (a, b)) in received
-            .value
-            .embeds
-            .iter()
-            .zip(&doc.value.embeds)
-            .enumerate()
-        {
+        assert_eq!(received.value.embeds.len(), doc.value.embeds.len());
+        for index in 0..received.value.embeds.len() {
+            let a = received.value.embeds.get(index).ok_or("embed")?;
+            let b = doc.value.embeds.get(index).ok_or("embed")?;
             assert_eq!(a.kind, b.kind);
-            assert_eq!(a.closure.owner_environment, b.closure.owner_environment);
-            assert_eq!(a.closure.owner_origins, b.closure.owner_origins);
-            assert_eq!(a.closure.owner_source_maps, b.closure.owner_source_maps);
-            assert_eq!(a.closure.syntax.schema, b.closure.syntax.schema);
-            assert_eq!(a.closure.syntax.category, b.closure.syntax.category);
+            assert_eq!(a.closure.owner_environment(), b.closure.owner_environment());
+            assert_eq!(a.closure.owner_origins(), b.closure.owner_origins());
+            assert_eq!(a.closure.owner_source_maps(), b.closure.owner_source_maps());
+            assert_eq!(a.closure.syntax().schema, b.closure.syntax().schema);
+            assert_eq!(a.closure.syntax().category, b.closure.syntax().category);
             let sources = |values: &[SourceSnapshot]| {
                 let mut rows: Vec<_> = values
                     .iter()
@@ -319,8 +317,8 @@ fn source_preparation_retains_code_and_identifies_each_foreign_closure() -> Resu
                 rows
             };
             assert_eq!(
-                sources(&a.closure.owner_sources),
-                sources(&b.closure.owner_sources),
+                sources(a.closure.owner_sources()),
+                sources(b.closure.owner_sources()),
                 "embed {index} sources"
             );
         }

@@ -14,7 +14,10 @@ use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::SchemaRegistry,
     source::{SourceAdmission, Span},
-    syntax::{FieldValue, ForeignClosure, NodeRef, SyntaxError, SyntaxNode, ValidatedSyntaxBundle},
+    syntax::{
+        FieldValue, NodeRef, SyntaxError, SyntaxNode, ValidatedSyntaxBundle,
+        group::{CaptureField, ForeignClosureGroup, GroupError},
+    },
     value::SchemaRef,
 };
 
@@ -22,6 +25,7 @@ use nepl3_core::{
 pub enum LowerError {
     Stopped(StopReason),
     Syntax(SyntaxError),
+    Group(GroupError),
     Structure(StructureError),
     Shape(ShapeError),
     /// A retained source node violates the selected Doc constructor contract.
@@ -41,6 +45,14 @@ pub enum LowerError {
     LiteralPayload {
         node: NodeRef,
     },
+}
+impl From<GroupError> for LowerError {
+    fn from(e: GroupError) -> Self {
+        match e.stop_reason() {
+            Some(s) => Self::Stopped(s),
+            None => Self::Group(e),
+        }
+    }
 }
 impl From<StopReason> for LowerError {
     fn from(e: StopReason) -> Self {
@@ -76,12 +88,17 @@ impl From<StructureError> for LowerError {
 enum Mapped {
     Node(u64),
 }
+struct CapturedEmbed {
+    kind: EmbedKind,
+    field: CaptureField,
+    depth: u64,
+}
 struct Adapter<'a, 'b> {
     checked: &'a ValidatedSyntaxBundle<'a>,
     registry: &'a SchemaRegistry,
     mapping: Vec<Option<Mapped>>,
     nodes: Vec<DocNode>,
-    embeds: Vec<DocEmbed>,
+    embeds: Vec<CapturedEmbed>,
     b: &'b mut Budget,
     presentations: Vec<literal::Presentation>,
     next_origin: u64,
@@ -181,7 +198,7 @@ fn run<D: literal::Decoder>(
         registry,
         mapping: vec![None; size],
         nodes: Vec::new(),
-        embeds: Vec::new(),
+        embeds: Default::default(),
         b,
         presentations: Vec::new(),
         next_origin: bundle.origins.len() as u64,
@@ -273,11 +290,36 @@ fn run<D: literal::Decoder>(
     else {
         return Err(LowerError::Unsupported { node: bundle.root }.into());
     };
+    let mut kinds = Vec::new();
+    let mut fields = Vec::new();
+    let mut capture_depths = Vec::new();
+    for embed in a.embeds {
+        push(&mut kinds, embed.kind, a.b)?;
+        push(&mut fields, embed.field, a.b)?;
+        let depth = embed
+            .depth
+            .checked_sub(a.b.current_depth())
+            .ok_or_else(|| a.b.stop(StopReason::DepthLimit))?;
+        push(&mut capture_depths, depth, a.b)?;
+    }
+    let group = if fields.is_empty() {
+        ForeignClosureGroup::default()
+    } else {
+        ForeignClosureGroup::capture_at_depths(
+            &[&checked],
+            &fields,
+            &capture_depths,
+            registry,
+            a.b,
+            decoder.admission(),
+        )
+        .map_err(LowerError::from)?
+    };
     let mut output = DocumentSyntax {
         value: DocValue {
             root: root(category, root_id),
             nodes: a.nodes,
-            embeds: a.embeds,
+            embeds: DocEmbeds { kinds, group },
         },
         sources: Vec::new(),
         origins: Vec::new(),

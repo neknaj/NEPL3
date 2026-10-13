@@ -8,7 +8,7 @@ use nepl3_core::{
     source::{SourceAdmission, SourceStore},
     view::FallbackRole,
 };
-use nepl3_doc_core::model::{DocEmbed, EmbedKind};
+use nepl3_doc_core::model::{DocEmbedView, EmbedKind};
 use nepl3_engine::{
     analysis::{
         BindingOptions,
@@ -69,22 +69,30 @@ fn text(
 /// The tree and closure are produced in one immutable parse/lower invocation by
 /// generate_impl. The callback cannot accept unrelated external RegionReply data.
 pub(super) fn render(
-    embed: &DocEmbed,
+    embed: &DocEmbedView<'_>,
     tree: &ValidatedParseTree<'_>,
     profile: &ResolvedParseProfile<'_>,
+    admission: &mut SourceAdmission,
     b: &mut Budget,
 ) -> Result<HtmlRequest, String> {
     b.poll().map_err(err)?;
     if embed.kind != EmbedKind::Code {
         return Err("CodeKind".into());
     }
-    let bundle = &embed.closure.syntax.bundle;
+    let bundle = &embed.closure.syntax().bundle;
     let cover = bundle
         .node(bundle.root)
         .map_err(err)?
         .cover
         .as_ref()
         .ok_or("CodeSourceUnavailable")?;
+    embed
+        .closure
+        .validate(profile.registry(), b, admission)
+        .map_err(|error| match error.stop_reason() {
+            Some(reason) => err(reason),
+            None => err(error),
+        })?;
     let mut found = None;
     for candidate in &bundle.sources {
         b.charge(
@@ -274,26 +282,97 @@ mod tests {
                 &mut codec,
             )
             .map_err(err)?;
-            let embed = doc.value.embeds.first().ok_or("missing embed")?;
+            let embed = doc.value.embeds.get(0).ok_or("missing embed")?;
             let mut cancelled = budget();
             cancelled.cancel();
             assert_eq!(
-                render(embed, tree, profile, &mut cancelled),
+                render(
+                    &embed,
+                    tree,
+                    profile,
+                    &mut SourceAdmission::default(),
+                    &mut cancelled
+                ),
                 Err("Cancelled".into())
             );
             let mut limits = budget().limits();
             limits.work = 0;
             assert_eq!(
-                render(embed, tree, profile, &mut Budget::new(limits)),
+                render(
+                    &embed,
+                    tree,
+                    profile,
+                    &mut SourceAdmission::default(),
+                    &mut Budget::new(limits)
+                ),
                 Err("WorkLimit".into())
             );
-            let mut absent = embed.clone();
-            let root = absent.closure.syntax.bundle.root;
-            absent.closure.syntax.bundle.nodes[root.0 as usize].cover = None;
+            let mut absent_document = doc.clone();
+            let bundle = &mut absent_document.value.embeds.group.entries[0].syntax.bundle;
+            let root = bundle.root;
+            bundle.nodes[root.0 as usize].cover = None;
+            let absent = absent_document.value.embeds.get(0).ok_or("embed")?;
             assert_eq!(
-                render(&absent, tree, profile, &mut budget()),
+                render(
+                    &absent,
+                    tree,
+                    profile,
+                    &mut SourceAdmission::default(),
+                    &mut budget()
+                ),
                 Err("CodeSourceUnavailable".into())
             );
+            let mut forged = doc.clone();
+            forged.value.embeds.group.entries[0].syntax.environment.id ^= 1;
+            let forged = forged.value.embeds.get(0).ok_or("embed")?;
+            // The retained parse tree is still valid. It must not authorize
+            // a mismatched closure supplied to the Code callback.
+            assert!(
+                render(
+                    &forged,
+                    tree,
+                    profile,
+                    &mut SourceAdmission::default(),
+                    &mut budget()
+                )
+                .is_err()
+            );
+            let mut deep = doc.clone();
+            let origins = &mut deep.value.embeds.group.provenances[0].origins;
+            let start = origins.len();
+            origins.push(nepl3_core::origin::Origin::Synthetic {
+                reason: "Code owner depth".into(),
+                anchor: None,
+            });
+            for offset in 1..30 {
+                origins.push(nepl3_core::origin::Origin::Composite(vec![
+                    nepl3_core::origin::OriginId((start + offset - 1) as u64),
+                ]));
+            }
+            let deep = deep.value.embeds.get(0).ok_or("embed")?;
+            let mut measured = budget();
+            deep.closure
+                .validate(
+                    profile.registry(),
+                    &mut measured,
+                    &mut SourceAdmission::default(),
+                )
+                .map_err(err)?;
+            let mut limits = budget().limits();
+            limits.depth = measured.usage().depth + 4;
+            let mut limited = Budget::new(limits);
+            let result = limited.with_depth_at_least(5, |b| {
+                Ok::<_, StopReason>(render(
+                    &deep,
+                    tree,
+                    profile,
+                    &mut SourceAdmission::default(),
+                    b,
+                ))
+            });
+            assert!(matches!(result, Ok(Err(_)) | Err(_)));
+            assert_eq!(limited.poll(), Err(StopReason::DepthLimit));
+            assert_eq!(limited.current_depth(), 0);
             let options = nepl3_doc_html::RenderOptions {
                 parallel: nepl3_doc_html::ParallelMode::Rows,
             };

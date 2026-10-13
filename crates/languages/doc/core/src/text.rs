@@ -15,7 +15,7 @@ use nepl3_core::{
 };
 
 pub const DOCUMENT_DOMAIN: &[u8] = b"NEPL3.Doc.PlainText.Document.v1\0";
-pub const GUEST_DOMAIN: &[u8] = b"NEPL3.Doc.PlainText.Guest.v1\0";
+pub const GUEST_DOMAIN: &[u8] = b"NEPL3.Doc.PlainText.Guest.v2\0";
 /// Execute one request with the same Budget and SourceAdmission for document
 /// validation, identity computation and output. Malformed input is a boundary
 /// error; a resource stop during preparation is a formal stopped reply.
@@ -134,17 +134,13 @@ pub fn prepare<'a, C: FoundationValueCodec>(
         .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
         .map_err(boundary)?;
     let mut embeds = Vec::new();
-    for (index, embed) in document.value.embeds.iter().enumerate() {
+    let guest_digests =
+        crate::identity::guests(&document.value.embeds.group, GUEST_DOMAIN, codec, b)?;
+    for (index, guest_digest) in guest_digests.into_iter().enumerate() {
         b.charge(Resource::Work, 1)?;
-        if embed.kind != EmbedKind::InlineMath {
+        if document.value.embeds.kinds[index] != EmbedKind::InlineMath {
             continue;
         }
-        let value = codec
-            .encode_foreign_closure(&embed.closure, b)
-            .map_err(boundary)?;
-        let guest_digest = codec
-            .canonical_value_digest(GUEST_DOMAIN, &value, b)
-            .map_err(boundary)?;
         b.charge(
             Resource::AllocationUnits,
             core::mem::size_of::<InlineTextTarget>() as u64,

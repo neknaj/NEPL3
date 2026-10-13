@@ -150,6 +150,13 @@ pub trait FoundationValueCodec {
         value: &crate::syntax::ForeignClosure,
         budget: &mut Budget,
     ) -> Result<NdfValue, Self::Error>;
+    /// Encode a borrowed closure with the same validation and wire layout as
+    /// an owned ForeignClosure, without materializing duplicate owner data.
+    fn encode_foreign_view(
+        &mut self,
+        value: &crate::syntax::ForeignClosureView<'_>,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, Self::Error>;
     fn decode_foreign_closure(
         &mut self,
         value: &NdfValue,

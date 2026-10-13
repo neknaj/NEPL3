@@ -53,7 +53,7 @@ fn syntax(nodes: Vec<Kind>, root: Root) -> SentenceSyntax {
         value: SentenceValue {
             root,
             nodes,
-            embeds: vec![],
+            embeds: Default::default(),
         },
         sources: vec![],
         views: vec![],
@@ -403,7 +403,7 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
         }],
         Root::Inline(InlineRef(0)),
     );
-    input.value.embeds.push(ForeignClosure {
+    let closure = ForeignClosure {
         syntax: ForeignSyntax {
             schema: foundation.clone(),
             category: "test-inline".into(),
@@ -435,7 +435,22 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
         owner_origins: vec![],
         owner_sources: vec![],
         owner_source_maps: vec![],
-    });
+    };
+    input.value.embeds = nepl3_core::syntax::group::ForeignClosureGroup {
+        provenances: vec![nepl3_core::syntax::group::ForeignProvenance {
+            origins: closure.owner_origins,
+            sources: closure.owner_sources,
+            source_maps: closure.owner_source_maps,
+        }],
+        environments: vec![nepl3_core::syntax::group::ForeignOwnerEnvironment {
+            provenance: nepl3_core::syntax::group::ProvenanceRef(0),
+            environment: closure.owner_environment,
+        }],
+        entries: vec![nepl3_core::syntax::group::ForeignGroupEntry {
+            owner: nepl3_core::syntax::group::OwnerEnvironmentRef(0),
+            syntax: closure.syntax,
+        }],
+    };
     assert!(matches!(
         html::render(&input, &r, &mut b(), &mut SourceAdmission::default()),
         Err(Error::ForeignAdapterRequired(EmbedRef(0)))
@@ -454,23 +469,27 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
     shared.value.embeds = input.value.embeds.clone();
     let original = shared.clone();
     let mut calls = 0;
-    let mut adapter = |closure: &ForeignClosure, embed, budget: &mut Budget| {
-        assert!(core::ptr::eq(closure, &shared.value.embeds[0]));
-        assert_eq!(embed, EmbedRef(0));
-        calls += 1;
-        budget.charge(
-            nepl3_core::budget::Resource::AllocationUnits,
-            core::mem::size_of::<HtmlNode>() as u64 + 1,
-        )?;
-        Ok::<_, Error>(HtmlRequest {
-            fragment: HtmlFragment {
-                root: 0,
-                nodes: vec![HtmlNode::Text { text: "7".into() }],
-            },
-            slot: HtmlSlot::Phrasing,
-            policy: HtmlPolicy { classes: vec![] },
-        })
-    };
+    let mut adapter =
+        |closure: &nepl3_core::syntax::ForeignClosureView<'_>, embed, budget: &mut Budget| {
+            assert!(core::ptr::eq(
+                closure.syntax(),
+                &shared.value.embeds.entries[0].syntax
+            ));
+            assert_eq!(embed, EmbedRef(0));
+            calls += 1;
+            budget.charge(
+                nepl3_core::budget::Resource::AllocationUnits,
+                core::mem::size_of::<HtmlNode>() as u64 + 1,
+            )?;
+            Ok::<_, Error>(HtmlRequest {
+                fragment: HtmlFragment {
+                    root: 0,
+                    nodes: vec![HtmlNode::Text { text: "7".into() }],
+                },
+                slot: HtmlSlot::Phrasing,
+                policy: HtmlPolicy { classes: vec![] },
+            })
+        };
     let mut full = b();
     let rendered = html::render_with_foreign(
         &shared,
@@ -586,31 +605,32 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
     for duplicate in [false, true] {
         let mut parts = Vec::new();
         for definition in [false, true] {
-            let mut adapter = |_: &ForeignClosure, _, _: &mut Budget| {
-                let anchor = definition || duplicate;
-                Ok::<_, Error>(HtmlRequest {
-                    fragment: HtmlFragment {
-                        root: 0,
-                        nodes: vec![HtmlNode::Element {
-                            tag: if anchor { HtmlTag::Span } else { HtmlTag::A },
-                            attributes: vec![if anchor {
-                                HtmlAttribute::Id {
-                                    value: "across-sentences".into(),
-                                }
-                            } else {
-                                HtmlAttribute::Href {
-                                    value: HtmlHref::Fragment {
-                                        id: "across-sentences".into(),
-                                    },
-                                }
+            let mut adapter =
+                |_: &nepl3_core::syntax::ForeignClosureView<'_>, _, _: &mut Budget| {
+                    let anchor = definition || duplicate;
+                    Ok::<_, Error>(HtmlRequest {
+                        fragment: HtmlFragment {
+                            root: 0,
+                            nodes: vec![HtmlNode::Element {
+                                tag: if anchor { HtmlTag::Span } else { HtmlTag::A },
+                                attributes: vec![if anchor {
+                                    HtmlAttribute::Id {
+                                        value: "across-sentences".into(),
+                                    }
+                                } else {
+                                    HtmlAttribute::Href {
+                                        value: HtmlHref::Fragment {
+                                            id: "across-sentences".into(),
+                                        },
+                                    }
+                                }],
+                                children: vec![],
                             }],
-                            children: vec![],
-                        }],
-                    },
-                    slot: HtmlSlot::Phrasing,
-                    policy: HtmlPolicy { classes: vec![] },
-                })
-            };
+                        },
+                        slot: HtmlSlot::Phrasing,
+                        policy: HtmlPolicy { classes: vec![] },
+                    })
+                };
             let mut measured = b();
             let pending = html::render_part_with_foreign(
                 &input,
@@ -925,13 +945,14 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
         ] {
             let mut measured = b();
             let mut calls = 0;
-            let mut adapter = |_: &ForeignClosure, _, budget: &mut Budget| {
-                calls += 1;
-                if let Some(reason) = reason {
-                    budget.stop(reason);
-                }
-                Err::<HtmlRequest, Error>(Error::InternalShape)
-            };
+            let mut adapter =
+                |_: &nepl3_core::syntax::ForeignClosureView<'_>, _, budget: &mut Budget| {
+                    calls += 1;
+                    if let Some(reason) = reason {
+                        budget.stop(reason);
+                    }
+                    Err::<HtmlRequest, Error>(Error::InternalShape)
+                };
             let result = measured.with_depth_at_least(3, |budget| {
                 if pending {
                     html::render_part_with_foreign(
@@ -969,7 +990,7 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
             assert!(measured.usage().work > 0);
         }
     }
-    let mut invalid = |_: &ForeignClosure, _, _: &mut Budget| {
+    let mut invalid = |_: &nepl3_core::syntax::ForeignClosureView<'_>, _, _: &mut Budget| {
         Ok::<_, Error>(HtmlRequest {
             fragment: HtmlFragment {
                 root: 0,
@@ -993,7 +1014,7 @@ fn foreign_closure_is_checked_before_requiring_a_selected_adapter() -> Result<()
         ),
         Err(html::RenderFailure::Sentence(Error::Markup(_)))
     ));
-    input.value.embeds[0].syntax.bundle.origins.clear();
+    input.value.embeds.entries[0].syntax.bundle.origins.clear();
     assert!(matches!(
         html::render(&input, &r, &mut b(), &mut SourceAdmission::default()),
         Err(Error::Input(_))

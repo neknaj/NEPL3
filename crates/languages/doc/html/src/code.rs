@@ -22,7 +22,7 @@ pub fn prepare_code<'a, C: FoundationValueCodec>(
 /// errors, including unavailable source or analysis stops, remain explicit.
 pub fn render_code<E>(
     prepared: &PreparedCodeArticle<'_>,
-    adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
+    adapter: &mut impl FnMut(&DocEmbedView<'_>, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
     budget: &mut Budget,
 ) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
     crate::build::render_prepared_with_foreign(&prepared.0, &[], adapter, budget, true)

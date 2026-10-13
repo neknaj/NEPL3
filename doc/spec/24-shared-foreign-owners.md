@@ -1,6 +1,6 @@
 # 24. Foreign syntaxの所有情報の共有
 
-この章はdesign revision `nepl3-design-2026-10-13-r6` のFoundation契約を定義する。採用理由は、各guestへ完全な所有情報を複製すると、所有情報量とguest数の積に比例する保存・検証が発生するためである。実装・正式受入の状態は[実装状態](../../implementation-status.json)で管理する。
+この章はdesign revision `nepl3-design-2026-10-13-r7` のFoundation契約とDoc/Sentence接続を定義する。採用理由は、各guestへ完全な所有情報を複製すると、所有情報量とguest数の積に比例する保存・検証が発生するためである。実装・正式受入の状態は[実装状態](../../implementation-status.json)で管理する。
 
 ## 明示的な所有関係
 
@@ -49,7 +49,15 @@ group全体を一度NDF化し、ProvenanceとEnvironmentの成分を各table要�
 
 tableの並べ替えと対応する参照付け替え、entryの部分選択・重複・順序変更は、選択されたguestのidentityを変えない。使用していない別entry・別所有者の内容を個別guestのidentityへ含めない。選択された成分のcanonical内容は完全に含める。これは通常の暗号学的衝突耐性に依存する内容identityであり、canonical化前の表現差を区別する保証ではない。
 
-旧ForeignClosure全体のflat digestとの同一性は保証しない。Prepare・Print・Text等の操作identityは、この成分identityへ接続する変更で、独立domain・framing・versionを規定する。現時点のconsumerを黙って新方式へ切り替えない。PageSetでのNDF借用再利用、native/portable providerの経路同等性、consumerの正式受入は接続時の別条件とする。
+旧ForeignClosure全体のflat digestとの同一性は保証しない。Docのguest identityはSHA-256(operation domain || canonical NDF/1 CBOR(Bytes32(Entry digest)))とする。Prepareは `NEPL3.Doc.Prepare.Guest.v2\0`、Printは `NEPL3.Doc.Print.Guest.v2\0`、PlainTextは `NEPL3.Doc.PlainText.Guest.v2\0` を使う。Document identityは既存のoperation domainと完全な現在のDocumentSyntaxを使い、schema identityの変更も含む。旧guest identityを暗黙に受理しない。
+
+DocValue.embedsはDocEmbeds recordであり、kindsとForeignClosureGroupを持つ。kindsとentriesは同じ長さ・順序であり、EmbedRefは両者の同じslotを選ぶ。長さ不一致、役割不一致、未使用slotを拒否する。SentenceValue.embedsはForeignClosureGroupであり、ForeignInlineのEmbedRefはentriesのslotを選ぶ。native lowerは元の検査済み所有者から一括captureし、Docでは変換中のcaller-relative深さと最終意味graphの最大出現深さを別々に検査する。Sentenceも最終意味graphの最大深さで再検査する。
+
+Doc fragmentは選択したentryとkindsを同じ順序で取り出し、意味nodeのEmbedRefを対応する新slotへ変更する。同じslotへの複数参照は共有したまま残す。選択provenanceの全Origin配列は保持する。literal専用入力の空判定はentry数だけでなく、environment・provenance tableも含む。隠れた所有tableを空literalとして受理しない。
+
+借用viewのvalidateはstandalone ForeignClosureと同じ検査を行う。encode_foreign_viewは同じstandalone wire layoutを返し、中間ForeignClosureの複製を不要にするが、NDF化・所有成分の検査費用は残る。host Code表示の操作内入力照合は `NEPL3.Doc.Host.CodeInput.v1\0` とこのstandalone NDF値を使い、portable Prepare guest identityとは混同しない。
+
+Doc/SentenceのHTML・Math・annotation・printerの各受信callbackは、実際の出力祖先深さと再帰ceilingの下で借用viewを新たに検査する。意味graphの深さ検査や保存済みprepared値だけでこの検査を省略しない。この段階ではcallback間で所有情報検査を共有・再利用する最適化、PageSetでのgroup NDF再利用、native/portable providerの経路同等性は未完了である。共有保存・一括captureの改善を、全render経路の線形計算量や正式受入の成立へ拡張しない。
 
 ## 接続と受入
 

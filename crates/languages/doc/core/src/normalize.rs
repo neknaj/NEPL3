@@ -289,7 +289,7 @@ mod tests {
                     span: None,
                 })
                 .collect(),
-            embeds: vec![],
+            embeds: Default::default(),
         };
         let output = value(input, &mut Vec::new(), &mut b())?;
         output.validate_shape(&mut b())?;

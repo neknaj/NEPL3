@@ -249,12 +249,12 @@ pub fn check_content<C: FoundationValueCodec>(
                 let guest = sentence
                     .value
                     .embeds
-                    .get(embed.0 as usize)
+                    .entry(embed.0 as usize)
                     .ok_or(Error::Selection)?;
                 let surface = math_surface.ok_or(Error::Selection)?;
-                b.charge(Resource::Work, guest.syntax.category.len() as u64)?;
-                if guest.syntax.schema.equal_with_budget(surface, b)?
-                    && guest.syntax.category == "Expr"
+                b.charge(Resource::Work, guest.syntax().category.len() as u64)?;
+                if guest.syntax().schema.equal_with_budget(surface, b)?
+                    && guest.syntax().category == "Expr"
                 {
                     Ok(true)
                 } else {

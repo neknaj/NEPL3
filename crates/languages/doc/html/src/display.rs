@@ -44,7 +44,7 @@ pub(crate) fn prepare_selected<'a, C: FoundationValueCodec>(
 }
 pub fn render_display<E>(
     prepared: &PreparedDisplayArticle<'_>,
-    adapter: &mut impl FnMut(&DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
+    adapter: &mut impl FnMut(&DocEmbedView<'_>, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
     budget: &mut Budget,
 ) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
     crate::build::render_prepared_with_foreign(
