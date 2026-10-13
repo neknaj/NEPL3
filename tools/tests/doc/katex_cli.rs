@@ -184,7 +184,6 @@ fn pinned_native_katex_doc_and_pages() -> Result<(), Box<dyn std::error::Error>>
                 "cat >/dev/null; exec head -c 9000 /dev/zero >&2",
                 false,
             ),
-            ("deadline", "exec sleep 120", false),
         ] {
             fs::write(&node, format!("#!/bin/sh\n{script}\n"))?;
             fs::set_permissions(&node, fs::Permissions::from_mode(0o700))?;
@@ -207,4 +206,15 @@ fn pinned_native_katex_doc_and_pages() -> Result<(), Box<dyn std::error::Error>>
     }
     fs::remove_dir_all(root)?;
     Ok(())
+}
+
+#[cfg(unix)]
+#[path = "katex_cli/deadline.rs"]
+mod deadline;
+
+#[cfg(unix)]
+#[test]
+#[ignore = "runs the real 60-second native transport deadline with a controlled host"]
+fn pinned_native_katex_deadline() -> Result<(), Box<dyn std::error::Error>> {
+    deadline::verify(env!("CARGO_BIN_EXE_nepl3-tools"))
 }
