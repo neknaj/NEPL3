@@ -357,6 +357,13 @@ body
         cons "providerがさらにAwaitした[場合/ばあい]は、hostがその[依存呼出/いぞんよびだ]しを[解決/かいけつ]してから、[終端/しゅうたん]replyを[待機/たいき]frameへ[戻/もど]す。"
         nil
       cons paragraph
+        cons "ReaderSessionは[保存/ほぞん]したReaderContinuation[全体/ぜんたい]とdomain ReadReply::Awaitをcanonical NDFへ[出力/しゅつりょく]できる。"
+        cons "[戻/もど]されたechoは[保存状態/ほぞんじょうたい]の[全/ぜん]fieldと[予算内/よさんない]で[比較/ひかく]し、[一致/いっち]した[場合/ばあい]だけ[既存/きそん]のprivate sessionを[再開/さいかい]する。"
+        cons "[受信/じゅしん]したsource、frame、Usageを[新/あたら]しいsessionの[状態/じょうたい]や[権限/けんげん]として[取/と]り[込/こ]まない。"
+        cons "[出力/しゅつりょく]と[比較/ひかく]のworkは[計上/けいじょう]し、echo[内/ない]のUsage/Reportは[保存時/ほぞんじ]の[値/あたい]を[維持/いじ]する。"
+        cons "[別/べつ]sessionや[不正/ふせい]な[外形/がいけい]の[事前拒否/じぜんきょひ]はpendingを[消費/しょうひ]せず、[同/おな]じ[操作/そうさ]の[予算停止/よさんていし]は[既受理/きじゅり]collectorを[保全/ほぜん]して[終端/しゅうたん]へ[移/うつ]る。"
+        nil
+      cons paragraph
         cons "ProviderCallとReaderContinuationは、hostが[割/わ]り[当/あ]てる[空/から]でないopaque sessionIdを[持/も]つ。"
         cons "callIdはそのsession[内/ない]で[一意/いちい]とし、coreは[乱数/らんすう]や[時計/とけい]でIDを[生成/せいせい]しない。"
         cons "plan/source/stateが[偶然同一/ぐうぜんどういつ]の[別/べつ]sessionから[届/とど]いた[継続/けいぞく]でも、[保存/ほぞん]されたsessionId/callIdと[違/ちが]えば[拒否/きょひ]する。"

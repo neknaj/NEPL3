@@ -1,5 +1,6 @@
 //! Iterative transactional reader execution. Host calls are explicit suspension points.
 mod checkpoint;
+mod echo;
 #[cfg(test)]
 mod ownership_tests;
 use checkpoint::{Frame, Saved};
