@@ -60,6 +60,16 @@ pub enum Resource {
     Events,
 }
 
+/// Observation of one scoped callback, including a callback that stopped its
+/// budget. Retaining output is not certification of semantic success.
+#[derive(Debug, Eq, PartialEq)]
+#[must_use = "inspect both callback output and stopped before admitting a result"]
+pub struct DepthObservation<T> {
+    pub output: T,
+    pub relative_depth: u64,
+    pub stopped: Option<StopReason>,
+}
+
 /// Passed by mutable borrow through nested operations; never cloned or rolled back.
 #[derive(Debug)]
 pub struct Budget {
@@ -259,6 +269,21 @@ impl Budget {
         &mut self,
         operation: impl FnOnce(&mut Self) -> Result<T, E>,
     ) -> Result<(T, u64), E> {
+        let observed = self.observe_depth_scope(operation)?;
+        let value = observed.output?;
+        self.poll()?;
+        Ok((value, observed.relative_depth))
+    }
+    /// Observe fresh relative depth while retaining callback output and its stop.
+    /// Historical Usage is unchanged and does not enter this interval's peak.
+    /// A preexisting stop prevents the callback; a stop reached by the callback
+    /// is returned in the observation rather than discarding already produced
+    /// output. This does not admit that output or authorize resuming a budget.
+    /// The trusted callback must not replace the Budget itself.
+    pub fn observe_depth_scope<T>(
+        &mut self,
+        operation: impl FnOnce(&mut Self) -> T,
+    ) -> Result<DepthObservation<T>, StopReason> {
         self.poll()?;
         let base = self.depth;
         let previous = self.observed_depth;
@@ -268,12 +293,14 @@ impl Budget {
             base,
             previous,
         };
-        let result = operation(guard.budget);
+        let output = operation(guard.budget);
         let completed = depth::measurement::finish(base, previous, guard.budget.observed_depth);
         drop(guard);
-        let value = result?;
-        self.poll()?;
-        Ok((value, completed.relative))
+        Ok(DepthObservation {
+            output,
+            relative_depth: completed.relative,
+            stopped: self.poll().err(),
+        })
     }
     /// Restores current depth on success, failure, or Rust unwinding; work remains charged.
     pub fn with_depth<T, E: From<StopReason>>(
