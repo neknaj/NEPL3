@@ -243,13 +243,8 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
         if &guest.syntax().schema != self.math_surface || guest.syntax().category != "Expr" {
             return Err(Error::Selection);
         }
-        guest
-            .validate(self.registry, b, self.codec.source_admission())
-            .map_err(Error::Syntax)?;
         let input = guest
-            .syntax()
-            .bundle
-            .validate_with_sources(self.registry, b, self.codec.source_admission())
+            .validate_with_bundle(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
         let syntax = lower::expression(
             &input,

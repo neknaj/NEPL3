@@ -70,13 +70,9 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
         {
             return Err(Error::Selection);
         }
-        guest
-            .validate(self.registry, b, self.codec.source_admission())
-            .map_err(Error::Syntax)?;
         let input = guest
-            .syntax
-            .bundle
-            .validate_with_sources(self.registry, b, self.codec.source_admission())
+            .view()
+            .validate_with_bundle(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
         let mut forms = Vec::new();
         let count =
@@ -195,13 +191,8 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
         if !selected(closure, self.math_surface, "Expr", b)? {
             return Err(Error::Selection);
         }
-        closure
-            .validate(self.registry, b, self.codec.source_admission())
-            .map_err(Error::Syntax)?;
         let input = closure
-            .syntax()
-            .bundle
-            .validate_with_sources(self.registry, b, self.codec.source_admission())
+            .validate_with_bundle(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
         let math = nepl3_math_core::lower::expression(
             &input,
@@ -232,13 +223,8 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
         b: &mut Budget,
     ) -> Result<String, Error<C::Error>> {
         use nepl3_doc_core::{check, model::GuestLanguage, print};
-        closure
-            .validate(self.registry, b, self.codec.source_admission())
-            .map_err(Error::Syntax)?;
         let input = closure
-            .syntax()
-            .bundle
-            .validate_with_sources(self.registry, b, self.codec.source_admission())
+            .validate_with_bundle(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
         let document = nepl3_suite::adapters::sentence::literal::lower(
             &input,

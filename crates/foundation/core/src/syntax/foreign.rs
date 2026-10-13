@@ -47,12 +47,26 @@ impl<'a> ForeignClosureView<'a> {
         b: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<(), SyntaxError> {
+        self.validate_with_bundle(registry, b, admission)
+            .map(|_| ())
+    }
+    /// Validate the complete closure and retain its checked guest bundle for
+    /// immediate lowering in this callback. Owner association, provenance and
+    /// environment checks must all succeed before the proof is returned.
+    /// This borrows the exact input; it does not authorize reuse at a later
+    /// receiving boundary or under another caller's depth or resource limits.
+    pub fn validate_with_bundle(
+        &self,
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<ValidatedSyntaxBundle<'a>, SyntaxError> {
         b.poll()?;
-        validate_syntax(self.syntax, registry, b, admission)?;
+        let bundle = validate_syntax(self.syntax, registry, b, admission)?;
         association(self.syntax, self.environment)?;
         validate_provenance(self.origins, self.sources, self.source_maps, b, admission)?;
         environment(&self.environment.value, self.origins.len(), registry, b)?;
-        Ok(())
+        Ok(bundle)
     }
     /// Explicitly copy a standalone closure. No source/semantic validity is
     /// inferred here; callers validate at their receiving operation boundary.
@@ -197,13 +211,13 @@ fn association(syntax: &ForeignSyntax, owner: &EnvironmentEntry) -> Result<(), S
     }
     Ok(())
 }
-fn validate_syntax(
-    syntax: &ForeignSyntax,
+fn validate_syntax<'a>(
+    syntax: &'a ForeignSyntax,
     registry: &SchemaRegistry,
     b: &mut Budget,
     admission: &mut SourceAdmission,
-) -> Result<(), SyntaxError> {
-    syntax
+) -> Result<ValidatedSyntaxBundle<'a>, SyntaxError> {
+    let bundle = syntax
         .bundle
         .validate_with_sources(registry, b, admission)?;
     require_schema(registry, &syntax.schema)?;
@@ -214,7 +228,7 @@ fn validate_syntax(
     {
         return Err(SyntaxError::ForeignRoot);
     }
-    Ok(())
+    Ok(bundle)
 }
 fn validate_provenance(
     origins: &[Origin],

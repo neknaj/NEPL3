@@ -6,23 +6,45 @@ use nepl3_core::{
 
 #[test]
 fn borrowed_closure_validation_and_encoding_match_owned_boundaries() -> TestResult {
-    let (_, registry, owner) = fixture()?;
-    let checked = owner
-        .validate(&registry, &mut budget())
-        .map_err(|e| format!("{e:?}"))?;
-    let closure = ForeignClosure::capture_at(
-        &checked,
-        NodeRef(0),
-        0,
-        &registry,
+    let (_, registry, closure) = closed()?;
+    let missing = SourceSnapshot::new(
+        SourceId("missing-owner-map".into()),
+        1,
+        "memory:missing".into(),
+        b"x".to_vec(),
         &mut budget(),
-        &mut SourceAdmission::default(),
     )
     .map_err(|e| format!("{e:?}"))?;
-    for malformed in [false, true] {
+    for malformed in 0..11 {
         let mut input = closure.clone();
-        if malformed {
-            input.syntax.environment.id ^= 1;
+        match malformed {
+            1 => input.syntax.environment.id ^= 1,
+            2 => input.owner_sources.clear(),
+            3 => input
+                .owner_origins
+                .push(Origin::Composite(vec![OriginId(u64::MAX)])),
+            4 => input.syntax.schema.digest.0[0] ^= 1,
+            5 => input.syntax.category.clear(),
+            6 => input.syntax.root = NodeRef(u64::MAX),
+            7 => input.owner_environment.digest.0[0] ^= 1,
+            8 => input.owner_environment.value.bindings[0].origin = Some(OriginId(u64::MAX)),
+            9 => input.owner_source_maps.push(nepl3_core::origin::Mapping {
+                source: input.owner_sources[0]
+                    .span(0, 1)
+                    .map_err(|e| format!("{e:?}"))?,
+                target: missing.span(0, 1).map_err(|e| format!("{e:?}"))?,
+                kind: nepl3_core::origin::MappingKind::Transformed,
+            }),
+            10 => input
+                .owner_environment
+                .value
+                .resources
+                .push(ResourceContent {
+                    id: "bad-content".into(),
+                    digest: nepl3_core::source::Digest([0; 32]),
+                    bytes: vec![1],
+                }),
+            _ => {}
         }
         let mut owned_budget = budget();
         let mut view_budget = budget();
@@ -33,11 +55,14 @@ fn borrowed_closure_validation_and_encoding_match_owned_boundaries() -> TestResu
                 &mut SourceAdmission::default(),
             )
             .map(|_| ());
-        let borrowed =
-            input
-                .view()
-                .validate(&registry, &mut view_budget, &mut SourceAdmission::default());
+        let borrowed = input
+            .view()
+            .validate_with_bundle(&registry, &mut view_budget, &mut SourceAdmission::default())
+            .map(|proof| {
+                assert!(core::ptr::eq(proof.bundle(), &input.syntax.bundle));
+            });
         assert_eq!(owned, borrowed);
+        assert_eq!(owned.is_err(), malformed != 0);
         assert_eq!(owned_budget.usage(), view_budget.usage());
     }
     let sources = nepl3_core::source::SourceStore::default();
@@ -83,7 +108,8 @@ fn borrowed_closure_validation_and_encoding_match_owned_boundaries() -> TestResu
             .map(|_| ());
         let borrowed = closure
             .view()
-            .validate(&registry, &mut z, &mut SourceAdmission::default());
+            .validate_with_bundle(&registry, &mut z, &mut SourceAdmission::default())
+            .map(|_| ());
         assert_eq!(owned, borrowed);
         assert_eq!(a.usage(), z.usage());
         assert_eq!(a.poll(), Err(reason));
@@ -211,5 +237,63 @@ fn capture_and_group_copy_store_growing_provenance_once_per_owner() -> TestResul
     assert!(b.0 > a.0 && b.1 > a.1);
     assert_eq!(b.0 - a.0, d.0 - c.0);
     assert_eq!(b.1 - a.1, d.1 - c.1);
+    Ok(())
+}
+
+#[test]
+fn retained_guest_proof_saves_only_duplicate_pass_and_keeps_caller_depth() -> TestResult {
+    let (_, registry, closure) = closed()?;
+    let mut old = budget();
+    let mut old_admission = SourceAdmission::default();
+    let old_depth = old
+        .with_depth_at_least(11, |b| {
+            closure.view().validate(&registry, b, &mut old_admission)?;
+            let proof =
+                closure
+                    .syntax
+                    .bundle
+                    .validate_with_sources(&registry, b, &mut old_admission)?;
+            assert!(core::ptr::eq(proof.bundle(), &closure.syntax.bundle));
+            Ok::<_, SyntaxError>(proof.validation_depth())
+        })
+        .map_err(|e| format!("{e:?}"))?;
+    let mut retained = budget();
+    let mut admission = SourceAdmission::default();
+    let depth = retained
+        .with_depth_at_least(11, |b| {
+            let proof = closure
+                .view()
+                .validate_with_bundle(&registry, b, &mut admission)?;
+            assert!(core::ptr::eq(proof.bundle(), &closure.syntax.bundle));
+            Ok::<_, SyntaxError>(proof.validation_depth())
+        })
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(depth, old_depth);
+    assert_eq!(retained.current_depth(), 0);
+    assert_eq!(old.current_depth(), 0);
+    assert_eq!(retained.usage().depth, old.usage().depth);
+    assert_eq!(retained.usage().source_bytes, old.usage().source_bytes);
+    assert!(retained.usage().work < old.usage().work);
+    assert!(retained.usage().allocation_units < old.usage().allocation_units);
+    // The only saved traversal is the explicit second bundle pass. Its costs
+    // are measured on the same admitted sources, not guessed from graph size.
+    closure
+        .syntax
+        .bundle
+        .validate_with_sources(&registry, &mut retained, &mut admission)
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(retained.usage(), old.usage());
+    let mut limits = budget().limits();
+    limits.depth = 11;
+    let mut limited = Budget::new(limits);
+    let failed = limited.with_depth_at_least(11, |b| {
+        closure
+            .view()
+            .validate_with_bundle(&registry, b, &mut SourceAdmission::default())
+            .map(|_| ())
+    });
+    assert!(failed.is_err());
+    assert_eq!(limited.poll(), Err(StopReason::DepthLimit));
+    assert_eq!(limited.current_depth(), 0);
     Ok(())
 }

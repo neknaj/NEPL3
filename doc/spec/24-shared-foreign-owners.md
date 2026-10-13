@@ -62,3 +62,5 @@ Doc/SentenceのHTML・Math・annotation・printerの各受信callbackは、実�
 ## 接続と受入
 
 Foundation groupの成立と、Doc ArticleのSentence/Inline所有移行は別の完了条件である。言語ごとの意味・順序・source対応・深さを保った接続を検証するまで、Doc移行やT07/T19/T21の正式受入を完了扱いにしない。過去revisionの受入記録を新revisionで実行した結果へ書き換えない。
+
+同一callback内の直後のloweringには、ForeignClosureView::validate_with_bundleが返す検査済みguest bundleを使用できる。このAPIはguestの構文検査に加え、ownerとの対応・provenance・environmentの全検査が成功してから、その入力を借用したproofを返す。既存validateも同じ検査経路を使用する。これにより直後のbundle単独検査の重複を除くが、callback間での検査省略を許可しない。Math loweringの公開受信境界検査、annotationの実際の挿入深さ検査、意味graphのshape検査は維持する。
