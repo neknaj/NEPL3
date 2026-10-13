@@ -93,7 +93,18 @@ fn sentence_wire_uses_its_own_identity_and_ordered_typed_fields() -> Result<(), 
                 variant: "Sentence".into(),
                 fields: vec![NdfValue::List(vec![])],
             })]),
-            NdfValue::List(vec![]),
+            NdfValue::Record(Record {
+                schema: registry
+                    .selected("nepl3.foundation", 1)
+                    .ok_or(SchemaError::WrongType)?
+                    .clone(),
+                kind: "ForeignClosureGroup".into(),
+                fields: vec![
+                    NdfValue::List(vec![]),
+                    NdfValue::List(vec![]),
+                    NdfValue::List(vec![]),
+                ],
+            }),
         ],
     });
     registry.validate(&TypeDescriptor::TypedValue, &value, &mut budget())?;

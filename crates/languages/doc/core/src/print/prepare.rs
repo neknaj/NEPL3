@@ -62,16 +62,25 @@ pub(super) fn check<'a>(
         }
     }
     let mut out = Vec::new();
-    for (index, embed) in request.document.value.embeds.iter().enumerate() {
+    for index in 0..request.document.value.embeds.len() {
+        let embed =
+            request
+                .document
+                .value
+                .embeds
+                .get(index)
+                .ok_or(PrintFailure::MissingBinding {
+                    embed: EmbedRef(index as u64),
+                })?;
         let id = EmbedRef(index as u64);
         let mut found = None;
         for binding in &request.bindings {
             b.charge(
                 Resource::Work,
-                (binding.schema.package.len() + embed.closure.syntax.schema.package.len() + 33)
+                (binding.schema.package.len() + embed.closure.syntax().schema.package.len() + 33)
                     as u64,
             )?;
-            if binding.schema == embed.closure.syntax.schema {
+            if binding.schema == embed.closure.syntax().schema {
                 found = Some(binding);
                 break;
             }
@@ -79,7 +88,7 @@ pub(super) fn check<'a>(
         let binding = found.ok_or(PrintFailure::MissingBinding { embed: id })?;
         b.charge(
             Resource::Work,
-            (binding.category.len() + embed.closure.syntax.category.len()) as u64,
+            (binding.category.len() + embed.closure.syntax().category.len()) as u64,
         )?;
         let compatible = match embed.kind {
             EmbedKind::InlineMath | EmbedKind::DisplayMath => {
@@ -88,7 +97,7 @@ pub(super) fn check<'a>(
             EmbedKind::CircuitFigure => binding.language == GuestLanguage::Circuit,
             EmbedKind::Code | EmbedKind::Guest => true,
         };
-        if !compatible || binding.category != embed.closure.syntax.category {
+        if !compatible || binding.category != embed.closure.syntax().category {
             return Err(PrintFailure::GuestCategory { embed: id }.into());
         }
         let mut text = None;

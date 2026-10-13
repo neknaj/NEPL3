@@ -95,12 +95,12 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
     /// Prepare the selected retained closure without reparsing its source.
     pub fn prepare_guest(
         &mut self,
-        guest: &nepl3_core::syntax::ForeignClosure,
+        guest: &nepl3_core::syntax::ForeignClosureView<'_>,
         display: nepl3_markup::mathml::Display,
         preference: Preference,
         budget: &mut Budget,
     ) -> Result<PreparedDisplay, Error<C::Error>> {
-        let mathml = self.render(guest, display, budget)?;
+        let mathml = self.render_view(guest, display, budget)?;
         self.prepare_rendered(mathml, preference, budget)
     }
     fn prepare_rendered(

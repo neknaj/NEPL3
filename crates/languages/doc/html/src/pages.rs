@@ -8,7 +8,7 @@ use nepl3_core::{
     value_codec::FoundationValueCodec,
 };
 use nepl3_doc_core::{
-    model::{DocEmbed, EmbedRef, LinkTarget},
+    model::{DocEmbedView, EmbedRef, LinkTarget},
     pages::{self, PageDestination, PageLinkPlan, PageSet},
     prepare,
 };
@@ -82,7 +82,7 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
 ) -> Result<RenderedPages, PagesRenderError<'a, C::Error>> {
     type NoAdapter<C> = fn(
         u64,
-        &DocEmbed,
+        &DocEmbedView<'_>,
         EmbedRef,
         &mut C,
         &mut Budget,
@@ -112,7 +112,7 @@ pub fn render_pages_with_code<'a, C: FoundationValueCodec, F>(
     r: &SchemaRegistry,
     c: &mut C,
     b: &mut Budget,
-    adapter: &mut impl FnMut(u64, &DocEmbed, EmbedRef, &mut Budget) -> Result<HtmlRequest, F>,
+    adapter: &mut impl FnMut(u64, &DocEmbedView<'_>, EmbedRef, &mut Budget) -> Result<HtmlRequest, F>,
 ) -> Result<RenderedCodePages, PagesCodeRenderError<'a, C::Error, F>> {
     render_pages_impl(
         request,
@@ -131,7 +131,13 @@ pub fn render_pages_with_display<'a, C: FoundationValueCodec, F>(
     r: &SchemaRegistry,
     c: &mut C,
     b: &mut Budget,
-    adapter: &mut impl FnMut(u64, &DocEmbed, EmbedRef, &mut C, &mut Budget) -> Result<HtmlRequest, F>,
+    adapter: &mut impl FnMut(
+        u64,
+        &DocEmbedView<'_>,
+        EmbedRef,
+        &mut C,
+        &mut Budget,
+    ) -> Result<HtmlRequest, F>,
 ) -> Result<RenderedCodePages, PagesCodeRenderError<'a, C::Error, F>> {
     render_pages_impl(request, r, c, b, Some(adapter), true)
 }
@@ -151,7 +157,7 @@ fn render_pages_impl<'a, C: FoundationValueCodec, F, A>(
     math: bool,
 ) -> Result<RenderedCodePages, PagesCodeRenderError<'a, C::Error, F>>
 where
-    A: FnMut(u64, &DocEmbed, EmbedRef, &mut C, &mut Budget) -> Result<HtmlRequest, F>,
+    A: FnMut(u64, &DocEmbedView<'_>, EmbedRef, &mut C, &mut Budget) -> Result<HtmlRequest, F>,
 {
     let checked = pages::resolve(&request.set, r, c, b).map_err(|e| match e {
         pages::PageError::Stopped(s) => PagesRenderError::Stopped(s),

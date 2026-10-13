@@ -94,7 +94,7 @@ fn all_standard_inline_kinds_keep_content_order_and_shared_references() -> Resul
         value: SentenceValue {
             root: Root::Sentence(SentenceRef(10)),
             nodes,
-            embeds: vec![],
+            embeds: Default::default(),
         },
         sources: vec![],
         views: vec![],
@@ -295,7 +295,7 @@ fn literal_bridge_and_typed_doc_share_normal_form_and_provenance() -> Result<(),
                     span: None,
                 })
                 .collect(),
-            embeds: vec![],
+            embeds: Default::default(),
         },
         sources: vec![],
         origins: vec![],
@@ -362,7 +362,7 @@ fn doc_bridge_preserves_generated_shared_inline_and_rejects_unselected_foreign()
     let mut input = SentenceSyntax {
         value: SentenceValue {
             root: Root::Inline(InlineRef(1)),
-            embeds: vec![],
+            embeds: Default::default(),
             nodes: vec![
                 Kind::Break,
                 Kind::Concat {
@@ -463,7 +463,21 @@ fn doc_bridge_preserves_generated_shared_inline_and_rejects_unselected_foreign()
         syntax: EmbedRef(0),
     }];
     input.value.root = Root::Inline(InlineRef(0));
-    input.value.embeds = vec![closure];
+    input.value.embeds = nepl3_core::syntax::group::ForeignClosureGroup {
+        provenances: vec![nepl3_core::syntax::group::ForeignProvenance {
+            origins: closure.owner_origins,
+            sources: closure.owner_sources,
+            source_maps: closure.owner_source_maps,
+        }],
+        environments: vec![nepl3_core::syntax::group::ForeignOwnerEnvironment {
+            provenance: nepl3_core::syntax::group::ProvenanceRef(0),
+            environment: closure.owner_environment,
+        }],
+        entries: vec![nepl3_core::syntax::group::ForeignGroupEntry {
+            owner: nepl3_core::syntax::group::OwnerEnvironmentRef(0),
+            syntax: closure.syntax,
+        }],
+    };
     input.locations = vec![location];
     input
         .validate(&r, &mut b(), &mut SourceAdmission::default())

@@ -154,7 +154,7 @@ fn doc(target: LinkTarget) -> DocumentSyntax {
                     span: None,
                 })
                 .collect(),
-            embeds: vec![],
+            embeds: Default::default(),
         },
         sources: vec![],
         origins: vec![],

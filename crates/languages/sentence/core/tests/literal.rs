@@ -252,7 +252,7 @@ fn literal_has_independent_sentence_meaning_and_closed_source_provenance() -> Re
                 inlines: vec![InlineRef(2), InlineRef(6)],
             },
         ],
-        embeds: vec![],
+        embeds: Default::default(),
     };
     assert_eq!(literal.syntax.value, expected);
     let mut budget = b();
@@ -614,7 +614,7 @@ fn literal_print_rejects_prefix_only_break_and_stops_expanding_shared_values() -
                 inlines: vec![InlineRef(0)],
             },
         ],
-        embeds: vec![],
+        embeds: Default::default(),
     };
     assert_eq!(
         literal::print(&value, &mut b()),
@@ -634,7 +634,7 @@ fn literal_print_rejects_prefix_only_break_and_stops_expanding_shared_values() -
     let value = SentenceValue {
         root: Root::Sentence(SentenceRef(21)),
         nodes,
-        embeds: vec![],
+        embeds: Default::default(),
     };
     let mut limits = b().limits();
     limits.output_bytes = 1000;
@@ -708,5 +708,55 @@ fn escape_prefixes_need_more_and_changed_schema_is_not_silently_accepted() -> Re
         ),
         Err(SentenceError::SchemaIdentity)
     ));
+    Ok(())
+}
+
+#[test]
+fn literal_and_text_reject_hidden_owner_tables_without_entries() -> Result<(), String> {
+    use nepl3_core::syntax::{Environment, EnvironmentEntry, group::*};
+    use nepl3_sentence_core::portable::literal as payload;
+    use nepl3_wire::foundation::FoundationCodec;
+    let r = registry()?;
+    let original = parse("\"plain\"", &r)?;
+    for environment in [false, true] {
+        let mut input = original.syntax.clone();
+        input.value.embeds.provenances.push(ForeignProvenance {
+            origins: vec![],
+            sources: vec![],
+            source_maps: vec![],
+        });
+        if environment {
+            input
+                .value
+                .embeds
+                .environments
+                .push(ForeignOwnerEnvironment {
+                    provenance: ProvenanceRef(0),
+                    environment: EnvironmentEntry {
+                        id: 0,
+                        digest: nepl3_core::source::Digest([0; 32]),
+                        value: Environment {
+                            bindings: vec![],
+                            resources: vec![],
+                        },
+                    },
+                });
+        }
+        assert_eq!(input.value.embeds.len(), 0);
+        assert!(!input.value.embeds.is_empty());
+        let empty = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+        assert!(payload::to_value(&input, &r, &mut codec, &mut b()).is_err());
+        assert!(
+            nepl3_sentence_core::text::prepare(
+                &input.value,
+                &r,
+                &mut b(),
+                &mut SourceAdmission::default()
+            )
+            .is_err()
+        );
+    }
     Ok(())
 }

@@ -97,6 +97,27 @@ fn closure(r: &SchemaRegistry) -> Result<ForeignClosure, String> {
         owner_source_maps: vec![],
     })
 }
+fn embeds(kind: EmbedKind, closure: ForeignClosure) -> DocEmbeds {
+    use nepl3_core::syntax::group::*;
+    DocEmbeds {
+        kinds: vec![kind],
+        group: ForeignClosureGroup {
+            provenances: vec![ForeignProvenance {
+                origins: closure.owner_origins,
+                sources: closure.owner_sources,
+                source_maps: closure.owner_source_maps,
+            }],
+            environments: vec![ForeignOwnerEnvironment {
+                provenance: nepl3_core::syntax::group::ProvenanceRef(0),
+                environment: closure.owner_environment,
+            }],
+            entries: vec![ForeignGroupEntry {
+                owner: nepl3_core::syntax::group::OwnerEnvironmentRef(0),
+                syntax: closure.syntax,
+            }],
+        },
+    }
+}
 #[test]
 fn code_guest_stays_syntax_through_doc_structure_and_cbor() -> Result<(), String> {
     let r = registry()?;
@@ -111,10 +132,7 @@ fn code_guest_stays_syntax_through_doc_structure_and_cbor() -> Result<(), String
                 origin: None,
                 span: None,
             }],
-            embeds: vec![DocEmbed {
-                kind: EmbedKind::Code,
-                closure: closure(&r)?,
-            }],
+            embeds: embeds(EmbedKind::Code, closure(&r)?),
         },
         sources: vec![],
         origins: vec![],
@@ -134,7 +152,7 @@ fn code_guest_stays_syntax_through_doc_structure_and_cbor() -> Result<(), String
     let actual = portable::from_value(&value, &r, &mut codec, &mut b()).map_err(err)?;
     assert_eq!(actual, doc);
     assert_eq!(
-        actual.value.embeds[0].closure.syntax.bundle.nodes[0].kind,
+        actual.value.embeds.group.entries[0].syntax.bundle.nodes[0].kind,
         "View:TextRun"
     );
     Ok(())
@@ -172,10 +190,7 @@ fn shared_embed_validation_composes_its_deepest_doc_owner() -> Result<(), String
         value: DocValue {
             root: DocRoot::Sentence(SentenceRef(20)),
             nodes,
-            embeds: vec![DocEmbed {
-                kind: EmbedKind::InlineMath,
-                closure: closure(&r)?,
-            }],
+            embeds: embeds(EmbedKind::InlineMath, closure(&r)?),
         },
         sources: vec![],
         origins: vec![],
@@ -258,10 +273,7 @@ fn mapped_article(
                     span: None,
                 })
                 .collect(),
-            embeds: vec![DocEmbed {
-                kind: EmbedKind::Code,
-                closure: guest,
-            }],
+            embeds: embeds(EmbedKind::Code, guest),
         },
         sources,
         source_maps: maps,
@@ -335,10 +347,42 @@ fn page_guest_digest_uses_owned_maps_not_parent_scope() -> Result<(), String> {
         let mut guest_values = Vec::new();
         for (index, page) in input.pages.iter().enumerate() {
             let plan = prepare::inspect(&page.document, &r, &mut scoped, &mut b()).map_err(err)?;
-            let value = scoped
-                .encode_foreign_closure(&page.document.value.embeds[0].closure, &mut b())
+            let group = scoped
+                .encode_foreign_group(&page.document.value.embeds.group, &mut b())
                 .map_err(err)?;
-            // Independent byte oracle, not the digest batch entry point.
+            // Independent component/framing oracle from the encoded group, not
+            // foreign_group_entry_digests or a consuming identity helper.
+            let NdfValue::List(ref provenances) = field(&group, 0)? else {
+                return Err("provenances".into());
+            };
+            let NdfValue::List(ref environments) = field(&group, 1)? else {
+                return Err("environments".into());
+            };
+            let NdfValue::List(ref entries) = field(&group, 2)? else {
+                return Err("entries".into());
+            };
+            let mut parts = Vec::new();
+            for (domain, component) in [
+                (
+                    b"NEPL3.Foreign.Provenance.v1\0".as_slice(),
+                    provenances[0].clone(),
+                ),
+                (
+                    b"NEPL3.Foreign.Environment.v1\0".as_slice(),
+                    field(&environments[0], 1)?,
+                ),
+                (
+                    b"NEPL3.Foreign.Syntax.v1\0".as_slice(),
+                    field(&entries[0], 1)?,
+                ),
+            ] {
+                let mut bytes = domain.to_vec();
+                bytes.extend(nepl3_wire::encode(&component, &mut b()).map_err(err)?);
+                parts.push(NdfValue::Bytes(Digest::of(&bytes).0.to_vec()));
+            }
+            let mut bytes = b"NEPL3.Foreign.Entry.v1\0".to_vec();
+            bytes.extend(nepl3_wire::encode(&NdfValue::List(parts), &mut b()).map_err(err)?);
+            let value = NdfValue::Bytes(Digest::of(&bytes).0.to_vec());
             let mut bytes = prepare::GUEST_DOMAIN.to_vec();
             bytes.extend(nepl3_wire::encode(&value, &mut b()).map_err(err)?);
             let digest = Digest::of(&bytes);
@@ -352,10 +396,8 @@ fn page_guest_digest_uses_owned_maps_not_parent_scope() -> Result<(), String> {
             );
             let document = field(&encoded_pages[index], 1)?;
             let doc_value = field(&document, 0)?;
-            let NdfValue::List(ref embeds) = field(&doc_value, 2)? else {
-                return Err("embed list".into());
-            };
-            assert_eq!(field(&embeds[0], 1)?, value);
+            let encoded_embeds = field(&doc_value, 2)?;
+            assert_eq!(field(&encoded_embeds, 1)?, group);
             standalone.push(plan);
             guest_values.push(value);
         }
@@ -401,10 +443,8 @@ fn page_guest_digest_uses_owned_maps_not_parent_scope() -> Result<(), String> {
     assert_eq!(parent_change.2, baseline.2);
     assert_ne!(parent_change.0.identity, baseline.0.identity);
     changed = set.clone();
-    changed.pages[0].document.value.embeds[0]
-        .closure
-        .owner_source_maps[0]
-        .kind = MappingKind::Transformed;
+    changed.pages[0].document.value.embeds.group.provenances[0].source_maps[0].kind =
+        MappingKind::Transformed;
     let owner_change = run(&changed, MappingKind::Exact)?;
     assert_ne!(owner_change.2[0], baseline.2[0]);
     assert_ne!(owner_change.1[0].requirements, baseline.1[0].requirements);
@@ -415,9 +455,8 @@ fn page_guest_digest_uses_owned_maps_not_parent_scope() -> Result<(), String> {
     assert_ne!(owner_change.0.identity, baseline.0.identity);
     // The missing endpoint still exists in both the document and codec stores.
     // Rejection must come from the closure's own authority, not lack of ambient data.
-    changed.pages[0].document.value.embeds[0]
-        .closure
-        .owner_sources
+    changed.pages[0].document.value.embeds.group.provenances[0]
+        .sources
         .remove(1);
     for batched in [false, true] {
         let mut admission = SourceAdmission::default();
@@ -434,5 +473,139 @@ fn page_guest_digest_uses_owned_maps_not_parent_scope() -> Result<(), String> {
         }
         assert_eq!(budget.poll(), Ok(()));
     }
+    Ok(())
+}
+
+#[test]
+fn doc_group_roles_hidden_owners_and_shared_fragment_are_checked() -> Result<(), String> {
+    use nepl3_core::syntax::group::*;
+    let r = registry()?;
+    let mut guest = closure(&r)?;
+    guest.owner_origins.push(Origin::Synthetic {
+        reason: "unreferenced owner origin retained".into(),
+        anchor: None,
+    });
+    let mut slots = embeds(EmbedKind::InlineMath, guest);
+    let mut environment = slots.group.environments[0].clone();
+    environment.environment.id = 29;
+    slots.group.environments.push(environment);
+    let mut entry = slots.group.entries[0].clone();
+    entry.owner = OwnerEnvironmentRef(1);
+    entry.syntax.environment.id = 29;
+    slots.group.entries.push(entry);
+    slots.group.entries.push(slots.group.entries[0].clone());
+    slots
+        .kinds
+        .extend([EmbedKind::InlineMath, EmbedKind::InlineMath]);
+    let kinds = [
+        DocKind::InlineMath {
+            syntax: EmbedRef(0),
+        },
+        DocKind::InlineMath {
+            syntax: EmbedRef(1),
+        },
+        DocKind::InlineMath {
+            syntax: EmbedRef(2),
+        },
+        DocKind::Concat {
+            inlines: vec![InlineRef(1), InlineRef(0), InlineRef(1)],
+        },
+        DocKind::Sentence {
+            inlines: vec![InlineRef(3), InlineRef(2)],
+        },
+    ];
+    let document = DocumentSyntax {
+        value: DocValue {
+            root: DocRoot::Sentence(SentenceRef(4)),
+            nodes: kinds
+                .into_iter()
+                .map(|kind| DocNode {
+                    kind,
+                    locations: vec![],
+                    origin: None,
+                    span: None,
+                })
+                .collect(),
+            embeds: slots,
+        },
+        sources: vec![],
+        origins: vec![],
+        views: vec![],
+        source_maps: vec![],
+    };
+    document
+        .validate_structure(&r, &mut b(), &mut SourceAdmission::default())
+        .map_err(err)?;
+    let mut wrong_count = document.clone();
+    wrong_count.value.embeds.kinds.pop();
+    assert_eq!(
+        wrong_count.value.validate_shape(&mut b()).err(),
+        Some(nepl3_doc_core::check::ShapeError::EmbedCount)
+    );
+    let mut wrong_role = document.clone();
+    wrong_role.value.embeds.kinds[0] = EmbedKind::Code;
+    assert!(
+        wrong_role
+            .validate_structure(&r, &mut b(), &mut SourceAdmission::default())
+            .is_err()
+    );
+    let fragment = document
+        .fragment(
+            DocRoot::Inline(InlineRef(3)),
+            &r,
+            &mut b(),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(err)?;
+    assert_eq!(fragment.value.embeds.len(), 2);
+    assert_eq!(
+        fragment.value.embeds.group.provenances,
+        document.value.embeds.group.provenances
+    );
+    assert_eq!(fragment.value.embeds.group.environments.len(), 2);
+    for (new, old) in [1usize, 0].into_iter().enumerate() {
+        assert_eq!(
+            fragment.value.embeds.get(new),
+            document.value.embeds.get(old)
+        );
+    }
+    let DocRoot::Inline(root) = fragment.value.root else {
+        return Err("inline".into());
+    };
+    let DocKind::Concat { ref inlines } = fragment.value.nodes[root.0 as usize].kind else {
+        return Err("concat".into());
+    };
+    assert_eq!(inlines[0], inlines[2]);
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let raw = portable::to_value(&fragment, &r, &mut codec, &mut b()).map_err(err)?;
+    let mut fresh_admission = SourceAdmission::default();
+    let mut fresh = FoundationCodec::new(&r, &empty, &mut fresh_admission).map_err(err)?;
+    assert_eq!(
+        portable::from_value(&raw, &r, &mut fresh, &mut b()).map_err(err)?,
+        fragment
+    );
+    let mut hidden = document.clone();
+    hidden.value.root = DocRoot::Inline(InlineRef(0));
+    hidden.value.nodes.truncate(1);
+    hidden.value.nodes[0].kind = DocKind::Text {
+        text: "empty foreign closure".into(),
+    };
+    hidden.value.embeds.kinds.clear();
+    hidden.value.embeds.group.entries.clear();
+    assert!(!hidden.value.embeds.is_empty());
+    assert!(
+        hidden
+            .validate_structure(&r, &mut b(), &mut SourceAdmission::default())
+            .is_err()
+    );
+    hidden.value.embeds.group.environments.clear();
+    assert!(!hidden.value.embeds.is_empty());
+    assert!(
+        hidden
+            .validate_structure(&r, &mut b(), &mut SourceAdmission::default())
+            .is_err()
+    );
     Ok(())
 }

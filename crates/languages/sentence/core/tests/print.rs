@@ -21,7 +21,7 @@ fn b() -> Budget {
 fn prefix_retains_standard_constructors_and_order() -> Result<(), Error> {
     let value = SentenceValue {
         root: Root::Sentence(SentenceRef(10)),
-        embeds: vec![],
+        embeds: Default::default(),
         nodes: vec![
             Kind::Text {
                 text: "漢\n[字]{語}/\"\\\0😀".into(),
@@ -73,7 +73,7 @@ fn empty_values_inline_entry_and_deep_nonrecursive_output() -> Result<(), Error>
     let empty = SentenceValue {
         root: Root::Sentence(SentenceRef(0)),
         nodes: vec![Kind::Sentence { inlines: vec![] }],
-        embeds: vec![],
+        embeds: Default::default(),
     };
     assert_eq!(print::prefix(&empty, &mut b())?, "sentence nil");
     let mut v = SentenceValue {
@@ -81,7 +81,7 @@ fn empty_values_inline_entry_and_deep_nonrecursive_output() -> Result<(), Error>
         nodes: vec![Kind::Text {
             text: String::new(),
         }],
-        embeds: vec![],
+        embeds: Default::default(),
     };
     for i in 0..10_000 {
         v.nodes.push(Kind::Emphasis {
@@ -100,7 +100,7 @@ fn shared_expansion_is_bounded_and_invalid_graphs_never_print() {
     let mut v = SentenceValue {
         root: Root::Inline(InlineRef(0)),
         nodes: vec![Kind::Text { text: "x".into() }],
-        embeds: vec![],
+        embeds: Default::default(),
     };
     // 21 arena nodes describe over a million occurrences: charge emitted data,
     // not only the compact input. Stop before returning any partial string.

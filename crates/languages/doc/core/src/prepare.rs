@@ -14,7 +14,7 @@ use nepl3_core::{
 };
 
 pub const DOCUMENT_DOMAIN: &[u8] = b"NEPL3.Doc.Prepare.Document.v1\0";
-pub const GUEST_DOMAIN: &[u8] = b"NEPL3.Doc.Prepare.Guest.v1\0";
+pub const GUEST_DOMAIN: &[u8] = b"NEPL3.Doc.Prepare.Guest.v2\0";
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DocRequirement {
     Link {
@@ -242,23 +242,25 @@ fn discover<'a, C: FoundationValueCodec>(
             push(&mut requirements, r, b)?;
         }
     }
-    for (index, embed) in document.value.embeds.iter().enumerate() {
+    let computed;
+    let guest_digests = match guest_digests {
+        Some(values) => values,
+        None => {
+            computed = crate::identity::guests(&document.value.embeds.group, GUEST_DOMAIN, c, b)?;
+            &computed
+        }
+    };
+    if guest_digests.len() != document.value.embeds.len() {
+        return Err(PortableError::Shape.into());
+    }
+    for (index, kind) in document.value.embeds.kinds.iter().copied().enumerate() {
         b.charge(Resource::Work, 1)?;
-        let guest_digest = match guest_digests {
-            Some(digests) => digests[index],
-            None => {
-                let guest = c
-                    .encode_foreign_closure(&embed.closure, b)
-                    .map_err(boundary)?;
-                c.canonical_value_digest(GUEST_DOMAIN, &guest, b)
-                    .map_err(boundary)?
-            }
-        };
+        let guest_digest = guest_digests[index];
         push(
             &mut requirements,
             DocRequirement::Foreign {
                 embed: EmbedRef(index as u64),
-                kind: embed.kind,
+                kind,
                 guest_digest,
             },
             b,

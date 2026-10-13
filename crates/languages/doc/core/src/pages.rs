@@ -375,17 +375,6 @@ pub fn resolve<'a, C: FoundationValueCodec>(
             },
             b,
         )?;
-        for embed in 0..set.pages[page].document.value.embeds.len() {
-            let guest = portable::pages::guest_value(document, embed, b)?;
-            push(
-                &mut digest_inputs,
-                CanonicalDigestInput {
-                    domain: prepare::GUEST_DOMAIN,
-                    value: guest,
-                },
-                b,
-            )?;
-        }
     }
     // The enclosing PageSet owns the exact document values. A codec can encode
     // these once while feeding the independently domain-separated hashes.
@@ -416,13 +405,13 @@ pub fn resolve<'a, C: FoundationValueCodec>(
         let document_digest = digests
             .next()
             .ok_or(PageError::Boundary(portable::PortableError::Shape))?;
-        let mut guest_digests = Vec::new();
-        for _ in &set.pages[page].document.value.embeds {
-            let digest = digests
-                .next()
-                .ok_or(PageError::Boundary(portable::PortableError::Shape))?;
-            push(&mut guest_digests, digest, b)?;
-        }
+        let guest_digests = crate::identity::guests(
+            &set.pages[page].document.value.embeds.group,
+            prepare::GUEST_DOMAIN,
+            c,
+            b,
+        )
+        .map_err(PageError::Boundary)?;
         let requirements =
             prepare::requirements(&labels, &guest_digests, c, b).map_err(|error| match error {
                 PreparationError::Stopped(s) => PageError::Stopped(s),

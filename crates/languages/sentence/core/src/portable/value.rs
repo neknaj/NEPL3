@@ -96,16 +96,8 @@ pub(super) fn encode<C: FoundationValueCodec>(
     for node in &v.nodes {
         nodes.push(encode_node(node, s, b)?);
     }
-    let mut embeds = reserve(v.embeds.len(), b)?;
-    for closure in &v.embeds {
-        embeds.push(c.encode_foreign_closure(closure, b).map_err(boundary)?);
-    }
-    record(
-        s,
-        "SentenceValue",
-        [root, NdfValue::List(nodes), NdfValue::List(embeds)],
-        b,
-    )
+    let embeds = c.encode_foreign_group(&v.embeds, b).map_err(boundary)?;
+    record(s, "SentenceValue", [root, NdfValue::List(nodes), embeds], b)
 }
 fn encode_node<E>(v: &Kind, s: &SchemaRef, b: &mut Budget) -> Result<NdfValue, Error<E>> {
     b.charge(Resource::Work, 1)?;
@@ -204,9 +196,7 @@ pub(super) fn decode<C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<SentenceValue, Error<C::Error>> {
-    let [root, NdfValue::List(raw_nodes), NdfValue::List(raw_embeds)] =
-        fields(v, s, "SentenceValue")?
-    else {
+    let [root, NdfValue::List(raw_nodes), raw_embeds] = fields(v, s, "SentenceValue")? else {
         return Err(Error::Shape);
     };
     let root = match case(root, s, "SentenceRoot")? {
@@ -218,10 +208,7 @@ pub(super) fn decode<C: FoundationValueCodec>(
     for raw in raw_nodes {
         nodes.push(decode_node(raw, s, b)?);
     }
-    let mut embeds = reserve(raw_embeds.len(), b)?;
-    for raw in raw_embeds {
-        embeds.push(c.decode_foreign_closure(raw, b).map_err(boundary)?);
-    }
+    let embeds = c.decode_foreign_group(raw_embeds, b).map_err(boundary)?;
     Ok(SentenceValue {
         root,
         nodes,

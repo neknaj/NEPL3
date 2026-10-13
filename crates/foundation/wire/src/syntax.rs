@@ -5,7 +5,7 @@ mod order;
 use crate::{WireError, boundary::*, environment::*, origin::*, source::*, view::*};
 use alloc::{boxed::Box, vec::Vec};
 pub use foreign::{decode_foreign_closure, encode_foreign_closure};
-pub(crate) use foreign::{foreign_from, foreign_value};
+pub(crate) use foreign::{foreign_from, foreign_value, foreign_view_value};
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     origin::OriginId,

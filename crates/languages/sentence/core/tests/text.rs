@@ -23,7 +23,7 @@ fn b() -> Budget {
 fn sample() -> SentenceValue {
     SentenceValue {
         root: Root::Sentence(SentenceRef(10)),
-        embeds: vec![],
+        embeds: Default::default(),
         nodes: vec![
             Kind::Text {
                 text: "漢😀".into(),
@@ -136,7 +136,7 @@ fn deep_inline_empty_content_and_shared_expansion() -> Result<(), Error> {
     let registry = SchemaRegistry::default();
     let mut value = SentenceValue {
         root: Root::Inline(InlineRef(0)),
-        embeds: vec![],
+        embeds: Default::default(),
         nodes: vec![Kind::Text {
             text: String::new(),
         }],
@@ -184,7 +184,7 @@ fn prepared_text_rejects_overflowing_caller_depth() -> Result<(), Error> {
     let value = SentenceValue {
         root: Root::Inline(InlineRef(0)),
         nodes: vec![Kind::Text { text: "x".into() }],
-        embeds: vec![],
+        embeds: Default::default(),
     };
     let registry = SchemaRegistry::default();
     for base in [u64::MAX - 1, u64::MAX] {

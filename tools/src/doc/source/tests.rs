@@ -294,9 +294,13 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
                         &mut codec,
                     )
                     .map_err(err)?;
-                    let input = doc.value.embeds[0]
+                    let input = doc
+                        .value
+                        .embeds
+                        .get(0)
+                        .ok_or("embed")?
                         .closure
-                        .syntax
+                        .syntax()
                         .bundle
                         .validate_with_sources(registry, b, codec.source_admission())
                         .map_err(err)?;
@@ -645,9 +649,9 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
                     &mut codec,
                 )
                 .map_err(err)?;
-                let closure = &document.value.embeds.first().ok_or("Math closure")?.closure;
+                let closure = &document.value.embeds.get(0).ok_or("Math closure")?.closure;
                 let input = closure
-                    .syntax
+                    .syntax()
                     .bundle
                     .validate_with_sources(registry, b, codec.source_admission())
                     .map_err(err)?;
@@ -709,7 +713,7 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
                 };
                 let mut measured = budget();
                 let rendered = host
-                    .render(closure, nepl3_markup::mathml::Display::Block, &mut measured)
+                    .render_view(closure, nepl3_markup::mathml::Display::Block, &mut measured)
                     .map_err(err)?
                     .into_html(&mut measured)
                     .map_err(err)?;
@@ -725,7 +729,13 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
                     return Err("Doc Math record".into());
                 };
                 assert_eq!(
-                    outer.document.value.embeds[nested.embed.0 as usize].kind,
+                    outer
+                        .document
+                        .value
+                        .embeds
+                        .get(nested.embed.0 as usize)
+                        .ok_or("embed")?
+                        .kind,
                     nepl3_doc_core::model::EmbedKind::InlineMath
                 );
                 let [annotation] = nested.output.annotations.as_slice() else {
@@ -869,7 +879,7 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
                     &prepared,
                     &mut |actual, embed, _| {
                         calls += 1;
-                        assert_eq!(actual, &shared.value.embeds[embed.0 as usize]);
+                        assert_eq!(Some(*actual), shared.value.embeds.get(embed.0 as usize));
                         Ok::<_, ()>(HtmlRequest {
                             fragment: HtmlFragment {
                                 root: 0,
@@ -972,7 +982,7 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
                     }
                     let mut limited = Budget::new(limits);
                     let result = host
-                        .render(closure, nepl3_markup::mathml::Display::Block, &mut limited)
+                        .render_view(closure, nepl3_markup::mathml::Display::Block, &mut limited)
                         .map_err(err)
                         .and_then(|output| output.into_html(&mut limited).map_err(err));
                     assert!(result.is_err(), "no partial HTML after {reason:?}");
@@ -1044,9 +1054,9 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                     &mut codec,
                 )
                 .map_err(err)?;
-                let math = &document.value.embeds.first().ok_or("Math closure")?.closure;
+                let math = &document.value.embeds.get(0).ok_or("Math closure")?.closure;
                 let input = math
-                    .syntax
+                    .syntax()
                     .bundle
                     .validate_with_sources(registry, b, codec.source_admission())
                     .map_err(err)?;
@@ -1121,11 +1131,11 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                         .iter()
                         .any(|kind| matches!(kind, Kind::ForeignInline { .. }))
                 );
-                let guest = &sentence_value.value.embeds[0];
-                assert_eq!(guest.syntax.schema, compiled.doc.package.schema);
-                assert_eq!(guest.syntax.category, "Inline");
+                let guest = &sentence_value.value.embeds.entry(0).ok_or("embed")?;
+                assert_eq!(guest.syntax().schema, compiled.doc.package.schema);
+                assert_eq!(guest.syntax().category, "Inline");
                 let input = guest
-                    .syntax
+                    .syntax()
                     .bundle
                     .validate_with_sources(registry, b, codec.source_admission())
                     .map_err(err)?;
@@ -1202,8 +1212,8 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                 };
                 let mut measured = budget();
                 let composed = host
-                    .render(
-                        &document.value.embeds[0].closure,
+                    .render_view(
+                        &document.value.embeds.get(0).ok_or("embed")?.closure,
                         nepl3_markup::mathml::Display::Block,
                         &mut measured,
                     )
@@ -1250,8 +1260,8 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
                     }
                     let mut limited = Budget::new(limits);
                     let result = host
-                        .render(
-                            &document.value.embeds[0].closure,
+                        .render_view(
+                            &document.value.embeds.get(0).ok_or("embed")?.closure,
                             nepl3_markup::mathml::Display::Block,
                             &mut limited,
                         )
@@ -1298,10 +1308,10 @@ fn math_sentence_math_printing_preserves_recursive_source() -> Result<(), String
                     &mut codec,
                 )
                 .map_err(err)?;
-                let closure = document.value.embeds.first().ok_or("Math closure")?;
+                let closure = document.value.embeds.get(0).ok_or("Math closure")?;
                 let input = closure
                     .closure
-                    .syntax
+                    .syntax()
                     .bundle
                     .validate_with_sources(profile.registry(), b, codec.source_admission())
                     .map_err(err)?;
@@ -1336,7 +1346,7 @@ fn math_sentence_math_printing_preserves_recursive_source() -> Result<(), String
                     codec: &mut codec,
                 };
                 let html = host
-                    .render(&closure.closure, nepl3_markup::mathml::Display::Block, b)
+                    .render_view(&closure.closure, nepl3_markup::mathml::Display::Block, b)
                     .map_err(err)?
                     .into_html(b)
                     .map_err(err)?;

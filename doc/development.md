@@ -645,13 +645,14 @@ paths linear-time.
 
 ### Checked PageSet preparation reuse
 
-PageSet resolution hashes the exact generated guest closure descendants together
-with the enclosing PageSet and document values. It keeps all native closure,
+PageSet resolution hashes the enclosing PageSet and document values together.
+Guest identities now use versioned Foundation components and operation-domain
+wrapping; group NDF reuse across that encoding boundary remains unfinished. It keeps all native closure,
 source, environment and outer schema checks, and preserves independently
 separated digest domains. Standalone preparation still encodes/checks its input.
 Guest hash work now precedes label discovery, so competing failure order may
 change. Tests compare mixed empty/single/multiple guest pages with independent
-standalone closure identities and exact/one-short resource ceilings.
+standalone component identities and exact/one-short resource ceilings.
 
 The same operation retains immutable native document structures in CheckedPages.
 Selected Markdown Math preparation borrows these structures instead of repeating
@@ -682,7 +683,7 @@ actual encoding/hash outputs are separate measurements.
 
 ### PageSet guest digest の mapping scope 回帰確認（2026-10-10）
 
-`nepl3-doc-core` の `foreign` integration test に、外部 codec・親 DocumentSyntax・ForeignClosure 自身の mapping を分けた native fixture を追加した。外部 mapping の変更は closure bytes・document digest・PageSet identity を変えず、親文書の mapping の変更は guest identity を保持する。closure 自身の mapping の変更は guest・document・PageSet identity を変える。guest digest は `GUEST_DOMAIN` と独立した wire encoding の連結から照合し、PageSet 内の closure 値・standalone preparation・fresh codec での portable reconstruction とも比較する。
+`nepl3-doc-core` の `foreign` integration test に、外部 codec・親 DocumentSyntax・ForeignClosure 自身の mapping を分けた native fixture を追加した。外部 mapping の変更は closure bytes・document digest・PageSet identity を変えず、親文書の mapping の変更は guest identity を保持する。closure 自身の mapping の変更は guest・document・PageSet identity を変える。guest digest は各成分domain・Entry framing・operation domainと独立した wire encoding の連結から照合し、PageSet 内の group 値・standalone preparation・fresh codec での portable reconstruction とも比較する。
 
 closure-owned source endpoint を欠かした場合は、同じ endpoint が文書と外部 store にあっても standalone/batch とも拒否する。これは native FoundationCodec の所有境界を確認する回帰試験であり、任意の custom codec の文脈非依存性や全受入群の完了を主張しない。guest view に必須の mapping 自体を除去する別ケースは、この追加試験の範囲外である。
 

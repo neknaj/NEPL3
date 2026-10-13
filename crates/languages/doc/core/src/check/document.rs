@@ -6,7 +6,7 @@ use nepl3_core::{
     origin::{OriginError, OriginGraph, SourceMap},
     schema::SchemaRegistry,
     source::{SourceAdmission, SourceError, SourceStore},
-    syntax::SyntaxError,
+    syntax::{SyntaxError, group::GroupError},
     view::ViewError,
 };
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -17,10 +17,19 @@ pub enum StructureError {
     Origin(OriginError),
     View(ViewError),
     Syntax(SyntaxError),
+    Group(GroupError),
     DuplicateSource,
     OriginReference(u64),
     ViewOwner,
     FieldPosition(u64),
+}
+impl From<GroupError> for StructureError {
+    fn from(e: GroupError) -> Self {
+        match e.stop_reason() {
+            Some(s) => Self::Stopped(s),
+            None => Self::Group(e),
+        }
+    }
 }
 impl From<StopReason> for StructureError {
     fn from(v: StopReason) -> Self {
@@ -222,8 +231,11 @@ impl DocumentSyntax {
             let mut index = 0;
             while let Some((child, _)) = edges::edge(&self.value.nodes[*node].kind, index) {
                 b.charge(Resource::Work, 1)?;
-                depths[child as usize] =
-                    depths[child as usize].max(depths[*node].saturating_add(1));
+                depths[child as usize] = depths[child as usize].max(
+                    depths[*node]
+                        .checked_add(1)
+                        .ok_or_else(|| b.stop(StopReason::DepthLimit))?,
+                );
                 index += 1;
             }
             let embed = match self.value.nodes[*node].kind {
@@ -238,13 +250,10 @@ impl DocumentSyntax {
                 embeds[e as usize] = embeds[e as usize].max(depths[*node]);
             }
         }
-        let base = b.current_depth();
-        for (embed, depth) in self.value.embeds.iter().zip(embeds) {
-            b.with_depth_at_least::<_, StructureError>(base.saturating_add(depth), |b| {
-                embed.closure.validate(registry, b, admission)?;
-                Ok(())
-            })?;
-        }
+        self.value
+            .embeds
+            .group
+            .validate_at_depths(&embeds, registry, b, admission)?;
         Ok(ValidatedDocumentSyntax {
             document: self,
             shape,

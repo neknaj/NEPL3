@@ -1,5 +1,6 @@
 //! Conservative logical clone accounting for the common owned syntax model.
 //! No source admission or diagnostic/event counters are repeated by a storage copy.
+use super::foreign::group;
 use super::*;
 use crate::{source::*, value::*, view::*};
 trait CopyCost {
@@ -337,6 +338,36 @@ macro_rules! owned_part {
         }
     )*};
 }
+impl CopyCost for group::ForeignProvenance {
+    fn charge(&self, b: &mut Budget) -> Result<(), StopReason> {
+        slot::<Self>(b)?;
+        self.origins.charge(b)?;
+        self.sources.charge(b)?;
+        self.source_maps.charge(b)
+    }
+}
+impl CopyCost for group::ForeignOwnerEnvironment {
+    fn charge(&self, b: &mut Budget) -> Result<(), StopReason> {
+        slot::<Self>(b)?;
+        self.environment.charge(b)
+    }
+}
+impl CopyCost for group::ForeignGroupEntry {
+    fn charge(&self, b: &mut Budget) -> Result<(), StopReason> {
+        slot::<Self>(b)?;
+        self.syntax.schema.charge(b)?;
+        self.syntax.category.charge(b)?;
+        self.syntax.bundle.charge_clone(b)
+    }
+}
+impl CopyCost for group::ForeignClosureGroup {
+    fn charge(&self, b: &mut Budget) -> Result<(), StopReason> {
+        slot::<Self>(b)?;
+        self.provenances.charge(b)?;
+        self.environments.charge(b)?;
+        self.entries.charge(b)
+    }
+}
 impl CopyCost for ForeignClosure {
     fn charge(&self, b: &mut Budget) -> Result<(), StopReason> {
         slot::<Self>(b)?;
@@ -355,5 +386,6 @@ owned_part!(
     EnvironmentEntry,
     Mapping,
     ViewBundle,
-    ForeignClosure
+    ForeignClosure,
+    group::ForeignClosureGroup
 );

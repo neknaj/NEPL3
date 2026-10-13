@@ -425,9 +425,9 @@ fn selected_foreign_inline_retains_closure_and_checks_identity() -> Result<(), S
     );
     assert_eq!(result.syntax_to_meaning, vec![Some(0)]);
     assert_eq!(result.value.embeds.len(), 1);
-    assert_eq!(result.value.embeds[0].syntax, guest);
+    assert_eq!(result.value.embeds.entries[0].syntax, guest);
     assert_eq!(
-        result.value.embeds[0].owner_environment,
+        result.value.embeds.environments[0].environment,
         bundle.environments[0]
     );
     let empty = nepl3_core::source::SourceStore::default();

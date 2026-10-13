@@ -8,6 +8,7 @@ mod stylesheet;
 pub use super::math::display::Preference as MathRenderer;
 use super::source::{Compiled, budget, compiled, err, with_named_input_limits};
 use nepl3_core::source::{Digest, SourceAdmission, SourceStore};
+use nepl3_core::value_codec::FoundationValueCodec;
 use nepl3_doc_core::check::Category;
 use nepl3_doc_html::{ParallelMode, RenderOptions};
 use nepl3_wire::foundation::FoundationCodec;
@@ -231,11 +232,11 @@ fn generate_impl(
             });
             let render_start = Instant::now();
             let mut math = Vec::new();
-            let mut adapter = |embed: &nepl3_doc_core::model::DocEmbed,
+            let mut adapter = |embed: &nepl3_doc_core::model::DocEmbedView<'_>,
                                index,
                                b: &mut nepl3_core::budget::Budget| {
                 if embed.kind == nepl3_doc_core::model::EmbedKind::Code {
-                    code::render(embed, tree, profile, b)
+                    code::render(embed, tree, profile, codec.source_admission(), b)
                 } else {
                     math::DisplayHost {
                         compiled,

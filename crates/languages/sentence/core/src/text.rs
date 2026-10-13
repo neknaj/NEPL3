@@ -78,7 +78,7 @@ impl<'a> PreparedText<'a> {
         let value = self.shape.value();
         if usize::try_from(embed.0)
             .ok()
-            .and_then(|i| value.embeds.get(i))
+            .and_then(|i| value.embeds.entry(i))
             .is_none()
         {
             return Err(Error::Embed(embed));

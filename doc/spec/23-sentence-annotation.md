@@ -27,7 +27,7 @@ rootはSentenceまたはInlineの型付き参照とし、公開LanguagePackage�
 Break、ExternalLink、ForeignInlineのいずれかである。子は順序付きの型付きindexで表す。
 Sentence/ConcatはInline列、Rubyはbaseとreading、InlineAnnoはbaseと順序付きnotesを持つ。
 Code/Textは文字列、Emphasis/StrongはInline一つ、Breakは子なし、ExternalLinkはURIとlabelを持つ。
-ForeignInlineは明示的なForeignClosureを参照し、言語名の閉じたenumを持たない。
+ForeignInlineは明示的なForeignClosureGroupのentryを参照し、言語名の閉じたenumを持たない。
 複数のforeign値の所有情報を共有する場合は[Foundationの共有所有契約](24-shared-foreign-owners.md)に従う。共有groupの検査だけで文章の出現深さやDoc consumer移行の成立を証明しない。
 
 文章内の外部URL構造はSentenceが所有する。page/section/anchorの名前解決、画像asset、
@@ -163,7 +163,7 @@ foreign-inlineは登録されたadapterが別の具体formで導入する。全g
 
 `lower::prefix_with_foreign`は、hostが選択した追加Inline formを受け取る。
 選択にはformのkind、guestの完全なschema identity、categoryを指定する。
-追加formは単一のforeign fieldを持ち、照合後にForeignClosureを保持する。
+追加formは単一のforeign fieldを持ち、照合後に元の所有者から一括captureしたForeignClosureGroupへ保持する。
 標準constructorの上書き、重複した選択、未選択のform、guest identityとcategoryの不一致を拒否する。
 `lower::presentation::sentence_with_foreign`は同じ選択を使い、意味nodeとSource/Origin/Viewの対応を保持する。
 この変換が行う操作は構造の取込みであり、guestの実行は別途認可された操作が担当する。

@@ -13,7 +13,7 @@ use nepl3_core::{
     schema::SchemaRegistry,
     value_codec::FoundationValueCodec,
 };
-use nepl3_doc_core::model::{DocEmbed, EmbedKind, EmbedRef};
+use nepl3_doc_core::model::{DocEmbedView, EmbedKind, EmbedRef};
 use nepl3_doc_html::ForeignPlacement;
 use nepl3_markup::{html::HtmlRequest, mathml::Display};
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -48,7 +48,7 @@ where
 {
     pub fn render(
         &mut self,
-        guest: &DocEmbed,
+        guest: &DocEmbedView<'_>,
         embed: EmbedRef,
         records: &mut Vec<Occurrence>,
         b: &mut Budget,
@@ -118,7 +118,7 @@ where
 pub fn compose(
     records: &mut [Occurrence],
     placements: &[ForeignPlacement],
-    embeds: &[DocEmbed],
+    embeds: &nepl3_doc_core::model::DocEmbeds,
     b: &mut Budget,
 ) -> Result<(), String> {
     let mut records = records.iter_mut();

@@ -2108,7 +2108,7 @@
     }
   ],
   "note": "Operation-level domain record constraints and sum variants are specified in the referenced chapters; domain constructor field order is design/forms.json.",
-  "design_revision": "nepl3-design-2026-10-13-r6",
+  "design_revision": "nepl3-design-2026-10-13-r7",
   "schema_status": "incomplete: see design/review.json R006; operation descriptions are not closed executable input/output schemas",
   "intrinsic_types": {
     "NdfValue": {

@@ -50,10 +50,14 @@ fn host_request(
         .collect::<Result<Vec<_>, String>>()?;
     let mut guests = Vec::new();
     for target in &identity.guests {
-        let embed = &doc.value.embeds[target.embed.0 as usize];
+        let embed = &doc
+            .value
+            .embeds
+            .get(target.embed.0 as usize)
+            .ok_or("embed")?;
         let binding = bindings
             .iter()
-            .find(|v| v.schema == embed.closure.syntax.schema)
+            .find(|v| v.schema == embed.closure.syntax().schema)
             .ok_or("explicit guest binding")?;
         let (_, alias, category) = selected
             .iter()
@@ -83,7 +87,7 @@ fn host_request(
         let tree = parse_source_as(&source, profile, alias, category, &mut b, &mut a)?;
         let proof = tree.validate(profile, &mut b, &mut a).map_err(err)?;
         assert_eq!(
-            guest_signature(&embed.closure.syntax.bundle),
+            guest_signature(&embed.closure.syntax().bundle),
             guest_signature(&tree.bundle)
         );
         let reply = nepl3_engine::parse::print::source_tree(&proof, &mut b, &mut a).map_err(err)?;
@@ -384,12 +388,14 @@ fn every_form_prints_through_real_parser_and_typed_first_receiver() -> Result<()
                                 .collect::<Vec<_>>(),
                             "{category}: {source}"
                         );
-                        for (expected, actual) in doc.value.embeds.iter().zip(&result.value.embeds)
-                        {
+                        assert_eq!(doc.value.embeds.len(), result.value.embeds.len());
+                        for index in 0..doc.value.embeds.len() {
+                            let expected = doc.value.embeds.get(index).ok_or("embed")?;
+                            let actual = result.value.embeds.get(index).ok_or("embed")?;
                             assert_eq!(expected.kind, actual.kind);
                             assert_eq!(
-                                guest_signature(&expected.closure.syntax.bundle),
-                                guest_signature(&actual.closure.syntax.bundle)
+                                guest_signature(&expected.closure.syntax().bundle),
+                                guest_signature(&actual.closure.syntax().bundle)
                             );
                         }
                         Ok(())
@@ -718,7 +724,7 @@ fn standalone_guest_fragments_keep_concrete_entry_and_foreign_syntax() -> Result
                     syntax: EmbedRef(0)
                 }
             );
-            assert_eq!(doc.value.embeds[0].kind, EmbedKind::Guest);
+            assert_eq!(doc.value.embeds.kinds[0], EmbedKind::Guest);
             assert_eq!(
                 doc.value.root,
                 match category {
@@ -747,7 +753,7 @@ fn standalone_guest_fragments_keep_concrete_entry_and_foreign_syntax() -> Result
                 &mut budget(),
             )
             .map_err(err)?;
-            assert_doc_retention(&doc, &actual);
+            assert_doc_retention(&doc, &actual)?;
             let mut wrong = doc.value.clone();
             wrong.root = if language == GuestLanguage::Math {
                 DocRoot::CircuitGuest(GuestRef(0))
@@ -961,7 +967,9 @@ fn printer_requires_explicit_current_guest_print_and_binding_at_first_receiver()
                     Err(nepl3_doc_core::portable::PortableError::Shape)
                 ));
             }
-            let bundle = &mut synthetic.document.value.embeds[0].closure.syntax.bundle;
+            let bundle = &mut synthetic.document.value.embeds.group.entries[0]
+                .syntax
+                .bundle;
             let root = bundle.root.0 as usize;
             bundle.nodes[root].cover = None;
             bundle.nodes[root].head = None;
@@ -1049,7 +1057,15 @@ fn fragment_preserves_shared_foreign_syntax_and_rejects_invalid_inputs() -> Resu
             let DocKind::InlineMath { syntax } = doc.value.nodes[selected.0 as usize].kind else {
                 return Err("math".into());
             };
-            let retained = doc.value.embeds[syntax.0 as usize].clone();
+            let retained = doc
+                .value
+                .embeds
+                .get(syntax.0 as usize)
+                .ok_or("embed")?
+                .closure
+                .materialize(&mut budget())
+                .map_err(err)?;
+            let retained_kind = doc.value.embeds.kinds[syntax.0 as usize];
             let selected_node = doc.value.nodes[selected.0 as usize].clone();
             let shared_embed = InlineRef(doc.value.nodes.len() as u64);
             doc.value.nodes.push(selected_node.clone());
@@ -1093,7 +1109,11 @@ fn fragment_preserves_shared_foreign_syntax_and_rejects_invalid_inputs() -> Resu
                     inlines: vec![InlineRef(0), InlineRef(1), InlineRef(0)]
                 }
             );
-            assert_eq!(result.value.embeds, vec![retained]);
+            assert_eq!(result.value.embeds.kinds, vec![retained_kind]);
+            assert_eq!(
+                result.value.embeds.get(0).ok_or("embed")?.closure,
+                retained.view()
+            );
             assert_eq!(result.sources, doc.sources);
             assert_eq!(result.origins, doc.origins);
             assert_eq!(result.views, doc.views);
@@ -1487,7 +1507,7 @@ fn typed_list_construction_preserves_order_and_inline_structure() -> Result<(), 
                         span: None,
                     })
                     .collect(),
-                embeds: vec![],
+                embeds: Default::default(),
             },
             sources: vec![],
             origins: vec![],
@@ -1597,7 +1617,7 @@ fn printer_expands_shared_paths_with_bounded_output_and_deep_cleanup() -> Result
                 value: DocValue {
                     root: DocRoot::Inline(InlineRef(depth)),
                     nodes,
-                    embeds: vec![],
+                    embeds: Default::default(),
                 },
                 sources: vec![],
                 origins: vec![],

@@ -124,7 +124,7 @@ article ja "NEPL3" body
     cons sentence
       cons ruby text "設計識別子" text "せっけいしきべつし"
       cons text "は "
-      cons code "nepl3-design-2026-10-13-r6"
+      cons code "nepl3-design-2026-10-13-r7"
       cons text "。"
       nil
     cons sentence

@@ -90,7 +90,7 @@ pub(super) fn render_member<C: FoundationValueCodec>(
                 codec: host.codec,
             };
             let result = host
-                .render(&guest.closure, nepl3_markup::mathml::Display::Inline, b)
+                .render_view(&guest.closure, nepl3_markup::mathml::Display::Inline, b)
                 .map_err(|error| {
                     match b.charge(
                         Resource::AllocationUnits,

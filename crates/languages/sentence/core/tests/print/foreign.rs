@@ -14,7 +14,7 @@ fn caller_depth_is_counted_once_at_the_exact_limit() -> Result<(), String> {
     let value = SentenceValue {
         root: Root::Inline(InlineRef(0)),
         nodes: vec![Kind::Text { text: "x".into() }],
-        embeds: vec![],
+        embeds: Default::default(),
     };
     let registry = SchemaRegistry::default();
     let prepared = print::prepare(&value, &registry, &mut b(), &mut SourceAdmission::default())
@@ -106,7 +106,21 @@ fn fixture() -> Result<(SchemaRegistry, SentenceValue), String> {
                     inlines: vec![InlineRef(0), InlineRef(0)],
                 },
             ],
-            embeds: vec![closure],
+            embeds: nepl3_core::syntax::group::ForeignClosureGroup {
+                provenances: vec![nepl3_core::syntax::group::ForeignProvenance {
+                    origins: closure.owner_origins,
+                    sources: closure.owner_sources,
+                    source_maps: closure.owner_source_maps,
+                }],
+                environments: vec![nepl3_core::syntax::group::ForeignOwnerEnvironment {
+                    provenance: nepl3_core::syntax::group::ProvenanceRef(0),
+                    environment: closure.owner_environment,
+                }],
+                entries: vec![nepl3_core::syntax::group::ForeignGroupEntry {
+                    owner: nepl3_core::syntax::group::OwnerEnvironmentRef(0),
+                    syntax: closure.syntax,
+                }],
+            },
         },
     ))
 }
@@ -178,7 +192,7 @@ fn selected_source_is_owner_bound_and_shared_occurrences_are_printed() -> Result
         Err(Error::WrongScope)
     );
     let mut invalid = value.clone();
-    invalid.embeds[0].syntax.environment.id = 1;
+    invalid.embeds.entries[0].syntax.environment.id = 1;
     assert!(
         print::prepare(
             &invalid,

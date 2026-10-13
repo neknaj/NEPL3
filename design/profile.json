@@ -28,7 +28,7 @@
     "circuit.facts/v1"
   ],
   "external_environment_policy": "explicit-projection-only",
-  "design_revision": "nepl3-design-2026-10-13-r6",
+  "design_revision": "nepl3-design-2026-10-13-r7",
   "schema_owners": {
     "Grammar": {
       "surface_package": "nepl3.syntax.grammar",

@@ -19,7 +19,7 @@ use nepl3_core::{
 };
 
 pub const DOCUMENT_DOMAIN: &[u8] = b"NEPL3.Doc.Print.Document.v1\0";
-pub const GUEST_DOMAIN: &[u8] = b"NEPL3.Doc.Print.Guest.v1\0";
+pub const GUEST_DOMAIN: &[u8] = b"NEPL3.Doc.Print.Guest.v2\0";
 
 /// Retrieve retained bytes only. This does not certify correspondence between
 /// the current guest syntax and that source, and `print` never calls it as a
@@ -36,7 +36,7 @@ pub fn original_guest_source<'a>(
         .ok()
         .and_then(|i| document.value.embeds.get(i))
         .ok_or(crate::check::ShapeError::Embed(embed.0))?;
-    let bundle = &guest.closure.syntax.bundle;
+    let bundle = &guest.closure.syntax().bundle;
     let root = bundle.node(bundle.root)?;
     let Some(cover) = &root.cover else {
         return Ok(None);
@@ -66,14 +66,9 @@ pub fn identity<C: FoundationValueCodec>(
         .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
         .map_err(boundary)?;
     let mut guests = Vec::new();
-    for (index, embed) in document.value.embeds.iter().enumerate() {
+    let guest_digests = crate::identity::guests(&document.value.embeds.group, GUEST_DOMAIN, c, b)?;
+    for (index, guest_digest) in guest_digests.into_iter().enumerate() {
         b.charge(Resource::Work, 1)?;
-        let value = c
-            .encode_foreign_closure(&embed.closure, b)
-            .map_err(boundary)?;
-        let guest_digest = c
-            .canonical_value_digest(GUEST_DOMAIN, &value, b)
-            .map_err(boundary)?;
         b.charge(
             Resource::AllocationUnits,
             core::mem::size_of::<PrintGuestTarget>() as u64,

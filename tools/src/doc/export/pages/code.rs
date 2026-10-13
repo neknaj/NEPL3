@@ -6,7 +6,7 @@ use nepl3_core::{
     schema::SchemaRegistry,
     value_codec::FoundationValueCodec,
 };
-use nepl3_doc_core::model::{DocEmbed, DocumentSyntax, EmbedKind, EmbedRef};
+use nepl3_doc_core::model::{DocEmbedView, DocumentSyntax, EmbedKind, EmbedRef};
 use nepl3_engine::{profile::ResolvedParseProfile, tree::ValidatedParseTree};
 use nepl3_markup::html::{HtmlAttribute, HtmlFragment, HtmlNode, HtmlPolicy, HtmlRequest, HtmlTag};
 
@@ -19,15 +19,17 @@ pub(super) struct PreparedPageCode {
     entries: Vec<Entry>,
 }
 
-fn digest(embed: &DocEmbed, registry: &SchemaRegistry, b: &mut Budget) -> Result<Digest, String> {
+fn digest(
+    embed: &DocEmbedView<'_>,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<Digest, String> {
     let store = SourceStore::default();
     let mut admission = SourceAdmission::default();
     let mut codec = FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
-    let value = codec
-        .encode_foreign_closure(&embed.closure, b)
-        .map_err(err)?;
+    let value = codec.encode_foreign_view(&embed.closure, b).map_err(err)?;
     codec
-        .canonical_value_digest(nepl3_doc_core::prepare::GUEST_DOMAIN, &value, b)
+        .canonical_value_digest(b"NEPL3.Doc.Host.CodeInput.v1\0", &value, b)
         .map_err(err)
 }
 
@@ -39,13 +41,20 @@ impl PreparedPageCode {
         b: &mut Budget,
     ) -> Result<Self, String> {
         let mut entries = Vec::new();
-        for (index, embed) in document.value.embeds.iter().enumerate() {
+        for index in 0..document.value.embeds.len() {
+            let embed = document.value.embeds.get(index).ok_or("CodeInputMissing")?;
             b.charge(Resource::Work, 1).map_err(err)?;
             if embed.kind != EmbedKind::Code {
                 continue;
             }
-            let digest = digest(embed, profile.registry(), b)?;
-            let markup = super::super::code::render(embed, tree, profile, b)?;
+            let digest = digest(&embed, profile.registry(), b)?;
+            let markup = super::super::code::render(
+                &embed,
+                tree,
+                profile,
+                &mut SourceAdmission::default(),
+                b,
+            )?;
             b.charge(
                 Resource::AllocationUnits,
                 (2 * core::mem::size_of::<Entry>()) as u64,
@@ -62,7 +71,7 @@ impl PreparedPageCode {
 
     pub(super) fn render(
         &self,
-        embed: &DocEmbed,
+        embed: &DocEmbedView<'_>,
         index: EmbedRef,
         registry: &SchemaRegistry,
         b: &mut Budget,
@@ -191,20 +200,20 @@ mod tests {
             cases.push(result);
         }
         let (document, prepared) = &cases[0];
-        let embed = document.value.embeds.first().ok_or("embed missing")?;
+        let embed = document.value.embeds.get(0).ok_or("embed missing")?;
         let foreign = cases[1]
             .0
             .value
             .embeds
-            .first()
+            .get(0)
             .ok_or("other embed missing")?;
         assert_eq!(
-            prepared.render(foreign, EmbedRef(0), &compiled.doc.registry, &mut budget()),
+            prepared.render(&foreign, EmbedRef(0), &compiled.doc.registry, &mut budget()),
             Err("CodeInputMismatch".into())
         );
         assert_eq!(
             prepared.render(
-                embed,
+                &embed,
                 EmbedRef(u64::MAX),
                 &compiled.doc.registry,
                 &mut budget()
@@ -212,9 +221,9 @@ mod tests {
             Err("CodeInputMissing".into())
         );
         let mut b = budget();
-        let first = prepared.render(embed, EmbedRef(0), &compiled.doc.registry, &mut b)?;
+        let first = prepared.render(&embed, EmbedRef(0), &compiled.doc.registry, &mut b)?;
         let usage = b.usage();
-        let second = prepared.render(embed, EmbedRef(0), &compiled.doc.registry, &mut b)?;
+        let second = prepared.render(&embed, EmbedRef(0), &compiled.doc.registry, &mut b)?;
         assert_eq!(first, second);
         assert!(b.usage().allocation_units > usage.allocation_units);
         assert!(b.usage().work > usage.work);
@@ -228,7 +237,7 @@ mod tests {
             let mut limited = Budget::new(limits);
             assert!(
                 prepared
-                    .render(embed, EmbedRef(0), &compiled.doc.registry, &mut limited)
+                    .render(&embed, EmbedRef(0), &compiled.doc.registry, &mut limited)
                     .is_err()
             );
             assert_eq!(limited.poll(), Err(reason));

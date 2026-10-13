@@ -17,6 +17,7 @@ pub enum Error<E> {
     Sentence(nepl3_sentence_core::syntax::Error),
     Shape(nepl3_sentence_core::check::Error),
     Closure(SyntaxError),
+    MissingEmbed(EmbedRef),
     Lower(super::literal::Error<E>),
 }
 impl<E> From<StopReason> for Error<E> {
@@ -125,15 +126,19 @@ fn collect_inner<C: FoundationValueCodec>(
     let base = b.current_depth();
     for occurrence in occurrences {
         let index = occurrence.embed.0 as usize;
-        let closure = &sentence.value.embeds[index];
+        let closure = sentence
+            .value
+            .embeds
+            .entry(index)
+            .ok_or(Error::MissingEmbed(occurrence.embed))?;
         b.charge(
             Resource::Work,
             (surface.package.len()
-                + closure.syntax.schema.package.len()
-                + closure.syntax.category.len()) as u64
+                + closure.syntax().schema.package.len()
+                + closure.syntax().category.len()) as u64
                 + 70,
         )?;
-        if &closure.syntax.schema != surface || closure.syntax.category != "Inline" {
+        if &closure.syntax().schema != surface || closure.syntax().category != "Inline" {
             continue;
         }
         let document = match mapping[index] {
@@ -144,7 +149,7 @@ fn collect_inner<C: FoundationValueCodec>(
                         .validate(registry, b, codec.source_admission())
                         .map_err(Error::Closure)?;
                     let input = closure
-                        .syntax
+                        .syntax()
                         .bundle
                         .validate_with_sources(registry, b, codec.source_admission())
                         .map_err(Error::Closure)?;

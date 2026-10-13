@@ -229,12 +229,10 @@
         [
           "embeds",
           {
-            "list": {
-              "named": {
-                "package": "nepl3.foundation",
-                "revision": 1,
-                "name": "ForeignClosure"
-              }
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "ForeignClosureGroup"
             }
           }
         ]

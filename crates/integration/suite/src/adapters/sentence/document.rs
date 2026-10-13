@@ -134,7 +134,7 @@ pub fn document(
         value: d::DocValue {
             root,
             nodes,
-            embeds: Vec::new(),
+            embeds: Default::default(),
         },
         sources: Vec::new(),
         origins: Vec::new(),

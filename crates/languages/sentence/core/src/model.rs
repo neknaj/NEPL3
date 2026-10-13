@@ -1,7 +1,7 @@
 //! Sentence content has no document or host-annotation role. Source/Origin and
 //! syntax views are a separate boundary; raw arena values are not proofs.
 use alloc::{string::String, vec::Vec};
-use nepl3_core::syntax::ForeignClosure;
+use nepl3_core::syntax::group::ForeignClosureGroup;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct SentenceRef(pub u64);
@@ -61,7 +61,7 @@ pub enum Kind {
 pub struct SentenceValue {
     pub root: Root,
     pub nodes: Vec<Kind>,
-    pub embeds: Vec<ForeignClosure>,
+    pub embeds: ForeignClosureGroup,
 }
 
 impl Kind {

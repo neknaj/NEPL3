@@ -317,22 +317,31 @@ fn plain_text_first_receiver_rejects_old_source_other_guest_and_owner_environmen
                     changed = newer_source.clone();
                 }
                 1 => {
-                    changed.value.embeds.swap(0, 1);
+                    changed.value.embeds.kinds.swap(0, 1);
+                    changed.value.embeds.group.entries.swap(0, 1);
                 }
                 _ => {
-                    let closure = &mut changed.value.embeds[0].closure;
-                    closure.owner_environment.value.resources.push(
-                        nepl3_core::syntax::ResourceContent {
+                    let group = &mut changed.value.embeds.group;
+                    let owner = group.entries[0].owner;
+                    let environment = &mut group.environments[owner.0 as usize].environment;
+                    environment
+                        .value
+                        .resources
+                        .push(nepl3_core::syntax::ResourceContent {
                             id: "host-context".into(),
                             digest: Digest::of(b"new context"),
                             bytes: b"new context".to_vec(),
-                        },
-                    );
+                        });
                     let digest = c
-                        .environment_digest(&closure.owner_environment.value, &mut budget())
+                        .environment_digest(&environment.value, &mut budget())
                         .map_err(err)?;
-                    closure.owner_environment.digest = digest;
-                    closure.syntax.environment.digest = digest;
+                    environment.digest = digest;
+                    // All guests selecting the shared environment retain its exact digest.
+                    for entry in &mut group.entries {
+                        if entry.owner == owner {
+                            entry.syntax.environment.digest = digest;
+                        }
+                    }
                 }
             }
             let mut fresh_admission = SourceAdmission::default();

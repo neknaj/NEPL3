@@ -285,6 +285,6 @@
     "host_json": "Internal parsed-unchecked envelope with nodes; exact field sets and types are checked, strings moved into native tree. Outer transport caps bytes before JSON decoding and owns source identity/cancellation; this JSON is not the portable provider ABI"
   },
   "default_deny": true,
-  "design_revision": "nepl3-design-2026-10-13-r6",
+  "design_revision": "nepl3-design-2026-10-13-r7",
   "html_profile": "interfaces/markup.json and doc/spec/19-html-fragment.md define flat Text/Element/MathElement nodes. HTML admits math roots (inline in phrasing, either display in flow); mtext admits checked HTML phrasing. IDs, ancestry and depth cross namespaces. SVG, KaTeX profiles and full artifact preparation remain required, not silently accepted."
 }

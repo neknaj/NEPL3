@@ -29,7 +29,7 @@ fn document(source: SourceSnapshot) -> DocumentSyntax {
                 span: None,
                 locations: vec![],
             }],
-            embeds: vec![],
+            embeds: Default::default(),
         },
         sources: vec![source],
         origins: vec![],

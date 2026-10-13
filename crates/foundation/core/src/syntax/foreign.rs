@@ -15,7 +15,7 @@ pub struct ForeignClosure {
 }
 /// Borrowed closed components. A view owns no data and carries no validation
 /// proof; standalone and grouped owners expose the same explicit boundary.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct ForeignClosureView<'a> {
     syntax: &'a ForeignSyntax,
     environment: &'a EnvironmentEntry,
@@ -38,6 +38,21 @@ impl<'a> ForeignClosureView<'a> {
     }
     pub fn owner_source_maps(&self) -> &'a [Mapping] {
         self.source_maps
+    }
+    /// Fresh receiving-operation validation under the actual caller depth and
+    /// current limits. A borrowed view itself carries no validation authority.
+    pub fn validate(
+        &self,
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<(), SyntaxError> {
+        b.poll()?;
+        validate_syntax(self.syntax, registry, b, admission)?;
+        association(self.syntax, self.environment)?;
+        validate_provenance(self.origins, self.sources, self.source_maps, b, admission)?;
+        environment(&self.environment.value, self.origins.len(), registry, b)?;
+        Ok(())
     }
     /// Explicitly copy a standalone closure. No source/semantic validity is
     /// inferred here; callers validate at their receiving operation boundary.
@@ -85,22 +100,7 @@ impl ForeignClosure {
         b: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<ValidatedForeignClosure<'a>, SyntaxError> {
-        b.poll()?;
-        validate_syntax(&self.syntax, registry, b, admission)?;
-        association(&self.syntax, &self.owner_environment)?;
-        validate_provenance(
-            &self.owner_origins,
-            &self.owner_sources,
-            &self.owner_source_maps,
-            b,
-            admission,
-        )?;
-        environment(
-            &self.owner_environment.value,
-            self.owner_origins.len(),
-            registry,
-            b,
-        )?;
+        self.view().validate(registry, b, admission)?;
         Ok(ValidatedForeignClosure { value: self })
     }
     /// Capture a foreign field of this exact checked owner. Tables retain owner

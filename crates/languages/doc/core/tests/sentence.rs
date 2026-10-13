@@ -76,7 +76,7 @@ fn text_merge_preserves_known_and_source_less_provenance() -> Result<(), String>
                     span: None,
                 },
             ],
-            embeds: vec![],
+            embeds: Default::default(),
         },
         sources: vec![source],
         origins: vec![Origin::Direct(span.clone())],

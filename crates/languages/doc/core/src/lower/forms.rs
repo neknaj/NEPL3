@@ -63,20 +63,19 @@ impl Adapter<'_, '_> {
                     "Form:DocGuest" => GuestLanguage::Doc,
                     _ => return Err(LowerError::Unsupported { node: id }),
                 };
-                let closure = ForeignClosure::capture_at(
-                    self.checked,
-                    id,
-                    0,
-                    self.registry,
-                    self.b,
-                    admission,
-                )?;
+                let field = CaptureField {
+                    owner: 0,
+                    node: id,
+                    field: 0,
+                };
+                let depth = self.b.current_depth();
                 let syntax = EmbedRef(self.embeds.len() as u64);
                 push(
                     &mut self.embeds,
-                    DocEmbed {
+                    CapturedEmbed {
                         kind: EmbedKind::Guest,
-                        closure,
+                        field,
+                        depth,
                     },
                     self.b,
                 )?;

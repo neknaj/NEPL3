@@ -251,7 +251,7 @@ fn document(catalog: &Catalog, language: &str) -> Result<DocumentSyntax> {
         value: DocValue {
             root,
             nodes: b.nodes,
-            embeds: vec![],
+            embeds: Default::default(),
         },
         sources: vec![],
         origins: vec![],

@@ -81,28 +81,20 @@ impl DocumentSyntax {
                 count += 1;
             }
         }
-        let mut output = self.clone_with_budget(budget)?;
+        let mut output = self.clone_without_embeds(budget)?;
         let mut nodes = core::mem::take(&mut output.value.nodes);
         budget.charge(
             Resource::AllocationUnits,
-            (output.value.embeds.len() as u64)
-                .saturating_mul(core::mem::size_of::<Option<crate::model::DocEmbed>>() as u64),
+            (self.value.embeds.len() as u64)
+                .saturating_mul(8 + core::mem::size_of::<crate::model::EmbedKind>() as u64),
         )?;
-        let mut embeds: Vec<_> = core::mem::take(&mut output.value.embeds)
-            .into_iter()
-            .map(Some)
-            .collect();
+        let mut selected_embeds = Vec::with_capacity(self.value.embeds.len());
+        let mut kinds = Vec::with_capacity(self.value.embeds.len());
         budget.charge(
             Resource::AllocationUnits,
             count.saturating_mul(core::mem::size_of::<crate::model::DocNode>() as u64),
         )?;
-        budget.charge(
-            Resource::AllocationUnits,
-            (embeds.len() as u64)
-                .saturating_mul(core::mem::size_of::<crate::model::DocEmbed>() as u64),
-        )?;
         output.value.nodes = Vec::with_capacity(count as usize);
-        output.value.embeds = Vec::with_capacity(embeds.len());
         // Move owned slots; no unmetered deep clone of a guest.
         for &old in checked.shape().postorder() {
             budget.charge(Resource::Work, 1)?;
@@ -125,10 +117,16 @@ impl DocumentSyntax {
             if let Some(embed) = embed {
                 let old = embed.0 as usize;
                 if embed_mapping[old] == u64::MAX {
-                    embed_mapping[old] = output.value.embeds.len() as u64;
-                    // Keep the full ForeignClosure byte-for-byte.
-                    let moved = embeds[old].take().ok_or(ShapeError::Embed(old as u64))?;
-                    output.value.embeds.push(moved);
+                    embed_mapping[old] = selected_embeds.len() as u64;
+                    selected_embeds.push(old as u64);
+                    kinds.push(
+                        *self
+                            .value
+                            .embeds
+                            .kinds
+                            .get(old)
+                            .ok_or(ShapeError::Embed(old as u64))?,
+                    );
                 }
                 embed.0 = embed_mapping[old];
             }
@@ -149,6 +147,13 @@ impl DocumentSyntax {
                     .push(owned[old].take().ok_or(ShapeError::Reference(old as u64))?);
             }
         }
+        let group = self
+            .value
+            .embeds
+            .group
+            .validate(registry, budget, admission)?
+            .select(&selected_embeds, registry, budget, admission)?;
+        output.value.embeds = crate::model::DocEmbeds { kinds, group };
         output.value.root = root;
         edges::rewrite_root(&mut output.value.root, |id| Ok(mapping[id as usize]))?;
         output.validate_structure(registry, budget, admission)?;

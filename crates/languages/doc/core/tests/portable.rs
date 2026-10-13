@@ -163,7 +163,7 @@ fn document_fixture(source: SourceSnapshot, r: &SchemaRegistry) -> Result<Docume
         value: DocValue {
             root: DocRoot::Sentence(SentenceRef(7)),
             nodes,
-            embeds: vec![],
+            embeds: Default::default(),
         },
         views: vec![DocView {
             head: source.span(0, 27).map_err(err)?,

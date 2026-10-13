@@ -2,7 +2,7 @@
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::SchemaRegistry,
-    syntax::{ForeignClosure, SyntaxError},
+    syntax::{ForeignClosure, ForeignClosureView, SyntaxError},
     value::SchemaRef,
     value_codec::FoundationValueCodec,
 };
@@ -130,9 +130,10 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
         )?;
         let mut sources = Vec::with_capacity(sentence.value.embeds.len());
         let base = b.current_depth();
-        for (closure, depth) in sentence.value.embeds.iter().zip(depths) {
+        for (index, depth) in depths.into_iter().enumerate() {
+            let closure = sentence.value.embeds.entry(index).ok_or(Error::Selection)?;
             let (prefix, source) = b.with_depth_at_least(base.saturating_add(depth), |b| {
-                if selected(closure, self.math_surface, "Expr", b)? {
+                if selected(&closure, self.math_surface, "Expr", b)? {
                     let spelling = foreign_spelling(
                         self.registry,
                         self.sentence_package,
@@ -141,8 +142,8 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
                         "Expr",
                         b,
                     )?;
-                    self.math(closure, b).map(|source| (spelling, source))
-                } else if selected(closure, self.doc_surface, "Inline", b)? {
+                    self.math(&closure, b).map(|source| (spelling, source))
+                } else if selected(&closure, self.doc_surface, "Inline", b)? {
                     let spelling = foreign_spelling(
                         self.registry,
                         self.sentence_package,
@@ -151,7 +152,7 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
                         "Inline",
                         b,
                     )?;
-                    self.document_inline(closure, b)
+                    self.document_inline(&closure, b)
                         .map(|source| (spelling, source))
                 } else {
                     Err(Error::Selection)
@@ -188,7 +189,7 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
 
     fn math(
         &mut self,
-        closure: &ForeignClosure,
+        closure: &ForeignClosureView<'_>,
         b: &mut Budget,
     ) -> Result<String, Error<C::Error>> {
         if !selected(closure, self.math_surface, "Expr", b)? {
@@ -198,13 +199,13 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
             .validate(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
         let input = closure
-            .syntax
+            .syntax()
             .bundle
             .validate_with_sources(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
         let math = nepl3_math_core::lower::expression(
             &input,
-            &closure.syntax.schema,
+            &closure.syntax().schema,
             nepl3_math_core::check::Category::Expr,
             self.registry,
             b,
@@ -227,7 +228,7 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
 
     fn document_inline(
         &mut self,
-        closure: &ForeignClosure,
+        closure: &ForeignClosureView<'_>,
         b: &mut Budget,
     ) -> Result<String, Error<C::Error>> {
         use nepl3_doc_core::{check, model::GuestLanguage, print};
@@ -235,13 +236,13 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
             .validate(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
         let input = closure
-            .syntax
+            .syntax()
             .bundle
             .validate_with_sources(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
         let document = nepl3_suite::adapters::sentence::literal::lower(
             &input,
-            &closure.syntax.schema,
+            &closure.syntax().schema,
             check::Category::Inline,
             self.registry,
             b,
@@ -261,13 +262,11 @@ impl<C: FoundationValueCodec> SentenceGuestPrinter<'_, C> {
             .try_reserve_exact(document.value.embeds.len())
             .map_err(|_| b.stop(StopReason::AllocationLimit))?;
         let base = b.current_depth();
-        for ((embed, target), depth) in document
-            .value
-            .embeds
-            .iter()
-            .zip(&identity.guests)
-            .zip(depths)
-        {
+        if identity.guests.len() != depths.len() || depths.len() != document.value.embeds.len() {
+            return Err(Error::Selection);
+        }
+        for (index, (target, depth)) in identity.guests.iter().zip(depths).enumerate() {
+            let embed = document.value.embeds.get(index).ok_or(Error::Selection)?;
             let text = b.with_depth_at_least(base.saturating_add(depth), |b| {
                 self.math(&embed.closure, b)
             })?;
@@ -390,7 +389,7 @@ fn foreign_spelling<'a, E>(
 }
 
 fn selected(
-    closure: &ForeignClosure,
+    closure: &ForeignClosureView<'_>,
     surface: Option<&SchemaRef>,
     category: &str,
     b: &mut Budget,
@@ -400,11 +399,11 @@ fn selected(
     };
     b.charge(
         Resource::Work,
-        (closure.syntax.schema.package.len()
+        (closure.syntax().schema.package.len()
             + surface.package.len()
-            + closure.syntax.category.len()
+            + closure.syntax().category.len()
             + category.len()) as u64
             + 64,
     )?;
-    Ok(&closure.syntax.schema == surface && closure.syntax.category == category)
+    Ok(&closure.syntax().schema == surface && closure.syntax().category == category)
 }

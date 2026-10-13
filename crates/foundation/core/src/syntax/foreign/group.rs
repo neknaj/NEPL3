@@ -25,7 +25,7 @@ pub struct ForeignGroupEntry {
     pub owner: OwnerEnvironmentRef,
     pub syntax: ForeignSyntax,
 }
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ForeignClosureGroup {
     pub provenances: Vec<ForeignProvenance>,
     pub environments: Vec<ForeignOwnerEnvironment>,
@@ -44,6 +44,15 @@ pub enum GroupError {
     Owner(u64),
     Entry(u64),
     DuplicateOwner { first: u64, second: u64 },
+}
+impl GroupError {
+    pub fn stop_reason(&self) -> Option<StopReason> {
+        match self {
+            Self::Stopped(s) => Some(*s),
+            Self::Syntax(e) => e.stop_reason(),
+            _ => None,
+        }
+    }
 }
 impl From<StopReason> for GroupError {
     fn from(reason: StopReason) -> Self {
@@ -68,13 +77,23 @@ impl<'a> ValidatedForeignGroup<'a> {
     /// Borrow a guest's explicit components without materializing owner tables.
     /// This view itself is not a transferable validation proof.
     pub fn entry(&self, number: usize) -> Option<ForeignClosureView<'a>> {
-        let entry = self.value.entries.get(number)?;
+        self.value.entry(number)
+    }
+}
+impl ForeignClosureGroup {
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty() && self.environments.is_empty() && self.provenances.is_empty()
+    }
+    /// Bounds-checked borrowed components, not a validation proof.
+    pub fn entry(&self, number: usize) -> Option<ForeignClosureView<'_>> {
+        let entry = self.entries.get(number)?;
         let owner = self
-            .value
             .environments
             .get(usize::try_from(entry.owner.0).ok()?)?;
         let provenance = self
-            .value
             .provenances
             .get(usize::try_from(owner.provenance.0).ok()?)?;
         Some(ForeignClosureView {

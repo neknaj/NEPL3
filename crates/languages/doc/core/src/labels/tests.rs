@@ -70,7 +70,7 @@ fn native_structure_proof_reuses_validation_and_keeps_labels() -> Result<(), all
                     span: None,
                 })
                 .collect(),
-            embeds: vec![],
+            embeds: Default::default(),
         },
         sources: vec![],
         origins: vec![],

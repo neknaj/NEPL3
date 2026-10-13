@@ -4,6 +4,12 @@ impl DocumentSyntax {
     /// Storage/work accounting only; operation owners separately admit sources
     /// and check structure. Recursive Doc ownership is represented by arena IDs.
     pub fn clone_with_budget(&self, b: &mut Budget) -> Result<Self, StopReason> {
+        self.clone_parts(true, b)
+    }
+    pub(crate) fn clone_without_embeds(&self, b: &mut Budget) -> Result<Self, StopReason> {
+        self.clone_parts(false, b)
+    }
+    fn clone_parts(&self, copy_embeds: bool, b: &mut Budget) -> Result<Self, StopReason> {
         b.charge(
             Resource::AllocationUnits,
             core::mem::size_of::<Self>() as u64,
@@ -31,12 +37,13 @@ impl DocumentSyntax {
                 bytes.saturating_add(core::mem::size_of::<DocNode>() as u64),
             )?;
         }
-        for embed in &self.value.embeds {
+        if copy_embeds {
+            b.charge(Resource::Work, self.value.embeds.kinds.len() as u64)?;
             b.charge(
                 Resource::AllocationUnits,
-                core::mem::size_of::<DocEmbed>() as u64,
+                (self.value.embeds.kinds.len() * core::mem::size_of::<EmbedKind>()) as u64,
             )?;
-            embed.closure.charge_clone(b)?;
+            self.value.embeds.group.charge_clone(b)?;
         }
         for source in &self.sources {
             b.charge(
@@ -71,7 +78,21 @@ impl DocumentSyntax {
             )?;
             map.charge_clone(b)?;
         }
-        Ok(self.clone())
+        Ok(Self {
+            value: DocValue {
+                root: self.value.root,
+                nodes: self.value.nodes.clone(),
+                embeds: if copy_embeds {
+                    self.value.embeds.clone()
+                } else {
+                    DocEmbeds::default()
+                },
+            },
+            sources: self.sources.clone(),
+            origins: self.origins.clone(),
+            views: self.views.clone(),
+            source_maps: self.source_maps.clone(),
+        })
     }
 }
 pub(crate) fn kind_bytes(kind: &DocKind) -> u64 {

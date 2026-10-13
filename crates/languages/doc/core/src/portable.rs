@@ -78,7 +78,7 @@ impl<E> From<StructureError> for PortableError<E> {
         }
     }
 }
-fn boundary<E: FoundationCodecError>(e: E) -> PortableError<E> {
+pub(crate) fn boundary<E: FoundationCodecError>(e: E) -> PortableError<E> {
     match e.stop_reason() {
         Some(s) => PortableError::Stopped(s),
         None => PortableError::Foundation(e),
