@@ -1,6 +1,8 @@
 use super::*;
 #[path = "delegation/binding.rs"]
 mod binding;
+#[path = "delegation/child.rs"]
+mod child;
 #[path = "delegation/parent.rs"]
 mod parent;
 use nepl3_core::budget::{Limits, Usage};

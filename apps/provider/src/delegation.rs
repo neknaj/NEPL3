@@ -6,11 +6,11 @@ use nepl3_core::{
         request::{InputValidationError, RequestBindingError},
     },
     schema::SchemaRegistry,
-    source::Digest,
+    source::{Digest, SourceAdmission},
 };
 use nepl3_suite::{
     grants::AuthorizedInvoke,
-    suspension::delegation::{IssuedBudget, LocalFailure, SettlementError},
+    suspension::delegation::{IssuedBudget, LocalFailure, SettlementError, child},
 };
 
 #[derive(Debug)]
@@ -40,6 +40,35 @@ pub struct IssuedInvocation<'request, 'budget> {
     implementation: Digest,
     context: Digest,
     budget: IssuedBudget<'budget>,
+}
+
+/// Locally executed observation associated with the immutable admitted request.
+/// The callback received that exact borrowed Invoke. The context digest covers
+/// admitted environment/source/resource context and implementation configuration;
+/// it is not an exact Invoke digest or a remote accounting token.
+#[must_use = "inspect semantic output and child stop before accepting a result"]
+pub struct LocalExecution<T> {
+    request_id: u64,
+    implementation: Digest,
+    context: Digest,
+    execution: child::Execution<T>,
+}
+impl<T> LocalExecution<T> {
+    pub fn request_id(&self) -> u64 {
+        self.request_id
+    }
+    pub fn implementation(&self) -> Digest {
+        self.implementation
+    }
+    pub fn context(&self) -> Digest {
+        self.context
+    }
+    pub fn execution(&self) -> &child::Execution<T> {
+        &self.execution
+    }
+    pub fn into_execution(self) -> child::Execution<T> {
+        self.execution
+    }
 }
 
 impl<'request, 'budget> IssuedInvocation<'request, 'budget> {
@@ -107,6 +136,31 @@ impl<'request, 'budget> IssuedInvocation<'request, 'budget> {
         operation: impl FnOnce(&mut Budget) -> Result<T, StopReason>,
     ) -> Result<T, LocalFailure<T>> {
         self.budget.run_local(operation)
+    }
+
+    /// Execute a trusted terminal callback in an explicitly separate admission
+    /// context. Its Budget contains the actual parent's cumulative history,
+    /// whereas the immutable Invoke retains relative additive grants. Callbacks
+    /// must use the supplied Budget rather than reconstruct it from request.limits.
+    /// The host still matches this Invoke to the intended saved Reader/session
+    /// and supplies its authorized source scope. Binding the Invoke alone does
+    /// not perform that mapping or validate a nested Reader source table.
+    /// No common dispatcher or remote accounting protocol is implied.
+    pub fn execute_local_child<T>(
+        self,
+        saved_depth: u64,
+        operation: impl FnOnce(&Invoke, &mut Budget, &mut SourceAdmission) -> T,
+    ) -> Result<LocalExecution<T>, child::Failure<T>> {
+        let request = self.authorized.request();
+        let execution = self
+            .budget
+            .execute_local_child(saved_depth, |b, a| operation(request, b, a))?;
+        Ok(LocalExecution {
+            request_id: request.request_id,
+            implementation: self.implementation,
+            context: self.context,
+            execution,
+        })
     }
 
     /// Compare an independently associated observed request to the complete
