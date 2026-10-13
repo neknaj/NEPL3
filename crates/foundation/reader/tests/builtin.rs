@@ -1,3 +1,7 @@
+#[path = "support/tokenizer/echo.rs"]
+mod echo_projection;
+#[path = "builtin/echo.rs"]
+mod tokenizer_echo;
 use nepl3_core::{budget::*, schema::*, source::*, syntax::*, value::*};
 use nepl3_reader::{builtin::*, model::*, runtime::ReaderError};
 use nepl3_reader::{plan::*, tokenizer::*};

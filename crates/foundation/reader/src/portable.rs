@@ -6,6 +6,7 @@ pub mod dispatch;
 mod error;
 pub mod plan;
 pub mod read;
+pub(crate) mod tokenizer;
 pub mod transform;
 use crate::{
     context::ContextError,
