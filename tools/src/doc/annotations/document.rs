@@ -27,6 +27,7 @@ pub struct NamespaceOwner {
 #[derive(Debug)]
 pub enum Error<E> {
     Selection,
+    Content(nepl3_sentence_core::check::Error),
     Math(Box<super::super::math::Error<E>>),
     Projection(super::super::math::ProjectionError),
     Guests(nepl3_suite::adapters::sentence::document_guests::Error<E>),

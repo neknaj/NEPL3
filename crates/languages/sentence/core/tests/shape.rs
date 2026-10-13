@@ -574,3 +574,220 @@ fn checked_foreign_validation_rejects_overflow_before_guest_validation() -> Resu
     assert_eq!(b.current_depth(), 0);
     Ok(())
 }
+
+#[test]
+fn selected_guest_content_propagates_without_invalidating_empty_standalone_guests()
+-> Result<(), String> {
+    use nepl3_sentence_core::check::ContentError;
+    for wrapper in 0..4 {
+        let mut v = value(vec![
+            Kind::Sentence {
+                inlines: vec![InlineRef(1)],
+            },
+            Kind::Ruby {
+                base: InlineRef(2),
+                reading: InlineRef(4),
+            },
+            match wrapper {
+                0 => Kind::Concat {
+                    inlines: vec![InlineRef(3)],
+                },
+                1 => Kind::Emphasis {
+                    inline: InlineRef(3),
+                },
+                2 => Kind::Strong {
+                    inline: InlineRef(3),
+                },
+                _ => Kind::ExternalLink {
+                    uri: "https://example.test/".into(),
+                    label: InlineRef(3),
+                },
+            },
+            Kind::ForeignInline {
+                syntax: EmbedRef(0),
+            },
+            Kind::Text {
+                text: "reading".into(),
+            },
+        ]);
+        v.embeds.push(invalid_guest());
+        let proof = v
+            .validate_shape(&mut budget())
+            .map_err(|error| format!("{error:?}"))?;
+        assert_eq!(
+            proof.content_with_foreign(&mut |_, _| Ok::<_, ()>(false), &mut budget()),
+            Err(ContentError::Sentence(Error::EmptyAnnotationPart(2)))
+        );
+        assert_eq!(
+            proof.content_with_foreign(&mut |_, _| Ok::<_, ()>(true), &mut budget()),
+            Ok(true)
+        );
+    }
+    let v = SentenceValue {
+        root: Root::Inline(InlineRef(0)),
+        nodes: vec![Kind::ForeignInline {
+            syntax: EmbedRef(0),
+        }],
+        embeds: vec![invalid_guest()],
+    };
+    let proof = v
+        .validate_shape(&mut budget())
+        .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(
+        proof.content_with_foreign(&mut |_, _| Ok::<_, ()>(false), &mut budget()),
+        Ok(false)
+    );
+    Ok(())
+}
+
+#[test]
+fn content_callbacks_preserve_deepest_occurrence_and_sticky_stops() -> Result<(), String> {
+    use nepl3_sentence_core::check::ContentError;
+    let v = SentenceValue {
+        root: Root::Sentence(SentenceRef(0)),
+        nodes: vec![
+            Kind::Sentence {
+                inlines: vec![InlineRef(1), InlineRef(2)],
+            },
+            Kind::ForeignInline {
+                syntax: EmbedRef(0),
+            },
+            Kind::Strong {
+                inline: InlineRef(3),
+            },
+            Kind::Emphasis {
+                inline: InlineRef(1),
+            },
+        ],
+        embeds: vec![invalid_guest()],
+    };
+    let proof = v
+        .validate_shape(&mut budget())
+        .map_err(|error| format!("{error:?}"))?;
+    let mut b = budget();
+    let mut calls = 0;
+    b.with_depth_at_least::<_, ContentError<()>>(7, |b| {
+        assert!(proof.content_with_foreign(
+            &mut |embed, b| {
+                calls += 1;
+                assert_eq!(embed, EmbedRef(0));
+                assert_eq!(b.current_depth(), 11);
+                Ok::<_, ()>(true)
+            },
+            b
+        )?);
+        assert_eq!(b.current_depth(), 7);
+        Ok(())
+    })
+    .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(calls, 1);
+    assert_eq!(b.current_depth(), 0);
+    for callback_ok in [false, true] {
+        let mut b = budget();
+        let result = proof.content_with_foreign(
+            &mut |_, b| {
+                b.cancel();
+                if callback_ok {
+                    Ok(true)
+                } else {
+                    Err("callback failure")
+                }
+            },
+            &mut b,
+        );
+        assert_eq!(
+            result,
+            Err(ContentError::Sentence(Error::Stopped(
+                StopReason::Cancelled
+            )))
+        );
+        assert_eq!(b.poll(), Err(StopReason::Cancelled));
+        assert_eq!(b.current_depth(), 0);
+    }
+    assert_eq!(
+        proof.content_with_foreign(&mut |_, _| Err("selected guest failed"), &mut budget()),
+        Err(ContentError::Foreign("selected guest failed"))
+    );
+    let mut measured = budget();
+    proof
+        .content_with_foreign(&mut |_, _| Ok::<_, ()>(true), &mut measured)
+        .map_err(|error| format!("{error:?}"))?;
+    for reason in [
+        StopReason::WorkLimit,
+        StopReason::AllocationLimit,
+        StopReason::DepthLimit,
+    ] {
+        let used = match reason {
+            StopReason::WorkLimit => measured.usage().work,
+            StopReason::AllocationLimit => measured.usage().allocation_units,
+            _ => measured.usage().depth,
+        };
+        for exact in [false, true] {
+            let mut limits = budget().limits();
+            let limit = used - u64::from(!exact);
+            match reason {
+                StopReason::WorkLimit => limits.work = limit,
+                StopReason::AllocationLimit => limits.allocation_units = limit,
+                _ => limits.depth = limit,
+            }
+            let mut b = Budget::new(limits);
+            let result = proof.content_with_foreign(&mut |_, _| Ok::<_, ()>(true), &mut b);
+            if exact {
+                assert_eq!(result, Ok(true));
+            } else {
+                assert_eq!(result, Err(ContentError::Sentence(Error::Stopped(reason))));
+                assert_eq!(b.poll(), Err(reason));
+            }
+            assert_eq!(b.current_depth(), 0);
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn cancellation_stops_later_content_callbacks_and_restores_caller_depth() -> Result<(), String> {
+    use nepl3_sentence_core::check::ContentError;
+    let v = SentenceValue {
+        root: Root::Sentence(SentenceRef(0)),
+        nodes: vec![
+            Kind::Sentence {
+                inlines: vec![InlineRef(1), InlineRef(2)],
+            },
+            Kind::ForeignInline {
+                syntax: EmbedRef(0),
+            },
+            Kind::ForeignInline {
+                syntax: EmbedRef(1),
+            },
+        ],
+        embeds: vec![invalid_guest(), invalid_guest()],
+    };
+    let proof = v
+        .validate_shape(&mut budget())
+        .map_err(|error| format!("{error:?}"))?;
+    let mut b = budget();
+    let mut calls = Vec::new();
+    b.with_depth_at_least::<_, ContentError<()>>(7, |b| {
+        let result = proof.content_with_foreign(
+            &mut |embed, b| {
+                calls.push(embed);
+                b.cancel();
+                Ok::<_, ()>(true)
+            },
+            b,
+        );
+        assert_eq!(
+            result,
+            Err(ContentError::Sentence(Error::Stopped(
+                StopReason::Cancelled
+            )))
+        );
+        assert_eq!(b.current_depth(), 7);
+        Ok(())
+    })
+    .map_err(|error| format!("{error:?}"))?;
+    assert_eq!(calls, vec![EmbedRef(0)]);
+    assert_eq!(b.current_depth(), 0);
+    assert_eq!(b.poll(), Err(StopReason::Cancelled));
+    Ok(())
+}

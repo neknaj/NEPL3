@@ -56,8 +56,21 @@ impl From<StopReason> for ShapeError {
 pub struct ValidatedDocShape<'a> {
     value: &'a DocValue,
     order: Vec<usize>,
+    root_content: bool,
 }
 impl<'a> ValidatedDocShape<'a> {
+    /// Semantic annotation content for explicit Sentence/Inline roots only.
+    /// Other root categories return None; this is not a document-emptiness test.
+    /// Empty labels remain valid standalone Inline values. Foreign execution,
+    /// assets, source ownership and rendering require their own checks.
+    pub fn annotation_content(&self) -> Option<bool> {
+        match self.value.root {
+            crate::model::DocRoot::Sentence(_) | crate::model::DocRoot::Inline(_) => {
+                Some(self.root_content)
+            }
+            _ => None,
+        }
+    }
     pub fn value(&self) -> &'a DocValue {
         self.value
     }

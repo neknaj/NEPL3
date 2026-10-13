@@ -241,6 +241,15 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
         let selected =
             document::namespace::collect(&sentence, self.doc_surface, self.registry, self.codec, b)
                 .map_err(|error| document_error(error, b))?;
+        document::namespace::check_content(
+            &sentence,
+            &selected,
+            self.math_surface,
+            self.registry,
+            self.codec,
+            b,
+        )
+        .map_err(|error| document_error(error, b))?;
         let members = document::namespace::inspect(&selected, self.registry, self.codec, b)
             .map_err(|error| document_error(error, b))?;
         let member_refs = document::namespace::member_refs(&members, b)?;
