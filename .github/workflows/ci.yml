@@ -49,7 +49,9 @@ jobs:
   native:
     name: native (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    # Ubuntu also checks external consumers and canonical Doc exports. Keep
+    # bounded CI headroom separate from the runtime's logical Budget limits.
+    timeout-minutes: ${{ matrix.os == 'ubuntu-latest' && 35 || 20 }}
     env:
       # Optimize canonical projection without disabling runtime checks.
       CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS: 'true'
