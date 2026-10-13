@@ -16,6 +16,14 @@ pub struct CanonicalDigestInput<'a> {
     pub value: &'a NdfValue,
 }
 
+/// Products of one checked group encoding. These are ordinary output data, not
+/// a reusable validation capability. Mutating either output does not establish
+/// a checked relationship with another native group or a later operation.
+pub struct EncodedForeignGroup {
+    pub value: NdfValue,
+    pub entry_digests: Vec<Digest>,
+}
+
 /// Implementations must enforce the registered foundation schema and its semantic
 /// source/view/environment constraints. This is not a provider-supplied callback.
 pub trait FoundationCodecError {
@@ -179,6 +187,15 @@ pub trait FoundationValueCodec {
         value: &crate::syntax::group::ForeignClosureGroup,
         budget: &mut Budget,
     ) -> Result<NdfValue, Self::Error>;
+    /// Encode/validate the exact native group once and derive component
+    /// identities from that same output, under one Budget and SourceAdmission.
+    /// Return no partial products on failure; retain all consumed charges/stops.
+    /// No caller-supplied encoded group is accepted as validation authority.
+    fn encode_foreign_group_with_digests(
+        &mut self,
+        value: &crate::syntax::group::ForeignClosureGroup,
+        budget: &mut Budget,
+    ) -> Result<EncodedForeignGroup, Self::Error>;
     fn decode_foreign_group(
         &mut self,
         value: &NdfValue,

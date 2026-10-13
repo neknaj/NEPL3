@@ -281,3 +281,124 @@ fn component_identity_has_explicit_framing_and_standalone_component_parity() -> 
     assert!(identities(&group, &SchemaRegistry::default(), &mut budget()).is_err());
     Ok(())
 }
+
+#[test]
+fn paired_group_encoding_preserves_outputs_and_saves_one_conversion() -> TestResult {
+    for (origin_scale, entries) in [(1, 1), (1, 8), (8, 8)] {
+        let (_, registry, mut group) = grouped()?;
+        let origin = group.provenances[0].origins[1].clone();
+        group.provenances[0]
+            .origins
+            .resize(origin_scale * 8, origin);
+        group.entries.resize(entries, group.entries[0].clone());
+        let sources = SourceStore::default();
+        let mut separate_admission = SourceAdmission::default();
+        let mut separate = budget();
+        let mut codec = FoundationCodec::new(&registry, &sources, &mut separate_admission)
+            .map_err(|e| format!("{e:?}"))?;
+        let value = codec
+            .encode_foreign_group(&group, &mut separate)
+            .map_err(|e| format!("{e:?}"))?;
+        let digests = codec
+            .foreign_group_entry_digests(&group, &mut separate)
+            .map_err(|e| format!("{e:?}"))?;
+        let mut paired_admission = SourceAdmission::default();
+        let mut paired = budget();
+        let mut codec = FoundationCodec::new(&registry, &sources, &mut paired_admission)
+            .map_err(|e| format!("{e:?}"))?;
+        let result = codec
+            .encode_foreign_group_with_digests(&group, &mut paired)
+            .map_err(|e| format!("{e:?}"))?;
+        assert_eq!(result.value, value);
+        assert_eq!(result.entry_digests, digests);
+        assert!(paired.usage().work < separate.usage().work);
+        assert!(paired.usage().allocation_units < separate.usage().allocation_units);
+        assert_eq!(paired.usage().source_bytes, separate.usage().source_bytes);
+        assert_eq!(paired.usage().depth, separate.usage().depth);
+        // Measure the omitted conversion with already-admitted sources. The
+        // saved cost is exactly this pass, not a claimed asymptotic bound.
+        codec
+            .encode_foreign_group(&group, &mut paired)
+            .map_err(|e| format!("{e:?}"))?;
+        assert_eq!(paired.usage(), separate.usage());
+    }
+    Ok(())
+}
+
+#[test]
+fn paired_group_encoding_keeps_exact_resource_stops_and_rejects_invalid_owners() -> TestResult {
+    let (_, registry, group) = grouped()?;
+    let sources = SourceStore::default();
+    let run = |group: &ForeignClosureGroup, b: &mut Budget| {
+        let mut admission = SourceAdmission::default();
+        FoundationCodec::new(&registry, &sources, &mut admission)?
+            .encode_foreign_group_with_digests(group, b)
+    };
+    let mut complete = budget();
+    let expected = run(&group, &mut complete).map_err(|e| format!("{e:?}"))?;
+    let used = complete.usage();
+    for reason in [
+        StopReason::WorkLimit,
+        StopReason::AllocationLimit,
+        StopReason::DepthLimit,
+        StopReason::SourceLimit,
+    ] {
+        for shortage in [0, 1] {
+            let mut limits = budget().limits();
+            match reason {
+                StopReason::WorkLimit => limits.work = used.work - shortage,
+                StopReason::AllocationLimit => {
+                    limits.allocation_units = used.allocation_units - shortage
+                }
+                StopReason::DepthLimit => limits.depth = used.depth - shortage,
+                StopReason::SourceLimit => limits.source_bytes = used.source_bytes - shortage,
+                _ => unreachable!(),
+            }
+            let mut limited = Budget::new(limits);
+            let result = run(&group, &mut limited);
+            if shortage == 0 {
+                let actual = result.map_err(|e| format!("{e:?}"))?;
+                assert_eq!(actual.value, expected.value);
+                assert_eq!(actual.entry_digests, expected.entry_digests);
+            } else {
+                let error = result.err().ok_or("expected stop")?;
+                assert_eq!(error.stop_reason(), Some(reason));
+                let before = limited.usage();
+                assert_eq!(limited.poll(), Err(reason));
+                assert_eq!(
+                    run(&group, &mut limited)
+                        .err()
+                        .ok_or("sticky stop")?
+                        .stop_reason(),
+                    Some(reason)
+                );
+                assert_eq!(limited.usage(), before);
+            }
+            assert_eq!(limited.current_depth(), 0);
+        }
+    }
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert_eq!(
+        run(&group, &mut cancelled)
+            .err()
+            .ok_or("cancelled")?
+            .stop_reason(),
+        Some(StopReason::Cancelled)
+    );
+    for mutation in 0..4 {
+        let mut malformed = group.clone();
+        match mutation {
+            0 => malformed.entries[0].owner = OwnerEnvironmentRef(u64::MAX),
+            1 => malformed.environments[0].environment.digest.0[0] ^= 1,
+            2 => malformed.provenances[0].sources.clear(),
+            3 => malformed.entries[0].syntax.schema.digest.0[0] ^= 1,
+            _ => unreachable!(),
+        }
+        let error = run(&malformed, &mut budget())
+            .err()
+            .ok_or("invalid closure accepted")?;
+        assert_eq!(error.stop_reason(), None);
+    }
+    Ok(())
+}
