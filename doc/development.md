@@ -86,6 +86,12 @@ CIのWASI jobはSHA-256を固定したWasmtime 44.0.1で実装済みcoreの実�
 
 providerのstream transportは `cargo test --locked -p nepl3-provider` で検査する。WASIでは同じコマンドに `--target wasm32-wasip2` を追加する。frameの分割転送、切断、長さ制限、codecとI/Oの停止、Close後の再利用拒否、schema交換を対象とする。
 
+Replyの受信から意味検査までを一つの累積Budgetで実行するhostは `Connection::receive_reply_with_budget` を使用する。
+transportのdecodeと操作応答の検査は同じBudgetを順に使用し、先行消費・残量・停止理由を維持する。受信後に検査用の残量を新設しない。
+request ID・方向・保存context・診断source権限の検査と失敗時の接続閉鎖は、従来の二Budget版 `receive_reply` と共有する。
+remote実行Usageの精算、生成sourceの追加認可、request lifetimeの確定はこのAPIの対象外である。
+局所試験は `cargo test --locked -p nepl3-provider --test transport reply::budget::` とし、先行Workありの厳密残量・1不足・取消・不正応答を検査する。
+
 Replyの追加sourceを検査するhostは、任意選択の `Connection::receive_pending_reply` を使用できる。
 最初の段階は構造検査済みrequest IDだけを公開し、元のregistry・SourceAdmission・Budgetを保持する。
 `finish_with` は保存済み要求のIDと選択操作の出力型を照合してから、Completeまたは存在するpartialのsource検査callbackを一度だけ呼ぶ。
