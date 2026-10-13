@@ -293,6 +293,21 @@ impl FoundationValueCodec for FoundationCodec<'_> {
     ) -> impl FoundationValueCodec<Error = WireError> + 'a {
         FoundationCodec::scoped(self, sources)
     }
+    fn scoped_with_admission<'a>(
+        &'a mut self,
+        sources: &'a SourceStore,
+        admission: &'a mut SourceAdmission,
+    ) -> impl FoundationValueCodec<Error = WireError> + 'a {
+        self.validated_mappings = None;
+        FoundationCodec {
+            schema: self.schema,
+            registry: self.registry,
+            sources,
+            mappings: &[],
+            validated_mappings: None,
+            admission,
+        }
+    }
     fn scoped_with_mappings<'a>(
         &'a mut self,
         sources: &'a SourceStore,

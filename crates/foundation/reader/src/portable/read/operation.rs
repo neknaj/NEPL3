@@ -11,6 +11,14 @@ pub fn to_reply<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<OperationReply, PortableError<C::Error>> {
     let encoded = reply_to_value(reply, context, codec, b)?;
+    wrap(reply, encoded, b)
+}
+
+pub(super) fn wrap<E>(
+    reply: &ReadReply,
+    encoded: NdfValue,
+    b: &mut Budget,
+) -> Result<OperationReply, PortableError<E>> {
     encoded.charge_clone(b)?;
     let NdfValue::Variant(v) = &encoded else {
         return Err(PortableError::Shape);
