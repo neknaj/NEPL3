@@ -40,6 +40,68 @@ impl<R: Read, W: Write> Connection<R, W> {
         transport: &mut Budget,
         validation: &mut Budget,
     ) -> Result<OperationReply, ReplyError> {
+        self.receive_reply_checked(
+            request,
+            registry,
+            sources,
+            admission,
+            transport,
+            |reply, _| {
+                suspending::validate_reply(
+                    reply,
+                    request,
+                    context,
+                    registry,
+                    authorized_sources,
+                    validation,
+                )
+            },
+        )
+    }
+
+    /// Receive and validate a reply using one cumulative host budget. Transport
+    /// decoding and semantic admission retain all prior usage and sticky stops;
+    /// no fresh validation allowance is created after receipt. This does not
+    /// settle remote execution usage or authorize newly generated sources.
+    #[allow(clippy::too_many_arguments)]
+    pub fn receive_reply_with_budget(
+        &mut self,
+        request: &Invoke,
+        context: Digest,
+        registry: &SchemaRegistry,
+        sources: &SourceStore,
+        authorized_sources: &impl DiagnosticSourceResolver,
+        admission: &mut SourceAdmission,
+        budget: &mut Budget,
+    ) -> Result<OperationReply, ReplyError> {
+        self.receive_reply_checked(
+            request,
+            registry,
+            sources,
+            admission,
+            budget,
+            |reply, budget| {
+                suspending::validate_reply(
+                    reply,
+                    request,
+                    context,
+                    registry,
+                    authorized_sources,
+                    budget,
+                )
+            },
+        )
+    }
+
+    fn receive_reply_checked(
+        &mut self,
+        request: &Invoke,
+        registry: &SchemaRegistry,
+        sources: &SourceStore,
+        admission: &mut SourceAdmission,
+        transport: &mut Budget,
+        validate: impl FnOnce(&OperationReply, &mut Budget) -> Result<(), suspending::Error>,
+    ) -> Result<OperationReply, ReplyError> {
         let result = (|| {
             let frame = self
                 .receive(registry, sources, admission, transport)
@@ -60,15 +122,7 @@ impl<R: Read, W: Write> Connection<R, W> {
                     received: request_id,
                 });
             }
-            suspending::validate_reply(
-                &reply,
-                request,
-                context,
-                registry,
-                authorized_sources,
-                validation,
-            )
-            .map_err(ReplyError::Validation)?;
+            validate(&reply, transport).map_err(ReplyError::Validation)?;
             Ok(reply)
         })();
         if result.is_err() {

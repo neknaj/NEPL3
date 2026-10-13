@@ -6,6 +6,8 @@ use nepl3_core::{
 };
 use nepl3_provider::reply::ReplyError;
 use nepl3_suite::grants::Grants;
+#[path = "reply/budget.rs"]
+mod budget;
 #[path = "reply/control.rs"]
 mod control;
 #[path = "reply/delegation.rs"]
