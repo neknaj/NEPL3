@@ -1,7 +1,9 @@
 //! Iterative finite-arena checking, including longest paths through shared
 //! subtrees. Does not resolve URLs, validate foreign source closures or execute.
+mod content;
 use crate::model::{EmbedRef, InlineRef, Kind, Root, SentenceValue};
 use alloc::{vec, vec::Vec};
+pub use content::ContentError;
 use nepl3_core::budget::{Budget, Resource, StopReason};
 use nepl3_core::{schema::SchemaRegistry, source::SourceAdmission, syntax::SyntaxError};
 
@@ -252,47 +254,12 @@ impl SentenceValue {
                 .checked_add(heights[node])
                 .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
             b.with_depth_at_least::<_, Error>(absolute_height, |_| Ok(()))?;
-            let require_content = |child: u64| -> Result<(), Error> {
-                let index = reference(self, child, Category::Inline)?;
-                if !visible[index] {
-                    return Err(Error::EmptyAnnotationPart(child));
-                }
-                Ok(())
-            };
-            match &self.nodes[node] {
-                Kind::Ruby { base, reading } => {
-                    require_content(base.0)?;
-                    require_content(reading.0)?;
-                }
-                Kind::InlineAnno { base, notes } => {
-                    if notes.is_empty() {
-                        return Err(Error::AnnotationNotes(node as u64));
-                    }
-                    require_content(base.0)?;
-                    for note in notes {
-                        b.charge(Resource::Work, 1)?;
-                        require_content(note.0)?;
-                    }
-                }
-                _ => {}
+            content::annotation(self, node, &visible, b)?;
+            if let Kind::ForeignInline { syntax } = self.nodes[node] {
+                let index = usize::try_from(syntax.0).map_err(|_| Error::Embed(syntax.0))?;
+                *used.get_mut(index).ok_or(Error::Embed(syntax.0))? = true;
             }
-            visible[node] = match &self.nodes[node] {
-                Kind::Text { text } | Kind::Code { text } => {
-                    b.charge(Resource::Work, text.len() as u64)?;
-                    !text.is_empty()
-                }
-                Kind::Break => true,
-                Kind::ForeignInline { syntax } => {
-                    let index = usize::try_from(syntax.0).map_err(|_| Error::Embed(syntax.0))?;
-                    *used.get_mut(index).ok_or(Error::Embed(syntax.0))? = true;
-                    true
-                }
-                Kind::ExternalLink { uri, .. } => {
-                    b.charge(Resource::Work, uri.len() as u64)?;
-                    any
-                }
-                _ => any,
-            };
+            visible[node] = content::visible(&self.nodes[node], any, true, b)?;
             colors[node] = 2;
             order.push(node);
             stack.pop();

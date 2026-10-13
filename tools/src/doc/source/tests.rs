@@ -197,6 +197,8 @@ fn composed_doc_namespace_keeps_fragment_source_identity() -> Result<(), String>
 fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(), String> {
     use crate::doc::annotations::{Error, SentenceAnnotationRenderer, document};
     enum Expected {
+        EmptyGuest,
+        ValidGuest,
         Dependency,
         Label,
         Duplicate,
@@ -213,6 +215,42 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
             origin_reason: "document fragment test",
         }])?;
     for (body, expected) in [
+        (
+            r#"cons ruby text "base" doc anchor target text "" nil"#,
+            Expected::EmptyGuest,
+        ),
+        (
+            r#"cons anno doc anchor target text "" cons text "note" nil nil"#,
+            Expected::EmptyGuest,
+        ),
+        (
+            r#"cons anno text "base" cons doc anchor target text "" nil nil"#,
+            Expected::EmptyGuest,
+        ),
+        (
+            r#"cons ruby doc ref target text "" text "reading" cons doc anchor target text "definition" nil"#,
+            Expected::EmptyGuest,
+        ),
+        (
+            r#"cons ruby doc link external "https://example.test/" text "" text "reading" nil"#,
+            Expected::EmptyGuest,
+        ),
+        (
+            r#"cons doc anchor target text "" nil"#,
+            Expected::ValidGuest,
+        ),
+        (
+            r#"cons ruby concat cons doc anchor target text "" cons text "base" nil text "reading" nil"#,
+            Expected::ValidGuest,
+        ),
+        (
+            r#"cons ruby doc anchor target break text "reading" nil"#,
+            Expected::ValidGuest,
+        ),
+        (
+            "cons ruby doc anchor target text \"\" text \"reading\" nil",
+            Expected::EmptyGuest,
+        ),
         (
             "cons doc link external \"https://example.test/\" text \"label\" nil",
             Expected::Dependency,
@@ -442,6 +480,18 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
                                     );
                                 }
                             }
+                            // No ambient source or schema may classify an unselected guest.
+                            assert!(matches!(
+                                document::namespace::check_content(
+                                    &output.sentence,
+                                    &[],
+                                    None,
+                                    registry,
+                                    host.codec,
+                                    b,
+                                ),
+                                Err(document::Error::Selection)
+                            ));
                             let mut invalid = output.sentence.clone();
                             let nepl3_sentence_core::model::Root::Sentence(root) =
                                 invalid.value.root
@@ -461,6 +511,15 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
                                 host.render_syntax(output.sentence.clone(), &mut cancelled),
                                 Err(Error::Stopped(nepl3_core::budget::StopReason::Cancelled))
                             ));
+                        }
+                        Expected::EmptyGuest => {
+                            assert!(
+                                matches!(result, Err(Error::Document(error)) if matches!(*error, document::Error::Content(nepl3_sentence_core::check::Error::EmptyAnnotationPart(_)))),
+                                "empty Doc guest must not satisfy annotation content"
+                            );
+                        }
+                        Expected::ValidGuest => {
+                            result.map_err(err)?;
                         }
                         Expected::Dependency => {
                             let Err(Error::Document(error)) = result else {

@@ -94,7 +94,11 @@ impl DocValue {
                 return Err(ShapeError::UnusedEmbed(i as u64));
             }
         }
-        Ok(ValidatedDocShape { value: self, order })
+        Ok(ValidatedDocShape {
+            value: self,
+            order,
+            root_content: visible[root],
+        })
     }
     fn reference(&self, node: u64, category: super::Category) -> Result<usize, ShapeError> {
         let index = usize::try_from(node).map_err(|_| ShapeError::Reference(node))?;

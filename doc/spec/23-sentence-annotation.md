@@ -358,6 +358,13 @@ Doc断片の選択とlowerは、suiteの`adapters::sentence::document_guests::co
 返却値は一意なDoc文書の所有列と、各表示出現から文書を参照する`DocumentId`の列を持つ。
 同じembedは最深の出現位置で一度解析し、表示順と共有を保持する。処理は`no_std + alloc`で成立し、I/O・HTML・原子的参照カウントを要求しない。
 他言語のguestは各adapterが担当し、名前解決と表示は後段で実行する。開発hostはこの結果を既存のnamespaceとHTML処理へ接続する。
+foreign Inlineの構造検査はguestを内容ありとして扱い、guest固有の表示内容を確定しない。
+`CheckedShape::content_with_foreign`はhostが明示したguestの内容判定を用いてRubyのbase/readingとAnnoのbase/noteの非空条件を再検査する。
+各embedのcallbackは最深の共有出現の深さで一度だけ呼び、同じ累積Budgetを使う。callback後の停止を成功や別errorで上書きしない。
+Doc guestの内容判定は元のDoc shapeの`annotation_content`から取得する。この入口はSentence/Inline rootだけに値を返し、Article等の空判定には使わない。空labelのanchorは単独なら有効だが、Ruby/Annoの必要な内容にはならない。
+native annotation hostはDocの意味モデルと明示選択したMath Exprの内容契約を使用する。HTMLや文字列長からguestの内容を推定しない。
+これは内容条件の検査であり、sourceの許可・名前解決・guest実行・完成HTMLの検査を代替しない。
+
 このnamespaceは一つのSentence表示に属する。外側のArticle全体とのnamespace共有、およびDocの旧Sentence所有の撤去はconsumer所有移行の残件である。
 複数のSentenceを一つの文書へ配置するrendererは、suiteの`html::render_part_with_foreign`で`PendingSentence`を取得できる。
 この値は局所syntax・guest closure・Phrasing構造の検査と要素の由来を保持し、HTML IDの重複とfragment参照の解決を合成後の文書検査へ委譲する。

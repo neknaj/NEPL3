@@ -192,3 +192,83 @@ pub fn prepare<'a, C: FoundationValueCodec>(
         },
     )
 }
+
+/// Guest content is selected from the semantic owner, never inferred from HTML.
+/// Math Expr is an explicit content-producing role if its later rendering succeeds.
+pub fn check_content<C: FoundationValueCodec>(
+    sentence: &SentenceSyntax,
+    selected: &[Selected],
+    math_surface: Option<&SchemaRef>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<(), Error<C::Error>> {
+    let shape = sentence
+        .validate(registry, b, codec.source_admission())
+        .map_err(|error| match error {
+            nepl3_sentence_core::syntax::Error::Stopped(reason) => Error::Stopped(reason),
+            nepl3_sentence_core::syntax::Error::Shape(error) => Error::Content(error),
+            error => Error::Guests(
+                nepl3_suite::adapters::sentence::document_guests::Error::Sentence(error),
+            ),
+        })?;
+    let count = sentence.value.embeds.len();
+    b.charge(
+        Resource::AllocationUnits,
+        (count as u64).saturating_mul(core::mem::size_of::<Option<&DocumentSyntax>>() as u64),
+    )?;
+    let mut contents = Vec::new();
+    contents
+        .try_reserve_exact(count)
+        .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+    contents.resize(count, None);
+    for item in selected {
+        b.charge(Resource::Work, 1)?;
+        let slot = contents
+            .get_mut(item.embed.0 as usize)
+            .ok_or(Error::Selection)?;
+        if slot.is_none() {
+            *slot = Some(item.document.as_ref());
+        }
+    }
+    shape
+        .shape()
+        .content_with_foreign(
+            &mut |embed, b| {
+                if let Some(document) = contents.get(embed.0 as usize).copied().flatten() {
+                    return document
+                        .value
+                        .validate_shape(b)
+                        .map(|shape| shape.annotation_content())
+                        .map_err(|error| match error {
+                            check::ShapeError::Stopped(reason) => Error::Stopped(reason),
+                            error => Error::Structure(check::StructureError::Shape(error)),
+                        })?
+                        .ok_or(Error::Selection);
+                }
+                let guest = sentence
+                    .value
+                    .embeds
+                    .get(embed.0 as usize)
+                    .ok_or(Error::Selection)?;
+                let surface = math_surface.ok_or(Error::Selection)?;
+                b.charge(Resource::Work, guest.syntax.category.len() as u64)?;
+                if guest.syntax.schema.equal_with_budget(surface, b)?
+                    && guest.syntax.category == "Expr"
+                {
+                    Ok(true)
+                } else {
+                    Err(Error::Selection)
+                }
+            },
+            b,
+        )
+        .map_err(|error| match error {
+            nepl3_sentence_core::check::ContentError::Sentence(
+                nepl3_sentence_core::check::Error::Stopped(reason),
+            ) => Error::Stopped(reason),
+            nepl3_sentence_core::check::ContentError::Sentence(error) => Error::Content(error),
+            nepl3_sentence_core::check::ContentError::Foreign(error) => error,
+        })?;
+    Ok(())
+}
