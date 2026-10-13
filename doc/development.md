@@ -833,3 +833,22 @@ wire reports, prove complete-Invoke equality or map Reader/session/source scope.
 The immutable Invoke keeps its relative grant; do not rewrite it to cumulative
 limits or insert an unchanged cumulative-ceiling dispatcher. The focused test is
 `cargo test --locked -p nepl3-provider --test transport reply::delegation::child::`.
+
+
+### Saved Reader call through a measured builtin child
+
+`apps/provider/tests/reader/child.rs` composes an authentic saved `builtinName`
+call with the request-bound local-child adapter and the production Reader builtin.
+The host retains the original session/call/continuation, authorizes the outer
+Invoke, narrows nested source declarations before context decoding, and uses the
+supplied child Budget and SourceAdmission throughout preparation and execution.
+The unchanged Invoke contains relative additive grants; the child has cumulative
+ceilings and the saved call depth. Actual increments settle once before the
+original session validates and consumes the terminal reply.
+
+The integration checks Matched, NoMatch and nonfinal NeedMore, source authority
+and conflicting-content rejection, a tight child work stop with retained output,
+parent admission isolation, fresh depth versus historical peak, and valid resume
+after rejected child attempts. It preserves the existing generated-source outer
+Report test. This is host-composed test coverage, not a new production sender API,
+resumable child, remote accounting proof, or formal provider-equivalence acceptance.
