@@ -54,13 +54,32 @@ impl<'request, 'budget> IssuedInvocation<'request, 'budget> {
         validation: &mut Budget,
     ) -> Result<Self, Error> {
         parent.poll().map_err(Error::Stopped)?;
+        let context = validate_context(authorized.request(), implementation, registry, validation)?;
+        Self::reserve(authorized, implementation, context, parent)
+    }
+
+    /// Pay input validation and context encoding from the actual parent before
+    /// reserving the saved Invoke's unchanged relative grant. Prior charges and
+    /// sticky stops are retained, including on validation or reservation failure.
+    /// The grant must fit the capacity remaining after these host-side costs.
+    pub fn issue_with_parent_validation(
+        authorized: AuthorizedInvoke<'request>,
+        implementation: Digest,
+        registry: &SchemaRegistry,
+        parent: &'budget mut Budget,
+    ) -> Result<Self, Error> {
+        parent.poll().map_err(Error::Stopped)?;
+        let context = validate_context(authorized.request(), implementation, registry, parent)?;
+        Self::reserve(authorized, implementation, context, parent)
+    }
+
+    fn reserve(
+        authorized: AuthorizedInvoke<'request>,
+        implementation: Digest,
+        context: Digest,
+        parent: &'budget mut Budget,
+    ) -> Result<Self, Error> {
         let request = authorized.request();
-        request
-            .validate_input(&request.operation, registry, validation)
-            .map_err(Error::Input)?;
-        let context =
-            nepl3_wire::operation::context_digest(request, implementation, registry, validation)
-                .map_err(Error::Context)?;
         let budget = IssuedBudget::issue(parent, request.limits).map_err(Error::Stopped)?;
         Ok(Self {
             authorized,
@@ -140,4 +159,17 @@ impl<'request, 'budget> IssuedInvocation<'request, 'budget> {
         }
         self.budget.settle(observed).map_err(Error::Settlement)
     }
+}
+
+fn validate_context(
+    request: &Invoke,
+    implementation: Digest,
+    registry: &SchemaRegistry,
+    validation: &mut Budget,
+) -> Result<Digest, Error> {
+    request
+        .validate_input(&request.operation, registry, validation)
+        .map_err(Error::Input)?;
+    nepl3_wire::operation::context_digest(request, implementation, registry, validation)
+        .map_err(Error::Context)
 }
