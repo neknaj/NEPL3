@@ -178,13 +178,9 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
         if &guest.syntax.schema != self.surface || guest.syntax.category != "Sentence" {
             return Err(Error::Selection);
         }
-        guest
-            .validate(self.registry, b, self.codec.source_admission())
-            .map_err(Error::Syntax)?;
         let input = guest
-            .syntax
-            .bundle
-            .validate_with_sources(self.registry, b, self.codec.source_admission())
+            .view()
+            .validate_with_bundle(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
         let mut forms = Vec::new();
         for (kind, category, surface) in [

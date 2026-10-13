@@ -145,13 +145,8 @@ fn collect_inner<C: FoundationValueCodec>(
             Some(id) => id,
             None => {
                 let document = b.with_depth_at_least(base.saturating_add(depths[index]), |b| {
-                    closure
-                        .validate(registry, b, codec.source_admission())
-                        .map_err(Error::Closure)?;
                     let input = closure
-                        .syntax()
-                        .bundle
-                        .validate_with_sources(registry, b, codec.source_admission())
+                        .validate_with_bundle(registry, b, codec.source_admission())
                         .map_err(Error::Closure)?;
                     crate::adapters::sentence::literal::lower(
                         &input,
