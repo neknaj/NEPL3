@@ -114,8 +114,14 @@ pub fn inspect<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<DocPreparationPlan, PreparationError<'a, C::Error>> {
-    let checked = labels::check(document, registry, b, c.source_admission())?;
-    let value = portable::to_value(document, registry, c, b)?;
+    // One receiving boundary: retain the immutable native proof through local
+    // labels and encoding, without exposing a proof-consuming public entry.
+    // Preserve label errors before invoking the foundation codec.
+    let structure = document
+        .validate_structure(registry, b, c.source_admission())
+        .map_err(labels::LabelError::from)?;
+    let checked = labels::check_structure(&structure, b)?;
+    let value = portable::to_value_from_structure(&structure, registry, c, b)?;
     let document_digest = c
         .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
         .map_err(boundary)?;
@@ -134,8 +140,14 @@ pub fn inspect_sentence<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<DocPreparationPlan, PreparationError<'a, C::Error>> {
-    let checked = labels::check_sentence(document, registry, b, c.source_admission())?;
-    let value = portable::to_value(document, registry, c, b)?;
+    // One receiving boundary: retain the immutable native proof through local
+    // labels and encoding, without exposing a proof-consuming public entry.
+    // Preserve label errors before invoking the foundation codec.
+    let structure = document
+        .validate_structure(registry, b, c.source_admission())
+        .map_err(labels::LabelError::from)?;
+    let checked = labels::check_sentence_structure(&structure, b)?;
+    let value = portable::to_value_from_structure(&structure, registry, c, b)?;
     let document_digest = c
         .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
         .map_err(boundary)?;
@@ -153,8 +165,14 @@ pub fn inspect_inline<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<DocPreparationPlan, PreparationError<'a, C::Error>> {
-    let checked = labels::check_inline(document, registry, b, c.source_admission())?;
-    let value = portable::to_value(document, registry, c, b)?;
+    // One receiving boundary: retain the immutable native proof through local
+    // labels and encoding, without exposing a proof-consuming public entry.
+    // Preserve label errors before invoking the foundation codec.
+    let structure = document
+        .validate_structure(registry, b, c.source_admission())
+        .map_err(labels::LabelError::from)?;
+    let checked = labels::check_inline_structure(&structure, b)?;
+    let value = portable::to_value_from_structure(&structure, registry, c, b)?;
     let document_digest = c
         .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
         .map_err(boundary)?;

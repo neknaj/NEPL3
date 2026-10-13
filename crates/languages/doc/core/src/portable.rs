@@ -131,6 +131,32 @@ fn encode_with_structure<'a, C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<(NdfValue, crate::check::ValidatedDocumentSyntax<'a>), PortableError<C::Error>> {
     let structure = document.validate_structure(registry, b, c.source_admission())?;
+    let value = encode_structure(&structure, registry, c, b)?;
+    Ok((value, structure))
+}
+
+/// Private, immediate reuse within preparation. No callback or receiving
+/// boundary may intervene between native validation and this encoding.
+/// Generated DocumentSyntax still receives its complete schema validation.
+pub(crate) fn to_value_from_structure<C: FoundationValueCodec>(
+    structure: &crate::check::ValidatedDocumentSyntax<'_>,
+    registry: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    let value = encode_structure(structure, registry, c, b)?;
+    check(registry, &value, b)?;
+    Ok(value)
+}
+
+fn encode_structure<C: FoundationValueCodec>(
+    structure: &crate::check::ValidatedDocumentSyntax<'_>,
+    registry: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    b.poll()?;
+    let document = structure.document();
     let s = schema(registry)?;
     let sources = c.encode_sources(&document.sources, b).map_err(boundary)?;
     let mut store = SourceStore::default();
@@ -152,7 +178,7 @@ fn encode_with_structure<'a, C: FoundationValueCodec>(
         [value, sources, origins, views, maps],
         b,
     )?;
-    Ok((output, structure))
+    Ok(output)
 }
 pub fn from_value<C: FoundationValueCodec>(
     input: &NdfValue,
