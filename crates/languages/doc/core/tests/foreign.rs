@@ -201,6 +201,34 @@ fn shared_embed_validation_composes_its_deepest_doc_owner() -> Result<(), String
     doc.validate_structure(&r, &mut full, &mut SourceAdmission::default())
         .map_err(err)?;
     assert!(full.usage().depth > 21);
+    // Preparation's retained proof must still validate the deepest semantic
+    // occurrence before encoding, including standalone Inline/Sentence roots.
+    for inline in [false, true] {
+        let mut input = doc.clone();
+        if inline {
+            input.value.nodes.pop();
+            input.value.root = DocRoot::Inline(InlineRef(19));
+        }
+        let inspect = if inline {
+            nepl3_doc_core::prepare::inspect_inline
+        } else {
+            nepl3_doc_core::prepare::inspect_sentence
+        };
+        let store = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&r, &store, &mut admission).map_err(err)?;
+        inspect(&input, &r, &mut codec, &mut b()).map_err(err)?;
+        let mut limits = b().limits();
+        limits.depth = if inline { 20 } else { 21 };
+        let mut stopped = Budget::new(limits);
+        assert!(matches!(
+            inspect(&input, &r, &mut codec, &mut stopped),
+            Err(nepl3_doc_core::prepare::PreparationError::Stopped(
+                StopReason::DepthLimit
+            ))
+        ));
+        assert_eq!(stopped.poll(), Err(StopReason::DepthLimit));
+    }
     let mut limits = b().limits();
     limits.depth = 21;
     assert!(matches!(
