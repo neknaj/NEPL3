@@ -798,3 +798,14 @@ authentication or default-dispatch route. Existing dispatch that interprets
 relative Invoke limits as cumulative ceilings cannot be inserted unchanged.
 Run `cargo test --locked -p nepl3-core --test budget` and
 `cargo test --locked -p nepl3-suite --test delegation` for focused checks.
+
+`IssuedInvocation::execute_local_child` binds that terminal adapter to the exact
+borrowed authorized Invoke and returns the saved request ID, host-selected
+implementation and context alongside the local execution. It consumes the
+reservation once, without revalidation or a second settlement. Both issuance
+paths are supported; parent-paid validation and subsequent local work remain in
+the child's actual starting history. These local bindings do not authenticate
+wire reports, prove complete-Invoke equality or map Reader/session/source scope.
+The immutable Invoke keeps its relative grant; do not rewrite it to cumulative
+limits or insert an unchanged cumulative-ceiling dispatcher. The focused test is
+`cargo test --locked -p nepl3-provider --test transport reply::delegation::child::`.
