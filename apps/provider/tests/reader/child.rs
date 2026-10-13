@@ -10,79 +10,30 @@ use nepl3_suite::grants::Grants;
 /// Source authority is narrowed before any nested request context is decoded.
 fn execute(
     invoke: &Invoke,
-    signature: &ProviderSignature,
     registry: &SchemaRegistry,
     budget: &mut Budget,
     admission: &mut SourceAdmission,
-) -> Result<ReadReply, String> {
+) -> Result<ReadReply, portable::PortableError<nepl3_wire::WireError>> {
     let mut authorized = SourceStore::default();
     for source in &invoke.sources {
         authorized
-            .insert_with_budget(source.clone_with_budget(budget).map_err(error)?, budget)
-            .map_err(error)?;
+            .insert_with_budget(source.clone_with_budget(budget)?, budget)
+            .map_err(portable::PortableError::Source)?;
     }
-    let TypedValue::Record(record) = invoke.input.clone_with_budget(budget).map_err(error)? else {
-        return Err("expected ReadRequest record".into());
-    };
-    let value = NdfValue::Record(record);
-    let schema = registry
-        .selected("nepl3.reader", 1)
-        .ok_or("Reader schema")?;
-    let mut codec = FoundationCodec::new(registry, &authorized, admission).map_err(error)?;
-    let declared =
-        portable::request_sources(&value, schema, &mut codec, registry, budget).map_err(error)?;
-    let mut local = SourceStore::default();
-    for source in declared {
-        let identity = source.identity();
-        let granted = authorized
-            .get_revision_with_budget(&identity.source, identity.revision, budget)
-            .map_err(error)?
-            .ok_or("unauthorized nested source")?;
-        if !source.eq_with_budget(granted, budget).map_err(error)? {
-            return Err("conflicting nested source".into());
-        }
-        local.insert_with_budget(source, budget).map_err(error)?;
-    }
-    let mut codec = FoundationCodec::new(registry, &local, admission).map_err(error)?;
-    let ProviderInput::Read(request) = dispatch::from_value(
+    let mut codec = FoundationCodec::new(registry, &authorized, admission)
+        .map_err(portable::PortableError::Boundary)?;
+    let executed = portable::read::sender::execute_name(
+        &invoke.operation,
         &invoke.input,
-        &DispatchContext {
-            signature,
-            sources: &local,
-            mappings: &[],
-            registry,
-        },
+        registry,
+        &authorized,
         &mut codec,
         budget,
-    )
-    .map_err(error)?
-    else {
-        return Err("expected typed Read request".into());
-    };
-    let checked = request
-        .context
-        .check(&mut codec, &local, registry, budget)
-        .map_err(error)?;
-    let snapshot = local
-        .resolve_with_budget(&request.snapshot, budget)
-        .map_err(error)?
-        .ok_or("missing declared snapshot")?;
-    provider::read(
-        &invoke.operation,
-        ReadRequest {
-            snapshot,
-            start: request.start,
-            limit: request.limit,
-            final_input: request.final_input,
-            context: &checked,
-            state: &request.state,
-        },
-        registry,
-        &local,
-        budget,
-        admission,
-    )
-    .map_err(error)
+    )?;
+    assert_eq!(executed.execution_usage(), budget.usage());
+    // Actual increments are settled by execute_local_child, never by re-recording
+    // the sender's cumulative Usage. This callback does not encode the result.
+    Ok(executed.into_reply())
 }
 
 #[test]
@@ -252,7 +203,7 @@ fn run_case(text: &str, final_input: bool, expected: u8, adversarial: bool) -> R
             .map_err(error)?;
             let result = issued
                 .execute_local_child(depth_base, |bound, child, child_admission| {
-                    execute(bound, &signature, &registry, child, child_admission)
+                    execute(bound, &registry, child, child_admission)
                 })
                 .map_err(error)?
                 .into_execution();
@@ -260,10 +211,11 @@ fn run_case(text: &str, final_input: bool, expected: u8, adversarial: bool) -> R
                 return Err(format!("candidate {case} must reject"));
             };
             match case {
-                0 => assert_eq!(failure, "unauthorized nested source"),
-                1 => assert!(failure.contains("UndeclaredSource"), "{failure}"),
-                2 => assert_eq!(failure, "conflicting nested source"),
-                _ => assert!(failure.contains("WorkLimit"), "{failure}"),
+                0..=2 => assert!(
+                    matches!(failure, portable::PortableError::UndeclaredSource),
+                    "candidate {case}: {failure:?}"
+                ),
+                _ => assert_eq!(failure.stop_reason(), Some(StopReason::WorkLimit)),
             }
             assert_eq!(
                 result.stopped(),
@@ -296,7 +248,7 @@ fn run_case(text: &str, final_input: bool, expected: u8, adversarial: bool) -> R
             assert_eq!(child.current_depth(), depth_base);
             assert_eq!(child.usage(), basis);
             assert_eq!(child.limits().work, basis.work + grant.work);
-            execute(bound, &signature, &registry, child, child_admission)
+            execute(bound, &registry, child, child_admission)
         })
         .map_err(error)?;
     assert_eq!(result.request_id(), call_id);
@@ -319,7 +271,7 @@ fn run_case(text: &str, final_input: bool, expected: u8, adversarial: bool) -> R
     assert_eq!(parent.current_depth(), 0);
     assert_eq!(parent.usage().depth, 80);
     let before_resume_source_bytes = parent.usage().source_bytes;
-    let reply = result.into_output()?;
+    let reply = result.into_output().map_err(error)?;
     session
         .pending_read()
         .map_err(error)?

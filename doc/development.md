@@ -838,10 +838,13 @@ limits or insert an unchanged cumulative-ceiling dispatcher. The focused test is
 ### Saved Reader call through a measured builtin child
 
 `apps/provider/tests/reader/child.rs` composes an authentic saved `builtinName`
-call with the request-bound local-child adapter and the production Reader builtin.
-The host retains the original session/call/continuation, authorizes the outer
-Invoke, narrows nested source declarations before context decoding, and uses the
-supplied child Budget and SourceAdmission throughout preparation and execution.
+call with the request-bound local-child adapter and the production standalone
+builtinName sender. The host retains the original session/call/continuation,
+authorizes the outer Invoke and builds only that Invoke's source authority.
+The shared sender narrows nested source declarations before context decoding;
+preparation and execution use the supplied child Budget and SourceAdmission.
+The test does not duplicate request decoding or builtin dispatch, encode its
+reply, or settle the sender's cumulative Usage a second time.
 The unchanged Invoke contains relative additive grants; the child has cumulative
 ceilings and the saved call depth. Actual increments settle once before the
 original session validates and consumes the terminal reply.
@@ -850,8 +853,8 @@ The integration checks Matched, NoMatch and nonfinal NeedMore, source authority
 and conflicting-content rejection, a tight child work stop with retained output,
 parent admission isolation, fresh depth versus historical peak, and valid resume
 after rejected child attempts. It preserves the existing generated-source outer
-Report test. This is host-composed test coverage, not a new production sender API,
-resumable child, remote accounting proof, or formal provider-equivalence acceptance.
+Report test. This is host-composed integration coverage, not a resumable child,
+remote accounting proof, or formal provider-equivalence acceptance.
 
 
 ### Tokenizer canonical pending-value echoes
