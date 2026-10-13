@@ -167,6 +167,17 @@ pub trait FoundationValueCodec {
         value: &NdfValue,
         budget: &mut Budget,
     ) -> Result<crate::syntax::group::ForeignClosureGroup, Self::Error>;
+    /// Versioned component identities in entry order. Validate and encode under
+    /// the current registry/admission/Budget, then hash each owner component once.
+    /// Group-local indices are excluded; explicit ownership is never inferred
+    /// from equal digests. These identities do not prove consumer occurrence depth.
+    /// Framing is specified by the shared foreign owner contract, not the legacy
+    /// flat ForeignClosure digest or a consuming operation's domain.
+    fn foreign_group_entry_digests(
+        &mut self,
+        value: &crate::syntax::group::ForeignClosureGroup,
+        budget: &mut Budget,
+    ) -> Result<Vec<Digest>, Self::Error>;
     fn decode_syntax(
         &mut self,
         value: &NdfValue,

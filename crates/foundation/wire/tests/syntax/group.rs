@@ -1039,3 +1039,6 @@ fn grouped_wire_rejects_forged_references_digests_and_exact_stops() -> TestResul
     }
     Ok(())
 }
+
+#[path = "group/identity.rs"]
+mod identity;

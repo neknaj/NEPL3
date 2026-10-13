@@ -1,6 +1,6 @@
 # 24. Foreign syntaxの所有情報の共有
 
-この章はdesign revision `nepl3-design-2026-10-13-r5` のFoundation契約を定義する。採用理由は、各guestへ完全な所有情報を複製すると、所有情報量とguest数の積に比例する保存・検証が発生するためである。実装・正式受入の状態は[実装状態](../../implementation-status.json)で管理する。
+この章はdesign revision `nepl3-design-2026-10-13-r6` のFoundation契約を定義する。採用理由は、各guestへ完全な所有情報を複製すると、所有情報量とguest数の積に比例する保存・検証が発生するためである。実装・正式受入の状態は[実装状態](../../implementation-status.json)で管理する。
 
 ## 明示的な所有関係
 
@@ -33,6 +33,23 @@ NDFのForeignClosureGroupは上記三配列を明示的に表す。codecは登�
 検査済みgroupから指定したentryの部分groupを作る操作は、指定順にentryを複製する。重複指定は重複entryとして残す。選択したenvironmentとprovenanceは一度だけ複製し、元のtable順を保つ。未選択のtable要素を出力へ残さず、group内参照だけを付け替える。各選択provenanceの全内容と、その内部のOriginId、environmentの元のID・digestは変更しない。
 
 範囲外entry指定は型付き失敗とする。空選択は空のgroupになる。選択mapの構築・元table走査・複製をすべて計上し、出力を現在のregistry・SourceAdmission・Budgetで再検査する。過去の検証証明を新しい操作へ返さない。使用側の出現深さは部分選択後も使用側が別途検査する。
+
+## Guestの成分identity
+
+`foreign_group_entry_digests` は現在のregistry・SourceAdmission・Budgetの下でgroupを検査・NDF化し、entry順のDigest配列を返す。この値は検証証明ではなく、使用側の意味上の出現深さの検査を代替しない。同じdigestを持つ独立所有者も、明示的な参照を根拠なく統合しない。
+
+各成分のhashはSHA-256(domain || canonical NDF/1 CBOR(value))とする。domain末尾の `\0` は一つのNUL byteを表す。
+
+- Provenance: `NEPL3.Foreign.Provenance.v1\0` と完全なForeignProvenance record。
+- Environment: `NEPL3.Foreign.Environment.v1\0` と選択されたEnvironmentEntry record。ForeignOwnerEnvironmentのprovenance参照は含めない。
+- Syntax: `NEPL3.Foreign.Syntax.v1\0` と完全なForeignSyntax record。ForeignGroupEntryのowner参照は含めない。
+- Entry: `NEPL3.Foreign.Entry.v1\0` と上記三digestをProvenance、Environment、Syntax順に並べたNDF List。各要素は32 byteのNDF Bytes値とする。
+
+group全体を一度NDF化し、ProvenanceとEnvironmentの成分を各table要素につき一度hashする。entryの構成時に所有者のbyte列を再hashしない。各成分は互いに独立したcanonical digest呼出しで処理し、batch要求indexの構築費用を必要としない。実際の変換・検査・hash・一時配列・digest出力を計上し、停止後に部分結果を返さず消費量を保持する。
+
+tableの並べ替えと対応する参照付け替え、entryの部分選択・重複・順序変更は、選択されたguestのidentityを変えない。使用していない別entry・別所有者の内容を個別guestのidentityへ含めない。選択された成分のcanonical内容は完全に含める。これは通常の暗号学的衝突耐性に依存する内容identityであり、canonical化前の表現差を区別する保証ではない。
+
+旧ForeignClosure全体のflat digestとの同一性は保証しない。Prepare・Print・Text等の操作identityは、この成分identityへ接続する変更で、独立domain・framing・versionを規定する。現時点のconsumerを黙って新方式へ切り替えない。PageSetでのNDF借用再利用、native/portable providerの経路同等性、consumerの正式受入は接続時の別条件とする。
 
 ## 接続と受入
 
