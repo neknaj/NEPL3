@@ -64,7 +64,17 @@ impl OriginGraph {
         sources: &SourceStore,
         budget: &mut Budget,
     ) -> Result<(), OriginError> {
-        Self::checked_heights(origins, sources, budget).map(|_| ())
+        Self::validate_origins_with_view(origins, sources, budget).map(|_| ())
+    }
+    /// Retain a borrowed proof after complete source, reference and DAG validation.
+    /// This is local structural evidence, not receiving-boundary admission authority.
+    pub fn validate_origins_with_view<'a>(
+        origins: &'a [Origin],
+        sources: &SourceStore,
+        budget: &mut Budget,
+    ) -> Result<ValidatedOriginGraph<'a>, OriginError> {
+        let heights = Self::checked_heights(origins, sources, budget)?;
+        Ok(ValidatedOriginGraph { origins, heights })
     }
     fn checked_heights(
         origins: &[Origin],
@@ -189,6 +199,80 @@ impl OriginGraph {
     }
     pub fn origins(&self) -> &[Origin] {
         &self.origins
+    }
+}
+/// Immutable origin arena whose complete graph and source geometry were checked.
+pub struct ValidatedOriginGraph<'a> {
+    origins: &'a [Origin],
+    heights: Vec<u64>,
+}
+impl ValidatedOriginGraph<'_> {
+    /// Whether an explicit cause supports the selected span through `maps`.
+    /// A root match or unsupported leaf needs no visitation scratch. Otherwise
+    /// each query initializes O(V) scratch for the arena and visits each reachable
+    /// edge at most once, plus the existing mapping-containment costs.
+    /// Shared ancestors are not expanded
+    /// once per path. Current caller depth and sticky stops still apply.
+    pub fn supports_span(
+        &self,
+        origin: OriginId,
+        span: &Span,
+        maps: &ValidatedSourceMap<'_>,
+        budget: &mut Budget,
+    ) -> Result<bool, OriginError> {
+        budget.poll()?;
+        let root = usize::try_from(origin.0).map_err(|_| OriginError::Reference)?;
+        let height = *self.heights.get(root).ok_or(OriginError::Reference)?;
+        budget.observe_depth(height)?;
+        // Direct fields are common. Do not initialize arena-sized scratch when
+        // the root itself decides the query (including an unsupported leaf).
+        budget.charge(Resource::Work, 1)?;
+        let root_value = &self.origins[root];
+        if let Some(position) = origin_span(root_value)?
+            && maps.contains(position, span, budget)?
+        {
+            return Ok(true);
+        }
+        if parents(root_value).is_empty() {
+            return Ok(false);
+        }
+        budget.charge(Resource::Work, self.origins.len() as u64)?;
+        budget.charge(Resource::AllocationUnits, self.origins.len() as u64)?;
+        let mut visited = Vec::new();
+        visited
+            .try_reserve_exact(self.origins.len())
+            .map_err(|_| budget.stop(StopReason::AllocationLimit))?;
+        visited.resize(self.origins.len(), 0u8);
+        let mut pending = Vec::new();
+        budget.charge(Resource::AllocationUnits, 8)?;
+        pending
+            .try_reserve(1)
+            .map_err(|_| budget.stop(StopReason::AllocationLimit))?;
+        pending.push(origin);
+        visited[root] = 1;
+        while let Some(origin) = pending.pop() {
+            budget.charge(Resource::Work, 1)?;
+            let value = &self.origins[origin.0 as usize];
+            if origin.0 as usize != root
+                && let Some(position) = origin_span(value)?
+                && maps.contains(position, span, budget)?
+            {
+                return Ok(true);
+            }
+            for parent in parents(value) {
+                budget.charge(Resource::Work, 1)?;
+                let index = parent.0 as usize;
+                if visited[index] == 0 {
+                    budget.charge(Resource::AllocationUnits, 8)?;
+                    pending
+                        .try_reserve(1)
+                        .map_err(|_| budget.stop(StopReason::AllocationLimit))?;
+                    pending.push(*parent);
+                    visited[index] = 1;
+                }
+            }
+        }
+        Ok(false)
     }
 }
 fn parents(origin: &Origin) -> &[OriginId] {

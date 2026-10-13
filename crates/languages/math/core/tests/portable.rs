@@ -260,3 +260,77 @@ fn mapped_view_parent_child_roundtrip_requires_explicit_mapping_closure() -> Res
     assert!(portable::to_value(&original, &r, &mut c, &mut b()).is_err());
     Ok(())
 }
+
+#[test]
+fn field_support_shared_ancestry_does_not_expand_paths() -> Result<(), String> {
+    let r = registry()?;
+    let source = SourceSnapshot::new(
+        SourceId("math-field".into()),
+        0,
+        "memory:math-field".into(),
+        b"ab".to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    let selected = source.span(0, 1).map_err(err)?;
+    let outside = source.span(1, 2).map_err(err)?;
+    let mut origins = vec![
+        Origin::Direct(outside.clone()),
+        Origin::Direct(selected.clone()),
+    ];
+    let mut last = OriginId(0);
+    for _ in 0..24 {
+        origins.push(Origin::Composite(vec![last, last]));
+        last = OriginId((origins.len() - 1) as u64);
+    }
+    let unsupported = last;
+    origins.push(Origin::Composite(vec![OriginId(1), last]));
+    let supported = OriginId((origins.len() - 1) as u64);
+    let mut doc = MathSyntax {
+        value: MathValue {
+            root: MathRoot::Expr(ExprRef(0)),
+            nodes: vec![MathNode {
+                kind: MathKind::Symbol { name: "a".into() },
+                locations: vec![MathFieldLocation {
+                    field: MathField::SymbolName,
+                    origin: Some(supported),
+                    span: Some(selected),
+                }],
+                origin: None,
+                span: None,
+            }],
+            embeds: vec![],
+        },
+        sources: vec![source],
+        origins,
+        views: vec![],
+        source_maps: vec![],
+    };
+    let mut limits = b().limits();
+    limits.work = 1000 * doc.origins.len() as u64;
+    doc.validate_structure(
+        &r,
+        &mut Budget::new(limits),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    doc.value.nodes[0].locations[0].origin = Some(unsupported);
+    assert_eq!(
+        doc.validate_structure(
+            &r,
+            &mut Budget::new(limits),
+            &mut SourceAdmission::default()
+        )
+        .err(),
+        Some(nepl3_math_core::check::StructureError::FieldPosition(0))
+    );
+    // A later query against the same ancestry selects different bytes.
+    doc.value.nodes[0].locations[0].span = Some(outside);
+    doc.validate_structure(
+        &r,
+        &mut Budget::new(limits),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    Ok(())
+}

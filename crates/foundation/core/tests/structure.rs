@@ -1708,3 +1708,202 @@ fn imported_origin_cursor_reuses_only_the_same_scoped_snapshot() -> Result<(), O
 
 #[path = "structure/lookup.rs"]
 mod lookup;
+
+#[test]
+fn origin_support_is_query_local_mapped_and_budgeted() -> Result<(), OriginError> {
+    let source = SourceSnapshot::new(
+        SourceId("support".into()),
+        0,
+        "memory:support".into(),
+        b"aac".to_vec(),
+        &mut budget(),
+    )?;
+    let a = source.span(0, 1)?;
+    let b = source.span(1, 2)?;
+    let c = source.span(2, 3)?;
+    let mut store = SourceStore::default();
+    store.insert(source)?;
+    let mut map = SourceMap::default();
+    map.insert(
+        Mapping {
+            source: a.clone(),
+            target: b.clone(),
+            kind: MappingKind::Exact,
+        },
+        &store,
+        &mut budget(),
+    )?;
+    let maps = map.validated();
+    let mut origins = vec![
+        Origin::Direct(a.clone()),
+        Origin::Synthetic {
+            reason: "unsupported".into(),
+            anchor: None,
+        },
+    ];
+    let mut last = OriginId(1);
+    for _ in 0..24 {
+        origins.push(Origin::Composite(vec![last, last]));
+        last = OriginId((origins.len() - 1) as u64);
+    }
+    origins.push(Origin::Composite(vec![OriginId(0), last]));
+    let root = OriginId((origins.len() - 1) as u64);
+    let view = OriginGraph::validate_origins_with_view(&origins, &store, &mut budget())?;
+    let mut usage = budget();
+    assert!(view.supports_span(root, &b, &maps, &mut usage)?);
+    assert!(!view.supports_span(root, &c, &maps, &mut budget())?);
+    assert!(view.supports_span(root, &a, &maps, &mut budget())?);
+    assert_eq!(
+        view.supports_span(OriginId(u64::MAX), &a, &maps, &mut budget()),
+        Err(OriginError::Reference)
+    );
+    // This bound accounts for every arena node/edge and the fixed small mapping.
+    assert!(usage.usage().work < 100 * origins.len() as u64);
+    let used = usage.usage();
+    for (resource, amount, reason) in [
+        (Resource::Work, used.work, StopReason::WorkLimit),
+        (
+            Resource::AllocationUnits,
+            used.allocation_units,
+            StopReason::AllocationLimit,
+        ),
+    ] {
+        let mut limits = budget().limits();
+        match resource {
+            Resource::Work => limits.work = amount,
+            _ => limits.allocation_units = amount,
+        }
+        assert!(view.supports_span(root, &b, &maps, &mut Budget::new(limits))?);
+        match resource {
+            Resource::Work => limits.work -= 1,
+            _ => limits.allocation_units -= 1,
+        }
+        let mut stopped = Budget::new(limits);
+        assert_eq!(
+            view.supports_span(root, &b, &maps, &mut stopped),
+            Err(OriginError::Stopped(reason))
+        );
+        assert_eq!(
+            view.supports_span(OriginId(0), &a, &maps, &mut stopped),
+            Err(OriginError::Stopped(reason))
+        );
+    }
+    let mut limits = budget().limits();
+    limits.depth = 26;
+    assert!(view.supports_span(root, &a, &maps, &mut Budget::new(limits))?);
+    let mut deeper = Budget::new(limits);
+    assert_eq!(
+        deeper.with_depth(|budget| view.supports_span(root, &a, &maps, budget)),
+        Err(OriginError::Stopped(StopReason::DepthLimit))
+    );
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert_eq!(
+        view.supports_span(root, &a, &maps, &mut cancelled),
+        Err(OriginError::Stopped(StopReason::Cancelled))
+    );
+    Ok(())
+}
+
+#[test]
+fn origin_support_proof_rejects_invalid_arena_before_any_match() -> Result<(), OriginError> {
+    let source = SourceSnapshot::new(
+        SourceId("proof".into()),
+        0,
+        "memory:proof".into(),
+        b"x".to_vec(),
+        &mut budget(),
+    )?;
+    let span = source.span(0, 1)?;
+    let mut store = SourceStore::default();
+    store.insert(source)?;
+    for (bad, expected) in [
+        (Origin::Composite(vec![OriginId(1)]), OriginError::Cycle),
+        (
+            Origin::Composite(vec![OriginId(99)]),
+            OriginError::Reference,
+        ),
+        (
+            Origin::Synthetic {
+                reason: String::new(),
+                anchor: None,
+            },
+            OriginError::EmptyReason,
+        ),
+    ] {
+        let origins = vec![Origin::Direct(span.clone()), bad];
+        assert_eq!(
+            OriginGraph::validate_origins_with_view(&origins, &store, &mut budget()).err(),
+            Some(expected)
+        );
+    }
+    let origins = vec![
+        Origin::Synthetic {
+            reason: "anchor".into(),
+            anchor: Some(span.clone()),
+        },
+        Origin::Generated {
+            operation: OperationRef {
+                schema: SchemaRef {
+                    package: "test".into(),
+                    revision: 1,
+                    digest: Digest::of(b"test"),
+                },
+                name: "generate".into(),
+            },
+            callsite: Some(span.clone()),
+            inputs: vec![],
+        },
+        Origin::Generated {
+            operation: OperationRef {
+                schema: SchemaRef {
+                    package: "test".into(),
+                    revision: 1,
+                    digest: Digest::of(b"test"),
+                },
+                name: "generate".into(),
+            },
+            callsite: None,
+            inputs: vec![OriginId(0)],
+        },
+    ];
+    let view = OriginGraph::validate_origins_with_view(&origins, &store, &mut budget())?;
+    let maps = SourceMap::default();
+    for i in 0..3 {
+        assert!(view.supports_span(OriginId(i), &span, &maps.validated(), &mut budget())?);
+    }
+    Ok(())
+}
+
+#[test]
+fn direct_origin_fields_do_not_initialize_unrelated_arena_scratch() -> Result<(), OriginError> {
+    let source = SourceSnapshot::new(
+        SourceId("direct".into()),
+        0,
+        "memory:direct".into(),
+        b"xy".to_vec(),
+        &mut budget(),
+    )?;
+    let selected = source.span(0, 1)?;
+    let unsupported = source.span(1, 2)?;
+    let mut store = SourceStore::default();
+    store.insert(source)?;
+    let map = SourceMap::default();
+    let maps = map.validated();
+    let small = vec![Origin::Direct(selected.clone())];
+    let large = vec![Origin::Direct(selected.clone()); 1000];
+    let small = OriginGraph::validate_origins_with_view(&small, &store, &mut budget())?;
+    let large = OriginGraph::validate_origins_with_view(&large, &store, &mut budget())?;
+    let mut small_budget = budget();
+    let mut large_budget = budget();
+    for _ in 0..50 {
+        for span in [&selected, &unsupported] {
+            assert_eq!(
+                small.supports_span(OriginId(0), span, &maps, &mut small_budget)?,
+                large.supports_span(OriginId(0), span, &maps, &mut large_budget)?
+            );
+        }
+    }
+    assert_eq!(small_budget.usage(), large_budget.usage());
+    Ok(())
+}

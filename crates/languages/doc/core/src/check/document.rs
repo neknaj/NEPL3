@@ -115,7 +115,7 @@ impl DocumentSyntax {
             }
             store.insert_with_budget(source.clone_with_budget(b)?, b)?;
         }
-        OriginGraph::validate_origins(&self.origins, &store, b)?;
+        let origins = OriginGraph::validate_origins_with_view(&self.origins, &store, b)?;
         let maps = SourceMap::validate_bound_mapping_parts(&self.source_maps, &[], &store, b)?;
         for (index, node) in self.value.nodes.iter().enumerate() {
             b.charge(Resource::Work, 1)?;
@@ -160,38 +160,7 @@ impl DocumentSyntax {
                         return Err(StructureError::FieldPosition(index as u64));
                     }
                     if let Some(origin) = location.origin {
-                        // The selected bytes must be supported by an explicit
-                        // cause. Composite/Generated arenas remain iterative.
-                        let mut pending = alloc::vec::Vec::new();
-                        b.charge(Resource::AllocationUnits, 8)?;
-                        pending.push(origin);
-                        let mut found = false;
-                        while let Some(origin) = pending.pop() {
-                            b.charge(Resource::Work, 1)?;
-                            let (position, parents) = match &self.origins[origin.0 as usize] {
-                                nepl3_core::origin::Origin::Direct(span) => (Some(span), &[][..]),
-                                nepl3_core::origin::Origin::Composite(parents) => {
-                                    (None, parents.as_slice())
-                                }
-                                nepl3_core::origin::Origin::Generated {
-                                    callsite, inputs, ..
-                                } => (callsite.as_ref(), inputs.as_slice()),
-                                nepl3_core::origin::Origin::Synthetic { anchor, .. } => {
-                                    (anchor.as_ref(), &[][..])
-                                }
-                            };
-                            if let Some(position) = position
-                                && maps.contains(position, span, b)?
-                            {
-                                found = true;
-                                break;
-                            }
-                            for parent in parents {
-                                b.charge(Resource::Work, 1)?;
-                                b.charge(Resource::AllocationUnits, 8)?;
-                                pending.push(*parent);
-                            }
-                        }
+                        let found = origins.supports_span(origin, span, &maps, b)?;
                         if !found {
                             return Err(StructureError::FieldPosition(index as u64));
                         }
