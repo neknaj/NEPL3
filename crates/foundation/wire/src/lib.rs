@@ -42,6 +42,7 @@ pub enum WireError {
     View(nepl3_core::view::ViewError),
     Origin(nepl3_core::origin::OriginError),
     Syntax(nepl3_core::syntax::SyntaxError),
+    ForeignGroup(nepl3_core::syntax::group::GroupError),
     Facts(nepl3_core::facts::FactError),
     Report(nepl3_core::diagnostic::validation::ReportValidationError),
 }
@@ -70,6 +71,15 @@ impl From<nepl3_core::facts::FactError> for WireError {
         match value {
             nepl3_core::facts::FactError::Stopped(r) => Self::Stopped(r),
             v => Self::Facts(v),
+        }
+    }
+}
+impl From<nepl3_core::syntax::group::GroupError> for WireError {
+    fn from(error: nepl3_core::syntax::group::GroupError) -> Self {
+        use nepl3_core::syntax::group::GroupError;
+        match error {
+            GroupError::Stopped(reason) => Self::Stopped(reason),
+            error => Self::ForeignGroup(error),
         }
     }
 }
@@ -102,6 +112,12 @@ impl nepl3_core::value_codec::FoundationCodecError for WireError {
             }
             Self::View(error) => error.stop_reason(),
             Self::Syntax(error) => error.stop_reason(),
+            Self::ForeignGroup(nepl3_core::syntax::group::GroupError::Stopped(reason)) => {
+                Some(*reason)
+            }
+            Self::ForeignGroup(nepl3_core::syntax::group::GroupError::Syntax(error)) => {
+                error.stop_reason()
+            }
             _ => None,
         }
     }

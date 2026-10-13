@@ -44,7 +44,7 @@ fn resource_cmp(left: &str, right: &str, b: &mut Budget) -> Result<Ordering, Syn
 
 // Index construction leaves the authored values untouched. Every comparison,
 // swap and allocation is charged; heapsort permits stopping inside the sort.
-fn sorted(
+pub(in crate::syntax) fn sorted(
     count: usize,
     compare: impl Fn(usize, usize, &mut Budget) -> Result<Ordering, SyntaxError>,
     b: &mut Budget,

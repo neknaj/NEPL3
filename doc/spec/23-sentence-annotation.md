@@ -28,6 +28,7 @@ Break、ExternalLink、ForeignInlineのいずれかである。子は順序付�
 Sentence/ConcatはInline列、Rubyはbaseとreading、InlineAnnoはbaseと順序付きnotesを持つ。
 Code/Textは文字列、Emphasis/StrongはInline一つ、Breakは子なし、ExternalLinkはURIとlabelを持つ。
 ForeignInlineは明示的なForeignClosureを参照し、言語名の閉じたenumを持たない。
+複数のforeign値の所有情報を共有する場合は[Foundationの共有所有契約](24-shared-foreign-owners.md)に従う。共有groupの検査だけで文章の出現深さやDoc consumer移行の成立を証明しない。
 
 文章内の外部URL構造はSentenceが所有する。page/section/anchorの名前解決、画像asset、
 数式等は明示foreign-inline adapterの契約で扱い、D固有の名前空間をSentence coreへ移さない。

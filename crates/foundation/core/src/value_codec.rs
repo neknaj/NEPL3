@@ -155,6 +155,18 @@ pub trait FoundationValueCodec {
         value: &NdfValue,
         budget: &mut Budget,
     ) -> Result<crate::syntax::ForeignClosure, Self::Error>;
+    /// Closed shared ownership tables; identity and source closure remain explicit.
+    /// Successful decoding does not prove consuming-language occurrence depths.
+    fn encode_foreign_group(
+        &mut self,
+        value: &crate::syntax::group::ForeignClosureGroup,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, Self::Error>;
+    fn decode_foreign_group(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<crate::syntax::group::ForeignClosureGroup, Self::Error>;
     fn decode_syntax(
         &mut self,
         value: &NdfValue,

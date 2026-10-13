@@ -286,6 +286,11 @@
       "route": "sources/doc-inventory.md"
     },
     {
+      "id": "shared-foreign-owners-source",
+      "source": "doc/spec/24-shared-foreign-owners.md",
+      "route": "sources/24-shared-foreign-owners.md"
+    },
+    {
       "id": "sentence-annotation-source",
       "source": "doc/spec/23-sentence-annotation.md",
       "route": "sources/23-sentence-annotation.md"

@@ -1,5 +1,6 @@
 //! Iterative bundle conversion preserves foreign syntax and token sidecars.
 mod foreign;
+pub mod group;
 mod order;
 use crate::{WireError, boundary::*, environment::*, origin::*, source::*, view::*};
 use alloc::{boxed::Box, vec::Vec};
