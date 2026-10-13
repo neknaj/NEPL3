@@ -6,6 +6,8 @@ use std::{
     io::{self, Cursor, Read, Write},
     rc::Rc,
 };
+#[path = "reader/child.rs"]
+mod child;
 #[path = "reader/model.rs"]
 mod model;
 use model::*;
