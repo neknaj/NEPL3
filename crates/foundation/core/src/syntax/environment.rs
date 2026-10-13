@@ -1,4 +1,5 @@
 use super::*;
+pub(in crate::syntax) use index::sorted;
 mod index;
 pub(super) use index::{EnvironmentIndex, resource_index};
 

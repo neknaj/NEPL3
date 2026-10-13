@@ -6,7 +6,7 @@ use nepl3_core::{
     value_codec::FoundationValueCodec,
 };
 use nepl3_wire::foundation::FoundationCodec;
-fn closed() -> Result<(SchemaRef, SchemaRegistry, ForeignClosure), String> {
+pub(super) fn closed() -> Result<(SchemaRef, SchemaRegistry, ForeignClosure), String> {
     let (schema, registry, mut owner) = fixture()?;
     // The owner uses a forward origin edge. The guest's Origin0 has a different
     // span, and its Env9 has different data. Neither local ID may be rebound.

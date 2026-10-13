@@ -1063,6 +1063,158 @@
         ]
       ]
     },
+    "ForeignClosureGroup": {
+      "constraints": [
+        "syntax.foreign-group"
+      ],
+      "record": [
+        [
+          "provenances",
+          {
+            "list": {
+              "named": {
+                "name": "ForeignProvenance",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "environments",
+          {
+            "list": {
+              "named": {
+                "name": "ForeignOwnerEnvironment",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "entries",
+          {
+            "list": {
+              "named": {
+                "name": "ForeignGroupEntry",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ForeignGroupEntry": {
+      "constraints": [],
+      "record": [
+        [
+          "owner",
+          {
+            "named": {
+              "name": "ForeignOwnerEnvironmentRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "syntax",
+          {
+            "named": {
+              "name": "ForeignSyntax",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "ForeignOwnerEnvironment": {
+      "constraints": [],
+      "record": [
+        [
+          "provenance",
+          {
+            "named": {
+              "name": "ForeignProvenanceRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "environment",
+          {
+            "named": {
+              "name": "EnvironmentEntry",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "ForeignOwnerEnvironmentRef": {
+      "constraints": [],
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ]
+    },
+    "ForeignProvenance": {
+      "constraints": [],
+      "record": [
+        [
+          "origins",
+          {
+            "list": {
+              "named": {
+                "name": "Origin",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "name": "SourceContent",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "name": "SourceMapping",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ForeignProvenanceRef": {
+      "constraints": [],
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ]
+    },
     "ForeignSyntax": {
       "constraints": [
         "syntax.foreign"

@@ -63,6 +63,6 @@ Rustの版は [rust-toolchain.toml](rust-toolchain.toml) で固定していま�
 
 文書は[移行条件](doc/spec/16-doc-migration.md)を満たしたページからDoc DSLを正本にしています。[doc/canonical.json](doc/canonical.json)の登録ページは.nepldを編集し、生成Markdownを手編集しません。未登録ページはMarkdownを正本とします。ローカルHTML生成、静的サイト、GitHub Pages配布の手順・保証範囲も[開発手順](doc/development.md)に記載しています。文書表記は[執筆指針](doc/authoring.md)に従います。
 
-設計識別子は `nepl3-design-2026-09-06-r4`。[foundationの訂正](doc/decisions/0005-foundation-runtime-contracts.md)、[Web・Doc移行の判断](doc/decisions/0003-web-tea-doc-migration.md)、[r2の契約訂正](doc/decisions/0002-design-contract-corrections.md)、未解消の課題は [独立レビュー](doc/review.md) に記録します。説明用の `.tmp/` はGit管理・CI・配布の対象外です。
+設計識別子は `nepl3-design-2026-10-13-r5`。[共有所有情報の契約](doc/spec/24-shared-foreign-owners.md)、[foundationの訂正](doc/decisions/0005-foundation-runtime-contracts.md)、[Web・Doc移行の判断](doc/decisions/0003-web-tea-doc-migration.md)、[r2の契約訂正](doc/decisions/0002-design-contract-corrections.md)、未解消の課題は [独立レビュー](doc/review.md) に記録します。説明用の `.tmp/` はGit管理・CI・配布の対象外です。
 
 ライセンスは [MIT](LICENSE) です。

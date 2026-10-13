@@ -1742,6 +1742,78 @@
         "Usage": []
       }
     },
+    "ForeignProvenanceRef": {
+      "fields": [
+        [
+          "index",
+          "U64"
+        ]
+      ]
+    },
+    "ForeignOwnerEnvironmentRef": {
+      "fields": [
+        [
+          "index",
+          "U64"
+        ]
+      ]
+    },
+    "ForeignProvenance": {
+      "fields": [
+        [
+          "origins",
+          "List<Origin>"
+        ],
+        [
+          "sources",
+          "List<SourceContent>"
+        ],
+        [
+          "sourceMaps",
+          "List<SourceMapping>"
+        ]
+      ]
+    },
+    "ForeignOwnerEnvironment": {
+      "fields": [
+        [
+          "provenance",
+          "ForeignProvenanceRef"
+        ],
+        [
+          "environment",
+          "EnvironmentEntry"
+        ]
+      ]
+    },
+    "ForeignGroupEntry": {
+      "fields": [
+        [
+          "owner",
+          "ForeignOwnerEnvironmentRef"
+        ],
+        [
+          "syntax",
+          "ForeignSyntax"
+        ]
+      ]
+    },
+    "ForeignClosureGroup": {
+      "fields": [
+        [
+          "provenances",
+          "List<ForeignProvenance>"
+        ],
+        [
+          "environments",
+          "List<ForeignOwnerEnvironment>"
+        ],
+        [
+          "entries",
+          "List<ForeignGroupEntry>"
+        ]
+      ]
+    },
     "ForeignClosure": {
       "fields": [
         [
@@ -2036,7 +2108,7 @@
     }
   ],
   "note": "Operation-level domain record constraints and sum variants are specified in the referenced chapters; domain constructor field order is design/forms.json.",
-  "design_revision": "nepl3-design-2026-09-06-r4",
+  "design_revision": "nepl3-design-2026-10-13-r5",
   "schema_status": "incomplete: see design/review.json R006; operation descriptions are not closed executable input/output schemas",
   "intrinsic_types": {
     "NdfValue": {
@@ -2266,6 +2338,7 @@
       "facts.delta",
       "facts.source_closure"
     ],
+    "ForeignClosureGroup": ["syntax.foreign-group"],
     "ForeignClosure": [
       "syntax.foreign-closure"
     ],

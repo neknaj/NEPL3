@@ -124,10 +124,12 @@ article ja "NEPL3" body
     cons sentence
       cons ruby text "設計識別子" text "せっけいしきべつし"
       cons text "は "
-      cons code "nepl3-design-2026-09-06-r4"
+      cons code "nepl3-design-2026-10-13-r5"
       cons text "。"
       nil
     cons sentence
+      cons link relative "doc/spec/24-shared-foreign-owners.md" none concat cons ruby text "共有所有情報" text "きょうゆうしょゆうじょうほう" cons text "の" cons ruby text "契約" text "けいやく" nil
+      cons text "、"
       cons link relative "doc/decisions/0005-foundation-runtime-contracts.md" none concat cons text "foundationの" cons ruby text "訂正" text "ていせい" nil
       cons text "、"
       cons link relative "doc/decisions/0003-web-tea-doc-migration.md" none concat cons text "Web・Doc" cons ruby text "移行" text "いこう" cons text "の" cons ruby text "判断" text "はんだん" nil

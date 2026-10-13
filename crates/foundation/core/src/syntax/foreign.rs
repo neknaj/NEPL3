@@ -1,4 +1,5 @@
 use super::*;
+pub mod group;
 
 /// Standalone guest syntax with the explicitly selected owner environment.
 /// Owner origins retain their original arena order and IDs; guest origins stay
@@ -12,6 +13,50 @@ pub struct ForeignClosure {
     pub owner_sources: Vec<SourceSnapshot>,
     pub owner_source_maps: Vec<Mapping>,
 }
+/// Borrowed closed components. A view owns no data and carries no validation
+/// proof; standalone and grouped owners expose the same explicit boundary.
+#[derive(Clone, Copy)]
+pub struct ForeignClosureView<'a> {
+    syntax: &'a ForeignSyntax,
+    environment: &'a EnvironmentEntry,
+    origins: &'a [Origin],
+    sources: &'a [SourceSnapshot],
+    source_maps: &'a [Mapping],
+}
+impl<'a> ForeignClosureView<'a> {
+    pub fn syntax(&self) -> &'a ForeignSyntax {
+        self.syntax
+    }
+    pub fn owner_environment(&self) -> &'a EnvironmentEntry {
+        self.environment
+    }
+    pub fn owner_origins(&self) -> &'a [Origin] {
+        self.origins
+    }
+    pub fn owner_sources(&self) -> &'a [SourceSnapshot] {
+        self.sources
+    }
+    pub fn owner_source_maps(&self) -> &'a [Mapping] {
+        self.source_maps
+    }
+    /// Explicitly copy a standalone closure. No source/semantic validity is
+    /// inferred here; callers validate at their receiving operation boundary.
+    pub fn materialize(&self, b: &mut Budget) -> Result<ForeignClosure, StopReason> {
+        b.poll()?;
+        let owner = group::copy_provenance(self.origins, self.sources, self.source_maps, b)?;
+        b.charge(
+            Resource::AllocationUnits,
+            core::mem::size_of::<ForeignClosure>() as u64,
+        )?;
+        Ok(ForeignClosure {
+            syntax: clone_syntax(self.syntax, b)?,
+            owner_environment: self.environment.clone_with_budget(b)?,
+            owner_origins: owner.origins,
+            owner_sources: owner.sources,
+            owner_source_maps: owner.source_maps,
+        })
+    }
+}
 pub struct ValidatedForeignClosure<'a> {
     value: &'a ForeignClosure,
 }
@@ -21,6 +66,16 @@ impl<'a> ValidatedForeignClosure<'a> {
     }
 }
 impl ForeignClosure {
+    pub fn view(&self) -> ForeignClosureView<'_> {
+        ForeignClosureView {
+            syntax: &self.syntax,
+            environment: &self.owner_environment,
+            origins: &self.owner_origins,
+            sources: &self.owner_sources,
+            source_maps: &self.owner_source_maps,
+        }
+    }
+
     /// Checks the two distinct origin arenas and declared source closures.
     /// Like SyntaxBundle's native graph proof, this checks environment identity
     /// equality; the portable codec additionally recomputes its canonical hash.
@@ -31,35 +86,15 @@ impl ForeignClosure {
         admission: &mut SourceAdmission,
     ) -> Result<ValidatedForeignClosure<'a>, SyntaxError> {
         b.poll()?;
-        self.syntax
-            .bundle
-            .validate_with_sources(registry, b, admission)?;
-        require_schema(registry, &self.syntax.schema)?;
-        b.charge(Resource::Work, self.syntax.category.len() as u64 + 40)?;
-        if self.syntax.category.is_empty()
-            || self.syntax.root != self.syntax.bundle.root
-            || self.syntax.bundle.node(self.syntax.root)?.schema != self.syntax.schema
-        {
-            return Err(SyntaxError::ForeignRoot);
-        }
-        if self.syntax.environment.id != self.owner_environment.id
-            || self.syntax.environment.digest != self.owner_environment.digest
-        {
-            return Err(SyntaxError::Environment);
-        }
-        let mut store = SourceStore::default();
-        for source in &self.owner_sources {
-            admission.admit_existing(source, b)?;
-            if store
-                .get_revision_with_budget(&source.identity().source, source.identity().revision, b)?
-                .is_some()
-            {
-                return Err(SyntaxError::DuplicateSource);
-            }
-            store.insert_with_budget(source.clone_with_budget(b)?, b)?;
-        }
-        OriginGraph::validate_origins(&self.owner_origins, &store, b)?;
-        SourceMap::validate_mappings(&self.owner_source_maps, &store, b)?;
+        validate_syntax(&self.syntax, registry, b, admission)?;
+        association(&self.syntax, &self.owner_environment)?;
+        validate_provenance(
+            &self.owner_origins,
+            &self.owner_sources,
+            &self.owner_source_maps,
+            b,
+            admission,
+        )?;
         environment(
             &self.owner_environment.value,
             self.owner_origins.len(),
@@ -124,52 +159,84 @@ impl ForeignClosure {
             .iter()
             .find(|e| e.id == syntax.environment.id && e.digest == syntax.environment.digest)
             .ok_or(SyntaxError::Environment)?;
-        let mut origins = Vec::new();
-        for origin in &owner.origins {
-            b.charge(
-                Resource::AllocationUnits,
-                core::mem::size_of::<Origin>() as u64,
-            )?;
-            origins.push(origin.clone_with_budget(b)?);
-        }
-        let mut sources = Vec::new();
-        for source in &owner.sources {
-            b.charge(
-                Resource::AllocationUnits,
-                core::mem::size_of::<SourceSnapshot>() as u64,
-            )?;
-            sources.push(source.clone_with_budget(b)?);
-        }
-        let mut maps = Vec::new();
-        for map in &owner.source_maps {
-            b.charge(
-                Resource::AllocationUnits,
-                core::mem::size_of::<Mapping>() as u64,
-            )?;
-            maps.push(map.clone_with_budget(b)?);
-        }
-        let bytes = (syntax.schema.package.len() + syntax.category.len()) as u64;
-        b.charge(Resource::Work, bytes + 40)?;
-        b.charge(
-            Resource::AllocationUnits,
-            bytes + core::mem::size_of::<Self>() as u64,
-        )?;
+        let provenance =
+            group::copy_provenance(&owner.origins, &owner.sources, &owner.source_maps, b)?;
         let result = Self {
-            syntax: ForeignSyntax {
-                schema: syntax.schema.clone(),
-                category: syntax.category.clone(),
-                root: syntax.root,
-                bundle: syntax.bundle.clone_with_budget(b)?,
-                environment: syntax.environment.clone(),
-            },
+            syntax: clone_syntax_with_allocation(syntax, core::mem::size_of::<Self>() as u64, b)?,
             owner_environment: environment.clone_with_budget(b)?,
-            owner_origins: origins,
-            owner_sources: sources,
-            owner_source_maps: maps,
+            owner_origins: provenance.origins,
+            owner_sources: provenance.sources,
+            owner_source_maps: provenance.source_maps,
         };
         result.validate(registry, b, admission)?;
         Ok(result)
     }
+}
+fn clone_syntax(syntax: &ForeignSyntax, b: &mut Budget) -> Result<ForeignSyntax, StopReason> {
+    clone_syntax_with_allocation(syntax, 0, b)
+}
+fn clone_syntax_with_allocation(
+    syntax: &ForeignSyntax,
+    extra_allocation: u64,
+    b: &mut Budget,
+) -> Result<ForeignSyntax, StopReason> {
+    let bytes = (syntax.schema.package.len() + syntax.category.len()) as u64;
+    b.charge(Resource::Work, bytes + 40)?;
+    b.charge(Resource::AllocationUnits, bytes + extra_allocation)?;
+    Ok(ForeignSyntax {
+        schema: syntax.schema.clone(),
+        category: syntax.category.clone(),
+        root: syntax.root,
+        bundle: syntax.bundle.clone_with_budget(b)?,
+        environment: syntax.environment.clone(),
+    })
+}
+fn association(syntax: &ForeignSyntax, owner: &EnvironmentEntry) -> Result<(), SyntaxError> {
+    if syntax.environment.id != owner.id || syntax.environment.digest != owner.digest {
+        return Err(SyntaxError::Environment);
+    }
+    Ok(())
+}
+fn validate_syntax(
+    syntax: &ForeignSyntax,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<(), SyntaxError> {
+    syntax
+        .bundle
+        .validate_with_sources(registry, b, admission)?;
+    require_schema(registry, &syntax.schema)?;
+    b.charge(Resource::Work, syntax.category.len() as u64 + 40)?;
+    if syntax.category.is_empty()
+        || syntax.root != syntax.bundle.root
+        || syntax.bundle.node(syntax.root)?.schema != syntax.schema
+    {
+        return Err(SyntaxError::ForeignRoot);
+    }
+    Ok(())
+}
+fn validate_provenance(
+    origins: &[Origin],
+    sources: &[SourceSnapshot],
+    maps: &[Mapping],
+    b: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<(), SyntaxError> {
+    let mut store = SourceStore::default();
+    for source in sources {
+        admission.admit_existing(source, b)?;
+        if store
+            .get_revision_with_budget(&source.identity().source, source.identity().revision, b)?
+            .is_some()
+        {
+            return Err(SyntaxError::DuplicateSource);
+        }
+        store.insert_with_budget(source.clone_with_budget(b)?, b)?;
+    }
+    OriginGraph::validate_origins(origins, &store, b)?;
+    SourceMap::validate_mappings(maps, &store, b)?;
+    Ok(())
 }
 pub(super) fn environment(
     value: &Environment,
