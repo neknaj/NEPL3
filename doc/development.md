@@ -742,6 +742,14 @@ charges resource IDs/digests/bytes before comparison. This comparison admits no
 source bytes and grants no authority. Even equally malformed values may compare
 equal; ordinary schema validation and authorization are still required.
 
+`IssuedInvocation::issue_with_parent_validation` charges input validation and context
+encoding to the actual parent before reserving the saved Invoke's unchanged grant.
+The grant must fit the remaining capacity after those costs. Prior usage and sticky
+stops survive validation or reservation failure; reservation itself is not consumed
+remote usage. Legacy `issue` keeps its separate validation Budget. This does not
+supply remote measurement authentication or the cumulative-history local-child adapter.
+The focused regression is `cargo test --locked -p nepl3-provider --test transport reply::delegation::parent::`.
+
 `IssuedInvocation::settle_saved_request` optionally runs that check under the
 actual parent's unreserved local ceiling before the existing identity checks and
 one-time settlement. Successful comparison costs stay charged on mismatch or
