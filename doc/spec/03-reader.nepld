@@ -364,6 +364,13 @@ body
         cons "[別/べつ]sessionや[不正/ふせい]な[外形/がいけい]の[事前拒否/じぜんきょひ]はpendingを[消費/しょうひ]せず、[同/おな]じ[操作/そうさ]の[予算停止/よさんていし]は[既受理/きじゅり]collectorを[保全/ほぜん]して[終端/しゅうたん]へ[移/うつ]る。"
         nil
       cons paragraph
+        cons "TokenizationSessionも[保存/ほぞん]した[継続全体/けいぞくぜんたい]とdomain TokenizationReplyのAwait/Reserveをcanonical NDFへ[出力/しゅつりょく]できる。"
+        cons "[内側/うちがわ]のReaderContinuationと[外側/そとがわ]のTokenizationContinuationは、それぞれの[保存時/ほぞんじ]のUsage/Reportを[維持/いじ]する。"
+        cons "[継続/けいぞく]の17 fieldと[待機/たいき]replyの8 fieldを[照合/しょうごう]し、[受信値/じゅしんち]でprivate[保存状態/ほぞんじょうたい]を[置換/ちかん]しない。"
+        cons "Reserveのechoはsourceの[作成権限/さくせいけんげん]を[付与/ふよ]せず、hostが[与/あた]える[実際/じっさい]のSourceReservationを[既存/きそん]の[経路/けいろ]で[検証/けんしょう]する。"
+        cons "source[宣言/せんげん]の[整列/せいれつ]と[同一宣言/どういつせんげん]の[統合/とうごう]は[出力/しゅつりょく]だけに[適用/てきよう]し、native collectorとrollbackの[順序/じゅんじょ]を[変/か]えない。"
+        nil
+      cons paragraph
         cons "ProviderCallとReaderContinuationは、hostが[割/わ]り[当/あ]てる[空/から]でないopaque sessionIdを[持/も]つ。"
         cons "callIdはそのsession[内/ない]で[一意/いちい]とし、coreは[乱数/らんすう]や[時計/とけい]でIDを[生成/せいせい]しない。"
         cons "plan/source/stateが[偶然同一/ぐうぜんどういつ]の[別/べつ]sessionから[届/とど]いた[継続/けいぞく]でも、[保存/ほぞん]されたsessionId/callIdと[違/ちが]えば[拒否/きょひ]する。"

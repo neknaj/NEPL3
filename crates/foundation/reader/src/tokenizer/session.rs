@@ -20,6 +20,7 @@ use nepl3_core::{
     source::{Digest, SourceAdmission, SourceError, SourceReservation, SourceStore},
     view::{Token, Trivia, TriviaKind, ViewBundle},
 };
+mod echo;
 #[cfg(test)]
 mod ownership_tests;
 
@@ -148,6 +149,7 @@ pub struct TokenizationSession<'a> {
     modes: &'a [ReaderMode],
     checked: &'a CheckedPlan<'a>,
     registry: &'a SchemaRegistry,
+    wire_schema: &'a nepl3_core::value::SchemaRef,
     reader: ReaderSession<'a>,
     pending: Option<Pending>,
     next_request: u64,
@@ -197,11 +199,16 @@ impl<'a> TokenizationSession<'a> {
         let plan_digest = checked.plan().digest(budget)?;
         let configuration_digest = super::identity::digest(modes, plan_digest, budget)?;
         let reader = ReaderSession::new(copy(&session_id, budget)?, checked, registry, budget)?;
+        // Wire schema and executable language plan schema have separate identities.
+        let wire_schema = registry
+            .selected(crate::schema::PACKAGE, crate::schema::REVISION)
+            .ok_or(ReaderError::Context)?;
         Ok(Self {
             session_id,
             modes,
             checked,
             registry,
+            wire_schema,
             reader,
             pending: None,
             next_request: 0,

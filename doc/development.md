@@ -852,3 +852,24 @@ parent admission isolation, fresh depth versus historical peak, and valid resume
 after rejected child attempts. It preserves the existing generated-source outer
 Report test. This is host-composed test coverage, not a new production sender API,
 resumable child, remote accounting proof, or formal provider-equivalence acceptance.
+
+
+### Tokenizer canonical pending-value echoes
+
+TokenizationSession exports the complete canonical TokenizationContinuation and
+pending domain TokenizationReply (Await or Reserve). Resume/reserve checks
+schema headers/session, unchanged limits and monotone history before shared-budget polling,
+then compares the complete value against private state before consuming pending.
+The selected Reader wire schema is distinct from the language plan schema.
+
+Inner Reader and outer Tokenizer Usage/Report retain their captured values while
+serialization and comparison consume the current budget. Admitted stops use the
+existing collector-preserving stop path; foreign or malformed preflight retains
+pending. A Reserve echo does not supply reservation authority: an actual native
+SourceReservation is still required and checked by the existing implementation.
+
+Regression tests cover both projections, all three provider kinds, reservation,
+independent native-derived field oracles, schema-valid changes, mapped scopes,
+repeated/unsorted sources, ambient exclusion, wrong routes, replay, and stops.
+This is not a general continuation decoder, a terminal-reply codec, or a common
+OperationReply Await/Reserve envelope. Formal acceptance remains in progress.

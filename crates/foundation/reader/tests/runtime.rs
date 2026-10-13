@@ -1,3 +1,7 @@
+#[path = "support/tokenizer/echo.rs"]
+mod echo_projection;
+#[path = "runtime/tokenizer/echo.rs"]
+mod tokenizer_echo;
 use nepl3_core::{budget::*, diagnostic::*, schema::*, source::*, syntax::*, value::*, view::*};
 use nepl3_reader::{model::*, plan::*, runtime::*};
 #[path = "runtime/checkpoints.rs"]
