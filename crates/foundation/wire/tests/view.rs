@@ -850,6 +850,28 @@ fn codec_mapping_scope_is_explicit_validated_and_cleared_on_rebind() -> TestResu
             assert_eq!(error.stop_reason(), Some(StopReason::SourceLimit));
             assert_eq!(stopped.poll(), Err(StopReason::SourceLimit));
         }
+        // A distinct operation also loses mapping authority, even after a warm
+        // parent validation; the parent's admission ledger is not replaced.
+        scoped
+            .decode_views(&raw, &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+        {
+            let mut fresh = SourceAdmission::default();
+            let mut separate = scoped.scoped_with_admission(&sources, &mut fresh);
+            assert!(matches!(
+                separate.encode_views(&views, &mut budget()),
+                Err(WireError::View(ViewError::Cover))
+            ));
+            assert!(matches!(
+                separate.decode_views(&raw, &mut budget()),
+                Err(WireError::View(ViewError::Cover))
+            ));
+        }
+        let mut parent_again = budget();
+        scoped
+            .decode_views(&raw, &mut parent_again)
+            .map_err(|e| format!("{e:?}"))?;
+        assert_eq!(parent_again.usage().source_bytes, 0);
         // A nested payload must not inherit its caller's containment authority.
         let mut rebound = scoped.scoped(&sources);
         assert!(rebound.encode_views(&views, &mut budget()).is_err());

@@ -132,6 +132,16 @@ pub trait FoundationValueCodec {
         &'a mut self,
         sources: &'a crate::source::SourceStore,
     ) -> impl FoundationValueCodec<Error = Self::Error> + 'a;
+    /// Rebind explicit sources and a distinct operation's admission ledger.
+    /// This scope clears mapping authority and validation caches, never borrowing
+    /// or transferring source charges from the parent codec's admission. Pair the
+    /// supplied admission with that operation's Budget; source declarations alone
+    /// do not grant authority. The parent admission remains unchanged.
+    fn scoped_with_admission<'a>(
+        &'a mut self,
+        sources: &'a crate::source::SourceStore,
+        admission: &'a mut crate::source::SourceAdmission,
+    ) -> impl FoundationValueCodec<Error = Self::Error> + 'a;
     /// Rebind sources and the explicit mapping closure used to validate Views.
     /// Mapping endpoints and geometry must be checked against these sources.
     /// Ordinary `scoped` clears this mapping context rather than inheriting it.

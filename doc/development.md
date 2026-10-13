@@ -873,3 +873,29 @@ independent native-derived field oracles, schema-valid changes, mapped scopes,
 repeated/unsorted sources, ambient exclusion, wrong routes, replay, and stops.
 This is not a general continuation decoder, a terminal-reply codec, or a common
 OperationReply Await/Reserve envelope. Formal acceptance remains in progress.
+
+
+### Standalone builtinName sender and encoding retries
+
+`portable::read::sender::execute_name` checks the selected builtinName operation,
+validates the request's declared source table against explicit host authority,
+and narrows context decoding to that table before calling the existing native
+provider. It reuses the request codec, dispatch validation and builtin; it does
+not implement another parser. A request declaration alone grants no authority.
+
+The returned `ExecutedName` privately owns the actual native reply, captured
+execution Usage and narrowed sources. `to_operation_reply` uses a separate
+encoding Budget, fresh SourceAdmission for each attempt and the shared terminal
+outcome wrapper. The codec scope rebinds sources and admission while retaining
+the registry; it cannot reuse execution or earlier encoding source-byte charges.
+The caller's admission ledger is preserved. Failed encoding can be
+retried without rerunning execution, changing its captured Report/Usage or
+clearing its sticky stop. Encoding consumes its own budget. The wire result does
+not authenticate remote usage, and this standalone entry does not reconcile a
+saved caller's cumulative history, depth, grant or session identity.
+
+This bounded slice excludes native pending-session convenience dispatch.
+Measured-child hosts remain responsible for request binding, depth, admission
+and settlement; they must not settle the sender's cumulative execution Usage a
+second time. Focused checks:
+`cargo test --locked -p nepl3-reader --test portable sender::`.

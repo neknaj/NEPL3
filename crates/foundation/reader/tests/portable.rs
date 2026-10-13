@@ -965,3 +965,6 @@ fn host_global_source_cannot_fill_a_missing_request_declaration() -> TestResult 
     );
     Ok(())
 }
+
+#[path = "portable/sender.rs"]
+mod sender;
