@@ -10,6 +10,7 @@ use crate::{
     },
 };
 use nepl3_core::source::SourceAdmission;
+pub(crate) mod native;
 pub mod operation;
 pub mod sender;
 mod value;
@@ -22,6 +23,17 @@ pub struct ReadReplyContext<'a> {
 }
 
 impl ReadReplyContext<'_> {
+    /// Absolute dispatch depth from the session's private saved pending slot.
+    /// This alone does not authorize an execution or a received reply.
+    pub fn saved_depth(&self) -> Result<u64, ReaderError> {
+        match &self.continuation.pending {
+            ProviderCall::Read { depth_base, .. } | ProviderCall::Dependent { depth_base, .. } => {
+                Ok(*depth_base)
+            }
+            ProviderCall::Transform { .. } => Err(ReaderError::ProviderContract),
+        }
+    }
+
     fn schema(&self) -> Result<&SchemaRef, ReaderError> {
         self.registry
             .selected(crate::schema::PACKAGE, crate::schema::REVISION)
@@ -49,12 +61,7 @@ impl ReadReplyContext<'_> {
             current: &c.current,
         };
         let frame = c.frames.last().ok_or(ReaderError::Continuation)?;
-        let depth_base = match &c.pending {
-            ProviderCall::Read { depth_base, .. } | ProviderCall::Dependent { depth_base, .. } => {
-                *depth_base
-            }
-            ProviderCall::Transform { .. } => return Err(ReaderError::ProviderContract),
-        };
+        let depth_base = self.saved_depth()?;
         budget.with_depth_at_least(depth_base, |budget| {
             check_provider(
                 &boundary,
