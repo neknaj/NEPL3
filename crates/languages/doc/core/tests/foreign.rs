@@ -609,3 +609,81 @@ fn doc_group_roles_hidden_owners_and_shared_fragment_are_checked() -> Result<(),
     );
     Ok(())
 }
+
+#[test]
+fn field_support_visits_shared_origin_dag_once_per_query() -> Result<(), String> {
+    let r = registry()?;
+    let source = SourceSnapshot::new(
+        SourceId("field".into()),
+        0,
+        "memory:field".into(),
+        b"ab".to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    let selected = source.span(0, 1).map_err(err)?;
+    let outside = source.span(1, 2).map_err(err)?;
+    let mut origins = vec![Origin::Direct(outside), Origin::Direct(selected.clone())];
+    let mut last = OriginId(0);
+    for _ in 0..24 {
+        origins.push(Origin::Composite(vec![last, last]));
+        last = OriginId((origins.len() - 1) as u64);
+    }
+    let unsupported = last;
+    origins.push(Origin::Composite(vec![OriginId(1), last]));
+    let supported = OriginId((origins.len() - 1) as u64);
+    let mut doc = DocumentSyntax {
+        value: DocValue {
+            root: DocRoot::Inline(InlineRef(1)),
+            nodes: vec![
+                DocNode {
+                    kind: DocKind::Text {
+                        text: "label".into(),
+                    },
+                    locations: vec![],
+                    origin: None,
+                    span: None,
+                },
+                DocNode {
+                    kind: DocKind::Anchor {
+                        id: "a".into(),
+                        label: InlineRef(0),
+                    },
+                    locations: vec![DocFieldLocation {
+                        field: DocField::AnchorId,
+                        origin: Some(supported),
+                        span: Some(selected),
+                    }],
+                    origin: None,
+                    span: None,
+                },
+            ],
+            embeds: Default::default(),
+        },
+        sources: vec![source],
+        origins,
+        views: vec![],
+        source_maps: vec![],
+    };
+    // A linear arena/edge bound including source/shape admission; a traversal
+    // of the 2^24 repeated paths cannot fit this graph-size-derived ceiling.
+    let mut limits = b().limits();
+    limits.work = 1000 * doc.origins.len() as u64;
+    doc.validate_structure(
+        &r,
+        &mut Budget::new(limits),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    doc.value.nodes[1].locations[0].origin = Some(unsupported);
+    assert_eq!(
+        doc.validate_structure(
+            &r,
+            &mut Budget::new(limits),
+            &mut SourceAdmission::default()
+        )
+        .err(),
+        Some(StructureError::FieldPosition(1))
+    );
+    Ok(())
+}
