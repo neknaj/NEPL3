@@ -733,6 +733,30 @@ MathML成功をKaTeX成功として扱わない。明示的な `mathml-only` で
 
 `Budget::with_depth`、`with_depth_at_least`、`with_ceiling`、`measure_depth`、`observe_depth_scope` は、通常のResult経路とRust unwindingでscopeを復元する。累積Usageとsticky stopは保持し、入れ子の深さ測定は内外の最大値を統合する。復元はstack上のDrop guardで行い、純粋なcharge・depth・ceiling遷移と停止理由の優先順位は維持する。`cargo test --locked -p nepl3-core --test budget unwind_scopes` は、内側で捕捉したunwind、取消・超過後のunwind、測定の内外peak、preflightのerror変換中のunwindを検査する。panic=abortやWasmでdestructorの実行を保証するものではなく、panicを成功Resultへ変換しない。
 
+### Session-bound canonical Reader echoes
+
+`ReaderSession::pending_continuation_value` exports every saved continuation field;
+`pending_reply_value` wraps that projection as domain `ReadReply::Await`, with the
+same pending call and Report. `resume_continuation_value` and `resume_reply_value`
+compare the complete canonical echo before resuming the existing private session.
+Received frames, sources, counters and context never replace private state or
+supply authority for creating a new session. These are not general continuation
+decoders or common `OperationReply::Await` adapters.
+
+Export and comparison consume the supplied Budget while encoded Usage/Report
+retain their saved values. Canonical source ordering and identical-declaration
+coalescing leave native collector/rollback order intact. Source mappings remain
+scoped to each saved checkpoint. Non-stopping malformed echoes preserve pending;
+foreign-session/shape preflight cannot consume it even with a stopped Budget.
+A shared-operation resource stop follows the existing terminal path, retaining
+accepted collector artifacts. Existing generated-source reply closure is kept.
+
+Focused checks: `cargo test --locked -p nepl3-reader --lib portable::continuation`
+and `cargo test --locked -p nepl3-reader --test runtime echo::`. Native sender,
+Tokenizer portable echoes, cross-process continuation authority and formal
+runtime acceptance remain separate work.
+
+
 ### Exact saved Invoke comparison before settlement
 
 `Invoke::check_saved` compares request ID, operation identity, input, environment,
