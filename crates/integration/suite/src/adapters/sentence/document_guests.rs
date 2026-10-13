@@ -82,17 +82,28 @@ pub fn collect<C: FoundationValueCodec>(
     codec: &mut C,
     b: &mut Budget,
 ) -> Result<Selection, Error<C::Error>> {
-    let result = collect_inner(sentence, surface, registry, codec, b);
-    b.poll()?;
-    result
+    collect_with_checked(sentence, surface, registry, codec, b).map(|(selection, _)| selection)
 }
-fn collect_inner<C: FoundationValueCodec>(
-    sentence: &SentenceSyntax,
+/// Retain validation of this immutable Sentence for immediate host preparation.
+/// Receiving boundaries and deeper callback occurrences must still validate.
+pub fn collect_with_checked<'a, C: FoundationValueCodec>(
+    sentence: &'a SentenceSyntax,
     surface: &SchemaRef,
     registry: &SchemaRegistry,
     codec: &mut C,
     b: &mut Budget,
-) -> Result<Selection, Error<C::Error>> {
+) -> Result<(Selection, nepl3_sentence_core::syntax::CheckedSyntax<'a>), Error<C::Error>> {
+    let result = collect_inner(sentence, surface, registry, codec, b);
+    b.poll()?;
+    result
+}
+fn collect_inner<'a, C: FoundationValueCodec>(
+    sentence: &'a SentenceSyntax,
+    surface: &SchemaRef,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<(Selection, nepl3_sentence_core::syntax::CheckedSyntax<'a>), Error<C::Error>> {
     let checked = sentence
         .validate(registry, b, codec.source_admission())
         .map_err(|error| match error {
@@ -173,5 +184,5 @@ fn collect_inner<C: FoundationValueCodec>(
             b,
         )?;
     }
-    Ok(selected)
+    Ok((selected, checked))
 }

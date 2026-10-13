@@ -350,6 +350,96 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
                             assert!(output.markup.fragment.nodes.iter().any(
                                 |node| matches!(node, HtmlNode::Text { text } if text == "7")
                             ));
+                            // Retained collection proof replaces exactly the second full
+                            // validation, not content checking or guest lowering.
+                            let store = SourceStore::default();
+                            let run_content = |limit: &mut Budget, repeat_validation: bool| {
+                                let mut admission = SourceAdmission::default();
+                                let mut codec =
+                                    FoundationCodec::new(registry, &store, &mut admission)
+                                        .map_err(err)?;
+                                let result = (|| {
+                                    let (selected, checked) =
+                                        document::namespace::collect_with_checked(
+                                            &output.sentence,
+                                            Some(&compiled.doc.package.schema),
+                                            registry,
+                                            &mut codec,
+                                            limit,
+                                        )?;
+                                    if repeat_validation {
+                                        document::namespace::check_content(
+                                            &output.sentence,
+                                            &selected,
+                                            Some(&compiled.others[0].schema),
+                                            registry,
+                                            &mut codec,
+                                            limit,
+                                        )?;
+                                    } else {
+                                        document::namespace::check_checked_content::<
+                                            FoundationCodec<'_>,
+                                        >(
+                                            &checked,
+                                            &selected,
+                                            Some(&compiled.others[0].schema),
+                                            limit,
+                                        )?;
+                                    }
+                                    Ok::<
+                                        _,
+                                        document::Error<
+                                            <FoundationCodec<'_> as FoundationValueCodec>::Error,
+                                        >,
+                                    >(selected)
+                                })();
+                                Ok::<_, String>(result)
+                            };
+                            let mut reused = budget();
+                            let selected = run_content(&mut reused, false)?.map_err(err)?;
+                            let mut repeated = budget();
+                            let original = run_content(&mut repeated, true)?.map_err(err)?;
+                            assert_eq!(selected.len(), original.len());
+                            for (a, b) in selected.iter().zip(&original) {
+                                assert_eq!(a.embed, b.embed);
+                                assert_eq!(a.document, b.document);
+                            }
+                            assert!(reused.usage().work < repeated.usage().work);
+                            assert!(
+                                reused.usage().allocation_units < repeated.usage().allocation_units
+                            );
+                            for (used, reason) in [
+                                (reused.usage().work, StopReason::WorkLimit),
+                                (reused.usage().allocation_units, StopReason::AllocationLimit),
+                            ] {
+                                for exact in [true, false] {
+                                    let mut limits = budget().limits();
+                                    let value = used - u64::from(!exact);
+                                    match reason {
+                                        StopReason::WorkLimit => limits.work = value,
+                                        StopReason::AllocationLimit => {
+                                            limits.allocation_units = value
+                                        }
+                                        _ => return Err("content resource".into()),
+                                    }
+                                    let mut limit = Budget::new(limits);
+                                    let result = run_content(&mut limit, false)?;
+                                    if exact {
+                                        result.map_err(err)?;
+                                    } else {
+                                        assert!(
+                                            matches!(result, Err(document::Error::Stopped(actual)) if actual == reason)
+                                        );
+                                        assert_eq!(limit.poll(), Err(reason));
+                                    }
+                                }
+                            }
+                            let mut cancelled = budget();
+                            cancelled.cancel();
+                            assert!(matches!(
+                                run_content(&mut cancelled, false)?,
+                                Err(document::Error::Stopped(StopReason::Cancelled))
+                            ));
                             for duplicate_definition in [false, true] {
                                 let mut shared = output.sentence.clone();
                                 let nepl3_sentence_core::model::Root::Sentence(root) =
