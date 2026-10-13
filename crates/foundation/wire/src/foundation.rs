@@ -358,6 +358,14 @@ impl FoundationValueCodec for FoundationCodec<'_> {
         self.validate(value, "ForeignClosureGroup", b)?;
         crate::syntax::group::from_value(value, self.schema, self.registry, self.admission, b)
     }
+    fn foreign_group_entry_digests(
+        &mut self,
+        value: &nepl3_core::syntax::group::ForeignClosureGroup,
+        b: &mut Budget,
+    ) -> Result<Vec<Digest>, WireError> {
+        let encoded = self.encode_foreign_group(value, b)?;
+        crate::syntax::group::identity::from_encoded(value, &encoded, self.schema, b)
+    }
     fn encode_report(
         &mut self,
         value: &nepl3_core::diagnostic::Report,

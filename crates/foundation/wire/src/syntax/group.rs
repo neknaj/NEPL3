@@ -1,5 +1,6 @@
 //! Closed shared owner tables. Portable decoding recomputes environment digests.
 use super::*;
+pub(crate) mod identity;
 use nepl3_core::syntax::group::{
     ForeignClosureGroup, ForeignGroupEntry, ForeignOwnerEnvironment, ForeignProvenance,
     OwnerEnvironmentRef, ProvenanceRef,

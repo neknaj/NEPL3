@@ -1,6 +1,6 @@
 {
   "schema": "nepl3.acceptance-catalog/1",
-  "design_revision": "nepl3-design-2026-10-13-r5",
+  "design_revision": "nepl3-design-2026-10-13-r6",
   "targets": {
     "baremetal-armv6m-build": {
       "description": "Production foundation compiled into thumbv6m-none-eabi RP2040 firmware; record compiler, source and firmware identities; compilation does not imply execution",
