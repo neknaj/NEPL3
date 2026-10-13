@@ -115,9 +115,22 @@ pub fn to_value<C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
-    let (value, _) = encode_with_structure(document, registry, c, b)?;
+    let encoded = encode_with_structure(document, registry, c, b, GuestIdentities::Omit)?;
+    let value = encoded.value;
     check(registry, &value, b)?;
     Ok(value)
+}
+
+// Operation-local products. No raw input can construct a validation proof.
+#[derive(Clone, Copy)]
+enum GuestIdentities {
+    Omit,
+    Retain,
+}
+struct EncodedDocument<'a> {
+    value: NdfValue,
+    structure: crate::check::ValidatedDocumentSyntax<'a>,
+    guest_components: alloc::vec::Vec<nepl3_core::source::Digest>,
 }
 
 // Retain the native immutable proof for the same operation's label traversal.
@@ -129,7 +142,8 @@ fn encode_with_structure<'a, C: FoundationValueCodec>(
     registry: &SchemaRegistry,
     c: &mut C,
     b: &mut Budget,
-) -> Result<(NdfValue, crate::check::ValidatedDocumentSyntax<'a>), PortableError<C::Error>> {
+    identities: GuestIdentities,
+) -> Result<EncodedDocument<'a>, PortableError<C::Error>> {
     let structure = document.validate_structure(registry, b, c.source_admission())?;
     let s = schema(registry)?;
     let sources = c.encode_sources(&document.sources, b).map_err(boundary)?;
@@ -140,7 +154,23 @@ fn encode_with_structure<'a, C: FoundationValueCodec>(
             .map_err(StructureError::from)?;
     }
     let mut scoped = c.scoped_with_mappings(&store, &document.source_maps);
-    let value = document.value.put(s, &mut scoped, b)?;
+    let (value, guest_components) = match identities {
+        GuestIdentities::Omit => (
+            document.value.put(s, &mut scoped, b)?,
+            alloc::vec::Vec::new(),
+        ),
+        GuestIdentities::Retain => document.value.put_with_embeds(s, &mut scoped, b, |c, b| {
+            document.value.embeds.put_with_group(s, c, b, |c, b| {
+                let encoded = c
+                    .encode_foreign_group_with_digests(&document.value.embeds.group, b)
+                    .map_err(boundary)?;
+                if encoded.entry_digests.len() != document.value.embeds.group.entries.len() {
+                    return Err(PortableError::Shape);
+                }
+                Ok((encoded.value, encoded.entry_digests))
+            })
+        })?,
+    };
     let origins = scoped
         .encode_origins(&document.origins, b)
         .map_err(boundary)?;
@@ -152,7 +182,11 @@ fn encode_with_structure<'a, C: FoundationValueCodec>(
         [value, sources, origins, views, maps],
         b,
     )?;
-    Ok((output, structure))
+    Ok(EncodedDocument {
+        value: output,
+        structure,
+        guest_components,
+    })
 }
 pub fn from_value<C: FoundationValueCodec>(
     input: &NdfValue,

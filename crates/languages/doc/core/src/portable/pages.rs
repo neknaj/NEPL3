@@ -32,7 +32,12 @@ pub fn set_to_value<C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
-    set_to_value_with_structures(set, r, c, b).map(|(value, _)| value)
+    encode_set(set, r, c, b, GuestIdentities::Omit).map(|(value, _)| value)
+}
+
+pub(crate) struct PageEncodings<'a> {
+    pub(crate) structures: Vec<crate::check::ValidatedDocumentSyntax<'a>>,
+    pub(crate) guest_components: Vec<Vec<nepl3_core::source::Digest>>,
 }
 
 pub(crate) fn set_to_value_with_structures<'a, C: FoundationValueCodec>(
@@ -40,16 +45,30 @@ pub(crate) fn set_to_value_with_structures<'a, C: FoundationValueCodec>(
     r: &SchemaRegistry,
     c: &mut C,
     b: &mut Budget,
-) -> Result<(NdfValue, Vec<crate::check::ValidatedDocumentSyntax<'a>>), PortableError<C::Error>> {
+) -> Result<(NdfValue, PageEncodings<'a>), PortableError<C::Error>> {
+    encode_set(set, r, c, b, GuestIdentities::Retain)
+}
+
+fn encode_set<'a, C: FoundationValueCodec>(
+    set: &'a PageSet,
+    r: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+    identities: GuestIdentities,
+) -> Result<(NdfValue, PageEncodings<'a>), PortableError<C::Error>> {
     let s = schema(r)?;
     let mut values = Vec::new();
     let mut structures = Vec::new();
+    let mut guest_components = Vec::new();
     for page in &set.pages {
         b.charge(Resource::Work, 1)?;
         let registration = page.registration.put(s, c, b)?;
-        let (document, structure) = encode_with_structure(&page.document, r, c, b)?;
-        pages::push(&mut structures, structure, b)?;
-        let value = record(s, "PageDocument", [registration, document], b)?;
+        let document = encode_with_structure(&page.document, r, c, b, identities)?;
+        pages::push(&mut structures, document.structure, b)?;
+        if matches!(identities, GuestIdentities::Retain) {
+            pages::push(&mut guest_components, document.guest_components, b)?;
+        }
+        let value = record(s, "PageDocument", [registration, document.value], b)?;
         pages::push(&mut values, value, b)?;
     }
     let files = set.files.put(s, c, b)?;
@@ -58,7 +77,13 @@ pub(crate) fn set_to_value_with_structures<'a, C: FoundationValueCodec>(
     // Checking each document again before this traversal duplicates the same
     // schema work. No generated value leaves this boundary before this check.
     text::check_type(&value, "PageSet", r, b)?;
-    Ok((value, structures))
+    Ok((
+        value,
+        PageEncodings {
+            structures,
+            guest_components,
+        },
+    ))
 }
 /// Structural receiver. Call pages::resolve to check registrations, actual
 /// labels and links. Separate documents cannot redefine one source revision.

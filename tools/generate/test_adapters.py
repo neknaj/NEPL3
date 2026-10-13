@@ -53,6 +53,29 @@ class AdapterTests(unittest.TestCase):
         self.assertIn('Ok(Self {source_maps:Value::read(&f[0],s,r,c,b)?})', output)
         self.assertIn('r:&SchemaRegistry', output)
 
+    def test_record_sidecar_preserves_field_order_and_normal_encoder(self) -> None:
+        for codec, arguments in ((Codec.LOCAL, "s,c,b"), (Codec.REGISTRY, "s,r,c,b")):
+            options = Options(frozenset(), {"sourceMaps": "source_maps"}, tuple_case,
+                              codec, {"Data": "sourceMaps"})
+            output = render({"Data": Record(("first", "sourceMaps", "last"))}, "// header", options)
+            self.assertIn("pub(crate) fn put_with_source_maps<C:FoundationValueCodec,T>", output)
+            self.assertLess(output.index("let f0="), output.index("let (f1,sidecar)=encode(c,b)?;"))
+            self.assertLess(output.index("let (f1,sidecar)="), output.index("let f2="))
+            self.assertIn('record(s,"Data",[f0,f1,f2],b)?', output)
+            self.assertIn("self.source_maps.put(" + arguments + ").map(|v|(v,()))", output)
+            self.assertIn("source_maps:Value::read(&f[1]," + arguments + ")?", output)
+
+    def test_record_sidecar_rejects_unknown_fields_and_variants(self) -> None:
+        for types, name, member in (
+            ({"Data": Record(("field",))}, "Missing", "field"),
+            ({"Data": Record(("field",))}, "Data", "missing"),
+            ({"Data": Variant({"Some": ("field",)})}, "Data", "field"),
+            ({"DataRef": Record(("field",))}, "DataRef", "field"),
+        ):
+            options = Options(frozenset(), {}, tuple_case, record_sidecars={name: member})
+            with self.assertRaisesRegex(ValueError, "declared record field"):
+                _ = render(types, "// header", options)
+
 
 if __name__ == "__main__":
     _ = unittest.main()

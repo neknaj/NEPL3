@@ -211,6 +211,48 @@ fn shared_embed_validation_composes_its_deepest_doc_owner() -> Result<(), String
         ),
         Err(StructureError::Stopped(StopReason::DepthLimit))
     ));
+    // The same shared leaf is reached through the deeper inline occurrence
+    // when resolving a complete Article, before any retained encoding is used.
+    use nepl3_doc_core::pages::*;
+    let mut document = doc;
+    document.value.nodes.push(DocNode {
+        locations: vec![],
+        kind: DocKind::Body { blocks: vec![] },
+        origin: None,
+        span: None,
+    });
+    document.value.nodes.push(DocNode {
+        locations: vec![],
+        kind: DocKind::Article {
+            language: "en".into(),
+            title: SentenceRef(20),
+            body: BodyRef(21),
+        },
+        origin: None,
+        span: None,
+    });
+    document.value.root = DocRoot::Article(ArticleRef(22));
+    let set = PageSet {
+        pages: vec![PageDocument {
+            registration: PageRegistration {
+                id: "deep".into(),
+                source: "deep.nepld".into(),
+                route: "deep.md".into(),
+            },
+            document,
+        }],
+        files: vec![],
+    };
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    resolve(&set, &r, &mut codec, &mut b()).map_err(err)?;
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    assert!(matches!(
+        resolve(&set, &r, &mut codec, &mut Budget::new(limits)),
+        Err(PageError::Stopped(StopReason::DepthLimit))
+    ));
     Ok(())
 }
 
@@ -607,5 +649,134 @@ fn doc_group_roles_hidden_owners_and_shared_fragment_are_checked() -> Result<(),
             .validate_structure(&r, &mut b(), &mut SourceAdmission::default())
             .is_err()
     );
+    Ok(())
+}
+
+#[test]
+fn page_group_reuse_preserves_plans_and_resource_boundaries() -> Result<(), String> {
+    use nepl3_doc_core::{pages::*, prepare};
+    let r = registry()?;
+    let empty = SourceStore::default();
+    for count in [1, 4, 8] {
+        for owner_size in [1, 16] {
+            let mut guest = closure(&r)?;
+            guest.owner_origins = vec![
+                Origin::Synthetic {
+                    reason: "owner context".repeat(owner_size),
+                    anchor: None,
+                };
+                owner_size
+            ];
+            let mut document = mapped_article(guest, vec![], vec![]);
+            let entry = document.value.embeds.group.entries[0].clone();
+            document.value.embeds.group.entries = vec![entry; count];
+            document.value.embeds.kinds = vec![EmbedKind::Code; count];
+            document.value.nodes.truncate(4);
+            document.value.nodes[3].kind = DocKind::Body {
+                blocks: (0..count).map(|i| BlockRef((4 + i) as u64)).collect(),
+            };
+            for i in 0..count {
+                document.value.nodes.push(DocNode {
+                    kind: DocKind::Code {
+                        syntax: EmbedRef(i as u64),
+                    },
+                    locations: vec![],
+                    origin: None,
+                    span: None,
+                });
+            }
+            let set = PageSet {
+                pages: vec![PageDocument {
+                    registration: PageRegistration {
+                        id: "page".into(),
+                        source: "page.nepld".into(),
+                        route: "page.md".into(),
+                    },
+                    document,
+                }],
+                files: vec![],
+            };
+            let run = |limits: Limits| -> Result<(_, _), String> {
+                let mut admission = SourceAdmission::default();
+                let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+                let mut budget = Budget::new(limits);
+                let plan = resolve(&set, &r, &mut codec, &mut budget)
+                    .map_err(err)?
+                    .into_plan();
+                Ok((plan, budget.usage()))
+            };
+            let (plan, usage) = run(b().limits())?;
+            // The standalone Prepare path still independently converts the group.
+            // Both paths must produce the same actual guest requirements.
+            let mut admission = SourceAdmission::default();
+            let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+            let mut standalone_budget = b();
+            let standalone = prepare::inspect(
+                &set.pages[0].document,
+                &r,
+                &mut codec,
+                &mut standalone_budget,
+            )
+            .map_err(err)?;
+            // The batch path retains only identities, so even with PageSet
+            // framing it allocates less than a standalone Prepare that performs
+            // a second group conversion. This relational oracle fails when that
+            // duplicate conversion is reintroduced; no frozen cost golden is used.
+            assert!(usage.allocation_units < standalone_budget.usage().allocation_units);
+            if count == 8 {
+                assert!(usage.work < standalone_budget.usage().work);
+            }
+            assert_eq!(plan.remaining.len(), standalone.requirements.len());
+            for (actual, expected) in plan.remaining.iter().zip(&standalone.requirements) {
+                assert_eq!(actual.page, 0);
+                assert_eq!(&actual.requirement, expected);
+            }
+            println!(
+                "page-group count={count} owner={owner_size} work={} allocation={} source={} depth={}",
+                usage.work, usage.allocation_units, usage.source_bytes, usage.depth
+            );
+            for reason in [
+                StopReason::WorkLimit,
+                StopReason::AllocationLimit,
+                StopReason::SourceLimit,
+                StopReason::DepthLimit,
+            ] {
+                let mut limits = b().limits();
+                let measured = match reason {
+                    StopReason::WorkLimit => &mut limits.work,
+                    StopReason::AllocationLimit => &mut limits.allocation_units,
+                    StopReason::SourceLimit => &mut limits.source_bytes,
+                    StopReason::DepthLimit => &mut limits.depth,
+                    _ => return Err("unexpected test limit".into()),
+                };
+                *measured = match reason {
+                    StopReason::WorkLimit => usage.work,
+                    StopReason::AllocationLimit => usage.allocation_units,
+                    StopReason::SourceLimit => usage.source_bytes,
+                    StopReason::DepthLimit => usage.depth,
+                    _ => return Err("unexpected test limit".into()),
+                };
+                assert_eq!(run(limits)?.0, plan);
+                match reason {
+                    StopReason::WorkLimit => limits.work -= 1,
+                    StopReason::AllocationLimit => limits.allocation_units -= 1,
+                    StopReason::SourceLimit => limits.source_bytes -= 1,
+                    StopReason::DepthLimit => limits.depth -= 1,
+                    _ => return Err("unexpected test limit".into()),
+                }
+                let mut admission = SourceAdmission::default();
+                let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+                let mut budget = Budget::new(limits);
+                assert!(
+                    matches!(resolve(&set, &r, &mut codec, &mut budget), Err(PageError::Stopped(s)) if s == reason)
+                );
+                let stopped = budget.usage();
+                assert!(
+                    matches!(resolve(&set, &r, &mut codec, &mut budget), Err(PageError::Stopped(s)) if s == reason)
+                );
+                assert_eq!(budget.usage(), stopped);
+            }
+        }
+    }
     Ok(())
 }
