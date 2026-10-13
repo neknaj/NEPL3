@@ -731,7 +731,7 @@ MathML成功をKaTeX成功として扱わない。明示的な `mathml-only` で
 
 ## BudgetのscopeとRust unwinding
 
-`Budget::with_depth`、`with_depth_at_least`、`with_ceiling`、`measure_depth` は、通常のResult経路とRust unwindingでscopeを復元する。累積Usageとsticky stopは保持し、入れ子の深さ測定は内外の最大値を統合する。復元はstack上のDrop guardで行い、純粋なcharge・depth・ceiling遷移と停止理由の優先順位は維持する。`cargo test --locked -p nepl3-core --test budget unwind_scopes` は、内側で捕捉したunwind、取消・超過後のunwind、測定の内外peak、preflightのerror変換中のunwindを検査する。panic=abortやWasmでdestructorの実行を保証するものではなく、panicを成功Resultへ変換しない。
+`Budget::with_depth`、`with_depth_at_least`、`with_ceiling`、`measure_depth`、`observe_depth_scope` は、通常のResult経路とRust unwindingでscopeを復元する。累積Usageとsticky stopは保持し、入れ子の深さ測定は内外の最大値を統合する。復元はstack上のDrop guardで行い、純粋なcharge・depth・ceiling遷移と停止理由の優先順位は維持する。`cargo test --locked -p nepl3-core --test budget unwind_scopes` は、内側で捕捉したunwind、取消・超過後のunwind、測定の内外peak、preflightのerror変換中のunwindを検査する。panic=abortやWasmでdestructorの実行を保証するものではなく、panicを成功Resultへ変換しない。
 
 ### Exact saved Invoke comparison before settlement
 
@@ -767,3 +767,34 @@ The host must establish those associations and terminal cleanup independently.
 The context digest retains its existing cycle-detection semantics; no wire
 record, remote inherited Budget transport, task status or formal acceptance
 result changes in this slice.
+
+### Trusted terminal local children
+
+`IssuedBudget::execute_local_child` consumes one relative grant in a separate local
+admission context. It imports the actual parent's cumulative Usage, adds each
+additive grant with checked arithmetic, and keeps depth as an absolute ceiling.
+Imported historical depth must fit that ceiling even if this callback is shallow.
+The callback starts at the greater of the admitted saved depth and the parent's
+active depth; its caller must retain every applicable ancestor ceiling.
+
+`Budget::observe_depth_scope` retains callback output, the fresh relative depth
+peak and the sticky stop together. Preexisting stops prevent execution. A stop
+reached during execution does not erase already produced output or accounting,
+but retained output is not proof of success or source admission. Nested scopes
+and Rust unwinding merge fresh peaks without reobserving historical Usage.depth.
+`measure_depth` preserves its existing Result error precedence and stop handling.
+
+The child settles seven additive differences and its fresh absolute depth peak;
+its cumulative usage still includes imported history. Inspect both its semantic
+output and stop reason. Child stops do not choose the parent's semantic policy.
+The adapter rejects observable Budget replacement, counter regression and changed
+limits, but is not tamper-proof against dishonest trusted callbacks. An unwound
+unsettled grant cancels its parent without inventing partial consumption.
+
+Sources are admitted once in this child's own SourceAdmission, independently of
+the parent's proof; returning a source does not authorize it in the parent.
+This is a terminal trusted local adapter, not a resumable child, remote Usage
+authentication or default-dispatch route. Existing dispatch that interprets
+relative Invoke limits as cumulative ceilings cannot be inserted unchanged.
+Run `cargo test --locked -p nepl3-core --test budget` and
+`cargo test --locked -p nepl3-suite --test delegation` for focused checks.

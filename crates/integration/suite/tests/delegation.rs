@@ -224,3 +224,6 @@ fn ancestor_scope_covers_local_and_delegated_work() -> Result<(), StopReason> {
     );
     Ok(())
 }
+
+#[path = "delegation/child.rs"]
+mod child;

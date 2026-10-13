@@ -269,3 +269,111 @@ mod unwind_scopes {
         Ok(())
     }
 }
+
+#[test]
+fn depth_observation_retains_stopped_output_and_fresh_interval() -> Result<(), StopReason> {
+    for reason in [StopReason::Cancelled, StopReason::WorkLimit] {
+        let mut b = Budget::new(limits(100));
+        b.observe_depth(80)?;
+        let observed = b.observe_depth_scope(|b| {
+            b.with_depth_at_least(6, |b| {
+                b.charge(Resource::Work, 7)?;
+                b.stop(reason);
+                Ok::<_, StopReason>("retained")
+            })
+        })?;
+        assert_eq!(observed.output, Ok("retained"));
+        assert_eq!(observed.relative_depth, 6);
+        assert_eq!(observed.stopped, Some(reason));
+        assert_eq!(b.usage().depth, 80);
+        assert_eq!(b.usage().work, 7);
+        assert_eq!(b.current_depth(), 0);
+        assert_eq!(b.poll(), Err(reason));
+        let mut called = false;
+        assert!(matches!(b.observe_depth_scope(|_| called = true), Err(r) if r == reason));
+        assert!(!called);
+    }
+    Ok(())
+}
+
+#[test]
+fn depth_observation_merges_nested_fresh_peaks_without_history() -> Result<(), StopReason> {
+    let mut b = Budget::new(limits(100));
+    b.observe_depth(80)?;
+    b.with_depth_at_least(5, |b| {
+        let outer = b.observe_depth_scope(|b| {
+            let inner = b.observe_depth_scope(|b| b.with_depth(|_| Ok::<_, StopReason>(42)))?;
+            assert_eq!(inner.output, Ok(42));
+            assert_eq!(inner.relative_depth, 1);
+            assert_eq!(inner.stopped, None);
+            Ok::<_, StopReason>(())
+        })?;
+        assert_eq!(outer.output, Ok(()));
+        assert_eq!(outer.relative_depth, 1);
+        let empty = b.observe_depth_scope(|_| ())?;
+        assert_eq!(empty.relative_depth, 0);
+        assert_eq!(empty.stopped, None);
+        Ok::<_, StopReason>(())
+    })?;
+    assert_eq!(b.usage().depth, 80);
+    Ok(())
+}
+
+#[test]
+fn depth_observation_keeps_plain_output_and_callback_errors() -> Result<(), StopReason> {
+    let mut b = Budget::new(limits(100));
+    b.observe_depth(80)?;
+    let outer = b.observe_depth_scope(|b| {
+        let inner = b.observe_depth_scope(|b| {
+            b.observe_depth(7)?;
+            Err::<(), _>(StopReason::SourceLimit)
+        })?;
+        assert_eq!(inner.output, Err(StopReason::SourceLimit));
+        assert_eq!(inner.relative_depth, 7);
+        assert_eq!(inner.stopped, None);
+        b.cancel();
+        Ok::<_, StopReason>("plain output retained")
+    })?;
+    assert_eq!(outer.output, Ok("plain output retained"));
+    assert_eq!(outer.relative_depth, 7);
+    assert_eq!(outer.stopped, Some(StopReason::Cancelled));
+    assert_eq!(b.usage().depth, 80);
+    let mut plain = Budget::new(limits(100));
+    let result = plain.observe_depth_scope(|b| {
+        b.cancel();
+        42
+    })?;
+    assert_eq!(result.output, 42);
+    assert_eq!(result.stopped, Some(StopReason::Cancelled));
+    Ok(())
+}
+
+#[cfg(panic = "unwind")]
+#[test]
+fn depth_observation_unwind_preserves_enclosing_peak_and_stop() -> Result<(), StopReason> {
+    use std::panic::{AssertUnwindSafe, catch_unwind, resume_unwind};
+    let mut b = Budget::new(limits(100));
+    b.observe_depth(80)?;
+    let outer = b.observe_depth_scope(|b| {
+        let caught = catch_unwind(AssertUnwindSafe(|| {
+            let _ = b.observe_depth_scope(|b| {
+                let _ = b.with_depth_at_least(9, |b| {
+                    b.charge(Resource::Work, 4)?;
+                    b.cancel();
+                    resume_unwind(Box::new(()));
+                    #[allow(unreachable_code)]
+                    Ok::<_, StopReason>(())
+                });
+            });
+        }));
+        assert!(caught.is_err());
+        assert_eq!(b.current_depth(), 0);
+        "retained"
+    })?;
+    assert_eq!(outer.output, "retained");
+    assert_eq!(outer.relative_depth, 9);
+    assert_eq!(outer.stopped, Some(StopReason::Cancelled));
+    assert_eq!(b.usage().depth, 80);
+    assert_eq!(b.usage().work, 4);
+    Ok(())
+}
