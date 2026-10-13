@@ -185,6 +185,13 @@ is one pass over the original stylesheet rather than repeated replacement of a
 growing base64 stylesheet. Output stylesheets have page-specific names and
 retain each page's unique visual scopes.
 
-CI runs the ignored `katex_cli::pinned_native` test with the real pinned packages.
-This covers inline/external CSS, accessible MathML, complete fonts/license,
+CI runs the ignored `katex_cli::pinned_native` tests. The document/page test uses
+the real pinned packages. The separate Unix deadline regression runs the actual
+CLI against a controlled direct host which records its PID and private directory
+before `exec sleep 120`. An independent 90-second watchdog, deadline-specific
+diagnostic, absent publication, terminated child and removed private directory
+distinguish enforcement from eventual fixture exit. This fixture needs no npm
+packages and does not test arbitrary descendant-process containment or promise
+hard real-time return from production exports.
+The real document/page test covers inline/external CSS, accessible MathML, complete fonts/license,
 three-page default-budget generation and explicit missing-resource fallback.
