@@ -366,3 +366,6 @@ fn descriptor_boundaries_reject_excess_depth_schema_forgery_and_resource_stops()
     );
     Ok(())
 }
+
+#[path = "schema/value.rs"]
+mod value;

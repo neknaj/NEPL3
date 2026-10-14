@@ -196,30 +196,44 @@ fn foundation<'a>(
         .ok_or(SchemaError::UnknownSchema.into())
 }
 
+fn check_value(
+    value: &NdfValue,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<(), WireError> {
+    let names = ("nepl3.foundation".len() + "SchemaDescriptor".len()) as u64;
+    b.charge(Resource::Work, names)?;
+    b.charge(Resource::AllocationUnits, names)?;
+    registry.validate(&expected("SchemaDescriptor"), value, b)?;
+    Ok(())
+}
+
 /// Validate names and field shapes, then encode using the selected foundation.
 /// Symbolic dependencies can be supplied later, before registry finalization.
-pub fn encode(
+/// Returning a value does not register the descriptor or grant execution rights.
+pub fn to_value(
     value: &SchemaDescriptor,
     registry: &SchemaRegistry,
     b: &mut Budget,
-) -> Result<Vec<u8>, WireError> {
+) -> Result<NdfValue, WireError> {
     let s = foundation(registry, b)?;
     value.reference(b)?;
     let value = value.value(s, b)?;
-    crate::encode_checked(&value, &expected("SchemaDescriptor"), registry, b)
+    check_value(&value, registry, b)?;
+    Ok(value)
 }
 
-/// Decode and compare the full identity to the host-selected expected schema.
-/// Returning a descriptor grants no execution or resource permissions.
-pub fn decode(
-    input: &[u8],
+/// Validate the foundation representation and the full host-selected identity.
+/// Symbolic dependencies are data; this function never registers or resolves them.
+pub fn from_value(
+    value: &NdfValue,
     identity: &SchemaRef,
     registry: &SchemaRegistry,
     b: &mut Budget,
 ) -> Result<SchemaDescriptor, WireError> {
     let s = foundation(registry, b)?;
-    let value = crate::decode_checked(input, &expected("SchemaDescriptor"), registry, b)?;
-    let descriptor: SchemaDescriptor = Codec::from(value.value(), s, &SourceStore::default(), b)?;
+    check_value(value, registry, b)?;
+    let descriptor: SchemaDescriptor = Codec::from(value, s, &SourceStore::default(), b)?;
     let actual = descriptor.reference(b)?;
     let comparison_work = (actual.package.len() as u64)
         .checked_add(identity.package.len() as u64)
@@ -230,4 +244,25 @@ pub fn decode(
         return Err(SchemaError::IdentityMismatch.into());
     }
     Ok(descriptor)
+}
+
+/// Canonical CBOR transport for the same validated descriptor value boundary.
+pub fn encode(
+    value: &SchemaDescriptor,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<Vec<u8>, WireError> {
+    crate::encode(&to_value(value, registry, b)?, b)
+}
+
+/// Decode and compare the full identity to the host-selected expected schema.
+/// Returning a descriptor grants no execution or resource permissions.
+pub fn decode(
+    input: &[u8],
+    identity: &SchemaRef,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<SchemaDescriptor, WireError> {
+    foundation(registry, b)?;
+    from_value(&crate::decode(input, b)?, identity, registry, b)
 }

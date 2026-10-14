@@ -179,6 +179,21 @@ impl FoundationValueCodec for FoundationCodec<'_> {
         self.validate(value, "TypeDescriptor", budget)?;
         types::decode(value, self.schema, budget)
     }
+    fn encode_schema_descriptor(
+        &mut self,
+        value: &nepl3_core::schema::SchemaDescriptor,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
+        crate::schema::to_value(value, self.registry, budget)
+    }
+    fn decode_schema_descriptor(
+        &mut self,
+        value: &NdfValue,
+        expected: &SchemaRef,
+        budget: &mut Budget,
+    ) -> Result<nepl3_core::schema::SchemaDescriptor, WireError> {
+        crate::schema::from_value(value, expected, self.registry, budget)
+    }
     fn source_admission(&mut self) -> &mut SourceAdmission {
         self.validated_mappings = None;
         self.admission

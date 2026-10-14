@@ -78,6 +78,9 @@ git diff
 
 共通型を変更したときは `cargo run --locked -p nepl3-tools -- foundation --write` で実際のpackage descriptorを生成します。`check` は正本との一致に加え、production core registryによるdigest照合・参照finalizeも行います。通常buildからschema生成を呼ぶbuild.rsは置きません。
 
+SchemaDescriptorの型付き交換は `FoundationValueCodec::encode_schema_descriptor` / `decode_schema_descriptor` から利用できる。実装はwireの値codecを共有し、CBORへの往復変換を挟まない。受信時にはhostが選んだSchemaRefを必須とし、登録済みfoundation schemaによる表現検査、descriptorの名前・重複・深さの検査、package・revision・digestの一致を確認する。既存のbyte codecも同じ検査を使う。交換の成功はschemaの登録、記述された依存先の解決、実行権限の付与を意味しない。外部のFoundationValueCodec実装にもこの明示的な境界の実装が必要になる。
+
+
 reader包絡の正本は `interfaces/reader.json` です。変更時は `cargo run --locked -p nepl3-tools -- reader --write` でproductionの登録コードを生成します。参照するfoundation型と合わせたregistryのfinalizeを検査し、VMのstate・request・continuation型と同じ変更で同期します。
 
 Grammarの型付きconstructor arenaは `design/forms.json` から `python tools/generate/grammar.py --write` で明示生成します。この生成物は構文shapeの投影であり、reader/binding/style/extensionを含むLanguagePackageをforms表だけから作るものではありません。初回seed入力adapterの `tools/bootstrap/grammar.py` は完全なsyntax.neplgを読み、元bytes/digest、constructor/literal/listのUTF-8 byte範囲と全metadataを保持したASTを出します。ASCII識別子のseed用部分集合に限定し、TextではNEPL3のescapeを使いJSON固有escapeを拒否します。これはproduction parserやbootstrap合格の代わりではなく、実Grammar compilerへの初期入力を用意する開発host処理です。P1/P2はproduction reader/engineで同じsourceを読み直して比較します。
