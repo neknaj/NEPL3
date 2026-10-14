@@ -32,6 +32,73 @@
         ]
       ]
     },
+    "CompileProfile": {
+      "constraints": [],
+      "record": [
+        [
+          "package",
+          "Text"
+        ],
+        [
+          "state_type",
+          {
+            "named": {
+              "name": "TypeDescriptor",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "reader_imports",
+          {
+            "list": {
+              "named": {
+                "name": "ReaderImport",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "extensions",
+          {
+            "list": {
+              "named": {
+                "name": "ExtensionRequirement",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "classes",
+          {
+            "list": {
+              "named": {
+                "name": "NamedClass",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "views",
+          {
+            "list": {
+              "named": {
+                "name": "NamedView",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
     "Document": {
       "constraints": [
         "grammar.constructor_graph"
@@ -85,6 +152,44 @@
           {
             "named": {
               "name": "Span",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "NamedClass": {
+      "constraints": [],
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "class",
+          {
+            "named": {
+              "name": "PresentationClass",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "NamedView": {
+      "constraints": [],
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "kind",
+          {
+            "named": {
+              "name": "KindRef",
               "package": "nepl3.foundation",
               "revision": 1
             }
@@ -1244,6 +1349,25 @@
             "named": {
               "name": "Span",
               "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "ReaderImport": {
+      "constraints": [],
+      "record": [
+        [
+          "provider",
+          "Text"
+        ],
+        [
+          "signature",
+          {
+            "named": {
+              "name": "ProviderSignature",
+              "package": "nepl3.reader",
               "revision": 1
             }
           }

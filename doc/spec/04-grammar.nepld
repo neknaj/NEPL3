@@ -525,4 +525,17 @@ body
         cons "proofを[使用/しよう]する[下流操作/かりゅうそうさ]の[処理量/しょりりょう]は[個別/こべつ]に[計上/けいじょう]し、source admissionも[実行/じっこう]する。"
         nil
       nil
+  cons section compile_profile "10. CompileProfileの[交換/こうかん]"
+    body
+      cons paragraph
+        cons "CompileProfileは、package、state_type、reader_imports、extensions、classes、viewsの6[項目/こうもく]を[保持/ほじ]する。"
+        cons "[各/かく]catalogの[順序/じゅんじょ]とextensionのaliasを[保持/ほじ]し、[言語/げんご]revisionはGrammar[文書/ぶんしょ]のLanguage[宣言/せんげん]から[取得/しゅとく]する。"
+        cons "ReaderImportはproviderとReader[所有/しょゆう]のProviderSignature、NamedClassはnameとFoundation[所有/しょゆう]のPresentationClass、NamedViewはnameとFoundation[所有/しょゆう]のKindRefで[構成/こうせい]する。"
+        cons "extensionsはEngine[所有/しょゆう]のExtensionRequirement[列/れつ]として[交換/こうかん]する。"
+        cons "[送受信/そうじゅしん]では[選択/せんたく]したGrammar schemaの[完全/かんぜん]なidentityとrecord[構造/こうぞう]を[検査/けんさ]し、[型/かた]やoperationの[未使用/みしよう]なsymbolic[参照/さんしょう]は[解決/かいけつ]せず[保持/ほじ]する。"
+        cons "catalog[名/めい]と[選択/せんたく]されたcontractの[意味検査/いみけんさ]はnative compilerが[担当/たんとう]する。"
+        cons "[交換/こうかん]はprovider[登録/とうろく]、[実行権限/じっこうけんげん]、source[権限/けんげん]、[資源上限/しげんじょうげん]を[付与/ふよ]せず、[同/おな]じBudgetへ[変換/へんかん]と[検査/けんさ]の[消費/しょうひ]を[累積/るいせき]する。"
+        cons "このdata[契約/けいやく]は、Grammar compile[操作/そうさ]のrequest/reply[対応/たいおう]やremote[実行結果/じっこうけっか]の[正当性/せいとうせい]を[証明/しょうめい]するものではない。"
+        nil
+      nil
   nil
