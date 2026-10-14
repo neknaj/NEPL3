@@ -26,6 +26,53 @@ fn b() -> Budget {
 fn err(e: impl core::fmt::Debug) -> String {
     format!("{e:?}")
 }
+fn exact_and_short_limits(
+    mut action: impl FnMut(&mut Budget) -> Result<(), ParseError>,
+) -> Result<(), String> {
+    use nepl3_core::budget::StopReason;
+    let mut measured = b();
+    action(&mut measured).map_err(err)?;
+    let usage = measured.usage();
+    let limits = Limits {
+        work: usage.work,
+        allocation_units: usage.allocation_units,
+        ..b().limits()
+    };
+    action(&mut Budget::new(limits)).map_err(err)?;
+    for (limits, reason) in [
+        (
+            Limits {
+                work: usage.work.checked_sub(1).ok_or("work charge")?,
+                ..limits
+            },
+            StopReason::WorkLimit,
+        ),
+        (
+            Limits {
+                allocation_units: usage
+                    .allocation_units
+                    .checked_sub(1)
+                    .ok_or("allocation charge")?,
+                ..limits
+            },
+            StopReason::AllocationLimit,
+        ),
+    ] {
+        let mut limited = Budget::new(limits);
+        assert!(matches!(action(&mut limited), Err(ParseError::Stopped(v)) if v == reason));
+        assert_eq!(limited.poll(), Err(reason));
+    }
+    let mut cancelled = b();
+    cancelled.cancel();
+    let before = cancelled.usage();
+    assert!(matches!(
+        action(&mut cancelled),
+        Err(ParseError::Stopped(StopReason::Cancelled))
+    ));
+    assert_eq!(cancelled.usage(), before);
+    Ok(())
+}
+
 fn first(
     _: &OperationRef,
     request: ReadRequest<'_>,
@@ -85,13 +132,17 @@ fn explicit_dispatch_distinguishes_same_named_operations_and_rejects_forged_bind
         })
     };
     let mut operations = vec![];
-    for package in ["test.first", "test.second"] {
+    for (package, name) in [
+        ("test.first", "read"),
+        ("test.second", "read"),
+        ("test.third", "other"),
+    ] {
         let d = SchemaDescriptor {
             package: package.into(),
             revision: 1,
             types: vec![],
             operations: vec![OperationDescriptor {
-                name: "read".into(),
+                name: name.into(),
                 input: named("ReadRequest"),
                 output: named("ReadReply"),
                 pure: true,
@@ -101,7 +152,7 @@ fn explicit_dispatch_distinguishes_same_named_operations_and_rejects_forged_bind
         r.register(schema.clone(), d, &mut b()).map_err(err)?;
         operations.push(OperationRef {
             schema,
-            name: "read".into(),
+            name: name.into(),
         });
     }
     r.finalize(&mut b()).map_err(err)?;
@@ -136,21 +187,98 @@ fn explicit_dispatch_distinguishes_same_named_operations_and_rejects_forged_bind
         origins: vec![],
     };
     for reversed in [false, true] {
-        let mut readers = vec![
-            NativeReader {
-                operation: operations[0].clone(),
-                read: first,
-            },
-            NativeReader {
-                operation: operations[1].clone(),
-                read: second,
-            },
+        let make = |budget: &mut Budget| {
+            let mut readers = vec![
+                NativeReader {
+                    operation: operations[0].clone(),
+                    read: first,
+                },
+                NativeReader {
+                    operation: operations[1].clone(),
+                    read: second,
+                },
+                NativeReader {
+                    operation: operations[2].clone(),
+                    read: first,
+                },
+            ];
+            if reversed {
+                readers.reverse();
+            }
+            NativeHost::new(&r, implementation, "dispatch:".into(), readers, budget)
+        };
+        exact_and_short_limits(|budget| make(budget).map(|_| ()))?;
+        let mut host = make(&mut b()).map_err(err)?;
+        exact_and_short_limits(|budget| host.provider_catalog(budget).map(|_| ()))?;
+        let catalog = host.provider_catalog(&mut b()).map_err(err)?;
+        let mut schemas = vec![
+            r.selected("nepl3.foundation", 1)
+                .ok_or("foundation")?
+                .clone(),
+            r.selected("nepl3.reader", 1).ok_or("reader")?.clone(),
         ];
-        if reversed {
-            readers.reverse();
+        schemas.extend(operations.iter().map(|operation| operation.schema.clone()));
+        let profile = ParseProfile {
+            id: "same-name-catalog".into(),
+            languages: vec![],
+            schemas,
+            category_modes: vec![],
+            head_providers: vec![],
+            providers: operations
+                .iter()
+                .map(|operation| ProviderRequirement {
+                    provider: operation.name.clone(),
+                    revision: 1,
+                    implementation_digest: implementation,
+                    operation: operation.clone(),
+                })
+                .collect(),
+            allowlist: operations.clone(),
+            resources: vec![],
+            limits: b().limits(),
+        };
+        let runtime = RuntimeCatalog {
+            packages: &[],
+            providers: &catalog,
+            resources: &[],
+        };
+        let resolved = profile.resolve(&runtime, &r, &mut b()).map_err(err)?;
+        let mut forged = catalog.clone();
+        forged[0].implementation_digest = Digest::of(b"wrong catalog identity");
+        assert!(matches!(
+            profile.resolve(
+                &RuntimeCatalog {
+                    packages: &[],
+                    providers: &forged,
+                    resources: &[]
+                },
+                &r,
+                &mut b()
+            ),
+            Err(ProfileError::ProviderIdentity)
+        ));
+        assert_eq!(catalog.len(), 2);
+        assert_eq!(
+            catalog
+                .iter()
+                .find(|p| p.provider == "read")
+                .ok_or("read group")?
+                .operations
+                .len(),
+            2
+        );
+        let mut copied = host.provider_catalog(&mut b()).map_err(err)?;
+        copied[0].operations[0].name.push('x');
+        assert_eq!(host.providers(), catalog);
+        for operation in &operations {
+            assert_eq!(
+                resolved
+                    .provider(operation, &mut b())
+                    .map_err(err)?
+                    .operation,
+                *operation
+            );
         }
-        let mut host = NativeHost::new(&r, implementation, "dispatch:".into(), readers, &mut b())
-            .map_err(err)?;
         for (index, operation) in operations.iter().enumerate() {
             let call = ProviderCall::Read {
                 session_id: "dispatch".into(),
@@ -168,11 +296,17 @@ fn explicit_dispatch_distinguishes_same_named_operations_and_rejects_forged_bind
                 },
             };
             let mut requirement = ProviderRequirement {
-                provider: "read".into(),
+                provider: operation.name.clone(),
                 revision: 1,
                 implementation_digest: implementation,
                 operation: operation.clone(),
             };
+            exact_and_short_limits(|budget| {
+                let mut fresh = make(&mut b())?;
+                fresh
+                    .provider(&call, &requirement, budget, &mut SourceAdmission::default())
+                    .map(|_| ())
+            })?;
             let reply = host
                 .provider(
                     &call,
@@ -183,8 +317,38 @@ fn explicit_dispatch_distinguishes_same_named_operations_and_rejects_forged_bind
                 .map_err(err)?;
             assert!(
                 matches!(reply, Some(ProviderReply::Read(reply)) if matches!(*reply,
-                ReadReply::NoMatch { .. } if index == 0) || matches!(*reply, ReadReply::NeedMore { .. } if index == 1))
+                ReadReply::NoMatch { .. } if index != 1) || matches!(*reply, ReadReply::NeedMore { .. } if index == 1))
             );
+            let mut unknown_call = call.clone();
+            let ProviderCall::Read {
+                operation: unknown, ..
+            } = &mut unknown_call
+            else {
+                return Err("read fixture".into());
+            };
+            unknown.schema.digest = Digest::of(b"unregistered same-name operation");
+            let mut unknown_requirement = requirement.clone();
+            unknown_requirement.operation = unknown.clone();
+            assert!(matches!(
+                host.provider(
+                    &unknown_call,
+                    &unknown_requirement,
+                    &mut b(),
+                    &mut SourceAdmission::default()
+                ),
+                Err(ParseError::Context)
+            ));
+            requirement.revision += 1;
+            assert!(matches!(
+                host.provider(
+                    &call,
+                    &requirement,
+                    &mut b(),
+                    &mut SourceAdmission::default()
+                ),
+                Err(ParseError::Context)
+            ));
+            requirement.revision -= 1;
             requirement.implementation_digest = Digest::of(b"wrong implementation");
             assert!(matches!(
                 host.provider(

@@ -53,11 +53,11 @@ impl<'a> NativeHost<'a> {
             return Err(ParseError::Context);
         }
         let mut providers = Vec::new();
-        for reader in &readers {
+        for (reader_index, reader) in readers.iter().enumerate() {
             let operation = &reader.operation;
             budget.charge(
                 Resource::Work,
-                (providers.len() as u64 + 1)
+                (reader_index as u64 + 1).saturating_mul(2)
                     * (operation.name.len() + operation.schema.package.len() + 40) as u64,
             )?;
             let descriptor = registry
@@ -108,12 +108,22 @@ impl<'a> NativeHost<'a> {
                     + operation.name.len() * 2
                     + operation.schema.package.len()) as u64,
             )?;
-            providers.push(ProviderImplementation {
-                provider: operation.name.clone(),
-                revision: 1,
-                implementation_digest: implementation,
-                operations: vec![operation.clone()],
-            });
+            // One implementation can expose the same operation name in distinct
+            // schemas. Catalog IDs remain unique; dispatch retains full references.
+            if let Some(provider) = providers.iter_mut().find(|p| p.provider == operation.name) {
+                provider
+                    .operations
+                    .try_reserve_exact(1)
+                    .map_err(|_| budget.stop(nepl3_core::budget::StopReason::AllocationLimit))?;
+                provider.operations.push(operation.clone());
+            } else {
+                providers.push(ProviderImplementation {
+                    provider: operation.name.clone(),
+                    revision: 1,
+                    implementation_digest: implementation,
+                    operations: vec![operation.clone()],
+                });
+            }
         }
         Ok(Self {
             registry,
@@ -199,23 +209,43 @@ impl ParseHost for NativeHost<'_> {
         };
         budget.charge(
             Resource::Work,
-            self.providers.len() as u64
+            self.readers.len() as u64
                 * (requirement.provider.len()
                     + operation.name.len()
                     + operation.schema.package.len()
                     + 66) as u64,
         )?;
+        budget.charge(
+            Resource::Work,
+            (operation.name.len() as u64)
+                .saturating_add(operation.schema.package.len() as u64)
+                .saturating_add(41),
+        )?;
         if requirement.operation != *operation {
             return Err(ParseError::Context);
         }
-        let Some(index) = self.providers.iter().position(|p| {
+        if !self.providers.iter().any(|p| {
             p.provider == requirement.provider
                 && p.revision == requirement.revision
                 && p.implementation_digest == requirement.implementation_digest
                 && p.operations.contains(operation)
-        }) else {
+        }) {
             return Err(ParseError::Context);
-        };
+        }
+        budget.charge(
+            Resource::Work,
+            (self.readers.len() as u64).saturating_mul(
+                (operation.name.len() as u64)
+                    .saturating_add(operation.schema.package.len() as u64)
+                    .saturating_add(41),
+            ),
+        )?;
+        let read = self
+            .readers
+            .iter()
+            .find(|reader| reader.operation == *operation)
+            .ok_or(ParseError::Context)?
+            .read;
         refresh_sources(&mut self.sources, &request.sources, budget)?;
         let sources = &self.sources;
         let snapshot = sources
@@ -238,7 +268,6 @@ impl ParseHost for NativeHost<'_> {
                     .map(ParseError::Stopped)
                     .unwrap_or(ParseError::Context)
             })?;
-        let read = self.readers.get(index).ok_or(ParseError::Context)?.read;
         budget.charge(
             Resource::AllocationUnits,
             core::mem::size_of::<nepl3_reader::model::ReadReply>() as u64,
