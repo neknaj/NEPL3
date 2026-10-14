@@ -1,9 +1,6 @@
 use super::*;
 use alloc::boxed::Box;
-use nepl3_core::{
-    value::Variant,
-    view::{FallbackRole, PresentationClass},
-};
+use nepl3_core::value::Variant;
 pub(in crate::portable) fn variant<E, const N: usize>(
     schema: &SchemaRef,
     name: &str,
@@ -211,27 +208,6 @@ pub(in crate::portable) fn stop_from(v: &str) -> Option<StopReason> {
         _ => return None,
     })
 }
-fn fallback_name(v: FallbackRole) -> &'static str {
-    match v {
-        FallbackRole::Content => "Content",
-        FallbackRole::Marker => "Marker",
-        FallbackRole::Delimiter => "Delimiter",
-        FallbackRole::Name => "Name",
-        FallbackRole::Quantity => "Quantity",
-        FallbackRole::Annotation => "Annotation",
-    }
-}
-fn fallback_from(v: &str) -> Option<FallbackRole> {
-    Some(match v {
-        "Content" => FallbackRole::Content,
-        "Marker" => FallbackRole::Marker,
-        "Delimiter" => FallbackRole::Delimiter,
-        "Name" => FallbackRole::Name,
-        "Quantity" => FallbackRole::Quantity,
-        "Annotation" => FallbackRole::Annotation,
-        _ => return None,
-    })
-}
 pub(in crate::portable) fn facts_value<C: FoundationValueCodec>(
     facts: &[ReaderFact],
     s: &SchemaRef,
@@ -253,23 +229,7 @@ pub(in crate::portable) fn facts_value<C: FoundationValueCodec>(
                 b,
             )?,
             ReaderFact::Presentation { class, span } => {
-                let foundation = c.foundation_schema();
-                let class = record(
-                    foundation,
-                    "PresentationClass",
-                    [
-                        schema_value(&class.schema, foundation, b)?,
-                        text(&class.name, b)?,
-                        variant(
-                            foundation,
-                            "FallbackRole",
-                            fallback_name(class.fallback),
-                            [],
-                            b,
-                        )?,
-                    ],
-                    b,
-                )?;
+                let class = c.encode_presentation_class(class, b).map_err(boundary)?;
                 variant(
                     s,
                     "ReaderFact",
@@ -319,16 +279,7 @@ pub(in crate::portable) fn facts_from<C: FoundationValueCodec>(
                 span: c.decode_span(span, b).map_err(boundary)?,
             },
             ("Presentation", [class, span]) => {
-                let f = fields(class, c.foundation_schema(), "PresentationClass", 3)?;
-                let (fallback, v) = parts(&f[2], c.foundation_schema(), "FallbackRole")?;
-                if !v.is_empty() {
-                    return Err(PortableError::Shape);
-                }
-                let class = PresentationClass {
-                    schema: schema_from(&f[0], c.foundation_schema(), b)?,
-                    name: string(&f[1], b)?,
-                    fallback: fallback_from(fallback).ok_or(PortableError::Shape)?,
-                };
+                let class = c.decode_presentation_class(class, b).map_err(boundary)?;
                 ReaderFact::Presentation {
                     class,
                     span: c.decode_span(span, b).map_err(boundary)?,
@@ -346,3 +297,6 @@ pub(in crate::portable) fn facts_from<C: FoundationValueCodec>(
     }
     Ok(facts)
 }
+
+#[cfg(test)]
+mod tests;

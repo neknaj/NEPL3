@@ -8,7 +8,7 @@ use crate::{
 };
 use nepl3_core::{
     value::{KindRef, OperationRef, Variant},
-    view::{FallbackRole, PresentationClass},
+    view::PresentationClass,
 };
 
 pub(in crate::portable) struct Context<'a> {
@@ -170,9 +170,60 @@ macro_rules! record_value {($ty:ident,$owner:ident,$n:literal,[$($field:ident:$i
     fn encode<C:FoundationValueCodec>(&self,s:&Context<'_>,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> { b.charge(Resource::Work,1)?; record(s.$owner,stringify!($ty),[$(self.$field.encode(s,c,b)?),*],b) }
     fn decode<C:FoundationValueCodec>(v:&NdfValue,s:&Context<'_>,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> { b.charge(Resource::Work,1)?; let f=fields(v,s.$owner,stringify!($ty),$n)?; Ok(Self{$($field:Value::decode(&f[$index],s,c,b)?),*}) }
 }};}
-record_value!(KindRef,foundation,2,[schema:0,local_kind:1]);
-record_value!(OperationRef,foundation,2,[schema:0,name:1]);
-record_value!(PresentationClass,foundation,3,[schema:0,name:1,fallback:2]);
+impl Value for KindRef {
+    fn encode<C: FoundationValueCodec>(
+        &self,
+        _: &Context<'_>,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<NdfValue, PortableError<C::Error>> {
+        c.encode_kind_ref(self, b).map_err(boundary)
+    }
+    fn decode<C: FoundationValueCodec>(
+        v: &NdfValue,
+        _: &Context<'_>,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<Self, PortableError<C::Error>> {
+        c.decode_kind_ref(v, b).map_err(boundary)
+    }
+}
+impl Value for OperationRef {
+    fn encode<C: FoundationValueCodec>(
+        &self,
+        _: &Context<'_>,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<NdfValue, PortableError<C::Error>> {
+        c.encode_operation_ref(self, b).map_err(boundary)
+    }
+    fn decode<C: FoundationValueCodec>(
+        v: &NdfValue,
+        _: &Context<'_>,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<Self, PortableError<C::Error>> {
+        c.decode_operation_ref(v, b).map_err(boundary)
+    }
+}
+impl Value for PresentationClass {
+    fn encode<C: FoundationValueCodec>(
+        &self,
+        _: &Context<'_>,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<NdfValue, PortableError<C::Error>> {
+        c.encode_presentation_class(self, b).map_err(boundary)
+    }
+    fn decode<C: FoundationValueCodec>(
+        v: &NdfValue,
+        _: &Context<'_>,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<Self, PortableError<C::Error>> {
+        c.decode_presentation_class(v, b).map_err(boundary)
+    }
+}
 record_value!(ReaderPlan,reader,5,[schema:0,state_type:1,expressions:2,rules:3,providers:4]);
 record_value!(ReaderRule,reader,3,[name:0,root:1,output:2]);
 record_value!(ProviderSignature,reader,7,[operation:0,kind:1,value_input:2,value_output:3,state_type:4,continuation_type:5,pure:6]);
@@ -268,11 +319,6 @@ impl Value for TokenReader {
         }
     }
 }
-unit_enum!(
-    FallbackRole,
-    foundation,
-    [Content, Marker, Delimiter, Name, Quantity, Annotation]
-);
 
 impl Value for CharClass {
     fn encode<C: FoundationValueCodec>(

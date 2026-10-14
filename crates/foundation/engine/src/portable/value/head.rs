@@ -11,7 +11,7 @@ use nepl3_core::{
     source::{SourceId, SourceRef},
     syntax::EnvironmentRef,
     value::{KindRef, NdfScalar, OperationRef, TypedValue},
-    view::{FallbackRole, PresentationClass},
+    view::PresentationClass,
 };
 impl<T: Value> Value for Option<T> {
     fn value<C: FoundationValueCodec>(
@@ -204,12 +204,6 @@ macro_rules! enum_value {($ty:ident,$owner:ident,$name:literal,[$($case:ident),*
 fn value<C:FoundationValueCodec>(&self,s:&Schemas<'_>,_:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>>{variant(s.$owner,$name,match self{$(Self::$case=>stringify!($case)),*},[],b)}
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&Schemas<'_>,_:&mut C,_:&mut Budget)->Result<Self,PortableError<C::Error>>{let(case,f)=parts(v,s.$owner,$name)?;if !f.is_empty(){return Err(PortableError::Shape);}Ok(match case{$(stringify!($case)=>Self::$case),*,_=>return Err(PortableError::Shape)})}}};}
 enum_value!(
-    FallbackRole,
-    foundation,
-    "FallbackRole",
-    [Content, Marker, Delimiter, Name, Quantity, Annotation]
-);
-enum_value!(
     Severity,
     foundation,
     "Severity",
@@ -233,11 +227,62 @@ enum_value!(
 );
 id!(BindingId, engine, "BindingId");
 id!(ProjectedNodeRef, engine, "ProjectedNodeRef");
-record_value!(KindRef,foundation,"KindRef",2,[schema:0,local_kind:1]);
-record_value!(OperationRef,foundation,"OperationRef",2,[schema:0,name:1]);
+impl Value for KindRef {
+    fn value<C: FoundationValueCodec>(
+        &self,
+        _: &Schemas<'_>,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<NdfValue, PortableError<C::Error>> {
+        c.encode_kind_ref(self, b).map_err(boundary)
+    }
+    fn read<C: FoundationValueCodec>(
+        v: &NdfValue,
+        _: &Schemas<'_>,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<Self, PortableError<C::Error>> {
+        c.decode_kind_ref(v, b).map_err(boundary)
+    }
+}
+impl Value for OperationRef {
+    fn value<C: FoundationValueCodec>(
+        &self,
+        _: &Schemas<'_>,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<NdfValue, PortableError<C::Error>> {
+        c.encode_operation_ref(self, b).map_err(boundary)
+    }
+    fn read<C: FoundationValueCodec>(
+        v: &NdfValue,
+        _: &Schemas<'_>,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<Self, PortableError<C::Error>> {
+        c.decode_operation_ref(v, b).map_err(boundary)
+    }
+}
 record_value!(SourceRef,foundation,"SourceRef",3,[source_id:0,revision:1,digest:2]);
 record_value!(EnvironmentRef,foundation,"EnvironmentRef",2,[id:0,digest:1]);
-record_value!(PresentationClass,foundation,"PresentationClass",3,[schema:0,name:1,fallback:2]);
+impl Value for PresentationClass {
+    fn value<C: FoundationValueCodec>(
+        &self,
+        _: &Schemas<'_>,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<NdfValue, PortableError<C::Error>> {
+        c.encode_presentation_class(self, b).map_err(boundary)
+    }
+    fn read<C: FoundationValueCodec>(
+        v: &NdfValue,
+        _: &Schemas<'_>,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<Self, PortableError<C::Error>> {
+        c.decode_presentation_class(v, b).map_err(boundary)
+    }
+}
 record_value!(Usage,foundation,"Usage",8,[source_bytes:0,work:1,depth:2,nodes:3,allocation_units:4,output_bytes:5,diagnostics:6,events:7]);
 record_value!(Limits,foundation,"Limits",8,[source_bytes:0,work:1,depth:2,nodes:3,allocation_units:4,output_bytes:5,diagnostics:6,events:7]);
 record_value!(TraceOverflow,foundation,"TraceOverflow",1,[dropped:0]);

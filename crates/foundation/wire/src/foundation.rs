@@ -1,6 +1,6 @@
 //! Concrete host boundary used by crates that depend on core rather than wire.
 pub(crate) mod types;
-use crate::{WireError, environment::*, source::*, view::*};
+use crate::{WireError, boundary::typed::Codec, environment::*, source::*, view::*};
 use alloc::vec::Vec;
 use nepl3_core::{
     budget::{Budget, Resource},
@@ -48,6 +48,26 @@ impl<'a> FoundationCodec<'a> {
             ("nepl3.foundation".len() + name.len()) as u64,
         )?;
         self.registry.validate(&expected(name), value, budget)?;
+        Ok(())
+    }
+    fn symbolic_work(
+        &self,
+        value: &NdfValue,
+        name: &str,
+        budget: &mut Budget,
+    ) -> Result<(), WireError> {
+        let count = if name == "PresentationClass" { 3 } else { 2 };
+        let f = crate::source::fields(value, self.schema, name, count)?;
+        let reference = crate::source::fields(&f[0], self.schema, "SchemaRef", 3)?;
+        let NdfValue::Text(package) = &reference[0] else {
+            return Err(WireError::InvalidType);
+        };
+        let name_len = match &f[1] {
+            NdfValue::Text(name) => name.len(),
+            NdfValue::U64(_) => 0,
+            _ => return Err(WireError::InvalidType),
+        };
+        budget.charge(Resource::Work, (package.len() + name_len + 33) as u64)?;
         Ok(())
     }
     /// Encode compact view bytes using this codec's declared sources and mapping
@@ -455,6 +475,69 @@ impl FoundationValueCodec for FoundationCodec<'_> {
         })?;
         nepl3_core::origin::OriginGraph::validate_origins(&origins, self.sources, budget)?;
         Ok(origins)
+    }
+    fn encode_kind_ref(
+        &mut self,
+        value: &nepl3_core::value::KindRef,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
+        budget.charge(Resource::Work, (value.schema.package.len() + 33) as u64)?;
+        let encoded = kind_value(value, self.schema, budget)?;
+        self.validate(&encoded, "KindRef", budget)?;
+        Ok(encoded)
+    }
+    fn decode_kind_ref(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<nepl3_core::value::KindRef, WireError> {
+        self.validate(value, "KindRef", budget)?;
+        self.symbolic_work(value, "KindRef", budget)?;
+        kind_from(value, self.schema, budget)
+    }
+    fn encode_operation_ref(
+        &mut self,
+        value: &nepl3_core::value::OperationRef,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
+        budget.charge(
+            Resource::Work,
+            (value.schema.package.len() + value.name.len() + 33) as u64,
+        )?;
+        let encoded = value.value(self.schema, budget)?;
+        self.validate(&encoded, "OperationRef", budget)?;
+        Ok(encoded)
+    }
+    fn decode_operation_ref(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<nepl3_core::value::OperationRef, WireError> {
+        self.validate(value, "OperationRef", budget)?;
+        self.symbolic_work(value, "OperationRef", budget)?;
+        <nepl3_core::value::OperationRef as Codec>::from(value, self.schema, self.sources, budget)
+    }
+    fn encode_presentation_class(
+        &mut self,
+        value: &nepl3_core::view::PresentationClass,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
+        budget.charge(
+            Resource::Work,
+            (value.schema.package.len() + value.name.len() + 33) as u64,
+        )?;
+        let encoded = class_value(value, self.schema, budget)?;
+        self.validate(&encoded, "PresentationClass", budget)?;
+        Ok(encoded)
+    }
+    fn decode_presentation_class(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<nepl3_core::view::PresentationClass, WireError> {
+        self.validate(value, "PresentationClass", budget)?;
+        self.symbolic_work(value, "PresentationClass", budget)?;
+        class_from(value, self.schema, budget)
     }
     fn foundation_schema(&self) -> &SchemaRef {
         self.schema
