@@ -929,3 +929,5 @@ with fresh encoding admission. This same-ledger helper is not inserted into the
 separately admitted measured-child route. NeedMore remains terminal for that
 immutable snapshot; a larger revision starts a new read rather than reviving the
 consumed continuation. Resource Stop is not converted to resumable Await.
+
+Grammar の CompiledArtifact は生成 surface descriptor と既存の完全な LanguagePackage を交換する段階的な境界である。受信 host は独立に選択した完全な surface identity を与え、専用 registry 内で descriptor を登録・finalize してから package を検査する。二つの codec インスタンス間で同じ Budget と SourceAdmission を共有し、失敗時には transaction 全体を破棄する。registry の clone、実行 provider の暗黙登録、compile 要求への対応証明は行わない。正式な grammar.compile の Profile・要求相関・返信状態の契約と受入は未完了である。

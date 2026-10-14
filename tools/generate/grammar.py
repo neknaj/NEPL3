@@ -32,6 +32,7 @@ def descriptor(root: Path = ROOT) -> JsonValue:
     """Serialize the Grammar descriptor directly at its external JSON boundary."""
     categories = load(root)
     types: dict[str, JsonValue] = {
+        "CompiledArtifact": record([["surface", named("SchemaDescriptor", "nepl3.foundation")], ["package", named("LanguagePackage", "nepl3.engine")]]),
         "CompileDiagnosticArguments": record([["expected", {"option": named("TypeDescriptor", "nepl3.foundation")}], ["actual", {"option": named("TypeDescriptor", "nepl3.foundation")}]]),
         "NodeId": record([["index", "U64"]]),
         "NameLiteral": record([["value", "Text"], ["span", named("Span", "nepl3.foundation")]]),
