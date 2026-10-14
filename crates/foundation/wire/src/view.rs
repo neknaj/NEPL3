@@ -66,7 +66,7 @@ pub(crate) fn schema_from(
         digest: as_digest(&f[2])?,
     })
 }
-fn kind_value(
+pub(crate) fn kind_value(
     value: &KindRef,
     schema: &SchemaRef,
     budget: &mut Budget,
@@ -81,7 +81,7 @@ fn kind_value(
         budget,
     )
 }
-fn kind_from(
+pub(crate) fn kind_from(
     value: &NdfValue,
     schema: &SchemaRef,
     budget: &mut Budget,
@@ -163,6 +163,34 @@ fn refs_from(
     })
 }
 
+pub(crate) fn class_value(
+    value: &PresentationClass,
+    schema: &SchemaRef,
+    budget: &mut Budget,
+) -> Result<NdfValue, WireError> {
+    record(
+        schema,
+        "PresentationClass",
+        [
+            schema_value(&value.schema, schema, budget)?,
+            text(&value.name, budget)?,
+            enumeration(schema, "FallbackRole", role_name(value.fallback), budget)?,
+        ],
+        budget,
+    )
+}
+pub(crate) fn class_from(
+    value: &NdfValue,
+    schema: &SchemaRef,
+    budget: &mut Budget,
+) -> Result<PresentationClass, WireError> {
+    let f = fields(value, schema, "PresentationClass", 3)?;
+    Ok(PresentationClass {
+        schema: schema_from(&f[0], schema, budget)?,
+        name: copied(&f[1], budget)?,
+        fallback: role(enum_name(&f[2], schema, "FallbackRole")?)?,
+    })
+}
 pub(crate) fn views_value(
     views: &ViewBundle,
     schema: &SchemaRef,
@@ -181,16 +209,7 @@ pub(crate) fn views_value(
             )
         })?;
         let roles = collect(&element.roles, budget, |role, budget| {
-            record(
-                schema,
-                "PresentationClass",
-                [
-                    schema_value(&role.schema, schema, budget)?,
-                    text(&role.name, budget)?,
-                    enumeration(schema, "FallbackRole", role_name(role.fallback), budget)?,
-                ],
-                budget,
-            )
+            class_value(role, schema, budget)
         })?;
         let relations = collect(&element.relations, budget, |relation, budget| {
             record(
@@ -249,12 +268,7 @@ pub(crate) fn views_from(
             })
         })?;
         let roles = collect(list(&f[3])?, budget, |value, budget| {
-            let f = fields(value, schema, "PresentationClass", 3)?;
-            Ok(PresentationClass {
-                schema: schema_from(&f[0], schema, budget)?,
-                name: copied(&f[1], budget)?,
-                fallback: role(enum_name(&f[2], schema, "FallbackRole")?)?,
-            })
+            class_from(value, schema, budget)
         })?;
         let relations = collect(list(&f[4])?, budget, |value, budget| {
             let f = fields(value, schema, "ViewRelation", 3)?;

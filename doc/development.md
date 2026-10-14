@@ -929,3 +929,5 @@ with fresh encoding admission. This same-ledger helper is not inserted into the
 separately admitted measured-child route. NeedMore remains terminal for that
 immutable snapshot; a larger revision starts a new read rather than reviving the
 consumed continuation. Resource Stop is not converted to resumable Await.
+
+KindRef・OperationRef・PresentationClass の通常値変換は FoundationValueCodec に集約する。reader plan・engine package/head・reader transform は同じ境界を使用し、既存 wire の通常 view/operation 変換と field 配置を共有する。対象 schema や local kind・operation 名・class 名の意味解決と授権は呼出側の責務であり、未知の symbolic reference を codec で拒否しない。通常値の変換では SourceBytes/OutputBytes を消費せず、文字列コピーの Work と構造検査の資源を同じ Budget に課金する。追加した六つの必須 trait method は外部実装にも対応が必要である。共有 view の圧縮表現は独立した schema のまま維持する。

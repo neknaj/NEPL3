@@ -82,6 +82,38 @@ pub trait FoundationValueCodec {
         expected: &SchemaRef,
         budget: &mut Budget,
     ) -> Result<crate::schema::SchemaDescriptor, Self::Error>;
+    /// Symbolic foundation data only: these adapters check shape and nominal
+    /// ownership, without resolving target schemas or granting execution authority.
+    fn encode_kind_ref(
+        &mut self,
+        value: &crate::value::KindRef,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, Self::Error>;
+    fn decode_kind_ref(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<crate::value::KindRef, Self::Error>;
+    fn encode_operation_ref(
+        &mut self,
+        value: &crate::value::OperationRef,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, Self::Error>;
+    fn decode_operation_ref(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<crate::value::OperationRef, Self::Error>;
+    fn encode_presentation_class(
+        &mut self,
+        value: &crate::view::PresentationClass,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, Self::Error>;
+    fn decode_presentation_class(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<crate::view::PresentationClass, Self::Error>;
     fn foundation_schema(&self) -> &SchemaRef;
     fn source_admission(&mut self) -> &mut crate::source::SourceAdmission;
     fn encode_fact_set(

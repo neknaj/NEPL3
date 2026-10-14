@@ -1,5 +1,6 @@
 use super::*;
 use alloc::vec;
+use nepl3_core::view::FallbackRole;
 use nepl3_core::{
     budget::Limits,
     source::{SourceAdmission, SourceStore},
@@ -36,8 +37,11 @@ fn every_expression_and_character_class_preserves_schema_fields() -> Result<(), 
     let sources = SourceStore::default();
     let mut admission = SourceAdmission::default();
     let mut codec = FoundationCodec::new(&registry, &sources, &mut admission).map_err(error)?;
+    let mut symbolic = context.reader.clone();
+    symbolic.package = "unregistered.symbolic".into();
+    symbolic.digest = nepl3_core::source::Digest::of(b"symbolic");
     let provider = OperationRef {
-        schema: context.reader.clone(),
+        schema: symbolic.clone(),
         name: "provider".into(),
     };
     let expressions = vec![
@@ -75,7 +79,7 @@ fn every_expression_and_character_class_preserves_schema_fields() -> Result<(), 
         (
             ReaderExpr::Region {
                 class: PresentationClass {
-                    schema: context.reader.clone(),
+                    schema: symbolic.clone(),
                     name: "class".into(),
                     fallback: FallbackRole::Content,
                 },
@@ -87,7 +91,7 @@ fn every_expression_and_character_class_preserves_schema_fields() -> Result<(), 
         (
             ReaderExpr::Node {
                 kind: KindRef {
-                    schema: context.reader.clone(),
+                    schema: symbolic.clone(),
                     local_kind: 3,
                 },
                 body: ReaderId(7),
