@@ -641,6 +641,34 @@ impl SchemaRegistry {
         self.schemas.push((expected, descriptor));
         Ok(())
     }
+    /// Add one descriptor to a finalized registry and validate the resulting closure.
+    /// On any error the selected schemas and finalized state are unchanged. This
+    /// keeps the original schema context usable for reporting a failed extension.
+    /// Consumed budget and reserved vector capacity are not rolled back; a stopped
+    /// budget remains stopped. No provisional schema or registration token escapes.
+    /// Use `register` followed by `finalize` for mutually dependent schema batches.
+    pub fn register_finalized(
+        &mut self,
+        expected: SchemaRef,
+        descriptor: SchemaDescriptor,
+        budget: &mut Budget,
+    ) -> Result<(), SchemaError> {
+        budget.poll()?;
+        if !self.finalized {
+            return Err(SchemaError::Unfinalized);
+        }
+        let retained = self.schemas.len();
+        let result = self
+            .register(expected, descriptor, budget)
+            .and_then(|()| self.finalize(budget));
+        if result.is_err() {
+            // register only appends; finalize only changes its proof flag.
+            // Restoring this previously checked prefix needs no new validation.
+            self.schemas.truncate(retained);
+            self.finalized = true;
+        }
+        result
+    }
     fn fields_for<'a>(
         &'a self,
         value: &'a NdfValue,
