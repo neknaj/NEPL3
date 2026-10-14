@@ -17,7 +17,7 @@ def tuple_case(name: str, _case: str) -> bool:
 
 def generate() -> str:
     options = adapters.Options(
-        frozenset(("MathSyntax", "MathPrintRequest")),
+        frozenset(("MathSyntax", "MathPrintRequest", "MathEvaluationRequest")),
         MappingProxyType({"languageHint": "language_hint", "sourceMaps": "source_maps",
                           "documentDigest": "document_digest", "guestDigest": "guest_digest",
                           "syntaxDigest": "syntax_digest", "sentenceSchema": "sentence_schema"}),

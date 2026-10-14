@@ -1,6 +1,8 @@
 //! Production composition for Math parsing, including independent Sentence callbacks.
 #[path = "math/annotations.rs"]
 mod annotations;
+#[path = "math/evaluation.rs"]
+mod evaluation_operation;
 #[path = "math/mathml.rs"]
 mod mathml;
 #[path = "math/print.rs"]
