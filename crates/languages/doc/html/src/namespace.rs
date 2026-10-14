@@ -14,7 +14,8 @@ use nepl3_markup::html::*;
 pub struct PreparedNamespace<'a> {
     members: Vec<prepare::PreparedRendering<'a>>,
 }
-/// Namespace with explicit InlineMath operations selected by a host.
+/// Namespace with explicit InlineMath operations and, when selected by the
+/// display preparation entry, checked member-local external URLs.
 pub struct PreparedForeignNamespace<'a>(PreparedNamespace<'a>);
 /// Structurally checked member and per-occurrence guest placements. Namespace
 /// identities remain pending until the composing renderer validates its output.
@@ -120,7 +121,14 @@ pub fn prepare<'a, C: FoundationValueCodec>(
     codec: &mut C,
     budget: &mut Budget,
 ) -> Result<PreparedNamespace<'a>, LocalPreparationError<'a, C::Error>> {
-    prepare_members(namespace, options, registry, codec, budget, false)
+    prepare_members(
+        namespace,
+        options,
+        registry,
+        codec,
+        budget,
+        Selection::Local,
+    )
 }
 /// Prepare a namespace whose outstanding requirements are only InlineMath.
 /// Other guest kinds, links and assets require their own explicit resolution.
@@ -132,7 +140,41 @@ pub fn prepare_with_foreign<'a, C: FoundationValueCodec>(
     codec: &mut C,
     budget: &mut Budget,
 ) -> Result<PreparedForeignNamespace<'a>, LocalPreparationError<'a, C::Error>> {
-    prepare_members(namespace, options, registry, codec, budget, true).map(PreparedForeignNamespace)
+    prepare_members(
+        namespace,
+        options,
+        registry,
+        codec,
+        budget,
+        Selection::InlineMath,
+    )
+    .map(PreparedForeignNamespace)
+}
+/// Prepare explicitly selected InlineMath operations and safe external URLs.
+/// Page links, assets and other guest kinds still require separate resolution.
+/// External links are checked and retained; preparation never fetches their targets.
+pub fn prepare_display<'a, C: FoundationValueCodec>(
+    namespace: &CheckedNamespace<'_, 'a>,
+    options: &'a RenderOptions,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<PreparedForeignNamespace<'a>, LocalPreparationError<'a, C::Error>> {
+    prepare_members(
+        namespace,
+        options,
+        registry,
+        codec,
+        budget,
+        Selection::Display,
+    )
+    .map(PreparedForeignNamespace)
+}
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Selection {
+    Local,
+    InlineMath,
+    Display,
 }
 fn prepare_members<'a, C: FoundationValueCodec>(
     namespace: &CheckedNamespace<'_, 'a>,
@@ -140,7 +182,7 @@ fn prepare_members<'a, C: FoundationValueCodec>(
     registry: &SchemaRegistry,
     codec: &mut C,
     budget: &mut Budget,
-    foreign: bool,
+    selection: Selection,
 ) -> Result<PreparedNamespace<'a>, LocalPreparationError<'a, C::Error>> {
     let plans = nepl3_doc_core::prepare::inspect_namespace(namespace, registry, codec, budget)
         .map_err(|error| match error {
@@ -151,9 +193,15 @@ fn prepare_members<'a, C: FoundationValueCodec>(
         })?;
     let mut members = Vec::new();
     for (document, plan) in namespace.documents().zip(plans) {
+        let mut links = Vec::new();
         for requirement in &plan.requirements {
             budget.charge(Resource::Work, 1)?;
-            if !foreign
+            if selection == Selection::Display
+                && crate::display::admit_external(requirement, &mut links, budget)?
+            {
+                continue;
+            }
+            if selection == Selection::Local
                 || !matches!(
                     requirement,
                     nepl3_doc_core::prepare::DocRequirement::Foreign {
@@ -165,7 +213,9 @@ fn prepare_members<'a, C: FoundationValueCodec>(
                 return Err(LocalPreparationError::NeedsResolution(plan));
             }
         }
-        let member = prepare::prepare_rendering(document, options, plan.document_digest, budget)?;
+        let mut member =
+            prepare::prepare_rendering(document, options, plan.document_digest, budget)?;
+        member.external_links = links;
         build::push(&mut members, member, budget)?;
     }
     Ok(PreparedNamespace { members })
