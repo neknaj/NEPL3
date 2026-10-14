@@ -9,24 +9,18 @@ mod tests;
 pub fn err(v: impl std::fmt::Debug) -> String {
     format!("{v:?}")
 }
+/// Conservative source-bundle identity of this development host's callbacks,
+/// including transitive workspace implementation and embedded grammar inputs.
+/// Conservative coverage may invalidate this identity after unrelated source edits.
+/// Targets, selected features, compiler flags and dependency-source substitution
+/// are outside this source fingerprint. Compiler/executable identity is recorded
+/// separately by publication tooling;
+/// this source identity is not remote attestation or a reproducible-build proof.
 pub fn host_identity() -> Digest {
-    Digest::of(
-        concat!(
-            include_str!("source.rs"),
-            include_str!("host.rs"),
-            include_str!("../source/host.rs"),
-            include_str!("../source/driver.rs"),
-            include_str!("../sentence/reader.rs"),
-            include_str!("../sentence/reader/descriptor.rs"),
-            include_str!("../sentence/catalog.rs"),
-            include_str!("../bootstrap/runtime.rs"),
-            include_str!("../bootstrap/runtime/host.rs"),
-            include_str!("../../../crates/integration/suite/src/adapters/sentence/document.rs"),
-            include_str!("../../../crates/integration/suite/src/adapters/sentence/literal.rs"),
-            include_str!("../../../crates/foundation/reader/src/builtin/provider.rs")
-        )
-        .as_bytes(),
-    )
+    Digest(include!(concat!(
+        env!("OUT_DIR"),
+        "/doc_host_source_digest.rs"
+    )))
 }
 pub fn with_input<T>(
     compiled: &Compiled,

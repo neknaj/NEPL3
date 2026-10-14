@@ -41,3 +41,6 @@ workspace = true
 
 [dev-dependencies]
 nepl3-lsp = { path = "../apps/lsp" }
+
+[build-dependencies]
+sha2.workspace = true
