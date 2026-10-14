@@ -171,7 +171,7 @@ pub fn prepare<'a, C: FoundationValueCodec>(
     codec: &mut C,
     b: &mut Budget,
 ) -> Result<nepl3_doc_html::namespace::PreparedForeignNamespace<'a>, Error<C::Error>> {
-    nepl3_doc_html::namespace::prepare_with_foreign(checked, options, registry, codec, b).map_err(
+    nepl3_doc_html::namespace::prepare_display(checked, options, registry, codec, b).map_err(
         |error| match error {
             LocalPreparationError::Stopped(reason) => Error::Stopped(reason),
             LocalPreparationError::NeedsResolution(plan) => Error::NeedsResolution(plan),

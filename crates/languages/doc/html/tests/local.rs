@@ -778,3 +778,257 @@ fn unselected_parallel_still_requires_image_asset() -> Result<(), String> {
     ));
     Ok(())
 }
+
+#[test]
+fn namespace_display_keeps_external_links_member_local_and_bounded() -> Result<(), String> {
+    use nepl3_doc_core::labels::namespace as labels;
+    use nepl3_markup::html::{HtmlAttribute, HtmlHref, HtmlNode};
+    let registry = registry()?;
+    let mut requests = Vec::new();
+    for uri in ["https://example.test/first", "mailto:reader@example.test"] {
+        let mut request = inline_request();
+        request.document.value.nodes = vec![
+            DocNode {
+                kind: DocKind::Link {
+                    target: LinkTarget::External { uri: uri.into() },
+                    label: InlineRef(1),
+                },
+                locations: vec![],
+                origin: None,
+                span: None,
+            },
+            DocNode {
+                kind: DocKind::Text {
+                    text: "link".into(),
+                },
+                locations: vec![],
+                origin: None,
+                span: None,
+            },
+        ];
+        requests.push(request);
+    }
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let members = requests
+        .iter()
+        .map(|request| {
+            labels::inspect(&request.document, &registry, &mut b(), &mut admission).map_err(err)
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let refs = members.iter().collect::<Vec<_>>();
+    let checked = labels::resolve(&refs, &mut b()).map_err(err)?;
+    let run = |budget: &mut Budget| -> Result<Vec<String>, String> {
+        budget
+            .charge(nepl3_core::budget::Resource::Work, 7)
+            .map_err(err)?;
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&registry, &store, &mut admission).map_err(err)?;
+        let prepared = namespace::prepare_display(
+            &checked,
+            &requests[0].options,
+            &registry,
+            &mut codec,
+            budget,
+        )
+        .map_err(err)?;
+        let mut actual = Vec::new();
+        for member in [labels::MemberId(0), labels::MemberId(1)] {
+            let output = namespace::render_part_with_foreign(
+                &prepared,
+                member,
+                &mut |_, _, _| Err::<nepl3_markup::html::HtmlRequest, _>("unexpected foreign"),
+                budget,
+            )
+            .map_err(err)?;
+            let (owner, _, markup, origins) = output.part.into_parts();
+            assert_eq!(owner, member);
+            let (element, uri) = markup
+                .fragment
+                .nodes
+                .iter()
+                .enumerate()
+                .find_map(|(index, node)| {
+                    let HtmlNode::Element { attributes, .. } = node else {
+                        return None;
+                    };
+                    attributes.iter().find_map(|attribute| match attribute {
+                        HtmlAttribute::Href {
+                            value: HtmlHref::External { uri },
+                        } => Some((index, uri)),
+                        _ => None,
+                    })
+                })
+                .ok_or("external link")?;
+            assert!(
+                origins
+                    .iter()
+                    .any(|origin| origin.node == 0 && origin.element == element as u64)
+            );
+            actual.push(uri.clone());
+        }
+        Ok(actual)
+    };
+    let mut measured = b();
+    let expected = run(&mut measured)?;
+    assert_eq!(
+        expected,
+        ["https://example.test/first", "mailto:reader@example.test"]
+    );
+    for reason in [
+        StopReason::WorkLimit,
+        StopReason::AllocationLimit,
+        StopReason::NodeLimit,
+        StopReason::DepthLimit,
+    ] {
+        let mut limits = b().limits();
+        let used = match reason {
+            StopReason::WorkLimit => &mut limits.work,
+            StopReason::AllocationLimit => &mut limits.allocation_units,
+            StopReason::NodeLimit => &mut limits.nodes,
+            StopReason::DepthLimit => &mut limits.depth,
+            _ => return Err("resource".into()),
+        };
+        *used = match reason {
+            StopReason::WorkLimit => measured.usage().work,
+            StopReason::AllocationLimit => measured.usage().allocation_units,
+            StopReason::NodeLimit => measured.usage().nodes,
+            _ => measured.usage().depth,
+        };
+        let exact = limits;
+        assert_eq!(run(&mut Budget::new(exact))?, expected);
+        match reason {
+            StopReason::WorkLimit => limits.work -= 1,
+            StopReason::AllocationLimit => limits.allocation_units -= 1,
+            StopReason::NodeLimit => limits.nodes -= 1,
+            _ => limits.depth -= 1,
+        }
+        let mut stopped = Budget::new(limits);
+        assert!(run(&mut stopped).is_err());
+        assert_eq!(stopped.poll(), Err(reason));
+        assert!(run(&mut stopped).is_err());
+    }
+    let mut cancelled = b();
+    cancelled.cancel();
+    assert!(run(&mut cancelled).is_err());
+    assert_eq!(cancelled.poll(), Err(StopReason::Cancelled));
+    Ok(())
+}
+
+#[test]
+fn namespace_display_does_not_resolve_pages_assets_or_unsafe_urls() -> Result<(), String> {
+    use nepl3_doc_core::labels::namespace as labels;
+    let registry = registry()?;
+    let mut kinds = vec![
+        (
+            DocKind::Link {
+                target: LinkTarget::Page {
+                    page: "other".into(),
+                    fragment: None,
+                },
+                label: InlineRef(1),
+            },
+            false,
+        ),
+        (
+            DocKind::Link {
+                target: LinkTarget::Relative {
+                    path: "other.md".into(),
+                    fragment: None,
+                },
+                label: InlineRef(1),
+            },
+            false,
+        ),
+        (
+            DocKind::InlineImage {
+                asset: AssetRef {
+                    id: "figure".into(),
+                    digest: None,
+                },
+                alt: SentenceRef(2),
+            },
+            false,
+        ),
+    ];
+    for uri in [
+        "javascript:alert(1)",
+        "data:text/html,unsafe",
+        "file:///private",
+        "https://example.test/\nunsafe",
+    ] {
+        kinds.push((
+            DocKind::Link {
+                target: LinkTarget::External { uri: uri.into() },
+                label: InlineRef(1),
+            },
+            true,
+        ));
+    }
+    for (kind, invalid_uri) in kinds {
+        let mut request = inline_request();
+        request.document.value.nodes = vec![
+            DocNode {
+                kind,
+                locations: vec![],
+                origin: None,
+                span: None,
+            },
+            DocNode {
+                kind: DocKind::Text {
+                    text: "label".into(),
+                },
+                locations: vec![],
+                origin: None,
+                span: None,
+            },
+            DocNode {
+                kind: DocKind::Sentence {
+                    inlines: vec![InlineRef(1)],
+                },
+                locations: vec![],
+                origin: None,
+                span: None,
+            },
+        ];
+        if !matches!(
+            request.document.value.nodes[0].kind,
+            DocKind::InlineImage { .. }
+        ) {
+            request.document.value.nodes.pop();
+        }
+        let store = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let member =
+            labels::inspect(&request.document, &registry, &mut b(), &mut admission).map_err(err)?;
+        let members = [&member];
+        let checked = labels::resolve(&members, &mut b()).map_err(err)?;
+        let mut codec = FoundationCodec::new(&registry, &store, &mut admission).map_err(err)?;
+        let result =
+            namespace::prepare_display(&checked, &request.options, &registry, &mut codec, &mut b());
+        if invalid_uri {
+            assert!(matches!(
+                result,
+                Err(LocalPreparationError::InvalidExternalUri { node: 0 })
+            ));
+        } else {
+            assert!(matches!(
+                result,
+                Err(LocalPreparationError::NeedsResolution(_))
+            ));
+        }
+        let mut cancelled = b();
+        cancelled.cancel();
+        assert!(matches!(
+            namespace::prepare_display(
+                &checked,
+                &request.options,
+                &registry,
+                &mut codec,
+                &mut cancelled
+            ),
+            Err(LocalPreparationError::Stopped(StopReason::Cancelled))
+        ));
+    }
+    Ok(())
+}

@@ -344,9 +344,10 @@ hostがSentence内の位置へ挿入する場合は、`namespace::render_part`�
 共通HTMLの`check_part`は構造・属性・挿入slotを検査し、Sentence rendererは全guestの合成後にID重複と参照解決を確定する。
 参照先のguestが未配置の場合はSentenceの表示全体を拒否し、部分HTMLを完成結果として返さない。
 InlineMathを含むnamespaceは`namespace::prepare_with_foreign`で準備する。対応するguest操作はInlineMathに限定し、他のforeign要素とlink・assetは未解決の依存要求として返す。
+表示用hostが外部URLも選択する場合は`namespace::prepare_display`を用いる。共通URI policyで安全性を検査し、同じ不変memberのnodeへhrefを束縛する。URLの取得は行わない。page・relative link、asset、他のforeign要素は未解決要求として保持する。既存の`prepare`と`prepare_with_foreign`の許容範囲は拡張しない。
 `namespace::render_part_with_foreign`は指定memberのguest操作を実行し、Doc参照を保持した`PendingPart`とguestの表示位置を返す。
 guest出力は局所的に有効なPhrasingを要求し、Doc参照の最終解決は合成先が担当する。停止時はpending出力も返さない。
-Sentence annotation hostは、構造検査済みSentenceの子順からDoc断片の表示出現を事前収集する。
+Sentence annotation hostは`namespace::prepare_display`を明示選択し、Doc Inline guestの外部URLとInlineMathを表示する。構造検査済みSentenceの子順からDoc断片の表示出現を事前収集する。
 Rubyの読み・Annoの注釈と共有nodeの反復を含め、出現順に文書namespaceへ登録する。
 同じembedのDoc意味モデルは不変の共有値として保持し、描画結果と由来は表示出現ごとに記録する。
 型付きSentenceを直接渡す`render_syntax`も、文書namespaceの準備前にSentenceの構造・source境界を検査し、同じ累積Budgetと深さ上限を適用する。

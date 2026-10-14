@@ -199,6 +199,9 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
     enum Expected {
         EmptyGuest,
         ValidGuest,
+        ExternalLink,
+        InvalidExternal,
+        NestedLink,
         Dependency,
         Label,
         Duplicate,
@@ -253,7 +256,27 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
         ),
         (
             "cons doc link external \"https://example.test/\" text \"label\" nil",
+            Expected::ExternalLink,
+        ),
+        (
+            r#"cons doc link external "javascript:alert(1)" text "label" nil"#,
+            Expected::InvalidExternal,
+        ),
+        (
+            r#"cons doc link page "guide" none text "label" nil"#,
             Expected::Dependency,
+        ),
+        (
+            r#"cons doc link relative "guide.md" none text "label" nil"#,
+            Expected::Dependency,
+        ),
+        (
+            r#"cons doc link external "https://outer.test/" math Math label 7 Sentence sentence cons doc link external "https://inner.test/" text "inner" nil nil"#,
+            Expected::NestedLink,
+        ),
+        (
+            r#"cons doc math Math label 7 Sentence sentence cons doc link external "https://inner.test/" text "inner" nil nil"#,
+            Expected::ValidGuest,
         ),
         ("cons doc ref missing text \"label\" nil", Expected::Label),
         (
@@ -525,6 +548,85 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
                         Expected::ValidGuest => {
                             result.map_err(err)?;
                         }
+                        Expected::ExternalLink => {
+                            let output = result.map_err(err)?;
+                            use nepl3_markup::html::{HtmlAttribute, HtmlHref, HtmlNode};
+                            let (element, _) = output.markup.fragment.nodes.iter().enumerate().find(|(_, node)| matches!(node,
+                                HtmlNode::Element { attributes, .. } if attributes.iter().any(|attribute| matches!(attribute,
+                                    HtmlAttribute::Href { value: HtmlHref::External { uri } } if uri == "https://example.test/")))).ok_or("external href")?;
+                            let [crate::doc::annotations::ForeignRecord::Document(owner)] =
+                                output.foreign.as_slice()
+                            else {
+                                return Err("document owner".into());
+                            };
+                            assert!(
+                                owner
+                                    .origins
+                                    .iter()
+                                    .any(|origin| origin.element == element as u64)
+                            );
+                            let mut cancelled = budget();
+                            cancelled.cancel();
+                            assert!(matches!(
+                                host.render_syntax(output.sentence.clone(), &mut cancelled),
+                                Err(Error::Stopped(StopReason::Cancelled))
+                            ));
+                            let options = nepl3_doc_html::RenderOptions {
+                                parallel: nepl3_doc_html::ParallelMode::Rows,
+                            };
+                            let prepared = nepl3_doc_html::display::prepare_display(
+                                &doc, &options, registry, &mut codec, b,
+                            )
+                            .map_err(err)?;
+                            let mut math_host = crate::doc::math::MathDisplayHost {
+                                registry,
+                                math_surface: &compiled.others[0].schema,
+                                sentence_surface: Some(&compiled.others[3].schema),
+                                doc_surface: Some(&compiled.doc.package.schema),
+                                codec: &mut codec,
+                            };
+                            let rendered = nepl3_doc_html::display::render_display(
+                                &prepared,
+                                &mut |guest: &nepl3_doc_core::model::DocEmbedView<'_>,
+                                      _,
+                                      b: &mut Budget| {
+                                    math_host
+                                        .render_view(
+                                            &guest.closure,
+                                            nepl3_markup::mathml::Display::Block,
+                                            b,
+                                        )
+                                        .map_err(err)?
+                                        .into_html(b)
+                                        .map(|value| value.markup)
+                                        .map_err(err)
+                                },
+                                b,
+                            )
+                            .map_err(err)?;
+                            let markup = &rendered.fragment.markup;
+                            let proof = nepl3_markup::html::validate(
+                                &markup.fragment,
+                                markup.slot,
+                                &markup.policy,
+                                b,
+                            )
+                            .map_err(err)?;
+                            let html = nepl3_markup::html::serialize(&proof, b).map_err(err)?;
+                            assert!(html.contains("href=\"https://example.test/\""));
+                            assert!(html.contains("<math"));
+                        }
+                        Expected::NestedLink => {
+                            assert!(
+                                result.is_err(),
+                                "nested anchors across Math/Sentence/Doc must not complete"
+                            );
+                        }
+                        Expected::InvalidExternal => {
+                            assert!(
+                                matches!(result, Err(Error::Document(error)) if matches!(*error, document::Error::InvalidExternalUri { .. }))
+                            );
+                        }
                         Expected::Dependency => {
                             let Err(Error::Document(error)) = result else {
                                 return Err("Doc dependency failure required".into());
@@ -532,11 +634,14 @@ fn doc_foreign_html_preserves_failures_and_rejects_duplicate_ids() -> Result<(),
                             let document::Error::NeedsResolution(plan) = *error else {
                                 return Err("resolution plan required".into());
                             };
-                            assert!(
-                                matches!(plan.requirements.as_slice(), [nepl3_doc_core::prepare::DocRequirement::Link {
-                            target: nepl3_doc_core::model::LinkTarget::External { uri }, ..
-                        }] if uri == "https://example.test/")
-                            );
+                            assert!(matches!(
+                                plan.requirements.as_slice(),
+                                [nepl3_doc_core::prepare::DocRequirement::Link {
+                                    target: nepl3_doc_core::model::LinkTarget::Page { .. }
+                                        | nepl3_doc_core::model::LinkTarget::Relative { .. },
+                                    ..
+                                }]
+                            ));
                         }
                         Expected::Label => {
                             let Err(Error::Document(error)) = result else {
