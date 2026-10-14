@@ -89,6 +89,9 @@ Reader の `portable::plan::signature_to_value` / `signature_from_value` と Eng
 
 Grammarの型付きconstructor arenaは `design/forms.json` から `python tools/generate/grammar.py --write` で明示生成します。この生成物は構文shapeの投影であり、reader/binding/style/extensionを含むLanguagePackageをforms表だけから作るものではありません。初回seed入力adapterの `tools/bootstrap/grammar.py` は完全なsyntax.neplgを読み、元bytes/digest、constructor/literal/listのUTF-8 byte範囲と全metadataを保持したASTを出します。ASCII識別子のseed用部分集合に限定し、TextではNEPL3のescapeを使いJSON固有escapeを拒否します。これはproduction parserやbootstrap合格の代わりではなく、実Grammar compilerへの初期入力を用意する開発host処理です。P1/P2はproduction reader/engineで同じsourceを読み直して比較します。
 
+Grammar Documentの明示NDF境界は `nepl3_grammar_core::portable::{to_value, from_value}` で扱う。`interfaces/grammar.json` の型と `design/forms.json` に由来する共通adapter生成を使い、同じRust型の別名であるNameLiteralとTextLiteralもwire上のrecord名を区別する。文書自身のsourcesを先に復元し、その閉じたsource集合でspanを検証する。既存のSourceAdmissionとBudgetを共有し、nativeと同じDocument検証で負の自然数・不正な参照・category・cycle・到達不能nodeを拒否する。これはGrammar compile操作の実装や入力がproduction readerで解析された証明ではない。compile操作に必要なcontext・生成schema・registryの返却契約と正式受入は別途必要であり、T05/R009を完了へ変更しない。
+
+
 CIのWASI jobはSHA-256を固定したWasmtime 44.0.1で実装済みcoreの実試験を実行し、browser向けWasmのcompileも行います。ローカルでは `CARGO_TARGET_WASM32_WASIP2_RUNNER` を `wasmtime run` とし、`cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html --target wasm32-wasip2 -- --test-threads=1` を実行します。browser targetのcompile成功はブラウザ上の実行・描画試験を意味しません。
 
 providerのstream transportは `cargo test --locked -p nepl3-provider` で検査する。WASIでは同じコマンドに `--target wasm32-wasip2` を追加する。frameの分割転送、切断、長さ制限、codecとI/Oの停止、Close後の再利用拒否、schema交換を対象とする。
@@ -935,3 +938,6 @@ immutable snapshot; a larger revision starts a new read rather than reviving the
 consumed continuation. Resource Stop is not converted to resumable Await.
 
 KindRef・OperationRef・PresentationClass の通常値変換は FoundationValueCodec に集約する。reader plan・engine package/head・reader transform は同じ境界を使用し、既存 wire の通常 view/operation 変換と field 配置を共有する。対象 schema や local kind・operation 名・class 名の意味解決と授権は呼出側の責務であり、未知の symbolic reference を codec で拒否しない。通常値の変換では SourceBytes/OutputBytes を消費せず、文字列コピーの Work と構造検査の資源を同じ Budget に課金する。追加した六つの必須 trait method は外部実装にも対応が必要である。共有 view の圧縮表現は独立した schema のまま維持する。
+Grammar の CompiledArtifact は生成 surface descriptor と既存の完全な LanguagePackage を交換する段階的な境界である。受信 host は独立に選択した完全な surface identity を与え、専用 registry 内で descriptor を登録・finalize してから package を検査する。二つの codec インスタンス間で同じ Budget と SourceAdmission を共有し、失敗時には transaction 全体を破棄する。registry の clone、実行 provider の暗黙登録、compile 要求への対応証明は行わない。正式な grammar.compile の操作実行・要求相関・返信状態の契約と受入は未完了である。
+
+Grammar の `request::CompileRequest` は Document と CompileProfile を同じ source admission / Budget で交換する入力境界である。decode は包絡全体の構造検査を先に実行し、その後に既存 Document と Profile codec を呼ぶ。`fingerprint` は domain-separated canonical NDF digest で入力を識別するが、compile 結果の正当性や request lifetime の proof ではない。正式な操作実行と返信検査は未実装である。局所試験は `cargo test --locked -p nepl3-tools --test grammar request::` とし、cold CBOR、各入力項目の識別、不正な後続profileをsource admission前に拒否すること、sourceの累積計上、型付き停止を検査する。

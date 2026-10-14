@@ -12,7 +12,7 @@ use nepl3_wire::foundation::FoundationCodec;
 fn error(error: impl core::fmt::Debug) -> String {
     format!("{error:?}")
 }
-fn registry() -> Result<SchemaRegistry, String> {
+pub(super) fn registry() -> Result<SchemaRegistry, String> {
     let mut registry = SchemaRegistry::default();
     let mut b = budget();
     for descriptor in [
@@ -29,7 +29,7 @@ fn registry() -> Result<SchemaRegistry, String> {
     registry.finalize(&mut b).map_err(error)?;
     Ok(registry)
 }
-fn profile() -> CompileProfile {
+pub(super) fn profile() -> CompileProfile {
     let symbolic = SchemaRef {
         package: "not.registered".into(),
         revision: 37,
