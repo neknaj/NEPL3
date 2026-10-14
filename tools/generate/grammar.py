@@ -9,15 +9,18 @@ from dataclasses import replace
 import json
 import sys
 from pathlib import Path
+from types import MappingProxyType
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from tools.catalog.forms import ListRead, Read, load
 from tools.serialization.json import JsonValue
 from tools.generate.lowering import update
+from tools.generate import adapters
 
 OUTPUT = ROOT / "crates/languages/grammar/core/src/model/generated.rs"
 SCHEMA = ROOT / "interfaces/grammar.json"
+ADAPTERS = ROOT / "crates/languages/grammar/core/src/portable/value/generated.rs"
 
 
 def named(name: str, package: str = "nepl3.grammar") -> JsonValue:
@@ -32,10 +35,12 @@ def descriptor(root: Path = ROOT) -> JsonValue:
     """Serialize the Grammar descriptor directly at its external JSON boundary."""
     categories = load(root)
     types: dict[str, JsonValue] = {
+        "CompileRequest": record([["document", named("Document")], ["profile", named("CompileProfile")]]),
         "CompileProfile": record([["package", "Text"], ["state_type", named("TypeDescriptor", "nepl3.foundation")], ["reader_imports", {"list": named("ReaderImport")}], ["extensions", {"list": named("ExtensionRequirement", "nepl3.engine")}], ["classes", {"list": named("NamedClass")}], ["views", {"list": named("NamedView")}]]),
         "ReaderImport": record([["provider", "Text"], ["signature", named("ProviderSignature", "nepl3.reader")]]),
         "NamedClass": record([["name", "Text"], ["class", named("PresentationClass", "nepl3.foundation")]]),
         "NamedView": record([["name", "Text"], ["kind", named("KindRef", "nepl3.foundation")]]),
+        "CompiledArtifact": record([["surface", named("SchemaDescriptor", "nepl3.foundation")], ["package", named("LanguagePackage", "nepl3.engine")]]),
         "CompileDiagnosticArguments": record([["expected", {"option": named("TypeDescriptor", "nepl3.foundation")}], ["actual", {"option": named("TypeDescriptor", "nepl3.foundation")}]]),
         "NodeId": record([["index", "U64"]]),
         "NameLiteral": record([["value", "Text"], ["span", named("Span", "nepl3.foundation")]]),
@@ -104,6 +109,28 @@ def generate(root: Path = ROOT) -> str:
     return "\n".join(lines) + "\n"
 
 
+def generate_adapters(root: Path = ROOT) -> str:
+    field_codecs: dict[str, tuple[str, str]] = {}
+    for category, body in load(root).items():
+        if not category.startswith("Grammar/"):
+            continue
+        for form in body.forms.values():
+            for member in form.fields:
+                read = member.read
+                if isinstance(read, str) and read.startswith("@"):
+                    literal = read[1:].lower()
+                    field_codecs[f"NodeKind.{form.kind}.{member.name}"] = (f"put_{literal}", f"read_{literal}")
+    options = adapters.Options(
+        frozenset(("Document", "NameLiteral", "TextLiteral", "NatLiteral", "CompileDiagnosticArguments", "CompileProfile", "ReaderImport", "NamedClass", "NamedView", "CompiledArtifact", "CompileRequest")),
+        MappingProxyType({}), lambda _name, _case: False,
+        tuple_records=frozenset(("NodeId",)),
+        case_names=MappingProxyType({"NodeKind.Self": "SelfSelector"}),
+        field_codecs=MappingProxyType(field_codecs),
+    )
+    header = "// Generated from design/forms.json by tools/generate/grammar.py. Do not edit."
+    return adapters.render(adapters.shapes(descriptor(root), options.excluded), header, options)
+
+
 class Arguments(argparse.Namespace):
     write: bool = False
 
@@ -114,12 +141,15 @@ def main() -> None:
     args = parser.parse_args(namespace=Arguments())
     update(args.write)
     expected = generate()
+    adapter_text = generate_adapters()
     schema = json.dumps(descriptor(), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     if args.write:
         OUTPUT.parent.mkdir(parents=True, exist_ok=True)
         _ = OUTPUT.write_text(expected, encoding="utf-8", newline="\n")
         _ = SCHEMA.write_text(schema, encoding="utf-8", newline="\n")
-    elif not OUTPUT.exists() or OUTPUT.read_text(encoding="utf-8") != expected or not SCHEMA.exists() or SCHEMA.read_text(encoding="utf-8") != schema:
+        ADAPTERS.parent.mkdir(parents=True, exist_ok=True)
+        _ = ADAPTERS.write_text(adapter_text, encoding="utf-8", newline="\n")
+    elif not ADAPTERS.exists() or ADAPTERS.read_text(encoding="utf-8") != adapter_text or not OUTPUT.exists() or OUTPUT.read_text(encoding="utf-8") != expected or not SCHEMA.exists() or SCHEMA.read_text(encoding="utf-8") != schema:
         raise SystemExit("Grammar AST is stale; run python tools/generate/grammar.py --write")
 
 

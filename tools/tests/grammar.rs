@@ -333,5 +333,12 @@ mod expected;
 #[path = "grammar/region.rs"]
 mod region;
 
+#[path = "grammar/artifact.rs"]
+mod artifact;
+#[path = "grammar/portable.rs"]
+mod portable;
 #[path = "grammar/profile.rs"]
 mod profile;
+
+#[path = "grammar/request.rs"]
+mod request;

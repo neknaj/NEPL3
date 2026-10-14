@@ -99,6 +99,56 @@
         ]
       ]
     },
+    "CompileRequest": {
+      "constraints": [],
+      "record": [
+        [
+          "document",
+          {
+            "named": {
+              "name": "Document",
+              "package": "nepl3.grammar",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "profile",
+          {
+            "named": {
+              "name": "CompileProfile",
+              "package": "nepl3.grammar",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "CompiledArtifact": {
+      "constraints": [],
+      "record": [
+        [
+          "surface",
+          {
+            "named": {
+              "name": "SchemaDescriptor",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "package",
+          {
+            "named": {
+              "name": "LanguagePackage",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
     "Document": {
       "constraints": [
         "grammar.constructor_graph"
