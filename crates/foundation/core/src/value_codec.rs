@@ -66,6 +66,22 @@ pub trait FoundationValueCodec {
         value: &NdfValue,
         budget: &mut Budget,
     ) -> Result<crate::schema::TypeDescriptor, Self::Error>;
+    /// Exchange a descriptor as data after canonical name/shape validation.
+    /// This neither registers it nor resolves its symbolic dependencies.
+    fn encode_schema_descriptor(
+        &mut self,
+        value: &crate::schema::SchemaDescriptor,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, Self::Error>;
+    /// Check the registered foundation representation, canonical descriptor
+    /// invariants and full host-selected identity. Success does not grant trust,
+    /// registry membership, execution permissions or resource authority.
+    fn decode_schema_descriptor(
+        &mut self,
+        value: &NdfValue,
+        expected: &SchemaRef,
+        budget: &mut Budget,
+    ) -> Result<crate::schema::SchemaDescriptor, Self::Error>;
     fn foundation_schema(&self) -> &SchemaRef;
     fn source_admission(&mut self) -> &mut crate::source::SourceAdmission;
     fn encode_fact_set(
