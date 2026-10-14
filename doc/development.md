@@ -82,6 +82,9 @@ reader包絡の正本は `interfaces/reader.json` です。変更時は `cargo r
 
 Grammarの型付きconstructor arenaは `design/forms.json` から `python tools/generate/grammar.py --write` で明示生成します。この生成物は構文shapeの投影であり、reader/binding/style/extensionを含むLanguagePackageをforms表だけから作るものではありません。初回seed入力adapterの `tools/bootstrap/grammar.py` は完全なsyntax.neplgを読み、元bytes/digest、constructor/literal/listのUTF-8 byte範囲と全metadataを保持したASTを出します。ASCII識別子のseed用部分集合に限定し、TextではNEPL3のescapeを使いJSON固有escapeを拒否します。これはproduction parserやbootstrap合格の代わりではなく、実Grammar compilerへの初期入力を用意する開発host処理です。P1/P2はproduction reader/engineで同じsourceを読み直して比較します。
 
+Grammar Documentの明示NDF境界は `nepl3_grammar_core::portable::{to_value, from_value}` で扱う。`interfaces/grammar.json` の型と `design/forms.json` に由来する共通adapter生成を使い、同じRust型の別名であるNameLiteralとTextLiteralもwire上のrecord名を区別する。文書自身のsourcesを先に復元し、その閉じたsource集合でspanを検証する。既存のSourceAdmissionとBudgetを共有し、nativeと同じDocument検証で負の自然数・不正な参照・category・cycle・到達不能nodeを拒否する。これはGrammar compile操作の実装や入力がproduction readerで解析された証明ではない。compile操作に必要なcontext・生成schema・registryの返却契約と正式受入は別途必要であり、T05/R009を完了へ変更しない。
+
+
 CIのWASI jobはSHA-256を固定したWasmtime 44.0.1で実装済みcoreの実試験を実行し、browser向けWasmのcompileも行います。ローカルでは `CARGO_TARGET_WASM32_WASIP2_RUNNER` を `wasmtime run` とし、`cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html --target wasm32-wasip2 -- --test-threads=1` を実行します。browser targetのcompile成功はブラウザ上の実行・描画試験を意味しません。
 
 providerのstream transportは `cargo test --locked -p nepl3-provider` で検査する。WASIでは同じコマンドに `--target wasm32-wasip2` を追加する。frameの分割転送、切断、長さ制限、codecとI/Oの停止、Close後の再利用拒否、schema交換を対象とする。

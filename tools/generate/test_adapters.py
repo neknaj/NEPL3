@@ -87,6 +87,29 @@ class AdapterTests(unittest.TestCase):
         output = render({"AssetRef": Record(("first", "second"))}, "// header", options)
         self.assertIn('self.first.put(s,c,b)?', output)
 
+    def test_nominal_field_hooks_follow_wire_identity_before_native_rename(self) -> None:
+        for codec in Codec:
+            with self.subTest(codec=codec):
+                options = Options(frozenset(), {"name": "native_name"}, tuple_case, codec,
+                                  frozenset(("NodeId",)), {"NodeKind.Self": "SelfSelector"},
+                                  {"NodeKind.Self.name": ("put_name", "read_name"),
+                                   "Root.Some.value": ("put_text", "read_text"),
+                                   "NodeId.index": ("put_index", "read_index"),
+                                   "Node.name": ("put_name", "read_name")})
+                output = render({"NodeKind": Variant({"Self": ("name",), "Other": ("name",)}),
+                                 "Root": Variant({"Some": ("value",)}),
+                                 "NodeId": Record(("index",)), "Node": Record(("name",))}, "// header", options)
+                args = "s,r,c,b" if codec is Codec.REGISTRY else "s,c,b"
+                self.assertIn(f'Self::SelfSelector {{native_name}} => variant(s,"NodeKind","Self",[put_name(native_name,{args})?],b)', output)
+                self.assertIn(f'("Self",1)=>Ok(Self::SelfSelector {{native_name:read_name(&f[0],{args})?}})', output)
+                self.assertIn(f'Self::Other {{native_name}} => variant(s,"NodeKind","Other",[native_name.put({args})?],b)', output)
+                self.assertIn(f'put_text(value,{args})?', output)
+                self.assertIn(f'Self::Some(read_text(&f[0],{args})?)', output)
+                self.assertIn(f'put_index(&self.0,{args})?', output)
+                self.assertIn(f'Ok(Self(read_index(&f[0],{args})?))', output)
+                self.assertIn(f'put_name(&self.native_name,{args})?', output)
+                self.assertIn(f'Ok(Self {{native_name:read_name(&f[0],{args})?}})', output)
+
     def test_registry_and_field_rename_are_generation_inputs(self) -> None:
         options = Options(frozenset(), {"sourceMaps": "source_maps"}, tuple_case, Codec.REGISTRY)
         output = render({"Data": Record(("sourceMaps",))}, "// header", options)

@@ -1,8 +1,8 @@
-"""Typed field-layout projection for the four native Value adapter generators.
+"""Typed field-layout projection for native Value adapter generators.
 
 Only field names, order, and record/variant layout affect these adapters. The
 existing Rust schema compiler owns descriptor type and constraint validation;
-generated Value calls delegate field codecs to the existing native types.
+generated Value calls delegate to native types or explicit nominal field codecs.
 """
 
 from collections.abc import Callable, Mapping
@@ -40,6 +40,7 @@ class Options:
     codec: Codec = Codec.LOCAL
     tuple_records: frozenset[str] = frozenset()
     case_names: Mapping[str, str] = field(default_factory=lambda: MappingProxyType({}))
+    field_codecs: Mapping[str, tuple[str, str]] = field(default_factory=lambda: MappingProxyType({}))
 
 
 def field_names(value: JsonValue) -> tuple[str, ...]:
@@ -75,6 +76,14 @@ def render(types: Mapping[str, Shape], header: str, options: Options) -> str:
     parameters = "s:&SchemaRef,r:&SchemaRegistry," if registry else "s:&SchemaRef,"
     arguments = "s,r,c,b" if registry else "s,c,b"
     rename = options.rename
+    def put_field(owner: str, member: str, expression: str, borrowed: str) -> str:
+        codec = options.field_codecs.get(f"{owner}.{member}")
+        return (f"{codec[0]}({borrowed},{arguments})?" if codec
+                else f"{expression}.put({arguments})?")
+    def read_field(owner: str, member: str, index: int) -> str:
+        codec = options.field_codecs.get(f"{owner}.{member}")
+        reader = codec[1] if codec else "Value::read"
+        return f"{reader}(&f[{index}],{arguments})?"
     for name, shape in types.items():
         tuple_record = name in options.tuple_records or (name.endswith("Ref") and name != "AssetRef")
         if isinstance(shape, Record) and tuple_record and len(shape.fields) != 1:
@@ -84,8 +93,10 @@ def render(types: Mapping[str, Shape], header: str, options: Options) -> str:
         out.append("fn put<C:FoundationValueCodec>(&self," + parameters + codec_name
                    + ":&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {")
         if isinstance(shape, Record):
-            exprs = [("self.0" if tuple_record else "self." + rename.get(field, field))
-                     + f".put({arguments})?" for field in shape.fields]
+            exprs = [put_field(name, member,
+                               "self.0" if tuple_record else "self." + rename.get(member, member),
+                               "&self.0" if tuple_record else "&self." + rename.get(member, member))
+                     for member in shape.fields]
             out.append(f'record(s,"{name}",[{",".join(exprs)}],b)')
         else:
             out.append("match self {")
@@ -98,7 +109,8 @@ def render(types: Mapping[str, Shape], header: str, options: Options) -> str:
                     pattern = f"Self::{native_case}(" + fields[0] + ")"
                 else:
                     pattern = f"Self::{native_case}" + (" {" + ",".join(fields) + "}" if fields else "")
-                exprs = [field + f".put({arguments})?" for field in fields]
+                exprs = [put_field(f"{name}.{case}", member, field, field)
+                         for member, field in zip(members, fields)]
                 out.append(pattern + f' => variant(s,"{name}","{case}",[{",".join(exprs)}],b),')
             out.append("}")
         out.append("}")
@@ -108,10 +120,10 @@ def render(types: Mapping[str, Shape], header: str, options: Options) -> str:
         if isinstance(shape, Record):
             out.append(f'let f=fields(v,s,"{name}",{len(shape.fields)})?;')
             if tuple_record:
-                out.append(f"Ok(Self(Value::read(&f[0],{arguments})?))")
+                out.append("Ok(Self(" + read_field(name, shape.fields[0], 0) + "))")
             else:
-                exprs = [rename.get(field, field) + f":Value::read(&f[{index}],{arguments})?"
-                         for index, field in enumerate(shape.fields)]
+                exprs = [rename.get(member, member) + ":" + read_field(name, member, index)
+                         for index, member in enumerate(shape.fields)]
                 out.append("Ok(Self {" + ",".join(exprs) + "})")
         else:
             out.append(f'let (tag,f)=case(v,s,"{name}")?;')
@@ -119,8 +131,9 @@ def render(types: Mapping[str, Shape], header: str, options: Options) -> str:
             for case, members in shape.cases.items():
                 native_case = options.case_names.get(f"{name}.{case}", case)
                 fields = [rename.get(field, field) for field in members]
-                exprs = [field + f":Value::read(&f[{index}],{arguments})?" for index, field in enumerate(fields)]
-                body = (f"(Value::read(&f[0],{arguments})?)" if options.tuple_case(name, case)
+                exprs = [field + ":" + read_field(f"{name}.{case}", member, index)
+                         for index, (member, field) in enumerate(zip(members, fields))]
+                body = ("(" + read_field(f"{name}.{case}", members[0], 0) + ")" if options.tuple_case(name, case)
                         else " {" + ",".join(exprs) + "}" if fields else "")
                 out.append(f'("{case}",{len(members)})=>Ok(Self::{native_case}{body}),')
             out.append("_=>Err(PortableError::Shape),}")
