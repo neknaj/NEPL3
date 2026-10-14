@@ -1435,6 +1435,31 @@
         ]
       },
       "constraints": []
+    },
+    "MathEvaluationRequest": {
+      "record": [
+        [
+          "syntax",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "MathSyntax"
+            }
+          }
+        ],
+        [
+          "environment",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "BindingEnvironment"
+            }
+          }
+        ]
+      ],
+      "constraints": []
     }
   },
   "operations": {
@@ -1451,6 +1476,23 @@
           "package": "nepl3.math",
           "revision": 1,
           "name": "MathPrintResult"
+        }
+      },
+      "pure": true
+    },
+    "evaluate": {
+      "input": {
+        "named": {
+          "package": "nepl3.math",
+          "revision": 1,
+          "name": "MathEvaluationRequest"
+        }
+      },
+      "output": {
+        "named": {
+          "package": "nepl3.math",
+          "revision": 1,
+          "name": "MathEvaluationResult"
         }
       },
       "pure": true
