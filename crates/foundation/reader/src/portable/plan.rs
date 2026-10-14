@@ -1,7 +1,7 @@
 //! Portable reader definitions retain arena indices and symbolic type identities.
 pub(super) mod value;
 use super::*;
-use crate::plan::{CheckedPlan, PlanError, ReaderPlan};
+use crate::plan::{CheckedPlan, PlanError, ProviderSignature, ReaderPlan};
 use crate::tokenizer::ReaderMode;
 use nepl3_core::value_codec::FoundationCodecError;
 use value::{Context, Value};
@@ -78,21 +78,22 @@ fn plan_error<E>(error: PlanError) -> PortableError<E> {
         other => PortableError::Plan(other),
     }
 }
-fn validate<E>(
+fn validate_named<E>(
+    name: &str,
     value: &NdfValue,
     registry: &SchemaRegistry,
     budget: &mut Budget,
 ) -> Result<(), PortableError<E>> {
     budget.charge(
         Resource::AllocationUnits,
-        ("nepl3.reader".len() + "ReaderPlan".len()) as u64,
+        ("nepl3.reader".len() + name.len()) as u64,
     )?;
     registry
         .validate(
             &TypeDescriptor::Named(TypeRef {
                 package: "nepl3.reader".into(),
                 revision: 1,
-                name: "ReaderPlan".into(),
+                name: name.into(),
             }),
             value,
             budget,
@@ -112,7 +113,7 @@ pub fn to_value<C: FoundationValueCodec>(
     budget.poll()?;
     let context = Context::new(plan.registry())?;
     let value = plan.plan().encode(&context, codec, budget)?;
-    validate(&value, plan.registry(), budget)?;
+    validate_named("ReaderPlan", &value, plan.registry(), budget)?;
     Ok(value)
 }
 /// Decode and check all rules, expression references and provider signatures.
@@ -124,8 +125,33 @@ pub fn from_value<C: FoundationValueCodec>(
     budget: &mut Budget,
 ) -> Result<ReaderPlan, PortableError<C::Error>> {
     budget.poll()?;
-    validate(value, registry, budget)?;
+    validate_named("ReaderPlan", value, registry, budget)?;
     let plan = ReaderPlan::decode(value, &Context::new(registry)?, codec, budget)?;
     plan.check(registry, budget).map_err(plan_error)?;
     Ok(plan)
+}
+
+/// Encode a symbolic provider contract without resolving or executing it.
+/// The compiler or checked plan validates a selected contract separately.
+pub fn signature_to_value<C: FoundationValueCodec>(
+    signature: &ProviderSignature,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    budget.poll()?;
+    let value = signature.encode(&Context::new(registry)?, codec, budget)?;
+    validate_named("ProviderSignature", &value, registry, budget)?;
+    Ok(value)
+}
+/// Decode a structurally valid symbolic contract, without granting authority.
+pub fn signature_from_value<C: FoundationValueCodec>(
+    value: &NdfValue,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<ProviderSignature, PortableError<C::Error>> {
+    budget.poll()?;
+    validate_named("ProviderSignature", value, registry, budget)?;
+    ProviderSignature::decode(value, &Context::new(registry)?, codec, budget)
 }

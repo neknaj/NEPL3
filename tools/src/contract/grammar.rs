@@ -25,6 +25,8 @@ pub(crate) fn check(root: &Path) -> Result<()> {
     let mut registry = SchemaRegistry::default();
     for descriptor in [
         foundation::descriptor(&json(root, "interfaces/foundation.json")?)?,
+        foundation::descriptor(&json(root, "interfaces/reader.json")?)?,
+        foundation::descriptor(&json(root, "interfaces/engine.json")?)?,
         foundation::descriptor(&value)?,
     ] {
         let reference = descriptor

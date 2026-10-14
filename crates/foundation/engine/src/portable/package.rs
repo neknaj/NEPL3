@@ -152,3 +152,29 @@ pub fn from_value<C: FoundationValueCodec>(
         .map_err(package_error)?;
     Ok(package)
 }
+
+/// Encode a symbolic extension contract. This does not resolve its operation,
+/// register an implementation, or establish runtime execution authority.
+pub fn extension_to_value<C: FoundationValueCodec>(
+    extension: &crate::package::ExtensionRequirement,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    budget.poll()?;
+    let value = extension.value(&Schemas::new(registry)?, codec, budget)?;
+    registry.validate(&expected("ExtensionRequirement", budget)?, &value, budget)?;
+    Ok(value)
+}
+/// Decode a structurally valid symbolic extension contract. The compiler checks
+/// selected contracts separately; unused catalog entries need not resolve.
+pub fn extension_from_value<C: FoundationValueCodec>(
+    value: &NdfValue,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<crate::package::ExtensionRequirement, PortableError<C::Error>> {
+    budget.poll()?;
+    registry.validate(&expected("ExtensionRequirement", budget)?, value, budget)?;
+    crate::package::ExtensionRequirement::read(value, &Schemas::new(registry)?, codec, budget)
+}

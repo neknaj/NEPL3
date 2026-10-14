@@ -332,3 +332,6 @@ mod binding;
 mod expected;
 #[path = "grammar/region.rs"]
 mod region;
+
+#[path = "grammar/profile.rs"]
+mod profile;

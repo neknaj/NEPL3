@@ -83,6 +83,10 @@ SchemaDescriptorの型付き交換は `FoundationValueCodec::encode_schema_descr
 
 reader包絡の正本は `interfaces/reader.json` です。変更時は `cargo run --locked -p nepl3-tools -- reader --write` でproductionの登録コードを生成します。参照するfoundation型と合わせたregistryのfinalizeを検査し、VMのstate・request・continuation型と同じ変更で同期します。
 
+Grammar の `compile::profile::CompileProfile` は native `PackageContext` の6項目を所有し、`as_context` で同じ保存領域を借用する。構築や借用は catalog の意味検査、provider の登録、実行権限の付与を行わない。catalog 名・選択された contract・出力の検査は既存の native compiler が担当する。
+Reader の `portable::plan::signature_to_value` / `signature_from_value` と Engine の `portable::package::extension_to_value` / `extension_from_value` は、既存の ProviderSignature / ExtensionRequirement の NDF 表現を再利用する。受信と送信の境界で登録済み schema による構造検査を行うが、未使用 catalog の参照先を解決しない。Grammar の `compile::profile::portable` がこれらと Foundation の型・参照・表示class codec を組み合わせ、CompileProfile 全体を NDF で交換する。構造検査済みの profile は native compiler の検査済み入力を意味せず、正式な grammar.compile 操作は未完成である。
+局所試験は `cargo test --locked -p nepl3-tools --test grammar profile::` とする。6項目の借用、native compiler と結果・エラー・予算消費の一致、未登録参照を含む cold CBOR 交換、不正な nominal identity / arity、型付き停止を検査する。
+
 Grammarの型付きconstructor arenaは `design/forms.json` から `python tools/generate/grammar.py --write` で明示生成します。この生成物は構文shapeの投影であり、reader/binding/style/extensionを含むLanguagePackageをforms表だけから作るものではありません。初回seed入力adapterの `tools/bootstrap/grammar.py` は完全なsyntax.neplgを読み、元bytes/digest、constructor/literal/listのUTF-8 byte範囲と全metadataを保持したASTを出します。ASCII識別子のseed用部分集合に限定し、TextではNEPL3のescapeを使いJSON固有escapeを拒否します。これはproduction parserやbootstrap合格の代わりではなく、実Grammar compilerへの初期入力を用意する開発host処理です。P1/P2はproduction reader/engineで同じsourceを読み直して比較します。
 
 CIのWASI jobはSHA-256を固定したWasmtime 44.0.1で実装済みcoreの実試験を実行し、browser向けWasmのcompileも行います。ローカルでは `CARGO_TARGET_WASM32_WASIP2_RUNNER` を `wasmtime run` とし、`cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html --target wasm32-wasip2 -- --test-threads=1` を実行します。browser targetのcompile成功はブラウザ上の実行・描画試験を意味しません。

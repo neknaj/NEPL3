@@ -11,6 +11,7 @@ use nepl3_core::{
 use nepl3_reader::plan::{PlanError, ProviderSignature};
 pub mod diagnostic;
 pub mod package;
+pub mod profile;
 pub mod reader;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
