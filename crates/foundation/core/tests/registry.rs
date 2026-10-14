@@ -199,3 +199,6 @@ fn exact_descriptor_lookup_is_borrowed_metered_and_not_a_validation_proof() -> R
     assert_eq!(b.usage().work, 1);
     Ok(())
 }
+
+#[path = "registry/transaction.rs"]
+mod transaction;
