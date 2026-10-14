@@ -32,6 +32,31 @@
         ]
       ]
     },
+    "CompiledArtifact": {
+      "constraints": [],
+      "record": [
+        [
+          "surface",
+          {
+            "named": {
+              "name": "SchemaDescriptor",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "package",
+          {
+            "named": {
+              "name": "LanguagePackage",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
     "Document": {
       "constraints": [
         "grammar.constructor_graph"

@@ -352,6 +352,14 @@ body
         cons sentence cons ruby text "名前" text "なまえ" cons text "として" cons ruby text "使用" text "しよう" cons text "しないNumber readerの " cons code "List<Text>" cons text " " cons ruby text "出力" text "しゅつりょく" cons text "は、そのまま" cons ruby text "保持" text "ほじ" cons text "する。" nil
         cons "payloadSchemasは[実際/じっさい]のreader[型/がた]、token payload、view/style、extension[操作/そうさ]が[参照/さんしょう]する[型定義/かたていぎ]の[閉包/へいほう]から[集/あつ]め、[未使用/みしよう]のregistry[登録/とうろく]を[依存/いぞん]へ[含/ふく]めない。" nil
       cons paragraph
+        cons "CompiledArtifactは、生成されたsurfaceのSchemaDescriptorと完全なLanguagePackageを同じ値に保持する。"
+        cons "他のpayloadとproviderのdescriptorは、hostが明示的に選択した依存として供給する。"
+        cons "受信は二段階とし、最初にhostが選択した完全なSchemaRefに対してsurface descriptorを検査する。"
+        cons "hostは専用のtransaction registryへdescriptorを登録し、依存をfinalizeした後、artifact全体とpackageの不変条件を検査する。"
+        cons "両段階は同じBudgetとSourceAdmissionを使用し、失敗時には暫定registryを公開しない。"
+        cons "artifactの受信成功は、特定のsourceとProfileをcompileした結果との対応や、実行providerの授権を証明しない。"
+        cons "この交換境界だけでは、正式なgrammar.compile要求とComplete・Invalid・Stopped返信の契約は成立しない。" nil
+      cons paragraph
         cons "[解決済/かいけつず]みProfileはsurface、[意味/いみ]、reader/providerの[全/ぜん]descriptorと[計算済/けいさんず]みdigestを[登録/とうろく]する。"
         cons "[未生成/みせいせい]のpackageへ[架空/かくう]のdigestを[置/お]かず、[同/おな]じSchemaRefに[異/こと]なるfield shapeを[割/わ]り[当/あ]てない。"
         cons "Grammar compileはsurface descriptorを[作/つく]る[責務/せきむ]を[持/も]ち、Doc/Math/Circuitの[意味/いみ]schemaを[勝手/かって]に[再生成/さいせいせい]・[上書/うわが]きしない。" nil
