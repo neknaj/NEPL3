@@ -1,5 +1,7 @@
 //! Output-attempt ownership over a frozen canonical batch. No admission proofs
 //! survive an attempt. The ordinary canonical entry remains single-attempt.
+#[path = "retry/preparation.rs"]
+pub(crate) mod preparation;
 use super::*;
 use crate::doc::export::pages::resources::job::{Attempt, Running};
 use nepl3_core::budget::{Limits, StopReason, Usage};
@@ -66,7 +68,12 @@ fn render(
 ) -> Result<Rendered> {
     let mut attempts = Vec::new();
     loop {
-        attempts.try_reserve(1)?;
+        attempts.try_reserve(1).map_err(|error| {
+            format!(
+                "HostAllocationFailure: {error}; cumulative job usage={:?}; attempts={attempts:?}",
+                running.usage()
+            )
+        })?;
         let attempt = running.run_budget(phase, |budget| {
             let generated = batch.render(budget.usage(), budget);
             attempts.push((budget.limits(), budget.usage(), budget.poll().err()));
@@ -83,7 +90,7 @@ fn render(
             }
             Attempt::Paused { mut paused, .. } => loop {
                 let Some((job_limits, output_limits)) =
-                    choose(paused.reason(), paused.usage(), paused.limits(), phase).map_err(|error| format!("{error}; cumulative render usage={:?}; previous stop={:?}; attempts={attempts:?}", paused.usage(), paused.reason()))?
+                    choose(paused.reason(), paused.usage(), paused.limits(), phase).map_err(|error| format!("{error}; cumulative job usage={:?}; previous stop={:?}; attempts={attempts:?}", paused.usage(), paused.reason()))?
                 else {
                     let cancelled = paused.cancel();
                     return Err(format!("Cancelled: {cancelled:?}; attempts={attempts:?}").into());
@@ -102,7 +109,7 @@ fn render(
             },
             Attempt::Failed { error, usage, .. } => {
                 return Err(format!(
-                    "{error}; cumulative render usage={usage:?}; attempts={attempts:?}"
+                    "{error}; cumulative job usage={usage:?}; attempts={attempts:?}"
                 )
                 .into());
             }

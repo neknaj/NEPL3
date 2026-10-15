@@ -516,6 +516,30 @@ body
         cons "[出力/しゅつりょく]は[全体/ぜんたい][成功/せいこう]後だけ[書/か]き[込/こ]み、[保存/ほぞん]receiptを[再開権限/さいかいけんげん]として[読/よ]み[戻/もど]さない。"
         nil
       cons paragraph
+        cons sentence cons code "doc-canonical --registry pages.json markdown --interactive-limits limits.json new-output" cons text " はMarkdownの" cons ruby text "準備" text "じゅんび" cons text "と" cons ruby text "出力" text "しゅつりょく" cons text "を" cons ruby text "同一" text "どういつ" cons text "jobで" cons ruby text "再開" text "さいかい" cons text "する。" nil
+        cons "doc-canonical retry-limitsは、このentryの[既定/きてい]JSONを[表示/ひょうじ]する。"
+        cons "[上限/じょうげん]fileはjob_limits・parse_limits・lower_limits・output_limitsを[持/も]ち、registryの[段階別上限/だんかいべつじょうげん]は[併用/へいよう]しない。"
+        cons "[各/かく]ページのparseとlowerを[同/おな]じ[累積/るいせき]ledgerで[計測/けいそく]し、[両方/りょうほう]が[成功/せいこう]したページだけをcheckpointに[加/くわ]える。"
+        cons "[停止/ていし]したページはparseから[再試行/さいしこう]し、[完了済/かんりょうず]みページは[再解析/さいかいせき]しない。"
+        cons "HTML[専用/せんよう]のCode[準備/じゅんび]はこのMarkdown entryで[実行/じっこう]しない。"
+        nil
+      cons paragraph
+        cons "[未処理/みしょり]ページも[含/ふく]む[全/ぜん]source・alias・registry・[登録/とうろく]file・SVGを[最初/さいしょ]の[試行前/しこうまえ]に[固定/こてい]する。"
+        cons "resumeは[指定/してい]された[上限/じょうげん]fileだけを[読/よ]み、[全段階/ぜんだんかい]の8[資源/しげん]とjob[上限/じょうげん]を[縮小/しゅくしょう]する[変更/へんこう]は[拒否/きょひ]する。"
+        cons "[出力段階/しゅつりょくだんかい]にも[準備/じゅんび]の[累積/るいせき]usageを[引/ひ]き[継/つ]ぎ、[残/のこ]るjob[上限/じょうげん]だけを[許可/きょか]する。"
+        cons "[加算資源/かさんしげん]は[全試行/ぜんしこう]の[合計/ごうけい]、depthは[最大値/さいだいち]とする。"
+        cons "cancel・EOF・[意味上/いみじょう]の[失敗/しっぱい]・I/O[失敗/しっぱい]では[完了/かんりょう]manifestを[公開/こうかい]しない。"
+        cons "legacy rendererの[拒否/きょひ]と[新規出力先/しんきしゅつりょくさき]だけへの[書込/かきこ]みは[出力再試行/しゅつりょくさいしこう]entryと[同/おな]じである。"
+        nil
+      cons paragraph
+        cons "job_executionのcontractはnepl3.canonical-markdown.retry-job/1とし、[各/かく]ページの[試行番号/しこうばんごう]・stage・[要求上限/ようきゅうじょうげん]・[実効上限/じっこうじょうげん]・profile digest・usage・[停止理由/ていしりゆう]と[出力試行/しゅつりょくしこう]を[記録/きろく]する。"
+        cons "[再開/さいかい]でprofileが[変/か]わる[場合/ばあい]があるため、[全/ぜん]ページが[同/おな]じ[上限/じょうげん]を[使/つか]ったと[誤認/ごにん]させるtop-levelのparse_limitsとlower_limitsはこのentryのreceiptから[除/のぞ]く。"
+        cons "[実際/じっさい]の[設定/せってい]と[計測値/けいそくち]はpreparation_attemptsの[各/かく]stageを[参照/さんしょう]する。"
+        cons "[累積/るいせき]usageは[計測/けいそく]されたparse・lower・[出力試行/しゅつりょくしこう]を[含/ふく]む。"
+        cons "package/profileのsetup・[入力読取/にゅうりょくよみとり]・hostの[保持/ほじ]metadata・job receipt[直列化/ちょくれつか]・I/Oは[計測範囲外/けいそくはんいがい]であり、[物理/ぶつり]memory[全体/ぜんたい]の[上限保証/じょうげんほしょう]とはしない。"
+        cons "[通常/つうじょう]entryと[出力/しゅつりょく]だけの[再試行/さいしこう]entryのreceipt[形式/けいしき]は[変更/へんこう]しない。"
+        nil
+      cons paragraph
         cons "[互換/ごかん]aliasとGitHubの[自動見出/じどうみだ]しIDは[独立/どくりつ]して[発生/はっせい]するため、[実際/じっさい]のGitHub[表示/ひょうじ]で[重複/ちょうふく]と[移動先/いどうさき]を[確認/かくにん]する。"
         cons sentence
           cons text "13"

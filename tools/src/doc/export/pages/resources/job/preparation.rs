@@ -340,7 +340,51 @@ fn prepare(
     phases: PreparationLimits,
     records: &mut Vec<Observation>,
 ) -> Result<Page, String> {
-    let requested = phases.parse_limits.budget().limits();
+    with_prepared_document(
+        meter,
+        compiled,
+        &entry.id,
+        input,
+        crate::doc::export::pages::resources::PhaseLimits {
+            parse: phases.parse_limits.budget().limits(),
+            lower: phases.lower_limits.budget().limits(),
+        },
+        records,
+        |document, tree, profile, meter, records| {
+            let code = stage(
+                meter,
+                Stage::Code,
+                phases.code_limits.budget().limits(),
+                profile.digest(),
+                records,
+                |budget| PreparedPageCode::prepare(&document, tree, profile, budget),
+            )?;
+            Ok(Page {
+                document,
+                _code: code,
+            })
+        },
+    )
+}
+
+/// Share the measured parse/lower lifecycle without imposing HTML Code preparation.
+/// The callback may retain owned documents, never borrowed admission proofs.
+pub(crate) fn with_prepared_document<T>(
+    meter: &mut Meter<'_>,
+    compiled: &Compiled,
+    source_name: &str,
+    input: &str,
+    phases: crate::doc::export::pages::resources::PhaseLimits,
+    records: &mut Vec<Observation>,
+    finish: impl FnOnce(
+        DocumentSyntax,
+        &nepl3_engine::tree::ValidatedParseTree<'_>,
+        &nepl3_engine::profile::ResolvedParseProfile<'_>,
+        &mut Meter<'_>,
+        &mut Vec<Observation>,
+    ) -> Result<T, String>,
+) -> Result<T, String> {
+    let requested = phases.parse;
     let effective = grant(meter, requested)?;
     let mut entered = false;
     let mut terminal = None;
@@ -348,7 +392,7 @@ fn prepare(
         true,
         compiled,
         input,
-        &entry.id,
+        source_name,
         "Article",
         effective,
         |observation| terminal = Some(observation),
@@ -375,7 +419,7 @@ fn prepare(
             let document = stage(
                 meter,
                 Stage::Lower,
-                phases.lower_limits.budget().limits(),
+                phases.lower,
                 profile.digest(),
                 records,
                 |budget| {
@@ -390,18 +434,7 @@ fn prepare(
                     .map_err(err)
                 },
             )?;
-            let code = stage(
-                meter,
-                Stage::Code,
-                phases.code_limits.budget().limits(),
-                profile.digest(),
-                records,
-                |budget| PreparedPageCode::prepare(&document, tree, profile, budget),
-            )?;
-            Ok(Page {
-                document,
-                _code: code,
-            })
+            finish(document, tree, profile, meter, records)
         },
     );
     if !entered {

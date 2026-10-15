@@ -448,7 +448,6 @@ fn markdown_interactive_output_with_io(
 ) -> Result<()> {
     use super::export::pages::resources::{job::covers, read_configuration};
     use projection::retry::OutputRetryLimits;
-    use std::io::BufRead;
     if output.exists() {
         return Err("output directory already exists".into());
     }
@@ -464,40 +463,18 @@ fn markdown_interactive_output_with_io(
                 messages,
                 "Paused Markdown output: {reason:?}; cumulative render usage={usage:?}"
             )?;
-            loop {
-                writeln!(messages, "resume <limits.json> or cancel (EOF cancels):")?;
-                messages.flush()?;
-                let mut line = String::new();
-                let count = std::io::Read::take(&mut input, 4097).read_line(&mut line)?;
-                if line.len() > 4096 {
-                    return Err("ResumeCommandLimit".into());
-                }
-                if count == 0 || line.trim() == "cancel" {
-                    return Ok(None);
-                }
-                let Some(path) = line
-                    .trim()
-                    .strip_prefix("resume ")
-                    .filter(|s| !s.trim().is_empty())
-                else {
-                    writeln!(messages, "Expected resume <limits.json> or cancel.")?;
-                    continue;
-                };
-                match read_configuration::<OutputRetryLimits>(Path::new(path.trim())) {
-                    Ok(next) => {
-                        let j = next.render_job_limits.budget().limits();
-                        let p = next.output_limits.budget().limits();
-                        if covers(j, job) && covers(p, phase) {
-                            return Ok(Some((j, p)));
-                        }
-                        writeln!(
-                            messages,
-                            "Rejected: all render job and output limits must be nondecreasing."
-                        )?;
-                    }
-                    Err(error) => writeln!(messages, "Cannot read limits: {error}")?,
-                }
-            }
+            resume_grant(&mut input, messages, |next: &OutputRetryLimits| {
+                covers(next.render_job_limits.budget().limits(), job)
+                    && covers(next.output_limits.budget().limits(), phase)
+            })
+            .map(|next| {
+                next.map(|n| {
+                    (
+                        n.render_job_limits.budget().limits(),
+                        n.output_limits.budget().limits(),
+                    )
+                })
+            })
         },
     )?;
     super::export::pages::write_generated(
@@ -512,6 +489,110 @@ fn markdown_interactive_output_with_io(
         },
         output,
     )
+}
+
+fn resume_grant<T: serde::de::DeserializeOwned>(
+    mut input: &mut impl std::io::BufRead,
+    messages: &mut impl std::io::Write,
+    accepts: impl Fn(&T) -> bool,
+) -> Result<Option<T>> {
+    use std::io::BufRead;
+    loop {
+        writeln!(messages, "resume <limits.json> or cancel (EOF cancels):")?;
+        messages.flush()?;
+        let mut line = String::new();
+        let count = std::io::Read::take(&mut input, 4097).read_line(&mut line)?;
+        if line.len() > 4096 {
+            return Err("ResumeCommandLimit".into());
+        }
+        if count == 0 || line.trim() == "cancel" {
+            return Ok(None);
+        }
+        let Some(path) = line
+            .trim()
+            .strip_prefix("resume ")
+            .filter(|s| !s.trim().is_empty())
+        else {
+            writeln!(messages, "Expected resume <limits.json> or cancel.")?;
+            continue;
+        };
+        match super::export::pages::resources::read_configuration::<T>(Path::new(path.trim())) {
+            Ok(next) if accepts(&next) => return Ok(Some(next)),
+            Ok(_) => writeln!(
+                messages,
+                "Rejected: all selected limits must be nondecreasing."
+            )?,
+            Err(error) => writeln!(messages, "Cannot read limits: {error}")?,
+        }
+    }
+}
+
+/// Explicit whole-job retry with complete-page parse/lower checkpoints.
+pub fn markdown_interactive(
+    root: &Path,
+    manifest: &str,
+    limits: &Path,
+    output: &Path,
+) -> Result<()> {
+    markdown_interactive_with_io(
+        root,
+        manifest,
+        limits,
+        output,
+        &mut std::io::stdin().lock(),
+        &mut std::io::stderr().lock(),
+    )
+}
+fn markdown_interactive_with_io(
+    root: &Path,
+    manifest: &str,
+    limits: &Path,
+    output: &Path,
+    input: &mut impl std::io::BufRead,
+    messages: &mut impl std::io::Write,
+) -> Result<()> {
+    use projection::retry::preparation::{self, RetryLimits};
+    if output.exists() {
+        return Err("output directory already exists".into());
+    }
+    let selected: RetryLimits = super::export::pages::resources::read_configuration(limits)?;
+    let raw = bounded(root, manifest, MAX_REGISTRY)?;
+    let generated = preparation::generate(
+        root,
+        manifest,
+        raw,
+        selected,
+        |previous, phase, reason, usage| {
+            let stage = match phase {
+                preparation::Phase::Preparation { page } => format!("preparation page {page}"),
+                preparation::Phase::Output => "output".to_owned(),
+            };
+            writeln!(
+                messages,
+                "Paused Markdown {stage}: {reason:?}; cumulative job usage={usage:?}"
+            )?;
+            resume_grant(input, messages, |next: &RetryLimits| next.covers(previous))
+        },
+    )?;
+    super::export::pages::write_generated(
+        super::export::pages::GeneratedPages {
+            provenance: None,
+            files: generated
+                .files
+                .into_iter()
+                .map(|(p, s)| (p, s.into_bytes()))
+                .collect(),
+            manifest: generated.manifest,
+        },
+        output,
+    )
+}
+pub fn retry_limits() -> Result<()> {
+    println!(
+        "{}",
+        serde_json::to_string_pretty(&projection::retry::preparation::RetryLimits::default())?
+    );
+    Ok(())
 }
 
 /// Export the registered Doc sources through the same prepared page-set backend.
