@@ -1,7 +1,7 @@
 //! Environment content is hashed independently of its local table ID.
 use crate::{WireError, boundary::*, source::*, view::*};
 use nepl3_core::{
-    budget::{Budget, Resource},
+    budget::Budget,
     origin::OriginId,
     schema::SchemaRegistry,
     source::Digest,
@@ -123,6 +123,10 @@ pub(crate) fn environment_from(
 }
 /// Computes the identity of a structurally valid Environment, without claiming
 /// validation of bundle-local origin references or domain binding semantics.
+/// Canonical bytes stream directly into the domain-separated hash after schema
+/// validation. OutputBytes accounts for the 32-byte digest; no temporary encoded
+/// byte vector is allocated. Work still accounts for encoding and hashing bytes,
+/// including the domain prefix. This does not deduplicate embedded source data.
 pub fn environment_digest(
     environment: &Environment,
     schema: &SchemaRef,
@@ -130,9 +134,10 @@ pub fn environment_digest(
     budget: &mut Budget,
 ) -> Result<Digest, WireError> {
     let value = environment_value(environment, schema, budget)?;
-    let bytes = crate::encode_checked(&value, &expected("Environment"), registry, budget)?;
-    budget.charge(Resource::Work, bytes.len() as u64)?;
-    Ok(Digest::domain(b"NEPL3-ENVIRONMENT-1\0", &bytes))
+    // Validate this operation's exact immutable value before streaming the same
+    // canonical bytes into the hash. No temporary wire payload is returned.
+    registry.validate(&expected("Environment"), &value, budget)?;
+    crate::encode::digest(b"NEPL3-ENVIRONMENT-1\0", &value, budget)
 }
 pub(crate) fn entry_value(
     entry: &EnvironmentEntry,
@@ -171,3 +176,6 @@ pub(crate) fn entry_from(
     }
     Ok(entry)
 }
+
+#[cfg(test)]
+mod tests;
