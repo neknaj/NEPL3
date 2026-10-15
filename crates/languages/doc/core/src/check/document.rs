@@ -99,6 +99,19 @@ impl DocumentSyntax {
         b: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<ValidatedDocumentSyntax<'a>, StructureError> {
+        self.validate_structure_with_sources(registry, b, admission)
+            .map(|(structure, _)| structure)
+    }
+
+    // Operation-local source index produced by the full structure check. The
+    // portable adapter consumes this exact index without reconstructing it.
+    // No validation proof is accepted from another document or budget.
+    pub(crate) fn validate_structure_with_sources<'a>(
+        &'a self,
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<(ValidatedDocumentSyntax<'a>, SourceStore), StructureError> {
         b.poll()?;
         if !registry.is_finalized() {
             return Err(SyntaxError::from(nepl3_core::schema::SchemaError::Unfinalized).into());
@@ -254,9 +267,12 @@ impl DocumentSyntax {
             .embeds
             .group
             .validate_at_depths(&embeds, registry, b, admission)?;
-        Ok(ValidatedDocumentSyntax {
-            document: self,
-            shape,
-        })
+        Ok((
+            ValidatedDocumentSyntax {
+                document: self,
+                shape,
+            },
+            store,
+        ))
     }
 }

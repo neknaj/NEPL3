@@ -130,15 +130,10 @@ fn encode_with_structure<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<(NdfValue, crate::check::ValidatedDocumentSyntax<'a>), PortableError<C::Error>> {
-    let structure = document.validate_structure(registry, b, c.source_admission())?;
+    let (structure, store) =
+        document.validate_structure_with_sources(registry, b, c.source_admission())?;
     let s = schema(registry)?;
     let sources = c.encode_sources(&document.sources, b).map_err(boundary)?;
-    let mut store = SourceStore::default();
-    for source in &document.sources {
-        store
-            .insert_with_budget(source.clone_with_budget(b)?, b)
-            .map_err(StructureError::from)?;
-    }
     let mut scoped = c.scoped_with_mappings(&store, &document.source_maps);
     let value = document.value.put(s, &mut scoped, b)?;
     let origins = scoped
