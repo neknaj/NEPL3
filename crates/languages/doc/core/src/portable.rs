@@ -130,12 +130,25 @@ fn encode_with_structure<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<(NdfValue, crate::check::ValidatedDocumentSyntax<'a>), PortableError<C::Error>> {
-    let (structure, store) =
-        document.validate_structure_with_sources(registry, b, c.source_admission())?;
+    let pending = document.prepare_structure(registry, b, c.source_admission())?;
+    let group = c
+        .encode_foreign_group_at_depths(&document.value.embeds.group, &pending.depths, registry, b)
+        .map_err(|error| match error {
+            nepl3_core::value_codec::GroupEncodingError::Structure(error) => {
+                PortableError::from(StructureError::from(error))
+            }
+            nepl3_core::value_codec::GroupEncodingError::Codec(error) => boundary(error),
+        })?;
+    let (structure, store) = pending.finish();
     let s = schema(registry)?;
     let sources = c.encode_sources(&document.sources, b).map_err(boundary)?;
     let mut scoped = c.scoped_with_mappings(&store, &document.source_maps);
-    let value = document.value.put(s, &mut scoped, b)?;
+    let (value, ()) = document.value.put_with_embeds(s, &mut scoped, b, |c, b| {
+        document
+            .value
+            .embeds
+            .put_with_group(s, c, b, |_, _| Ok((group, ())))
+    })?;
     let origins = scoped
         .encode_origins(&document.origins, b)
         .map_err(boundary)?;

@@ -281,3 +281,179 @@ fn component_identity_has_explicit_framing_and_standalone_component_parity() -> 
     assert!(identities(&group, &SchemaRegistry::default(), &mut budget()).is_err());
     Ok(())
 }
+
+#[test]
+fn fused_group_encoding_matches_separate_validation_and_charges_less() -> TestResult {
+    let (_, registry, group) = grouped()?;
+    let sources = SourceStore::default();
+    let mut old_admission = SourceAdmission::default();
+    let mut old_budget = budget();
+    group
+        .validate_at_depths(&[3], &registry, &mut old_budget, &mut old_admission)
+        .map_err(|e| format!("{e:?}"))?;
+    let expected = FoundationCodec::new(&registry, &sources, &mut old_admission)
+        .map_err(|e| format!("{e:?}"))?
+        .encode_foreign_group(&group, &mut old_budget)
+        .map_err(|e| format!("{e:?}"))?;
+    let mut admission = SourceAdmission::default();
+    let mut b = budget();
+    let actual = FoundationCodec::new(&registry, &sources, &mut admission)
+        .map_err(|e| format!("{e:?}"))?
+        .encode_foreign_group_at_depths(&group, &[3], &registry, &mut b)
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(actual, expected);
+    // The baseline actually performs the extra pass, rather than using a
+    // frozen arbitrary expected total as the performance oracle.
+    assert!(b.usage().work < old_budget.usage().work);
+    assert_eq!(b.usage().depth, old_budget.usage().depth);
+    Ok(())
+}
+
+#[test]
+fn fused_group_encoding_preserves_native_error_phase() -> TestResult {
+    use nepl3_core::value_codec::GroupEncodingError;
+    let (_, registry, group) = grouped()?;
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let result = FoundationCodec::new(&registry, &sources, &mut admission)
+        .map_err(|e| format!("{e:?}"))?
+        .encode_foreign_group_at_depths(&group, &[], &registry, &mut budget());
+    assert!(matches!(
+        result,
+        Err(GroupEncodingError::Structure(GroupError::DepthCount))
+    ));
+    Ok(())
+}
+
+#[test]
+fn fused_group_encoding_checks_distinct_registry_and_forged_digest() -> TestResult {
+    use nepl3_core::value_codec::GroupEncodingError;
+    let (_, registry, group) = grouped()?;
+    let (_, equivalent, _) = grouped()?;
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut b = budget();
+    let actual = FoundationCodec::new(&registry, &sources, &mut admission)
+        .map_err(|e| format!("{e:?}"))?
+        .encode_foreign_group_at_depths(&group, &[2], &equivalent, &mut b)
+        .map_err(|e| format!("{e:?}"))?;
+    let mut admission = SourceAdmission::default();
+    let expected = FoundationCodec::new(&registry, &sources, &mut admission)
+        .map_err(|e| format!("{e:?}"))?
+        .encode_foreign_group(&group, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(actual, expected);
+    let mut same_budget = budget();
+    let mut same_admission = SourceAdmission::default();
+    FoundationCodec::new(&registry, &sources, &mut same_admission)
+        .map_err(|e| format!("{e:?}"))?
+        .encode_foreign_group_at_depths(&group, &[2], &registry, &mut same_budget)
+        .map_err(|e| format!("{e:?}"))?;
+    assert!(b.usage().work > same_budget.usage().work);
+    let mut changed = group;
+    changed.environments[0].environment.digest.0[0] ^= 1;
+    changed.entries[0].syntax.environment.digest = changed.environments[0].environment.digest;
+    let mut admission = SourceAdmission::default();
+    // Association still agrees, but serialization must recompute the digest.
+    let result = FoundationCodec::new(&registry, &sources, &mut admission)
+        .map_err(|e| format!("{e:?}"))?
+        .encode_foreign_group_at_depths(&changed, &[2], &registry, &mut budget());
+    assert!(matches!(result, Err(GroupEncodingError::Codec(_))));
+    Ok(())
+}
+
+fn fused(
+    group: &ForeignClosureGroup,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<NdfValue, WireError> {
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    b.charge(nepl3_core::budget::Resource::Work, 7)?;
+    b.with_depth_at_least(4, |b| {
+        FoundationCodec::new(registry, &sources, &mut admission)?
+            .encode_foreign_group_at_depths(group, &[3], registry, b)
+            .map_err(|e| match e {
+                nepl3_core::value_codec::GroupEncodingError::Structure(e) => e.into(),
+                nepl3_core::value_codec::GroupEncodingError::Codec(e) => e,
+            })
+    })
+}
+#[test]
+fn fused_group_encoding_limits_are_exact_and_sticky() -> TestResult {
+    let (_, registry, group) = grouped()?;
+    let mut measured = budget();
+    fused(&group, &registry, &mut measured).map_err(|e| format!("{e:?}"))?;
+    let u = measured.usage();
+    for (used, reason) in [
+        (u.work, StopReason::WorkLimit),
+        (u.allocation_units, StopReason::AllocationLimit),
+        (u.nodes, StopReason::NodeLimit),
+        (u.source_bytes, StopReason::SourceLimit),
+        (u.depth, StopReason::DepthLimit),
+        (u.output_bytes, StopReason::OutputLimit),
+    ] {
+        if used == 0 {
+            continue;
+        }
+        for exact in [false, true] {
+            let mut limits = budget().limits();
+            let n = used - u64::from(!exact);
+            match reason {
+                StopReason::WorkLimit => limits.work = n,
+                StopReason::AllocationLimit => limits.allocation_units = n,
+                StopReason::NodeLimit => limits.nodes = n,
+                StopReason::SourceLimit => limits.source_bytes = n,
+                StopReason::DepthLimit => limits.depth = n,
+                StopReason::OutputLimit => limits.output_bytes = n,
+                _ => return Err("case".into()),
+            }
+            let mut b = Budget::new(limits);
+            let result = fused(&group, &registry, &mut b);
+            if exact {
+                result.map_err(|e| format!("{e:?}"))?;
+            } else {
+                assert_eq!(result.err().and_then(|e| e.stop_reason()), Some(reason));
+                assert_eq!(b.poll(), Err(reason));
+            }
+        }
+    }
+    let mut stopped = budget();
+    stopped.stop(StopReason::Cancelled);
+    assert_eq!(
+        fused(&group, &registry, &mut stopped)
+            .err()
+            .and_then(|e| e.stop_reason()),
+        Some(StopReason::Cancelled)
+    );
+    Ok(())
+}
+
+#[test]
+fn fused_group_encoding_rejects_incompatible_codec_registry() -> TestResult {
+    use nepl3_core::value_codec::GroupEncodingError;
+    let (_, native, group) = grouped()?;
+    let mut descriptor = foundation::descriptor(&mut budget()).map_err(|e| format!("{e:?}"))?;
+    descriptor.types.push(nepl3_core::schema::NamedType {
+        name: "ExtraTypeForDifferentIdentity".into(),
+        shape: nepl3_core::schema::TypeShape::Record { fields: vec![] },
+        constraints: vec![],
+    });
+    let reference = descriptor
+        .reference(&mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let mut incompatible = SchemaRegistry::default();
+    incompatible
+        .register(reference, descriptor, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    incompatible
+        .finalize(&mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let result = FoundationCodec::new(&incompatible, &sources, &mut admission)
+        .map_err(|e| format!("{e:?}"))?
+        .encode_foreign_group_at_depths(&group, &[2], &native, &mut budget());
+    assert!(matches!(result, Err(GroupEncodingError::Codec(_))));
+    Ok(())
+}

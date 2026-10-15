@@ -16,6 +16,13 @@ pub struct CanonicalDigestInput<'a> {
     pub value: &'a NdfValue,
 }
 
+/// Distinguishes the consuming operation's native check from wire encoding.
+#[derive(Debug, Eq, PartialEq)]
+pub enum GroupEncodingError<E> {
+    Structure(crate::syntax::group::GroupError),
+    Codec(E),
+}
+
 /// Implementations must enforce the registered foundation schema and its semantic
 /// source/view/environment constraints. This is not a provider-supplied callback.
 pub trait FoundationCodecError {
@@ -179,6 +186,22 @@ pub trait FoundationValueCodec {
         value: &crate::syntax::group::ForeignClosureGroup,
         budget: &mut Budget,
     ) -> Result<NdfValue, Self::Error>;
+    /// Fresh native validation at caller-relative semantic depths followed by
+    /// encoding in this operation. No earlier proof is accepted. Both registries
+    /// remain authoritative; equivalent distinct registries may require more work.
+    fn encode_foreign_group_at_depths(
+        &mut self,
+        value: &crate::syntax::group::ForeignClosureGroup,
+        depths: &[u64],
+        registry: &crate::schema::SchemaRegistry,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, GroupEncodingError<Self::Error>> {
+        value
+            .validate_at_depths(depths, registry, budget, self.source_admission())
+            .map_err(GroupEncodingError::Structure)?;
+        self.encode_foreign_group(value, budget)
+            .map_err(GroupEncodingError::Codec)
+    }
     fn decode_foreign_group(
         &mut self,
         value: &NdfValue,

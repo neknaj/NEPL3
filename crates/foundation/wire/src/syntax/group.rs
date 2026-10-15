@@ -14,6 +14,39 @@ pub(crate) fn to_value(
     b: &mut Budget,
 ) -> Result<NdfValue, WireError> {
     value.validate(registry, b, admission)?;
+    encode_validated(value, schema, registry, admission, b)
+}
+
+pub(crate) fn to_value_at_depths(
+    value: &ForeignClosureGroup,
+    depths: &[u64],
+    native_registry: &SchemaRegistry,
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<NdfValue, nepl3_core::value_codec::GroupEncodingError<WireError>> {
+    use nepl3_core::value_codec::GroupEncodingError;
+    value
+        .validate_at_depths(depths, native_registry, b, admission)
+        .map_err(GroupEncodingError::Structure)?;
+    if !core::ptr::eq(native_registry, registry) {
+        value
+            .validate(registry, b, admission)
+            .map_err(|e| GroupEncodingError::Codec(e.into()))?;
+    }
+    encode_validated(value, schema, registry, admission, b).map_err(GroupEncodingError::Codec)
+}
+
+// Private: every caller freshly validates this exact immutable group using
+// the same registry, admission and Budget before entering serialization.
+fn encode_validated(
+    value: &ForeignClosureGroup,
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<NdfValue, WireError> {
     let provenances = sequence(&value.provenances, b, |v, b| {
         record(
             schema,
