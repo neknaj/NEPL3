@@ -88,6 +88,18 @@ enum Encode<'a> {
     Enter(&'a SyntaxBundle, u64),
     Finish(&'a SyntaxBundle, usize),
 }
+
+// A reachable mapping allocates at least one native index, wire index and
+// pending NodeRef per node. Keep tiny bundles on the original path so the
+// separate cache entry cannot increase their logical allocation allowance.
+fn retain_order(bundle: &SyntaxBundle) -> bool {
+    let minimum_per_node = core::mem::size_of::<usize>()
+        + core::mem::size_of::<u64>()
+        + core::mem::size_of::<NodeRef>();
+    bundle.nodes.len().saturating_mul(minimum_per_node)
+        >= core::mem::size_of::<(Vec<usize>, Vec<u64>)>()
+}
+
 pub(crate) fn bundle_value(
     bundle: &SyntaxBundle,
     schema: &SchemaRef,
@@ -97,20 +109,28 @@ pub(crate) fn bundle_value(
 ) -> Result<NdfValue, WireError> {
     let mut pending = Vec::new();
     let mut results = Vec::new();
+    let mut orders = Vec::new();
     push(&mut pending, Encode::Enter(bundle, 1), budget)?;
     while let Some(step) = pending.pop() {
         budget.charge(Resource::Work, 1)?;
         match step {
             Encode::Enter(bundle, depth) => {
                 budget.observe_depth(depth)?;
+                // The bundle is immutably borrowed throughout this traversal.
+                // Retain its admitted canonical order across guest encoding;
+                // recomputing it at Finish cannot change the result.
+                let (indices, mapping) = order(bundle, budget)?;
                 let mut guests = Vec::new();
-                for index in order(bundle, budget)?.0 {
-                    let node = &bundle.nodes[index];
+                for index in &indices {
+                    let node = &bundle.nodes[*index];
                     for field in &node.fields {
                         if let FieldValue::Foreign(guest) = field {
                             push(&mut guests, &guest.bundle, budget)?;
                         }
                     }
+                }
+                if retain_order(bundle) {
+                    push(&mut orders, (indices, mapping), budget)?;
                 }
                 push(&mut pending, Encode::Finish(bundle, guests.len()), budget)?;
                 for guest in guests.into_iter().rev() {
@@ -122,7 +142,14 @@ pub(crate) fn bundle_value(
                 }
             }
             Encode::Finish(bundle, count) => {
-                let (indices, mapping) = order(bundle, budget)?;
+                let (indices, mapping) = if retain_order(bundle) {
+                    // Enter/Finish are nested depth-first. Small bundles neither
+                    // push nor pop this stack; each eligible ancestor keeps its
+                    // immutable mapping until all of its guests have finished.
+                    orders.pop().ok_or(WireError::InvalidType)?
+                } else {
+                    order(bundle, budget)?
+                };
                 let start = results
                     .len()
                     .checked_sub(count)
@@ -224,7 +251,7 @@ pub(crate) fn bundle_value(
             }
         }
     }
-    if results.len() != 1 {
+    if results.len() != 1 || !orders.is_empty() {
         return Err(WireError::InvalidType);
     }
     results.pop().ok_or(WireError::InvalidType)
