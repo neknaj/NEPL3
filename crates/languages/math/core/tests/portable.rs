@@ -260,3 +260,81 @@ fn mapped_view_parent_child_roundtrip_requires_explicit_mapping_closure() -> Res
     assert!(portable::to_value(&original, &r, &mut c, &mut b()).is_err());
     Ok(())
 }
+
+#[test]
+fn repeated_math_views_reuse_mapping_source_geometry() -> Result<(), String> {
+    use nepl3_core::{
+        origin::{Mapping, MappingKind},
+        value::KindRef,
+        view::{ViewBundle, ViewElement, ViewRef},
+    };
+    let r = registry()?;
+    let mut original = source_expression()?;
+    let source = original.sources[0].clone();
+    let head = source.span(0, source.text().len() as u64).map_err(err)?;
+    let target = SourceSnapshot::new(
+        SourceId("view-target".into()),
+        0,
+        "memory:view-target".into(),
+        source.text().as_bytes().to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    let target_span = target.span(0, target.text().len() as u64).map_err(err)?;
+    original.sources.push(target);
+    let schema = r.selected("nepl3.foundation", 1).ok_or("foundation")?;
+    let view = MathView {
+        head: head.clone(),
+        view: ViewBundle {
+            roots: vec![ViewRef(0)],
+            elements: vec![ViewElement {
+                kind: KindRef {
+                    schema: schema.clone(),
+                    local_kind: r.kind_id(schema, "Token").map_err(err)?,
+                },
+                span: head.clone(),
+                fields: vec![],
+                roles: vec![],
+                relations: vec![],
+            }],
+        },
+    };
+    let mapping = Mapping {
+        source: head,
+        target: target_span,
+        kind: MappingKind::Exact,
+    };
+    let mut incremental = Vec::new();
+    for count in [1, 64] {
+        original.source_maps = vec![mapping.clone(); count];
+        let mut costs = Vec::new();
+        for views in [1, 16] {
+            original.views = vec![view.clone(); views];
+            let mut budget = b();
+            original
+                .validate_structure(&r, &mut budget, &mut SourceAdmission::default())
+                .map_err(err)?;
+            costs.push(budget.usage().work);
+        }
+        incremental.push(costs[1] - costs[0]);
+    }
+    // The extra same-source views must not rescan an unrelated mapping table.
+    // Initial validation still visits all 64 rows before any view is checked.
+    assert_eq!(incremental[0], incremental[1]);
+    original.sources.pop();
+    assert!(
+        original
+            .validate_structure(&r, &mut b(), &mut SourceAdmission::default())
+            .is_err(),
+        "even mappings unused by the views must retain their source closure"
+    );
+    let mut stopped = b();
+    stopped.cancel();
+    assert!(
+        original
+            .validate_structure(&r, &mut stopped, &mut SourceAdmission::default())
+            .is_err()
+    );
+    assert_eq!(stopped.poll(), Err(StopReason::Cancelled));
+    Ok(())
+}
