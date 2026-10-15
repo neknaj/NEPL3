@@ -130,7 +130,14 @@ pub fn environment_digest(
     budget: &mut Budget,
 ) -> Result<Digest, WireError> {
     let value = environment_value(environment, schema, budget)?;
-    let bytes = crate::encode_checked(&value, &expected("Environment"), registry, budget)?;
+    value_digest(&value, registry, budget)
+}
+fn value_digest(
+    value: &NdfValue,
+    registry: &SchemaRegistry,
+    budget: &mut Budget,
+) -> Result<Digest, WireError> {
+    let bytes = crate::encode_checked(value, &expected("Environment"), registry, budget)?;
     budget.charge(Resource::Work, bytes.len() as u64)?;
     Ok(Digest::domain(b"NEPL3-ENVIRONMENT-1\0", &bytes))
 }
@@ -140,7 +147,9 @@ pub(crate) fn entry_value(
     registry: &SchemaRegistry,
     budget: &mut Budget,
 ) -> Result<NdfValue, WireError> {
-    if environment_digest(&entry.value, schema, registry, budget)? != entry.digest {
+    // Validate/hash exactly the owned value that will cross the boundary.
+    let value = environment_value(&entry.value, schema, budget)?;
+    if value_digest(&value, registry, budget)? != entry.digest {
         return Err(SyntaxError::Environment.into());
     }
     record(
@@ -149,7 +158,7 @@ pub(crate) fn entry_value(
         [
             NdfValue::U64(entry.id),
             bytes(&entry.digest.0, budget)?,
-            environment_value(&entry.value, schema, budget)?,
+            value,
         ],
         budget,
     )
@@ -171,3 +180,6 @@ pub(crate) fn entry_from(
     }
     Ok(entry)
 }
+
+#[cfg(test)]
+mod tests;
