@@ -421,6 +421,99 @@ pub fn markdown(root: &Path, manifest: &str, output: &Path) -> Result<()> {
     )
 }
 
+/// Opt-in continuation of output attempts after immutable preparation succeeds.
+/// Parse/lower/preparation stops remain ordinary failures on this entry.
+pub fn markdown_interactive_output(
+    root: &Path,
+    manifest: &str,
+    limits_path: &Path,
+    output: &Path,
+) -> Result<()> {
+    markdown_interactive_output_with_io(
+        root,
+        manifest,
+        limits_path,
+        output,
+        &mut std::io::stdin().lock(),
+        &mut std::io::stderr().lock(),
+    )
+}
+fn markdown_interactive_output_with_io(
+    root: &Path,
+    manifest: &str,
+    limits_path: &Path,
+    output: &Path,
+    mut input: &mut impl std::io::BufRead,
+    messages: &mut impl std::io::Write,
+) -> Result<()> {
+    use super::export::pages::resources::{job::covers, read_configuration};
+    use projection::retry::OutputRetryLimits;
+    use std::io::BufRead;
+    if output.exists() {
+        return Err("output directory already exists".into());
+    }
+    let selected: OutputRetryLimits = read_configuration(limits_path)?;
+    let raw = bounded(root, manifest, MAX_REGISTRY)?;
+    let generated = projection::retry::generate(
+        root,
+        manifest,
+        raw,
+        selected,
+        |reason, usage, job, phase| {
+            writeln!(
+                messages,
+                "Paused Markdown output: {reason:?}; cumulative render usage={usage:?}"
+            )?;
+            loop {
+                writeln!(messages, "resume <limits.json> or cancel (EOF cancels):")?;
+                messages.flush()?;
+                let mut line = String::new();
+                let count = std::io::Read::take(&mut input, 4097).read_line(&mut line)?;
+                if line.len() > 4096 {
+                    return Err("ResumeCommandLimit".into());
+                }
+                if count == 0 || line.trim() == "cancel" {
+                    return Ok(None);
+                }
+                let Some(path) = line
+                    .trim()
+                    .strip_prefix("resume ")
+                    .filter(|s| !s.trim().is_empty())
+                else {
+                    writeln!(messages, "Expected resume <limits.json> or cancel.")?;
+                    continue;
+                };
+                match read_configuration::<OutputRetryLimits>(Path::new(path.trim())) {
+                    Ok(next) => {
+                        let j = next.render_job_limits.budget().limits();
+                        let p = next.output_limits.budget().limits();
+                        if covers(j, job) && covers(p, phase) {
+                            return Ok(Some((j, p)));
+                        }
+                        writeln!(
+                            messages,
+                            "Rejected: all render job and output limits must be nondecreasing."
+                        )?;
+                    }
+                    Err(error) => writeln!(messages, "Cannot read limits: {error}")?,
+                }
+            }
+        },
+    )?;
+    super::export::pages::write_generated(
+        super::export::pages::GeneratedPages {
+            provenance: None,
+            files: generated
+                .files
+                .into_iter()
+                .map(|(p, s)| (p, s.into_bytes()))
+                .collect(),
+            manifest: generated.manifest,
+        },
+        output,
+    )
+}
+
 /// Export the registered Doc sources through the same prepared page-set backend.
 /// The existing Markdown path remains the logical namespace for relative links;
 /// the physical source and its digest are recorded separately by the generator.

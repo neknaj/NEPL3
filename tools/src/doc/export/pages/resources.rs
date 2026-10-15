@@ -130,12 +130,12 @@ pub(super) fn phase_identity(output: Digest, profiles: &[Digest], phases: PhaseL
     }
     Digest::of(&bytes)
 }
-pub(super) fn limits(value: Limits) -> serde_json::Value {
+pub(crate) fn limits(value: Limits) -> serde_json::Value {
     serde_json::json!({"source_bytes":value.source_bytes,"work":value.work,"depth":value.depth,
         "nodes":value.nodes,"allocation_units":value.allocation_units,"output_bytes":value.output_bytes,
         "diagnostics":value.diagnostics,"events":value.events})
 }
-pub(super) fn usage(value: Usage) -> serde_json::Value {
+pub(crate) fn usage(value: Usage) -> serde_json::Value {
     serde_json::json!({"source_bytes":value.source_bytes,"work":value.work,"depth":value.depth,
         "nodes":value.nodes,"allocation_units":value.allocation_units,"output_bytes":value.output_bytes,
         "diagnostics":value.diagnostics,"events":value.events})

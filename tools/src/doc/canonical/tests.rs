@@ -1,3 +1,5 @@
+#[path = "tests/retry.rs"]
+mod retry;
 use super::*;
 use crate::testing::Fixture;
 use serde_json::json;

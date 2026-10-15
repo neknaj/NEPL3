@@ -60,6 +60,20 @@ fn run() -> nepl3_tools::Result<()> {
         ["doc-canonical", "--registry", registry, "--check"] => {
             nepl3_tools::doc::canonical::check(&root, registry)
         }
+        [
+            "doc-canonical",
+            "--registry",
+            registry,
+            "markdown",
+            "--interactive-output-limits",
+            limits,
+            output,
+        ] => nepl3_tools::doc::canonical::markdown_interactive_output(
+            &root,
+            registry,
+            std::path::Path::new(limits),
+            std::path::Path::new(output),
+        ),
         ["doc-canonical", "--registry", registry, "markdown", output] => {
             nepl3_tools::doc::canonical::markdown(&root, registry, std::path::Path::new(output))
         }
@@ -274,6 +288,9 @@ fn run() -> nepl3_tools::Result<()> {
             );
             println!(
                 "nepl3-tools doc-canonical --registry <repository-relative.json> html <new-output-directory>"
+            );
+            println!(
+                "nepl3-tools doc-canonical --registry <repository-relative.json> markdown --interactive-output-limits <limits.json> <new-output-directory>"
             );
             println!("nepl3-tools doc-canonical markdown <new-output-directory>");
             println!("nepl3-tools doc-canonical html <new-output-directory>");
