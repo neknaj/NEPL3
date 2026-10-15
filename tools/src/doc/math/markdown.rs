@@ -71,10 +71,11 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
         &mut self,
         checked: &nepl3_doc_core::check::ValidatedDocumentSyntax<'a>,
         node: u64,
+        shared: &mut nepl3_core::syntax::group::ForeignGroupValidation<'_, '_>,
         budget: &mut Budget,
     ) -> Result<PreparedMarkdown<'a>, PrepareError<C::Error>> {
         let prepared = self
-            .prepare_validated_node(checked, node, Preference::KaTeXPreferred, budget)
+            .prepare_validated_node(checked, node, Preference::KaTeXPreferred, shared, budget)
             .map_err(PrepareError::Host)?;
         Self::markdown_from_display(checked.document(), node, prepared, budget)
     }
