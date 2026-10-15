@@ -314,3 +314,166 @@ fn exact_rows_and_fact_variants_keep_same_mapping_closure() -> Result<(), String
     );
     Ok(())
 }
+
+#[test]
+fn merged_seed_versions_do_not_repeat_whole_mapping_scans() -> Result<(), String> {
+    let a = source("seed", 0, b'a')?;
+    let unrelated = source("unrelated", 0, b'b')?;
+    let maps: Vec<_> = (0..90)
+        .map(|i| {
+            Ok(map(
+                span(&unrelated, i, i + 1)?,
+                span(&unrelated, i, i + 1)?,
+            ))
+        })
+        .collect::<Result<_, String>>()?;
+    let mut closure = Closure {
+        ranges: Vec::new(),
+        pending: Vec::new(),
+    };
+    let mut b = budget();
+    let seeds = (1..=90)
+        .map(|end| span(&a, 0, end))
+        .collect::<Result<Vec<_>, _>>()?;
+    for seed in &seeds {
+        closure.span(seed, &mut b).map_err(|e| format!("{e:?}"))?;
+    }
+    let used = b.usage();
+    let mut limits = b.limits();
+    limits.work = used.work + 20_000;
+    let selected = b
+        .with_ceiling(limits, |b| closure.select(&maps, b))
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(selected, vec![false; maps.len()]);
+    assert_eq!(
+        b.usage().allocation_units - used.allocation_units,
+        maps.len() as u64
+    );
+    Ok(())
+}
+
+#[test]
+fn compacted_seed_union_matches_unmerged_fixed_point() -> Result<(), String> {
+    fn overlaps(a: &Span, b: &Span) -> bool {
+        a.snapshot_ref() == b.snapshot_ref() && a.start() <= b.end() && b.start() <= a.end()
+    }
+    let snapshots = [
+        source("same", 0, b'a')?,
+        source("same", 1, b'a')?,
+        source("same", 0, b'b')?,
+    ];
+    for variant in 0..64 {
+        let mut seeds = (1..=12)
+            .map(|end| span(&snapshots[variant % 3], 0, end))
+            .collect::<Result<Vec<_>, _>>()?;
+        seeds.extend(
+            (51..=60)
+                .map(|end| span(&snapshots[variant % 3], 50, end))
+                .collect::<Result<Vec<_>, _>>()?,
+        );
+        seeds.extend(
+            (21..=25)
+                .map(|end| span(&snapshots[(variant + 1) % 3], 20, end))
+                .collect::<Result<Vec<_>, _>>()?,
+        );
+        let mut maps = Vec::new();
+        for row in 0..30 {
+            let start = ((row * 7 + variant * 3) % 96) as u64;
+            let target = ((row * 11 + variant) % 96) as u64;
+            maps.push(map(
+                span(
+                    &snapshots[(row + variant) % 3],
+                    start,
+                    start + (row % 4) as u64,
+                )?,
+                span(
+                    &snapshots[(row + variant + 1) % 3],
+                    target,
+                    target + (row % 3) as u64,
+                )?,
+            ));
+        }
+        // A separate monotone fixed-point reference keeps every original seed
+        // and each selected endpoint. It neither merges nor compacts ranges.
+        let mut reachable = seeds.clone();
+        let mut expected = vec![false; maps.len()];
+        loop {
+            let mut changed = false;
+            for (index, mapping) in maps.iter().enumerate() {
+                if !expected[index]
+                    && reachable
+                        .iter()
+                        .any(|s| overlaps(s, &mapping.source) || overlaps(s, &mapping.target))
+                {
+                    expected[index] = true;
+                    reachable.push(mapping.source.clone());
+                    reachable.push(mapping.target.clone());
+                    changed = true;
+                }
+            }
+            if !changed {
+                break;
+            }
+        }
+        assert_eq!(select(&maps, &seeds)?, expected);
+    }
+    Ok(())
+}
+
+#[test]
+fn compacted_seed_selection_keeps_exact_caps_and_sticky_stops() -> Result<(), String> {
+    let a = source("a", 0, b'a')?;
+    let z = source("z", 0, b'z')?;
+    let seeds = (1..=20)
+        .map(|end| span(&a, 0, end))
+        .collect::<Result<Vec<_>, _>>()?;
+    let maps = vec![
+        map(span(&a, 20, 20)?, span(&z, 30, 40)?),
+        map(span(&z, 40, 40)?, span(&a, 80, 90)?),
+    ];
+    let prepare = |b: &mut Budget| -> Result<Closure<'_>, StopReason> {
+        let mut c = Closure {
+            ranges: Vec::new(),
+            pending: Vec::new(),
+        };
+        for seed in &seeds {
+            c.span(seed, b)?;
+        }
+        Ok(c)
+    };
+    let mut full = budget();
+    let expected = prepare(&mut full)
+        .map_err(|e| format!("{e:?}"))?
+        .select(&maps, &mut full)
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(expected, vec![true, true]);
+    for allocation in [false, true] {
+        for short in [false, true] {
+            let mut b = budget();
+            let c = prepare(&mut b).map_err(|e| format!("{e:?}"))?;
+            let mut cap = b.limits();
+            if allocation {
+                cap.allocation_units = full.usage().allocation_units - u64::from(short);
+            } else {
+                cap.work = full.usage().work - u64::from(short);
+            }
+            let result = b.with_ceiling(cap, |b| c.select(&maps, b));
+            if short {
+                let reason = if allocation {
+                    StopReason::AllocationLimit
+                } else {
+                    StopReason::WorkLimit
+                };
+                assert_eq!(result, Err(reason));
+                assert_eq!(b.poll(), Err(reason));
+            } else {
+                assert_eq!(result.map_err(|e| format!("{e:?}"))?, expected);
+            }
+        }
+    }
+    let mut b = budget();
+    let c = prepare(&mut b).map_err(|e| format!("{e:?}"))?;
+    b.cancel();
+    assert_eq!(c.select(&maps, &mut b), Err(StopReason::Cancelled));
+    Ok(())
+}
