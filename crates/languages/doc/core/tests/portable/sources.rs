@@ -64,11 +64,12 @@ fn encode(
     document: &DocumentSyntax,
     r: &SchemaRegistry,
     budget: &mut Budget,
-) -> Result<NdfValue, String> {
+) -> Result<NdfValue, PortableError<nepl3_wire::WireError>> {
     let empty = SourceStore::default();
     let mut admission = SourceAdmission::default();
-    let mut codec = FoundationCodec::new(r, &empty, &mut admission).map_err(err)?;
-    portable::to_value(document, r, &mut codec, budget).map_err(err)
+    let mut codec =
+        FoundationCodec::new(r, &empty, &mut admission).map_err(PortableError::Foundation)?;
+    portable::to_value(document, r, &mut codec, budget)
 }
 
 #[test]
@@ -98,7 +99,12 @@ fn reused_source_index_preserves_budget_edges_and_prior_usage() -> Result<(), St
             let mut limited = Budget::new(limits);
             let result = encode(&document, &r, &mut limited);
             if short {
-                assert!(result.is_err());
+                let reason = if allocation {
+                    StopReason::AllocationLimit
+                } else {
+                    StopReason::WorkLimit
+                };
+                assert_eq!(result, Err(PortableError::Stopped(reason)));
                 assert_eq!(
                     limited.poll(),
                     Err(if allocation {
@@ -115,7 +121,10 @@ fn reused_source_index_preserves_budget_edges_and_prior_usage() -> Result<(), St
     }
     let mut cancelled = b();
     cancelled.cancel();
-    assert!(encode(&document, &r, &mut cancelled).is_err());
+    assert_eq!(
+        encode(&document, &r, &mut cancelled),
+        Err(PortableError::Stopped(StopReason::Cancelled))
+    );
     assert_eq!(cancelled.poll(), Err(StopReason::Cancelled));
     Ok(())
 }
