@@ -1683,3 +1683,146 @@ fn terminal_parse_observations_preserve_failure_usage_and_phase_boundary() -> Re
     assert!(setup_failure.profile.is_none());
     Ok(())
 }
+
+#[test]
+fn foreign_math_owns_local_text_maps_without_inheriting_prior_paragraph_maps() -> Result<(), String>
+{
+    use nepl3_core::syntax::FieldValue;
+    let c = compiled()?;
+    let mut routes = Vec::new();
+    for native in [false, true] {
+        let mut results = Vec::new();
+        for count in [0, 4] {
+            let source = format!(
+                "article en \"Math\" body {}cons display Math symbol \"x\" nil",
+                "cons paragraph cons sentence cons text \"unrelated prior text\" nil nil "
+                    .repeat(count)
+            );
+            let observed = with_named_input(
+                native,
+                &c,
+                &source,
+                "mapping-scope",
+                "Article",
+                |tree, _, _, _| {
+                    let root = &tree.tree().bundle;
+                    let mut pending = vec![root];
+                    let mut math_maps = Vec::new();
+                    while let Some(bundle) = pending.pop() {
+                        for node in &bundle.nodes {
+                            for field in &node.fields {
+                                if let FieldValue::Foreign(guest) = field {
+                                    if guest.schema.package == "standard.math" {
+                                        let maps = &guest.bundle.source_maps;
+                                        assert!(
+                                            !maps.is_empty(),
+                                            "the symbol's empty-view builtin Text maps must survive"
+                                        );
+                                        for mapping in maps {
+                                            let target = guest
+                                                .bundle
+                                                .sources
+                                                .iter()
+                                                .find(|s| {
+                                                    s.identity() == mapping.target.snapshot_ref()
+                                                })
+                                                .ok_or("mapping target")?;
+                                            assert_eq!(
+                                                target.text(),
+                                                "x",
+                                                "retain the symbol's actual decoded snapshot, not unrelated title/text maps"
+                                            );
+                                            assert_eq!(
+                                                target.slice(&mapping.target).map_err(err)?,
+                                                "x"
+                                            );
+                                        }
+                                        math_maps.push(maps.clone());
+                                    }
+                                    pending.push(&guest.bundle);
+                                }
+                            }
+                        }
+                    }
+                    assert_eq!(math_maps.len(), 1);
+                    Ok((root.source_maps.len(), math_maps.remove(0)))
+                },
+            )?;
+            results.push(observed);
+        }
+        assert_eq!(
+            results[0].1.len(),
+            results[1].1.len(),
+            "older unrelated paragraphs must not enlarge Math provenance"
+        );
+        assert!(
+            results[1].0 > results[0].0,
+            "the enclosing operation still retains earlier maps: {results:?}"
+        );
+        routes.push(results);
+    }
+    assert_eq!(
+        routes[0], routes[1],
+        "owned and native routes retain the same exact mapping rows"
+    );
+    Ok(())
+}
+
+#[test]
+fn sibling_and_nested_foreign_arenas_keep_independent_local_maps() -> Result<(), String> {
+    use nepl3_core::syntax::FieldValue;
+    let c = compiled()?;
+    let source = r#"article en "A" body cons display Math symbol "x" cons display Math label symbol "y" Sentence sentence cons text "z" nil nil"#;
+    let mut routes = Vec::new();
+    for native in [false, true] {
+        routes.push(with_named_input(
+            native,
+            &c,
+            source,
+            "nested-map-scope",
+            "Article",
+            |tree, _, _, _| {
+                let mut pending = vec![&tree.tree().bundle];
+                let mut local = Vec::new();
+                while let Some(bundle) = pending.pop() {
+                    for node in &bundle.nodes {
+                        for field in &node.fields {
+                            if let FieldValue::Foreign(guest) = field {
+                                let mut targets = Vec::new();
+                                for mapping in &guest.bundle.source_maps {
+                                    let target = guest
+                                        .bundle
+                                        .sources
+                                        .iter()
+                                        .find(|s| s.identity() == mapping.target.snapshot_ref())
+                                        .ok_or("target")?;
+                                    targets.push(target.text().to_owned());
+                                }
+                                targets.sort();
+                                targets.dedup();
+                                local.push((guest.schema.package.clone(), targets));
+                                pending.push(&guest.bundle);
+                            }
+                        }
+                    }
+                }
+                assert!(
+                    local
+                        .iter()
+                        .any(|(p, t)| p == "standard.math" && t == &vec!["x".to_owned()])
+                );
+                assert!(local.iter().any(|(p, t)| p == "standard.math"
+                    && t.contains(&"y".to_owned())
+                    && !t.contains(&"x".to_owned())));
+                assert!(
+                    local
+                        .iter()
+                        .any(|(p, t)| p == "nepl3.syntax.sentence" && t == &vec!["z".to_owned()])
+                );
+                Ok(local)
+            },
+        )?);
+    }
+    assert_eq!(routes[0], routes[1]);
+    Ok(())
+}
