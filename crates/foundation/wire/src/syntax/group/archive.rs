@@ -2,7 +2,7 @@
 use super::*;
 use crate::source::archive::tables::{Capture, Restore};
 use nepl3_core::schema::archive::group as contract;
-fn archive_type() -> nepl3_core::schema::TypeDescriptor {
+pub(super) fn archive_type() -> nepl3_core::schema::TypeDescriptor {
     nepl3_core::schema::TypeDescriptor::Named(nepl3_core::schema::TypeRef {
         package: contract::PACKAGE.into(),
         revision: contract::REVISION,
@@ -28,7 +28,10 @@ pub fn encode(
         registry,
         admission,
         b,
-        &mut |sources, _, admission, b| capture.take(sources, admission, b),
+        &mut |sources: &[nepl3_core::source::SourceSnapshot],
+              _: &SchemaRef,
+              admission: &mut SourceAdmission,
+              b: &mut Budget| capture.take(sources, admission, b),
     )?;
     let skeleton = crate::encode_checked(&skeleton, &expected("ForeignClosureGroup"), registry, b)?;
     let sources = capture.finish(source_archive, foundation, admission, b)?;

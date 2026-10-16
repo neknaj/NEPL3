@@ -487,3 +487,6 @@ fn opaque_payload_survives_and_nonempty_provenance_skeleton_rejects() -> TestRes
     ));
     Ok(())
 }
+
+#[path = "compact.rs"]
+mod compact;
