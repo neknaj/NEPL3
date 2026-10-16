@@ -1,4 +1,5 @@
 //! Closed shared owner tables. Portable decoding recomputes environment digests.
+pub mod archive;
 use super::*;
 pub(crate) mod identity;
 use nepl3_core::syntax::group::{
@@ -13,6 +14,21 @@ pub(crate) fn to_value(
     admission: &mut SourceAdmission,
     b: &mut Budget,
 ) -> Result<NdfValue, WireError> {
+    to_value_with_sources(value, schema, registry, admission, b, &mut sources_value)
+}
+pub(crate) fn to_value_with_sources(
+    value: &ForeignClosureGroup,
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+    source_value: &mut impl FnMut(
+        &[nepl3_core::source::SourceSnapshot],
+        &SchemaRef,
+        &mut SourceAdmission,
+        &mut Budget,
+    ) -> Result<NdfValue, WireError>,
+) -> Result<NdfValue, WireError> {
     value.validate(registry, b, admission)?;
     let provenances = sequence(&value.provenances, b, |v, b| {
         record(
@@ -20,7 +36,7 @@ pub(crate) fn to_value(
             "ForeignProvenance",
             [
                 sequence(&v.origins, b, |v, b| origin_value(v, schema, b))?,
-                sources_value(&v.sources, schema, admission, b)?,
+                source_value(&v.sources, schema, admission, b)?,
                 sequence(&v.source_maps, b, |v, b| mapping_value(v, schema, b))?,
             ],
             b,
@@ -43,7 +59,14 @@ pub(crate) fn to_value(
             "ForeignGroupEntry",
             [
                 id_value(v.owner.0, "ForeignOwnerEnvironmentRef", schema, b)?,
-                foreign::syntax_value(&v.syntax, schema, registry, admission, b)?,
+                foreign::syntax_value_with_sources(
+                    &v.syntax,
+                    schema,
+                    registry,
+                    admission,
+                    b,
+                    source_value,
+                )?,
             ],
             b,
         )
@@ -62,12 +85,33 @@ pub(crate) fn from_value(
     admission: &mut SourceAdmission,
     b: &mut Budget,
 ) -> Result<ForeignClosureGroup, WireError> {
+    from_value_with_sources(value, schema, registry, admission, b, &mut |v, s, a, b| {
+        let snapshots = sources_from(v, s, a, b)?;
+        let local = store(&snapshots, b)?;
+        Ok((snapshots, local))
+    })
+}
+pub(crate) fn from_value_with_sources(
+    value: &NdfValue,
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+    source_from: &mut impl FnMut(
+        &NdfValue,
+        &SchemaRef,
+        &mut SourceAdmission,
+        &mut Budget,
+    ) -> Result<
+        (Vec<nepl3_core::source::SourceSnapshot>, SourceStore),
+        WireError,
+    >,
+) -> Result<ForeignClosureGroup, WireError> {
     b.poll()?;
     let f = fields(value, schema, "ForeignClosureGroup", 3)?;
     let provenances = collect(list(&f[0])?, b, |v, b| {
         let f = fields(v, schema, "ForeignProvenance", 3)?;
-        let sources = sources_from(&f[1], schema, admission, b)?;
-        let store = store(&sources, b)?;
+        let (sources, store) = source_from(&f[1], schema, admission, b)?;
         Ok(ForeignProvenance {
             origins: collect(list(&f[0])?, b, |v, b| origin_from(v, schema, &store, b))?,
             sources,
@@ -85,7 +129,14 @@ pub(crate) fn from_value(
         let f = fields(v, schema, "ForeignGroupEntry", 2)?;
         Ok(ForeignGroupEntry {
             owner: OwnerEnvironmentRef(id_from(&f[0], "ForeignOwnerEnvironmentRef", schema)?),
-            syntax: foreign::syntax_from(&f[1], schema, registry, admission, b)?,
+            syntax: foreign::syntax_from_with_sources(
+                &f[1],
+                schema,
+                registry,
+                admission,
+                b,
+                source_from,
+            )?,
         })
     })?;
     let value = ForeignClosureGroup {

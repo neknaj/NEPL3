@@ -1,0 +1,26 @@
+{
+  "package": "nepl3.group-archive",
+  "revision": 1,
+  "types": {
+    "GroupArchive": {
+      "constraints": [],
+      "record": [
+        [
+          "sources",
+          {
+            "named": {
+              "package": "nepl3.source-archive",
+              "revision": 1,
+              "name": "SourceSets"
+            }
+          }
+        ],
+        [
+          "skeleton",
+          "Bytes"
+        ]
+      ]
+    }
+  },
+  "operations": {}
+}

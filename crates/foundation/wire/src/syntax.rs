@@ -1,4 +1,5 @@
 //! Iterative bundle conversion preserves foreign syntax and token sidecars.
+pub mod archive;
 mod foreign;
 pub mod group;
 mod order;
@@ -106,6 +107,29 @@ pub(crate) fn bundle_value(
     registry: &SchemaRegistry,
     admission: &mut SourceAdmission,
     budget: &mut Budget,
+) -> Result<NdfValue, WireError> {
+    bundle_value_with_sources(
+        bundle,
+        schema,
+        registry,
+        admission,
+        budget,
+        &mut sources_value,
+    )
+}
+
+pub(crate) fn bundle_value_with_sources(
+    bundle: &SyntaxBundle,
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    budget: &mut Budget,
+    encode_sources: &mut impl FnMut(
+        &[nepl3_core::source::SourceSnapshot],
+        &SchemaRef,
+        &mut SourceAdmission,
+        &mut Budget,
+    ) -> Result<NdfValue, WireError>,
 ) -> Result<NdfValue, WireError> {
     let mut pending = Vec::new();
     let mut results = Vec::new();
@@ -229,7 +253,7 @@ pub(crate) fn bundle_value(
                     schema,
                     "SyntaxBundle",
                     [
-                        sources_value(&bundle.sources, schema, admission, budget)?,
+                        encode_sources(&bundle.sources, schema, admission, budget)?,
                         nodes,
                         sequence(&bundle.origins, budget, |origin, b| {
                             origin_value(origin, schema, b)
@@ -268,6 +292,36 @@ pub(crate) fn bundle_from(
     admission: &mut SourceAdmission,
     budget: &mut Budget,
 ) -> Result<SyntaxBundle, WireError> {
+    bundle_from_with_sources(
+        value,
+        schema,
+        registry,
+        admission,
+        budget,
+        &mut |value, schema, admission, budget| {
+            let snapshots = sources_from(value, schema, admission, budget)?;
+            let local = store(&snapshots, budget)?;
+            Ok((snapshots, local))
+        },
+    )
+}
+
+pub(crate) fn bundle_from_with_sources(
+    value: &NdfValue,
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    budget: &mut Budget,
+    decode_sources: &mut impl FnMut(
+        &NdfValue,
+        &SchemaRef,
+        &mut SourceAdmission,
+        &mut Budget,
+    ) -> Result<
+        (Vec<nepl3_core::source::SourceSnapshot>, SourceStore),
+        WireError,
+    >,
+) -> Result<SyntaxBundle, WireError> {
     let mut pending = Vec::new();
     let mut results = Vec::new();
     push(&mut pending, Decode::Enter(value, 1), budget)?;
@@ -302,8 +356,7 @@ pub(crate) fn bundle_from(
             }
             Decode::Finish(value, count) => {
                 let f = fields(value, schema, "SyntaxBundle", 7)?;
-                let snapshots = sources_from(&f[0], schema, admission, budget)?;
-                let sources = store(&snapshots, budget)?;
+                let (snapshots, sources) = decode_sources(&f[0], schema, admission, budget)?;
                 let start = results
                     .len()
                     .checked_sub(count)
