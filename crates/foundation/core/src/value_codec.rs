@@ -179,6 +179,18 @@ pub trait FoundationValueCodec {
         value: &crate::syntax::group::ForeignClosureGroup,
         budget: &mut Budget,
     ) -> Result<NdfValue, Self::Error>;
+    /// Produce the checked boundary value and the same versioned component
+    /// identities in one operation. The default preserves provider compatibility;
+    /// implementations may reuse only the just-validated exact encoding.
+    fn encode_foreign_group_with_entry_digests(
+        &mut self,
+        value: &crate::syntax::group::ForeignClosureGroup,
+        budget: &mut Budget,
+    ) -> Result<(NdfValue, Vec<Digest>), Self::Error> {
+        let encoded = self.encode_foreign_group(value, budget)?;
+        let digests = self.foreign_group_entry_digests(value, budget)?;
+        Ok((encoded, digests))
+    }
     fn decode_foreign_group(
         &mut self,
         value: &NdfValue,
