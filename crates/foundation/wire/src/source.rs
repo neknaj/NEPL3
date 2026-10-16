@@ -1,5 +1,6 @@
 //! Typed foundation source adapters. Source digests and span geometry are checked
 //! after structural decoding; a record labelled SourceContent is never trusted.
+pub mod archive;
 mod order;
 use crate::{WireError, decode_checked, encode_checked};
 use alloc::{string::String, vec::Vec};
@@ -131,17 +132,7 @@ pub(crate) fn sources_value(
     admission: &mut SourceAdmission,
     budget: &mut Budget,
 ) -> Result<NdfValue, WireError> {
-    let mut sorted = Vec::new();
-    for source in sources {
-        admission.admit_existing(source, budget)?;
-        budget.charge(
-            Resource::AllocationUnits,
-            core::mem::size_of::<(SourceRef, &SourceSnapshot)>() as u64
-                + source.identity().source.0.len() as u64,
-        )?;
-        sorted.push((source.reference(), source));
-    }
-    order::sort(&mut sorted, budget)?;
+    let sorted = ordered_sources_admitting(sources, Some(admission), budget)?;
     let mut entries = Vec::new();
     for (reference, source) in sorted {
         budget.charge(
@@ -190,6 +181,12 @@ pub(crate) fn sources_from(
     for entry in entries {
         let fields = fields(entry, schema, "SourceContent", 3)?;
         let reference = reference(&fields[0], schema, budget)?;
+        if let Some(prior) = &previous {
+            budget.charge(
+                Resource::Work,
+                prior.source_id.0.len().min(reference.source_id.0.len()) as u64 * 2 + 48,
+            )?;
+        }
         if previous.as_ref().is_some_and(|prior| {
             prior >= &reference
                 || (prior.source_id == reference.source_id && prior.revision == reference.revision)
@@ -281,4 +278,31 @@ pub(crate) fn span_from_value(
         reference.source_id.0.len() as u64,
     )?;
     Ok(source.span(as_u64(&fields[1])?, as_u64(&fields[2])?)?)
+}
+
+pub(crate) fn ordered_sources<'a>(
+    sources: &'a [SourceSnapshot],
+    budget: &mut Budget,
+) -> Result<Vec<(SourceRef, &'a SourceSnapshot)>, WireError> {
+    ordered_sources_admitting(sources, None, budget)
+}
+fn ordered_sources_admitting<'a>(
+    sources: &'a [SourceSnapshot],
+    mut admission: Option<&mut SourceAdmission>,
+    budget: &mut Budget,
+) -> Result<Vec<(SourceRef, &'a SourceSnapshot)>, WireError> {
+    let mut sorted = Vec::new();
+    for source in sources {
+        if let Some(admission) = admission.as_deref_mut() {
+            admission.admit_existing(source, budget)?;
+        }
+        budget.charge(
+            Resource::AllocationUnits,
+            core::mem::size_of::<(SourceRef, &SourceSnapshot)>() as u64
+                + source.identity().source.0.len() as u64,
+        )?;
+        sorted.push((source.reference(), source));
+    }
+    order::sort(&mut sorted, budget)?;
+    Ok(sorted)
 }
