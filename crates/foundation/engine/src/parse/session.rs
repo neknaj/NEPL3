@@ -31,6 +31,8 @@ use head::HeadPending;
 struct Imported {
     sources: usize,
     mappings: usize,
+    first_map: usize,
+    first_fact: usize,
     index: build::SourceIndex,
 }
 struct Machine {
@@ -352,6 +354,8 @@ impl<'a> ParseSession<'a> {
             imported: vec![Imported {
                 sources: 0,
                 mappings: 0,
+                first_map: 0,
+                first_fact: 0,
                 index,
             }],
             progress: ParseProgress {
@@ -902,6 +906,13 @@ impl<'a> ParseSession<'a> {
             machine.imported.push(Imported {
                 sources: 0,
                 mappings: 0,
+                first_map: machine
+                    .accepted
+                    .as_ref()
+                    .ok_or(ParseError::Reference)?
+                    .source_maps()
+                    .len(),
+                first_fact: machine.progress.facts.len(),
                 index,
             });
             machine.progress.arenas.len() as u64 - 1
@@ -956,6 +967,31 @@ impl<'a> ParseSession<'a> {
         } else {
             None
         };
+        let mapping_mask = if frame.foreign {
+            let imported = machine.imported.last().ok_or(ParseError::Reference)?;
+            let local_maps = machine
+                .accepted
+                .as_ref()
+                .ok_or(ParseError::Reference)?
+                .source_maps()
+                .get(imported.first_map..)
+                .ok_or(ParseError::Reference)?;
+            let facts = machine
+                .progress
+                .facts
+                .get(imported.first_fact..)
+                .ok_or(ParseError::Reference)?;
+            Some(super::mapping::prepare(
+                arena,
+                node,
+                machine.progress.cursor,
+                local_maps,
+                facts,
+                budget,
+            )?)
+        } else {
+            None
+        };
         let fields = &mut machine
             .progress
             .frames
@@ -963,6 +999,9 @@ impl<'a> ParseSession<'a> {
             .ok_or(ParseError::Reference)?
             .children;
         arena.complete(node, fields, machine.progress.cursor, budget)?;
+        if let Some(keep) = mapping_mask {
+            super::mapping::apply(arena, &keep);
+        }
         let frame = machine.progress.frames.pop().ok_or(ParseError::Reference)?;
         if machine.progress.frames.is_empty() {
             arena.root = Some(node);

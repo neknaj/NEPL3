@@ -69,6 +69,9 @@ fn checked_in_math_example_is_reproducible() -> Result<()> {
         md,
         include_str!("../../../../../examples/document/math/markdown.md")
     );
+    // Page input identity includes foreign provenance: parser-local mapping
+    // ownership changes require regenerating this header even when the rendered
+    // Math and annotation body remain byte-identical.
     // Golden equality guards reproduction only. Structural payload preservation
     // and independent Markdown parsing are tested separately on actual inputs.
     Ok(())

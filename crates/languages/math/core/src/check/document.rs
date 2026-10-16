@@ -96,24 +96,20 @@ impl MathSyntax {
         }
         let shape = self.value.validate_shape(b)?;
         let mut store = SourceStore::default();
-        for (i, source) in self.sources.iter().enumerate() {
+        for source in &self.sources {
             admission.admit_existing(source, b)?;
-            for prior in &self.sources[..i] {
-                b.charge(
-                    Resource::Work,
-                    (prior.identity().source.0.len() + source.identity().source.0.len()) as u64
-                        + 40,
-                )?;
-                if prior.identity().source == source.identity().source
-                    && prior.identity().revision == source.identity().revision
-                {
-                    return Err(StructureError::DuplicateSource);
-                }
+            if store
+                .get_revision_with_budget(&source.identity().source, source.identity().revision, b)?
+                .is_some()
+            {
+                return Err(StructureError::DuplicateSource);
             }
-            store.insert_with_budget(source.clone_with_budget(b)?, b)?;
+            store.insert_ref_with_budget(source, b)?;
         }
         OriginGraph::validate_origins(&self.origins, &store, b)?;
-        let maps = SourceMap::validate_mappings(&self.source_maps, &store, b)?;
+        // Retain the exact immutable store: token views reuse this operation's
+        // completed geometry check instead of rescanning every mapping.
+        let maps = SourceMap::validate_bound_mapping_parts(&self.source_maps, &[], &store, b)?;
         for (index, node) in self.value.nodes.iter().enumerate() {
             b.charge(Resource::Work, 1)?;
             if let Some(origin) = node.origin

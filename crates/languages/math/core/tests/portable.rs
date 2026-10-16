@@ -260,3 +260,157 @@ fn mapped_view_parent_child_roundtrip_requires_explicit_mapping_closure() -> Res
     assert!(portable::to_value(&original, &r, &mut c, &mut b()).is_err());
     Ok(())
 }
+
+#[test]
+fn repeated_math_views_reuse_mapping_source_geometry() -> Result<(), String> {
+    use nepl3_core::{
+        origin::{Mapping, MappingKind},
+        value::KindRef,
+        view::{ViewBundle, ViewElement, ViewRef},
+    };
+    let r = registry()?;
+    let mut original = source_expression()?;
+    let source = original.sources[0].clone();
+    let head = source.span(0, source.text().len() as u64).map_err(err)?;
+    let target = SourceSnapshot::new(
+        SourceId("view-target".into()),
+        0,
+        "memory:view-target".into(),
+        source.text().as_bytes().to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    let target_span = target.span(0, target.text().len() as u64).map_err(err)?;
+    original.sources.push(target);
+    let schema = r.selected("nepl3.foundation", 1).ok_or("foundation")?;
+    let view = MathView {
+        head: head.clone(),
+        view: ViewBundle {
+            roots: vec![ViewRef(0)],
+            elements: vec![ViewElement {
+                kind: KindRef {
+                    schema: schema.clone(),
+                    local_kind: r.kind_id(schema, "Token").map_err(err)?,
+                },
+                span: head.clone(),
+                fields: vec![],
+                roles: vec![],
+                relations: vec![],
+            }],
+        },
+    };
+    let mapping = Mapping {
+        source: head,
+        target: target_span,
+        kind: MappingKind::Exact,
+    };
+    let mut incremental = Vec::new();
+    for count in [1, 64] {
+        original.source_maps = vec![mapping.clone(); count];
+        let mut costs = Vec::new();
+        for views in [1, 16] {
+            original.views = vec![view.clone(); views];
+            let mut budget = b();
+            original
+                .validate_structure(&r, &mut budget, &mut SourceAdmission::default())
+                .map_err(err)?;
+            costs.push(budget.usage().work);
+        }
+        incremental.push(costs[1] - costs[0]);
+    }
+    // The extra same-source views must not rescan an unrelated mapping table.
+    // Initial validation still visits all 64 rows before any view is checked.
+    assert_eq!(incremental[0], incremental[1]);
+    original.sources.pop();
+    assert!(
+        original
+            .validate_structure(&r, &mut b(), &mut SourceAdmission::default())
+            .is_err(),
+        "even mappings unused by the views must retain their source closure"
+    );
+    let mut stopped = b();
+    stopped.cancel();
+    assert!(
+        original
+            .validate_structure(&r, &mut stopped, &mut SourceAdmission::default())
+            .is_err()
+    );
+    assert_eq!(stopped.poll(), Err(StopReason::Cancelled));
+    Ok(())
+}
+
+#[test]
+fn admitted_math_sources_use_indexed_duplicate_detection() -> Result<(), String> {
+    let r = registry()?;
+    let mut costs = Vec::new();
+    for count in [128, 256, 512] {
+        let mut input = source_expression()?;
+        for i in 0..count {
+            input.sources.push(
+                SourceSnapshot::new(
+                    SourceId(format!("unrelated-{i:08}")),
+                    0,
+                    "memory:unused".into(),
+                    vec![b'x'],
+                    &mut b(),
+                )
+                .map_err(err)?,
+            );
+        }
+        let mut budget = b();
+        let mut admission = SourceAdmission::default();
+        for source in &input.sources {
+            admission.admit_existing(source, &mut budget).map_err(err)?;
+        }
+        let before = budget.usage();
+        input
+            .validate_structure(&r, &mut budget, &mut admission)
+            .map_err(err)?;
+        costs.push(budget.usage().work - before.work);
+        input.sources.push(input.sources[0].clone());
+        assert!(matches!(
+            input.validate_structure(&r, &mut b(), &mut SourceAdmission::default()),
+            Err(nepl3_math_core::check::StructureError::DuplicateSource)
+        ));
+    }
+    // Doubling a pre-admitted, ordered source table must not quadruple work.
+    assert!(costs[1] < 3 * costs[0], "{costs:?}");
+    assert!(costs[2] < 3 * costs[1], "{costs:?}");
+    Ok(())
+}
+
+#[test]
+fn indexed_math_sources_preserve_duplicate_conflict_and_revision_errors() -> Result<(), String> {
+    use nepl3_core::source::SourceError;
+    use nepl3_math_core::check::StructureError;
+    let r = registry()?;
+    for scenario in 0..3 {
+        let mut input = source_expression()?;
+        let first = &input.sources[0];
+        let extra = SourceSnapshot::new(
+            first.identity().source.clone(),
+            first.identity().revision + u64::from(scenario == 2),
+            first.uri().into(),
+            if scenario == 1 {
+                b"changed".to_vec()
+            } else {
+                first.text().as_bytes().to_vec()
+            },
+            &mut b(),
+        )
+        .map_err(err)?;
+        input.sources.push(extra);
+        let result = input.validate_structure(&r, &mut b(), &mut SourceAdmission::default());
+        match scenario {
+            0 => assert!(matches!(result, Err(StructureError::DuplicateSource))),
+            1 => assert!(matches!(
+                result,
+                Err(StructureError::Source(SourceError::IdentityConflict))
+            )),
+            _ => {
+                result.map_err(err)?;
+            }
+        }
+    }
+    Ok(())
+}
