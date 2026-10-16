@@ -297,3 +297,90 @@ fn retained_guest_proof_saves_only_duplicate_pass_and_keeps_caller_depth() -> Te
     assert_eq!(limited.current_depth(), 0);
     Ok(())
 }
+
+#[test]
+fn group_retention_preserves_validation_cost_except_proof_storage() -> TestResult {
+    let (_, registry, owner) = fixture()?;
+    let checked = owner
+        .validate(&registry, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let group = ForeignClosureGroup::capture(
+        &[&checked],
+        &[CaptureField {
+            owner: 0,
+            node: NodeRef(0),
+            field: 0,
+        }; 2],
+        &registry,
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let depths = [1, 17];
+    let mut old = budget();
+    let prior = old
+        .with_depth_at_least(7, |b| {
+            group.validate_at_depths(&depths, &registry, b, &mut SourceAdmission::default())
+        })
+        .map_err(|e| format!("{e:?}"))?;
+    assert!(prior.bundle(0).is_none());
+    let mut measured = budget();
+    let retained = measured
+        .with_depth_at_least(7, |b| {
+            group.validate_retaining_bundles_at_depths(
+                &depths,
+                &registry,
+                b,
+                &mut SourceAdmission::default(),
+            )
+        })
+        .map_err(|e| format!("{e:?}"))?;
+    for index in 0..2 {
+        assert!(core::ptr::eq(
+            retained.bundle(index).ok_or("retained bundle")?.bundle(),
+            &group.entries[index].syntax.bundle
+        ));
+    }
+    assert!(retained.bundle(2).is_none());
+    assert_eq!(measured.usage().work, old.usage().work);
+    assert_eq!(measured.usage().nodes, old.usage().nodes);
+    assert_eq!(measured.usage().depth, old.usage().depth);
+    assert_eq!(
+        measured.usage().allocation_units - old.usage().allocation_units,
+        2 * core::mem::size_of::<ValidatedSyntaxBundle<'_>>() as u64
+    );
+    for short in [false, true] {
+        let mut limited = Budget::new(Limits {
+            allocation_units: measured.usage().allocation_units - u64::from(short),
+            ..budget().limits()
+        });
+        let result = limited.with_depth_at_least(7, |b| {
+            group.validate_retaining_bundles_at_depths(
+                &depths,
+                &registry,
+                b,
+                &mut SourceAdmission::default(),
+            )
+        });
+        if short {
+            assert!(result.is_err());
+            assert_eq!(limited.poll(), Err(StopReason::AllocationLimit));
+        } else {
+            assert!(result.is_ok());
+        }
+        assert_eq!(limited.current_depth(), 0);
+    }
+    let mut invalid = group.clone();
+    invalid.provenances.push(invalid.provenances[0].clone());
+    assert!(
+        invalid
+            .validate_retaining_bundles_at_depths(
+                &depths,
+                &registry,
+                &mut budget(),
+                &mut SourceAdmission::default()
+            )
+            .is_err()
+    );
+    Ok(())
+}

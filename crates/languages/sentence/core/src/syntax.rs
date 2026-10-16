@@ -102,6 +102,7 @@ impl From<SchemaError> for Error {
 pub struct CheckedSyntax<'a> {
     syntax: &'a SentenceSyntax,
     shape: CheckedShape<'a>,
+    foreign: Option<nepl3_core::syntax::group::ValidatedForeignGroup<'a>>,
 }
 impl<'a> CheckedSyntax<'a> {
     pub fn syntax(&self) -> &'a SentenceSyntax {
@@ -109,6 +110,10 @@ impl<'a> CheckedSyntax<'a> {
     }
     pub fn shape(&self) -> &CheckedShape<'a> {
         &self.shape
+    }
+    /// Operation-local proofs retained only by validate_retaining_foreign_bundles.
+    pub fn foreign(&self) -> Option<&nepl3_core::syntax::group::ValidatedForeignGroup<'a>> {
+        self.foreign.as_ref()
     }
 }
 pub(crate) fn sources(
@@ -148,6 +153,27 @@ impl SentenceSyntax {
         registry: &SchemaRegistry,
         b: &mut Budget,
         admission: &mut SourceAdmission,
+    ) -> Result<CheckedSyntax<'a>, Error> {
+        self.validate_inner(registry, b, admission, false)
+    }
+
+    /// Validate the complete input and retain guest bundle proofs for immediate
+    /// immutable consumption. Receiving boundaries must still validate normally.
+    pub fn validate_retaining_foreign_bundles<'a>(
+        &'a self,
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<CheckedSyntax<'a>, Error> {
+        self.validate_inner(registry, b, admission, true)
+    }
+
+    fn validate_inner<'a>(
+        &'a self,
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+        retain: bool,
     ) -> Result<CheckedSyntax<'a>, Error> {
         b.poll()?;
         if !registry.is_finalized() {
@@ -205,11 +231,17 @@ impl SentenceSyntax {
                 }
             }
         }
-        shape.validate_foreign(registry, b, admission)?;
+        let foreign = if retain {
+            shape.validate_foreign_retaining_bundles(registry, b, admission)?
+        } else {
+            shape.validate_foreign(registry, b, admission)?;
+            None
+        };
         b.poll()?;
         Ok(CheckedSyntax {
             syntax: self,
             shape,
+            foreign,
         })
     }
 }
