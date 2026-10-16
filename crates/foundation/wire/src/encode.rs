@@ -9,11 +9,16 @@ use nepl3_core::{
 use sha2::{Digest as _, Sha256};
 
 mod batch;
+mod syntax_prefix;
 pub(super) use batch::digests;
+pub(super) use syntax_prefix::SyntaxPrefixCache;
 
 // Both destinations consume the same canonical encoding traversal. Only the
 // byte-vector destination materializes the encoded output.
 trait Sink {
+    fn shortcut(&mut self, _: &NdfValue, _: u64, _: &mut Budget) -> Result<bool, WireError> {
+        Ok(false)
+    }
     fn write(&mut self, value: &[u8], budget: &mut Budget) -> Result<(), WireError>;
     fn enter(&mut self, _: &NdfValue, _: &mut Budget) -> Result<bool, WireError> {
         Ok(false)
@@ -135,6 +140,9 @@ fn emit(item: &NdfValue, out: &mut impl Sink, budget: &mut Budget) -> Result<(),
         };
         budget.observe_depth(depth)?;
         budget.charge(Resource::Nodes, 1)?;
+        if out.shortcut(item, depth, budget)? {
+            continue;
+        }
         if out.enter(item, budget)? {
             budget.charge(Resource::Work, 1)?;
             budget.charge(

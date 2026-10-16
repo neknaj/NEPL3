@@ -40,6 +40,7 @@ pub(crate) fn from_encoded(
         push(&mut environment_digests, digest, b)?;
     }
     let mut result = Vec::new();
+    let mut syntax_cache = crate::encode::SyntaxPrefixCache::new(schema, SYNTAX);
     for (entry, encoded) in group.entries.iter().zip(entries) {
         b.charge(Resource::Work, 1)?;
         let owner_index = usize::try_from(entry.owner.0).map_err(|_| WireError::InvalidLength)?;
@@ -56,7 +57,7 @@ pub(crate) fn from_encoded(
             .get(owner_index)
             .ok_or(WireError::InvalidLength)?;
         let f = fields(encoded, schema, "ForeignGroupEntry", 2)?;
-        let syntax = crate::encode::digest(SYNTAX, &f[1], b)?;
+        let syntax = syntax_cache.digest(&entry.syntax, &f[1], b)?;
         // Canonical NDF list of three Bytes32 values, in this fixed order.
         b.charge(Resource::Work, 96)?;
         b.charge(

@@ -521,3 +521,66 @@ fn depth_checked_components_match_separate_boundaries() -> TestResult {
     ));
     Ok(())
 }
+
+#[test]
+fn shared_source_prefix_matches_independent_hashes_across_block_boundaries() -> TestResult {
+    use sha2::{Digest as _, Sha256};
+    fn fields(v: &NdfValue) -> Result<&[NdfValue], String> {
+        match v {
+            NdfValue::Record(r) => Ok(&r.fields),
+            _ => Err("record".into()),
+        }
+    }
+    fn list(v: &NdfValue) -> Result<&[NdfValue], String> {
+        match v {
+            NdfValue::List(v) => Ok(v),
+            _ => Err("list".into()),
+        }
+    }
+    fn hash(domain: &[u8], v: &NdfValue) -> Result<Digest, String> {
+        let bytes = encode(v, &mut budget()).map_err(|e| format!("{e:?}"))?;
+        let mut hash = Sha256::new();
+        hash.update(domain);
+        hash.update(bytes);
+        Ok(Digest(hash.finalize().into()))
+    }
+    for size in [0, 1, 63, 64, 65, 4096] {
+        let (_, registry, mut group) = grouped()?;
+        let source = SourceSnapshot::new(
+            SourceId("unused-prefix".into()),
+            1,
+            "memory:unused-prefix".into(),
+            vec![b'x'; size],
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        group.entries[0].syntax.bundle.sources.push(source);
+        group.entries = vec![group.entries[0].clone(); 3];
+        let empty = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&registry, &empty, &mut admission)
+            .map_err(|e| format!("{e:?}"))?;
+        let (encoded, actual) = codec
+            .encode_foreign_group_with_entry_digests(&group, &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+        let f = fields(&encoded)?;
+        let p = hash(b"NEPL3.Foreign.Provenance.v1\0", &list(&f[0])?[0])?;
+        let e = hash(
+            b"NEPL3.Foreign.Environment.v1\0",
+            &fields(&list(&f[1])?[0])?[1],
+        )?;
+        for (entry, actual) in list(&f[2])?.iter().zip(actual) {
+            let s = hash(b"NEPL3.Foreign.Syntax.v1\0", &fields(entry)?[1])?;
+            let expected = hash(
+                b"NEPL3.Foreign.Entry.v1\0",
+                &NdfValue::List(vec![
+                    NdfValue::Bytes(p.0.to_vec()),
+                    NdfValue::Bytes(e.0.to_vec()),
+                    NdfValue::Bytes(s.0.to_vec()),
+                ]),
+            )?;
+            assert_eq!(actual, expected, "source size {size}");
+        }
+    }
+    Ok(())
+}
