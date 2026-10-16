@@ -1,3 +1,4 @@
+mod archive;
 pub(crate) mod doc;
 pub(crate) mod doc_html;
 pub(crate) mod engine;
@@ -200,6 +201,7 @@ pub(crate) fn check(root: &Path) -> Result<()> {
     }
     types::check(&model, &contracts)?;
     foundation::check(root, &contracts)?;
+    archive::check(root)?;
     let operations = contracts
         .get("operations")
         .and_then(Value::as_array)
@@ -263,6 +265,18 @@ mod tests {
             &foundation::generated(&contracts)?,
         )?;
         foundation::write_projection(files.root(), &foundation::generated(&contracts)?)?;
+        files.write(
+            "interfaces/source-archive.json",
+            include_str!("../../../interfaces/source-archive.json"),
+        )?;
+        files.write(
+            "interfaces/syntax-archive.json",
+            include_str!("../../../interfaces/syntax-archive.json"),
+        )?;
+        files.write(
+            "interfaces/group-archive.json",
+            include_str!("../../../interfaces/group-archive.json"),
+        )?;
         files.write("doc/spec/test.md", "fixture")?;
         files.json("conformance/cases.json", &json!({"cases":[]}))?;
         Ok(files)

@@ -1,3 +1,5 @@
+#[path = "syntax/archive.rs"]
+mod archive;
 use nepl3_core::{
     budget::{Budget, Limits},
     origin::{Origin, OriginId},

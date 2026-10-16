@@ -129,13 +129,13 @@ pub fn prepare<'a, C: FoundationValueCodec>(
     codec: &mut C,
     b: &mut Budget,
 ) -> Result<PreparedText<'a>, PortableError<C::Error>> {
-    let value = portable::to_value(document, registry, codec, b)?;
+    let (value, components) =
+        portable::to_value_with_guest_components(document, registry, codec, b)?;
     let document_digest = codec
         .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
         .map_err(boundary)?;
     let mut embeds = Vec::new();
-    let guest_digests =
-        crate::identity::guests(&document.value.embeds.group, GUEST_DOMAIN, codec, b)?;
+    let guest_digests = crate::identity::wrap_components(&components, GUEST_DOMAIN, codec, b)?;
     for (index, guest_digest) in guest_digests.into_iter().enumerate() {
         b.charge(Resource::Work, 1)?;
         if document.value.embeds.kinds[index] != EmbedKind::InlineMath {

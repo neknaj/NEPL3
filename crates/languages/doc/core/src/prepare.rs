@@ -115,13 +115,14 @@ pub fn inspect<'a, C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<DocPreparationPlan, PreparationError<'a, C::Error>> {
     let checked = labels::check(document, registry, b, c.source_admission())?;
-    let value = portable::to_value(document, registry, c, b)?;
+    let (value, components) = portable::to_value_with_guest_components(document, registry, c, b)?;
     let document_digest = c
         .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
         .map_err(boundary)?;
+    let guests = crate::identity::wrap_components(&components, GUEST_DOMAIN, c, b)?;
     Ok(DocPreparationPlan {
         document_digest,
-        requirements: discover(checked.document(), None, c, b)?,
+        requirements: discover(checked.document(), Some(&guests), c, b)?,
     })
 }
 
@@ -135,13 +136,14 @@ pub fn inspect_sentence<'a, C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<DocPreparationPlan, PreparationError<'a, C::Error>> {
     let checked = labels::check_sentence(document, registry, b, c.source_admission())?;
-    let value = portable::to_value(document, registry, c, b)?;
+    let (value, components) = portable::to_value_with_guest_components(document, registry, c, b)?;
     let document_digest = c
         .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
         .map_err(boundary)?;
+    let guests = crate::identity::wrap_components(&components, GUEST_DOMAIN, c, b)?;
     Ok(DocPreparationPlan {
         document_digest,
-        requirements: discover(checked.document(), None, c, b)?,
+        requirements: discover(checked.document(), Some(&guests), c, b)?,
     })
 }
 
@@ -154,13 +156,14 @@ pub fn inspect_inline<'a, C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<DocPreparationPlan, PreparationError<'a, C::Error>> {
     let checked = labels::check_inline(document, registry, b, c.source_admission())?;
-    let value = portable::to_value(document, registry, c, b)?;
+    let (value, components) = portable::to_value_with_guest_components(document, registry, c, b)?;
     let document_digest = c
         .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
         .map_err(boundary)?;
+    let guests = crate::identity::wrap_components(&components, GUEST_DOMAIN, c, b)?;
     Ok(DocPreparationPlan {
         document_digest,
-        requirements: discover(checked.document(), None, c, b)?,
+        requirements: discover(checked.document(), Some(&guests), c, b)?,
     })
 }
 
@@ -201,11 +204,13 @@ pub fn inspect_namespace<'a, C: FoundationValueCodec>(
         .try_reserve_exact(count)
         .map_err(|_| b.stop(StopReason::AllocationLimit))?;
     for document in documents {
-        let value = portable::to_value(document, registry, c, b)?;
+        let (value, components) =
+            portable::to_value_with_guest_components(document, registry, c, b)?;
         let document_digest = c
             .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
             .map_err(boundary)?;
-        let requirements = discover(document, None, c, b)?;
+        let guests = crate::identity::wrap_components(&components, GUEST_DOMAIN, c, b)?;
+        let requirements = discover(document, Some(&guests), c, b)?;
         plans.push(DocPreparationPlan {
             document_digest,
             requirements,

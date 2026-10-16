@@ -41,13 +41,56 @@ pub(crate) fn set_to_value_with_structures<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<(NdfValue, Vec<crate::check::ValidatedDocumentSyntax<'a>>), PortableError<C::Error>> {
+    encode_set(set, r, c, b, None)
+}
+pub(crate) struct PageSetEncoding<'a> {
+    pub(crate) value: NdfValue,
+    pub(crate) structures: Vec<crate::check::ValidatedDocumentSyntax<'a>>,
+    pub(crate) components: Vec<Vec<nepl3_core::source::Digest>>,
+}
+
+/// Same checked PageSet boundary plus identities for each exact encoded group.
+pub(crate) fn set_to_value_with_components<'a, C: FoundationValueCodec>(
+    set: &'a PageSet,
+    r: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<PageSetEncoding<'a>, PortableError<C::Error>> {
+    let mut components = Vec::new();
+    let (value, structures) = encode_set(set, r, c, b, Some(&mut components))?;
+    if components.len() != set.pages.len() {
+        return Err(PortableError::Shape);
+    }
+    Ok(PageSetEncoding {
+        value,
+        structures,
+        components,
+    })
+}
+fn encode_set<'a, C: FoundationValueCodec>(
+    set: &'a PageSet,
+    r: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+    mut components: Option<&mut Vec<Vec<nepl3_core::source::Digest>>>,
+) -> Result<(NdfValue, Vec<crate::check::ValidatedDocumentSyntax<'a>>), PortableError<C::Error>> {
     let s = schema(r)?;
     let mut values = Vec::new();
     let mut structures = Vec::new();
     for page in &set.pages {
         b.charge(Resource::Work, 1)?;
         let registration = page.registration.put(s, c, b)?;
-        let (document, structure) = encode_with_structure(&page.document, r, c, b)?;
+        let (document, structure) = if let Some(all_components) = components.as_deref_mut() {
+            let mut page_components = Vec::new();
+            let encoded = encode_structure(&page.document, r, c, b, Some(&mut page_components))?;
+            if page_components.len() != page.document.value.embeds.group.entries.len() {
+                return Err(PortableError::Shape);
+            }
+            pages::push(all_components, page_components, b)?;
+            encoded
+        } else {
+            encode_with_structure(&page.document, r, c, b)?
+        };
         pages::push(&mut structures, structure, b)?;
         let value = record(s, "PageDocument", [registration, document], b)?;
         pages::push(&mut values, value, b)?;

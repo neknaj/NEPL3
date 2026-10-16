@@ -1,3 +1,5 @@
+#[path = "group/archive.rs"]
+mod archive;
 use super::foreign::closed;
 use super::*;
 use nepl3_core::{

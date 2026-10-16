@@ -281,3 +281,26 @@ fn component_identity_has_explicit_framing_and_standalone_component_parity() -> 
     assert!(identities(&group, &SchemaRegistry::default(), &mut budget()).is_err());
     Ok(())
 }
+
+#[test]
+fn combined_encoding_and_components_match_independent_boundaries() -> TestResult {
+    let (_, registry, group) = grouped()?;
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut c =
+        FoundationCodec::new(&registry, &sources, &mut admission).map_err(|e| format!("{e:?}"))?;
+    let encoded = c
+        .encode_foreign_group(&group, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let components = c
+        .foreign_group_entry_digests(&group, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let mut admission = SourceAdmission::default();
+    let mut c =
+        FoundationCodec::new(&registry, &sources, &mut admission).map_err(|e| format!("{e:?}"))?;
+    let actual = c
+        .encode_foreign_group_with_entry_digests(&group, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(actual, (encoded, components));
+    Ok(())
+}
