@@ -72,6 +72,45 @@ fn math_batch_reuses_document_validation_without_changing_fragments() -> Result<
                 .map_err(err)
             },
         )?;
+        // A session for another immutable input or registry must never grant
+        // authority to this host, even when the values look alike.
+        {
+            let store = SourceStore::default();
+            let mut admission = SourceAdmission::default();
+            let mut b = budget();
+            let checked = document
+                .validate_structure(&c.doc.registry, &mut b, &mut admission)
+                .map_err(err)?;
+            let mut codec =
+                FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+            let mut host = MathDisplayHost {
+                registry: &c.doc.registry,
+                math_surface: surfaces.math,
+                sentence_surface: surfaces.sentence,
+                doc_surface: surfaces.doc,
+                codec: &mut codec,
+            };
+            let node = document
+                .value
+                .nodes
+                .iter()
+                .position(|n| matches!(n.kind, DocKind::DisplayMath { .. }))
+                .ok_or("missing math")? as u64;
+            let other_group = document.value.embeds.group.clone();
+            let other_registry = SchemaRegistry::default();
+            for (group, registry) in [
+                (&other_group, &c.doc.registry),
+                (&document.value.embeds.group, &other_registry),
+            ] {
+                let mut session =
+                    nepl3_core::syntax::group::ForeignGroupValidation::new(group, registry, &mut b)
+                        .map_err(err)?;
+                assert!(matches!(
+                    host.render_validated_node(&checked, node, Some(&mut session), &mut b),
+                    Err(crate::doc::math::Error::Selection)
+                ));
+            }
+        }
         let run = |legacy: bool| -> Result<(Vec<String>, nepl3_core::budget::Usage), String> {
             let store = SourceStore::default();
             let mut admission = SourceAdmission::default();

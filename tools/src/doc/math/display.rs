@@ -86,9 +86,10 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
         checked: &nepl3_doc_core::check::ValidatedDocumentSyntax<'_>,
         node: u64,
         preference: Preference,
+        shared: &mut nepl3_core::syntax::group::ForeignGroupValidation<'_, '_>,
         budget: &mut Budget,
     ) -> Result<PreparedDisplay, Error<C::Error>> {
-        let mathml = self.render_validated_node(checked, node, budget)?;
+        let mathml = self.render_validated_node(checked, node, Some(shared), budget)?;
         self.prepare_rendered(mathml, preference, budget)
     }
 

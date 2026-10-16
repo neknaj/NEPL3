@@ -2,8 +2,10 @@
 use super::*;
 mod capture;
 mod select;
+mod session;
 pub use capture::CaptureField;
 pub(super) use capture::copy_provenance;
+pub use session::ForeignGroupValidation;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct ProvenanceRef(pub u64);

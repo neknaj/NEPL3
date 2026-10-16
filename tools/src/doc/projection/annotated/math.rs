@@ -91,6 +91,7 @@ where
     };
     let mut entries = Vec::new();
     let mut structure = None;
+    let mut shared = None;
     let limits = budget.limits();
     let depth = budget.current_depth();
     for (node, value) in document.value.nodes.iter().enumerate() {
@@ -123,8 +124,22 @@ where
                     }
                 }
             };
+        let shared = match &mut shared {
+            Some(shared) => shared,
+            None => shared.insert(
+                nepl3_core::syntax::group::ForeignGroupValidation::new(
+                    &document.value.embeds.group,
+                    registry,
+                    budget,
+                )
+                .map_err(|error| match error.stop_reason() {
+                    Some(reason) => Error::Stopped(reason),
+                    None => Error::Invalid(format!("Markdown Math owner validation: {error:?}")),
+                })?,
+            ),
+        };
         let prepared = host
-            .prepare_markdown_validated_node(checked, node as u64, budget)
+            .prepare_markdown_validated_node(checked, node as u64, shared, budget)
             .map_err(|e| match e {
                 PrepareError::Host(crate::doc::math::Error::Stopped(s)) => Error::Stopped(s),
                 e => Error::Invalid(format!("Markdown Math: {e:?}")),
