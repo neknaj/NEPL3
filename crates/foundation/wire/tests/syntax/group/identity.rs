@@ -283,6 +283,29 @@ fn component_identity_has_explicit_framing_and_standalone_component_parity() -> 
 }
 
 #[test]
+fn combined_encoding_and_components_match_independent_boundaries() -> TestResult {
+    let (_, registry, group) = grouped()?;
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut c =
+        FoundationCodec::new(&registry, &sources, &mut admission).map_err(|e| format!("{e:?}"))?;
+    let encoded = c
+        .encode_foreign_group(&group, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let components = c
+        .foreign_group_entry_digests(&group, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let mut admission = SourceAdmission::default();
+    let mut c =
+        FoundationCodec::new(&registry, &sources, &mut admission).map_err(|e| format!("{e:?}"))?;
+    let actual = c
+        .encode_foreign_group_with_entry_digests(&group, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(actual, (encoded, components));
+    Ok(())
+}
+
+#[test]
 fn fused_group_encoding_matches_separate_validation_and_charges_less() -> TestResult {
     let (_, registry, group) = grouped()?;
     let sources = SourceStore::default();
@@ -455,5 +478,46 @@ fn fused_group_encoding_rejects_incompatible_codec_registry() -> TestResult {
         .map_err(|e| format!("{e:?}"))?
         .encode_foreign_group_at_depths(&group, &[2], &native, &mut budget());
     assert!(matches!(result, Err(GroupEncodingError::Codec(_))));
+    Ok(())
+}
+
+#[test]
+fn depth_checked_components_match_separate_boundaries() -> TestResult {
+    let (_, registry, group) = grouped()?;
+    let sources = SourceStore::default();
+    let mut old_admission = SourceAdmission::default();
+    let mut old_budget = budget();
+    let mut old = FoundationCodec::new(&registry, &sources, &mut old_admission)
+        .map_err(|e| format!("{e:?}"))?;
+    let expected_value = old
+        .encode_foreign_group_at_depths(&group, &[3], &registry, &mut old_budget)
+        .map_err(|e| format!("{e:?}"))?;
+    let expected_components = old
+        .foreign_group_entry_digests(&group, &mut old_budget)
+        .map_err(|e| format!("{e:?}"))?;
+    let mut admission = SourceAdmission::default();
+    let mut b = budget();
+    let mut codec =
+        FoundationCodec::new(&registry, &sources, &mut admission).map_err(|e| format!("{e:?}"))?;
+    let actual = codec
+        .encode_foreign_group_at_depths_with_entry_digests(&group, &[3], &registry, &mut b)
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(actual, (expected_value, expected_components));
+    assert!(b.usage().work < old_budget.usage().work);
+    assert_eq!(b.usage().depth, old_budget.usage().depth);
+    let mut admission = SourceAdmission::default();
+    let mut codec =
+        FoundationCodec::new(&registry, &sources, &mut admission).map_err(|e| format!("{e:?}"))?;
+    assert!(matches!(
+        codec.encode_foreign_group_at_depths_with_entry_digests(
+            &group,
+            &[],
+            &registry,
+            &mut budget()
+        ),
+        Err(nepl3_core::value_codec::GroupEncodingError::Structure(
+            GroupError::DepthCount
+        ))
+    ));
     Ok(())
 }

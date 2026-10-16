@@ -1,3 +1,7 @@
+#[path = "foreign/default.rs"]
+mod default;
+#[path = "foreign/preparation.rs"]
+mod preparation;
 use nepl3_core::{
     budget::{Budget, Limits, StopReason},
     origin::{Origin, OriginId},

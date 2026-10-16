@@ -355,7 +355,11 @@ pub fn resolve<'a, C: FoundationValueCodec>(
     let limits = b.limits();
     let depth = b.current_depth();
     registrations(set, b)?;
-    let (value, structures) = portable::pages::set_to_value_with_structures(set, registry, c, b)?;
+    let portable::pages::PageSetEncoding {
+        value,
+        structures,
+        components,
+    } = portable::pages::set_to_value_with_components(set, registry, c, b)?;
     let mut digest_inputs = Vec::new();
     push(
         &mut digest_inputs,
@@ -405,13 +409,12 @@ pub fn resolve<'a, C: FoundationValueCodec>(
         let document_digest = digests
             .next()
             .ok_or(PageError::Boundary(portable::PortableError::Shape))?;
-        let guest_digests = crate::identity::guests(
-            &set.pages[page].document.value.embeds.group,
-            prepare::GUEST_DOMAIN,
-            c,
-            b,
-        )
-        .map_err(PageError::Boundary)?;
+        let page_components = components
+            .get(page)
+            .ok_or(PageError::Boundary(portable::PortableError::Shape))?;
+        let guest_digests =
+            crate::identity::wrap_components(page_components, prepare::GUEST_DOMAIN, c, b)
+                .map_err(PageError::Boundary)?;
         let requirements =
             prepare::requirements(&labels, &guest_digests, c, b).map_err(|error| match error {
                 PreparationError::Stopped(s) => PageError::Stopped(s),

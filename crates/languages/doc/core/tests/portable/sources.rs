@@ -47,7 +47,9 @@ fn source_index_is_reused_within_document_encoding() -> Result<(), String> {
             );
             assert_eq!(
                 measured.usage().allocation_units,
-                allocation - rebuild.usage().allocation_units
+                allocation
+                    - rebuild.usage().allocation_units
+                    - borrowed_identity_savings(&value, &document.sources)
             );
         }
         let mut incoming = SourceAdmission::default();
@@ -262,7 +264,10 @@ fn reply_codecs_reuse_only_the_validated_request_source_closure() -> Result<(), 
                     (5928, 7010, 6033, 2390)
                 };
                 assert_eq!(measured.usage().work, ew - 2, "reply source index rebuilt");
-                assert_eq!(measured.usage().allocation_units, ea - 24);
+                assert_eq!(
+                    measured.usage().allocation_units,
+                    ea - 24 - borrowed_identity_savings(&value, &[])
+                );
                 assert_eq!(received.usage().work, dw - 2, "reply source index rebuilt");
                 assert_eq!(received.usage().allocation_units, da - 24);
             }
@@ -321,4 +326,40 @@ fn reply_codecs_reuse_only_the_validated_request_source_closure() -> Result<(), 
         }
     }
     Ok(())
+}
+
+// The frozen 4c8d0434 baseline additionally copied each Span's source ID and
+// used (owned SourceRef, &SourceSnapshot) sorting entries. Account for exactly
+// those removed copies; do not replace the baseline with new measured totals.
+fn borrowed_identity_savings(value: &NdfValue, sources: &[SourceSnapshot]) -> u64 {
+    use nepl3_core::source::{SnapshotId, SourceRef};
+    let mut savings: u64 = sources
+        .iter()
+        .map(|source| {
+            source.identity().source.0.len() as u64
+                + (core::mem::size_of::<(SourceRef, &SourceSnapshot)>()
+                    - core::mem::size_of::<(&SnapshotId, &SourceSnapshot)>())
+                    as u64
+        })
+        .sum();
+    let mut pending = vec![value];
+    while let Some(value) = pending.pop() {
+        match value {
+            NdfValue::Record(record) => {
+                if record.schema.package == "nepl3.foundation"
+                    && record.kind == "Span"
+                    && let Some(NdfValue::Record(reference)) = record.fields.first()
+                    && let Some(NdfValue::Text(id)) = reference.fields.first()
+                {
+                    savings += id.len() as u64;
+                }
+                pending.extend(record.fields.iter());
+            }
+            NdfValue::List(values) => pending.extend(values.iter()),
+            NdfValue::Some(value) => pending.push(value),
+            NdfValue::Variant(value) => pending.extend(value.fields.iter()),
+            _ => {}
+        }
+    }
+    savings
 }

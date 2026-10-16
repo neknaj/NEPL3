@@ -94,7 +94,7 @@ fn collect_inner<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<Selection, Error<C::Error>> {
     let checked = sentence
-        .validate(registry, b, codec.source_admission())
+        .validate_retaining_foreign_bundles(registry, b, codec.source_admission())
         .map_err(|error| match error {
             nepl3_sentence_core::syntax::Error::Stopped(reason) => Error::Stopped(reason),
             error => Error::Sentence(error),
@@ -145,11 +145,12 @@ fn collect_inner<C: FoundationValueCodec>(
             Some(id) => id,
             None => {
                 let document = b.with_depth_at_least(base.saturating_add(depths[index]), |b| {
-                    let input = closure
-                        .validate_with_bundle(registry, b, codec.source_admission())
-                        .map_err(Error::Closure)?;
+                    let input = checked
+                        .foreign()
+                        .and_then(|group| group.bundle(index))
+                        .ok_or(Error::MissingEmbed(occurrence.embed))?;
                     crate::adapters::sentence::literal::lower(
-                        &input,
+                        input,
                         surface,
                         Category::Inline,
                         registry,
