@@ -586,3 +586,6 @@ fn compact_owner_table_permutation_and_empty_group() -> TestResult {
     );
     Ok(())
 }
+
+#[path = "depths.rs"]
+mod depths;
