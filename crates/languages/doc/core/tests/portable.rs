@@ -529,3 +529,43 @@ fn additional_views_reuse_the_same_source_closure() -> Result<(), String> {
 
 #[path = "portable/sources.rs"]
 mod sources;
+
+#[test]
+fn explicit_archive_preserves_source_views_and_rejects_missing_doc_scope() -> Result<(), String> {
+    let mut r = registry()?;
+    for d in [
+        nepl3_core::schema::archive::descriptor(&mut b()),
+        nepl3_core::schema::archive::group::descriptor(&mut b()),
+        nepl3_doc_core::schema::archive::descriptor(&mut b()),
+    ] {
+        let d = d.map_err(err)?;
+        r.register(d.reference(&mut b()).map_err(err)?, d, &mut b())
+            .map_err(err)?;
+    }
+    r.finalize(&mut b()).map_err(err)?;
+    let doc = literal(&r)?;
+    assert!(!doc.views.is_empty());
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut c = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let archive = portable::archive::to_value(&doc, &r, &mut c, &mut b()).map_err(err)?;
+    let mut admission = SourceAdmission::default();
+    let mut c = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    assert_eq!(
+        portable::archive::from_value(&archive.value, &r, &mut c, &mut b()).map_err(err)?,
+        doc
+    );
+    let mut bad = archive.value;
+    let NdfValue::Record(root) = &mut bad else {
+        return Err("archive".into());
+    };
+    let NdfValue::Record(skeleton) = &mut root.fields[0] else {
+        return Err("skeleton".into());
+    };
+    let NdfValue::List(sources) = &mut skeleton.fields[1] else {
+        return Err("sources".into());
+    };
+    sources.clear();
+    assert!(portable::archive::from_value(&bad, &r, &mut c, &mut b()).is_err());
+    Ok(())
+}

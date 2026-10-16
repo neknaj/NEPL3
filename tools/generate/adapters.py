@@ -39,6 +39,7 @@ class Options:
     tuple_case: Callable[[str, str], bool]
     codec: Codec = Codec.LOCAL
     record_sidecars: Mapping[str, str] = field(default_factory=dict[str, str])
+    record_readers: Mapping[str, tuple[str, str]] = field(default_factory=dict[str, tuple[str, str]])
 
 
 def field_names(value: JsonValue) -> tuple[str, ...]:
@@ -79,7 +80,13 @@ def render(types: Mapping[str, Shape], header: str, options: Options) -> str:
         if (not isinstance(shape, Record) or member not in shape.fields
                 or (name.endswith("Ref") and name != "AssetRef")):
             raise ValueError(f"sidecar requires a declared record field on a named-field struct: {name}.{member}")
+    for name, (member, native_type) in options.record_readers.items():
+        shape = types.get(name)
+        if (not isinstance(shape, Record) or member not in shape.fields or not native_type
+                or (name.endswith("Ref") and name != "AssetRef")):
+            raise ValueError(f"reader requires a declared record field and native type: {name}.{member}")
     for name, shape in types.items():
+        reader = options.record_readers.get(name)
         sidecar = options.record_sidecars.get(name)
         if sidecar is not None and isinstance(shape, Record):
             method = "put_with_" + rename.get(sidecar, sidecar)
@@ -94,6 +101,18 @@ def render(types: Mapping[str, Shape], header: str, options: Options) -> str:
                     out.append(f"let f{index}={expr}.put({arguments})?;")
             values = ",".join(f"f{index}" for index in range(len(shape.fields)))
             out.extend([f'let value=record(s,"{name}",[{values}],b)?;', "Ok((value,sidecar))", "}", "}"])
+        if reader is not None and isinstance(shape, Record):
+            member, native_type = reader
+            method = "read_with_" + rename.get(member, member)
+            out.extend([f"impl {name} {{",
+                        f"pub(crate) fn {method}<C:FoundationValueCodec>(v:&NdfValue," + parameters
+                        + f"c:&mut C,b:&mut Budget,decode:impl FnOnce(&NdfValue,&mut C,&mut Budget)->Result<{native_type},PortableError<C::Error>>)->Result<Self,PortableError<C::Error>> {{",
+                        f"b.charge(Resource::Work,{len(name) + 32})?;",
+                        f'let f=fields(v,s,"{name}",{len(shape.fields)})?;'])
+            exprs = [rename.get(field, field) + (f":decode(&f[{index}],c,b)?" if field == member
+                     else f":Value::read(&f[{index}],{arguments})?")
+                     for index, field in enumerate(shape.fields)]
+            out.extend(["Ok(Self {" + ",".join(exprs) + "})", "}", "}"])
         out.append(f"impl Value for {name} {{")
         codec_name = "_c" if isinstance(shape, Variant) and not any(shape.cases.values()) else "c"
         out.append("fn put<C:FoundationValueCodec>(&self," + parameters + codec_name
@@ -121,8 +140,13 @@ def render(types: Mapping[str, Shape], header: str, options: Options) -> str:
         out.append("}")
         out.append("fn read<C:FoundationValueCodec>(v:&NdfValue," + parameters + codec_name
                    + ":&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {")
-        out.append(f"b.charge(Resource::Work,{len(name) + 32})?;")
-        if isinstance(shape, Record):
+        if reader is None:
+            out.append(f"b.charge(Resource::Work,{len(name) + 32})?;")
+        if reader is not None:
+            member, _ = reader
+            method = "read_with_" + rename.get(member, member)
+            out.append(f"Self::{method}(v,{arguments},|v,c,b|Value::read(v,{arguments}))")
+        elif isinstance(shape, Record):
             out.append(f'let f=fields(v,s,"{name}",{len(shape.fields)})?;')
             if name.endswith("Ref") and name != "AssetRef":
                 out.append(f"Ok(Self(Value::read(&f[0],{arguments})?))")

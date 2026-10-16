@@ -1,4 +1,5 @@
 //! Concrete host boundary used by crates that depend on core rather than wire.
+mod archive;
 pub(crate) mod types;
 use crate::{WireError, environment::*, source::*, view::*};
 use alloc::vec::Vec;

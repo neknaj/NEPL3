@@ -1,5 +1,6 @@
 //! Explicit Doc NDF schema adapters. Decoding produces raw data followed by the
 //! same source/category/graph checks used by native callers, not a render proof.
+pub mod archive;
 pub mod pages;
 pub mod prepare;
 pub mod print;
@@ -156,27 +157,38 @@ fn encode_structure<'a, C: FoundationValueCodec>(
     b: &mut Budget,
     components: Option<&mut alloc::vec::Vec<nepl3_core::source::Digest>>,
 ) -> Result<(NdfValue, crate::check::ValidatedDocumentSyntax<'a>), PortableError<C::Error>> {
-    let pending = document.prepare_structure(registry, b, c.source_admission())?;
-    let group_result = if let Some(components) = components {
-        c.encode_foreign_group_at_depths_with_entry_digests(
-            &document.value.embeds.group,
-            &pending.depths,
-            registry,
-            b,
-        )
-        .map(|(group, identities)| {
-            *components = identities;
-            group
+    encode_structure_using_group(document, registry, c, b, |c, depths, b| {
+        let group_result = if let Some(components) = components {
+            c.encode_foreign_group_at_depths_with_entry_digests(
+                &document.value.embeds.group,
+                depths,
+                registry,
+                b,
+            )
+            .map(|(group, identities)| {
+                *components = identities;
+                group
+            })
+        } else {
+            c.encode_foreign_group_at_depths(&document.value.embeds.group, depths, registry, b)
+        };
+        group_result.map_err(|error| match error {
+            nepl3_core::value_codec::GroupEncodingError::Structure(error) => {
+                PortableError::from(StructureError::from(error))
+            }
+            nepl3_core::value_codec::GroupEncodingError::Codec(error) => boundary(error),
         })
-    } else {
-        c.encode_foreign_group_at_depths(&document.value.embeds.group, &pending.depths, registry, b)
-    };
-    let group = group_result.map_err(|error| match error {
-        nepl3_core::value_codec::GroupEncodingError::Structure(error) => {
-            PortableError::from(StructureError::from(error))
-        }
-        nepl3_core::value_codec::GroupEncodingError::Codec(error) => boundary(error),
-    })?;
+    })
+}
+fn encode_structure_using_group<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    registry: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+    encode_group: impl FnOnce(&mut C, &[u64], &mut Budget) -> Result<NdfValue, PortableError<C::Error>>,
+) -> Result<(NdfValue, crate::check::ValidatedDocumentSyntax<'a>), PortableError<C::Error>> {
+    let pending = document.prepare_structure(registry, b, c.source_admission())?;
+    let group = encode_group(c, &pending.depths, b)?;
     let (structure, store) = pending.finish();
     let s = schema(registry)?;
     let sources = c.encode_sources(&document.sources, b).map_err(boundary)?;

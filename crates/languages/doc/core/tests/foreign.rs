@@ -1,3 +1,5 @@
+#[path = "foreign/archive.rs"]
+mod archive;
 #[path = "foreign/default.rs"]
 mod default;
 #[path = "foreign/preparation.rs"]

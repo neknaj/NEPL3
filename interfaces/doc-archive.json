@@ -1,0 +1,26 @@
+{
+  "package": "nepl3.doc-archive",
+  "revision": 1,
+  "types": {
+    "DocumentArchive": {
+      "constraints": [],
+      "record": [
+        [
+          "skeleton",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "DocumentSyntax"
+            }
+          }
+        ],
+        [
+          "group",
+          "Bytes"
+        ]
+      ]
+    }
+  },
+  "operations": {}
+}
