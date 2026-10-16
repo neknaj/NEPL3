@@ -43,17 +43,7 @@ impl SourceAdmission {
             let mut store = SourceStore::default();
             for source in sources {
                 self.admit_existing(source, b)?;
-                if store
-                    .get_revision_with_budget(
-                        &source.identity().source,
-                        source.identity().revision,
-                        b,
-                    )?
-                    .is_some()
-                {
-                    return Err(SourceSetError::Duplicate);
-                }
-                store.insert_ref_with_budget(source, b)?;
+                store.insert_unique_declaration(source, b)?;
             }
             // Only a fully admitted, duplicate-free set is reusable. All owned
             // snapshots and index storage were charged by insertion above.
@@ -62,6 +52,40 @@ impl SourceAdmission {
         self.checked_set
             .as_ref()
             .ok_or(SourceSetError::Source(SourceError::MissingSnapshot))
+    }
+}
+
+impl SourceStore {
+    // Local declarations must be unique even when the snapshots are equal.
+    // Keep this separate from public idempotent insertion.
+    fn insert_unique_declaration(
+        &mut self,
+        snapshot: &SourceSnapshot,
+        budget: &mut Budget,
+    ) -> Result<(), SourceSetError> {
+        budget.poll()?;
+        let position = super::source_index_position(
+            &self.index,
+            |i| &self.snapshots[i],
+            snapshot,
+            self.insertion_hint,
+            budget,
+        )?;
+        let at = match position {
+            Ok(_) => return Err(SourceSetError::Duplicate),
+            Err(at) => at,
+        };
+        budget.charge(Resource::Work, (self.index.len() - at) as u64)?;
+        budget.charge(
+            Resource::AllocationUnits,
+            core::mem::size_of::<usize>() as u64,
+        )?;
+        let owned = snapshot.clone_with_budget(budget)?;
+        self.index.insert(at, self.snapshots.len());
+        self.snapshots.push(owned);
+        self.insertion_hint = Some(at);
+        self.invalidate_scope();
+        Ok(())
     }
 }
 
@@ -95,6 +119,118 @@ mod tests {
             })
             .collect()
     }
+    #[test]
+    fn unique_insertion_revision_and_exact_limits() -> Result<(), SourceSetError> {
+        let mut sources = fixture_sources()?;
+        sources.push(SourceSnapshot::new(
+            SourceId("id-0".into()),
+            2,
+            "memory:0".into(),
+            b"revised".to_vec(),
+            &mut budget(),
+        )?);
+        let mut measured = budget();
+        let mut baseline = SourceStore::default();
+        for source in &sources {
+            baseline.insert_unique_declaration(source, &mut measured)?;
+        }
+        let usage = measured.usage();
+        for (work, allocation, succeeds) in [
+            (usage.work, usage.allocation_units, true),
+            (usage.work - 1, usage.allocation_units, false),
+            (usage.work, usage.allocation_units - 1, false),
+        ] {
+            let mut b = Budget::new(Limits {
+                work,
+                allocation_units: allocation,
+                ..budget().limits()
+            });
+            let mut store = SourceStore::default();
+            let result = sources.iter().try_for_each(|source| {
+                let snapshots = store.snapshots.clone();
+                let index = store.index.clone();
+                let hint = store.insertion_hint;
+                let result = store.insert_unique_declaration(source, &mut b);
+                if result.is_err() {
+                    assert_eq!(store.snapshots, snapshots);
+                    assert_eq!(store.index, index);
+                    assert_eq!(store.insertion_hint, hint);
+                }
+                result
+            });
+            assert_eq!(result.is_ok(), succeeds);
+            if succeeds {
+                assert_eq!(store.snapshots(), baseline.snapshots());
+                assert_eq!(b.usage(), usage);
+            } else {
+                assert!(
+                    store
+                        .insert_unique_declaration(&sources[0], &mut b)
+                        .is_err()
+                );
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn unique_insertion_matches_two_search_store() -> Result<(), SourceSetError> {
+        for order in [
+            [0, 1, 2, 3, 4, 5, 6, 7],
+            [7, 6, 5, 4, 3, 2, 1, 0],
+            [3, 0, 7, 2, 5, 1, 6, 4],
+        ] {
+            let sources = fixture_sources()?;
+            let mut old = SourceStore::default();
+            let mut new = SourceStore::default();
+            let mut old_budget = budget();
+            let mut new_budget = budget();
+            for i in order {
+                let source = &sources[i];
+                assert!(
+                    old.get_revision_with_budget(
+                        &source.identity().source,
+                        source.identity().revision,
+                        &mut old_budget
+                    )?
+                    .is_none()
+                );
+                old.insert_ref_with_budget(source, &mut old_budget)?;
+                new.insert_unique_declaration(source, &mut new_budget)?;
+            }
+            assert_eq!(old.snapshots(), new.snapshots());
+            for source in &sources {
+                assert_eq!(
+                    old.get_revision_with_budget(
+                        &source.identity().source,
+                        source.identity().revision,
+                        &mut budget()
+                    )?,
+                    new.get_revision_with_budget(
+                        &source.identity().source,
+                        source.identity().revision,
+                        &mut budget()
+                    )?
+                );
+            }
+            assert!(new_budget.usage().work < old_budget.usage().work);
+            assert_eq!(
+                new_budget.usage().allocation_units,
+                old_budget.usage().allocation_units
+            );
+            let before = new.snapshots().to_vec();
+            assert_eq!(
+                new.insert_unique_declaration(&sources[3], &mut budget()),
+                Err(SourceSetError::Duplicate)
+            );
+            assert_eq!(new.snapshots(), before);
+            // Public insertion remains idempotent for the same snapshot.
+            new.insert_ref_with_budget(&sources[3], &mut budget())?;
+            assert_eq!(new.snapshots(), before);
+        }
+        Ok(())
+    }
+
     #[test]
     fn exact_local_sets_reuse_without_admitting_the_union() -> Result<(), SourceSetError> {
         let sources = fixture_sources()?;
