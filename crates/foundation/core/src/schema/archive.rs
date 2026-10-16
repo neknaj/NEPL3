@@ -1,4 +1,5 @@
 //! Explicit versioned source-set archive schema; foundation v1 stays unchanged.
+pub mod syntax;
 use super::{
     FieldDescriptor, NamedType, SchemaDescriptor, SchemaError, TypeDescriptor, TypeRef, TypeShape,
 };

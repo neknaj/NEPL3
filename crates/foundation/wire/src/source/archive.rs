@@ -39,6 +39,24 @@ pub fn encode(
     admission: &mut SourceAdmission,
     budget: &mut Budget,
 ) -> Result<Vec<u8>, WireError> {
+    let value = to_value(
+        sources,
+        memberships,
+        archive_schema,
+        foundation_schema,
+        admission,
+        budget,
+    )?;
+    encode_checked(&value, &expected_archive(), registry, budget)
+}
+pub(crate) fn to_value(
+    sources: &[SourceSnapshot],
+    memberships: &[Vec<SourceRef>],
+    archive_schema: &SchemaRef,
+    foundation_schema: &SchemaRef,
+    admission: &mut SourceAdmission,
+    budget: &mut Budget,
+) -> Result<NdfValue, WireError> {
     let mut table = ArchiveSources::new(sources, admission, budget).map_err(archive_error)?;
     let members = sequence(memberships, budget, |members, budget| {
         // Resolve through the table to reject dangling, wrong-digest, duplicate
@@ -51,7 +69,7 @@ pub fn encode(
     table.finish(budget).map_err(archive_error)?;
     let sources = sources_value(sources, foundation_schema, admission, budget)?;
     let value = record(archive_schema, contract::ROOT, [sources, members], budget)?;
-    encode_checked(&value, &expected_archive(), registry, budget)
+    Ok(value)
 }
 
 /// Decode the table once and resolve checked native handles for each local set.
@@ -66,7 +84,22 @@ pub fn decode(
     budget: &mut Budget,
 ) -> Result<Vec<Vec<SourceSnapshot>>, WireError> {
     let value = decode_checked(bytes, &expected_archive(), registry, budget)?;
-    let root = fields(value.value(), archive_schema, contract::ROOT, 2)?;
+    from_value(
+        value.value(),
+        archive_schema,
+        foundation_schema,
+        admission,
+        budget,
+    )
+}
+pub(crate) fn from_value(
+    value: &NdfValue,
+    archive_schema: &SchemaRef,
+    foundation_schema: &SchemaRef,
+    admission: &mut SourceAdmission,
+    budget: &mut Budget,
+) -> Result<Vec<Vec<SourceSnapshot>>, WireError> {
+    let root = fields(value, archive_schema, contract::ROOT, 2)?;
     let sources = sources_from(&root[0], foundation_schema, admission, budget)?;
     let mut table = ArchiveSources::new(&sources, admission, budget).map_err(archive_error)?;
     let result = collect(list(&root[1])?, budget, |members, budget| {

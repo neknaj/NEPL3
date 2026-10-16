@@ -14,12 +14,22 @@ fn parity(value: &Value) -> Result<SchemaDescriptor> {
     }
     Ok(implemented)
 }
+fn syntax_parity(value: &Value) -> Result<SchemaDescriptor> {
+    let declared = foundation::descriptor(value)?;
+    let implemented = nepl3_core::schema::archive::syntax::descriptor(&mut foundation::budget())
+        .map_err(|e| format!("syntax archive descriptor: {e:?}"))?;
+    if declared != implemented {
+        return Err("syntax archive JSON and Rust descriptors differ".into());
+    }
+    Ok(implemented)
+}
 pub(super) fn check(root: &Path) -> Result<()> {
     let archive = parity(&json(root, "interfaces/source-archive.json")?)?;
+    let syntax = syntax_parity(&json(root, "interfaces/syntax-archive.json")?)?;
     let foundation = foundation::descriptor(&json(root, "interfaces/foundation.json")?)?;
     let mut budget = foundation::budget();
     let mut registry = SchemaRegistry::default();
-    for descriptor in [foundation, archive] {
+    for descriptor in [foundation, archive, syntax] {
         let reference = descriptor
             .reference(&mut budget)
             .map_err(|error| format!("source archive dependency identity: {error:?}"))?;
@@ -47,6 +57,9 @@ mod tests {
         let mut value: Value = json(root, "interfaces/source-archive.json")?;
         value["types"]["SourceSets"]["record"][1][1] = Value::from("Text");
         assert!(parity(&value).is_err());
+        let mut syntax: Value = json(root, "interfaces/syntax-archive.json")?;
+        syntax["revision"] = Value::from(2);
+        assert!(syntax_parity(&syntax).is_err());
         Ok(())
     }
 }
