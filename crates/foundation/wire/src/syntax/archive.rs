@@ -22,6 +22,7 @@ pub fn encode(
     admission: &mut SourceAdmission,
     budget: &mut Budget,
 ) -> Result<Vec<u8>, WireError> {
+    crate::source::archive::fields::check(foundation, registry, false, budget)?;
     bundle.validate_with_sources(registry, budget, admission)?;
     let mut capture = Capture::default();
     let skeleton = bundle_value_with_sources(
@@ -56,6 +57,7 @@ pub fn decode(
     admission: &mut SourceAdmission,
     budget: &mut Budget,
 ) -> Result<SyntaxBundle, WireError> {
+    crate::source::archive::fields::check(foundation, registry, false, budget)?;
     let value = crate::decode_checked(bytes, &archive_type(), registry, budget)?;
     let root = fields(value.value(), syntax_archive, contract::ROOT, 2)?;
     let mut restore = Restore::new(&root[0], source_archive, foundation, admission, budget)?;

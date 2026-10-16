@@ -20,6 +20,7 @@ pub fn encode(
     admission: &mut SourceAdmission,
     b: &mut Budget,
 ) -> Result<Vec<u8>, WireError> {
+    crate::source::archive::fields::check(foundation, registry, true, b)?;
     let mut capture = Capture::default();
     let skeleton = to_value_with_sources(
         group,
@@ -50,6 +51,7 @@ pub fn decode(
     admission: &mut SourceAdmission,
     b: &mut Budget,
 ) -> Result<ForeignClosureGroup, WireError> {
+    crate::source::archive::fields::check(foundation, registry, true, b)?;
     let value = crate::decode_checked(bytes, &archive_type(), registry, b)?;
     let root = fields(value.value(), group_archive, contract::ROOT, 2)?;
     let mut restore = Restore::new(&root[0], source_archive, foundation, admission, b)?;
