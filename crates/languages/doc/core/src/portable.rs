@@ -156,26 +156,37 @@ fn encode_structure<'a, C: FoundationValueCodec>(
     b: &mut Budget,
     components: Option<&mut alloc::vec::Vec<nepl3_core::source::Digest>>,
 ) -> Result<(NdfValue, crate::check::ValidatedDocumentSyntax<'a>), PortableError<C::Error>> {
-    let (structure, store) =
-        document.validate_structure_with_sources(registry, b, c.source_admission())?;
+    let pending = document.prepare_structure(registry, b, c.source_admission())?;
+    let group_result = if let Some(components) = components {
+        c.encode_foreign_group_at_depths_with_entry_digests(
+            &document.value.embeds.group,
+            &pending.depths,
+            registry,
+            b,
+        )
+        .map(|(group, identities)| {
+            *components = identities;
+            group
+        })
+    } else {
+        c.encode_foreign_group_at_depths(&document.value.embeds.group, &pending.depths, registry, b)
+    };
+    let group = group_result.map_err(|error| match error {
+        nepl3_core::value_codec::GroupEncodingError::Structure(error) => {
+            PortableError::from(StructureError::from(error))
+        }
+        nepl3_core::value_codec::GroupEncodingError::Codec(error) => boundary(error),
+    })?;
+    let (structure, store) = pending.finish();
     let s = schema(registry)?;
     let sources = c.encode_sources(&document.sources, b).map_err(boundary)?;
     let mut scoped = c.scoped_with_mappings(&store, &document.source_maps);
-    let value = if let Some(components) = components {
-        // Same field order as the generated DocValue / DocEmbeds adapters.
-        // Regression tests compare the resulting canonical value byte-for-byte.
-        let root = document.value.root.put(s, &mut scoped, b)?;
-        let nodes = document.value.nodes.put(s, &mut scoped, b)?;
-        let kinds = document.value.embeds.kinds.put(s, &mut scoped, b)?;
-        let (group, identities) = scoped
-            .encode_foreign_group_with_entry_digests(&document.value.embeds.group, b)
-            .map_err(boundary)?;
-        *components = identities;
-        let embeds = record(s, "DocEmbeds", [kinds, group], b)?;
-        record(s, "DocValue", [root, nodes, embeds], b)?
-    } else {
-        document.value.put(s, &mut scoped, b)?
-    };
+    let (value, ()) = document.value.put_with_embeds(s, &mut scoped, b, |c, b| {
+        document
+            .value
+            .embeds
+            .put_with_group(s, c, b, |_, _| Ok((group, ())))
+    })?;
     let origins = scoped
         .encode_origins(&document.origins, b)
         .map_err(boundary)?;

@@ -390,6 +390,39 @@ impl FoundationValueCodec for FoundationCodec<'_> {
             crate::syntax::group::identity::from_encoded(value, &encoded, self.schema, b)?;
         Ok((encoded, digests))
     }
+    fn encode_foreign_group_at_depths(
+        &mut self,
+        value: &nepl3_core::syntax::group::ForeignClosureGroup,
+        depths: &[u64],
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+    ) -> Result<NdfValue, nepl3_core::value_codec::GroupEncodingError<WireError>> {
+        let value = crate::syntax::group::to_value_at_depths(
+            value,
+            depths,
+            registry,
+            self.schema,
+            self.registry,
+            self.admission,
+            b,
+        )?;
+        self.validate(&value, "ForeignClosureGroup", b)
+            .map_err(nepl3_core::value_codec::GroupEncodingError::Codec)?;
+        Ok(value)
+    }
+    fn encode_foreign_group_at_depths_with_entry_digests(
+        &mut self,
+        value: &nepl3_core::syntax::group::ForeignClosureGroup,
+        depths: &[u64],
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+    ) -> Result<(NdfValue, Vec<Digest>), nepl3_core::value_codec::GroupEncodingError<WireError>>
+    {
+        let encoded = self.encode_foreign_group_at_depths(value, depths, registry, b)?;
+        let digests = crate::syntax::group::identity::from_encoded(value, &encoded, self.schema, b)
+            .map_err(nepl3_core::value_codec::GroupEncodingError::Codec)?;
+        Ok((encoded, digests))
+    }
     fn decode_foreign_group(
         &mut self,
         value: &NdfValue,

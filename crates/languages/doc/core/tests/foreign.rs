@@ -215,6 +215,16 @@ fn shared_embed_validation_composes_its_deepest_doc_owner() -> Result<(), String
         ),
         Err(StructureError::Stopped(StopReason::DepthLimit))
     ));
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &sources, &mut admission).map_err(err)?;
+    portable::to_value(&doc, &r, &mut codec, &mut b()).map_err(err)?;
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &sources, &mut admission).map_err(err)?;
+    assert!(matches!(
+        portable::to_value(&doc, &r, &mut codec, &mut Budget::new(limits)),
+        Err(portable::PortableError::Stopped(StopReason::DepthLimit))
+    ));
     Ok(())
 }
 
