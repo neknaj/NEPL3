@@ -273,3 +273,157 @@ fn repeated_source_preparation_reuses_the_same_encoded_group() -> Result<(), Str
     );
     Ok(())
 }
+
+#[test]
+fn pages_reuse_components_without_reordering_or_changing_set_identity() -> Result<(), String> {
+    use nepl3_doc_core::pages::{self, PageDocument, PageRegistration, PageSet};
+    let r = registry()?;
+    let one = mapped_article(closure(&r)?, vec![], vec![]);
+    let mut two = one.clone();
+    two.value
+        .embeds
+        .group
+        .entries
+        .push(two.value.embeds.group.entries[0].clone());
+    two.value.embeds.kinds.push(EmbedKind::Code);
+    two.value.nodes.push(DocNode {
+        kind: DocKind::Code {
+            syntax: EmbedRef(1),
+        },
+        locations: vec![],
+        origin: None,
+        span: None,
+    });
+    let DocKind::Body { blocks } = &mut two.value.nodes[3].kind else {
+        return Err("body".into());
+    };
+    blocks.push(BlockRef(5));
+    let mut zero = one.clone();
+    zero.value.embeds = Default::default();
+    zero.value.nodes.truncate(4);
+    let DocKind::Body { blocks } = &mut zero.value.nodes[3].kind else {
+        return Err("body".into());
+    };
+    blocks.clear();
+    let set = PageSet {
+        pages: [one, zero, two]
+            .into_iter()
+            .enumerate()
+            .map(|(i, document)| PageDocument {
+                registration: PageRegistration {
+                    id: format!("page{i}"),
+                    source: format!("p{i}.nepld"),
+                    route: format!("p{i}.md"),
+                },
+                document,
+            })
+            .collect(),
+        files: vec![],
+    };
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut fallback =
+        default::DefaultCodec(FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?);
+    let mut old = b();
+    let expected = pages::resolve(&set, &r, &mut fallback, &mut old).map_err(err)?;
+    let mut admission = SourceAdmission::default();
+    let mut fused = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let mut new = b();
+    let actual = pages::resolve(&set, &r, &mut fused, &mut new).map_err(err)?;
+    assert_eq!(actual.plan(), expected.plan());
+    assert!(new.usage().work < old.usage().work);
+    let legacy = portable::pages::set_to_value(&set, &r, &mut fused, &mut b()).map_err(err)?;
+    assert_eq!(
+        actual.plan().identity,
+        fused
+            .canonical_value_digest(pages::SET_DOMAIN, &legacy, &mut b())
+            .map_err(err)?
+    );
+    Ok(())
+}
+#[test]
+fn printer_and_plain_text_keep_their_distinct_identity_domains() -> Result<(), String> {
+    use nepl3_doc_core::{print, text};
+    let r = registry()?;
+    let doc = DocumentSyntax {
+        value: DocValue {
+            root: DocRoot::Sentence(SentenceRef(1)),
+            nodes: vec![
+                DocNode {
+                    kind: DocKind::InlineMath {
+                        syntax: EmbedRef(0),
+                    },
+                    locations: vec![],
+                    origin: None,
+                    span: None,
+                },
+                DocNode {
+                    kind: DocKind::Sentence {
+                        inlines: vec![InlineRef(0)],
+                    },
+                    locations: vec![],
+                    origin: None,
+                    span: None,
+                },
+            ],
+            embeds: embeds(EmbedKind::InlineMath, closure(&r)?),
+        },
+        sources: vec![],
+        origins: vec![],
+        views: vec![],
+        source_maps: vec![],
+    };
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut fallback =
+        default::DefaultCodec(FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?);
+    let expected_print = print::identity(&doc, &r, &mut fallback, &mut b()).map_err(err)?;
+    let expected_text = text::prepare(&doc, &r, &mut fallback, &mut b())
+        .map_err(err)?
+        .identity()
+        .clone();
+    let mut admission = SourceAdmission::default();
+    let mut fused = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let actual_print = print::identity(&doc, &r, &mut fused, &mut b()).map_err(err)?;
+    let actual_text = text::prepare(&doc, &r, &mut fused, &mut b())
+        .map_err(err)?
+        .identity()
+        .clone();
+    assert_eq!(actual_print, expected_print);
+    assert_eq!(actual_text, expected_text);
+    assert_ne!(actual_print.document_digest, actual_text.document_digest);
+    let value = portable::to_value(&doc, &r, &mut fused, &mut b()).map_err(err)?;
+    assert_eq!(
+        actual_print.document_digest,
+        fused
+            .canonical_value_digest(print::DOCUMENT_DOMAIN, &value, &mut b())
+            .map_err(err)?
+    );
+    assert_eq!(
+        actual_text.document_digest,
+        fused
+            .canonical_value_digest(text::DOCUMENT_DOMAIN, &value, &mut b())
+            .map_err(err)?
+    );
+    let components = fused
+        .foreign_group_entry_digests(&doc.value.embeds.group, &mut b())
+        .map_err(err)?;
+    let component = nepl3_core::value::NdfValue::Bytes(components[0].0.to_vec());
+    assert_eq!(
+        actual_print.guests[0].guest_digest,
+        fused
+            .canonical_value_digest(print::GUEST_DOMAIN, &component, &mut b())
+            .map_err(err)?
+    );
+    assert_eq!(
+        actual_text.embeds[0].guest_digest,
+        fused
+            .canonical_value_digest(text::GUEST_DOMAIN, &component, &mut b())
+            .map_err(err)?
+    );
+    assert_ne!(
+        actual_print.guests[0].guest_digest,
+        actual_text.embeds[0].guest_digest
+    );
+    Ok(())
+}
