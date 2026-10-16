@@ -15,6 +15,7 @@ mod diagnostic;
 mod environment;
 mod error;
 mod host;
+mod mapping;
 mod model;
 pub mod print;
 mod select;
