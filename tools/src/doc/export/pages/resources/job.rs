@@ -105,6 +105,16 @@ impl Running {
             usage: self.usage,
         }
     }
+    /// Trusted host adapters only: expose the admitted attempt budget to existing
+    /// metered renderers. Callers must not replace/reset it or retain admission
+    /// proofs beyond this callback. Public clients use the restricted Meter.
+    pub(crate) fn run_budget<T, E>(
+        self,
+        phase: Limits,
+        operation: impl FnOnce(&mut Budget) -> Result<T, E>,
+    ) -> Attempt<T, E> {
+        self.run(phase, |meter| operation(meter.budget))
+    }
     /// Admit at most the remaining job resources before entering the callback.
     /// Depth is a peak, so it is bounded rather than subtracted. Retried work
     /// consumes another attempt and is charged again to this same ledger.

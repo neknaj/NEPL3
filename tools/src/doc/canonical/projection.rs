@@ -1,6 +1,8 @@
 //! Frozen repository inputs and an explicitly selected page-context projection.
 #[path = "receipt.rs"]
 mod receipt;
+#[path = "retry.rs"]
+pub(super) mod retry;
 use super::*;
 use crate::doc::export::pages::resources::PhaseLimits;
 use crate::doc::{
@@ -182,13 +184,13 @@ fn capture(root: &Path, raw: Vec<u8>) -> Result<Captured> {
     })
 }
 
-fn grouped(
+fn prepare_group(
     compiled: &Compiled,
     inputs: &[Input],
     references: ReferenceInputs,
     phases: PhaseLimits,
     budget: &mut Budget,
-) -> Result<(annotated::pages::PagesArtifact, Vec<PageFile>)> {
+) -> Result<PreparedGroup> {
     let footnotes = inputs
         .iter()
         .all(|input| input.page.renderer == FOOTNOTES_RENDERER);
@@ -271,6 +273,33 @@ fn grouped(
         });
     }
     let set = PageSet { pages, files };
+    Ok(PreparedGroup {
+        set,
+        aliases,
+        footnotes,
+        svg,
+    })
+}
+
+struct PreparedGroup {
+    set: PageSet,
+    aliases: Vec<Vec<annotated::Alias>>,
+    footnotes: bool,
+    svg: bool,
+}
+
+fn render_group(
+    compiled: &Compiled,
+    inputs: &[Input],
+    prepared: &PreparedGroup,
+    budget: &mut Budget,
+) -> Result<annotated::pages::PagesArtifact> {
+    let PreparedGroup {
+        set,
+        aliases,
+        footnotes,
+        ..
+    } = prepared;
     let store = SourceStore::default();
     let mut admission = SourceAdmission::default();
     let mut codec =
@@ -303,7 +332,7 @@ fn grouped(
     } else {
         None
     };
-    let output = if footnotes {
+    let output = if *footnotes {
         let math = compiled
             .others
             .iter()
@@ -315,7 +344,7 @@ fn grouped(
             .find(|p| p.schema.package == "nepl3.syntax.sentence")
             .ok_or("missing standard Sentence surface")?;
         annotated::pages::render_footnotes_svg_math(
-            &set,
+            set,
             &compiled.doc.registry,
             &mut codec,
             budget,
@@ -328,7 +357,7 @@ fn grouped(
         )
     } else {
         annotated::pages::render_styles(
-            &set,
+            set,
             &compiled.doc.registry,
             &mut codec,
             budget,
@@ -337,7 +366,7 @@ fn grouped(
         )
     }
     .map_err(|e| format!("Markdown page set: {e:?}; usage={:?}", budget.usage()))?;
-    Ok((output, if svg { set.files } else { Vec::new() }))
+    Ok(output)
 }
 
 #[cfg(test)]
@@ -372,8 +401,18 @@ fn generate_batch(
     raw: Vec<u8>,
     budget: &mut Budget,
 ) -> Result<Generated> {
-    budget.poll().map_err(err)?;
     let initial_usage = budget.usage();
+    let batch = prepare_batch(root, manifest, raw, budget)?;
+    batch.render(initial_usage, budget)
+}
+
+fn prepare_batch(
+    root: &Path,
+    manifest: &str,
+    raw: Vec<u8>,
+    budget: &mut Budget,
+) -> Result<PreparedBatch> {
+    budget.poll().map_err(err)?;
     charge(budget, Resource::Work, 1)?;
     let Captured {
         raw,
@@ -383,178 +422,290 @@ fn generate_batch(
         phases,
     } = capture(root, raw)?;
     let compiled = crate::doc::source::compiled()?;
-    let (mut group, svg_files) = if needs_group {
-        let (group, files) = grouped(&compiled, &inputs, references, phases, budget)?;
-        (Some(group), files)
-    } else {
-        (None, Vec::new())
-    };
-    if let Some(group) = &mut group {
-        for (artifact, input) in group.pages.iter_mut().zip(&inputs) {
-            if input.page.renderer == FOOTNOTES_RENDERER {
-                continue;
-            }
-            let href = annotated::pages::relative(
-                &input.page.projection,
-                &input.page.source,
-                None,
-                budget,
-            )
-            .map_err(err)?;
-            artifact.source_link(&href, budget).map_err(err)?;
-        }
-    }
-    let mut context = Vec::new();
-    let identity = if let Some(group) = &group {
-        field(&mut context, CONTEXT, budget)?;
-        field(&mut context, RENDERER.as_bytes(), budget)?;
-        field(&mut context, manifest.as_bytes(), budget)?;
-        field(&mut context, &raw, budget)?;
-        field(&mut context, &group.identity.0, budget)?;
-        field(&mut context, &(inputs.len() as u64).to_be_bytes(), budget)?;
-        for input in &inputs {
-            let p = &input.page;
-            for value in [
-                &p.id,
-                &p.source,
-                &p.projection,
-                &p.aliases,
-                &p.route,
-                &p.renderer,
-            ] {
-                field(&mut context, value.as_bytes(), budget)?;
-            }
-            for bytes in [input.source.as_bytes(), &input.aliases] {
-                charge(budget, Resource::Work, bytes.len())?;
-                field(&mut context, &Digest::of(bytes).0, budget)?;
-            }
-        }
-        charge(budget, Resource::Work, context.len())?;
-        Some(Digest::of(&context))
+    let prepared = if needs_group {
+        Some(prepare_group(
+            &compiled, &inputs, references, phases, budget,
+        )?)
     } else {
         None
     };
-    let file_capacity = inputs
-        .len()
-        .checked_add(svg_files.len())
-        .ok_or("OutputLimit")?;
-    let has_svg = !svg_files.is_empty();
-    charge(
-        budget,
-        Resource::AllocationUnits,
-        file_capacity * core::mem::size_of::<(String, String)>()
-            + inputs.len() * core::mem::size_of::<Digest>(),
-    )?;
-    let mut files = Vec::with_capacity(file_capacity);
-    let mut documents = Vec::with_capacity(inputs.len());
-    for (index, input) in inputs.iter().enumerate() {
-        budget.poll().map_err(err)?;
-        let page = &input.page;
-        let (text, document_digest) = if page.renderer == host::RENDERER {
-            let href = annotated::pages::relative(&page.projection, &page.source, None, budget)
-                .map_err(err)?;
-            let (legacy, document_digest) = host::generate_with_phase_limits(
-                &compiled,
-                &page.source,
-                &input.source,
-                &input.aliases,
-                Some(&href),
-                budget,
-                phases,
-            )?;
-            if let Some(group) = &group {
-                charge(
+    charge(budget, Resource::Work, manifest.len())?;
+    charge(budget, Resource::AllocationUnits, manifest.len())?;
+    Ok(PreparedBatch {
+        compiled,
+        manifest: manifest.to_owned(),
+        raw,
+        inputs,
+        phases,
+        prepared,
+    })
+}
+
+/// Owns immutable inputs and lowered documents, never a CheckedPages proof.
+/// Every render invocation performs fresh PageSet resolution in its own budget.
+struct PreparedBatch {
+    compiled: Compiled,
+    manifest: String,
+    raw: Vec<u8>,
+    inputs: Vec<Input>,
+    phases: PhaseLimits,
+    prepared: Option<PreparedGroup>,
+}
+impl PreparedBatch {
+    fn render(
+        &self,
+        initial_usage: nepl3_core::budget::Usage,
+        budget: &mut Budget,
+    ) -> Result<Generated> {
+        let mut group = self
+            .prepared
+            .as_ref()
+            .map(|p| render_group(&self.compiled, &self.inputs, p, budget))
+            .transpose()?;
+        let svg_files = self
+            .prepared
+            .as_ref()
+            .filter(|p| p.svg)
+            .map_or(&[][..], |p| p.set.files.as_slice());
+        self.finish(&mut group, svg_files, initial_usage, budget)
+    }
+}
+
+impl PreparedBatch {
+    fn finish(
+        &self,
+        group: &mut Option<annotated::pages::PagesArtifact>,
+        svg_files: &[PageFile],
+        initial_usage: nepl3_core::budget::Usage,
+        budget: &mut Budget,
+    ) -> Result<Generated> {
+        let Self {
+            compiled,
+            manifest,
+            raw,
+            inputs,
+            phases,
+            ..
+        } = self;
+        let phases = *phases;
+        if let Some(group) = group.as_mut() {
+            for (artifact, input) in group.pages.iter_mut().zip(inputs) {
+                if input.page.renderer == FOOTNOTES_RENDERER {
+                    continue;
+                }
+                let href = annotated::pages::relative(
+                    &input.page.projection,
+                    &input.page.source,
+                    None,
                     budget,
-                    Resource::Work,
-                    legacy.len() + group.pages[index].markdown.len(),
-                )?;
-                let body = legacy
-                    .split_once("\n\n")
-                    .ok_or("legacy metadata missing")?
-                    .1;
-                if body.trim_end_matches('\n') != group.pages[index].markdown.trim_end_matches('\n')
-                {
-                    return Err("legacy projection differs from resolved page body/anchors".into());
+                )
+                .map_err(err)?;
+                artifact.source_link(&href, budget).map_err(err)?;
+            }
+        }
+        let mut context = Vec::new();
+        let identity = if let Some(group) = &group {
+            field(&mut context, CONTEXT, budget)?;
+            field(&mut context, RENDERER.as_bytes(), budget)?;
+            field(&mut context, manifest.as_bytes(), budget)?;
+            field(&mut context, raw, budget)?;
+            field(&mut context, &group.identity.0, budget)?;
+            field(&mut context, &(inputs.len() as u64).to_be_bytes(), budget)?;
+            for input in inputs {
+                let p = &input.page;
+                for value in [
+                    &p.id,
+                    &p.source,
+                    &p.projection,
+                    &p.aliases,
+                    &p.route,
+                    &p.renderer,
+                ] {
+                    field(&mut context, value.as_bytes(), budget)?;
+                }
+                for bytes in [input.source.as_bytes(), &input.aliases] {
+                    charge(budget, Resource::Work, bytes.len())?;
+                    field(&mut context, &Digest::of(bytes).0, budget)?;
                 }
             }
-            (legacy, document_digest)
+            charge(budget, Resource::Work, context.len())?;
+            Some(Digest::of(&context))
         } else {
-            let group = group.as_ref().ok_or("missing page context")?;
-            let context = page_context(
-                input,
-                &group.dependencies[index],
-                &group.image_dependencies[index],
-                &group.math_dependencies[index],
-                budget,
-            )?;
-            let artifact = &group.pages[index];
-            // Paths passed portable ASCII validation. Escaping hyphens prevents
-            // a filename from closing the comment; none contains a newline.
-            let reserve =
-                (page.source.len() * 5 + page.id.len() * 5 + 1024 + artifact.markdown.len()) * 8;
-            charge(
-                budget,
-                Resource::Work,
-                input.source.len() + input.aliases.len(),
-            )?;
-            charge(budget, Resource::Work, reserve)?;
-            charge(budget, Resource::AllocationUnits, reserve)?;
-            (
-                format!(
-                    "<!-- Generated from {}; renderer {}; page {}; source SHA-256 {}; alias input SHA-256 {}; page input SHA-256 {}. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->\n\n{}\n",
-                    page.source.replace('-', "&#45;"),
-                    page.renderer,
-                    page.id.replace('-', "&#45;"),
-                    hex(Digest::of(input.source.as_bytes())),
-                    hex(Digest::of(&input.aliases)),
-                    hex(context),
-                    artifact.markdown.trim_end_matches('\n')
-                ),
-                artifact.document_digest,
-            )
+            None
         };
-        if text.len() as u64 > MAX_OUTPUT {
-            return Err("canonical per-page OutputLimit".into());
-        }
-        charge(budget, Resource::OutputBytes, text.len())?;
-        charge(budget, Resource::Work, page.projection.len())?;
+        let file_capacity = inputs
+            .len()
+            .checked_add(svg_files.len())
+            .ok_or("OutputLimit")?;
+        let has_svg = !svg_files.is_empty();
         charge(
             budget,
             Resource::AllocationUnits,
-            page.projection.len() + core::mem::size_of::<(String, String)>(),
+            file_capacity * core::mem::size_of::<(String, String)>()
+                + inputs.len() * core::mem::size_of::<Digest>(),
         )?;
-        files.push((page.projection.clone(), text));
-        documents.push(document_digest);
+        let mut files = Vec::with_capacity(file_capacity);
+        let mut documents = Vec::with_capacity(inputs.len());
+        for (index, input) in inputs.iter().enumerate() {
+            budget.poll().map_err(err)?;
+            let page = &input.page;
+            let (text, document_digest) = if page.renderer == host::RENDERER {
+                let href = annotated::pages::relative(&page.projection, &page.source, None, budget)
+                    .map_err(err)?;
+                let (legacy, document_digest) = host::generate_with_phase_limits(
+                    compiled,
+                    &page.source,
+                    &input.source,
+                    &input.aliases,
+                    Some(&href),
+                    budget,
+                    phases,
+                )?;
+                if let Some(group) = &group {
+                    charge(
+                        budget,
+                        Resource::Work,
+                        legacy.len() + group.pages[index].markdown.len(),
+                    )?;
+                    let body = legacy
+                        .split_once("\n\n")
+                        .ok_or("legacy metadata missing")?
+                        .1;
+                    if body.trim_end_matches('\n')
+                        != group.pages[index].markdown.trim_end_matches('\n')
+                    {
+                        return Err(
+                            "legacy projection differs from resolved page body/anchors".into()
+                        );
+                    }
+                }
+                (legacy, document_digest)
+            } else {
+                let group = group.as_ref().ok_or("missing page context")?;
+                let context = page_context(
+                    input,
+                    &group.dependencies[index],
+                    &group.image_dependencies[index],
+                    &group.math_dependencies[index],
+                    budget,
+                )?;
+                let artifact = &group.pages[index];
+                // Paths passed portable ASCII validation. Escaping hyphens prevents
+                // a filename from closing the comment; none contains a newline.
+                let reserve =
+                    (page.source.len() * 5 + page.id.len() * 5 + 1024 + artifact.markdown.len())
+                        * 8;
+                charge(
+                    budget,
+                    Resource::Work,
+                    input.source.len() + input.aliases.len(),
+                )?;
+                charge(budget, Resource::Work, reserve)?;
+                charge(budget, Resource::AllocationUnits, reserve)?;
+                (
+                    format!(
+                        "<!-- Generated from {}; renderer {}; page {}; source SHA-256 {}; alias input SHA-256 {}; page input SHA-256 {}. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->\n\n{}\n",
+                        page.source.replace('-', "&#45;"),
+                        page.renderer,
+                        page.id.replace('-', "&#45;"),
+                        hex(Digest::of(input.source.as_bytes())),
+                        hex(Digest::of(&input.aliases)),
+                        hex(context),
+                        artifact.markdown.trim_end_matches('\n')
+                    ),
+                    artifact.document_digest,
+                )
+            };
+            if text.len() as u64 > MAX_OUTPUT {
+                return Err("canonical per-page OutputLimit".into());
+            }
+            charge(budget, Resource::OutputBytes, text.len())?;
+            charge(budget, Resource::Work, page.projection.len())?;
+            charge(
+                budget,
+                Resource::AllocationUnits,
+                page.projection.len() + core::mem::size_of::<(String, String)>(),
+            )?;
+            files.push((page.projection.clone(), text));
+            documents.push(document_digest);
+        }
+        charge(
+            budget,
+            Resource::AllocationUnits,
+            file_capacity * core::mem::size_of::<serde_json::Value>(),
+        )?;
+        let mut records = Vec::with_capacity(file_capacity);
+        for ((path, text), document_digest) in files.iter().zip(documents) {
+            charge(budget, Resource::Work, text.len() + path.len())?;
+            charge(budget, Resource::AllocationUnits, path.len() * 6 + 512)?;
+            records.push(serde_json::json!({"path":path,"sha256":hex(Digest::of(text.as_bytes())),"bytes":text.len(),"document_digest":hex(document_digest)}));
+        }
+        for file in svg_files {
+            let copy_bytes = file.content.0.len() + file.registration.route.len();
+            charge(budget, Resource::Work, copy_bytes)?;
+            charge(budget, Resource::AllocationUnits, copy_bytes)?;
+            let path = file.registration.route.clone();
+            let text = std::str::from_utf8(&file.content.0)?.to_owned();
+            charge(budget, Resource::Work, text.len() + path.len())?;
+            charge(budget, Resource::OutputBytes, text.len())?;
+            charge(budget, Resource::AllocationUnits, path.len() * 6 + 512)?;
+            records.push(serde_json::json!({"path":path,"sha256":hex(Digest::of(text.as_bytes())),"bytes":text.len(),"kind":"static-svg"}));
+            files.push((path, text));
+        }
+        let manifest = receipt::render(
+            inputs,
+            group.as_ref(),
+            has_svg,
+            identity,
+            &records,
+            initial_usage,
+            phases,
+            budget,
+        )?;
+        Ok(Generated { files, manifest })
     }
-    charge(
-        budget,
-        Resource::AllocationUnits,
-        file_capacity * core::mem::size_of::<serde_json::Value>(),
-    )?;
-    let mut records = Vec::with_capacity(file_capacity);
-    for ((path, text), document_digest) in files.iter().zip(documents) {
-        charge(budget, Resource::Work, text.len() + path.len())?;
-        charge(budget, Resource::AllocationUnits, path.len() * 6 + 512)?;
-        records.push(serde_json::json!({"path":path,"sha256":hex(Digest::of(text.as_bytes())),"bytes":text.len(),"document_digest":hex(document_digest)}));
+}
+
+#[cfg(test)]
+mod retained_tests {
+    use super::*;
+    use crate::testing::Fixture;
+    use nepl3_core::budget::{Limits, StopReason, Usage};
+    #[test]
+    fn prepared_inputs_survive_output_stop_without_rereading_files() -> Result<()> {
+        let f = Fixture::new()?;
+        f.write(
+            "page.nepld",
+            r#"article en "Frozen" body cons paragraph cons "{Before/note}" nil nil"#,
+        )?;
+        f.write("aliases.json", "[]")?;
+        let raw = serde_json::to_vec(&serde_json::json!({"version":1,"pages":[{
+            "id":"page", "source":"page.nepld", "projection":"page.md", "route":"page.md",
+            "aliases":"aliases.json", "renderer":FOOTNOTES_RENDERER
+        }]}))?;
+        let batch = prepare_batch(
+            f.root(),
+            "pages.json",
+            raw,
+            &mut crate::doc::source::budget(),
+        )?;
+        let expected = batch.render(Usage::default(), &mut crate::doc::source::budget())?;
+        f.write("page.nepld", "invalid changed source")?;
+        f.write("aliases.json", "invalid changed aliases")?;
+        let mut short = Budget::new(Limits {
+            work: 0,
+            ..crate::doc::source::budget().limits()
+        });
+        assert!(batch.render(Usage::default(), &mut short).is_err());
+        assert_eq!(short.poll(), Err(StopReason::WorkLimit));
+        // A stopped Budget remains stopped; retaining inputs is not permission
+        // to revive it or to carry its checked-admission proof into a new one.
+        assert!(batch.render(Usage::default(), &mut short).is_err());
+        let actual = batch.render(Usage::default(), &mut crate::doc::source::budget())?;
+        assert_eq!(expected.files, actual.files);
+        assert_eq!(expected.manifest, actual.manifest);
+        assert!(actual.files[0].1.contains("Before"));
+        assert!(actual.files[0].1.contains("[^"));
+        Ok(())
     }
-    for file in svg_files {
-        let path = file.registration.route;
-        let text = String::from_utf8(file.content.0)?;
-        charge(budget, Resource::Work, text.len() + path.len())?;
-        charge(budget, Resource::OutputBytes, text.len())?;
-        charge(budget, Resource::AllocationUnits, path.len() * 6 + 512)?;
-        records.push(serde_json::json!({"path":path,"sha256":hex(Digest::of(text.as_bytes())),"bytes":text.len(),"kind":"static-svg"}));
-        files.push((path, text));
-    }
-    let manifest = receipt::render(
-        &inputs,
-        group.as_ref(),
-        has_svg,
-        identity,
-        &records,
-        initial_usage,
-        phases,
-        budget,
-    )?;
-    Ok(Generated { files, manifest })
 }
