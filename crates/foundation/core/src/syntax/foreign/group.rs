@@ -69,10 +69,17 @@ impl From<SyntaxError> for GroupError {
 }
 pub struct ValidatedForeignGroup<'a> {
     value: &'a ForeignClosureGroup,
+    bundles: Option<Vec<ValidatedSyntaxBundle<'a>>>,
 }
 impl<'a> ValidatedForeignGroup<'a> {
     pub fn value(&self) -> &'a ForeignClosureGroup {
         self.value
+    }
+    /// A retained guest proof from this exact group validation, available only
+    /// after every owner and entry check succeeds. This does not replace a
+    /// receiving operation's validation under its own registry and budget.
+    pub fn bundle(&self, number: usize) -> Option<&ValidatedSyntaxBundle<'a>> {
+        self.bundles.as_ref()?.get(number)
     }
     /// Borrow a guest's explicit components without materializing owner tables.
     /// This view itself is not a transferable validation proof.
@@ -129,7 +136,7 @@ impl ForeignClosureGroup {
         b: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<ValidatedForeignGroup<'a>, GroupError> {
-        self.validate_inner(None, registry, b, admission)
+        self.validate_inner(None, false, registry, b, admission)
     }
     /// One depth per stored entry: the maximum across every checked semantic
     /// occurrence referring to that entry, relative to the current caller.
@@ -142,11 +149,23 @@ impl ForeignClosureGroup {
         b: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<ValidatedForeignGroup<'a>, GroupError> {
-        self.validate_inner(Some(depths), registry, b, admission)
+        self.validate_inner(Some(depths), false, registry, b, admission)
+    }
+    /// Opt-in operation-local guest proof retention. All ordinary validation
+    /// checks and per-component depths remain mandatory; retained storage is metered.
+    pub fn validate_retaining_bundles_at_depths<'a>(
+        &'a self,
+        depths: &[u64],
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<ValidatedForeignGroup<'a>, GroupError> {
+        self.validate_inner(Some(depths), true, registry, b, admission)
     }
     fn validate_inner<'a>(
         &'a self,
         depths: Option<&[u64]>,
+        retain: bool,
         registry: &SchemaRegistry,
         b: &mut Budget,
         admission: &mut SourceAdmission,
@@ -157,6 +176,18 @@ impl ForeignClosureGroup {
         }
         if depths.is_some_and(|depths| depths.len() != self.entries.len()) {
             return Err(GroupError::DepthCount);
+        }
+        let mut bundles = Vec::new();
+        if retain {
+            let bytes = self
+                .entries
+                .len()
+                .checked_mul(core::mem::size_of::<ValidatedSyntaxBundle<'_>>())
+                .ok_or_else(|| b.stop(StopReason::AllocationLimit))?;
+            b.charge(Resource::AllocationUnits, bytes as u64)?;
+            bundles
+                .try_reserve_exact(self.entries.len())
+                .map_err(|_| b.stop(StopReason::AllocationLimit))?;
         }
         let mut provenance_depth = scratch(self.provenances.len(), None::<u64>, b)?;
         let mut environment_depth = scratch(self.environments.len(), None::<u64>, b)?;
@@ -204,10 +235,12 @@ impl ForeignClosureGroup {
             let absolute = base
                 .checked_add(depth)
                 .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
-            b.with_depth_at_least::<_, GroupError>(absolute, |b| {
-                validate_syntax(&entry.syntax, registry, b, admission)?;
-                Ok(())
+            let proof = b.with_depth_at_least::<_, GroupError>(absolute, |b| {
+                Ok(validate_syntax(&entry.syntax, registry, b, admission)?)
             })?;
+            if retain {
+                bundles.push(proof);
+            }
         }
         for (number, (provenance, depth)) in
             self.provenances.iter().zip(provenance_depth).enumerate()
@@ -250,6 +283,9 @@ impl ForeignClosureGroup {
             })?;
         }
         b.poll()?;
-        Ok(ValidatedForeignGroup { value: self })
+        Ok(ValidatedForeignGroup {
+            value: self,
+            bundles: retain.then_some(bundles),
+        })
     }
 }

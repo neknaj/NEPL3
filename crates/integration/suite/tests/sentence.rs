@@ -518,3 +518,6 @@ fn doc_bridge_preserves_generated_shared_inline_and_rejects_unselected_foreign()
     ));
     Ok(())
 }
+
+#[path = "sentence/retained.rs"]
+mod retained;
