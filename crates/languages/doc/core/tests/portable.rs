@@ -526,3 +526,6 @@ fn additional_views_reuse_the_same_source_closure() -> Result<(), String> {
     );
     Ok(())
 }
+
+#[path = "portable/sources.rs"]
+mod sources;

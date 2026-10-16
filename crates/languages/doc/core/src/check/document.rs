@@ -99,6 +99,33 @@ impl DocumentSyntax {
         b: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<ValidatedDocumentSyntax<'a>, StructureError> {
+        self.validate_structure_with_sources(registry, b, admission)
+            .map(|(structure, _)| structure)
+    }
+
+    // Operation-local source index produced by the full structure check. The
+    // portable adapter consumes this exact index without reconstructing it.
+    // No validation proof is accepted from another document or budget.
+    pub(crate) fn validate_structure_with_sources<'a>(
+        &'a self,
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<(ValidatedDocumentSyntax<'a>, SourceStore), StructureError> {
+        let pending = self.prepare_structure(registry, b, admission)?;
+        self.value
+            .embeds
+            .group
+            .validate_at_depths(&pending.depths, registry, b, admission)?;
+        Ok(pending.finish())
+    }
+
+    pub(crate) fn prepare_structure<'a>(
+        &'a self,
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<PreparedStructure<'a>, StructureError> {
         b.poll()?;
         if !registry.is_finalized() {
             return Err(SyntaxError::from(nepl3_core::schema::SchemaError::Unfinalized).into());
@@ -250,13 +277,31 @@ impl DocumentSyntax {
                 embeds[e as usize] = embeds[e as usize].max(depths[*node]);
             }
         }
-        self.value
-            .embeds
-            .group
-            .validate_at_depths(&embeds, registry, b, admission)?;
-        Ok(ValidatedDocumentSyntax {
+        Ok(PreparedStructure {
             document: self,
             shape,
+            store,
+            depths: embeds,
         })
+    }
+}
+
+// Private preparation is not a validation proof. Only the full check above or
+// portable encoding after successful fused group validation may finish it.
+pub(crate) struct PreparedStructure<'a> {
+    document: &'a DocumentSyntax,
+    shape: ValidatedDocShape<'a>,
+    store: SourceStore,
+    pub(crate) depths: alloc::vec::Vec<u64>,
+}
+impl<'a> PreparedStructure<'a> {
+    pub(crate) fn finish(self) -> (ValidatedDocumentSyntax<'a>, SourceStore) {
+        (
+            ValidatedDocumentSyntax {
+                document: self.document,
+                shape: self.shape,
+            },
+            self.store,
+        )
     }
 }

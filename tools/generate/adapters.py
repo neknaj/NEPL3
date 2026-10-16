@@ -6,7 +6,7 @@ generated Value calls delegate field codecs to the existing native types.
 """
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from types import MappingProxyType
@@ -38,6 +38,7 @@ class Options:
     rename: Mapping[str, str]
     tuple_case: Callable[[str, str], bool]
     codec: Codec = Codec.LOCAL
+    record_sidecars: Mapping[str, str] = field(default_factory=dict[str, str])
 
 
 def field_names(value: JsonValue) -> tuple[str, ...]:
@@ -73,12 +74,34 @@ def render(types: Mapping[str, Shape], header: str, options: Options) -> str:
     parameters = "s:&SchemaRef,r:&SchemaRegistry," if registry else "s:&SchemaRef,"
     arguments = "s,r,c,b" if registry else "s,c,b"
     rename = options.rename
+    for name, member in options.record_sidecars.items():
+        shape = types.get(name)
+        if (not isinstance(shape, Record) or member not in shape.fields
+                or (name.endswith("Ref") and name != "AssetRef")):
+            raise ValueError(f"sidecar requires a declared record field on a named-field struct: {name}.{member}")
     for name, shape in types.items():
+        sidecar = options.record_sidecars.get(name)
+        if sidecar is not None and isinstance(shape, Record):
+            method = "put_with_" + rename.get(sidecar, sidecar)
+            out.extend([f"impl {name} {{",
+                        f"pub(crate) fn {method}<C:FoundationValueCodec,T>(&self," + parameters
+                        + "c:&mut C,b:&mut Budget,encode:impl FnOnce(&mut C,&mut Budget)->Result<(NdfValue,T),PortableError<C::Error>>)->Result<(NdfValue,T),PortableError<C::Error>> {"])
+            for index, member in enumerate(shape.fields):
+                expr = "self." + rename.get(member, member)
+                if member == sidecar:
+                    out.append(f"let (f{index},sidecar)=encode(c,b)?;")
+                else:
+                    out.append(f"let f{index}={expr}.put({arguments})?;")
+            values = ",".join(f"f{index}" for index in range(len(shape.fields)))
+            out.extend([f'let value=record(s,"{name}",[{values}],b)?;', "Ok((value,sidecar))", "}", "}"])
         out.append(f"impl Value for {name} {{")
         codec_name = "_c" if isinstance(shape, Variant) and not any(shape.cases.values()) else "c"
         out.append("fn put<C:FoundationValueCodec>(&self," + parameters + codec_name
                    + ":&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {")
-        if isinstance(shape, Record):
+        if sidecar is not None:
+            member = rename.get(sidecar, sidecar)
+            out.append(f"self.put_with_{member}({arguments},|c,b|self.{member}.put({arguments}).map(|v|(v,()))).map(|(v,_)|v)")
+        elif isinstance(shape, Record):
             exprs = [("self.0" if name.endswith("Ref") and name != "AssetRef" else "self." + rename.get(field, field))
                      + f".put({arguments})?" for field in shape.fields]
             out.append(f'record(s,"{name}",[{",".join(exprs)}],b)')

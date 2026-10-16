@@ -1,4 +1,5 @@
 //! Immutable UTF-8 snapshots, checked byte spans and editor position adapters.
+pub mod archive;
 mod edit;
 mod guard;
 #[cfg(test)]

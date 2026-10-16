@@ -73,6 +73,16 @@ impl<'a> Closure<'a> {
         b.charge(Resource::AllocationUnits, maps.len() as u64)?;
         b.charge(Resource::Work, maps.len() as u64)?;
         let mut keep = vec![false; maps.len()];
+        // Before traversal begins, ranges is the exact union of all seed
+        // ranges. Intermediate versions left in pending add no reachability.
+        // Reuse its already charged storage, avoiding repeated full map scans.
+        if !maps.is_empty() && self.pending.len() > self.ranges.len() {
+            b.charge(Resource::Work, self.ranges.len() as u64)?;
+            self.pending.clear();
+            // add() appends to pending whenever it appends to ranges, and only
+            // removes from ranges. Thus pending's capacity already suffices.
+            self.pending.extend_from_slice(&self.ranges);
+        }
         while let Some(range) = self.pending.pop() {
             for (index, mapping) in maps.iter().enumerate() {
                 b.charge(Resource::Work, 1)?;

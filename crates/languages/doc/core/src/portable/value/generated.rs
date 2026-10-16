@@ -339,9 +339,18 @@ let f=fields(v,s,"DocNode",4)?;
 Ok(Self {kind:Value::read(&f[0],s,c,b)?,origin:Value::read(&f[1],s,c,b)?,span:Value::read(&f[2],s,c,b)?,locations:Value::read(&f[3],s,c,b)?})
 }
 }
+impl DocValue {
+pub(crate) fn put_with_embeds<C:FoundationValueCodec,T>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget,encode:impl FnOnce(&mut C,&mut Budget)->Result<(NdfValue,T),PortableError<C::Error>>)->Result<(NdfValue,T),PortableError<C::Error>> {
+let f0=self.root.put(s,c,b)?;
+let f1=self.nodes.put(s,c,b)?;
+let (f2,sidecar)=encode(c,b)?;
+let value=record(s,"DocValue",[f0,f1,f2],b)?;
+Ok((value,sidecar))
+}
+}
 impl Value for DocValue {
 fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
-record(s,"DocValue",[self.root.put(s,c,b)?,self.nodes.put(s,c,b)?,self.embeds.put(s,c,b)?],b)
+self.put_with_embeds(s,c,b,|c,b|self.embeds.put(s,c,b).map(|v|(v,()))).map(|(v,_)|v)
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
 b.charge(Resource::Work,40)?;
@@ -931,9 +940,17 @@ match (tag,f.len()) {
 _=>Err(PortableError::Shape),}
 }
 }
+impl DocEmbeds {
+pub(crate) fn put_with_group<C:FoundationValueCodec,T>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget,encode:impl FnOnce(&mut C,&mut Budget)->Result<(NdfValue,T),PortableError<C::Error>>)->Result<(NdfValue,T),PortableError<C::Error>> {
+let f0=self.kinds.put(s,c,b)?;
+let (f1,sidecar)=encode(c,b)?;
+let value=record(s,"DocEmbeds",[f0,f1],b)?;
+Ok((value,sidecar))
+}
+}
 impl Value for DocEmbeds {
 fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
-record(s,"DocEmbeds",[self.kinds.put(s,c,b)?,self.group.put(s,c,b)?],b)
+self.put_with_group(s,c,b,|c,b|self.group.put(s,c,b).map(|v|(v,()))).map(|(v,_)|v)
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
 b.charge(Resource::Work,41)?;

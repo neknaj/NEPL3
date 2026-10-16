@@ -1,6 +1,6 @@
 //! First reception validates the explicit document closure. A raw printed guest
 //! is host data, not a newly minted syntax/meaning correspondence proof.
-use super::text::{check_type, sources};
+use super::text::check_type;
 use super::*;
 use crate::print::{PrintIdentity, PrintOutcome, PrintReply, PrintRequest};
 
@@ -78,8 +78,7 @@ pub fn reply_to_value<C: FoundationValueCodec>(
 ) -> Result<NdfValue, PortableError<C::Error>> {
     b.poll()?;
     tag(reply)?;
-    document.validate_structure(r, b, c.source_admission())?;
-    let store = sources(document, b)?;
+    let (_, store) = document.validate_structure_with_sources(r, b, c.source_admission())?;
     let mut scoped = c.scoped(&store);
     let out = reply.put(schema(r)?, &mut scoped, b)?;
     check_type(&out, "PrintReply", r, b)?;
@@ -93,8 +92,7 @@ pub fn reply_from_value<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<PrintReply, PortableError<C::Error>> {
     check_type(input, "PrintReply", r, b)?;
-    document.validate_structure(r, b, c.source_admission())?;
-    let store = sources(document, b)?;
+    let (_, store) = document.validate_structure_with_sources(r, b, c.source_admission())?;
     let mut scoped = c.scoped(&store);
     let reply = Value::read(input, schema(r)?, &mut scoped, b)?;
     tag(&reply)?;

@@ -4,7 +4,7 @@ use super::annotations::{RenderedAnnotation, SentenceAnnotationRenderer};
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::SchemaRegistry,
-    syntax::{ForeignClosure, ForeignClosureView, SyntaxError},
+    syntax::{ForeignClosure, ForeignClosureView, SyntaxError, group::ForeignGroupValidation},
     value::SchemaRef,
     value_codec::FoundationValueCodec,
 };
@@ -169,7 +169,7 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
             let checked = document
                 .validate_structure(self.registry, b, self.codec.source_admission())
                 .map_err(Error::Document)?;
-            self.render_validated_node(&checked, node, b)
+            self.render_validated_node(&checked, node, None, b)
         })();
         b.poll()?;
         result
@@ -181,6 +181,7 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
         &mut self,
         checked: &nepl3_doc_core::check::ValidatedDocumentSyntax<'_>,
         node: u64,
+        shared: Option<&mut ForeignGroupValidation<'_, '_>>,
         b: &mut Budget,
     ) -> Result<RenderedMath, Error<C::Error>> {
         b.poll()?;
@@ -202,7 +203,18 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
                 .embeds
                 .get(embed.0 as usize)
                 .ok_or(Error::Node(node))?;
-            self.render_view(&guest.closure, display, b)
+            if let Some(shared) = shared {
+                if !core::ptr::eq(shared.group(), &document.value.embeds.group)
+                    || !shared.uses_registry(self.registry)
+                {
+                    return Err(Error::Selection);
+                }
+                b.with_depth(|b| {
+                    self.expression(&guest.closure, display, Some((shared, embed.0 as usize)), b)
+                })
+            } else {
+                self.render_view(&guest.closure, display, b)
+            }
         })();
         b.poll()?;
         result
@@ -223,7 +235,7 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
         display: Display,
         b: &mut Budget,
     ) -> Result<RenderedMath, Error<C::Error>> {
-        let result = b.with_depth(|b| self.expression(guest, display, b));
+        let result = b.with_depth(|b| self.expression(guest, display, None, b));
         b.poll()?;
         result
     }
@@ -231,6 +243,7 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
         &mut self,
         guest: &ForeignClosureView<'_>,
         display: Display,
+        shared: Option<(&mut ForeignGroupValidation<'_, '_>, usize)>,
         b: &mut Budget,
     ) -> Result<RenderedMath, Error<C::Error>> {
         b.charge(
@@ -243,9 +256,11 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
         if &guest.syntax().schema != self.math_surface || guest.syntax().category != "Expr" {
             return Err(Error::Selection);
         }
-        let input = guest
-            .validate_with_bundle(self.registry, b, self.codec.source_admission())
-            .map_err(Error::Syntax)?;
+        let input = match shared {
+            Some((shared, index)) => shared.validate_entry(index, b, self.codec.source_admission()),
+            None => guest.validate_with_bundle(self.registry, b, self.codec.source_admission()),
+        }
+        .map_err(Error::Syntax)?;
         let syntax = lower::expression(
             &input,
             self.math_surface,

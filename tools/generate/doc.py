@@ -42,6 +42,7 @@ def generate() -> str:
         MappingProxyType({"languageHint": "language_hint", "sourceMaps": "source_maps",
                           "documentDigest": "document_digest", "guestDigest": "guest_digest"}),
         tuple_case,
+        record_sidecars=MappingProxyType({"DocValue": "embeds", "DocEmbeds": "group"}),
     )
     return adapters.generate(ROOT, "doc", "doc", options)
 

@@ -28,32 +28,32 @@ fn source() -> Result<SourceSnapshot, SourceError> {
 fn canonical_order_preserves_all_fields_and_rejects_duplicate_identity() -> Result<(), WireError> {
     let source = source()?;
     let references = [
-        SourceRef {
-            source_id: SourceId("b".into()),
+        SnapshotId {
+            source: SourceId("b".into()),
             revision: 0,
             digest: Digest([0; 32]),
         },
-        SourceRef {
-            source_id: SourceId("a".into()),
+        SnapshotId {
+            source: SourceId("a".into()),
             revision: 2,
             digest: Digest([1; 32]),
         },
-        SourceRef {
-            source_id: SourceId("a".into()),
+        SnapshotId {
+            source: SourceId("a".into()),
             revision: 1,
             digest: Digest([2; 32]),
         },
     ];
-    let mut entries: Vec<_> = references.iter().cloned().map(|r| (r, &source)).collect();
+    let mut entries: Vec<_> = references.iter().map(|r| (r, &source)).collect();
     sort(&mut entries, &mut budget())?;
     assert_eq!(
-        entries.iter().map(|entry| &entry.0).collect::<Vec<_>>(),
+        entries.iter().map(|entry| entry.0).collect::<Vec<_>>(),
         [&references[2], &references[1], &references[0]]
     );
     for digest in [Digest([2; 32]), Digest([3; 32])] {
         let mut duplicate = references[2].clone();
         duplicate.digest = digest;
-        let mut entries = [(duplicate, &source), (references[2].clone(), &source)];
+        let mut entries = [(&duplicate, &source), (&references[2], &source)];
         assert!(matches!(
             sort(&mut entries, &mut budget()),
             Err(WireError::Source(SourceError::IdentityConflict))
@@ -63,10 +63,10 @@ fn canonical_order_preserves_all_fields_and_rejects_duplicate_identity() -> Resu
         let mut duplicate = references[2].clone();
         duplicate.digest = digest;
         let mut entries = [
-            (references[0].clone(), &source),
-            (references[2].clone(), &source),
-            (references[1].clone(), &source),
-            (duplicate, &source),
+            (&references[0], &source),
+            (&references[2], &source),
+            (&references[1], &source),
+            (&duplicate, &source),
         ];
         assert!(matches!(
             sort(&mut entries, &mut budget()),
@@ -87,8 +87,8 @@ fn source_order_scales_with_count_and_identifier_length_and_stops() -> Result<()
                 let mut input: Vec<_> = (0..count)
                     .map(|id| {
                         (
-                            SourceRef {
-                                source_id: SourceId(format!("{}-{id:06}", "x".repeat(prefix))),
+                            SnapshotId {
+                                source: SourceId(format!("{}-{id:06}", "x".repeat(prefix))),
                                 revision: 0,
                                 digest: Digest([0; 32]),
                             },
@@ -101,7 +101,7 @@ fn source_order_scales_with_count_and_identifier_length_and_stops() -> Result<()
                 } else if layout == 2 {
                     input.rotate_left(count / 3);
                 }
-                let mut entries = input.clone();
+                let mut entries: Vec<_> = input.iter().map(|(id, source)| (id, *source)).collect();
                 let mut measured = budget();
                 sort(&mut entries, &mut measured)?;
                 let work = measured.usage().work;
@@ -118,13 +118,11 @@ fn source_order_scales_with_count_and_identifier_length_and_stops() -> Result<()
                 }
                 previous = Some(work);
                 for (id, entry) in entries.iter().enumerate() {
-                    assert_eq!(
-                        entry.0.source_id.0,
-                        format!("{}-{id:06}", "x".repeat(prefix))
-                    );
+                    assert_eq!(entry.0.source.0, format!("{}-{id:06}", "x".repeat(prefix)));
                 }
                 for limit in [work, work - 1] {
-                    let mut entries = input.clone();
+                    let mut entries: Vec<_> =
+                        input.iter().map(|(id, source)| (id, *source)).collect();
                     let mut limited = Budget::new(Limits {
                         work: limit,
                         ..Limits::default()
@@ -156,18 +154,22 @@ fn source_order_scales_with_count_and_identifier_length_and_stops() -> Result<()
 fn empty_singleton_and_odd_unicode_source_sets_are_canonical() -> Result<(), WireError> {
     let source = source()?;
     for names in [&[][..], &["界"][..], &["😀", "界", "a", "あ", "z"][..]] {
-        let mut entries: Vec<_> = names
+        let identities: Vec<_> = names
             .iter()
             .map(|name| {
                 (
-                    SourceRef {
-                        source_id: SourceId((*name).into()),
+                    SnapshotId {
+                        source: SourceId((*name).into()),
                         revision: 1,
                         digest: Digest([0; 32]),
                     },
                     &source,
                 )
             })
+            .collect();
+        let mut entries: Vec<_> = identities
+            .iter()
+            .map(|(id, source)| (id, *source))
             .collect();
         let mut cancelled = budget();
         cancelled.stop(StopReason::Cancelled);
@@ -184,7 +186,7 @@ fn empty_singleton_and_odd_unicode_source_sets_are_canonical() -> Result<(), Wir
         assert_eq!(
             entries
                 .iter()
-                .map(|entry| entry.0.source_id.0.as_str())
+                .map(|entry| entry.0.source.0.as_str())
                 .collect::<Vec<_>>(),
             expected
         );
