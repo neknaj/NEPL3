@@ -14,6 +14,25 @@ use nepl3_core::{
     value_codec::{CanonicalDigestInput, FoundationCodecError, FoundationValueCodec},
 };
 
+pub mod archive;
+/// Explicit identity contract selected by the resolver, never inferred from bytes.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PageIdentityProfile {
+    LegacyV1,
+    ArchiveV1,
+}
+impl PageIdentityProfile {
+    fn domains(self) -> (&'static [u8], &'static [u8], &'static [u8]) {
+        match self {
+            Self::LegacyV1 => (SET_DOMAIN, prepare::DOCUMENT_DOMAIN, prepare::GUEST_DOMAIN),
+            Self::ArchiveV1 => (
+                archive::SET_DOMAIN,
+                archive::DOCUMENT_DOMAIN,
+                archive::GUEST_DOMAIN,
+            ),
+        }
+    }
+}
 pub const SET_DOMAIN: &[u8] = b"NEPL3.Doc.Pages.v1\0";
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PageRegistration {
@@ -134,6 +153,7 @@ impl From<StopReason> for PageProjectionError {
 }
 
 pub struct CheckedPages<'a> {
+    profile: PageIdentityProfile,
     set: &'a PageSet,
     plan: PageLinkPlan,
     document_digests: Vec<Digest>,
@@ -142,6 +162,10 @@ pub struct CheckedPages<'a> {
     structures: Vec<crate::check::ValidatedDocumentSyntax<'a>>,
 }
 impl<'a> CheckedPages<'a> {
+    /// Identity domains for plan and document digests; transport alone is not proof.
+    pub fn identity_profile(&self) -> PageIdentityProfile {
+        self.profile
+    }
     /// Project a sentence without supplying any external guest resolutions.
     /// Reuse this operation's immutable admission under its cumulative Budget.
     /// Bounds are checked; equality cannot establish paid-usage identity.
@@ -352,6 +376,32 @@ pub fn resolve<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<CheckedPages<'a>, PageError<'a, C::Error>> {
+    resolve_using(
+        set,
+        registry,
+        c,
+        b,
+        PageIdentityProfile::LegacyV1,
+        portable::pages::set_to_value_with_components,
+    )
+}
+fn resolve_using<'a, C: FoundationValueCodec>(
+    set: &'a PageSet,
+    registry: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+    profile: PageIdentityProfile,
+    encode: impl FnOnce(
+        &'a PageSet,
+        &SchemaRegistry,
+        &mut C,
+        &mut Budget,
+    ) -> Result<
+        portable::pages::PageSetEncoding<'a>,
+        portable::PortableError<C::Error>,
+    >,
+) -> Result<CheckedPages<'a>, PageError<'a, C::Error>> {
+    let (set_domain, document_domain, guest_domain) = profile.domains();
     let limits = b.limits();
     let depth = b.current_depth();
     registrations(set, b)?;
@@ -359,12 +409,12 @@ pub fn resolve<'a, C: FoundationValueCodec>(
         value,
         structures,
         components,
-    } = portable::pages::set_to_value_with_components(set, registry, c, b)?;
+    } = encode(set, registry, c, b)?;
     let mut digest_inputs = Vec::new();
     push(
         &mut digest_inputs,
         CanonicalDigestInput {
-            domain: SET_DOMAIN,
+            domain: set_domain,
             value: &value,
         },
         b,
@@ -374,7 +424,7 @@ pub fn resolve<'a, C: FoundationValueCodec>(
         push(
             &mut digest_inputs,
             CanonicalDigestInput {
-                domain: prepare::DOCUMENT_DOMAIN,
+                domain: document_domain,
                 value: document,
             },
             b,
@@ -412,9 +462,8 @@ pub fn resolve<'a, C: FoundationValueCodec>(
         let page_components = components
             .get(page)
             .ok_or(PageError::Boundary(portable::PortableError::Shape))?;
-        let guest_digests =
-            crate::identity::wrap_components(page_components, prepare::GUEST_DOMAIN, c, b)
-                .map_err(PageError::Boundary)?;
+        let guest_digests = crate::identity::wrap_components(page_components, guest_domain, c, b)
+            .map_err(PageError::Boundary)?;
         let requirements =
             prepare::requirements(&labels, &guest_digests, c, b).map_err(|error| match error {
                 PreparationError::Stopped(s) => PageError::Stopped(s),
@@ -551,6 +600,7 @@ pub fn resolve<'a, C: FoundationValueCodec>(
         return Err(PageError::Boundary(portable::PortableError::Shape));
     }
     Ok(CheckedPages {
+        profile,
         structures,
         limits,
         depth,

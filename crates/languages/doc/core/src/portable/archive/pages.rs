@@ -102,3 +102,39 @@ pub fn from_value<C: FoundationGroupArchiveCodec>(
     b.poll()?;
     Ok(PageSet { pages, files })
 }
+
+use crate::pages::PageLinkPlan;
+pub fn plan_to_value<'a, C: FoundationGroupArchiveCodec>(
+    plan: &PageLinkPlan,
+    set: &'a PageSet,
+    r: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<NdfValue, crate::pages::PageError<'a, C::Error>> {
+    let checked = crate::pages::archive::resolve(set, r, c, b)?;
+    let actual = checked.plan().put(crate::portable::schema(r)?, c, b)?;
+    let supplied = plan.put(crate::portable::schema(r)?, c, b)?;
+    let left = c
+        .canonical_value_digest(b"NEPL3.Doc.Archive.PagePlan.v1\0", &actual, b)
+        .map_err(boundary)?;
+    let right = c
+        .canonical_value_digest(b"NEPL3.Doc.Archive.PagePlan.v1\0", &supplied, b)
+        .map_err(boundary)?;
+    if left != right {
+        return Err(PortableError::Shape.into());
+    }
+    text::check_type(&supplied, "PageLinkPlan", r, b)?;
+    Ok(supplied)
+}
+pub fn plan_from_value<'a, C: FoundationGroupArchiveCodec>(
+    input: &NdfValue,
+    set: &'a PageSet,
+    r: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<PageLinkPlan, crate::pages::PageError<'a, C::Error>> {
+    text::check_type(input, "PageLinkPlan", r, b)?;
+    let plan = PageLinkPlan::read(input, crate::portable::schema(r)?, c, b)?;
+    plan_to_value(&plan, set, r, c, b)?;
+    Ok(plan)
+}
