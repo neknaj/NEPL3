@@ -45,3 +45,5 @@ pub fn descriptor(b: &mut Budget) -> Result<SchemaDescriptor, SchemaError> {
         }],
     })
 }
+
+pub mod pages;
