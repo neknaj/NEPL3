@@ -52,8 +52,25 @@ pub fn to_value<C: FoundationGroupArchiveCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<DocumentArchiveEncoding, PortableError<C::Error>> {
+    to_value_with_structure(document, r, c, b).map(|(encoding, _)| encoding)
+}
+
+/// Retain the native operation-local structure proof for consuming page routes.
+/// The public archive transport remains data and carries no reusable proof.
+pub(crate) fn to_value_with_structure<'a, C: FoundationGroupArchiveCodec>(
+    document: &'a DocumentSyntax,
+    r: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<
+    (
+        DocumentArchiveEncoding,
+        crate::check::ValidatedDocumentSyntax<'a>,
+    ),
+    PortableError<C::Error>,
+> {
     let mut group_archive = None;
-    let (skeleton, _) = encode_structure_using_group(document, r, c, b, |c, depths, b| {
+    let (skeleton, structure) = encode_structure_using_group(document, r, c, b, |c, depths, b| {
         let encoded = c
             .encode_compact_group_at_depths(&document.value.embeds.group, depths, r, b)
             .map_err(|error| match error {
@@ -88,10 +105,13 @@ pub fn to_value<C: FoundationGroupArchiveCodec>(
     )?;
     check_archive(&value, r, b)?;
     b.poll()?;
-    Ok(DocumentArchiveEncoding {
-        value,
-        guest_components: group_archive.entry_digests,
-    })
+    Ok((
+        DocumentArchiveEncoding {
+            value,
+            guest_components: group_archive.entry_digests,
+        },
+        structure,
+    ))
 }
 /// Decode only this explicit archive envelope. Restore the group without expanding
 /// it back into v1 NDF, retain each declaration scope, then check consuming Doc depths.
@@ -148,3 +168,5 @@ pub fn from_value<C: FoundationGroupArchiveCodec>(
     b.poll()?;
     Ok(output)
 }
+
+pub mod pages;

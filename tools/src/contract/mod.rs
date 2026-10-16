@@ -285,6 +285,10 @@ mod tests {
             "interfaces/doc-archive.json",
             include_str!("../../../interfaces/doc-archive.json"),
         )?;
+        files.write(
+            "interfaces/doc-pages-archive.json",
+            include_str!("../../../interfaces/doc-pages-archive.json"),
+        )?;
         files.write("doc/spec/test.md", "fixture")?;
         files.json("conformance/cases.json", &json!({"cases":[]}))?;
         Ok(files)

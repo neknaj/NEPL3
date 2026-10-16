@@ -1,0 +1,61 @@
+{
+  "package": "nepl3.doc-pages-archive",
+  "revision": 1,
+  "types": {
+    "ArchivedPage": {
+      "constraints": [],
+      "record": [
+        [
+          "registration",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "PageRegistration"
+            }
+          }
+        ],
+        [
+          "document",
+          {
+            "named": {
+              "package": "nepl3.doc-archive",
+              "revision": 1,
+              "name": "DocumentArchive"
+            }
+          }
+        ]
+      ]
+    },
+    "PageSetArchive": {
+      "constraints": [],
+      "record": [
+        [
+          "pages",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc-pages-archive",
+                "revision": 1,
+                "name": "ArchivedPage"
+              }
+            }
+          }
+        ],
+        [
+          "files",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "PageFile"
+              }
+            }
+          }
+        ]
+      ]
+    }
+  },
+  "operations": {}
+}

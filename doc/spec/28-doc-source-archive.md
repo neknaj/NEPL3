@@ -67,3 +67,5 @@ mismatch, empty groups, nonempty placeholders, source conflicts, deepest shared
 occurrence, provider cardinality, cancellation and exact/one-short budgets are
 transport acceptance requirements. This milestone does not select a compact
 PageSet/preparation/rendering route or establish real-data generation under 4B Work.
+
+Page-set structural transport is specified separately in [Doc PageSet archive](29-doc-pages-source-archive.md).
