@@ -80,6 +80,21 @@ pub(super) fn syntax_value(
     admission: &mut SourceAdmission,
     b: &mut Budget,
 ) -> Result<NdfValue, WireError> {
+    syntax_value_with_sources(syntax, schema, registry, admission, b, &mut sources_value)
+}
+pub(super) fn syntax_value_with_sources(
+    syntax: &ForeignSyntax,
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+    source_value: &mut impl FnMut(
+        &[nepl3_core::source::SourceSnapshot],
+        &SchemaRef,
+        &mut SourceAdmission,
+        &mut Budget,
+    ) -> Result<NdfValue, WireError>,
+) -> Result<NdfValue, WireError> {
     record(
         schema,
         "ForeignSyntax",
@@ -87,7 +102,14 @@ pub(super) fn syntax_value(
             schema_value(&syntax.schema, schema, b)?,
             text(&syntax.category, b)?,
             id_value(0, "NodeRef", schema, b)?,
-            bundle_value(&syntax.bundle, schema, registry, admission, b)?,
+            bundle_value_with_sources(
+                &syntax.bundle,
+                schema,
+                registry,
+                admission,
+                b,
+                source_value,
+            )?,
             environment_ref_value(&syntax.environment, schema, b)?,
         ],
         b,
@@ -100,12 +122,34 @@ pub(super) fn syntax_from(
     admission: &mut SourceAdmission,
     b: &mut Budget,
 ) -> Result<ForeignSyntax, WireError> {
+    syntax_from_with_sources(value, schema, registry, admission, b, &mut |v, s, a, b| {
+        let snapshots = sources_from(v, s, a, b)?;
+        let local = store(&snapshots, b)?;
+        Ok((snapshots, local))
+    })
+}
+pub(super) fn syntax_from_with_sources(
+    value: &NdfValue,
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+    source_from: &mut impl FnMut(
+        &NdfValue,
+        &SchemaRef,
+        &mut SourceAdmission,
+        &mut Budget,
+    ) -> Result<
+        (Vec<nepl3_core::source::SourceSnapshot>, SourceStore),
+        WireError,
+    >,
+) -> Result<ForeignSyntax, WireError> {
     let f = fields(value, schema, "ForeignSyntax", 5)?;
     Ok(ForeignSyntax {
         schema: schema_from(&f[0], schema, b)?,
         category: copied(&f[1], b)?,
         root: NodeRef(id_from(&f[2], "NodeRef", schema)?),
-        bundle: bundle_from(&f[3], schema, registry, admission, b)?,
+        bundle: bundle_from_with_sources(&f[3], schema, registry, admission, b, source_from)?,
         environment: environment_ref_from(&f[4], schema)?,
     })
 }

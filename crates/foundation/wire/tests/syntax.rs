@@ -1,3 +1,5 @@
+#[path = "syntax/archive.rs"]
+mod archive;
 use nepl3_core::{
     budget::{Budget, Limits},
     origin::{Origin, OriginId},
@@ -12,6 +14,8 @@ use nepl3_wire::{WireError, decode, encode, environment::environment_digest, syn
 mod foreign;
 #[path = "syntax/group.rs"]
 mod group;
+#[path = "syntax/order.rs"]
+mod order;
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 fn budget() -> Budget {
     Budget::new(Limits {

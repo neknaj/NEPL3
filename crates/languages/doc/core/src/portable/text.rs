@@ -86,19 +86,6 @@ fn report_tag<E>(reply: &PlainTextReply) -> Result<(), PortableError<E>> {
     }
     Ok(())
 }
-pub(super) fn sources<E>(
-    document: &DocumentSyntax,
-    b: &mut Budget,
-) -> Result<SourceStore, PortableError<E>> {
-    let mut store = SourceStore::default();
-    for source in &document.sources {
-        b.charge(Resource::Work, 1)?;
-        store
-            .insert_with_budget(source.clone_with_budget(b)?, b)
-            .map_err(StructureError::from)?;
-    }
-    Ok(store)
-}
 /// Report positions resolve only within the original request's document.
 pub fn reply_to_value<C: FoundationValueCodec>(
     reply: &PlainTextReply,
@@ -109,8 +96,7 @@ pub fn reply_to_value<C: FoundationValueCodec>(
 ) -> Result<NdfValue, PortableError<C::Error>> {
     b.poll()?;
     report_tag(reply)?;
-    document.validate_structure(r, b, c.source_admission())?;
-    let store = sources(document, b)?;
+    let (_, store) = document.validate_structure_with_sources(r, b, c.source_admission())?;
     let mut scoped = c.scoped(&store);
     let out = reply.put(schema(r)?, &mut scoped, b)?;
     check_type(&out, "PlainTextReply", r, b)?;
@@ -124,8 +110,7 @@ pub fn reply_from_value<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<PlainTextReply, PortableError<C::Error>> {
     check_type(input, "PlainTextReply", r, b)?;
-    document.validate_structure(r, b, c.source_admission())?;
-    let store = sources(document, b)?;
+    let (_, store) = document.validate_structure_with_sources(r, b, c.source_admission())?;
     let mut scoped = c.scoped(&store);
     let reply = Value::read(input, schema(r)?, &mut scoped, b)?;
     report_tag(&reply)?;

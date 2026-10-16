@@ -142,6 +142,28 @@ impl<'a> CheckedShape<'a> {
         b: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<(), Error> {
+        self.validate_foreign_inner(registry, b, admission, false)
+            .map(|_| ())
+    }
+
+    /// Retain exact guest proofs for a caller that consumes this immutable shape
+    /// during the same operation. Empty groups need no retained proof.
+    pub fn validate_foreign_retaining_bundles(
+        &self,
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<Option<nepl3_core::syntax::group::ValidatedForeignGroup<'a>>, Error> {
+        self.validate_foreign_inner(registry, b, admission, true)
+    }
+
+    fn validate_foreign_inner(
+        &self,
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+        retain: bool,
+    ) -> Result<Option<nepl3_core::syntax::group::ValidatedForeignGroup<'a>>, Error> {
         let embeds = self.foreign_depths(b)?;
         // Preserve the receiving-depth gate before inspecting guest schemas.
         for depth in &embeds {
@@ -153,12 +175,18 @@ impl<'a> CheckedShape<'a> {
         // No foreign boundary exists for a truly empty closure. Hidden owner
         // tables are deliberately excluded from this fast path.
         if self.value.embeds.is_empty() {
-            return Ok(());
+            return Ok(None);
         }
-        self.value
-            .embeds
-            .validate_at_depths(&embeds, registry, b, admission)?;
-        Ok(())
+        let proof = if retain {
+            self.value
+                .embeds
+                .validate_retaining_bundles_at_depths(&embeds, registry, b, admission)?
+        } else {
+            self.value
+                .embeds
+                .validate_at_depths(&embeds, registry, b, admission)?
+        };
+        Ok(Some(proof))
     }
 
     /// Deepest owner occurrence for each embed, relative to this Sentence root.

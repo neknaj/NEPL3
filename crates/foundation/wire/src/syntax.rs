@@ -1,4 +1,5 @@
 //! Iterative bundle conversion preserves foreign syntax and token sidecars.
+pub mod archive;
 mod foreign;
 pub mod group;
 mod order;
@@ -88,6 +89,18 @@ enum Encode<'a> {
     Enter(&'a SyntaxBundle, u64),
     Finish(&'a SyntaxBundle, usize),
 }
+
+// A reachable mapping allocates at least one native index, wire index and
+// pending NodeRef per node. Keep tiny bundles on the original path so the
+// separate cache entry cannot increase their logical allocation allowance.
+fn retain_order(bundle: &SyntaxBundle) -> bool {
+    let minimum_per_node = core::mem::size_of::<usize>()
+        + core::mem::size_of::<u64>()
+        + core::mem::size_of::<NodeRef>();
+    bundle.nodes.len().saturating_mul(minimum_per_node)
+        >= core::mem::size_of::<(Vec<usize>, Vec<u64>)>()
+}
+
 pub(crate) fn bundle_value(
     bundle: &SyntaxBundle,
     schema: &SchemaRef,
@@ -95,22 +108,53 @@ pub(crate) fn bundle_value(
     admission: &mut SourceAdmission,
     budget: &mut Budget,
 ) -> Result<NdfValue, WireError> {
+    bundle_value_with_sources(
+        bundle,
+        schema,
+        registry,
+        admission,
+        budget,
+        &mut sources_value,
+    )
+}
+
+pub(crate) fn bundle_value_with_sources(
+    bundle: &SyntaxBundle,
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    budget: &mut Budget,
+    encode_sources: &mut impl FnMut(
+        &[nepl3_core::source::SourceSnapshot],
+        &SchemaRef,
+        &mut SourceAdmission,
+        &mut Budget,
+    ) -> Result<NdfValue, WireError>,
+) -> Result<NdfValue, WireError> {
     let mut pending = Vec::new();
     let mut results = Vec::new();
+    let mut orders = Vec::new();
     push(&mut pending, Encode::Enter(bundle, 1), budget)?;
     while let Some(step) = pending.pop() {
         budget.charge(Resource::Work, 1)?;
         match step {
             Encode::Enter(bundle, depth) => {
                 budget.observe_depth(depth)?;
+                // The bundle is immutably borrowed throughout this traversal.
+                // Retain its admitted canonical order across guest encoding;
+                // recomputing it at Finish cannot change the result.
+                let (indices, mapping) = order(bundle, budget)?;
                 let mut guests = Vec::new();
-                for index in order(bundle, budget)?.0 {
-                    let node = &bundle.nodes[index];
+                for index in &indices {
+                    let node = &bundle.nodes[*index];
                     for field in &node.fields {
                         if let FieldValue::Foreign(guest) = field {
                             push(&mut guests, &guest.bundle, budget)?;
                         }
                     }
+                }
+                if retain_order(bundle) {
+                    push(&mut orders, (indices, mapping), budget)?;
                 }
                 push(&mut pending, Encode::Finish(bundle, guests.len()), budget)?;
                 for guest in guests.into_iter().rev() {
@@ -122,7 +166,14 @@ pub(crate) fn bundle_value(
                 }
             }
             Encode::Finish(bundle, count) => {
-                let (indices, mapping) = order(bundle, budget)?;
+                let (indices, mapping) = if retain_order(bundle) {
+                    // Enter/Finish are nested depth-first. Small bundles neither
+                    // push nor pop this stack; each eligible ancestor keeps its
+                    // immutable mapping until all of its guests have finished.
+                    orders.pop().ok_or(WireError::InvalidType)?
+                } else {
+                    order(bundle, budget)?
+                };
                 let start = results
                     .len()
                     .checked_sub(count)
@@ -202,7 +253,7 @@ pub(crate) fn bundle_value(
                     schema,
                     "SyntaxBundle",
                     [
-                        sources_value(&bundle.sources, schema, admission, budget)?,
+                        encode_sources(&bundle.sources, schema, admission, budget)?,
                         nodes,
                         sequence(&bundle.origins, budget, |origin, b| {
                             origin_value(origin, schema, b)
@@ -224,7 +275,7 @@ pub(crate) fn bundle_value(
             }
         }
     }
-    if results.len() != 1 {
+    if results.len() != 1 || !orders.is_empty() {
         return Err(WireError::InvalidType);
     }
     results.pop().ok_or(WireError::InvalidType)
@@ -240,6 +291,36 @@ pub(crate) fn bundle_from(
     registry: &SchemaRegistry,
     admission: &mut SourceAdmission,
     budget: &mut Budget,
+) -> Result<SyntaxBundle, WireError> {
+    bundle_from_with_sources(
+        value,
+        schema,
+        registry,
+        admission,
+        budget,
+        &mut |value, schema, admission, budget| {
+            let snapshots = sources_from(value, schema, admission, budget)?;
+            let local = store(&snapshots, budget)?;
+            Ok((snapshots, local))
+        },
+    )
+}
+
+pub(crate) fn bundle_from_with_sources(
+    value: &NdfValue,
+    schema: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    budget: &mut Budget,
+    decode_sources: &mut impl FnMut(
+        &NdfValue,
+        &SchemaRef,
+        &mut SourceAdmission,
+        &mut Budget,
+    ) -> Result<
+        (Vec<nepl3_core::source::SourceSnapshot>, SourceStore),
+        WireError,
+    >,
 ) -> Result<SyntaxBundle, WireError> {
     let mut pending = Vec::new();
     let mut results = Vec::new();
@@ -275,8 +356,7 @@ pub(crate) fn bundle_from(
             }
             Decode::Finish(value, count) => {
                 let f = fields(value, schema, "SyntaxBundle", 7)?;
-                let snapshots = sources_from(&f[0], schema, admission, budget)?;
-                let sources = store(&snapshots, budget)?;
+                let (snapshots, sources) = decode_sources(&f[0], schema, admission, budget)?;
                 let start = results
                     .len()
                     .checked_sub(count)

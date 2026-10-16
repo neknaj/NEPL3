@@ -18,6 +18,16 @@ pub(crate) fn guests<C: FoundationValueCodec>(
     if components.len() != group.entries.len() {
         return Err(PortableError::Shape);
     }
+    wrap_components(&components, domain, c, b)
+}
+/// Apply the existing consuming-operation domain to already computed foundation
+/// identities. The caller retains responsibility for the exact group association.
+pub(crate) fn wrap_components<C: FoundationValueCodec>(
+    components: &[Digest],
+    domain: &[u8],
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<Vec<Digest>, PortableError<C::Error>> {
     let bytes = components
         .len()
         .checked_mul(core::mem::size_of::<Digest>())

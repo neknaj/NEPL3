@@ -120,6 +120,23 @@ pub fn to_value<C: FoundationValueCodec>(
     Ok(value)
 }
 
+/// Internal preparation path: unchanged boundary representation plus component
+/// identities computed from its exact embedded group, with no cross-call cache.
+pub(crate) fn to_value_with_guest_components<C: FoundationValueCodec>(
+    document: &DocumentSyntax,
+    registry: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<(NdfValue, alloc::vec::Vec<nepl3_core::source::Digest>), PortableError<C::Error>> {
+    let mut components = alloc::vec::Vec::new();
+    let (value, _) = encode_structure(document, registry, c, b, Some(&mut components))?;
+    check(registry, &value, b)?;
+    if components.len() != document.value.embeds.group.entries.len() {
+        return Err(PortableError::Shape);
+    }
+    Ok((value, components))
+}
+
 // Retain the native immutable proof for the same operation's label traversal.
 // The caller must validate the generated NDF at its output boundary: either
 // DocumentSyntax in to_value, or the enclosing PageSet in pages::set_to_value.
@@ -130,17 +147,46 @@ fn encode_with_structure<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<(NdfValue, crate::check::ValidatedDocumentSyntax<'a>), PortableError<C::Error>> {
-    let structure = document.validate_structure(registry, b, c.source_admission())?;
+    encode_structure(document, registry, c, b, None)
+}
+fn encode_structure<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    registry: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+    components: Option<&mut alloc::vec::Vec<nepl3_core::source::Digest>>,
+) -> Result<(NdfValue, crate::check::ValidatedDocumentSyntax<'a>), PortableError<C::Error>> {
+    let pending = document.prepare_structure(registry, b, c.source_admission())?;
+    let group_result = if let Some(components) = components {
+        c.encode_foreign_group_at_depths_with_entry_digests(
+            &document.value.embeds.group,
+            &pending.depths,
+            registry,
+            b,
+        )
+        .map(|(group, identities)| {
+            *components = identities;
+            group
+        })
+    } else {
+        c.encode_foreign_group_at_depths(&document.value.embeds.group, &pending.depths, registry, b)
+    };
+    let group = group_result.map_err(|error| match error {
+        nepl3_core::value_codec::GroupEncodingError::Structure(error) => {
+            PortableError::from(StructureError::from(error))
+        }
+        nepl3_core::value_codec::GroupEncodingError::Codec(error) => boundary(error),
+    })?;
+    let (structure, store) = pending.finish();
     let s = schema(registry)?;
     let sources = c.encode_sources(&document.sources, b).map_err(boundary)?;
-    let mut store = SourceStore::default();
-    for source in &document.sources {
-        store
-            .insert_with_budget(source.clone_with_budget(b)?, b)
-            .map_err(StructureError::from)?;
-    }
     let mut scoped = c.scoped_with_mappings(&store, &document.source_maps);
-    let value = document.value.put(s, &mut scoped, b)?;
+    let (value, ()) = document.value.put_with_embeds(s, &mut scoped, b, |c, b| {
+        document
+            .value
+            .embeds
+            .put_with_group(s, c, b, |_, _| Ok((group, ())))
+    })?;
     let origins = scoped
         .encode_origins(&document.origins, b)
         .map_err(boundary)?;
