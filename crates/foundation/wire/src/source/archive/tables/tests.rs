@@ -27,8 +27,9 @@ fn fixture() -> Result<(SchemaRef, SchemaRef, Vec<SourceSnapshot>), WireError> {
     }
     Ok((a, f, sources))
 }
-/// Frozen pre-factoring SyntaxArchive collection mechanics; intentionally not
-/// implemented by calling Capture, so lost/moved charges change this comparison.
+/// Independent SyntaxArchive collection oracle, not implemented through Capture.
+/// Both paths use borrowed sorting and explicitly materialize membership references.
+/// This checks callback factoring parity, not pre-borrowing allocation totals.
 fn legacy_capture(
     groups: &[&[SourceSnapshot]],
     a: &SchemaRef,
@@ -46,9 +47,9 @@ fn legacy_capture(
             union.insert_ref_with_budget(source, b)?;
             b.charge(
                 Resource::AllocationUnits,
-                core::mem::size_of::<SourceRef>() as u64,
+                core::mem::size_of::<SourceRef>() as u64 + reference.source.0.len() as u64,
             )?;
-            members.push(reference);
+            members.push(source.reference());
         }
         b.charge(
             Resource::AllocationUnits,
@@ -64,7 +65,7 @@ fn legacy_capture(
     to_value(&sources, &memberships, a, f, admission, b)
 }
 #[test]
-fn capture_preserves_pre_factoring_value_and_all_charges() -> Result<(), WireError> {
+fn capture_matches_independent_collection_value_and_all_charges() -> Result<(), WireError> {
     let (a, f, sources) = fixture()?;
     let groups = [&sources[0..0], &sources[0..1], &sources[1..2], &sources[..]];
     let mut old = budget();

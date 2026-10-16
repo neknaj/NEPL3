@@ -8,8 +8,8 @@ use nepl3_core::{
     budget::{Budget, Resource},
     schema::{SchemaRegistry, TypeDescriptor, TypeRef},
     source::{
-        Digest, SourceAdmission, SourceError, SourceId, SourceRef, SourceSnapshot, SourceStore,
-        Span,
+        Digest, SnapshotId, SourceAdmission, SourceError, SourceId, SourceRef, SourceSnapshot,
+        SourceStore, Span,
     },
     value::{NdfValue, Record, SchemaRef},
 };
@@ -42,8 +42,12 @@ pub(crate) fn record<const N: usize>(
         fields: Vec::from(fields),
     }))
 }
-fn source_ref(
-    reference: &SourceRef,
+// Borrow identity fields through conversion. Only the final NDF representation
+// owns a copied identifier; constructing an intermediate SourceRef is unnecessary.
+fn source_ref_parts(
+    source_id: &SourceId,
+    revision: u64,
+    digest: Digest,
     schema: &SchemaRef,
     budget: &mut Budget,
 ) -> Result<NdfValue, WireError> {
@@ -52,10 +56,23 @@ fn source_ref(
         schema,
         "SourceRef",
         [
-            text(&reference.source_id.0, budget)?,
-            NdfValue::U64(reference.revision),
-            NdfValue::Bytes(reference.digest.0.to_vec()),
+            text(&source_id.0, budget)?,
+            NdfValue::U64(revision),
+            NdfValue::Bytes(digest.0.to_vec()),
         ],
+        budget,
+    )
+}
+fn source_ref(
+    reference: &SourceRef,
+    schema: &SchemaRef,
+    budget: &mut Budget,
+) -> Result<NdfValue, WireError> {
+    source_ref_parts(
+        &reference.source_id,
+        reference.revision,
+        reference.digest,
+        schema,
         budget,
     )
 }
@@ -143,7 +160,13 @@ pub(crate) fn sources_value(
             schema,
             "SourceContent",
             [
-                source_ref(&reference, schema, budget)?,
+                source_ref_parts(
+                    &reference.source,
+                    reference.revision,
+                    reference.digest,
+                    schema,
+                    budget,
+                )?,
                 text(source.uri(), budget)?,
                 text(source.text(), budget)?,
             ],
@@ -233,17 +256,11 @@ pub(crate) fn span_value(
     budget: &mut Budget,
 ) -> Result<NdfValue, WireError> {
     let id = span.snapshot_ref();
-    budget.charge(Resource::AllocationUnits, id.source.0.len() as u64)?;
-    let reference = SourceRef {
-        source_id: id.source.clone(),
-        revision: id.revision,
-        digest: id.digest,
-    };
     record(
         schema,
         "Span",
         [
-            source_ref(&reference, schema, budget)?,
+            source_ref_parts(&id.source, id.revision, id.digest, schema, budget)?,
             NdfValue::U64(span.start()),
             NdfValue::U64(span.end()),
         ],
@@ -283,14 +300,14 @@ pub(crate) fn span_from_value(
 pub(crate) fn ordered_sources<'a>(
     sources: &'a [SourceSnapshot],
     budget: &mut Budget,
-) -> Result<Vec<(SourceRef, &'a SourceSnapshot)>, WireError> {
+) -> Result<Vec<(&'a SnapshotId, &'a SourceSnapshot)>, WireError> {
     ordered_sources_admitting(sources, None, budget)
 }
 fn ordered_sources_admitting<'a>(
     sources: &'a [SourceSnapshot],
     mut admission: Option<&mut SourceAdmission>,
     budget: &mut Budget,
-) -> Result<Vec<(SourceRef, &'a SourceSnapshot)>, WireError> {
+) -> Result<Vec<(&'a SnapshotId, &'a SourceSnapshot)>, WireError> {
     let mut sorted = Vec::new();
     for source in sources {
         if let Some(admission) = admission.as_deref_mut() {
@@ -298,11 +315,12 @@ fn ordered_sources_admitting<'a>(
         }
         budget.charge(
             Resource::AllocationUnits,
-            core::mem::size_of::<(SourceRef, &SourceSnapshot)>() as u64
-                + source.identity().source.0.len() as u64,
+            core::mem::size_of::<(&SnapshotId, &SourceSnapshot)>() as u64,
         )?;
-        sorted.push((source.reference(), source));
+        sorted.push((source.identity(), source));
     }
     order::sort(&mut sorted, budget)?;
     Ok(sorted)
 }
+#[cfg(test)]
+mod tests;

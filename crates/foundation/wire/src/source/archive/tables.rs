@@ -20,9 +20,9 @@ impl Capture {
             self.union.insert_ref_with_budget(source, b)?;
             b.charge(
                 Resource::AllocationUnits,
-                core::mem::size_of::<SourceRef>() as u64,
+                core::mem::size_of::<SourceRef>() as u64 + reference.source.0.len() as u64,
             )?;
-            members.push(reference);
+            members.push(source.reference());
         }
         b.charge(
             Resource::AllocationUnits,
