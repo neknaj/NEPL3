@@ -1,5 +1,6 @@
 //! Typed descriptors, deterministic identities and structural boundary checking.
 //! Domain constraint IDs remain obligations for the domain checker.
+pub mod archive;
 pub mod foundation;
 mod frontier;
 mod lookup;

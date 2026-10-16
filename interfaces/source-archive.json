@@ -1,0 +1,38 @@
+{
+  "package": "nepl3.source-archive",
+  "revision": 1,
+  "types": {
+    "SourceSets": {
+      "constraints": [],
+      "record": [
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceContent"
+              }
+            }
+          }
+        ],
+        [
+          "memberships",
+          {
+            "list": {
+              "list": {
+                "named": {
+                  "package": "nepl3.foundation",
+                  "revision": 1,
+                  "name": "SourceRef"
+                }
+              }
+            }
+          }
+        ]
+      ]
+    }
+  },
+  "operations": {}
+}

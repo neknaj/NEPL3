@@ -1,0 +1,26 @@
+{
+  "package": "nepl3.syntax-archive",
+  "revision": 1,
+  "types": {
+    "SyntaxArchive": {
+      "constraints": [],
+      "record": [
+        [
+          "sources",
+          {
+            "named": {
+              "package": "nepl3.source-archive",
+              "revision": 1,
+              "name": "SourceSets"
+            }
+          }
+        ],
+        [
+          "skeleton",
+          "Bytes"
+        ]
+      ]
+    }
+  },
+  "operations": {}
+}
