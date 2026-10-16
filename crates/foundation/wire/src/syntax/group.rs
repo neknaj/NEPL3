@@ -1,11 +1,54 @@
 //! Closed shared owner tables. Portable decoding recomputes environment digests.
 pub mod archive;
+pub mod compact;
 use super::*;
 pub(crate) mod identity;
 use nepl3_core::syntax::group::{
     ForeignClosureGroup, ForeignGroupEntry, ForeignOwnerEnvironment, ForeignProvenance,
     OwnerEnvironmentRef, ProvenanceRef,
 };
+
+/// Typed component boundaries, never inferred from arbitrary record labels.
+#[derive(Clone, Copy)]
+pub(crate) enum SourceComponent {
+    Provenance,
+    Entry,
+}
+pub(crate) trait GroupSources {
+    fn take(
+        &mut self,
+        sources: &[nepl3_core::source::SourceSnapshot],
+        schema: &SchemaRef,
+        admission: &mut SourceAdmission,
+        b: &mut Budget,
+    ) -> Result<NdfValue, WireError>;
+    fn finish_component(
+        &mut self,
+        _component: SourceComponent,
+        _b: &mut Budget,
+    ) -> Result<(), WireError> {
+        Ok(())
+    }
+}
+impl<F> GroupSources for F
+where
+    F: FnMut(
+        &[nepl3_core::source::SourceSnapshot],
+        &SchemaRef,
+        &mut SourceAdmission,
+        &mut Budget,
+    ) -> Result<NdfValue, WireError>,
+{
+    fn take(
+        &mut self,
+        sources: &[nepl3_core::source::SourceSnapshot],
+        schema: &SchemaRef,
+        admission: &mut SourceAdmission,
+        b: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
+        self(sources, schema, admission, b)
+    }
+}
 
 pub(crate) fn to_value(
     value: &ForeignClosureGroup,
@@ -22,12 +65,7 @@ pub(crate) fn to_value_with_sources(
     registry: &SchemaRegistry,
     admission: &mut SourceAdmission,
     b: &mut Budget,
-    source_value: &mut impl FnMut(
-        &[nepl3_core::source::SourceSnapshot],
-        &SchemaRef,
-        &mut SourceAdmission,
-        &mut Budget,
-    ) -> Result<NdfValue, WireError>,
+    source_value: &mut impl GroupSources,
 ) -> Result<NdfValue, WireError> {
     value.validate(registry, b, admission)?;
     encode_validated(value, schema, registry, admission, b, source_value)
@@ -63,24 +101,21 @@ fn encode_validated(
     registry: &SchemaRegistry,
     admission: &mut SourceAdmission,
     b: &mut Budget,
-    source_value: &mut impl FnMut(
-        &[nepl3_core::source::SourceSnapshot],
-        &SchemaRef,
-        &mut SourceAdmission,
-        &mut Budget,
-    ) -> Result<NdfValue, WireError>,
+    source_value: &mut impl GroupSources,
 ) -> Result<NdfValue, WireError> {
     let provenances = sequence(&value.provenances, b, |v, b| {
-        record(
+        let encoded = record(
             schema,
             "ForeignProvenance",
             [
                 sequence(&v.origins, b, |v, b| origin_value(v, schema, b))?,
-                source_value(&v.sources, schema, admission, b)?,
+                source_value.take(&v.sources, schema, admission, b)?,
                 sequence(&v.source_maps, b, |v, b| mapping_value(v, schema, b))?,
             ],
             b,
-        )
+        )?;
+        source_value.finish_component(SourceComponent::Provenance, b)?;
+        Ok(encoded)
     })?;
     let environments = sequence(&value.environments, b, |v, b| {
         record(
@@ -94,7 +129,7 @@ fn encode_validated(
         )
     })?;
     let entries = sequence(&value.entries, b, |v, b| {
-        record(
+        let encoded = record(
             schema,
             "ForeignGroupEntry",
             [
@@ -105,11 +140,15 @@ fn encode_validated(
                     registry,
                     admission,
                     b,
-                    source_value,
+                    &mut |sources, schema, admission, b| {
+                        source_value.take(sources, schema, admission, b)
+                    },
                 )?,
             ],
             b,
-        )
+        )?;
+        source_value.finish_component(SourceComponent::Entry, b)?;
+        Ok(encoded)
     })?;
     record(
         schema,
