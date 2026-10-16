@@ -950,3 +950,18 @@ Regression coverage compares component identities with independently emitted
 canonical bytes across SHA block boundaries, checks changed prefix keys and
 suffixes, and tests exact/one-short warm resource limits. This optimization alone
 does not establish that a real document set fits any configured resource limit.
+
+Native syntax/provenance validation also retains one checked local source set in
+its SourceAdmission ledger. Exact ordered snapshot equality (including URI/text)
+reuses the previously built SourceStore; misses preserve admission, duplicate and
+insertion checks before replacing it. Every consumer still checks its own origins,
+mappings, tokens, nodes and environments. The local set never becomes the ledger's
+union, so admitting a source elsewhere cannot make it visible to a guest.
+
+The retained store is owned by the same append-only operation ledger and holds
+immutable snapshots. Failed replacement keeps the previous set. Public stop/error
+variants are unchanged. Each lookup pays one Work unit plus snapshot comparisons;
+reused sets avoid repeated source-index allocations/searches. Provenance insertion
+now uses the single-charge shared insertion path instead of charging snapshot
+storage once for cloning and again for insertion. Regression tests retain the
+historical canonical-order baseline with an explicit one-unit cold-probe allowance.

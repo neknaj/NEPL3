@@ -130,6 +130,14 @@ impl From<ViewError> for SyntaxError {
         }
     }
 }
+impl From<crate::source::SourceSetError> for SyntaxError {
+    fn from(e: crate::source::SourceSetError) -> Self {
+        match e {
+            crate::source::SourceSetError::Source(e) => Self::from(e),
+            crate::source::SourceSetError::Duplicate => Self::DuplicateSource,
+        }
+    }
+}
 impl From<StopReason> for SyntaxError {
     fn from(e: StopReason) -> Self {
         Self::Stopped(e)
@@ -217,28 +225,10 @@ impl SyntaxBundle {
         while let Some((bundle, depth)) = bundles.pop() {
             budget.observe_depth(depth)?;
             bundle.node(bundle.root)?;
-            let mut sources = SourceStore::default();
-            for source in &bundle.sources {
-                admission.admit_existing(source, budget)?;
-                if sources
-                    .get_revision_with_budget(
-                        &source.identity().source,
-                        source.identity().revision,
-                        budget,
-                    )?
-                    .is_some()
-                {
-                    return Err(SyntaxError::DuplicateSource);
-                }
-                // Keep the existing duplicate/admission checks, but meter the
-                // actual immutable snapshot clone and source index insertion.
-                // Pointer-atomic targets share storage; other targets still
-                // charge and copy the complete snapshot through this API.
-                sources.insert_ref_with_budget(source, budget)?;
-            }
+            let sources = admission.checked_source_set(&bundle.sources, budget)?;
             // The table is borrowed. OriginGraph meters its validation scratch
             // storage; there is no additional owned Origin table to charge.
-            OriginGraph::validate_origins(&bundle.origins, &sources, budget)?;
+            OriginGraph::validate_origins(&bundle.origins, sources, budget)?;
             for (index, environment) in bundle.environments.iter().enumerate() {
                 if bundle.environments[..index]
                     .iter()
@@ -248,14 +238,10 @@ impl SyntaxBundle {
                 }
                 foreign::environment(&environment.value, bundle.origins.len(), registry, budget)?;
             }
-            let maps = SourceMap::validate_bound_mapping_parts(
-                &bundle.source_maps,
-                &[],
-                &sources,
-                budget,
-            )?;
+            let maps =
+                SourceMap::validate_bound_mapping_parts(&bundle.source_maps, &[], sources, budget)?;
             for token in &bundle.tokens {
-                token.validate_with_maps(&sources, registry, &maps, budget)?;
+                token.validate_with_maps(sources, registry, &maps, budget)?;
             }
             let node_depths = bundle.check_cycles(depth, budget)?;
             for (node_index, node) in bundle.nodes.iter().enumerate() {

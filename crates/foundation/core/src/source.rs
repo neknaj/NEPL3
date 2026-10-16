@@ -1,4 +1,6 @@
 //! Immutable UTF-8 snapshots, checked byte spans and editor position adapters.
+mod sets;
+pub(crate) use sets::SourceSetError;
 pub mod archive;
 mod edit;
 mod guard;
@@ -546,6 +548,7 @@ fn units(text: &str, encoding: PositionEncoding) -> u64 {
 /// One operation's admitted snapshots. Share this alongside the Budget across guest calls.
 #[derive(Debug, Default)]
 pub struct SourceAdmission {
+    checked_set: Option<SourceStore>,
     admitted: Vec<(SnapshotId, String)>,
     index: Vec<usize>,
     #[cfg(target_has_atomic = "ptr")]
