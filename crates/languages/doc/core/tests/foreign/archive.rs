@@ -895,3 +895,445 @@ fn pages_archive_conflicting_individually_valid_pages_reject() -> Result<(), Str
     assert!(decode_pages(&joined, &r, &mut b()).is_err());
     Ok(())
 }
+
+#[test]
+fn pages_archive_resolver_identity_and_plan_routes_are_explicit() -> Result<(), String> {
+    use nepl3_doc_core::pages::{self, PageIdentityProfile};
+    let r = setup()?;
+    let set = page_set(vec![document(&r)?]);
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut c = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let legacy = pages::resolve(&set, &r, &mut c, &mut b()).map_err(err)?;
+    assert_eq!(legacy.identity_profile(), PageIdentityProfile::LegacyV1);
+    let checked = pages::archive::resolve(&set, &r, &mut c, &mut b()).map_err(err)?;
+    assert_eq!(checked.identity_profile(), PageIdentityProfile::ArchiveV1);
+    assert_ne!(checked.plan().identity, legacy.plan().identity);
+    assert_ne!(checked.document_digest(0), legacy.document_digest(0));
+    assert_eq!(checked.plan().links, legacy.plan().links);
+    let value = codec::pages::to_value(&set, &r, &mut c, &mut b()).map_err(err)?;
+    // Independent direct digest over the exact archive envelope, not resolver internals.
+    assert_eq!(
+        checked.plan().identity,
+        c.canonical_value_digest(pages::archive::SET_DOMAIN, &value, &mut b())
+            .map_err(err)?
+    );
+    let standalone = codec::to_value(&set.pages[0].document, &r, &mut c, &mut b()).map_err(err)?;
+    assert_eq!(
+        checked.document_digest(0),
+        Some(
+            c.canonical_value_digest(pages::archive::DOCUMENT_DOMAIN, &standalone.value, &mut b())
+                .map_err(err)?
+        )
+    );
+    let component = standalone.guest_components[0];
+    let expected_guest = c
+        .canonical_value_digest(
+            pages::archive::GUEST_DOMAIN,
+            &NdfValue::Bytes(component.0.to_vec()),
+            &mut b(),
+        )
+        .map_err(err)?;
+    assert!(checked.plan().remaining.iter().any(|item| matches!(&item.requirement,
+        nepl3_doc_core::prepare::DocRequirement::Foreign{guest_digest,..} if *guest_digest==expected_guest)));
+    let plan = checked.into_plan();
+    let portable_plan =
+        codec::pages::plan_to_value(&plan, &set, &r, &mut c, &mut b()).map_err(err)?;
+    assert_eq!(
+        codec::pages::plan_from_value(&portable_plan, &set, &r, &mut c, &mut b()).map_err(err)?,
+        plan
+    );
+    assert!(portable::pages::plan_from_value(&portable_plan, &set, &r, &mut c, &mut b()).is_err());
+    let old =
+        portable::pages::plan_to_value(legacy.plan(), &set, &r, &mut c, &mut b()).map_err(err)?;
+    assert!(codec::pages::plan_from_value(&old, &set, &r, &mut c, &mut b()).is_err());
+    assert!(codec::pages::plan_to_value(legacy.plan(), &set, &r, &mut c, &mut b()).is_err());
+    Ok(())
+}
+
+#[test]
+fn pages_archive_resolver_budgets_are_exact_and_sticky() -> Result<(), String> {
+    let r = setup()?;
+    let doc = page_set(vec![document(&r)?]);
+    for alternate in [false, true] {
+        let run = |budget:&mut Budget| -> Result<(),nepl3_doc_core::pages::PageError<'_,nepl3_wire::WireError>> {
+            let empty=SourceStore::default();let mut admission=SourceAdmission::default();
+            let mut c=FoundationCodec::new(&r,&empty,&mut admission).map_err(PortableError::Foundation)?;
+            if alternate {
+                let mut c=super::default::DefaultCodec::new(c);
+                nepl3_doc_core::pages::archive::resolve(&doc,&r,&mut c,budget).map(|_|())
+            } else { nepl3_doc_core::pages::archive::resolve(&doc,&r,&mut c,budget).map(|_|()) }
+        };
+        let mut measured = b();
+        run(&mut measured).map_err(err)?;
+        let u = measured.usage();
+        let limits = Limits {
+            source_bytes: u.source_bytes,
+            work: u.work,
+            depth: u.depth,
+            nodes: u.nodes,
+            allocation_units: u.allocation_units,
+            output_bytes: u.output_bytes,
+            diagnostics: u.diagnostics,
+            events: u.events,
+        };
+        run(&mut Budget::new(limits)).map_err(err)?;
+        for resource in 0..6 {
+            let mut short = limits;
+            let reason = match resource {
+                0 => {
+                    short.source_bytes -= 1;
+                    StopReason::SourceLimit
+                }
+                1 => {
+                    short.work -= 1;
+                    StopReason::WorkLimit
+                }
+                2 => {
+                    short.depth -= 1;
+                    StopReason::DepthLimit
+                }
+                3 => {
+                    short.nodes -= 1;
+                    StopReason::NodeLimit
+                }
+                4 => {
+                    short.allocation_units -= 1;
+                    StopReason::AllocationLimit
+                }
+                _ => {
+                    if short.output_bytes == 0 {
+                        continue;
+                    }
+                    short.output_bytes -= 1;
+                    StopReason::OutputLimit
+                }
+            };
+            let mut budget = Budget::new(short);
+            assert_eq!(
+                run(&mut budget),
+                Err(nepl3_doc_core::pages::PageError::Stopped(reason))
+            );
+            let retained = budget.usage();
+            assert_eq!(
+                run(&mut budget),
+                Err(nepl3_doc_core::pages::PageError::Stopped(reason))
+            );
+            assert_eq!(budget.usage(), retained);
+        }
+        let mut cancelled = b();
+        cancelled.cancel();
+        assert_eq!(
+            run(&mut cancelled),
+            Err(nepl3_doc_core::pages::PageError::Stopped(
+                StopReason::Cancelled
+            ))
+        );
+    }
+    Ok(())
+}
+
+use nepl3_doc_core::pages::{PageDocument, PageRegistration, PageSet};
+fn link_document(target: LinkTarget) -> DocumentSyntax {
+    let kinds = vec![
+        DocKind::Article {
+            language: "ja".into(),
+            title: SentenceRef(1),
+            body: BodyRef(3),
+        },
+        DocKind::Sentence {
+            inlines: vec![InlineRef(2)],
+        },
+        DocKind::Text {
+            text: "文書".into(),
+        },
+        DocKind::Body {
+            blocks: vec![BlockRef(4)],
+        },
+        DocKind::Paragraph {
+            items: vec![FlowRef(5)],
+        },
+        DocKind::Sentence {
+            inlines: vec![InlineRef(6), InlineRef(7)],
+        },
+        DocKind::Anchor {
+            id: "導入".into(),
+            label: InlineRef(2),
+        },
+        DocKind::Link {
+            target,
+            label: InlineRef(2),
+        },
+    ];
+    DocumentSyntax {
+        value: DocValue {
+            root: DocRoot::Article(ArticleRef(0)),
+            nodes: kinds
+                .into_iter()
+                .map(|kind| DocNode {
+                    kind,
+                    locations: vec![],
+                    origin: None,
+                    span: None,
+                })
+                .collect(),
+            embeds: Default::default(),
+        },
+        sources: vec![],
+        origins: vec![],
+        views: vec![],
+        source_maps: vec![],
+    }
+}
+fn linked_set() -> PageSet {
+    PageSet {
+        files: vec![],
+        pages: vec![
+            PageDocument {
+                registration: PageRegistration {
+                    id: "first".into(),
+                    source: "doc/first.nepld".into(),
+                    route: "docs/first/index.html".into(),
+                },
+                document: link_document(LinkTarget::Page {
+                    page: "second".into(),
+                    fragment: Some("導入".into()),
+                }),
+            },
+            PageDocument {
+                registration: PageRegistration {
+                    id: "second".into(),
+                    source: "doc/next/second.nepld".into(),
+                    route: "docs/second/index.html".into(),
+                },
+                document: link_document(LinkTarget::Relative {
+                    path: ".././first.nepld".into(),
+                    fragment: Some("導入".into()),
+                }),
+            },
+        ],
+    }
+}
+
+#[test]
+fn pages_archive_links_helpers_and_tampered_plan_are_checked() -> Result<(), String> {
+    use nepl3_doc_core::pages::{self, FileBytes, PageFile, PageProjectionError};
+    let r = setup()?;
+    let mut set = linked_set();
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut c = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let mut budget = b();
+    let checked = pages::archive::resolve(&set, &r, &mut c, &mut budget).map_err(err)?;
+    let legacy = pages::resolve(&set, &r, &mut c, &mut b()).map_err(err)?;
+    assert_eq!(checked.plan().links.len(), 2);
+    assert_eq!(checked.plan().links, legacy.plan().links);
+    checked.document_structure(0, &mut budget).map_err(err)?;
+    let text = checked
+        .project_unresolved_text(
+            0,
+            SentenceRef(1),
+            nepl3_doc_core::text::AnnotationPolicy::BaseOnly,
+            &mut budget,
+        )
+        .map_err(err)?;
+    assert_eq!(
+        text.outcome,
+        nepl3_doc_core::text::PlainTextOutcome::Complete {
+            text: "文書".into()
+        }
+    );
+    let mut wrong = Budget::new(Limits {
+        work: 1,
+        ..budget.limits()
+    });
+    assert!(matches!(
+        checked.document_structure(0, &mut wrong),
+        Err(PageProjectionError::Stopped(_))
+    ));
+    let mut wrong = Budget::new(Limits {
+        work: budget.limits().work + 1,
+        ..budget.limits()
+    });
+    assert!(matches!(
+        checked.document_structure(0, &mut wrong),
+        Err(PageProjectionError::ScopeMismatch)
+    ));
+    assert!(matches!(
+        budget.with_depth(|b| checked.document_structure(0, b).map(|_| ())),
+        Err(PageProjectionError::ScopeMismatch)
+    ));
+    let mut plan = checked.into_plan();
+    plan.links.swap(0, 1);
+    assert!(codec::pages::plan_to_value(&plan, &set, &r, &mut c, &mut b()).is_err());
+    let mut outer = b();
+    outer
+        .with_depth_at_least(4, |b| {
+            let checked = pages::archive::resolve(&set, &r, &mut c, b)?;
+            checked
+                .document_structure(0, b)
+                .map_err(|_| pages::PageError::Boundary(PortableError::Shape))?;
+            Ok::<_, pages::PageError<'_, nepl3_wire::WireError>>(())
+        })
+        .map_err(err)?;
+    set.files.push(PageFile {
+        registration: PageRegistration {
+            id: "file".into(),
+            source: "doc/pic.svg".into(),
+            route: "img/pic.svg".into(),
+        },
+        content: FileBytes(vec![1, 2]),
+    });
+    set.pages[0].document.value.nodes[7].kind = DocKind::Link {
+        target: LinkTarget::Relative {
+            path: "pic.svg".into(),
+            fragment: None,
+        },
+        label: InlineRef(2),
+    };
+    let checked = pages::archive::resolve(&set, &r, &mut c, &mut b()).map_err(err)?;
+    assert_eq!(
+        checked.plan().links[0].target,
+        pages::PageDestination::File { index: 0 }
+    );
+    set.pages[0].document.value.nodes[7].kind = DocKind::Link {
+        target: LinkTarget::Page {
+            page: "second".into(),
+            fragment: Some("missing".into()),
+        },
+        label: InlineRef(2),
+    };
+    assert!(matches!(
+        pages::archive::resolve(&set, &r, &mut c, &mut b()),
+        Err(pages::PageError::MissingFragment { .. })
+    ));
+    Ok(())
+}
+
+#[test]
+fn pages_archive_plan_adapter_budgets_are_exact_and_sticky() -> Result<(), String> {
+    let r = setup()?;
+    let doc = page_set(vec![document(&r)?]);
+    for alternate in [false, true] {
+        let run = |budget:&mut Budget| -> Result<(),nepl3_doc_core::pages::PageError<'_,nepl3_wire::WireError>> {
+            let empty=SourceStore::default();let mut admission=SourceAdmission::default();
+            let c=FoundationCodec::new(&r,&empty,&mut admission).map_err(PortableError::Foundation)?;
+            let mut c=super::default::DefaultCodec::new(c);
+            let plan=nepl3_doc_core::pages::archive::resolve(&doc,&r,&mut c,budget)?.into_plan();
+            let value=codec::pages::plan_to_value(&plan,&doc,&r,&mut c,budget)?;
+            if alternate {codec::pages::plan_from_value(&value,&doc,&r,&mut c,budget)?;}
+            Ok(())
+        };
+        let mut measured = b();
+        run(&mut measured).map_err(err)?;
+        let u = measured.usage();
+        let limits = Limits {
+            source_bytes: u.source_bytes,
+            work: u.work,
+            depth: u.depth,
+            nodes: u.nodes,
+            allocation_units: u.allocation_units,
+            output_bytes: u.output_bytes,
+            diagnostics: u.diagnostics,
+            events: u.events,
+        };
+        run(&mut Budget::new(limits)).map_err(err)?;
+        for resource in 0..6 {
+            let mut short = limits;
+            let reason = match resource {
+                0 => {
+                    short.source_bytes -= 1;
+                    StopReason::SourceLimit
+                }
+                1 => {
+                    short.work -= 1;
+                    StopReason::WorkLimit
+                }
+                2 => {
+                    short.depth -= 1;
+                    StopReason::DepthLimit
+                }
+                3 => {
+                    short.nodes -= 1;
+                    StopReason::NodeLimit
+                }
+                4 => {
+                    short.allocation_units -= 1;
+                    StopReason::AllocationLimit
+                }
+                _ => {
+                    if short.output_bytes == 0 {
+                        continue;
+                    }
+                    short.output_bytes -= 1;
+                    StopReason::OutputLimit
+                }
+            };
+            let mut budget = Budget::new(short);
+            assert_eq!(
+                run(&mut budget),
+                Err(nepl3_doc_core::pages::PageError::Stopped(reason))
+            );
+            let retained = budget.usage();
+            assert_eq!(
+                run(&mut budget),
+                Err(nepl3_doc_core::pages::PageError::Stopped(reason))
+            );
+            assert_eq!(budget.usage(), retained);
+        }
+        let mut cancelled = b();
+        cancelled.cancel();
+        assert_eq!(
+            run(&mut cancelled),
+            Err(nepl3_doc_core::pages::PageError::Stopped(
+                StopReason::Cancelled
+            ))
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn legacy_resolver_retains_pre_refactor_identity_and_usage() -> Result<(), String> {
+    let r = setup()?;
+    let set = page_set(vec![document(&r)?]);
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut c = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let mut budget = b();
+    let plan = nepl3_doc_core::pages::resolve(&set, &r, &mut c, &mut budget)
+        .map_err(err)?
+        .into_plan();
+    // Measured independently on pre-refactor bd5220de with the identical fixture
+    // and fresh codec/admission. These constants protect compatibility, not new
+    // algorithm correctness (covered by archive digest oracles above).
+    let u = budget.usage();
+    assert_eq!(
+        (
+            u.source_bytes,
+            u.work,
+            u.depth,
+            u.nodes,
+            u.output_bytes,
+            u.diagnostics,
+            u.events
+        ),
+        (21, 35591, 17, 453, 256, 0, 0)
+    );
+    #[cfg(target_pointer_width = "64")]
+    assert_eq!(u.allocation_units, 27254);
+    assert_eq!(
+        plan.identity.0,
+        [
+            217, 34, 86, 93, 27, 210, 96, 153, 180, 123, 231, 35, 144, 210, 135, 132, 151, 132, 80,
+            75, 131, 111, 136, 148, 206, 221, 225, 142, 160, 176, 54, 230
+        ]
+    );
+    assert_eq!(plan.links.len(), 0);
+    assert_eq!(plan.remaining.len(), 1);
+    assert!(
+        matches!(&plan.remaining[0].requirement,nepl3_doc_core::prepare::DocRequirement::Foreign{guest_digest,..}
+        if guest_digest.0==[225,252,72,62,147,114,222,11,155,47,35,217,162,40,83,53,131,190,85,252,181,114,74,203,181,90,26,165,155,84,58,158])
+    );
+    Ok(())
+}

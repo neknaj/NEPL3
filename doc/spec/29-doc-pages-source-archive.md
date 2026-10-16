@@ -25,3 +25,5 @@ as legacy transport; consuming resolution must apply its own nonempty rule.
 No compact PageSet identity, preparation-plan route or Markdown renderer is selected
 by this transport alone. Existing v1 routes, domains and descriptor identities remain
 unchanged. End-to-end historical generation is a separate acceptance condition.
+
+Explicit consuming identities and link resolution are defined in [archive resolution](30-doc-pages-archive-resolution.md).
