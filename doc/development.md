@@ -926,3 +926,42 @@ with fresh encoding admission. This same-ledger helper is not inserted into the
 separately admitted measured-child route. NeedMore remains terminal for that
 immutable snapshot; a larger revision starts a new read rather than reviving the
 consumed continuation. Resource Stop is not converted to resumable Await.
+
+### Identical syntax source-prefix checkpoints
+
+Within one checked ForeignClosureGroup conversion, the wire encoder may retain
+one complete SHA-256 state after the outer ForeignSyntax.bundle.sources prefix.
+The operation fixes the foundation schema and domain. Reuse additionally checks
+the complete guest schema, category, and ordered native snapshots, including URI
+and text via metered snapshot equality. Canonical root IDs are normalized to zero.
+The remainder of the bundle and its environment reference are still encoded in
+order. This preserves expanded v1 identities and every local source declaration;
+it is neither a compact wire format nor a generic subtree digest cache.
+
+All native, schema, ownership and source admission checks precede this private
+optimization. The checkpoint is retained only after a successful digest. Hits
+reobserve its maximum absolute depth, meter comparisons and SHA-state copies,
+and remain subject to sticky Budget stops. Native storage sharing can make key
+comparison cheap; independently allocated equal snapshots still pay for byte
+comparison. Cold/missing prefixes have additional checkpoint bookkeeping cost.
+Nested source lists later in the syntax stream are not skipped.
+
+Regression coverage compares component identities with independently emitted
+canonical bytes across SHA block boundaries, checks changed prefix keys and
+suffixes, and tests exact/one-short warm resource limits. This optimization alone
+does not establish that a real document set fits any configured resource limit.
+
+Native syntax/provenance validation also retains one checked local source set in
+its SourceAdmission ledger. Exact ordered snapshot equality (including URI/text)
+reuses the previously built SourceStore; misses preserve admission, duplicate and
+insertion checks before replacing it. Every consumer still checks its own origins,
+mappings, tokens, nodes and environments. The local set never becomes the ledger's
+union, so admitting a source elsewhere cannot make it visible to a guest.
+
+The retained store is owned by the same append-only operation ledger and holds
+immutable snapshots. Failed replacement keeps the previous set. Public stop/error
+variants are unchanged. Each lookup pays one Work unit plus snapshot comparisons;
+reused sets avoid repeated source-index allocations/searches. Provenance insertion
+now uses the single-charge shared insertion path instead of charging snapshot
+storage once for cloning and again for insertion. Regression tests retain the
+historical canonical-order baseline with an explicit one-unit cold-probe allowance.

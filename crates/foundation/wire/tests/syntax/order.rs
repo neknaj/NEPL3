@@ -79,8 +79,12 @@ fn retained_order_preserves_large_arena_permutations_and_measured_work() -> Test
                 let cache = core::mem::size_of::<(Vec<usize>, Vec<u64>)>() as u64;
                 let saved = ordering.usage().allocation_units.saturating_sub(cache);
                 let work_saved = if count == 1 { 0 } else { ordering.usage().work };
+                // Native declaration-set reuse adds one metered cold probe.
+                // Keep the historical two-pass baseline and ordering savings;
+                // only account for that separately specified new operation.
+                let cold_source_set_probe = 1;
                 assert!(
-                    measured.usage().work <= old_work - work_saved / 2,
+                    measured.usage().work <= old_work + cold_source_set_probe - work_saved / 2,
                     "duplicate canonical order work: {:?}",
                     measured.usage()
                 );

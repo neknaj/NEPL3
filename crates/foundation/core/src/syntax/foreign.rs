@@ -237,19 +237,9 @@ fn validate_provenance(
     b: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> Result<(), SyntaxError> {
-    let mut store = SourceStore::default();
-    for source in sources {
-        admission.admit_existing(source, b)?;
-        if store
-            .get_revision_with_budget(&source.identity().source, source.identity().revision, b)?
-            .is_some()
-        {
-            return Err(SyntaxError::DuplicateSource);
-        }
-        store.insert_with_budget(source.clone_with_budget(b)?, b)?;
-    }
-    OriginGraph::validate_origins(origins, &store, b)?;
-    SourceMap::validate_mappings(maps, &store, b)?;
+    let store = admission.checked_source_set(sources, b)?;
+    OriginGraph::validate_origins(origins, store, b)?;
+    SourceMap::validate_mappings(maps, store, b)?;
     Ok(())
 }
 pub(super) fn environment(

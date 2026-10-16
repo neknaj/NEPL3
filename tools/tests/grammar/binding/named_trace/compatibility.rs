@@ -31,9 +31,9 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
             assert_eq!(
                 b.usage(),
                 if mode == 0 {
-                    expected(10, (2223, 6, 2, lambda_lookup), 4, 21, (5819, 4), 0, 0)
+                    expected(10, (2223, 6, 2, lambda_lookup), 4, 21, (5819, 4, 0), 0, 0)
                 } else {
-                    expected(10, (2340, 6, 2, lambda_lookup), 5, 21, (6369, 4), 0, 0)
+                    expected(10, (2340, 6, 2, lambda_lookup), 5, 21, (6369, 4, 0), 0, 0)
                 }
             );
             let mut limits = budget().limits();
@@ -74,9 +74,9 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
             assert_eq!(
                 short.usage(),
                 if mode == 0 {
-                    expected(10, (2155, 6, 2, lambda_lookup), 4, 21, (5819, 4), 0, 0)
+                    expected(10, (2155, 6, 2, lambda_lookup), 4, 21, (5819, 4, 0), 0, 0)
                 } else {
-                    expected(10, (2272, 6, 2, lambda_lookup), 5, 21, (6369, 4), 0, 0)
+                    expected(10, (2272, 6, 2, lambda_lookup), 5, 21, (6369, 4, 0), 0, 0)
                 }
             );
         }
@@ -103,7 +103,15 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
         assert!(matches!(r.outcome, BindingOutcome::Complete(_)));
         assert_eq!(
             b.usage(),
-            expected(20, (8854, 36, 6, custom_lookup), 8, 98, (22039, 22), 2, 1)
+            expected(
+                20,
+                (8854, 36, 6, custom_lookup),
+                8,
+                98,
+                (22039, 22, 1),
+                2,
+                1
+            )
         );
         let mut limits = budget().limits();
         limits.work = b.usage().work - 1;
@@ -126,7 +134,15 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
         ));
         assert_eq!(
             short.usage(),
-            expected(20, (8789, 36, 6, custom_lookup), 8, 98, (22039, 22), 2, 1)
+            expected(
+                20,
+                (8789, 36, 6, custom_lookup),
+                8,
+                98,
+                (22039, 22, 1),
+                2,
+                1
+            )
         );
         Ok(())
     })?;
@@ -155,7 +171,7 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
         ));
         assert_eq!(
             b.usage(),
-            expected(8, (2041, 6, 2, recovered_lookup), 5, 17, (5844, 2), 0, 0)
+            expected(8, (2041, 6, 2, recovered_lookup), 5, 17, (5844, 2, 0), 0, 0)
         );
         let mut limits = budget().limits();
         limits.work = b.usage().work - 1;
@@ -173,7 +189,7 @@ fn disabled_capture_preserves_usage_after_inline_frontier_savings() -> Result<()
         ));
         assert_eq!(
             short.usage(),
-            expected(8, (1973, 6, 2, recovered_lookup), 5, 17, (5276, 2), 0, 0)
+            expected(8, (1973, 6, 2, recovered_lookup), 5, 17, (5276, 2, 0), 0, 0)
         );
         Ok(())
     })
@@ -204,13 +220,16 @@ fn expected(
     work: (u64, u64, u64, u64),
     depth: u64,
     nodes: u64,
-    allocation_units: (u64, u64),
+    allocation_units: (u64, u64, u64),
     diagnostics: u64,
     events: u64,
 ) -> nepl3_core::budget::Usage {
     nepl3_core::budget::Usage {
         source_bytes,
-        work: work.0 + work.1 * 2 + work.2 + work.3,
+        // Each public binding entry validates one native syntax bundle,
+        // adding the checked-local-source-set cold probe. Facts validation
+        // remains separate and does not call that native bundle helper.
+        work: work.0 + work.1 * 2 + work.2 + work.3 + 1,
         depth,
         nodes,
         allocation_units: allocation_units.0
@@ -219,7 +238,11 @@ fn expected(
                     &nepl3_core::schema::TypeDescriptor,
                     &nepl3_core::value::NdfValue,
                     u64,
-                )>() as u64,
+                )>() as u64
+            // Custom host request validation reuses the same one-source set:
+            // one snapshot handle and one source-index slot are not rebuilt.
+            - allocation_units.2 * (core::mem::size_of::<nepl3_core::source::SourceSnapshot>()
+                + core::mem::size_of::<usize>()) as u64,
         output_bytes: 0,
         diagnostics,
         events,

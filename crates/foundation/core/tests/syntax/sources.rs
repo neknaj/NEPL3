@@ -137,3 +137,44 @@ fn admitted_ordered_sources_avoid_repeated_pairwise_duplicate_scans() -> Result<
     }
     Ok(())
 }
+
+#[test]
+fn warm_local_source_set_preserves_consumer_checks_and_stop_variants() -> Result<(), SyntaxError> {
+    let (registry, schema) = registry()?;
+    let source = snapshot("shared-set", 0, "value")?;
+    let mut input = bundle(&schema);
+    input.sources.push(source.clone());
+    input.origins.push(Origin::Direct(source.span(0, 5)?));
+    let mut admission = SourceAdmission::default();
+    let mut cold = budget();
+    input.validate_with_sources(&registry, &mut cold, &mut admission)?;
+    let mut warm = budget();
+    input.validate_with_sources(&registry, &mut warm, &mut admission)?;
+    assert!(warm.usage().work < cold.usage().work);
+    assert!(warm.usage().allocation_units < cold.usage().allocation_units);
+    // A warmed union must not make a source visible in an empty local set.
+    let mut missing = input.clone();
+    missing.sources.clear();
+    let expected = missing.validate(&registry, &mut budget()).err();
+    assert!(expected.is_some());
+    assert_eq!(
+        missing
+            .validate_with_sources(&registry, &mut budget(), &mut admission)
+            .err(),
+        expected
+    );
+    input.validate_with_sources(&registry, &mut budget(), &mut admission)?;
+    for work in [0, 1] {
+        let mut stopped = Budget::new(Limits {
+            work,
+            ..budget().limits()
+        });
+        assert_eq!(
+            input
+                .validate_with_sources(&registry, &mut stopped, &mut admission)
+                .err(),
+            Some(SyntaxError::Stopped(StopReason::WorkLimit))
+        );
+    }
+    Ok(())
+}
