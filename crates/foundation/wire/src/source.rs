@@ -1,5 +1,6 @@
 //! Typed foundation source adapters. Source digests and span geometry are checked
 //! after structural decoding; a record labelled SourceContent is never trusted.
+pub mod archive;
 mod order;
 use crate::{WireError, decode_checked, encode_checked};
 use alloc::{string::String, vec::Vec};
@@ -190,6 +191,12 @@ pub(crate) fn sources_from(
     for entry in entries {
         let fields = fields(entry, schema, "SourceContent", 3)?;
         let reference = reference(&fields[0], schema, budget)?;
+        if let Some(prior) = &previous {
+            budget.charge(
+                Resource::Work,
+                prior.source_id.0.len().min(reference.source_id.0.len()) as u64 * 2 + 48,
+            )?;
+        }
         if previous.as_ref().is_some_and(|prior| {
             prior >= &reference
                 || (prior.source_id == reference.source_id && prior.revision == reference.revision)
