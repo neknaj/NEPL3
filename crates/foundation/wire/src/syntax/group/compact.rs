@@ -19,7 +19,17 @@ struct CompactCapture<'a> {
     provenances: Vec<NdfValue>,
     entries: Vec<NdfValue>,
 }
-impl CompactCapture<'_> {
+impl<'a> CompactCapture<'a> {
+    fn new(registry: &'a SchemaRegistry) -> Self {
+        Self {
+            table: Capture::default(),
+            registry,
+            cache: Vec::new(),
+            current: Vec::new(),
+            provenances: Vec::new(),
+            entries: Vec::new(),
+        }
+    }
     fn source_digest(
         &mut self,
         source: &SourceSnapshot,
@@ -159,15 +169,43 @@ fn encode_inner(
     b: &mut Budget,
 ) -> Result<(Vec<u8>, Vec<Digest>), WireError> {
     crate::source::archive::fields::check(foundation, registry, true, b)?;
-    let mut capture = CompactCapture {
-        table: Capture::default(),
-        registry,
-        cache: Vec::new(),
-        current: Vec::new(),
-        provenances: Vec::new(),
-        entries: Vec::new(),
-    };
+    let mut capture = CompactCapture::new(registry);
     let skeleton = to_value_with_sources(group, foundation, registry, admission, b, &mut capture)?;
+    finish_encoded(
+        group,
+        skeleton,
+        capture,
+        Boundary {
+            group_archive,
+            source_archive,
+            foundation,
+            registry,
+        },
+        admission,
+        b,
+    )
+}
+
+struct Boundary<'a> {
+    group_archive: &'a SchemaRef,
+    source_archive: &'a SchemaRef,
+    foundation: &'a SchemaRef,
+    registry: &'a SchemaRegistry,
+}
+fn finish_encoded(
+    group: &ForeignClosureGroup,
+    skeleton: NdfValue,
+    capture: CompactCapture<'_>,
+    boundary: Boundary<'_>,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<(Vec<u8>, Vec<Digest>), WireError> {
+    let Boundary {
+        group_archive,
+        source_archive,
+        foundation,
+        registry,
+    } = boundary;
     // Root and unchanged payload validation also run for an empty group.
     let bytes = crate::encode_checked(&skeleton, &expected("ForeignClosureGroup"), registry, b)?;
     if !capture.current.is_empty() {
@@ -231,3 +269,75 @@ fn encode_inner(
 
 #[cfg(test)]
 mod tests;
+
+/// Native consuming-language occurrence depths and their registry authority.
+/// This is an input, not a validation receipt. Each call validates it afresh.
+pub struct GroupAtDepths<'a> {
+    pub group: &'a ForeignClosureGroup,
+    pub depths: &'a [u64],
+    pub native_registry: &'a SchemaRegistry,
+}
+
+/// Preserve per-entry semantic depths, including an already-active outer depth.
+/// Caller structure failures remain separate from codec-registry/encoding errors.
+pub fn encode_at_depths(
+    input: GroupAtDepths<'_>,
+    group_archive: &SchemaRef,
+    source_archive: &SchemaRef,
+    foundation: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<(Vec<u8>, Vec<Digest>), nepl3_core::value_codec::GroupEncodingError<WireError>> {
+    use nepl3_core::value_codec::GroupEncodingError;
+    validate_for_encoding_at_depths(
+        input.group,
+        input.depths,
+        input.native_registry,
+        registry,
+        admission,
+        b,
+    )
+    .map_err(|error| match error {
+        GroupEncodingError::Structure(error) => GroupEncodingError::Structure(error),
+        GroupEncodingError::Codec(error) => GroupEncodingError::Codec(
+            match nepl3_core::value_codec::FoundationCodecError::stop_reason(&error) {
+                Some(reason) => WireError::Stopped(reason),
+                None => error,
+            },
+        ),
+    })?;
+    let encoded = (|| {
+        crate::source::archive::fields::check(foundation, registry, true, b)?;
+        let mut capture = CompactCapture::new(registry);
+        let skeleton = encode_validated(
+            input.group,
+            foundation,
+            registry,
+            admission,
+            b,
+            &mut capture,
+        )?;
+        finish_encoded(
+            input.group,
+            skeleton,
+            capture,
+            Boundary {
+                group_archive,
+                source_archive,
+                foundation,
+                registry,
+            },
+            admission,
+            b,
+        )
+    })();
+    encoded.map_err(|error| {
+        GroupEncodingError::Codec(
+            match nepl3_core::value_codec::FoundationCodecError::stop_reason(&error) {
+                Some(reason) => WireError::Stopped(reason),
+                None => error,
+            },
+        )
+    })
+}

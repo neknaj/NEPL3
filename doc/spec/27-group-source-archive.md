@@ -86,3 +86,23 @@ A sticky stop remains a failure on retry. No proof or cache crosses operations.
 
 This Foundation API does not complete default Doc integration, foreign Sentence
 payload adaptation, or the historical real-data 4B Work acceptance milestone.
+
+### Consuming-language depths
+
+`compact::encode_at_depths` accepts a typed GroupAtDepths input containing the
+native group, one occurrence-depth maximum for every entry, and the caller's
+native registry. This input is not a proof. Every call validates the complete
+input at those depths in the current active Budget depth, before codec boundary
+work. A distinct codec registry receives its own native validation; equivalent
+registry contents do not authorize skipping this second authority. The same
+private validation helper is used by the existing v1 depth-aware encoding path.
+Missing/extra entry depths and native errors remain GroupEncodingError::Structure;
+codec registry, archive/schema and encoding failures remain Codec. Codec stops
+are normalized without converting a stopped computation into a partial pair.
+
+The archive bytes and v2 identities do not include occurrence depths: valid
+placement changes validation cost and limits, not content identity. Depth-aware
+encoding shares capture and finalization with the ordinary compact operation and
+does not reconstruct then re-encode the group. Archive decoding alone still does
+not establish the consuming document's occurrence-depth requirements. Doc must
+compute and check its own shared-embed maximum depths after reconstruction.

@@ -80,6 +80,19 @@ pub(crate) fn to_value_at_depths(
     admission: &mut SourceAdmission,
     b: &mut Budget,
 ) -> Result<NdfValue, nepl3_core::value_codec::GroupEncodingError<WireError>> {
+    validate_for_encoding_at_depths(value, depths, native_registry, registry, admission, b)?;
+    encode_validated(value, schema, registry, admission, b, &mut sources_value)
+        .map_err(nepl3_core::value_codec::GroupEncodingError::Codec)
+}
+
+fn validate_for_encoding_at_depths(
+    value: &ForeignClosureGroup,
+    depths: &[u64],
+    native_registry: &SchemaRegistry,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<(), nepl3_core::value_codec::GroupEncodingError<WireError>> {
     use nepl3_core::value_codec::GroupEncodingError;
     value
         .validate_at_depths(depths, native_registry, b, admission)
@@ -89,8 +102,7 @@ pub(crate) fn to_value_at_depths(
             .validate(registry, b, admission)
             .map_err(|e| GroupEncodingError::Codec(e.into()))?;
     }
-    encode_validated(value, schema, registry, admission, b, &mut sources_value)
-        .map_err(GroupEncodingError::Codec)
+    Ok(())
 }
 
 // Private: every caller freshly validates this exact immutable group using
