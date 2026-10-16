@@ -32,14 +32,25 @@ fn group_parity(value: &Value) -> Result<SchemaDescriptor> {
     }
     Ok(implemented)
 }
+fn doc_parity(value: &Value) -> Result<SchemaDescriptor> {
+    let declared = foundation::descriptor(value)?;
+    let implemented = nepl3_doc_core::schema::archive::descriptor(&mut foundation::budget())
+        .map_err(|e| format!("doc archive descriptor: {e:?}"))?;
+    if declared != implemented {
+        return Err("doc archive JSON and Rust descriptors differ".into());
+    }
+    Ok(implemented)
+}
 pub(super) fn check(root: &Path) -> Result<()> {
     let archive = parity(&json(root, "interfaces/source-archive.json")?)?;
     let syntax = syntax_parity(&json(root, "interfaces/syntax-archive.json")?)?;
     let group = group_parity(&json(root, "interfaces/group-archive.json")?)?;
+    let doc_archive = doc_parity(&json(root, "interfaces/doc-archive.json")?)?;
+    let doc = foundation::descriptor(&json(root, "interfaces/doc.json")?)?;
     let foundation = foundation::descriptor(&json(root, "interfaces/foundation.json")?)?;
     let mut budget = foundation::budget();
     let mut registry = SchemaRegistry::default();
-    for descriptor in [foundation, archive, syntax, group] {
+    for descriptor in [foundation, archive, syntax, group, doc, doc_archive] {
         let reference = descriptor
             .reference(&mut budget)
             .map_err(|error| format!("source archive dependency identity: {error:?}"))?;
@@ -73,6 +84,9 @@ mod tests {
         let mut group: Value = json(root, "interfaces/group-archive.json")?;
         group["revision"] = Value::from(2);
         assert!(group_parity(&group).is_err());
+        let mut doc: Value = json(root, "interfaces/doc-archive.json")?;
+        doc["types"]["DocumentArchive"]["record"][0][1] = Value::from("Bytes");
+        assert!(doc_parity(&doc).is_err());
         Ok(())
     }
 }

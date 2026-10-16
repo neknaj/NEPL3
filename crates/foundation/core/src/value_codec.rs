@@ -1,4 +1,5 @@
 //! Host-selected typed value boundary. Normal reader execution does not serialize.
+pub mod archive;
 use crate::origin::Origin;
 use crate::{
     budget::Budget,

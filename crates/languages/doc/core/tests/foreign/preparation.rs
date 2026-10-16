@@ -8,7 +8,7 @@ fn fused_preparation_matches_default_provider_and_saves_group_encoding() -> Resu
     let document = mapped_article(closure(&r)?, vec![], vec![]);
     let mut admission = SourceAdmission::default();
     let codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
-    let mut fallback = default::DefaultCodec(codec);
+    let mut fallback = default::DefaultCodec::new(codec);
     let mut old = b();
     let expected = prepare::inspect(&document, &r, &mut fallback, &mut old).map_err(err)?;
     let mut admission = SourceAdmission::default();
@@ -67,7 +67,7 @@ fn namespace_and_ambient_scopes_preserve_fused_plan() -> Result<(), String> {
     let maps = [map];
     let mut scoped = c.scoped_with_mappings(&store, &maps);
     let actual = prepare::inspect_namespace(&ns, &r, &mut scoped, &mut b()).map_err(err)?;
-    let mut fallback = default::DefaultCodec(scoped);
+    let mut fallback = default::DefaultCodec::new(scoped);
     let expected = prepare::inspect_namespace(&ns, &r, &mut fallback, &mut b()).map_err(err)?;
     assert_eq!(actual, expected);
     Ok(())
@@ -179,8 +179,9 @@ fn sentence_and_inline_plans_match_default_provider() -> Result<(), String> {
         }
         .map_err(err)?;
         let mut admission = SourceAdmission::default();
-        let mut fallback =
-            default::DefaultCodec(FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?);
+        let mut fallback = default::DefaultCodec::new(
+            FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?,
+        );
         let expected = if sentence {
             prepare::inspect_sentence(&doc, &r, &mut fallback, &mut b())
         } else {
@@ -254,7 +255,7 @@ fn repeated_source_preparation_reuses_the_same_encoded_group() -> Result<(), Str
     let empty = SourceStore::default();
     let mut admission = SourceAdmission::default();
     let mut fallback =
-        default::DefaultCodec(FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?);
+        default::DefaultCodec::new(FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?);
     let mut old = b();
     let expected = prepare::inspect(&document, &r, &mut fallback, &mut old).map_err(err)?;
     let mut admission = SourceAdmission::default();
@@ -323,7 +324,7 @@ fn pages_reuse_components_without_reordering_or_changing_set_identity() -> Resul
     let empty = SourceStore::default();
     let mut admission = SourceAdmission::default();
     let mut fallback =
-        default::DefaultCodec(FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?);
+        default::DefaultCodec::new(FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?);
     let mut old = b();
     let expected = pages::resolve(&set, &r, &mut fallback, &mut old).map_err(err)?;
     let mut admission = SourceAdmission::default();
@@ -376,7 +377,7 @@ fn printer_and_plain_text_keep_their_distinct_identity_domains() -> Result<(), S
     let empty = SourceStore::default();
     let mut admission = SourceAdmission::default();
     let mut fallback =
-        default::DefaultCodec(FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?);
+        default::DefaultCodec::new(FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?);
     let expected_print = print::identity(&doc, &r, &mut fallback, &mut b()).map_err(err)?;
     let expected_text = text::prepare(&doc, &r, &mut fallback, &mut b())
         .map_err(err)?

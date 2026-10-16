@@ -348,14 +348,19 @@ let value=record(s,"DocValue",[f0,f1,f2],b)?;
 Ok((value,sidecar))
 }
 }
+impl DocValue {
+pub(crate) fn read_with_embeds<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget,decode:impl FnOnce(&NdfValue,&mut C,&mut Budget)->Result<DocEmbeds,PortableError<C::Error>>)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,40)?;
+let f=fields(v,s,"DocValue",3)?;
+Ok(Self {root:Value::read(&f[0],s,c,b)?,nodes:Value::read(&f[1],s,c,b)?,embeds:decode(&f[2],c,b)?})
+}
+}
 impl Value for DocValue {
 fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
 self.put_with_embeds(s,c,b,|c,b|self.embeds.put(s,c,b).map(|v|(v,()))).map(|(v,_)|v)
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
-b.charge(Resource::Work,40)?;
-let f=fields(v,s,"DocValue",3)?;
-Ok(Self {root:Value::read(&f[0],s,c,b)?,nodes:Value::read(&f[1],s,c,b)?,embeds:Value::read(&f[2],s,c,b)?})
+Self::read_with_embeds(v,s,c,b,|v,c,b|Value::read(v,s,c,b))
 }
 }
 impl Value for DocView {
@@ -948,14 +953,19 @@ let value=record(s,"DocEmbeds",[f0,f1],b)?;
 Ok((value,sidecar))
 }
 }
+impl DocEmbeds {
+pub(crate) fn read_with_group<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget,decode:impl FnOnce(&NdfValue,&mut C,&mut Budget)->Result<ForeignClosureGroup,PortableError<C::Error>>)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,41)?;
+let f=fields(v,s,"DocEmbeds",2)?;
+Ok(Self {kinds:Value::read(&f[0],s,c,b)?,group:decode(&f[1],c,b)?})
+}
+}
 impl Value for DocEmbeds {
 fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
 self.put_with_group(s,c,b,|c,b|self.group.put(s,c,b).map(|v|(v,()))).map(|(v,_)|v)
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
-b.charge(Resource::Work,41)?;
-let f=fields(v,s,"DocEmbeds",2)?;
-Ok(Self {kinds:Value::read(&f[0],s,c,b)?,group:Value::read(&f[1],s,c,b)?})
+Self::read_with_group(v,s,c,b,|v,c,b|Value::read(v,s,c,b))
 }
 }
 }

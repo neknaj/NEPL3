@@ -8,7 +8,17 @@ use nepl3_core::{
     value_codec::{CanonicalDigestInput, FoundationValueCodec},
     view::ViewBundle,
 };
-pub(super) struct DefaultCodec<C>(pub C);
+pub(super) enum ArchiveComponents {
+    Exact,
+    Short,
+    Long,
+}
+pub(super) struct DefaultCodec<C>(pub C, pub ArchiveComponents);
+impl<C> DefaultCodec<C> {
+    pub(super) fn new(inner: C) -> Self {
+        Self(inner, ArchiveComponents::Exact)
+    }
+}
 impl<C: FoundationValueCodec> FoundationValueCodec for DefaultCodec<C> {
     type Error = C::Error;
     fn canonical_value_digest(
@@ -124,21 +134,21 @@ impl<C: FoundationValueCodec> FoundationValueCodec for DefaultCodec<C> {
         &'a mut self,
         sources: &'a nepl3_core::source::SourceStore,
     ) -> impl FoundationValueCodec<Error = Self::Error> + 'a {
-        DefaultCodec(self.0.scoped(sources))
+        DefaultCodec::new(self.0.scoped(sources))
     }
     fn scoped_with_admission<'a>(
         &'a mut self,
         sources: &'a nepl3_core::source::SourceStore,
         admission: &'a mut nepl3_core::source::SourceAdmission,
     ) -> impl FoundationValueCodec<Error = Self::Error> + 'a {
-        DefaultCodec(self.0.scoped_with_admission(sources, admission))
+        DefaultCodec::new(self.0.scoped_with_admission(sources, admission))
     }
     fn scoped_with_mappings<'a>(
         &'a mut self,
         sources: &'a nepl3_core::source::SourceStore,
         mappings: &'a [nepl3_core::origin::Mapping],
     ) -> impl FoundationValueCodec<Error = Self::Error> + 'a {
-        DefaultCodec(self.0.scoped_with_mappings(sources, mappings))
+        DefaultCodec::new(self.0.scoped_with_mappings(sources, mappings))
     }
     fn encode_syntax(
         &mut self,

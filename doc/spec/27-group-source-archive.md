@@ -106,3 +106,6 @@ encoding shares capture and finalization with the ordinary compact operation and
 does not reconstruct then re-encode the group. Archive decoding alone still does
 not establish the consuming document's occurrence-depth requirements. Doc must
 compute and check its own shared-embed maximum depths after reconstruction.
+
+The explicit [Doc source archive](28-doc-source-archive.md) consumes this capability
+without changing existing Doc preparation or rendering identities.

@@ -43,6 +43,7 @@ def generate() -> str:
                           "documentDigest": "document_digest", "guestDigest": "guest_digest"}),
         tuple_case,
         record_sidecars=MappingProxyType({"DocValue": "embeds", "DocEmbeds": "group"}),
+        record_readers=MappingProxyType({"DocValue": ("embeds", "DocEmbeds"), "DocEmbeds": ("group", "ForeignClosureGroup")}),
     )
     return adapters.generate(ROOT, "doc", "doc", options)
 

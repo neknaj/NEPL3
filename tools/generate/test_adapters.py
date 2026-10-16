@@ -65,6 +65,19 @@ class AdapterTests(unittest.TestCase):
             self.assertIn("self.source_maps.put(" + arguments + ").map(|v|(v,()))", output)
             self.assertIn("source_maps:Value::read(&f[1]," + arguments + ")?", output)
 
+    def test_record_reader_preserves_shape_order_charge_and_normal_reader(self) -> None:
+        for codec, arguments in ((Codec.LOCAL, "s,c,b"), (Codec.REGISTRY, "s,r,c,b")):
+            options = Options(frozenset(), {"sourceMaps": "source_maps"}, tuple_case,
+                              codec, record_readers={"Data": ("sourceMaps", "NativeMaps")})
+            output = render({"Data": Record(("first", "sourceMaps", "last"))}, "// header", options)
+            self.assertIn("pub(crate) fn read_with_source_maps<C:FoundationValueCodec>", output)
+            self.assertIn("Result<NativeMaps,PortableError<C::Error>>", output)
+            self.assertIn("source_maps:decode(&f[1],c,b)?", output)
+            self.assertIn("Self::read_with_source_maps(v," + arguments + ",|v,c,b|Value::read(v," + arguments + "))", output)
+            self.assertEqual(output.count("b.charge(Resource::Work,36)?;"), 1)
+            self.assertLess(output.index("first:Value::read"), output.index("source_maps:decode"))
+            self.assertLess(output.index("source_maps:decode"), output.index("last:Value::read"))
+
     def test_record_sidecar_rejects_unknown_fields_and_variants(self) -> None:
         for types, name, member in (
             ({"Data": Record(("field",))}, "Missing", "field"),
