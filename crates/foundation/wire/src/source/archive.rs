@@ -1,4 +1,5 @@
 //! Opt-in source-set archive. No syntax graph or opaque payload is rewritten.
+pub(crate) mod fields;
 pub(crate) mod tables;
 use super::*;
 use crate::{

@@ -27,3 +27,17 @@ Legacy group decoding rejects the archive envelope. Standalone closure extractio
 and existing component digests are evaluated on the reconstructed native group.
 Default Doc integration, general Sentence payload adapters and real-data 4B Work
 recovery remain separate unfinished work.
+
+## Replaced-field descriptor boundary
+
+Empty skeleton source lists do not establish their element types. Before encode
+or decode, SyntaxArchive requires the selected Foundation descriptor to declare
+SyntaxBundle field 0 as `sources: List(SourceContent)`. GroupArchive also requires
+ForeignProvenance field 1 to have that exact contract. Each SourceContent named
+reference uses package `nepl3.foundation`, revision 1. These checks apply even to
+empty inputs; an archive deliberately requires its complete replacement contract.
+The selected SchemaRef must match the finalized registry. Descriptor lookups and
+comparisons are charged to the current Budget and respect sticky cancellation.
+These checks supplement full original-native validation, checked skeleton and
+source-table boundaries, and reconstructed-native validation; they do not change
+v1 descriptors, wire bytes, or component identities.
