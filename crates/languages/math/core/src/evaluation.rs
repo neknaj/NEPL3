@@ -1,6 +1,7 @@
 //! Evaluation borrows the author's notation and never rewrites its arena.
 mod apply;
 mod machine;
+mod shape;
 use crate::{exact::arithmetic, model::*, number};
 use alloc::vec::Vec;
 use nepl3_core::{
@@ -12,6 +13,20 @@ pub use crate::model::{
     MathEvaluationOutcome as Outcome, MathEvaluationReason as Reason,
     MathEvaluationRequirement as Requirement,
 };
+// Internal shape evidence is carried only within this evaluation. It is not a
+// new portable outcome and never substitutes for an exact value.
+enum PartialOutcome {
+    Exact(MathExactValue),
+    Symbolic(Vec<Requirement>, Option<shape::Shape>),
+}
+impl PartialOutcome {
+    fn finish(self) -> Outcome {
+        match self {
+            Self::Exact(value) => Outcome::Exact(value),
+            Self::Symbolic(requirements, _) => Outcome::Symbolic(requirements),
+        }
+    }
+}
 /// Node references in requirements are interpreted only against this exact input.
 pub struct Evaluation<'a> {
     pub source: &'a MathValue,
@@ -115,7 +130,7 @@ fn numeric(node: ExprRef, error: number::ArithmeticError) -> Error {
 fn scalar(n: i64, node: ExprRef, b: &mut Budget) -> Result<Rational, Error> {
     number::ratio(&Integer::from(n), &Integer::from(1_i64), b).map_err(|e| numeric(node, e))
 }
-fn symbolic(node: ExprRef, reason: Reason, b: &mut Budget) -> Result<Outcome, Error> {
+fn symbolic(node: ExprRef, reason: Reason, b: &mut Budget) -> Result<PartialOutcome, Error> {
     let mut requirements = Vec::new();
     push(
         &mut requirements,
@@ -125,18 +140,18 @@ fn symbolic(node: ExprRef, reason: Reason, b: &mut Budget) -> Result<Outcome, Er
         },
         b,
     )?;
-    Ok(Outcome::Symbolic(requirements))
+    Ok(PartialOutcome::Symbolic(requirements, None))
 }
-fn copy(value: &Outcome, b: &mut Budget) -> Result<Outcome, Error> {
+fn copy(value: &PartialOutcome, b: &mut Budget) -> Result<PartialOutcome, Error> {
     Ok(match value {
-        Outcome::Symbolic(items) => {
+        PartialOutcome::Symbolic(items, shape) => {
             let mut out = Vec::new();
             for item in items {
                 push(&mut out, item.clone(), b)?;
             }
-            Outcome::Symbolic(out)
+            PartialOutcome::Symbolic(out, *shape)
         }
-        Outcome::Exact(value) => Outcome::Exact(copy_value(value, b)?),
+        PartialOutcome::Exact(value) => PartialOutcome::Exact(copy_value(value, b)?),
     })
 }
 fn copy_value(value: &MathExactValue, b: &mut Budget) -> Result<MathExactValue, Error> {
