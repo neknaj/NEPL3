@@ -109,3 +109,5 @@ compute and check its own shared-embed maximum depths after reconstruction.
 
 The explicit [Doc source archive](28-doc-source-archive.md) consumes this capability
 without changing existing Doc preparation or rendering identities.
+
+An identity-only capability is specified separately in [group commitments without transport](32-group-identity-without-transport.md).
