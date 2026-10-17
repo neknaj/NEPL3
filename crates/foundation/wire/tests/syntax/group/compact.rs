@@ -925,3 +925,36 @@ fn commitment_only_second_registry_stops_are_normalized() -> TestResult {
     }
     Ok(())
 }
+
+#[test]
+fn archive_capture_usage_and_bytes_stay_unchanged() -> TestResult {
+    let (a, s, f, r, g) = setup()?;
+    let mut b = budget();
+    let (bytes, _) = compact::encode(&g, &a, &s, &f, &r, &mut SourceAdmission::default(), &mut b)
+        .map_err(|e| format!("{e:?}"))?;
+    // Independently measured on pre-optimization bd5220de with this fixture.
+    let u = b.usage();
+    assert_eq!(
+        (
+            u.source_bytes,
+            u.depth,
+            u.nodes,
+            u.output_bytes,
+            u.diagnostics,
+            u.events
+        ),
+        (4, 19, 1620, 26973, 0, 0)
+    );
+    #[cfg(target_has_atomic = "ptr")]
+    assert_eq!(u.work, 102525);
+    #[cfg(all(target_pointer_width = "64", target_has_atomic = "ptr"))]
+    assert_eq!(u.allocation_units, 194028);
+    assert_eq!(
+        Digest::of(&bytes).0,
+        [
+            200, 6, 35, 196, 215, 105, 185, 189, 130, 31, 53, 25, 205, 14, 32, 151, 141, 57, 25,
+            54, 106, 85, 108, 125, 169, 58, 98, 41, 244, 88, 14, 231
+        ]
+    );
+    Ok(())
+}

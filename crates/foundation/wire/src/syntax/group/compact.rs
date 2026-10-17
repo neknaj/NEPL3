@@ -12,7 +12,7 @@ const SYNTAX: &[u8] = b"NEPL3.Foreign.Syntax.v2\0";
 const ENTRY: &[u8] = b"NEPL3.Foreign.Entry.v2\0";
 
 struct CompactCapture<'a> {
-    table: Capture,
+    table: Option<Capture>,
     registry: &'a SchemaRegistry,
     cache: Vec<(SourceSnapshot, Digest)>,
     current: Vec<NdfValue>,
@@ -22,7 +22,17 @@ struct CompactCapture<'a> {
 impl<'a> CompactCapture<'a> {
     fn new(registry: &'a SchemaRegistry) -> Self {
         Self {
-            table: Capture::default(),
+            table: Some(Capture::default()),
+            registry,
+            cache: Vec::new(),
+            current: Vec::new(),
+            provenances: Vec::new(),
+            entries: Vec::new(),
+        }
+    }
+    fn identity_only(registry: &'a SchemaRegistry) -> Self {
+        Self {
+            table: None,
             registry,
             cache: Vec::new(),
             current: Vec::new(),
@@ -57,7 +67,7 @@ impl<'a> CompactCapture<'a> {
                 }
             }
         }
-        // Admission has already occurred through table.take. Still use the
+        // Admission has already occurred through the selected capture path. Still use the
         // normal typed adapter and registry check; a stored digest alone is no proof.
         let NdfValue::List(ref mut values) =
             crate::source::sources_value(core::slice::from_ref(source), schema, admission, b)?
@@ -90,9 +100,17 @@ impl GroupSources for CompactCapture<'_> {
         admission: &mut SourceAdmission,
         b: &mut Budget,
     ) -> Result<NdfValue, WireError> {
-        let empty = self.table.take(sources, admission, b)?;
+        let archive = self.table.is_some();
+        let empty = if let Some(table) = self.table.as_mut() {
+            table.take(sources, admission, b)?
+        } else {
+            NdfValue::List(Vec::new())
+        };
         let mut members = Vec::new();
         for (_, source) in crate::source::ordered_sources(sources, b)? {
+            if !archive {
+                admission.admit_existing(source, b)?;
+            }
             let digest = self.source_digest(source, schema, admission, b)?;
             push(&mut members, digest_value(digest, b)?, b)?;
         }
@@ -211,9 +229,12 @@ fn finish_encoded(
     if !capture.current.is_empty() {
         return Err(WireError::InvalidLength);
     }
-    let sources = capture
-        .table
-        .finish(source_archive, foundation, admission, b)?;
+    let sources = capture.table.ok_or(WireError::InvalidLength)?.finish(
+        source_archive,
+        foundation,
+        admission,
+        b,
+    )?;
     let value = record(
         group_archive,
         nepl3_core::schema::archive::group::ROOT,
@@ -393,7 +414,7 @@ pub fn commit_at_depths(
     })?;
     let result = (|| {
         crate::source::archive::fields::check(foundation, registry, true, b)?;
-        let mut capture = CompactCapture::new(registry);
+        let mut capture = CompactCapture::identity_only(registry);
         let skeleton = encode_validated(
             input.group,
             foundation,
