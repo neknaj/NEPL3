@@ -40,3 +40,9 @@ and retains the same exact SourceSnapshot/digest cache and ordered commitment
 memberships. Archive capture keeps its existing union/membership behavior. Removing
 unused transport bookkeeping does not alter either identity preimage or skip
 source equality, descriptor, native validation or admission checks.
+
+Identity-only source digest lookup may use a next-index hint local to one
+canonically ordered source list. Every hit still compares the full identity and
+checks exact snapshot equality. Gaps fall back to bounded binary search; the hint
+is reset for each local list. Admission, duplicate rejection, miss-path schema
+validation and digest framing remain mandatory. Archive lookup is unchanged.
