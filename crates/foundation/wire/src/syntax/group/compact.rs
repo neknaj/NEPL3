@@ -221,15 +221,33 @@ fn finish_encoded(
         b,
     )?;
     let transport = crate::encode_checked(&value, &super::archive::archive_type(), registry, b)?;
-    let f = fields(&skeleton, foundation, "ForeignClosureGroup", 3)?;
+    let result = entry_commitments(
+        group,
+        &skeleton,
+        capture.provenances,
+        capture.entries,
+        foundation,
+        b,
+    )?;
+    Ok((transport, result))
+}
+fn entry_commitments(
+    group: &ForeignClosureGroup,
+    skeleton: &NdfValue,
+    provenances: Vec<NdfValue>,
+    entries: Vec<NdfValue>,
+    foundation: &SchemaRef,
+    b: &mut Budget,
+) -> Result<Vec<Digest>, WireError> {
+    let f = fields(skeleton, foundation, "ForeignClosureGroup", 3)?;
     let ps = list(&f[0])?;
     let es = list(&f[1])?;
     let xs = list(&f[2])?;
-    if ps.len() != capture.provenances.len() || xs.len() != capture.entries.len() {
+    if ps.len() != provenances.len() || xs.len() != entries.len() {
         return Err(WireError::InvalidLength);
     }
     let mut pd = Vec::new();
-    for (p, members) in ps.iter().zip(capture.provenances) {
+    for (p, members) in ps.iter().zip(provenances) {
         b.charge(Resource::Work, 1)?;
         push(&mut pd, component(PROVENANCE, p, members, b)?, b)?;
     }
@@ -240,7 +258,7 @@ fn finish_encoded(
         push(&mut ed, crate::encode::digest(ENVIRONMENT, &f[1], b)?, b)?;
     }
     let mut result = Vec::new();
-    for ((entry, x), members) in group.entries.iter().zip(xs).zip(capture.entries) {
+    for ((entry, x), members) in group.entries.iter().zip(xs).zip(entries) {
         b.charge(Resource::Work, 1)?;
         let owner_index = usize::try_from(entry.owner.0).map_err(|_| WireError::InvalidLength)?;
         let owner = group
@@ -264,7 +282,7 @@ fn finish_encoded(
         )?;
     }
     b.poll()?;
-    Ok((transport, result))
+    Ok(result)
 }
 
 #[cfg(test)]
@@ -340,4 +358,85 @@ pub fn encode_at_depths(
             },
         )
     })
+}
+
+/// Identity-only operation. The complete skeleton and position-preserving local
+/// memberships bind the ordered group without serializing either archive layer.
+pub fn commit_at_depths(
+    input: GroupAtDepths<'_>,
+    foundation: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<
+    nepl3_core::value_codec::commitment::GroupCommitments,
+    nepl3_core::value_codec::GroupEncodingError<WireError>,
+> {
+    use nepl3_core::value_codec::{
+        FoundationCodecError, GroupEncodingError, commitment::GroupCommitments,
+    };
+    let normalize = |error: WireError| match error.stop_reason() {
+        Some(reason) => WireError::Stopped(reason),
+        None => error,
+    };
+    validate_for_encoding_at_depths(
+        input.group,
+        input.depths,
+        input.native_registry,
+        registry,
+        admission,
+        b,
+    )
+    .map_err(|e| match e {
+        GroupEncodingError::Structure(e) => GroupEncodingError::Structure(e),
+        GroupEncodingError::Codec(e) => GroupEncodingError::Codec(normalize(e)),
+    })?;
+    let result = (|| {
+        crate::source::archive::fields::check(foundation, registry, true, b)?;
+        let mut capture = CompactCapture::new(registry);
+        let skeleton = encode_validated(
+            input.group,
+            foundation,
+            registry,
+            admission,
+            b,
+            &mut capture,
+        )?;
+        b.charge(
+            Resource::AllocationUnits,
+            ("nepl3.foundation".len() + "ForeignClosureGroup".len()) as u64,
+        )?;
+        registry.validate(&expected("ForeignClosureGroup"), &skeleton, b)?;
+        if !capture.current.is_empty() {
+            return Err(WireError::InvalidLength);
+        }
+        let mut provenance_members = Vec::new();
+        for value in &capture.provenances {
+            push(&mut provenance_members, value.clone_with_budget(b)?, b)?;
+        }
+        let mut entry_members = Vec::new();
+        for value in &capture.entries {
+            push(&mut entry_members, value.clone_with_budget(b)?, b)?;
+        }
+        let entry_digests = entry_commitments(
+            input.group,
+            &skeleton,
+            capture.provenances,
+            capture.entries,
+            foundation,
+            b,
+        )?;
+        let mut fields = Vec::new();
+        push(&mut fields, skeleton, b)?;
+        push(&mut fields, NdfValue::List(provenance_members), b)?;
+        push(&mut fields, NdfValue::List(entry_members), b)?;
+        let group_digest =
+            crate::encode::digest(b"NEPL3.Foreign.Group.v2\0", &NdfValue::List(fields), b)?;
+        b.poll()?;
+        Ok(GroupCommitments {
+            group_digest,
+            entry_digests,
+        })
+    })();
+    result.map_err(|e| GroupEncodingError::Codec(normalize(e)))
 }
