@@ -132,6 +132,36 @@ where
     )
 }
 
+/// Explicit compact identity profile. Alias/style and SVG validation still run
+/// before archive resolution under the same cumulative output Budget.
+pub fn render_compact_footnotes_svg_math<
+    C: nepl3_core::value_codec::archive::FoundationGroupArchiveCodec,
+>(
+    set: &PageSet,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+    aliases: &[&[Alias]],
+    surfaces: MathSurfaces<'_>,
+) -> Result<PagesArtifact, Error>
+where
+    C::Error: core::fmt::Debug,
+{
+    render_using(
+        set,
+        registry,
+        codec,
+        budget,
+        aliases,
+        PageMode {
+            styles: None,
+            svg: true,
+            math: Some(surfaces),
+        },
+        domain::archive::resolve,
+    )
+}
+
 struct PageMode<'a> {
     styles: Option<&'a [NotesMode]>,
     svg: bool,
@@ -145,6 +175,25 @@ fn render_inner<C: FoundationValueCodec>(
     budget: &mut Budget,
     aliases: &[&[Alias]],
     mode: PageMode<'_>,
+) -> Result<PagesArtifact, Error>
+where
+    C::Error: core::fmt::Debug,
+{
+    render_using(set, registry, codec, budget, aliases, mode, domain::resolve)
+}
+fn render_using<'a, C: FoundationValueCodec>(
+    set: &'a PageSet,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+    aliases: &[&[Alias]],
+    mode: PageMode<'_>,
+    resolve: impl FnOnce(
+        &'a PageSet,
+        &SchemaRegistry,
+        &mut C,
+        &mut Budget,
+    ) -> Result<domain::CheckedPages<'a>, domain::PageError<'a, C::Error>>,
 ) -> Result<PagesArtifact, Error>
 where
     C::Error: core::fmt::Debug,
@@ -168,7 +217,7 @@ where
     } else {
         None
     };
-    let checked = domain::resolve(set, registry, codec, budget).map_err(|e| match e {
+    let checked = resolve(set, registry, codec, budget).map_err(|e| match e {
         domain::PageError::Stopped(s) => Error::Stopped(s),
         e => Error::Invalid(format!("{e:?}")),
     })?;

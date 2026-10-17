@@ -21,6 +21,37 @@ use nepl3_wire::foundation::FoundationCodec;
 
 pub(super) const RENDERER: &str = "nepl3-tools.markdown-annotated-pages/4";
 pub(super) const FOOTNOTES_RENDERER: &str = "nepl3-tools.markdown-footnotes-pages/1";
+pub(super) const COMPACT_RENDERER: &str = "nepl3-tools.markdown-footnotes-compact-pages/1";
+pub(super) fn is_footnotes(renderer: &str) -> bool {
+    matches!(renderer, FOOTNOTES_RENDERER | COMPACT_RENDERER)
+}
+fn compiled_for(inputs: &[Input]) -> Result<Compiled> {
+    let mut compiled = crate::doc::source::compiled()?;
+    if inputs
+        .iter()
+        .all(|input| input.page.renderer == COMPACT_RENDERER)
+    {
+        // Contract construction is host compilation setup, like source::compiled;
+        // it neither admits document sources nor resets an output/retry Budget.
+        let mut budget = crate::doc::source::budget();
+        for descriptor in [
+            nepl3_core::schema::archive::descriptor(&mut budget),
+            nepl3_core::schema::archive::group::descriptor(&mut budget),
+            nepl3_doc_core::schema::archive::descriptor(&mut budget),
+            nepl3_doc_core::schema::archive::pages::descriptor(&mut budget),
+        ] {
+            let descriptor = descriptor.map_err(err)?;
+            let reference = descriptor.reference(&mut budget).map_err(err)?;
+            compiled
+                .doc
+                .registry
+                .register(reference, descriptor, &mut budget)
+                .map_err(err)?;
+        }
+        compiled.doc.registry.finalize(&mut budget).map_err(err)?;
+    }
+    Ok(compiled)
+}
 const CONTEXT: &[u8] = b"nepl3.canonical-input-context/1\0";
 const MAX_ALIASES: u64 = 1_048_576;
 const MAX_OUTPUT: u64 = 2_097_152;
@@ -145,10 +176,12 @@ struct Captured {
 fn capture(root: &Path, raw: Vec<u8>) -> Result<Captured> {
     let registry = parse_registry(&raw)?;
     let phases = registry.phases();
-    let grouped = registry
-        .pages
-        .iter()
-        .any(|p| matches!(p.renderer.as_str(), RENDERER | FOOTNOTES_RENDERER));
+    let grouped = registry.pages.iter().any(|p| {
+        matches!(
+            p.renderer.as_str(),
+            RENDERER | FOOTNOTES_RENDERER | COMPACT_RENDERER
+        )
+    });
     let references = reference_inputs(root, registry.files)?;
     if registry.pages.len() > 128 {
         return Err("PageCountLimit".into());
@@ -193,7 +226,7 @@ fn prepare_group(
 ) -> Result<PreparedGroup> {
     let footnotes = inputs
         .iter()
-        .all(|input| input.page.renderer == FOOTNOTES_RENDERER);
+        .all(|input| is_footnotes(&input.page.renderer));
     let svg = !references.is_empty() && footnotes;
     charge(
         budget,
@@ -310,7 +343,7 @@ fn render_group(
         aliases.len() * core::mem::size_of::<&[annotated::Alias]>(),
     )?;
     let refs: Vec<_> = aliases.iter().map(Vec::as_slice).collect();
-    let styles = if inputs.iter().any(|v| v.page.renderer == FOOTNOTES_RENDERER) {
+    let styles = if inputs.iter().any(|v| is_footnotes(&v.page.renderer)) {
         charge(budget, Resource::Work, inputs.len())?;
         charge(
             budget,
@@ -321,7 +354,7 @@ fn render_group(
             inputs
                 .iter()
                 .map(|v| {
-                    if v.page.renderer == FOOTNOTES_RENDERER {
+                    if is_footnotes(&v.page.renderer) {
                         annotated::NotesMode::Footnotes
                     } else {
                         annotated::NotesMode::Inline
@@ -343,7 +376,15 @@ fn render_group(
             .iter()
             .find(|p| p.schema.package == "nepl3.syntax.sentence")
             .ok_or("missing standard Sentence surface")?;
-        annotated::pages::render_footnotes_svg_math(
+        let render = if inputs
+            .iter()
+            .all(|input| input.page.renderer == COMPACT_RENDERER)
+        {
+            annotated::pages::render_compact_footnotes_svg_math
+        } else {
+            annotated::pages::render_footnotes_svg_math
+        };
+        render(
             set,
             &compiled.doc.registry,
             &mut codec,
@@ -421,7 +462,7 @@ fn prepare_batch(
         needs_group,
         phases,
     } = capture(root, raw)?;
-    let compiled = crate::doc::source::compiled()?;
+    let compiled = compiled_for(&inputs)?;
     let prepared = if needs_group {
         Some(prepare_group(
             &compiled, &inputs, references, phases, budget,
@@ -490,7 +531,7 @@ impl PreparedBatch {
         let phases = *phases;
         if let Some(group) = group.as_mut() {
             for (artifact, input) in group.pages.iter_mut().zip(inputs) {
-                if input.page.renderer == FOOTNOTES_RENDERER {
+                if is_footnotes(&input.page.renderer) {
                     continue;
                 }
                 let href = annotated::pages::relative(
@@ -690,6 +731,223 @@ mod retained_tests {
             &mut crate::doc::source::budget(),
         )?;
         let expected = batch.render(Usage::default(), &mut crate::doc::source::budget())?;
+        f.write("page.nepld", "invalid changed source")?;
+        f.write("aliases.json", "invalid changed aliases")?;
+        let mut short = Budget::new(Limits {
+            work: 0,
+            ..crate::doc::source::budget().limits()
+        });
+        assert!(batch.render(Usage::default(), &mut short).is_err());
+        assert_eq!(short.poll(), Err(StopReason::WorkLimit));
+        // A stopped Budget remains stopped; retaining inputs is not permission
+        // to revive it or to carry its checked-admission proof into a new one.
+        assert!(batch.render(Usage::default(), &mut short).is_err());
+        let actual = batch.render(Usage::default(), &mut crate::doc::source::budget())?;
+        assert_eq!(expected.files, actual.files);
+        assert_eq!(expected.manifest, actual.manifest);
+        assert!(actual.files[0].1.contains("Before"));
+        assert!(actual.files[0].1.contains("[^"));
+        Ok(())
+    }
+    #[test]
+    fn compact_profile_preserves_body_and_rejects_mixed_or_html() -> Result<()> {
+        let f = Fixture::new()?;
+        f.write("page.nepld",r#"article en "Compact" body cons paragraph cons "{Before/note}" nil cons paragraph cons sentence cons link relative "page.md" none text "Self" nil nil cons display Math frac 3 7 cons image asset "figure" none "Image" none nil"#)?;
+        f.write("aliases.json", r#"[{"section":null,"name":"entry"}]"#)?;
+        let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M0 0 L10 10"/></svg>"#;
+        f.write("image.svg", svg)?;
+        let manifest = |renderer: &str| {
+            serde_json::to_vec(&serde_json::json!({"version":1,"pages":[{
+                "id":"page","source":"page.nepld","projection":"page.md","route":"page.md","aliases":"aliases.json","renderer":renderer
+            }],"files":[{"id":"figure","source":"image.svg","route":"assets/image.svg"}]}))
+        };
+        let legacy = prepare_batch(
+            f.root(),
+            "pages.json",
+            manifest(FOOTNOTES_RENDERER)?,
+            &mut crate::doc::source::budget(),
+        )?;
+        let compact = prepare_batch(
+            f.root(),
+            "pages.json",
+            manifest(COMPACT_RENDERER)?,
+            &mut crate::doc::source::budget(),
+        )?;
+        let old = legacy.render(Usage::default(), &mut crate::doc::source::budget())?;
+        let new = compact.render(Usage::default(), &mut crate::doc::source::budget())?;
+        assert_eq!(
+            old.files[0].1.lines().skip(1).collect::<Vec<_>>(),
+            new.files[0].1.lines().skip(1).collect::<Vec<_>>()
+        );
+        assert!(
+            new.files
+                .iter()
+                .any(|(path, text)| path == "assets/image.svg" && text == svg)
+        );
+        assert!(new.files[0].1.contains("entry"));
+        assert!(new.files[0].1.contains("Self"));
+        let old_receipt: serde_json::Value = serde_json::from_str(&old.manifest)?;
+        let new_receipt: serde_json::Value = serde_json::from_str(&new.manifest)?;
+        let group = compact.prepared.as_ref().ok_or("prepared group")?;
+        let store = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(&compact.compiled.doc.registry, &store, &mut admission)
+                .map_err(err)?;
+        let checked = nepl3_doc_core::pages::archive::resolve(
+            &group.set,
+            &compact.compiled.doc.registry,
+            &mut codec,
+            &mut crate::doc::source::budget(),
+        )
+        .map_err(err)?;
+        assert_eq!(new_receipt["input_pageset"], hex(checked.plan().identity));
+        assert_eq!(
+            new_receipt["files"][0]["document_digest"],
+            hex(checked.document_digest(0).ok_or("document digest")?)
+        );
+        let guest = checked
+            .plan()
+            .remaining
+            .iter()
+            .find_map(|requirement| match &requirement.requirement {
+                nepl3_doc_core::prepare::DocRequirement::Foreign { guest_digest, .. } => {
+                    Some(*guest_digest)
+                }
+                _ => None,
+            })
+            .ok_or("Math commitment")?;
+        assert_eq!(
+            new_receipt["page_dependencies"][0]["math"][0]["guest_sha256"],
+            hex(guest)
+        );
+        assert_ne!(old_receipt["input_pageset"], new_receipt["input_pageset"]);
+        assert_ne!(
+            old_receipt["files"][0]["document_digest"],
+            new_receipt["files"][0]["document_digest"]
+        );
+        assert_ne!(
+            old_receipt["page_dependencies"][0]["math"],
+            new_receipt["page_dependencies"][0]["math"]
+        );
+        f.write(
+            "pages.json",
+            String::from_utf8(manifest(COMPACT_RENDERER)?)?,
+        )?;
+        assert!(super::super::generate_html(f.root(), "pages.json").is_err());
+        let mut mixed: serde_json::Value = serde_json::from_slice(&manifest(COMPACT_RENDERER)?)?;
+        let mut second = mixed["pages"][0].clone();
+        second["id"] = "second".into();
+        second["source"] = "second.nepld".into();
+        second["projection"] = "second.md".into();
+        second["route"] = "second.md".into();
+        second["renderer"] = FOOTNOTES_RENDERER.into();
+        mixed["pages"].as_array_mut().ok_or("pages")?.push(second);
+        let error = parse_registry(&serde_json::to_vec(&mixed)?)
+            .err()
+            .ok_or("mixed profile accepted")?;
+        assert!(
+            error
+                .to_string()
+                .contains("compact page identity cannot be mixed")
+        );
+        mixed["pages"][0]["renderer"] = FOOTNOTES_RENDERER.into();
+        parse_registry(&serde_json::to_vec(&mixed)?)?;
+        Ok(())
+    }
+    #[test]
+    fn compact_inputs_survive_output_stop_without_rereading_files() -> Result<()> {
+        let f = Fixture::new()?;
+        f.write(
+            "page.nepld",
+            r#"article en "Frozen" body cons paragraph cons "{Before/note}" nil nil"#,
+        )?;
+        f.write("aliases.json", "[]")?;
+        let raw = serde_json::to_vec(&serde_json::json!({"version":1,"pages":[{
+            "id":"page", "source":"page.nepld", "projection":"page.md", "route":"page.md",
+            "aliases":"aliases.json", "renderer":COMPACT_RENDERER
+        }]}))?;
+        let batch = prepare_batch(
+            f.root(),
+            "pages.json",
+            raw,
+            &mut crate::doc::source::budget(),
+        )?;
+        let expected = batch.render(Usage::default(), &mut crate::doc::source::budget())?;
+        let mut measured = crate::doc::source::budget();
+        batch.render(Usage::default(), &mut measured)?;
+        let u = measured.usage();
+        let mut limits = Limits {
+            source_bytes: u.source_bytes,
+            work: u.work,
+            depth: u.depth,
+            nodes: u.nodes,
+            allocation_units: u.allocation_units,
+            output_bytes: u.output_bytes,
+            diagnostics: u.diagnostics,
+            events: u.events,
+        };
+        // Receipts serialize the requested limits: reducing digit widths can
+        // reduce their own metered size. Find a stable exact boundary first.
+        loop {
+            let mut exact = Budget::new(limits);
+            batch.render(Usage::default(), &mut exact)?;
+            let u = exact.usage();
+            let next = Limits {
+                source_bytes: u.source_bytes,
+                work: u.work,
+                depth: u.depth,
+                nodes: u.nodes,
+                allocation_units: u.allocation_units,
+                output_bytes: u.output_bytes,
+                diagnostics: u.diagnostics,
+                events: u.events,
+            };
+            if next == limits {
+                break;
+            }
+            assert!(
+                next.source_bytes <= limits.source_bytes
+                    && next.work <= limits.work
+                    && next.depth <= limits.depth
+                    && next.nodes <= limits.nodes
+                    && next.allocation_units <= limits.allocation_units
+                    && next.output_bytes <= limits.output_bytes
+            );
+            limits = next;
+        }
+
+        for (resource, reason) in [
+            (0, StopReason::SourceLimit),
+            (1, StopReason::WorkLimit),
+            (2, StopReason::DepthLimit),
+            (3, StopReason::NodeLimit),
+            (4, StopReason::AllocationLimit),
+            (5, StopReason::OutputLimit),
+        ] {
+            let mut short = limits;
+            let limit = match resource {
+                0 => &mut short.source_bytes,
+                1 => &mut short.work,
+                2 => &mut short.depth,
+                3 => &mut short.nodes,
+                4 => &mut short.allocation_units,
+                _ => &mut short.output_bytes,
+            };
+            if *limit == 0 {
+                continue;
+            }
+            *limit -= 1;
+            let mut budget = Budget::new(short);
+            assert!(
+                batch.render(Usage::default(), &mut budget).is_err(),
+                "resource {resource}"
+            );
+            assert_eq!(budget.poll(), Err(reason));
+            let usage = budget.usage();
+            assert!(batch.render(Usage::default(), &mut budget).is_err());
+            assert_eq!(budget.usage(), usage);
+        }
         f.write("page.nepld", "invalid changed source")?;
         f.write("aliases.json", "invalid changed aliases")?;
         let mut short = Budget::new(Limits {

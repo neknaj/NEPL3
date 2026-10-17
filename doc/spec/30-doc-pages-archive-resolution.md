@@ -33,3 +33,5 @@ The explicit archive resolver reports a nested boundary stop as its top-level
 PageError::Stopped while retaining the Budget's original sticky reason. Legacy
 error classification is unchanged. The archive plan boundary shares this rule
 through its normal PortableError conversion.
+
+The opt-in tools consumer is specified in [compact Markdown pages](31-compact-markdown-pages.md).
