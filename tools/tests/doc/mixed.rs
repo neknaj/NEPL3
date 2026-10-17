@@ -811,3 +811,58 @@ fn mixed_lower_keeps_doc_guest_syntax_without_meaning_check() -> Result<(), Stri
         Ok(())
     })
 }
+
+#[test]
+fn production_literal_lower_reuses_codec_validation_without_changing_document() -> Result<(), String>
+{
+    let compiled = compiled()?;
+    with_input(
+        &compiled,
+        "paragraph cons \"Before [base/reading] {word/note}\" cons \"After\" nil",
+        "Block",
+        |tree, profile, b, a| {
+            let raw = &tree.tree().bundle;
+            let checked = raw
+                .validate_with_sources(profile.registry(), b, a)
+                .map_err(err)?;
+            let empty = SourceStore::default();
+            let mut measured = budget();
+            let mut admission = SourceAdmission::default();
+            let mut codec =
+                FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
+            let actual = nepl3_suite::adapters::sentence::literal::lower(
+                &checked,
+                &compiled.doc.package.schema,
+                Category::Block,
+                profile.registry(),
+                &mut measured,
+                &mut codec,
+            )
+            .map_err(err)?;
+            let mut old = budget();
+            let mut old_admission = SourceAdmission::default();
+            let mut old_codec =
+                FoundationCodec::new(profile.registry(), &empty, &mut old_admission)
+                    .map_err(err)?;
+            // Mutation 5 makes no change: the existing hostile-decoder fixture
+            // decodes and invokes the public validating bridge, like the old
+            // production route. All later Doc lower checks remain identical.
+            let expected = lower::document_with_decoder(
+                &checked,
+                &compiled.doc.package.schema,
+                Category::Block,
+                profile.registry(),
+                &mut old,
+                &mut UntrustedDecoder {
+                    codec: &mut old_codec,
+                    mutation: 5,
+                },
+            )
+            .map_err(err)?;
+            assert_eq!(actual, expected);
+            assert!(measured.usage().work < old.usage().work);
+            assert!(measured.usage().allocation_units < old.usage().allocation_units);
+            Ok(())
+        },
+    )
+}
