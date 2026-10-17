@@ -205,10 +205,21 @@ fn parse_registry(raw: &[u8]) -> Result<Registry> {
     if registry.version != 1 || registry.pages.is_empty() || registry.pages.len() > 1000 {
         return Err("unsupported or empty canonical registry".into());
     }
+    if registry
+        .pages
+        .iter()
+        .any(|p| p.renderer == projection::COMPACT_RENDERER)
+        && !registry
+            .pages
+            .iter()
+            .all(|p| p.renderer == projection::COMPACT_RENDERER)
+    {
+        return Err("compact page identity cannot be mixed with legacy renderers".into());
+    }
     let svg = registry
         .pages
         .iter()
-        .all(|p| p.renderer == projection::FOOTNOTES_RENDERER);
+        .all(|p| projection::is_footnotes(&p.renderer));
     if (!svg
         || registry
             .files
@@ -218,7 +229,7 @@ fn parse_registry(raw: &[u8]) -> Result<Registry> {
         && registry
             .pages
             .iter()
-            .any(|p| p.renderer == projection::FOOTNOTES_RENDERER)
+            .any(|p| projection::is_footnotes(&p.renderer))
     {
         return Err("footnote page sets cannot depend on unexported passive files".into());
     }
@@ -235,12 +246,15 @@ fn parse_registry(raw: &[u8]) -> Result<Registry> {
             || !ids.insert(&page.id)
             || !matches!(
                 page.renderer.as_str(),
-                RENDERER | projection::RENDERER | projection::FOOTNOTES_RENDERER
+                RENDERER
+                    | projection::RENDERER
+                    | projection::FOOTNOTES_RENDERER
+                    | projection::COMPACT_RENDERER
             )
         {
             return Err("invalid canonical page identity or renderer".into());
         }
-        let footnotes = page.renderer == projection::FOOTNOTES_RENDERER;
+        let footnotes = projection::is_footnotes(&page.renderer);
         for (name, suffix) in [
             (&page.source, ".nepld"),
             (&page.projection, ".md"),
@@ -625,7 +639,7 @@ pub(crate) fn generate_html_with_projections(
     if registry
         .pages
         .iter()
-        .any(|p| p.renderer == projection::FOOTNOTES_RENDERER)
+        .any(|p| projection::is_footnotes(&p.renderer))
     {
         return Err("footnote-only registry requires Markdown export".into());
     }
@@ -690,7 +704,7 @@ pub fn footnotes_manifest(manifest: &Path, output: &Path) -> Result<()> {
     if registry
         .pages
         .iter()
-        .any(|p| p.renderer != projection::FOOTNOTES_RENDERER)
+        .any(|p| !projection::is_footnotes(&p.renderer))
     {
         return Err("footnotes-pages requires the footnote renderer on every page".into());
     }

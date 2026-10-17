@@ -78,7 +78,7 @@ pub(crate) fn generate(
     } = capture(root, raw)?;
     let compiled = crate::doc::source::compiled()?;
     let initial_phases = limits.phases();
-    let footnotes = inputs.iter().all(|p| p.page.renderer == FOOTNOTES_RENDERER);
+    let footnotes = inputs.iter().all(|p| is_footnotes(&p.page.renderer));
     let svg = footnotes && !references.is_empty();
     let aliases = inputs
         .iter()
@@ -309,6 +309,92 @@ mod tests {
                 .any(|(p, s)| p == "two.md" && s.contains("\\frac{3}{7}"))
         );
         let r: serde_json::Value = serde_json::from_str(&output.manifest)?;
+        let a = r["job_execution"]["preparation_attempts"]
+            .as_array()
+            .ok_or("attempts")?;
+        assert_eq!(a.len(), 3);
+        let original = a[0]["stages"][0]["profile"]
+            .as_str()
+            .ok_or("original profile")?;
+        let resumed = a[2]["stages"][0]["profile"]
+            .as_str()
+            .ok_or("resumed profile")?;
+        assert_ne!(original, resumed);
+        assert_eq!(
+            a[0]["stages"][1]["profile"]
+                .as_str()
+                .ok_or("original lower profile")?,
+            original
+        );
+        assert_eq!(
+            a[2]["stages"][1]["profile"]
+                .as_str()
+                .ok_or("resumed lower profile")?,
+            resumed
+        );
+        assert_eq!(
+            r["page_dependencies"][1]["math"]
+                .as_array()
+                .ok_or("Math dependency")?
+                .len(),
+            20
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn compact_math_page_resumes_with_its_actual_profile_and_fresh_render_admission() -> Result<()>
+    {
+        let (f, raw) = fixture()?;
+        let raw = String::from_utf8(raw)?
+            .replace(FOOTNOTES_RENDERER, COMPACT_RENDERER)
+            .into_bytes();
+        f.write(
+            "two.nepld",
+            format!(
+                "article en \"Math\" body {} nil",
+                "cons display Math frac 3 7 ".repeat(20)
+            ),
+        )?;
+        let baseline = generate(
+            f.root(),
+            "pages.json",
+            raw.clone(),
+            RetryLimits::default(),
+            |_, _, _, _| Err("unexpected baseline stop".into()),
+        )?;
+        let r: serde_json::Value = serde_json::from_str(&baseline.manifest)?;
+        let first = r["job_execution"]["preparation_attempts"][0]["stages"][0]["usage"]["work"]
+            .as_u64()
+            .ok_or("first parse")?;
+        let second = r["job_execution"]["preparation_attempts"][1]["stages"][0]["usage"]["work"]
+            .as_u64()
+            .ok_or("Math parse")?;
+        assert!(second > first + 100);
+        let mut initial = RetryLimits::default();
+        initial.parse_limits.work = first + 100;
+        let output = generate(f.root(), "pages.json", raw, initial, |_, phase, _, _| {
+            assert!(matches!(phase, Phase::Preparation { page: 1 }));
+            Ok(Some(RetryLimits::default()))
+        })?;
+        assert!(
+            output
+                .files
+                .iter()
+                .any(|(p, s)| p == "two.md" && s.contains("\\frac{3}{7}"))
+        );
+        let r: serde_json::Value = serde_json::from_str(&output.manifest)?;
+        let baseline_receipt: serde_json::Value = serde_json::from_str(&baseline.manifest)?;
+        for key in [
+            "input_pageset",
+            "input_context",
+            "page_dependencies",
+            "files",
+        ] {
+            assert_eq!(r[key], baseline_receipt[key], "retry identity {key}");
+        }
+        assert_eq!(output.files, baseline.files);
+
         let a = r["job_execution"]["preparation_attempts"]
             .as_array()
             .ok_or("attempts")?;
