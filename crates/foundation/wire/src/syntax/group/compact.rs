@@ -46,7 +46,25 @@ impl<'a> CompactCapture<'a> {
         schema: &SchemaRef,
         admission: &mut SourceAdmission,
         b: &mut Budget,
+        mut next: Option<&mut usize>,
     ) -> Result<Digest, WireError> {
+        // A hint belongs to one ordered local set only. It never substitutes for
+        // identity comparison, exact snapshot equality, or source admission.
+        if let Some(index) = next.as_deref_mut()
+            && let Some((cached, digest)) = self.cache.get(*index)
+            && cached
+                .identity()
+                .compare_with_budget(source.identity(), b)?
+                == Ordering::Equal
+        {
+            if !cached.eq_with_budget(source, b)? {
+                return Err(nepl3_core::source::SourceError::IdentityConflict.into());
+            }
+            *index += 1;
+            b.charge(Resource::Work, 32)?;
+            return Ok(*digest);
+        }
+        // Gaps use binary search, so sparse subsets do not scan the entire cache.
         let mut lo = 0;
         let mut hi = self.cache.len();
         while lo < hi {
@@ -61,6 +79,9 @@ impl<'a> CompactCapture<'a> {
                 Ordering::Equal => {
                     if !self.cache[mid].0.eq_with_budget(source, b)? {
                         return Err(nepl3_core::source::SourceError::IdentityConflict.into());
+                    }
+                    if let Some(index) = next {
+                        *index = mid + 1;
                     }
                     b.charge(Resource::Work, 32)?;
                     return Ok(self.cache[mid].1);
@@ -89,6 +110,9 @@ impl<'a> CompactCapture<'a> {
         )?;
         let owned = source.clone_with_budget(b)?;
         self.cache.insert(lo, (owned, digest));
+        if let Some(index) = next {
+            *index = lo + 1;
+        }
         Ok(digest)
     }
 }
@@ -107,11 +131,18 @@ impl GroupSources for CompactCapture<'_> {
             NdfValue::List(Vec::new())
         };
         let mut members = Vec::new();
+        let mut next = 0;
         for (_, source) in crate::source::ordered_sources(sources, b)? {
             if !archive {
                 admission.admit_existing(source, b)?;
             }
-            let digest = self.source_digest(source, schema, admission, b)?;
+            let digest = self.source_digest(
+                source,
+                schema,
+                admission,
+                b,
+                if archive { None } else { Some(&mut next) },
+            )?;
             push(&mut members, digest_value(digest, b)?, b)?;
         }
         push(&mut self.current, NdfValue::List(members), b)?;
