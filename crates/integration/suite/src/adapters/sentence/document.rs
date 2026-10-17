@@ -67,6 +67,26 @@ pub fn document(
     a: &mut SourceAdmission,
 ) -> Result<d::DocumentSyntax, Error> {
     input.validate(r, b, a)?;
+    convert(input, r, b, a)
+}
+
+pub(super) fn decoded_document(
+    input: &super::literal::DecodedSentence<'_>,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+) -> Result<d::DocumentSyntax, Error> {
+    convert(input.syntax(), input.registry(), b, a)
+}
+
+// Only the public validating entry and the decoder-issued immutable owner can
+// enter conversion. Doc validation remains independent and is performed below.
+fn convert(
+    input: &SentenceSyntax,
+    r: &SchemaRegistry,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+) -> Result<d::DocumentSyntax, Error> {
+    b.poll()?;
     let mut nodes = Vec::new();
     for (kind, location) in input.value.nodes.iter().zip(&input.locations) {
         b.charge(Resource::Work, 1)?;

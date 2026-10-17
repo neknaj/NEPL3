@@ -2,7 +2,7 @@
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::SchemaRegistry,
-    source::SourceAdmission,
+    source::{SourceAdmission, SourceSnapshot},
     syntax::{NodeRef, SyntaxBundle, SyntaxError, SyntaxNode, ValidatedSyntaxBundle},
     value::{NdfValue, SchemaRef},
     value_codec::FoundationValueCodec,
@@ -12,7 +12,7 @@ use nepl3_doc_core::{
     lower::{LiteralDecoder, LowerError},
     model::DocumentSyntax,
 };
-use nepl3_sentence_core::portable;
+use nepl3_sentence_core::{portable, syntax::SentenceSyntax};
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum Error<E> {
@@ -56,6 +56,36 @@ impl<E> From<StructureError> for Error<E> {
     }
 }
 
+// An owned immutable result of one complete Sentence codec validation, tied to
+// the exact borrowed registry used for decoding. No mutable syntax access or
+// public constructor is exposed; this is not a portable proof or Doc proof.
+pub(super) struct DecodedSentence<'r> {
+    syntax: SentenceSyntax,
+    registry: &'r SchemaRegistry,
+}
+impl DecodedSentence<'_> {
+    pub(super) fn syntax(&self) -> &SentenceSyntax {
+        &self.syntax
+    }
+    pub(super) fn registry(&self) -> &SchemaRegistry {
+        self.registry
+    }
+}
+fn decode<'r, C: FoundationValueCodec>(
+    payload: &NdfValue,
+    owner: Option<&SourceSnapshot>,
+    registry: &'r SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<DecodedSentence<'r>, portable::Error<C::Error>> {
+    let syntax = match owner {
+        Some(owner) => portable::literal::from_value(payload, owner, registry, codec, b)?,
+        None => portable::syntax::from_value(payload, registry, codec, b)?,
+    };
+    b.poll()?;
+    Ok(DecodedSentence { syntax, registry })
+}
+
 struct Decoder<'a, C>(&'a mut C);
 impl<C: FoundationValueCodec> LiteralDecoder for Decoder<'_, C> {
     type Error = Error<C::Error>;
@@ -95,20 +125,20 @@ impl<C: FoundationValueCodec> LiteralDecoder for Decoder<'_, C> {
                 }
             }
             let owner = owner.ok_or(LowerError::LiteralPayload { node: id })?;
-            portable::literal::from_value(&token.payload, owner, registry, self.0, b)
+            decode(&token.payload, Some(owner), registry, self.0, b)
         } else {
-            portable::syntax::from_value(&token.payload, registry, self.0, b)
+            decode(&token.payload, None, registry, self.0, b)
         };
         let syntax = result.map_err(|error| match error {
             portable::Error::Stopped(reason) => Error::Stopped(reason),
             error => Error::Payload { node: id, error },
         })?;
-        super::document(&syntax, registry, b, self.0.source_admission()).map_err(
-            |error| match error {
+        super::document::decoded_document(&syntax, b, self.0.source_admission()).map_err(|error| {
+            match error {
                 super::Error::Stopped(reason) => Error::Stopped(reason),
                 error => Error::Adapter { node: id, error },
-            },
-        )
+            }
+        })
     }
 }
 
@@ -131,3 +161,6 @@ pub fn lower<C: FoundationValueCodec>(
         &mut Decoder(codec),
     )
 }
+
+#[cfg(test)]
+mod tests;
