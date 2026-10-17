@@ -5,7 +5,7 @@ use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     origin::{OriginError, OriginGraph, SourceMap},
     schema::SchemaRegistry,
-    source::{SourceAdmission, SourceError, SourceStore},
+    source::{SourceAdmission, SourceError, SourceSetError},
     syntax::SyntaxError,
     view::ViewError,
 };
@@ -95,21 +95,17 @@ impl MathSyntax {
             return Err(SyntaxError::from(nepl3_core::schema::SchemaError::Unfinalized).into());
         }
         let shape = self.value.validate_shape(b)?;
-        let mut store = SourceStore::default();
-        for source in &self.sources {
-            admission.admit_existing(source, b)?;
-            if store
-                .get_revision_with_budget(&source.identity().source, source.identity().revision, b)?
-                .is_some()
-            {
-                return Err(StructureError::DuplicateSource);
-            }
-            store.insert_ref_with_budget(source, b)?;
-        }
-        OriginGraph::validate_origins(&self.origins, &store, b)?;
+        let store =
+            admission
+                .checked_source_set(&self.sources, b)
+                .map_err(|error| match error {
+                    SourceSetError::Duplicate => StructureError::DuplicateSource,
+                    SourceSetError::Source(error) => StructureError::from(error),
+                })?;
+        OriginGraph::validate_origins(&self.origins, store, b)?;
         // Retain the exact immutable store: token views reuse this operation's
         // completed geometry check instead of rescanning every mapping.
-        let maps = SourceMap::validate_bound_mapping_parts(&self.source_maps, &[], &store, b)?;
+        let maps = SourceMap::validate_bound_mapping_parts(&self.source_maps, &[], store, b)?;
         for (index, node) in self.value.nodes.iter().enumerate() {
             b.charge(Resource::Work, 1)?;
             if let Some(origin) = node.origin
@@ -220,7 +216,7 @@ impl MathSyntax {
                 .get_ref(view.head.snapshot_ref())
                 .ok_or(SourceError::MissingSnapshot)?
                 .slice(&view.head)?;
-            view.view.validate_with_maps(&store, registry, &maps, b)?;
+            view.view.validate_with_maps(store, registry, &maps, b)?;
             for element in &view.view.elements {
                 if !maps.contains(&view.head, &element.span, b)? {
                     return Err(StructureError::ViewOwner);
