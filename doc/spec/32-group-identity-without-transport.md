@@ -31,3 +31,5 @@ APIs, transport bytes, identity domains and resource charges remain unchanged.
 Returned digests are data, not native validation proofs. A consuming Doc/PageSet
 profile must bind its remaining fields separately and explicitly select new identity
 domains. This capability alone establishes no rendering or historical-corpus success.
+
+Identity-only document consumption is specified in [Doc commitment profile](33-doc-commitment-profile.md).
