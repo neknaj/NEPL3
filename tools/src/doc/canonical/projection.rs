@@ -25,33 +25,6 @@ pub(super) const COMPACT_RENDERER: &str = "nepl3-tools.markdown-footnotes-compac
 pub(super) fn is_footnotes(renderer: &str) -> bool {
     matches!(renderer, FOOTNOTES_RENDERER | COMPACT_RENDERER)
 }
-fn compiled_for(inputs: &[Input]) -> Result<Compiled> {
-    let mut compiled = crate::doc::source::compiled()?;
-    if inputs
-        .iter()
-        .all(|input| input.page.renderer == COMPACT_RENDERER)
-    {
-        // Contract construction is host compilation setup, like source::compiled;
-        // it neither admits document sources nor resets an output/retry Budget.
-        let mut budget = crate::doc::source::budget();
-        for descriptor in [
-            nepl3_core::schema::archive::descriptor(&mut budget),
-            nepl3_core::schema::archive::group::descriptor(&mut budget),
-            nepl3_doc_core::schema::archive::descriptor(&mut budget),
-            nepl3_doc_core::schema::archive::pages::descriptor(&mut budget),
-        ] {
-            let descriptor = descriptor.map_err(err)?;
-            let reference = descriptor.reference(&mut budget).map_err(err)?;
-            compiled
-                .doc
-                .registry
-                .register(reference, descriptor, &mut budget)
-                .map_err(err)?;
-        }
-        compiled.doc.registry.finalize(&mut budget).map_err(err)?;
-    }
-    Ok(compiled)
-}
 const CONTEXT: &[u8] = b"nepl3.canonical-input-context/1\0";
 const MAX_ALIASES: u64 = 1_048_576;
 const MAX_OUTPUT: u64 = 2_097_152;
@@ -462,7 +435,7 @@ fn prepare_batch(
         needs_group,
         phases,
     } = capture(root, raw)?;
-    let compiled = compiled_for(&inputs)?;
+    let compiled = crate::doc::source::compiled()?;
     let prepared = if needs_group {
         Some(prepare_group(
             &compiled, &inputs, references, phases, budget,
@@ -794,7 +767,7 @@ mod retained_tests {
         let mut codec =
             FoundationCodec::new(&compact.compiled.doc.registry, &store, &mut admission)
                 .map_err(err)?;
-        let checked = nepl3_doc_core::pages::archive::resolve(
+        let checked = nepl3_doc_core::pages::compact::resolve(
             &group.set,
             &compact.compiled.doc.registry,
             &mut codec,

@@ -414,3 +414,171 @@ fn indexed_math_sources_preserve_duplicate_conflict_and_revision_errors() -> Res
     }
     Ok(())
 }
+
+#[test]
+fn warm_local_declarations_never_replace_math_structure_checks() -> Result<(), String> {
+    let r = registry()?;
+    let mut input = source_expression()?;
+    for i in 0..64 {
+        input.sources.push(
+            SourceSnapshot::new(
+                SourceId(format!("extra-{i:03}")),
+                0,
+                "memory:extra".into(),
+                b"x".to_vec(),
+                &mut b(),
+            )
+            .map_err(err)?,
+        );
+    }
+    let mut admission = SourceAdmission::default();
+    let mut operation = b();
+    input
+        .validate_structure(&r, &mut operation, &mut admission)
+        .map_err(err)?;
+    let cold = operation.usage();
+    input
+        .validate_structure(&r, &mut operation, &mut admission)
+        .map_err(err)?;
+    let measured = operation.usage();
+    #[cfg(target_has_atomic = "ptr")]
+    assert!(measured.work - cold.work < cold.work);
+    assert_eq!(measured.source_bytes, cold.source_bytes);
+    let mut malformed = input.clone();
+    malformed.value.nodes[0].origin = Some(OriginId(u64::MAX));
+    assert!(
+        malformed
+            .validate_structure(&r, &mut operation, &mut admission)
+            .is_err()
+    );
+    assert!(
+        malformed
+            .validate_structure(&r, &mut operation, &mut admission)
+            .is_err()
+    );
+    input
+        .validate_structure(&r, &mut operation, &mut admission)
+        .map_err(err)?;
+    let mut missing = input.clone();
+    missing.sources.remove(0);
+    assert!(
+        missing
+            .validate_structure(&r, &mut operation, &mut admission)
+            .is_err()
+    );
+    let mut duplicate = input.clone();
+    duplicate.sources.push(input.sources[0].clone());
+    assert!(matches!(
+        duplicate.validate_structure(&r, &mut operation, &mut admission),
+        Err(nepl3_math_core::check::StructureError::DuplicateSource)
+    ));
+    input
+        .validate_structure(&r, &mut operation, &mut admission)
+        .map_err(err)?;
+    let mut bad_map = input.clone();
+    bad_map.source_maps.push(nepl3_core::origin::Mapping {
+        source: input.sources[0].span(0, 1).map_err(err)?,
+        target: input.sources[0].span(0, 2).map_err(err)?,
+        kind: nepl3_core::origin::MappingKind::Exact,
+    });
+    assert!(
+        bad_map
+            .validate_structure(&r, &mut operation, &mut admission)
+            .is_err()
+    );
+    let mut bad_guest = input.clone();
+    bad_guest.value.nodes.truncate(1);
+    bad_guest.value.nodes[0].kind = MathKind::SentenceGuest {
+        syntax: EmbedRef(0),
+    };
+    bad_guest.value.root = MathRoot::SentenceGuest(SentenceGuestRef(0));
+    use nepl3_core::{
+        source::Digest,
+        syntax::{
+            Environment, EnvironmentEntry, EnvironmentRef, ForeignClosure, ForeignSyntax, NodeRef,
+            SyntaxBundle,
+        },
+    };
+    bad_guest.value.embeds.push(ForeignClosure {
+        syntax: ForeignSyntax {
+            schema: r
+                .selected("nepl3.foundation", 1)
+                .ok_or("foundation")?
+                .clone(),
+            category: "Sentence".into(),
+            root: NodeRef(0),
+            bundle: SyntaxBundle {
+                sources: vec![],
+                nodes: vec![],
+                origins: vec![],
+                root: NodeRef(0),
+                environments: vec![],
+                tokens: vec![],
+                source_maps: vec![],
+            },
+            environment: EnvironmentRef {
+                id: 0,
+                digest: Digest([0; 32]),
+            },
+        },
+        owner_environment: EnvironmentEntry {
+            id: 0,
+            digest: Digest([0; 32]),
+            value: Environment {
+                bindings: vec![],
+                resources: vec![],
+            },
+        },
+        owner_origins: vec![],
+        owner_sources: vec![],
+        owner_source_maps: vec![],
+    });
+    let guest_error = bad_guest
+        .validate_structure(&r, &mut operation, &mut admission)
+        .err();
+    assert!(
+        matches!(
+            guest_error,
+            Some(nepl3_math_core::check::StructureError::Syntax(_))
+        ),
+        "{guest_error:?}"
+    );
+    for kind in 0..3 {
+        let mut limits = b().limits();
+        limits.work = measured.work;
+        limits.allocation_units = measured.allocation_units;
+        let reason = match kind {
+            0 => None,
+            1 => {
+                limits.work -= 1;
+                Some(StopReason::WorkLimit)
+            }
+            _ => {
+                limits.allocation_units -= 1;
+                Some(StopReason::AllocationLimit)
+            }
+        };
+        let mut budget = Budget::new(limits);
+        let mut ledger = SourceAdmission::default();
+        // Seed and warm validation share the trial's one cumulative Budget.
+        input
+            .validate_structure(&r, &mut budget, &mut ledger)
+            .map_err(err)?;
+        let result = input.validate_structure(&r, &mut budget, &mut ledger);
+        if let Some(reason) = reason {
+            assert!(
+                matches!(result,Err(nepl3_math_core::check::StructureError::Stopped(actual)) if actual==reason)
+            );
+            assert_eq!(budget.poll(), Err(reason));
+            let saved = budget.usage();
+            assert!(
+                matches!(input.validate_structure(&r,&mut budget,&mut ledger),Err(nepl3_math_core::check::StructureError::Stopped(actual)) if actual==reason)
+            );
+            assert_eq!(budget.usage(), saved);
+        } else {
+            result.map_err(err)?;
+            assert_eq!(budget.usage(), measured);
+        }
+    }
+    Ok(())
+}

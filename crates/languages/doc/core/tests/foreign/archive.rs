@@ -1311,16 +1311,17 @@ fn legacy_resolver_retains_pre_refactor_identity_and_usage() -> Result<(), Strin
     assert_eq!(
         (
             u.source_bytes,
-            u.work,
             u.depth,
             u.nodes,
             u.output_bytes,
             u.diagnostics,
             u.events
         ),
-        (21, 35591, 17, 453, 256, 0, 0)
+        (21, 17, 453, 256, 0, 0)
     );
-    #[cfg(target_pointer_width = "64")]
+    #[cfg(target_has_atomic = "ptr")]
+    assert_eq!(u.work, 35591);
+    #[cfg(all(target_pointer_width = "64", target_has_atomic = "ptr"))]
     assert_eq!(u.allocation_units, 27254);
     assert_eq!(
         plan.identity.0,
@@ -1335,5 +1336,626 @@ fn legacy_resolver_retains_pre_refactor_identity_and_usage() -> Result<(), Strin
         matches!(&plan.remaining[0].requirement,nepl3_doc_core::prepare::DocRequirement::Foreign{guest_digest,..}
         if guest_digest.0==[225,252,72,62,147,114,222,11,155,47,35,217,162,40,83,53,131,190,85,252,181,114,74,203,181,90,26,165,155,84,58,158])
     );
+    Ok(())
+}
+
+impl<C: nepl3_core::value_codec::commitment::FoundationGroupCommitmentCodec>
+    nepl3_core::value_codec::commitment::FoundationGroupCommitmentCodec
+    for super::default::DefaultCodec<C>
+{
+    fn compact_group_commitments_at_depths(
+        &mut self,
+        g: &nepl3_core::syntax::group::ForeignClosureGroup,
+        d: &[u64],
+        r: &SchemaRegistry,
+        b: &mut Budget,
+    ) -> Result<
+        nepl3_core::value_codec::commitment::GroupCommitments,
+        GroupEncodingError<Self::Error>,
+    > {
+        let mut value = self.0.compact_group_commitments_at_depths(g, d, r, b)?;
+        match self.1 {
+            super::default::ArchiveComponents::Exact => {}
+            super::default::ArchiveComponents::Short => {
+                value.entry_digests.pop();
+            }
+            super::default::ArchiveComponents::Long => value
+                .entry_digests
+                .push(nepl3_core::source::Digest([0; 32])),
+        }
+        Ok(value)
+    }
+}
+#[test]
+fn commitment_pages_bind_complete_private_preimages_without_archive_contracts() -> Result<(), String>
+{
+    use nepl3_core::value_codec::commitment::FoundationGroupCommitmentCodec;
+    use nepl3_doc_core::pages::{self, PageIdentityProfile};
+    let r = registry()?;
+    assert!(r.selected("nepl3.doc-archive", 1).is_none());
+    let set = page_set(vec![document(&r)?]);
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut c = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let checked = pages::compact::resolve(&set, &r, &mut c, &mut b()).map_err(err)?;
+    assert_eq!(checked.identity_profile(), PageIdentityProfile::CompactV1);
+    // Start with an independently encoded ordinary Doc value and replace only
+    // the typed group's location. The private compact preimage is not transport.
+    let mut skeleton =
+        portable::to_value(&set.pages[0].document, &r, &mut c, &mut b()).map_err(err)?;
+    let group = c
+        .encode_foreign_group(
+            &nepl3_core::syntax::group::ForeignClosureGroup {
+                provenances: vec![],
+                environments: vec![],
+                entries: vec![],
+            },
+            &mut b(),
+        )
+        .map_err(err)?;
+    fields(&mut fields(&mut fields(&mut skeleton)?[0])?[2])?[1] = group;
+    let commits = c
+        .compact_group_commitments_at_depths(
+            &set.pages[0].document.value.embeds.group,
+            &[0],
+            &r,
+            &mut b(),
+        )
+        .map_err(err)?;
+    let doc_value = NdfValue::List(vec![
+        skeleton,
+        NdfValue::Bytes(commits.group_digest.0.to_vec()),
+    ]);
+    assert_eq!(
+        checked.document_digest(0),
+        Some(
+            c.canonical_value_digest(pages::compact::DOCUMENT_DOMAIN, &doc_value, &mut b())
+                .map_err(err)?
+        )
+    );
+    let mut legacy = portable::pages::set_to_value(&set, &r, &mut c, &mut b()).map_err(err)?;
+    let all = fields(&mut legacy)?;
+    let files = all[1].clone();
+    let NdfValue::List(pages) = &mut all[0] else {
+        return Err("pages".into());
+    };
+    let registration = fields(&mut pages[0])?[0].clone();
+    let preimage = NdfValue::List(vec![
+        NdfValue::List(vec![NdfValue::List(vec![registration, doc_value])]),
+        files,
+    ]);
+    assert_eq!(
+        checked.plan().identity,
+        c.canonical_value_digest(pages::compact::SET_DOMAIN, &preimage, &mut b())
+            .map_err(err)?
+    );
+    let guest = c
+        .canonical_value_digest(
+            pages::compact::GUEST_DOMAIN,
+            &NdfValue::Bytes(commits.entry_digests[0].0.to_vec()),
+            &mut b(),
+        )
+        .map_err(err)?;
+    assert!(checked.plan().remaining.iter().any(|p|matches!(&p.requirement,nepl3_doc_core::prepare::DocRequirement::Foreign{guest_digest,..} if *guest_digest==guest)));
+    Ok(())
+}
+#[test]
+fn commitment_pages_reject_archive_and_legacy_plans_and_bad_provider_counts() -> Result<(), String>
+{
+    use nepl3_doc_core::pages;
+    let r = setup()?;
+    let set = page_set(vec![document(&r)?]);
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut c = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let plan = pages::compact::resolve(&set, &r, &mut c, &mut b())
+        .map_err(err)?
+        .into_plan();
+    let value =
+        portable::commitment::plan_to_value(&plan, &set, &r, &mut c, &mut b()).map_err(err)?;
+    assert_eq!(
+        portable::commitment::plan_from_value(&value, &set, &r, &mut c, &mut b()).map_err(err)?,
+        plan
+    );
+    assert!(portable::pages::plan_from_value(&value, &set, &r, &mut c, &mut b()).is_err());
+    assert!(codec::pages::plan_from_value(&value, &set, &r, &mut c, &mut b()).is_err());
+    for other in [
+        pages::resolve(&set, &r, &mut c, &mut b())
+            .map_err(err)?
+            .into_plan(),
+        pages::archive::resolve(&set, &r, &mut c, &mut b())
+            .map_err(err)?
+            .into_plan(),
+    ] {
+        assert!(portable::commitment::plan_to_value(&other, &set, &r, &mut c, &mut b()).is_err());
+    }
+    for mode in [
+        super::default::ArchiveComponents::Short,
+        super::default::ArchiveComponents::Long,
+    ] {
+        let mut admission = SourceAdmission::default();
+        let inner = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+        let mut c = super::default::DefaultCodec::new(inner);
+        c.1 = mode;
+        assert!(pages::compact::resolve(&set, &r, &mut c, &mut b()).is_err());
+    }
+    Ok(())
+}
+
+#[test]
+fn commitment_pages_resolver_budgets_are_exact_and_sticky() -> Result<(), String> {
+    let r = registry()?;
+    let doc = page_set(vec![document(&r)?]);
+    for alternate in [false, true] {
+        let run = |budget:&mut Budget| -> Result<(),nepl3_doc_core::pages::PageError<'_,nepl3_wire::WireError>> {
+            let empty=SourceStore::default();let mut admission=SourceAdmission::default();
+            let mut c=FoundationCodec::new(&r,&empty,&mut admission).map_err(PortableError::Foundation)?;
+            if alternate {
+                let mut c=super::default::DefaultCodec::new(c);
+                nepl3_doc_core::pages::compact::resolve(&doc,&r,&mut c,budget).map(|_|())
+            } else { nepl3_doc_core::pages::compact::resolve(&doc,&r,&mut c,budget).map(|_|()) }
+        };
+        let mut measured = b();
+        run(&mut measured).map_err(err)?;
+        let u = measured.usage();
+        let limits = Limits {
+            source_bytes: u.source_bytes,
+            work: u.work,
+            depth: u.depth,
+            nodes: u.nodes,
+            allocation_units: u.allocation_units,
+            output_bytes: u.output_bytes,
+            diagnostics: u.diagnostics,
+            events: u.events,
+        };
+        run(&mut Budget::new(limits)).map_err(err)?;
+        for resource in 0..6 {
+            let mut short = limits;
+            let reason = match resource {
+                0 => {
+                    short.source_bytes -= 1;
+                    StopReason::SourceLimit
+                }
+                1 => {
+                    short.work -= 1;
+                    StopReason::WorkLimit
+                }
+                2 => {
+                    short.depth -= 1;
+                    StopReason::DepthLimit
+                }
+                3 => {
+                    short.nodes -= 1;
+                    StopReason::NodeLimit
+                }
+                4 => {
+                    short.allocation_units -= 1;
+                    StopReason::AllocationLimit
+                }
+                _ => {
+                    if short.output_bytes == 0 {
+                        continue;
+                    }
+                    short.output_bytes -= 1;
+                    StopReason::OutputLimit
+                }
+            };
+            let mut budget = Budget::new(short);
+            assert_eq!(
+                run(&mut budget),
+                Err(nepl3_doc_core::pages::PageError::Stopped(reason))
+            );
+            let retained = budget.usage();
+            assert_eq!(
+                run(&mut budget),
+                Err(nepl3_doc_core::pages::PageError::Stopped(reason))
+            );
+            assert_eq!(budget.usage(), retained);
+        }
+        let mut cancelled = b();
+        cancelled.cancel();
+        assert_eq!(
+            run(&mut cancelled),
+            Err(nepl3_doc_core::pages::PageError::Stopped(
+                StopReason::Cancelled
+            ))
+        );
+    }
+    Ok(())
+}
+#[test]
+fn commitment_pages_plan_adapter_budgets_are_exact_and_sticky() -> Result<(), String> {
+    let r = registry()?;
+    let doc = page_set(vec![document(&r)?]);
+    for alternate in [false, true] {
+        let run = |budget:&mut Budget| -> Result<(),nepl3_doc_core::pages::PageError<'_,nepl3_wire::WireError>> {
+            let empty=SourceStore::default();let mut admission=SourceAdmission::default();
+            let c=FoundationCodec::new(&r,&empty,&mut admission).map_err(PortableError::Foundation)?;
+            let mut c=super::default::DefaultCodec::new(c);
+            let plan=nepl3_doc_core::pages::compact::resolve(&doc,&r,&mut c,budget)?.into_plan();
+            let value=portable::commitment::plan_to_value(&plan,&doc,&r,&mut c,budget)?;
+            if alternate {portable::commitment::plan_from_value(&value,&doc,&r,&mut c,budget)?;}
+            Ok(())
+        };
+        let mut measured = b();
+        run(&mut measured).map_err(err)?;
+        let u = measured.usage();
+        let limits = Limits {
+            source_bytes: u.source_bytes,
+            work: u.work,
+            depth: u.depth,
+            nodes: u.nodes,
+            allocation_units: u.allocation_units,
+            output_bytes: u.output_bytes,
+            diagnostics: u.diagnostics,
+            events: u.events,
+        };
+        run(&mut Budget::new(limits)).map_err(err)?;
+        for resource in 0..6 {
+            let mut short = limits;
+            let reason = match resource {
+                0 => {
+                    short.source_bytes -= 1;
+                    StopReason::SourceLimit
+                }
+                1 => {
+                    short.work -= 1;
+                    StopReason::WorkLimit
+                }
+                2 => {
+                    short.depth -= 1;
+                    StopReason::DepthLimit
+                }
+                3 => {
+                    short.nodes -= 1;
+                    StopReason::NodeLimit
+                }
+                4 => {
+                    short.allocation_units -= 1;
+                    StopReason::AllocationLimit
+                }
+                _ => {
+                    if short.output_bytes == 0 {
+                        continue;
+                    }
+                    short.output_bytes -= 1;
+                    StopReason::OutputLimit
+                }
+            };
+            let mut budget = Budget::new(short);
+            assert_eq!(
+                run(&mut budget),
+                Err(nepl3_doc_core::pages::PageError::Stopped(reason))
+            );
+            let retained = budget.usage();
+            assert_eq!(
+                run(&mut budget),
+                Err(nepl3_doc_core::pages::PageError::Stopped(reason))
+            );
+            assert_eq!(budget.usage(), retained);
+        }
+        let mut cancelled = b();
+        cancelled.cancel();
+        assert_eq!(
+            run(&mut cancelled),
+            Err(nepl3_doc_core::pages::PageError::Stopped(
+                StopReason::Cancelled
+            ))
+        );
+    }
+    Ok(())
+}
+#[test]
+fn commitment_pages_links_helpers_and_tampered_plan_are_checked() -> Result<(), String> {
+    use nepl3_doc_core::pages::{self, FileBytes, PageFile, PageProjectionError};
+    let r = registry()?;
+    let mut set = linked_set();
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut c = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let mut budget = b();
+    let checked = pages::compact::resolve(&set, &r, &mut c, &mut budget).map_err(err)?;
+    let legacy = pages::resolve(&set, &r, &mut c, &mut b()).map_err(err)?;
+    assert_eq!(checked.plan().links.len(), 2);
+    assert_eq!(checked.plan().links, legacy.plan().links);
+    checked.document_structure(0, &mut budget).map_err(err)?;
+    let text = checked
+        .project_unresolved_text(
+            0,
+            SentenceRef(1),
+            nepl3_doc_core::text::AnnotationPolicy::BaseOnly,
+            &mut budget,
+        )
+        .map_err(err)?;
+    assert_eq!(
+        text.outcome,
+        nepl3_doc_core::text::PlainTextOutcome::Complete {
+            text: "文書".into()
+        }
+    );
+    let mut wrong = Budget::new(Limits {
+        work: 1,
+        ..budget.limits()
+    });
+    assert!(matches!(
+        checked.document_structure(0, &mut wrong),
+        Err(PageProjectionError::Stopped(_))
+    ));
+    let mut wrong = Budget::new(Limits {
+        work: budget.limits().work + 1,
+        ..budget.limits()
+    });
+    assert!(matches!(
+        checked.document_structure(0, &mut wrong),
+        Err(PageProjectionError::ScopeMismatch)
+    ));
+    assert!(matches!(
+        budget.with_depth(|b| checked.document_structure(0, b).map(|_| ())),
+        Err(PageProjectionError::ScopeMismatch)
+    ));
+    let mut plan = checked.into_plan();
+    plan.links.swap(0, 1);
+    assert!(portable::commitment::plan_to_value(&plan, &set, &r, &mut c, &mut b()).is_err());
+    let mut outer = b();
+    outer
+        .with_depth_at_least(4, |b| {
+            let checked = pages::compact::resolve(&set, &r, &mut c, b)?;
+            checked
+                .document_structure(0, b)
+                .map_err(|_| pages::PageError::Boundary(PortableError::Shape))?;
+            Ok::<_, pages::PageError<'_, nepl3_wire::WireError>>(())
+        })
+        .map_err(err)?;
+    set.files.push(PageFile {
+        registration: PageRegistration {
+            id: "file".into(),
+            source: "doc/pic.svg".into(),
+            route: "img/pic.svg".into(),
+        },
+        content: FileBytes(vec![1, 2]),
+    });
+    set.pages[0].document.value.nodes[7].kind = DocKind::Link {
+        target: LinkTarget::Relative {
+            path: "pic.svg".into(),
+            fragment: None,
+        },
+        label: InlineRef(2),
+    };
+    let checked = pages::compact::resolve(&set, &r, &mut c, &mut b()).map_err(err)?;
+    assert_eq!(
+        checked.plan().links[0].target,
+        pages::PageDestination::File { index: 0 }
+    );
+    set.pages[0].document.value.nodes[7].kind = DocKind::Link {
+        target: LinkTarget::Page {
+            page: "second".into(),
+            fragment: Some("missing".into()),
+        },
+        label: InlineRef(2),
+    };
+    assert!(matches!(
+        pages::compact::resolve(&set, &r, &mut c, &mut b()),
+        Err(pages::PageError::MissingFragment { .. })
+    ));
+    Ok(())
+}
+
+#[test]
+fn commitment_pages_keep_ordered_document_and_guest_associations() -> Result<(), String> {
+    let r = registry()?;
+    let first = document(&r)?;
+    let mut second = document(&r)?;
+    second.value.nodes[2].kind = DocKind::Text {
+        text: "second".into(),
+    };
+    second.value.embeds.group.entries[0]
+        .syntax
+        .bundle
+        .sources
+        .push(
+            SourceSnapshot::new(
+                SourceId("extra".into()),
+                1,
+                "memory:extra".into(),
+                b"unused local".to_vec(),
+                &mut b(),
+            )
+            .map_err(err)?,
+        );
+    let run = |set: &PageSet| -> Result<(_, Vec<_>, Vec<_>), String> {
+        let empty = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut c = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+        let checked =
+            nepl3_doc_core::pages::compact::resolve(set, &r, &mut c, &mut b()).map_err(err)?;
+        let docs = (0..set.pages.len())
+            .map(|i| checked.document_digest(i as u64).ok_or("document"))
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(str::to_owned)?;
+        let guests = checked
+            .plan()
+            .remaining
+            .iter()
+            .filter_map(|p| match &p.requirement {
+                nepl3_doc_core::prepare::DocRequirement::Foreign { guest_digest, .. } => {
+                    Some((p.page, *guest_digest))
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        Ok((checked.plan().identity, docs, guests))
+    };
+    let a = run(&page_set(vec![first.clone()]))?;
+    let b = run(&page_set(vec![second.clone()]))?;
+    let together = run(&page_set(vec![first.clone(), second.clone()]))?;
+    assert_eq!(together.1, vec![a.1[0], b.1[0]]);
+    assert_eq!(together.2, vec![(0, a.2[0].1), (1, b.2[0].1)]);
+    let reversed = run(&page_set(vec![second, first]))?;
+    assert_ne!(together.0, reversed.0);
+    assert_eq!(reversed.1, vec![b.1[0], a.1[0]]);
+    Ok(())
+}
+#[test]
+fn commitment_pages_reject_cross_document_source_conflict() -> Result<(), String> {
+    let r = registry()?;
+    let mut first = document(&r)?;
+    let mut second = document(&r)?;
+    for (doc, text) in [
+        (&mut first, b"first".as_slice()),
+        (&mut second, b"second".as_slice()),
+    ] {
+        doc.sources.push(
+            SourceSnapshot::new(
+                SourceId("shared-doc".into()),
+                1,
+                "memory:shared".into(),
+                text.to_vec(),
+                &mut b(),
+            )
+            .map_err(err)?,
+        );
+    }
+    let run = |set: &PageSet| {
+        let empty = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut c = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+        nepl3_doc_core::pages::compact::resolve(set, &r, &mut c, &mut b())
+            .map(|_| ())
+            .map_err(err)
+    };
+    run(&page_set(vec![first.clone()]))?;
+    run(&page_set(vec![second.clone()]))?;
+    assert!(run(&page_set(vec![first, second])).is_err());
+    Ok(())
+}
+
+#[test]
+fn commitment_pages_bind_files_sources_and_match_alternate_provider() -> Result<(), String> {
+    use nepl3_doc_core::pages::{self, FileBytes, PageFile};
+    let r = registry()?;
+    let mut set = page_set(vec![document(&r)?]);
+    set.files.push(PageFile {
+        registration: PageRegistration {
+            id: "file".into(),
+            source: "asset.bin".into(),
+            route: "asset.bin".into(),
+        },
+        content: FileBytes(vec![1, 2, 3]),
+    });
+    let run = |set: &PageSet, alternate: bool| {
+        let empty = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let inner = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+        let checked = if alternate {
+            let mut c = super::default::DefaultCodec::new(inner);
+            pages::compact::resolve(set, &r, &mut c, &mut b()).map_err(err)?
+        } else {
+            let mut c = inner;
+            pages::compact::resolve(set, &r, &mut c, &mut b()).map_err(err)?
+        };
+        Ok::<_, String>((checked.plan().clone(), checked.document_digest(0)))
+    };
+    let original = run(&set, false)?;
+    assert_eq!(original, run(&set, true)?);
+    let mut changed = set.clone();
+    changed.files[0].content.0[0] ^= 1;
+    let bytes = run(&changed, false)?;
+    assert_ne!(bytes.0.identity, original.0.identity);
+    assert_eq!(bytes.1, original.1);
+    let mut changed = set.clone();
+    changed.files[0].registration.route = "other.bin".into();
+    assert_ne!(run(&changed, false)?.0.identity, original.0.identity);
+    let mut changed = set.clone();
+    changed.pages[0].document.sources.push(
+        SourceSnapshot::new(
+            SourceId("unused-doc".into()),
+            1,
+            "memory:unused-doc".into(),
+            b"declared".to_vec(),
+            &mut b(),
+        )
+        .map_err(err)?,
+    );
+    assert_ne!(run(&changed, false)?.1, original.1);
+    Ok(())
+}
+#[test]
+fn commitment_pages_check_deepest_shared_guest_occurrence() -> Result<(), String> {
+    use nepl3_core::value_codec::commitment::FoundationGroupCommitmentCodec;
+    let r = registry()?;
+    let mut nodes = vec![DocNode {
+        kind: DocKind::InlineMath {
+            syntax: EmbedRef(0),
+        },
+        locations: vec![],
+        origin: None,
+        span: None,
+    }];
+    for i in 1..20 {
+        nodes.push(DocNode {
+            kind: DocKind::Strong {
+                inline: InlineRef(i - 1),
+            },
+            locations: vec![],
+            origin: None,
+            span: None,
+        });
+    }
+    for kind in [
+        DocKind::Sentence {
+            inlines: vec![InlineRef(0), InlineRef(19)],
+        },
+        DocKind::Body { blocks: vec![] },
+        DocKind::Article {
+            language: "en".into(),
+            title: SentenceRef(20),
+            body: BodyRef(21),
+        },
+    ] {
+        nodes.push(DocNode {
+            kind,
+            locations: vec![],
+            origin: None,
+            span: None,
+        });
+    }
+    let doc = DocumentSyntax {
+        value: DocValue {
+            root: DocRoot::Article(ArticleRef(22)),
+            nodes,
+            embeds: embeds(EmbedKind::InlineMath, closure(&r)?),
+        },
+        sources: vec![],
+        origins: vec![],
+        views: vec![],
+        source_maps: vec![],
+    };
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut c = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let mut group_budget = b();
+    c.compact_group_commitments_at_depths(&doc.value.embeds.group, &[0], &r, &mut group_budget)
+        .map_err(err)?;
+    let set = page_set(vec![doc]);
+    let run = |budget: &mut Budget| {
+        let mut admission = SourceAdmission::default();
+        let mut c =
+            FoundationCodec::new(&r, &empty, &mut admission).map_err(PortableError::Foundation)?;
+        nepl3_doc_core::pages::compact::resolve(&set, &r, &mut c, budget).map(|_| ())
+    };
+    let mut measured = b();
+    measured.with_depth_at_least(4, run).map_err(err)?;
+    assert!(measured.usage().depth > group_budget.usage().depth);
+    let mut short = Budget::new(Limits {
+        depth: measured.usage().depth - 1,
+        ..b().limits()
+    });
+    assert!(matches!(
+        short.with_depth_at_least(4, run),
+        Err(nepl3_doc_core::pages::PageError::Stopped(
+            StopReason::DepthLimit
+        ))
+    ));
+    assert_eq!(short.current_depth(), 0);
     Ok(())
 }

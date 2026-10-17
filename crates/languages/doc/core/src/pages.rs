@@ -15,16 +15,23 @@ use nepl3_core::{
 };
 
 pub mod archive;
+pub mod compact;
 /// Explicit identity contract selected by the resolver, never inferred from bytes.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum PageIdentityProfile {
     LegacyV1,
     ArchiveV1,
+    CompactV1,
 }
 impl PageIdentityProfile {
     fn domains(self) -> (&'static [u8], &'static [u8], &'static [u8]) {
         match self {
             Self::LegacyV1 => (SET_DOMAIN, prepare::DOCUMENT_DOMAIN, prepare::GUEST_DOMAIN),
+            Self::CompactV1 => (
+                compact::SET_DOMAIN,
+                compact::DOCUMENT_DOMAIN,
+                compact::GUEST_DOMAIN,
+            ),
             Self::ArchiveV1 => (
                 archive::SET_DOMAIN,
                 archive::DOCUMENT_DOMAIN,
@@ -420,7 +427,12 @@ fn resolve_using<'a, C: FoundationValueCodec>(
         b,
     )?;
     for page in 0..structures.len() {
-        let document = portable::pages::document_value(&value, page, b)?;
+        let document = match profile {
+            PageIdentityProfile::CompactV1 => {
+                portable::commitment::document_value(&value, page, b)?
+            }
+            _ => portable::pages::document_value(&value, page, b)?,
+        };
         push(
             &mut digest_inputs,
             CanonicalDigestInput {

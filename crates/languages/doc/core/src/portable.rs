@@ -1,6 +1,7 @@
 //! Explicit Doc NDF schema adapters. Decoding produces raw data followed by the
 //! same source/category/graph checks used by native callers, not a render proof.
 pub mod archive;
+pub mod commitment;
 pub mod pages;
 pub mod prepare;
 pub mod print;

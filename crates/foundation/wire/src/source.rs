@@ -13,6 +13,7 @@ use nepl3_core::{
     },
     value::{NdfValue, Record, SchemaRef},
 };
+pub(crate) use order::OrderCache;
 
 pub(crate) fn expected(name: &str) -> TypeDescriptor {
     TypeDescriptor::Named(TypeRef {

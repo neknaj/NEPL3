@@ -76,7 +76,7 @@ pub(crate) fn generate(
         references,
         ..
     } = capture(root, raw)?;
-    let compiled = compiled_for(&inputs)?;
+    let compiled = crate::doc::source::compiled()?;
     let initial_phases = limits.phases();
     let footnotes = inputs.iter().all(|p| is_footnotes(&p.page.renderer));
     let svg = footnotes && !references.is_empty();

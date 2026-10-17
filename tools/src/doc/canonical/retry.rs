@@ -362,4 +362,104 @@ mod tests {
         );
         Ok(())
     }
+    #[test]
+    fn compact_math_svg_receipts_match_across_normal_and_retry_entries() -> Result<()> {
+        let f = Fixture::new()?;
+        f.write("page.nepld", r#"article en "Compact" body cons paragraph cons "{Text/note}" nil cons display Math frac 3 7 cons image asset "figure" none "Image" none nil"#)?;
+        f.write("aliases.json", "[]")?;
+        f.write("figure.svg", r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M0 0 L10 10"/></svg>"#)?;
+        let raw = serde_json::to_vec(&serde_json::json!({"version":1,"pages":[{
+            "id":"page","source":"page.nepld","projection":"page.md","route":"page.md",
+            "aliases":"aliases.json","renderer":COMPACT_RENDERER
+        }],"files":[{"id":"figure","source":"figure.svg","route":"assets/figure.svg"}]}))?;
+        let expected = generate_from_registry(
+            f.root(),
+            "pages.json",
+            raw.clone(),
+            &mut crate::doc::source::budget(),
+        )?;
+        let batch = prepare_batch(
+            f.root(),
+            "pages.json",
+            raw.clone(),
+            &mut crate::doc::source::budget(),
+        )?;
+        let mut measured = crate::doc::source::budget();
+        batch.render(Usage::default(), &mut measured)?;
+        let short_work = measured
+            .usage()
+            .work
+            .checked_sub(256)
+            .ok_or("fixture too small")?;
+        let large = crate::doc::source::budget().limits();
+        let mut selected = OutputRetryLimits::default();
+        selected.output_limits.work = short_work;
+        let mut stops = 0;
+        let retried = generate(
+            f.root(),
+            "pages.json",
+            raw.clone(),
+            selected,
+            |reason, used, _, _| {
+                assert_eq!(reason, StopReason::WorkLimit);
+                assert!(used.work > 0 && used.output_bytes > 0);
+                stops += 1;
+                Ok(Some((large, large)))
+            },
+        )?;
+        assert_eq!(stops, 1);
+        let mut selected = preparation::RetryLimits::default();
+        selected.output_limits.work = short_work;
+        let mut stops = 0;
+        let prepared = preparation::generate(
+            f.root(),
+            "pages.json",
+            raw,
+            selected,
+            |_, phase, reason, used| {
+                assert!(matches!(phase, preparation::Phase::Output));
+                assert_eq!(reason, StopReason::WorkLimit);
+                assert!(used.work > 0);
+                stops += 1;
+                Ok(Some(preparation::RetryLimits::default()))
+            },
+        )?;
+        assert_eq!(stops, 1);
+        let baseline: serde_json::Value = serde_json::from_str(&expected.manifest)?;
+        for actual in [&retried, &prepared] {
+            assert_eq!(actual.files, expected.files);
+            let receipt: serde_json::Value = serde_json::from_str(&actual.manifest)?;
+            for key in [
+                "input_pageset",
+                "input_context",
+                "page_dependencies",
+                "files",
+            ] {
+                assert_eq!(receipt[key], baseline[key], "{key}");
+            }
+        }
+        let output: serde_json::Value = serde_json::from_str(&retried.manifest)?;
+        let attempts = output["render_job"]["attempts"]
+            .as_array()
+            .ok_or("output attempts")?;
+        assert_eq!(attempts.len(), 2);
+        assert_eq!(attempts[0]["stop"], "WorkLimit");
+        assert!(attempts[1]["stop"].is_null());
+        let first = attempts[0]["usage"]["work"].as_u64().ok_or("failed work")?;
+        let total = output["render_job"]["usage"]["work"]
+            .as_u64()
+            .ok_or("total work")?;
+        let success = baseline["output_budget"]["usage_before_receipt_serialization"]["work"]
+            .as_u64()
+            .ok_or("baseline work")?;
+        assert!(first > 0 && total >= first + success);
+        let prepared: serde_json::Value = serde_json::from_str(&prepared.manifest)?;
+        let attempts = prepared["job_execution"]["render_attempts"]
+            .as_array()
+            .ok_or("preparation entry output attempts")?;
+        assert_eq!(attempts.len(), 2);
+        assert_eq!(attempts[0]["stop"], "WorkLimit");
+        assert!(attempts[1]["stop"].is_null());
+        Ok(())
+    }
 }

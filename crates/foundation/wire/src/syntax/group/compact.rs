@@ -12,7 +12,8 @@ const SYNTAX: &[u8] = b"NEPL3.Foreign.Syntax.v2\0";
 const ENTRY: &[u8] = b"NEPL3.Foreign.Entry.v2\0";
 
 struct CompactCapture<'a> {
-    table: Capture,
+    table: Option<Capture>,
+    order: crate::source::OrderCache,
     registry: &'a SchemaRegistry,
     cache: Vec<(SourceSnapshot, Digest)>,
     current: Vec<NdfValue>,
@@ -22,7 +23,19 @@ struct CompactCapture<'a> {
 impl<'a> CompactCapture<'a> {
     fn new(registry: &'a SchemaRegistry) -> Self {
         Self {
-            table: Capture::default(),
+            table: Some(Capture::default()),
+            order: crate::source::OrderCache::default(),
+            registry,
+            cache: Vec::new(),
+            current: Vec::new(),
+            provenances: Vec::new(),
+            entries: Vec::new(),
+        }
+    }
+    fn identity_only(registry: &'a SchemaRegistry) -> Self {
+        Self {
+            table: None,
+            order: crate::source::OrderCache::default(),
             registry,
             cache: Vec::new(),
             current: Vec::new(),
@@ -36,7 +49,25 @@ impl<'a> CompactCapture<'a> {
         schema: &SchemaRef,
         admission: &mut SourceAdmission,
         b: &mut Budget,
+        mut next: Option<&mut usize>,
     ) -> Result<Digest, WireError> {
+        // A hint belongs to one ordered local set only. It never substitutes for
+        // identity comparison, exact snapshot equality, or source admission.
+        if let Some(index) = next.as_deref_mut()
+            && let Some((cached, digest)) = self.cache.get(*index)
+            && cached
+                .identity()
+                .compare_with_budget(source.identity(), b)?
+                == Ordering::Equal
+        {
+            if !cached.eq_with_budget(source, b)? {
+                return Err(nepl3_core::source::SourceError::IdentityConflict.into());
+            }
+            *index += 1;
+            b.charge(Resource::Work, 32)?;
+            return Ok(*digest);
+        }
+        // Gaps use binary search, so sparse subsets do not scan the entire cache.
         let mut lo = 0;
         let mut hi = self.cache.len();
         while lo < hi {
@@ -52,12 +83,15 @@ impl<'a> CompactCapture<'a> {
                     if !self.cache[mid].0.eq_with_budget(source, b)? {
                         return Err(nepl3_core::source::SourceError::IdentityConflict.into());
                     }
+                    if let Some(index) = next {
+                        *index = mid + 1;
+                    }
                     b.charge(Resource::Work, 32)?;
                     return Ok(self.cache[mid].1);
                 }
             }
         }
-        // Admission has already occurred through table.take. Still use the
+        // Admission has already occurred through the selected capture path. Still use the
         // normal typed adapter and registry check; a stored digest alone is no proof.
         let NdfValue::List(ref mut values) =
             crate::source::sources_value(core::slice::from_ref(source), schema, admission, b)?
@@ -79,6 +113,9 @@ impl<'a> CompactCapture<'a> {
         )?;
         let owned = source.clone_with_budget(b)?;
         self.cache.insert(lo, (owned, digest));
+        if let Some(index) = next {
+            *index = lo + 1;
+        }
         Ok(digest)
     }
 }
@@ -90,10 +127,30 @@ impl GroupSources for CompactCapture<'_> {
         admission: &mut SourceAdmission,
         b: &mut Budget,
     ) -> Result<NdfValue, WireError> {
-        let empty = self.table.take(sources, admission, b)?;
+        let archive = self.table.is_some();
+        let empty = if let Some(table) = self.table.as_mut() {
+            table.take(sources, admission, b)?
+        } else {
+            NdfValue::List(Vec::new())
+        };
         let mut members = Vec::new();
-        for (_, source) in crate::source::ordered_sources(sources, b)? {
-            let digest = self.source_digest(source, schema, admission, b)?;
+        let mut next = 0;
+        let ordered = if archive {
+            crate::source::ordered_sources(sources, b)?
+        } else {
+            self.order.ordered(sources, b)?
+        };
+        for (_, source) in ordered {
+            if !archive {
+                admission.admit_existing(source, b)?;
+            }
+            let digest = self.source_digest(
+                source,
+                schema,
+                admission,
+                b,
+                if archive { None } else { Some(&mut next) },
+            )?;
             push(&mut members, digest_value(digest, b)?, b)?;
         }
         push(&mut self.current, NdfValue::List(members), b)?;
@@ -211,9 +268,12 @@ fn finish_encoded(
     if !capture.current.is_empty() {
         return Err(WireError::InvalidLength);
     }
-    let sources = capture
-        .table
-        .finish(source_archive, foundation, admission, b)?;
+    let sources = capture.table.ok_or(WireError::InvalidLength)?.finish(
+        source_archive,
+        foundation,
+        admission,
+        b,
+    )?;
     let value = record(
         group_archive,
         nepl3_core::schema::archive::group::ROOT,
@@ -221,15 +281,33 @@ fn finish_encoded(
         b,
     )?;
     let transport = crate::encode_checked(&value, &super::archive::archive_type(), registry, b)?;
-    let f = fields(&skeleton, foundation, "ForeignClosureGroup", 3)?;
+    let result = entry_commitments(
+        group,
+        &skeleton,
+        capture.provenances,
+        capture.entries,
+        foundation,
+        b,
+    )?;
+    Ok((transport, result))
+}
+fn entry_commitments(
+    group: &ForeignClosureGroup,
+    skeleton: &NdfValue,
+    provenances: Vec<NdfValue>,
+    entries: Vec<NdfValue>,
+    foundation: &SchemaRef,
+    b: &mut Budget,
+) -> Result<Vec<Digest>, WireError> {
+    let f = fields(skeleton, foundation, "ForeignClosureGroup", 3)?;
     let ps = list(&f[0])?;
     let es = list(&f[1])?;
     let xs = list(&f[2])?;
-    if ps.len() != capture.provenances.len() || xs.len() != capture.entries.len() {
+    if ps.len() != provenances.len() || xs.len() != entries.len() {
         return Err(WireError::InvalidLength);
     }
     let mut pd = Vec::new();
-    for (p, members) in ps.iter().zip(capture.provenances) {
+    for (p, members) in ps.iter().zip(provenances) {
         b.charge(Resource::Work, 1)?;
         push(&mut pd, component(PROVENANCE, p, members, b)?, b)?;
     }
@@ -240,7 +318,7 @@ fn finish_encoded(
         push(&mut ed, crate::encode::digest(ENVIRONMENT, &f[1], b)?, b)?;
     }
     let mut result = Vec::new();
-    for ((entry, x), members) in group.entries.iter().zip(xs).zip(capture.entries) {
+    for ((entry, x), members) in group.entries.iter().zip(xs).zip(entries) {
         b.charge(Resource::Work, 1)?;
         let owner_index = usize::try_from(entry.owner.0).map_err(|_| WireError::InvalidLength)?;
         let owner = group
@@ -264,7 +342,7 @@ fn finish_encoded(
         )?;
     }
     b.poll()?;
-    Ok((transport, result))
+    Ok(result)
 }
 
 #[cfg(test)]
@@ -340,4 +418,85 @@ pub fn encode_at_depths(
             },
         )
     })
+}
+
+/// Identity-only operation. The complete skeleton and position-preserving local
+/// memberships bind the ordered group without serializing either archive layer.
+pub fn commit_at_depths(
+    input: GroupAtDepths<'_>,
+    foundation: &SchemaRef,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<
+    nepl3_core::value_codec::commitment::GroupCommitments,
+    nepl3_core::value_codec::GroupEncodingError<WireError>,
+> {
+    use nepl3_core::value_codec::{
+        FoundationCodecError, GroupEncodingError, commitment::GroupCommitments,
+    };
+    let normalize = |error: WireError| match error.stop_reason() {
+        Some(reason) => WireError::Stopped(reason),
+        None => error,
+    };
+    validate_for_encoding_at_depths(
+        input.group,
+        input.depths,
+        input.native_registry,
+        registry,
+        admission,
+        b,
+    )
+    .map_err(|e| match e {
+        GroupEncodingError::Structure(e) => GroupEncodingError::Structure(e),
+        GroupEncodingError::Codec(e) => GroupEncodingError::Codec(normalize(e)),
+    })?;
+    let result = (|| {
+        crate::source::archive::fields::check(foundation, registry, true, b)?;
+        let mut capture = CompactCapture::identity_only(registry);
+        let skeleton = encode_validated(
+            input.group,
+            foundation,
+            registry,
+            admission,
+            b,
+            &mut capture,
+        )?;
+        b.charge(
+            Resource::AllocationUnits,
+            ("nepl3.foundation".len() + "ForeignClosureGroup".len()) as u64,
+        )?;
+        registry.validate(&expected("ForeignClosureGroup"), &skeleton, b)?;
+        if !capture.current.is_empty() {
+            return Err(WireError::InvalidLength);
+        }
+        let mut provenance_members = Vec::new();
+        for value in &capture.provenances {
+            push(&mut provenance_members, value.clone_with_budget(b)?, b)?;
+        }
+        let mut entry_members = Vec::new();
+        for value in &capture.entries {
+            push(&mut entry_members, value.clone_with_budget(b)?, b)?;
+        }
+        let entry_digests = entry_commitments(
+            input.group,
+            &skeleton,
+            capture.provenances,
+            capture.entries,
+            foundation,
+            b,
+        )?;
+        let mut fields = Vec::new();
+        push(&mut fields, skeleton, b)?;
+        push(&mut fields, NdfValue::List(provenance_members), b)?;
+        push(&mut fields, NdfValue::List(entry_members), b)?;
+        let group_digest =
+            crate::encode::digest(b"NEPL3.Foreign.Group.v2\0", &NdfValue::List(fields), b)?;
+        b.poll()?;
+        Ok(GroupCommitments {
+            group_digest,
+            entry_digests,
+        })
+    })();
+    result.map_err(|e| GroupEncodingError::Codec(normalize(e)))
 }

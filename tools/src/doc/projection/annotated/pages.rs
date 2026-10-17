@@ -133,9 +133,9 @@ where
 }
 
 /// Explicit compact identity profile. Alias/style and SVG validation still run
-/// before archive resolution under the same cumulative output Budget.
+/// before identity-only resolution under the same cumulative output Budget.
 pub fn render_compact_footnotes_svg_math<
-    C: nepl3_core::value_codec::archive::FoundationGroupArchiveCodec,
+    C: nepl3_core::value_codec::commitment::FoundationGroupCommitmentCodec,
 >(
     set: &PageSet,
     registry: &SchemaRegistry,
@@ -158,7 +158,7 @@ where
             svg: true,
             math: Some(surfaces),
         },
-        domain::archive::resolve,
+        domain::compact::resolve,
     )
 }
 
