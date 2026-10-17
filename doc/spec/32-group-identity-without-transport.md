@@ -46,3 +46,14 @@ canonically ordered source list. Every hit still compares the full identity and
 checks exact snapshot equality. Gaps fall back to bounded binary search; the hint
 is reset for each local list. Admission, duplicate rejection, miss-path schema
 validation and digest framing remain mandatory. Archive lookup is unchanged.
+
+On pointer-atomic targets, identity-only capture may retain one owned local source
+sequence and its canonical index permutation. Exact immutable-storage prefix
+matches permit sorting only newly appended declarations and merging the two
+orders. The merge rejects equal SourceId/revision across the boundary, regardless
+of digest. Shrinking or unrelated sequences use the ordinary complete ordering
+path. Independent snapshots never require a text comparison merely to reuse an
+order. Returned references always point to the current local input; every source
+still undergoes admission and exact digest-cache validation. Retained snapshots,
+indices, comparisons and output references are budgeted, and failed preparation
+leaves prior ordering metadata intact. Other targets keep ordinary ordering.

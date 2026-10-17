@@ -30,19 +30,28 @@ pub(super) fn sort(
     entries: &mut [(&SnapshotId, &SourceSnapshot)],
     b: &mut Budget,
 ) -> Result<(), WireError> {
-    fn sift(
-        entries: &mut [(&SnapshotId, &SourceSnapshot)],
+    sort_by_key(entries, |entry| entry.0, b)
+}
+
+fn sort_by_key<'a, T>(
+    entries: &mut [T],
+    key: impl Fn(&T) -> &'a SnapshotId + Copy,
+    b: &mut Budget,
+) -> Result<(), WireError> {
+    fn sift<'a, T>(
+        entries: &mut [T],
         mut root: usize,
+        key: impl Fn(&T) -> &'a SnapshotId + Copy,
         b: &mut Budget,
     ) -> Result<(), StopReason> {
         while root < entries.len() / 2 {
             let mut child = root * 2 + 1;
             if child + 1 < entries.len()
-                && compare(entries[child].0, entries[child + 1].0, b)? == Ordering::Less
+                && compare(key(&entries[child]), key(&entries[child + 1]), b)? == Ordering::Less
             {
                 child += 1;
             }
-            if compare(entries[root].0, entries[child].0, b)? != Ordering::Less {
+            if compare(key(&entries[root]), key(&entries[child]), b)? != Ordering::Less {
                 break;
             }
             b.charge(Resource::Work, 1)?;
@@ -56,7 +65,7 @@ pub(super) fn sort(
     // A linear checked pass also establishes uniqueness for that case.
     let mut ordered = true;
     for pair in entries.windows(2) {
-        match identity(pair[0].0, pair[1].0, b)? {
+        match identity(key(&pair[0]), key(&pair[1]), b)? {
             Ordering::Less => {}
             Ordering::Equal => return Err(SourceError::IdentityConflict.into()),
             Ordering::Greater => {
@@ -69,15 +78,15 @@ pub(super) fn sort(
         return Ok(());
     }
     for root in (0..entries.len() / 2).rev() {
-        sift(entries, root, b)?;
+        sift(entries, root, key, b)?;
     }
     for end in (1..entries.len()).rev() {
         b.charge(Resource::Work, 1)?;
         entries.swap(0, end);
-        sift(&mut entries[..end], 0, b)?;
+        sift(&mut entries[..end], 0, key, b)?;
     }
     for pair in entries.windows(2) {
-        if identity(pair[0].0, pair[1].0, b)? == Ordering::Equal {
+        if identity(key(&pair[0]), key(&pair[1]), b)? == Ordering::Equal {
             return Err(SourceError::IdentityConflict.into());
         }
     }
@@ -86,3 +95,6 @@ pub(super) fn sort(
 
 #[cfg(test)]
 mod tests;
+
+mod cache;
+pub(crate) use cache::OrderCache;

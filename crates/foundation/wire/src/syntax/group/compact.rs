@@ -13,6 +13,7 @@ const ENTRY: &[u8] = b"NEPL3.Foreign.Entry.v2\0";
 
 struct CompactCapture<'a> {
     table: Option<Capture>,
+    order: crate::source::OrderCache,
     registry: &'a SchemaRegistry,
     cache: Vec<(SourceSnapshot, Digest)>,
     current: Vec<NdfValue>,
@@ -23,6 +24,7 @@ impl<'a> CompactCapture<'a> {
     fn new(registry: &'a SchemaRegistry) -> Self {
         Self {
             table: Some(Capture::default()),
+            order: crate::source::OrderCache::default(),
             registry,
             cache: Vec::new(),
             current: Vec::new(),
@@ -33,6 +35,7 @@ impl<'a> CompactCapture<'a> {
     fn identity_only(registry: &'a SchemaRegistry) -> Self {
         Self {
             table: None,
+            order: crate::source::OrderCache::default(),
             registry,
             cache: Vec::new(),
             current: Vec::new(),
@@ -132,7 +135,12 @@ impl GroupSources for CompactCapture<'_> {
         };
         let mut members = Vec::new();
         let mut next = 0;
-        for (_, source) in crate::source::ordered_sources(sources, b)? {
+        let ordered = if archive {
+            crate::source::ordered_sources(sources, b)?
+        } else {
+            self.order.ordered(sources, b)?
+        };
+        for (_, source) in ordered {
             if !archive {
                 admission.admit_existing(source, b)?;
             }
