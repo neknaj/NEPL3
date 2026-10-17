@@ -1311,16 +1311,17 @@ fn legacy_resolver_retains_pre_refactor_identity_and_usage() -> Result<(), Strin
     assert_eq!(
         (
             u.source_bytes,
-            u.work,
             u.depth,
             u.nodes,
             u.output_bytes,
             u.diagnostics,
             u.events
         ),
-        (21, 35591, 17, 453, 256, 0, 0)
+        (21, 17, 453, 256, 0, 0)
     );
-    #[cfg(target_pointer_width = "64")]
+    #[cfg(target_has_atomic = "ptr")]
+    assert_eq!(u.work, 35591);
+    #[cfg(all(target_pointer_width = "64", target_has_atomic = "ptr"))]
     assert_eq!(u.allocation_units, 27254);
     assert_eq!(
         plan.identity.0,

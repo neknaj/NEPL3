@@ -33,3 +33,10 @@ profile must bind its remaining fields separately and explicitly select new iden
 domains. This capability alone establishes no rendering or historical-corpus success.
 
 Identity-only document consumption is specified in [Doc commitment profile](33-doc-commitment-profile.md).
+
+Identity-only capture does not build the archive union or SourceRef membership
+storage. It orders each local declaration set once, explicitly admits each source,
+and retains the same exact SourceSnapshot/digest cache and ordered commitment
+memberships. Archive capture keeps its existing union/membership behavior. Removing
+unused transport bookkeeping does not alter either identity preimage or skip
+source equality, descriptor, native validation or admission checks.
