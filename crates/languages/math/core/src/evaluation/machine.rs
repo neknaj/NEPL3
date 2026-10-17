@@ -1,3 +1,4 @@
+use super::PartialOutcome as Outcome;
 use super::*;
 use crate::model::MathExactValue as V;
 use crate::{
@@ -186,7 +187,7 @@ pub fn evaluate<'a>(
                     (lower, upper) => {
                         let mut rs = Vec::new();
                         for outcome in [lower, upper] {
-                            if let Outcome::Symbolic(items) = outcome {
+                            if let Outcome::Symbolic(items, _) = outcome {
                                 for r in items {
                                     push(&mut rs, r, b)?;
                                 }
@@ -202,7 +203,7 @@ pub fn evaluate<'a>(
                                 b,
                             )?;
                         }
-                        push(&mut results, Outcome::Symbolic(rs), b)?;
+                        push(&mut results, Outcome::Symbolic(rs, None), b)?;
                     }
                 }
             }
@@ -211,7 +212,7 @@ pub fn evaluate<'a>(
                     let result = if sum.requirements.is_empty() {
                         Outcome::Exact(V::Scalar { value: sum.total })
                     } else {
-                        Outcome::Symbolic(sum.requirements)
+                        Outcome::Symbolic(sum.requirements, None)
                     };
                     push(&mut results, result, b)?;
                 } else {
@@ -242,7 +243,7 @@ pub fn evaluate<'a>(
                         },
                         b,
                     )?,
-                    Outcome::Symbolic(rs) => {
+                    Outcome::Symbolic(rs, _) => {
                         for r in rs {
                             push(&mut sum.requirements, r, b)?;
                         }
@@ -260,6 +261,6 @@ pub fn evaluate<'a>(
     }
     Ok(Evaluation {
         source,
-        outcome: pop(&mut results)?,
+        outcome: pop(&mut results)?.finish(),
     })
 }

@@ -456,3 +456,207 @@ fn checked_evaluation_rejects_overflowing_caller_depth() -> Result<(), String> {
     }
     Ok(())
 }
+
+#[test]
+fn determinant_keeps_constructor_shape_when_contents_are_symbolic() -> Result<(), String> {
+    // One row with two columns is not square, irrespective of the first
+    // scalar's value. A missing scalar must not hide that dimensional error.
+    for missing in [false, true] {
+        let value = model(vec![
+            MathKind::Det { value: ExprRef(1) },
+            MathKind::Matrix {
+                rows: vec![RowRef(2)],
+            },
+            MathKind::Row {
+                values: vec![ExprRef(3), ExprRef(4)],
+            },
+            if missing {
+                MathKind::Symbol { name: "x".into() }
+            } else {
+                n(2)?
+            },
+            n(1)?,
+        ]);
+        let before = value.clone();
+        let input = check::expression(&value, &mut b()).map_err(err)?;
+        let raw = empty();
+        let env = environment::check(&raw, &mut b()).map_err(err)?;
+        assert!(matches!(
+            evaluation::evaluate(&input, &env, &mut b()),
+            Err(evaluation::Error::At {
+                expression: ExprRef(0),
+                error: arithmetic::Error::NotSquare
+            })
+        ));
+        let report = evaluation::report(&input, &env, &mut b()).map_err(err)?;
+        assert!(matches!(
+            report.result,
+            MathEvaluationResult::Failure {
+                failure: MathEvaluationFailure {
+                    expression: ExprRef(0),
+                    kind: MathEvaluationFailureKind::NotSquare
+                }
+            }
+        ));
+        assert_eq!(value, before);
+    }
+    // Square does not mean exact: preserve the original missing-value site.
+    let square = model(vec![
+        MathKind::Det { value: ExprRef(1) },
+        MathKind::Matrix {
+            rows: vec![RowRef(2)],
+        },
+        MathKind::Row {
+            values: vec![ExprRef(3)],
+        },
+        MathKind::Symbol { name: "x".into() },
+    ]);
+    assert_eq!(
+        run(&square, &empty())?,
+        Outcome::Symbolic(vec![MathEvaluationRequirement {
+            expression: ExprRef(3),
+            reason: Reason::MissingSymbol,
+        }])
+    );
+    // A bare unknown might be a square matrix; never infer a scalar shape.
+    let unknown = model(vec![
+        MathKind::Det { value: ExprRef(1) },
+        MathKind::Symbol { name: "a".into() },
+    ]);
+    assert_eq!(
+        run(&unknown, &empty())?,
+        Outcome::Symbolic(vec![MathEvaluationRequirement {
+            expression: ExprRef(1),
+            reason: Reason::MissingSymbol,
+        }])
+    );
+    Ok(())
+}
+
+#[test]
+fn symbolic_shape_survives_binding_fence_negation_and_transpose() -> Result<(), String> {
+    let value = model(vec![
+        MathKind::Let {
+            name: "a".into(),
+            init: ExprRef(1),
+            body: ExprRef(5),
+        },
+        MathKind::Matrix {
+            rows: vec![RowRef(2)],
+        },
+        MathKind::Row {
+            values: vec![ExprRef(3), ExprRef(4)],
+        },
+        MathKind::Symbol { name: "x".into() },
+        n(1)?,
+        MathKind::Det { value: ExprRef(6) },
+        MathKind::Transpose { value: ExprRef(7) },
+        MathKind::Neg { value: ExprRef(8) },
+        MathKind::Fence {
+            open: "(".into(),
+            close: ")".into(),
+            value: ExprRef(9),
+        },
+        MathKind::Symbol { name: "a".into() },
+    ]);
+    let input = check::expression(&value, &mut b()).map_err(err)?;
+    let raw = empty();
+    let env = environment::check(&raw, &mut b()).map_err(err)?;
+    let mut baseline = b();
+    assert!(matches!(
+        evaluation::evaluate(&input, &env, &mut baseline),
+        Err(evaluation::Error::At {
+            expression: ExprRef(5),
+            error: arithmetic::Error::NotSquare
+        })
+    ));
+    // The error path must still charge the shared budget and preserve stops.
+    let used = baseline.usage();
+    for (limits, reason) in [
+        (
+            Limits {
+                work: used.work - 1,
+                ..b().limits()
+            },
+            StopReason::WorkLimit,
+        ),
+        (
+            Limits {
+                allocation_units: used.allocation_units - 1,
+                ..b().limits()
+            },
+            StopReason::AllocationLimit,
+        ),
+    ] {
+        let mut budget = Budget::new(limits);
+        assert!(
+            matches!(evaluation::evaluate(&input, &env, &mut budget), Err(evaluation::Error::Stopped(r)) if r == reason)
+        );
+        assert_eq!(budget.poll(), Err(reason));
+    }
+    Ok(())
+}
+
+#[test]
+fn symbolic_vector_transpose_dimensions_and_child_failure_precedence() -> Result<(), String> {
+    for width in [1, 2] {
+        let mut kinds = vec![
+            MathKind::Det { value: ExprRef(1) },
+            MathKind::Transpose { value: ExprRef(2) },
+            MathKind::Vector {
+                values: (0..width).map(|i| ExprRef(3 + i)).collect(),
+            },
+            MathKind::Symbol { name: "x".into() },
+        ];
+        if width == 2 {
+            kinds.push(n(1)?);
+        }
+        let value = model(kinds);
+        let input = check::expression(&value, &mut b()).map_err(err)?;
+        let raw = empty();
+        let env = environment::check(&raw, &mut b()).map_err(err)?;
+        let result = evaluation::evaluate(&input, &env, &mut b());
+        if width == 1 {
+            assert!(
+                matches!(result.map(|v| v.outcome), Ok(Outcome::Symbolic(rs)) if rs == vec![MathEvaluationRequirement { expression: ExprRef(3), reason: Reason::MissingSymbol }])
+            );
+        } else {
+            assert!(matches!(
+                result,
+                Err(evaluation::Error::At {
+                    expression: ExprRef(0),
+                    error: arithmetic::Error::NotSquare
+                })
+            ));
+        }
+    }
+    // Child failures keep source-order precedence over the parent's known
+    // nonsquare shape, even after a preceding missing-value requirement.
+    let value = model(vec![
+        MathKind::Det { value: ExprRef(1) },
+        MathKind::Matrix {
+            rows: vec![RowRef(2)],
+        },
+        MathKind::Row {
+            values: vec![ExprRef(3), ExprRef(4)],
+        },
+        MathKind::Symbol { name: "x".into() },
+        MathKind::Frac {
+            left: ExprRef(5),
+            right: ExprRef(6),
+        },
+        n(1)?,
+        n(0)?,
+    ]);
+    let input = check::expression(&value, &mut b()).map_err(err)?;
+    let raw = empty();
+    let env = environment::check(&raw, &mut b()).map_err(err)?;
+    assert!(matches!(
+        evaluation::evaluate(&input, &env, &mut b()),
+        Err(evaluation::Error::At {
+            expression: ExprRef(4),
+            error: arithmetic::Error::Arithmetic(number::ArithmeticError::DivisionByZero)
+        })
+    ));
+    Ok(())
+}

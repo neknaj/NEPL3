@@ -1,3 +1,4 @@
+use super::PartialOutcome as Outcome;
 use super::*;
 use crate::exact;
 use crate::model::MathExactValue as V;
@@ -51,12 +52,13 @@ pub(super) fn apply(
             }
         }
     }
+    let shape = shape::result(node, kind, &operands, b)?;
     let mut requirements = Vec::new();
     let mut values = Vec::new();
     for operand in operands {
         match operand {
             Outcome::Exact(v) => push(&mut values, v, b)?,
-            Outcome::Symbolic(rs) => {
+            Outcome::Symbolic(rs, _) => {
                 for r in rs {
                     push(&mut requirements, r, b)?;
                 }
@@ -64,7 +66,7 @@ pub(super) fn apply(
         }
     }
     if !requirements.is_empty() {
-        return Ok(Outcome::Symbolic(requirements));
+        return Ok(Outcome::Symbolic(requirements, shape));
     }
     let mismatch = || at(node, arithmetic::Error::OperandShapeMismatch);
     if matches!(
