@@ -1,6 +1,6 @@
 //! Immutable UTF-8 snapshots, checked byte spans and editor position adapters.
 mod sets;
-pub(crate) use sets::SourceSetError;
+pub use sets::SourceSetError;
 pub mod archive;
 mod edit;
 mod guard;

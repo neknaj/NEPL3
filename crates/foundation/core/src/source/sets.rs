@@ -2,7 +2,7 @@
 use super::{SourceAdmission, SourceError, SourceSnapshot, SourceStore};
 use crate::budget::{Budget, Resource, StopReason};
 #[derive(Debug, Eq, PartialEq)]
-pub(crate) enum SourceSetError {
+pub enum SourceSetError {
     Source(SourceError),
     Duplicate,
 }
@@ -20,7 +20,12 @@ impl SourceAdmission {
     /// This ledger only accumulates admitted immutable snapshots. A retained
     /// local set is never replaced by the ledger's union. All consumer-specific
     /// origins, maps, tokens, nodes and environments still need validation.
-    pub(crate) fn checked_source_set<'a>(
+    /// The returned immutable store is owned by this admission ledger, not by
+    /// the caller's slice. It proves only admitted, unique local declarations;
+    /// it is neither registry/graph validity nor a portable validation receipt.
+    /// Callers must retain their operation's cumulative Budget and still run
+    /// consumer-specific checks after a cache hit or an earlier failed consumer check.
+    pub fn checked_source_set<'a>(
         &'a mut self,
         sources: &[SourceSnapshot],
         b: &mut Budget,
