@@ -108,77 +108,127 @@ fn sequence(
                 continue;
             }
             DocKind::Text { text } if text.is_empty() => continue,
-            DocKind::Text { text: right } => {
-                if let Some(last) = output.last_mut() {
-                    let prior = nodes
-                        .get(last.0 as usize)
-                        .ok_or(ShapeError::Reference(last.0))?;
-                    if let DocKind::Text { text: left } = &prior.kind {
-                        let len = (left.len() as u64).saturating_add(right.len() as u64);
-                        b.charge(Resource::Work, len)?;
-                        b.charge(
-                            Resource::AllocationUnits,
-                            len.saturating_add(core::mem::size_of::<DocNode>() as u64),
-                        )?;
-                        b.charge(Resource::Nodes, 1)?;
-                        let mut text = String::new();
-                        text.push_str(left);
-                        text.push_str(right);
-                        let left_origin = origin(prior, origins, b)?;
-                        let right_origin = origin(node, origins, b)?;
-                        let origin = match (left_origin, right_origin) {
-                            (Some(a), Some(c)) => {
-                                b.charge(
-                                    Resource::AllocationUnits,
-                                    core::mem::size_of::<Origin>() as u64 + 16,
-                                )?;
-                                let id = OriginId(origins.len() as u64);
-                                origins.push(Origin::Composite(vec![a, c]));
-                                Some(id)
-                            }
-                            (None, None) => None,
-                            (left, right) => {
-                                const REASON: &str =
-                                    "Doc normalization of a source-less Text segment";
-                                b.charge(
-                                    Resource::AllocationUnits,
-                                    (core::mem::size_of::<Origin>() as u64)
-                                        .saturating_mul(2)
-                                        .saturating_add(REASON.len() as u64)
-                                        .saturating_add(16),
-                                )?;
-                                b.charge(Resource::Work, REASON.len() as u64)?;
-                                let synthetic = OriginId(origins.len() as u64);
-                                origins.push(Origin::Synthetic {
-                                    reason: String::from(REASON),
-                                    anchor: None,
-                                });
-                                let joined = OriginId(origins.len() as u64);
-                                origins.push(Origin::Composite(vec![
-                                    left.unwrap_or(synthetic),
-                                    right.unwrap_or(synthetic),
-                                ]));
-                                Some(joined)
-                            }
-                        };
-                        let id = InlineRef(nodes.len() as u64);
-                        nodes.push(DocNode {
-                            locations: Vec::new(),
-                            kind: DocKind::Text { text },
-                            origin,
-                            span: None,
-                        });
-                        *last = id;
-                        continue;
-                    }
-                }
-            }
             _ => {}
         }
         b.charge(Resource::AllocationUnits, 8)?;
         output.push(r);
     }
+    coalesce(output, nodes, origins, b)
+}
+
+// Flatten first, then copy each adjacent Text run once. Intermediate prefixes
+// are not semantic nodes and must not consume quadratic copying/allocation.
+// Existing nodes stay immutable because other parents can share them.
+fn coalesce(
+    items: Vec<InlineRef>,
+    nodes: &mut Vec<DocNode>,
+    origins: &mut Vec<Origin>,
+    b: &mut Budget,
+) -> Result<Vec<InlineRef>, ShapeError> {
+    let mut output = Vec::new();
+    let mut start = 0;
+    while start < items.len() {
+        b.charge(Resource::Work, 1)?;
+        let mut end = start;
+        let mut bytes = 0u64;
+        while let Some(item) = items.get(end) {
+            b.charge(Resource::Work, 1)?;
+            let node = nodes
+                .get(item.0 as usize)
+                .ok_or(ShapeError::Reference(item.0))?;
+            let DocKind::Text { text } = &node.kind else {
+                break;
+            };
+            bytes = bytes.saturating_add(text.len() as u64);
+            end += 1;
+        }
+        let item = if end.saturating_sub(start) > 1 {
+            b.charge(Resource::Work, bytes)?;
+            b.charge(
+                Resource::AllocationUnits,
+                bytes.saturating_add(core::mem::size_of::<DocNode>() as u64),
+            )?;
+            b.charge(Resource::Nodes, 1)?;
+            let capacity = usize::try_from(bytes)
+                .map_err(|_| b.stop(nepl3_core::budget::StopReason::AllocationLimit))?;
+            let mut text = String::with_capacity(capacity);
+            let mut joined = None;
+            for (offset, item) in items[start..end].iter().enumerate() {
+                b.charge(Resource::Work, 1)?;
+                let node = nodes
+                    .get(item.0 as usize)
+                    .ok_or(ShapeError::Reference(item.0))?;
+                let DocKind::Text { text: part } = &node.kind else {
+                    return Err(ShapeError::Reference(item.0));
+                };
+                text.push_str(part);
+                let next = origin(node, origins, b)?;
+                joined = if offset == 0 {
+                    next
+                } else {
+                    join_origins(joined, next, origins, b)?
+                };
+            }
+            let item = InlineRef(nodes.len() as u64);
+            nodes.push(DocNode {
+                locations: Vec::new(),
+                kind: DocKind::Text { text },
+                origin: joined,
+                span: None,
+            });
+            item
+        } else {
+            items[start]
+        };
+        b.charge(
+            Resource::AllocationUnits,
+            core::mem::size_of::<InlineRef>() as u64,
+        )?;
+        output.push(item);
+        start = end.max(start + 1);
+    }
     Ok(output)
+}
+fn join_origins(
+    left: Option<OriginId>,
+    right: Option<OriginId>,
+    origins: &mut Vec<Origin>,
+    b: &mut Budget,
+) -> Result<Option<OriginId>, ShapeError> {
+    Ok(match (left, right) {
+        (Some(a), Some(c)) => {
+            b.charge(
+                Resource::AllocationUnits,
+                core::mem::size_of::<Origin>() as u64 + 16,
+            )?;
+            let id = OriginId(origins.len() as u64);
+            origins.push(Origin::Composite(vec![a, c]));
+            Some(id)
+        }
+        (None, None) => None,
+        (left, right) => {
+            const REASON: &str = "Doc normalization of a source-less Text segment";
+            b.charge(
+                Resource::AllocationUnits,
+                (core::mem::size_of::<Origin>() as u64)
+                    .saturating_mul(2)
+                    .saturating_add(REASON.len() as u64)
+                    .saturating_add(16),
+            )?;
+            b.charge(Resource::Work, REASON.len() as u64)?;
+            let synthetic = OriginId(origins.len() as u64);
+            origins.push(Origin::Synthetic {
+                reason: String::from(REASON),
+                anchor: None,
+            });
+            let joined = OriginId(origins.len() as u64);
+            origins.push(Origin::Composite(vec![
+                left.unwrap_or(synthetic),
+                right.unwrap_or(synthetic),
+            ]));
+            Some(joined)
+        }
+    })
 }
 fn origin(
     node: &DocNode,
@@ -241,76 +291,4 @@ pub(crate) fn compact(mut value: DocValue, b: &mut Budget) -> Result<DocValue, S
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::model::{DocRoot, SentenceRef};
-    use nepl3_core::budget::Limits;
-    fn b() -> Budget {
-        Budget::new(Limits {
-            work: 1_000_000,
-            depth: 100,
-            nodes: 1000,
-            allocation_units: 1_000_000,
-            ..Limits::default()
-        })
-    }
-    #[test]
-    fn normal_form_flattens_only_sequences_and_retains_explicit_break() -> Result<(), ShapeError> {
-        let kinds = vec![
-            DocKind::Text { text: "a".into() },
-            DocKind::Text {
-                text: String::new(),
-            },
-            DocKind::Text { text: "b".into() },
-            DocKind::Concat {
-                inlines: vec![InlineRef(0), InlineRef(1), InlineRef(2)],
-            },
-            DocKind::Break,
-            DocKind::Text { text: "c".into() },
-            DocKind::Text {
-                text: "read".into(),
-            },
-            DocKind::Ruby {
-                base: InlineRef(5),
-                reading: InlineRef(6),
-            },
-            DocKind::Sentence {
-                inlines: vec![InlineRef(3), InlineRef(4), InlineRef(7)],
-            },
-        ];
-        let input = DocValue {
-            root: DocRoot::Sentence(SentenceRef(8)),
-            nodes: kinds
-                .into_iter()
-                .map(|kind| DocNode {
-                    locations: Vec::new(),
-                    kind,
-                    origin: None,
-                    span: None,
-                })
-                .collect(),
-            embeds: Default::default(),
-        };
-        let output = value(input, &mut Vec::new(), &mut b())?;
-        output.validate_shape(&mut b())?;
-        assert_eq!(output.nodes.len(), 6);
-        assert_eq!(output.nodes[0].kind, DocKind::Text { text: "ab".into() });
-        assert_eq!(output.nodes[1].kind, DocKind::Break);
-        assert_eq!(
-            output.nodes[4].kind,
-            DocKind::Ruby {
-                base: InlineRef(2),
-                reading: InlineRef(3)
-            }
-        );
-        assert_eq!(
-            output.nodes[5].kind,
-            DocKind::Sentence {
-                inlines: vec![InlineRef(0), InlineRef(1), InlineRef(4)]
-            }
-        );
-        let again = value(output.clone(), &mut Vec::new(), &mut b())?;
-        assert_eq!(again, output);
-        Ok(())
-    }
-}
+mod tests;
