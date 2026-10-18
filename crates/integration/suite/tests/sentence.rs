@@ -521,3 +521,6 @@ fn doc_bridge_preserves_generated_shared_inline_and_rejects_unselected_foreign()
 
 #[path = "sentence/retained.rs"]
 mod retained;
+
+#[path = "sentence/placed.rs"]
+mod placed;

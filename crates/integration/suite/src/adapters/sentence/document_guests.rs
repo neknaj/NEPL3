@@ -1,5 +1,10 @@
 //! Select Doc Inline guests from an independent Sentence without copying its
 //! meaning into the legacy Doc Sentence model. No renderer or host I/O is used.
+mod placed;
+pub use placed::{
+    DocumentKey, OwnerId, PlacedError, PlacedOccurrence, PlacedSelection, Placement, collect_placed,
+};
+
 use alloc::vec::Vec;
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},

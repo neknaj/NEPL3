@@ -5,6 +5,7 @@ use nepl3_sentence_core::model::Kind;
 use nepl3_wire::foundation::FoundationCodec;
 
 mod namespace;
+mod placed;
 mod profile;
 
 #[test]
