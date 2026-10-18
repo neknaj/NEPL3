@@ -11,11 +11,14 @@ use nepl3_core::{
 use nepl3_sentence_core::{lower, portable, syntax::SentenceSyntax};
 use nepl3_suite::adapters::sentence::html;
 pub mod document;
+mod foreign;
+pub mod paragraph;
 
 #[derive(Debug)]
 pub enum Error<E> {
     Stopped(StopReason),
     Selection,
+    Placed(Box<nepl3_suite::adapters::sentence::document_guests::PlacedError<E>>),
     Syntax(SyntaxError),
     Lower(lower::presentation::Error<E>),
     Portable(portable::Error<E>),
@@ -278,91 +281,35 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
             registry,
             self.codec,
             &mut |closure, embed, codec, b| {
-                if let Some(doc_schema) = doc_surface {
-                    b.charge(
-                        Resource::Work,
-                        (doc_schema.package.len()
-                            + closure.syntax().schema.package.len()
-                            + closure.syntax().category.len()) as u64
-                            + 70,
-                    )?;
-                    if &closure.syntax().schema == doc_schema
-                        && closure.syntax().category == "Inline"
-                    {
-                        let selected = selected.get(document_position).ok_or(Error::Selection)?;
-                        if selected.embed != embed {
-                            return Err(Error::Selection);
-                        }
-                        // Namespace collection checked semantic occurrences earlier.
-                        // The HTML insertion ancestors can be deeper: re-admit the
-                        // borrowed owner at this callback's active depth/ceiling.
-                        closure
-                            .validate(registry, b, codec.source_admission())
-                            .map_err(Error::Syntax)?;
-                        let (rendered, nested) = document::render_member(
-                            &prepared,
-                            nepl3_doc_core::labels::namespace::MemberId(document_position as u64),
-                            &mut SentenceAnnotationRenderer {
-                                registry,
-                                surface,
-                                math_surface,
-                                doc_surface,
-                                codec,
-                            },
-                            b,
-                        )
-                        .map_err(|error| document_error(error, b))?;
-                        let (_, document_digest, markup, origins) = rendered.into_parts();
-                        document_position += 1;
-                        b.charge(
-                            Resource::AllocationUnits,
-                            (core::mem::size_of::<ForeignRecord>() as u64).saturating_mul(2),
-                        )?;
-                        foreign.push(ForeignRecord::Document(ForeignDocumentRecord {
-                            embed,
-                            document: std::sync::Arc::clone(&selected.document),
-                            document_digest,
-                            origins,
-                            foreign: nested,
-                        }));
-                        return Ok(markup);
-                    }
+                let candidate = selected.get(document_position).map(|selected| {
+                    (
+                        selected,
+                        nepl3_doc_core::labels::namespace::MemberId(document_position as u64),
+                    )
+                });
+                let (markup, record) = foreign::render(
+                    closure,
+                    embed,
+                    candidate,
+                    &prepared,
+                    &mut SentenceAnnotationRenderer {
+                        registry,
+                        surface,
+                        math_surface,
+                        doc_surface,
+                        codec,
+                    },
+                    b,
+                )?;
+                if matches!(&record, ForeignRecord::Document(_)) {
+                    document_position += 1;
                 }
-                let math_surface = math_surface.ok_or(Error::Selection)?;
-                let mut host = super::math::MathDisplayHost {
-                    registry,
-                    math_surface,
-                    sentence_surface: Some(surface),
-                    doc_surface,
-                    codec,
-                };
-                let result = host
-                    .render_view(closure, nepl3_markup::mathml::Display::Inline, b)
-                    .map_err(|error| {
-                        match b.charge(
-                            Resource::AllocationUnits,
-                            core::mem::size_of_val(&error) as u64,
-                        ) {
-                            Ok(()) => Error::Math(Box::new(error)),
-                            Err(reason) => Error::Stopped(reason),
-                        }
-                    })?
-                    .into_html(b)
-                    .map_err(Error::Projection)?;
                 b.charge(
                     Resource::AllocationUnits,
                     (core::mem::size_of::<ForeignRecord>() as u64).saturating_mul(2),
                 )?;
-                foreign.push(ForeignRecord::Math(ForeignMathRecord {
-                    embed,
-                    output: MathRecord {
-                        syntax: result.syntax,
-                        node_roots: result.node_roots,
-                        annotation_roots: result.annotation_roots,
-                        annotations: result.annotations,
-                    },
-                }));
-                Ok::<_, Error<C::Error>>(result.markup)
+                foreign.push(record);
+                Ok::<_, Error<C::Error>>(markup)
             },
             b,
         )
@@ -375,23 +322,7 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
             return Err(Error::Selection);
         }
         for (record, placement) in foreign.iter_mut().zip(placements) {
-            if record.embed() != placement.embed {
-                return Err(Error::Selection);
-            }
-            record
-                .remap(
-                    &mut |element| {
-                        if element >= placement.elements {
-                            return Err(super::math::ProjectionError::Mapping(element));
-                        }
-                        placement
-                            .first_element
-                            .checked_add(element)
-                            .ok_or(super::math::ProjectionError::Mapping(element))
-                    },
-                    b,
-                )
-                .map_err(Error::Projection)?;
+            foreign::place(record, &placement, b)?;
         }
         Ok(RenderedAnnotation {
             sentence,

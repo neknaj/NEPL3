@@ -417,6 +417,42 @@ pub fn render_part_with_foreign<'a, E: From<StopReason>>(
     .map_err(Error::from)?;
     Ok(PendingSentence(output))
 }
+/// Build a pending Sentence with the same codec admission ledger used by its
+/// recursively selected guests. Complete namespace validation belongs to the
+/// compositor; input/source/phrasing checks remain local to this operation.
+pub fn render_part_with_foreign_codec<
+    'a,
+    C: nepl3_core::value_codec::FoundationValueCodec,
+    E: From<StopReason>,
+>(
+    input: &'a SentenceSyntax,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    adapter: &mut impl FnMut(
+        &nepl3_core::syntax::ForeignClosureView<'_>,
+        EmbedRef,
+        &mut C,
+        &mut Budget,
+    ) -> Result<HtmlRequest, E>,
+    b: &mut Budget,
+) -> Result<PendingSentence<'a>, RenderFailure<E>> {
+    let checked = input
+        .validate(registry, b, codec.source_admission())
+        .map_err(Error::from)?;
+    let output = build_checked_with_foreign(
+        &checked,
+        &mut |closure, embed, b| adapter(closure, embed, codec, b),
+        b,
+    )?;
+    check_part(
+        &output.markup.fragment,
+        output.markup.slot,
+        &output.markup.policy,
+        b,
+    )
+    .map_err(Error::from)?;
+    Ok(PendingSentence(output))
+}
 fn build_with_foreign<'a, E: From<StopReason>>(
     input: &'a SentenceSyntax,
     registry: &SchemaRegistry,
