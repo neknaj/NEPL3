@@ -34,6 +34,23 @@ pub struct PlacedSelection<'a> {
     occurrences: Vec<PlacedOccurrence>,
 }
 impl<'a> PlacedSelection<'a> {
+    /// Transfer owner-local selections and placement correspondences together.
+    pub fn into_parts(
+        self,
+    ) -> (
+        &'a [SentenceSyntax],
+        &'a [Placement],
+        Vec<Selection>,
+        Vec<PlacedOccurrence>,
+    ) {
+        (
+            self.inputs,
+            self.placements,
+            self.selected,
+            self.occurrences,
+        )
+    }
+
     pub fn placements(&self) -> &'a [Placement] {
         self.placements
     }

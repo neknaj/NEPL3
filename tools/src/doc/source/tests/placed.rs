@@ -16,82 +16,14 @@ fn placed_sentence_guests_resolve_forward_names_and_reject_duplicate_placements(
             origin_reason: "placed document fragment test",
         }])?;
     for native in [false, true] {
-        let mut owners = Vec::new();
-        for (name, fragment) in [
-            ("placed-reference", "ref target text \"参照\""),
-            ("placed-definition", "anchor target text \"定義\""),
-        ] {
-            let source = format!(
-                "article en \"Title\" body cons display Math label x Sentence sentence cons doc {fragment} nil nil"
-            );
-            with_named_input(
-                native,
-                &compiled,
-                &source,
-                name,
-                "Article",
-                |tree, profile, b, a| {
-                    let registry = profile.registry();
-                    let input = tree
-                        .tree()
-                        .bundle
-                        .validate_with_sources(registry, b, a)
-                        .map_err(err)?;
-                    let store = SourceStore::default();
-                    let mut admission = SourceAdmission::default();
-                    let mut codec =
-                        FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
-                    let doc = nepl3_suite::adapters::sentence::literal::lower(
-                        &input,
-                        &compiled.doc.package.schema,
-                        Category::Article,
-                        registry,
-                        b,
-                        &mut codec,
-                    )
-                    .map_err(err)?;
-                    let math_input = doc
-                        .value
-                        .embeds
-                        .get(0)
-                        .ok_or("Math embed")?
-                        .closure
-                        .syntax()
-                        .bundle
-                        .validate_with_sources(registry, b, codec.source_admission())
-                        .map_err(err)?;
-                    let math = nepl3_math_core::lower::expression(
-                        &math_input,
-                        &compiled.others[0].schema,
-                        nepl3_math_core::check::Category::Expr,
-                        registry,
-                        b,
-                        codec.source_admission(),
-                    )
-                    .map_err(err)?;
-                    let guest = math.value.embeds.first().ok_or("Sentence embed")?;
-                    let sentence_input = guest
-                        .view()
-                        .validate_with_bundle(registry, b, codec.source_admission())
-                        .map_err(err)?;
-                    let sentence = nepl3_sentence_core::lower::presentation::sentence_with_foreign(
-                        &sentence_input,
-                        &compiled.others[3].schema,
-                        &[nepl3_sentence_core::lower::ForeignInlineForm {
-                            kind: "Form:DocumentInline",
-                            guest_schema: &compiled.doc.package.schema,
-                            guest_category: "Inline",
-                        }],
-                        registry,
-                        &mut codec,
-                        b,
-                    )
-                    .map_err(err)?;
-                    owners.push(sentence);
-                    Ok(())
-                },
-            )?;
-        }
+        let owners = sentence_owners(
+            &compiled,
+            native,
+            &[
+                ("placed-reference", "ref target text \"参照\""),
+                ("placed-definition", "anchor target text \"定義\""),
+            ],
+        )?;
         with_input_route(
             native,
             &compiled,
@@ -176,4 +108,85 @@ fn placed_sentence_guests_resolve_forward_names_and_reject_duplicate_placements(
         )?;
     }
     Ok(())
+}
+
+pub(super) fn sentence_owners(
+    compiled: &Compiled,
+    native: bool,
+    fragments: &[(&str, &str)],
+) -> Result<Vec<nepl3_sentence_core::syntax::SentenceSyntax>, String> {
+    let mut owners = Vec::new();
+    for (name, fragment) in fragments.iter().copied() {
+        let source = format!(
+            "article en \"Title\" body cons display Math label x Sentence sentence cons doc {fragment} nil nil"
+        );
+        with_named_input(
+            native,
+            compiled,
+            &source,
+            name,
+            "Article",
+            |tree, profile, b, a| {
+                let registry = profile.registry();
+                let input = tree
+                    .tree()
+                    .bundle
+                    .validate_with_sources(registry, b, a)
+                    .map_err(err)?;
+                let store = SourceStore::default();
+                let mut admission = SourceAdmission::default();
+                let mut codec =
+                    FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+                let doc = nepl3_suite::adapters::sentence::literal::lower(
+                    &input,
+                    &compiled.doc.package.schema,
+                    Category::Article,
+                    registry,
+                    b,
+                    &mut codec,
+                )
+                .map_err(err)?;
+                let math_input = doc
+                    .value
+                    .embeds
+                    .get(0)
+                    .ok_or("Math embed")?
+                    .closure
+                    .syntax()
+                    .bundle
+                    .validate_with_sources(registry, b, codec.source_admission())
+                    .map_err(err)?;
+                let math = nepl3_math_core::lower::expression(
+                    &math_input,
+                    &compiled.others[0].schema,
+                    nepl3_math_core::check::Category::Expr,
+                    registry,
+                    b,
+                    codec.source_admission(),
+                )
+                .map_err(err)?;
+                let guest = math.value.embeds.first().ok_or("Sentence embed")?;
+                let sentence_input = guest
+                    .view()
+                    .validate_with_bundle(registry, b, codec.source_admission())
+                    .map_err(err)?;
+                let sentence = nepl3_sentence_core::lower::presentation::sentence_with_foreign(
+                    &sentence_input,
+                    &compiled.others[3].schema,
+                    &[nepl3_sentence_core::lower::ForeignInlineForm {
+                        kind: "Form:DocumentInline",
+                        guest_schema: &compiled.doc.package.schema,
+                        guest_category: "Inline",
+                    }],
+                    registry,
+                    &mut codec,
+                    b,
+                )
+                .map_err(err)?;
+                owners.push(sentence);
+                Ok(())
+            },
+        )?;
+    }
+    Ok(owners)
 }

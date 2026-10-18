@@ -398,6 +398,17 @@ native annotation hostはDocの意味モデルと明示選択したMath Exprの�
 段落全体の参照・重複ID・構造・深さを共通Budgetで検査し、失敗時は部分出力を返さない。
 この段落合成はHTMLの操作であり、Docの文書モデルとArticle全体の名前解決への接続は引き続きconsumer移行で扱う。
 
+開発hostの`doc::annotations::paragraph::render`は、明示した独立Sentence所有列と配置列を、一つの段落namespaceへ接続する。
+Doc Inlineの出現を`collect_placed`で収集し、全memberの名前解決とguest内容検査を行ってから、各Sentenceをpending HTMLとして描画する。
+`render_part_with_foreign_codec`は再帰guestと同じSourceAdmissionを使用し、現在の深さで入力を検査する。
+段落自身の階層を加えた深さを収集・内容検査・各Sentenceの描画へ渡し、完成した段落全体を検査した後だけ返す。
+Doc fragmentの前方参照はSentenceをまたいで解決できるが、同じ定義を持つ配置の反復は重複定義となる。
+Doc内のInlineMathとそのSentence注釈は既存の選択済みhostへ接続し、Math注釈の局所定義を段落namespaceへ導入しない。
+foreignのdispatchとDoc/Mathの由来記録は単独annotation表示と共通にし、各配置のmetadataを完成した段落のHTML要素へ対応させる。
+返却値は元のSentenceを不変借用し、Doc断片の共有所有と配置ごとの表示位置を保持する。失敗や停止時に部分段落を返さない。
+この入口は明示配置の段落表示であり、Article走査・CLIの既存Article経路・旧Doc所有の撤去を完了したものではない。
+
+
 ## 注釈と移行完了条件
 
 以下は移行後にも維持する注釈契約と、旧経路を除去する際の受入条件である。実施順・各段階の残件はT07と実装状態で管理する。旧コメントの認識だけを先に削除する変更はmainへ統合しない。
