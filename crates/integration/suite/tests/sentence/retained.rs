@@ -2,7 +2,8 @@ use super::*;
 #[path = "legacy_guests.rs"]
 mod legacy;
 
-fn fixture() -> Result<(SchemaRegistry, nepl3_core::value::SchemaRef, SentenceSyntax), String> {
+pub(super) fn fixture()
+-> Result<(SchemaRegistry, nepl3_core::value::SchemaRef, SentenceSyntax), String> {
     use nepl3_core::schema::{NamedType, SchemaDescriptor, TypeShape};
     use nepl3_core::syntax::group::*;
     let mut r = SchemaRegistry::default();

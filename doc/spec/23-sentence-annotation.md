@@ -371,6 +371,16 @@ Doc断片の選択とlowerは、suiteの`adapters::sentence::document_guests::co
 返却値は一意なDoc文書の所有列と、各表示出現から文書を参照する`DocumentId`の列を持つ。
 同じembedは最深の出現位置で一度解析し、表示順と共有を保持する。処理は`no_std + alloc`で成立し、I/O・HTML・原子的参照カウントを要求しない。
 他言語のguestは各adapterが担当し、名前解決と表示は後段で実行する。開発hostはこの結果を既存のnamespaceとHTML処理へ接続する。
+
+複数の独立Sentenceを配置するnative consumerは、`document_guests::collect_placed`へ所有列と表示配置列を明示する。
+配置は所有indexと呼出元からの相対深さを持ち、範囲外indexと未配置ownerを拒否する。各ownerを最深の配置で一度検査・解析し、
+Doc断片の所有はowner別に保持する。同じownerの繰り返し配置はDoc値を共有するが、異なるownerを本文や局所embed番号の一致だけで統合しない。
+返却値は元の所有列・配置列の不変借用と、配置index・owner・局所embed・Doc所有indexの対応を保持する。
+出現列は配置順とSentence内の順序に従い、参照先のDoc断片を明示的なnamespace memberとして使用できる。
+この操作は名前解決や描画を行わず、相対深さが実際のArticleの配置から求められた証明でもない。
+未選択guestを含むSentence構造とsource閉包を検査し、同じ累積Budgetで停止した場合は選択結果を返さない。
+Article全体の走査・namespace統合と旧Doc Sentence所有の除去は、引き続きconsumer移行の残件である。
+
 foreign Inlineの構造検査はguestを内容ありとして扱い、guest固有の表示内容を確定しない。
 `CheckedShape::content_with_foreign`はhostが明示したguestの内容判定を用いてRubyのbase/readingとAnnoのbase/noteの非空条件を再検査する。
 各embedのcallbackは最深の共有出現の深さで一度だけ呼び、同じ累積Budgetを使う。callback後の停止を成功や別errorで上書きしない。
