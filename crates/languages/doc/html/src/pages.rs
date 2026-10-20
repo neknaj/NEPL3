@@ -1,5 +1,7 @@
 //! Whole-page-set HTML rendering. Every referenced anchor must survive output
 //! selection; a semantic label alone does not prove the emitted destination.
+//! The display route selects Sentence, Code and Math callbacks explicitly;
+//! Sentence IDs are validated within each complete page, not across page arenas.
 use crate::build::{copy, hex_id, push};
 use crate::*;
 use nepl3_core::{
@@ -124,7 +126,7 @@ pub fn render_pages_with_code<'a, C: FoundationValueCodec, F>(
     )
 }
 
-/// Selected Code/Math composition shares the operation's source-admission codec
+/// Selected Sentence/Code/Math composition shares the operation's source-admission codec
 /// with the host adapter. Math-local IDs are scoped by output occurrence.
 pub fn render_pages_with_display<'a, C: FoundationValueCodec, F>(
     request: &'a PagesHtmlRequest,

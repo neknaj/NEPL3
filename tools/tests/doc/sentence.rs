@@ -447,3 +447,482 @@ fn sentence_fragment_reindexes_nonzero_embed_and_checks_wire_depth() -> Result<(
         Ok(())
     })
 }
+
+#[test]
+fn article_sentence_guests_compose_one_namespace_and_reject_invalid_output() -> Result<(), String> {
+    use nepl3_markup::html::*;
+    let compiled = compiled()?;
+    let source = r#"article en Sentence sentence cons text "Title" nil body cons paragraph cons Sentence sentence cons text "first" nil cons Sentence sentence cons text "second" nil nil nil"#;
+    with_input_route(true, &compiled, source, "Article", |tree, profile, b, a| {
+        let registry = profile.registry();
+        let checked = tree
+            .tree()
+            .bundle
+            .validate_with_sources(registry, b, a)
+            .map_err(err)?;
+        let store = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+        let doc = nepl3_suite::adapters::sentence::literal::lower(
+            &checked,
+            &compiled.doc.package.schema,
+            Category::Article,
+            registry,
+            b,
+            &mut codec,
+        )
+        .map_err(err)?;
+        assert_eq!(doc.value.embeds.len(), 3);
+        let options = nepl3_doc_html::RenderOptions {
+            parallel: nepl3_doc_html::ParallelMode::Rows,
+        };
+        let prepared =
+            nepl3_doc_html::display::prepare_display(&doc, &options, registry, &mut codec, b)
+                .map_err(err)?;
+        for scenario in 0..6 {
+            let mut seen = Vec::new();
+            let result = nepl3_doc_html::display::render_display(
+                &prepared,
+                &mut |view, embed, operation| {
+                    assert_eq!(view.kind, EmbedKind::Sentence);
+                    assert_eq!(view.closure.syntax().category, "Sentence");
+                    assert_eq!(
+                        view.closure.syntax(),
+                        doc.value
+                            .embeds
+                            .get(embed.0 as usize)
+                            .ok_or("missing owner")?
+                            .closure
+                            .syntax()
+                    );
+                    seen.push(embed);
+                    if scenario == 4 {
+                        return Err("adapter failed".to_string());
+                    }
+                    if scenario == 5 {
+                        operation.cancel();
+                    }
+                    // A selected adapter supplies ordinary phrasing output.
+                    // The first body guest references a later guest. The title
+                    // and body share the complete Article's final namespace.
+                    let (tag, attributes, text) = match embed.0 {
+                        0 => (HtmlTag::Span, vec![], "Title"),
+                        1 => (
+                            HtmlTag::A,
+                            vec![HtmlAttribute::Href {
+                                value: HtmlHref::Fragment {
+                                    id: "target".into(),
+                                },
+                            }],
+                            "first",
+                        ),
+                        _ => (
+                            if scenario == 3 {
+                                HtmlTag::P
+                            } else {
+                                HtmlTag::Span
+                            },
+                            if scenario == 1 {
+                                vec![]
+                            } else {
+                                vec![HtmlAttribute::Id {
+                                    value: "target".into(),
+                                }]
+                            },
+                            "second",
+                        ),
+                    };
+                    let mut nodes = vec![
+                        HtmlNode::Element {
+                            tag,
+                            attributes,
+                            children: vec![1],
+                        },
+                        HtmlNode::Text { text: text.into() },
+                    ];
+                    if scenario == 2
+                        && embed.0 == 0
+                        && let HtmlNode::Element { attributes, .. } = &mut nodes[0]
+                    {
+                        attributes.push(HtmlAttribute::Id {
+                            value: "target".into(),
+                        });
+                    }
+                    Ok(HtmlRequest {
+                        fragment: HtmlFragment { root: 0, nodes },
+                        slot: HtmlSlot::Phrasing,
+                        policy: HtmlPolicy { classes: vec![] },
+                    })
+                },
+                &mut budget(),
+            );
+            if scenario == 0 {
+                let rendered = result.map_err(err)?;
+                assert_eq!(seen, vec![EmbedRef(0), EmbedRef(1), EmbedRef(2)]);
+                assert_eq!(rendered.foreign.len(), 3);
+                for (placement, embed) in rendered.foreign.iter().zip(&seen) {
+                    assert_eq!(placement.embed, *embed);
+                    assert_eq!(placement.elements, 2);
+                    assert!(
+                        placement.first_element + placement.elements
+                            <= rendered.fragment.markup.fragment.nodes.len() as u64
+                    );
+                }
+                let m = &rendered.fragment.markup;
+                let valid = validate(&m.fragment, m.slot, &m.policy, &mut budget()).map_err(err)?;
+                let html = serialize(&valid, &mut budget()).map_err(err)?;
+                assert!(html.contains("href=\"#target\""));
+                assert!(html.contains("id=\"target\""));
+                assert!(html.contains("Title"));
+                assert_eq!(
+                    html.matches("<p>").count(),
+                    1,
+                    "consecutive Sentence guests share one paragraph"
+                );
+            } else {
+                match (scenario, result) {
+                    (
+                        1,
+                        Err(nepl3_doc_html::ForeignRenderError::Render(
+                            nepl3_doc_html::RenderError::Markup(HtmlError::MissingFragment(_)),
+                        )),
+                    ) => {}
+                    (
+                        2,
+                        Err(nepl3_doc_html::ForeignRenderError::Render(
+                            nepl3_doc_html::RenderError::Markup(HtmlError::DuplicateId(_)),
+                        )),
+                    ) => {}
+                    (
+                        3,
+                        Err(nepl3_doc_html::ForeignRenderError::Render(
+                            nepl3_doc_html::RenderError::Markup(HtmlError::Content(_)),
+                        )),
+                    ) => {}
+                    (4, Err(nepl3_doc_html::ForeignRenderError::Foreign(message))) => {
+                        assert_eq!(message, "adapter failed")
+                    }
+                    (
+                        5,
+                        Err(nepl3_doc_html::ForeignRenderError::Render(
+                            nepl3_doc_html::RenderError::Stopped(_),
+                        )),
+                    ) => {}
+                    (_, Err(error)) => {
+                        return Err(format!("scenario {scenario}: wrong error {error:?}"));
+                    }
+                    (_, Ok(_)) => {
+                        return Err(format!("scenario {scenario}: invalid output accepted"));
+                    }
+                }
+            }
+        }
+        let mut shared = doc.clone();
+        let DocRoot::Article(root) = shared.value.root else {
+            return Err("article root".into());
+        };
+        let title = match shared.value.nodes[root.0 as usize].kind {
+            DocKind::Article { title, .. } => title,
+            _ => return Err("article root".into()),
+        };
+        let paragraph = shared
+            .value
+            .nodes
+            .iter_mut()
+            .find_map(|node| match &mut node.kind {
+                DocKind::Paragraph { items } => Some(items),
+                _ => None,
+            })
+            .ok_or("paragraph")?;
+        paragraph.push(FlowRef(title.0));
+        let shared_prepared = nepl3_doc_html::display::prepare_display(
+            &shared,
+            &options,
+            registry,
+            &mut codec,
+            &mut budget(),
+        )
+        .map_err(err)?;
+        let text_guest = |_: &DocEmbedView<'_>, _: EmbedRef, operation: &mut Budget| {
+            assert!(
+                operation.current_depth() > 0,
+                "insertion ancestors must be charged before callback"
+            );
+            Ok::<_, String>(HtmlRequest {
+                fragment: HtmlFragment {
+                    root: 0,
+                    nodes: vec![HtmlNode::Text {
+                        text: "text".into(),
+                    }],
+                },
+                slot: HtmlSlot::Phrasing,
+                policy: HtmlPolicy { classes: vec![] },
+            })
+        };
+        let rendered = nepl3_doc_html::display::render_display(
+            &shared_prepared,
+            &mut { text_guest },
+            &mut budget(),
+        )
+        .map_err(err)?;
+        let occurrences: Vec<_> = rendered
+            .foreign
+            .iter()
+            .filter(|p| p.embed == EmbedRef(0))
+            .collect();
+        assert_eq!(occurrences.len(), 2);
+        assert_ne!(occurrences[0].first_element, occurrences[1].first_element);
+        let mut shallow = Budget::new(Limits {
+            depth: 1,
+            work: u64::MAX,
+            allocation_units: u64::MAX,
+            nodes: u64::MAX,
+            output_bytes: u64::MAX,
+            source_bytes: u64::MAX,
+            ..Limits::default()
+        });
+        assert!(matches!(
+            nepl3_doc_html::display::render_display(
+                &shared_prepared,
+                &mut { text_guest },
+                &mut shallow,
+            ),
+            Err(nepl3_doc_html::ForeignRenderError::Render(
+                nepl3_doc_html::RenderError::Stopped(_)
+            ))
+        ));
+        let mut invoked = false;
+        let mut depth_limited = Budget::new(Limits {
+            depth: 10,
+            work: u64::MAX,
+            allocation_units: u64::MAX,
+            nodes: u64::MAX,
+            output_bytes: u64::MAX,
+            source_bytes: u64::MAX,
+            ..Limits::default()
+        });
+        let too_deep = nepl3_doc_html::display::render_display(
+            &shared_prepared,
+            &mut |_, _, _| {
+                invoked = true;
+                let mut nodes = Vec::new();
+                for index in 0..8 {
+                    nodes.push(HtmlNode::Element {
+                        tag: HtmlTag::Span,
+                        attributes: vec![],
+                        children: vec![index + 1],
+                    });
+                }
+                nodes.push(HtmlNode::Text {
+                    text: "deep".into(),
+                });
+                let markup = HtmlRequest {
+                    fragment: HtmlFragment { root: 0, nodes },
+                    slot: HtmlSlot::Phrasing,
+                    policy: HtmlPolicy { classes: vec![] },
+                };
+                let mut standalone = Budget::new(Limits {
+                    depth: 10,
+                    work: u64::MAX,
+                    allocation_units: u64::MAX,
+                    nodes: u64::MAX,
+                    output_bytes: u64::MAX,
+                    source_bytes: u64::MAX,
+                    ..Limits::default()
+                });
+                validate(
+                    &markup.fragment,
+                    markup.slot,
+                    &markup.policy,
+                    &mut standalone,
+                )
+                .map_err(err)?;
+                Ok::<_, String>(markup)
+            },
+            &mut depth_limited,
+        );
+        assert!(
+            invoked,
+            "exercise guest validation, not only host ancestor creation"
+        );
+        assert!(matches!(
+            too_deep,
+            Err(nepl3_doc_html::ForeignRenderError::Render(
+                nepl3_doc_html::RenderError::Stopped(_)
+            ))
+        ));
+        Ok(())
+    })
+}
+
+#[test]
+fn article_foreign_preparation_rejects_unsupported_and_external_requirements() -> Result<(), String>
+{
+    let compiled = compiled()?;
+    for (source, _circuit) in [
+        (
+            r#"article en sentence nil body cons circuit sentence nil Circuit design nil Main nil nil"#,
+            true,
+        ),
+        (
+            r#"article en sentence nil body cons image asset "missing" none sentence nil none nil"#,
+            false,
+        ),
+    ] {
+        with_input_route(true, &compiled, source, "Article", |tree, profile, b, a| {
+            let registry = profile.registry();
+            let checked = tree
+                .tree()
+                .bundle
+                .validate_with_sources(registry, b, a)
+                .map_err(err)?;
+            let store = SourceStore::default();
+            let mut admission = SourceAdmission::default();
+            let mut codec = FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+            let doc = nepl3_suite::adapters::sentence::literal::lower(
+                &checked,
+                &compiled.doc.package.schema,
+                Category::Article,
+                registry,
+                b,
+                &mut codec,
+            )
+            .map_err(err)?;
+            let options = nepl3_doc_html::RenderOptions {
+                parallel: nepl3_doc_html::ParallelMode::Rows,
+            };
+            let prepared =
+                nepl3_doc_html::display::prepare_display(&doc, &options, registry, &mut codec, b);
+            assert!(matches!(
+                prepared,
+                Err(nepl3_doc_html::LocalPreparationError::NeedsResolution(_))
+            ));
+            Ok(())
+        })?;
+    }
+    Ok(())
+}
+
+#[test]
+fn article_selects_real_sentence_lowering_and_annotation_markup() -> Result<(), String> {
+    let compiled = compiled()?;
+    let source = r#"article ja Sentence "題[漢/かん]" body cons paragraph cons Sentence sentence cons anno text "word" cons text "note" nil nil nil nil"#;
+    with_input_route(true, &compiled, source, "Article", |tree, profile, b, a| {
+        let registry = profile.registry();
+        let checked = tree
+            .tree()
+            .bundle
+            .validate_with_sources(registry, b, a)
+            .map_err(err)?;
+        let store = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+        let doc = nepl3_suite::adapters::sentence::literal::lower(
+            &checked,
+            &compiled.doc.package.schema,
+            Category::Article,
+            registry,
+            b,
+            &mut codec,
+        )
+        .map_err(err)?;
+        let options = nepl3_doc_html::RenderOptions {
+            parallel: nepl3_doc_html::ParallelMode::Rows,
+        };
+        let prepared =
+            nepl3_doc_html::display::prepare_display(&doc, &options, registry, &mut codec, b)
+                .map_err(err)?;
+        let rendered = nepl3_doc_html::display::render_display(
+            &prepared,
+            &mut |view, _, operation| {
+                let input = view
+                    .closure
+                    .validate_with_bundle(registry, operation, codec.source_admission())
+                    .map_err(err)?;
+                let value = nepl3_sentence_core::lower::presentation::sentence(
+                    &input,
+                    &view.closure.syntax().schema,
+                    registry,
+                    &mut codec,
+                    operation,
+                )
+                .map_err(err)?;
+                let rendered = nepl3_suite::adapters::sentence::html::render(
+                    &value,
+                    registry,
+                    operation,
+                    codec.source_admission(),
+                )
+                .map_err(err)?;
+                Ok::<_, String>(rendered.into_markup())
+            },
+            b,
+        )
+        .map_err(err)?;
+        assert_eq!(rendered.foreign.len(), 2);
+        let m = &rendered.fragment.markup;
+        let valid = nepl3_markup::html::validate(&m.fragment, m.slot, &m.policy, b).map_err(err)?;
+        let html = nepl3_markup::html::serialize(&valid, b).map_err(err)?;
+        for expected in ["nepl-ruby", "nepl-anno", "漢", "かん", "word", "note"] {
+            assert!(html.contains(expected), "{expected} missing from {html}");
+        }
+        let request = nepl3_doc_html::pages::PagesHtmlRequest {
+            set: nepl3_doc_core::pages::PageSet {
+                pages: ["one", "two"]
+                    .into_iter()
+                    .map(|id| nepl3_doc_core::pages::PageDocument {
+                        registration: nepl3_doc_core::pages::PageRegistration {
+                            id: id.into(),
+                            source: format!("{id}.nepld"),
+                            route: format!("{id}.html"),
+                        },
+                        document: doc.clone(),
+                    })
+                    .collect(),
+                files: vec![],
+            },
+            options: options.clone(),
+        };
+        for fail_second in [false, true] {
+            let mut visited = Vec::new();
+            let result = nepl3_doc_html::pages::render_pages_with_display(
+                &request,
+                registry,
+                &mut codec,
+                &mut budget(),
+                &mut |page, guest, _, _, _| {
+                    visited.push(page);
+                    assert_eq!(guest.kind, EmbedKind::Sentence);
+                    if fail_second && page == 1 {
+                        return Err("second page adapter failed".to_string());
+                    }
+                    Ok(nepl3_markup::html::HtmlRequest {
+                        fragment: nepl3_markup::html::HtmlFragment {
+                            root: 0,
+                            nodes: vec![nepl3_markup::html::HtmlNode::Text {
+                                text: "guest".into(),
+                            }],
+                        },
+                        slot: nepl3_markup::html::HtmlSlot::Phrasing,
+                        policy: nepl3_markup::html::HtmlPolicy { classes: vec![] },
+                    })
+                },
+            );
+            assert!(visited.contains(&0) && visited.contains(&1));
+            if fail_second {
+                assert!(
+                    result.is_err(),
+                    "no partial PageSet on a later guest failure"
+                );
+            } else {
+                let output = result.map_err(err)?;
+                assert_eq!(output.pages.fragments.len(), 2);
+                assert_eq!(
+                    output.foreign.iter().map(Vec::len).collect::<Vec<_>>(),
+                    vec![2, 2]
+                );
+            }
+        }
+        Ok(())
+    })
+}
