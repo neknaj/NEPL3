@@ -11,6 +11,8 @@ use nepl3_core::{
 use nepl3_doc_core::labels::namespace::{CheckedNamespace, MemberId};
 use nepl3_markup::html::*;
 
+pub mod display;
+
 pub struct PreparedNamespace<'a> {
     members: Vec<prepare::PreparedRendering<'a>>,
 }
@@ -40,12 +42,24 @@ pub fn render_part_with_foreign<E>(
     ) -> Result<HtmlRequest, E>,
     budget: &mut Budget,
 ) -> Result<PendingForeignPart, ForeignPartError<E>> {
+    render_pending(&prepared.0, member, adapter, budget)
+}
+fn render_pending<E>(
+    prepared: &PreparedNamespace<'_>,
+    member: MemberId,
+    adapter: &mut impl FnMut(
+        &nepl3_doc_core::model::DocEmbedView<'_>,
+        nepl3_doc_core::model::EmbedRef,
+        &mut Budget,
+    ) -> Result<HtmlRequest, E>,
+    budget: &mut Budget,
+) -> Result<PendingForeignPart, ForeignPartError<E>> {
     budget
         .poll()
         .map_err(|reason| ForeignPartError::Render(reason.into()))?;
     let input = usize::try_from(member.0)
         .ok()
-        .and_then(|index| prepared.0.members.get(index))
+        .and_then(|index| prepared.members.get(index))
         .ok_or(ForeignPartError::Member(member))?;
     let rendered = build::namespace_member_with_foreign(input, adapter, budget)
         .map_err(ForeignPartError::Render)?;
@@ -120,7 +134,14 @@ pub fn prepare<'a, C: FoundationValueCodec>(
     codec: &mut C,
     budget: &mut Budget,
 ) -> Result<PreparedNamespace<'a>, LocalPreparationError<'a, C::Error>> {
-    prepare_members(namespace, options, registry, codec, budget, false)
+    prepare_members(
+        namespace,
+        options,
+        registry,
+        codec,
+        budget,
+        Admission::Local,
+    )
 }
 /// Prepare a namespace whose outstanding requirements are only InlineMath.
 /// Other guest kinds, links and assets require their own explicit resolution.
@@ -132,7 +153,21 @@ pub fn prepare_with_foreign<'a, C: FoundationValueCodec>(
     codec: &mut C,
     budget: &mut Budget,
 ) -> Result<PreparedForeignNamespace<'a>, LocalPreparationError<'a, C::Error>> {
-    prepare_members(namespace, options, registry, codec, budget, true).map(PreparedForeignNamespace)
+    prepare_members(
+        namespace,
+        options,
+        registry,
+        codec,
+        budget,
+        Admission::InlineMath,
+    )
+    .map(PreparedForeignNamespace)
+}
+#[derive(Clone, Copy)]
+enum Admission {
+    Local,
+    InlineMath,
+    Display,
 }
 fn prepare_members<'a, C: FoundationValueCodec>(
     namespace: &CheckedNamespace<'_, 'a>,
@@ -140,7 +175,7 @@ fn prepare_members<'a, C: FoundationValueCodec>(
     registry: &SchemaRegistry,
     codec: &mut C,
     budget: &mut Budget,
-    foreign: bool,
+    admission: Admission,
 ) -> Result<PreparedNamespace<'a>, LocalPreparationError<'a, C::Error>> {
     let plans = nepl3_doc_core::prepare::inspect_namespace(namespace, registry, codec, budget)
         .map_err(|error| match error {
@@ -151,21 +186,32 @@ fn prepare_members<'a, C: FoundationValueCodec>(
         })?;
     let mut members = Vec::new();
     for (document, plan) in namespace.documents().zip(plans) {
+        let mut links = Vec::new();
         for requirement in &plan.requirements {
             budget.charge(Resource::Work, 1)?;
-            if !foreign
-                || !matches!(
-                    requirement,
-                    nepl3_doc_core::prepare::DocRequirement::Foreign {
-                        kind: nepl3_doc_core::model::EmbedKind::InlineMath,
-                        ..
-                    }
-                )
+            if matches!(admission, Admission::Display)
+                && crate::display::admit_external(requirement, &mut links, budget)?
             {
+                continue;
+            }
+            let admitted = match (admission, requirement) {
+                (
+                    Admission::InlineMath,
+                    nepl3_doc_core::prepare::DocRequirement::Foreign { kind, .. },
+                ) => *kind == nepl3_doc_core::model::EmbedKind::InlineMath,
+                (
+                    Admission::Display,
+                    nepl3_doc_core::prepare::DocRequirement::Foreign { kind, .. },
+                ) => crate::display::selected(*kind, true),
+                _ => false,
+            };
+            if !admitted {
                 return Err(LocalPreparationError::NeedsResolution(plan));
             }
         }
-        let member = prepare::prepare_rendering(document, options, plan.document_digest, budget)?;
+        let mut member =
+            prepare::prepare_rendering(document, options, plan.document_digest, budget)?;
+        member.external_links = links;
         build::push(&mut members, member, budget)?;
     }
     Ok(PreparedNamespace { members })
