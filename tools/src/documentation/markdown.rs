@@ -12,7 +12,7 @@ pub(super) struct Structure {
     code_blocks: Vec<Code>,
     inline_code: Vec<InlineCode>,
     html_fragments: Vec<HtmlFragment>,
-    gap_ids: BTreeSet<String>,
+    feature_review_ids: BTreeSet<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
@@ -170,7 +170,7 @@ pub(super) fn extract(source: &str) -> Result<Structure> {
         code_blocks: Vec::new(),
         inline_code: Vec::new(),
         html_fragments: Vec::new(),
-        gap_ids: BTreeSet::new(),
+        feature_review_ids: BTreeSet::new(),
     };
     let mut heading: Option<usize> = None;
     let mut links: Vec<usize> = Vec::new();
@@ -223,7 +223,7 @@ pub(super) fn extract(source: &str) -> Result<Structure> {
                 _ => None,
             };
             if let Some(gap) = gap {
-                out.gap_ids.insert(gap.into());
+                out.feature_review_ids.insert(gap.into());
             }
         }
         // One projection contract for headings, link labels and image alt text.

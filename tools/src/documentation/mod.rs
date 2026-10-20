@@ -1,4 +1,5 @@
 mod markdown;
+mod ownership;
 
 use crate::{
     Result, command, json,
@@ -21,6 +22,23 @@ const CONTRACTS: &[&str] = &[
     "languages/doc/syntax.neplg",
 ];
 
+// Contracts added after the historical baseline are fingerprinted whenever they
+// exist in the selected commit; absence in an old commit is not fabricated.
+const OWNER_CONTRACTS: &[&str] = &[
+    "design/tasks.json",
+    "implementation-status.json",
+    "design/dependencies.json",
+    "design/acceptance.json",
+    "doc/migration/pages.json",
+];
+fn owner_contract(path: &str) -> bool {
+    OWNER_CONTRACTS.contains(&path)
+        || path.starts_with("interfaces/") && path.ends_with(".json")
+        || ownership::is_registry(path)
+        || path.starts_with("doc/migration/aliases/") && path.ends_with(".json")
+        || path.ends_with(".aliases.json")
+}
+
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 struct Inventory {
@@ -33,6 +51,7 @@ struct Inventory {
     capability_contracts: Vec<File>,
     pages: Vec<Page>,
     rustdoc_sources: Vec<File>,
+    document_sources: Vec<File>,
     exclusions: Vec<Exclusion>,
 }
 
@@ -56,7 +75,11 @@ struct Exclusion {
 struct Page {
     file: File,
     classification: String,
-    canonical_source: String,
+    canonical_source: Option<String>,
+    canonical_registry: Option<String>,
+    canonical_aliases: Option<String>,
+    declared_route: Option<String>,
+    declared_renderer: Option<String>,
     migration_action: String,
     stable_page_id: Option<String>,
     published_url: Option<String>,
@@ -147,7 +170,7 @@ fn classification(path: &str) -> (&'static str, String, &'static str) {
         (
             "declared-signature-projection",
             "design/forms.json".into(),
-            "Declared derived from forms, but a checked signature-table generator is not currently implemented; retain form source and implement reproducible Doc/Markdown projections",
+            "Preserve declared forms ownership; generator/output equivalence requires a separate reproducibility check",
         )
     } else if path.starts_with(".github/") {
         (
@@ -171,7 +194,9 @@ fn classification(path: &str) -> (&'static str, String, &'static str) {
 }
 
 fn exclusion(path: &str) -> &'static str {
-    if path.starts_with("doc/history/") {
+    if path.starts_with("conformance/results/") {
+        "Historical conformance/evidence result; explicitly excluded from authored source and current-delta scope"
+    } else if path.starts_with("doc/history/") {
         "Immutable historical non-Markdown input: preserve original bytes; not authored prose or executable acceptance evidence"
     } else if path == "LICENSE" {
         "License text retained as legal artifact; do not rewrite as authored Doc prose"
@@ -186,8 +211,9 @@ fn exclusion(path: &str) -> &'static str {
 
 fn generate(root: &Path, commit: &str) -> Result<Inventory> {
     let paths = snapshot_paths(root, commit)?;
+    let owners = ownership::collect(root, commit, &paths)?;
     let mut result = Inventory {
-        schema: "nepl3.doc-inventory/2".into(),
+        schema: "nepl3.doc-inventory/3".into(),
         baseline_commit: commit.into(),
         scope:
             "immutable-commit-baseline; no claim of current completeness or migration acceptance"
@@ -198,10 +224,15 @@ fn generate(root: &Path, commit: &str) -> Result<Inventory> {
         capability_contracts: Vec::new(),
         pages: Vec::new(),
         rustdoc_sources: Vec::new(),
+        document_sources: Vec::new(),
         exclusions: Vec::new(),
     };
     for path in &paths {
         if path.starts_with("conformance/results/") {
+            result.exclusions.push(Exclusion {
+                path: path.clone(),
+                reason: exclusion(path).into(),
+            });
             continue;
         }
         if path.ends_with(".md") {
@@ -209,7 +240,28 @@ fn generate(root: &Path, commit: &str) -> Result<Inventory> {
             let source =
                 std::str::from_utf8(&bytes).map_err(|e| format!("{path}: invalid UTF-8: {e}"))?;
             let (class, canonical, action) = classification(path);
-            result.pages.push(Page { file: file(path, &bytes)?, classification: class.into(), canonical_source: canonical, migration_action: action.into(), stable_page_id: None, published_url: None, identity_status: "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping".into(), structure: markdown::extract(source)? });
+            let owner = owners.get(path);
+            let unregistered = owner.is_none() && source.starts_with("<!-- Generated from ");
+            result.pages.push(Page {
+                file: file(path, &bytes)?,
+                classification: if owner.is_some() { "registered-doc-projection" }
+                    else if unregistered { "unregistered-generated-projection" } else { class }.into(),
+                canonical_source: owner.map(|o| o.source.clone()).or_else(|| (!unregistered).then_some(canonical)),
+                canonical_registry: owner.map(|o| o.registry.clone()),
+                canonical_aliases: owner.map(|o| o.aliases.clone()),
+                declared_route: owner.map(|o| o.route.clone()),
+                declared_renderer: owner.map(|o| o.renderer.clone()),
+                migration_action: if owner.is_some() { "Preserve the commit-pinned NEPL3d owner; do not hand-edit generated Markdown. Generation and semantic equality remain separate checks." }
+                    else if unregistered { "Resolve the generated page owner explicitly; do not infer a canonical source from a comment or treat this page as authored Markdown." } else { action }.into(),
+                stable_page_id: owner.map(|o| o.id.clone()), published_url: None,
+                identity_status: if owner.is_some() { "Identity and relative route declared by the recorded registry; deployment and projection equivalence are unverified" }
+                    else { "Unassigned: no audited registry identity; a source path is not a stable deployed URL" }.into(),
+                structure: markdown::extract(source)?,
+            });
+        } else if path.ends_with(".nepld") {
+            result
+                .document_sources
+                .push(file(path, &blob(root, commit, path)?)?);
         } else if path.ends_with(".rs") {
             result
                 .rustdoc_sources
@@ -229,12 +281,28 @@ fn generate(root: &Path, commit: &str) -> Result<Inventory> {
             .capability_contracts
             .push(file(path, &blob(root, commit, path)?)?);
     }
+    let declared_aliases: BTreeSet<_> = owners
+        .values()
+        .map(|owner| owner.aliases.as_str())
+        .collect();
+    for path in paths.iter().filter(|path| {
+        (owner_contract(path) || declared_aliases.contains(path.as_str()))
+            && !CONTRACTS.contains(&path.as_str())
+    }) {
+        result
+            .capability_contracts
+            .push(file(path, &blob(root, commit, path)?)?);
+    }
     Ok(result)
 }
 
 fn scoped_path(path: &str) -> bool {
     !path.starts_with("conformance/results/")
-        && (path.ends_with(".md") || path.ends_with(".rs") || CONTRACTS.contains(&path))
+        && (path.ends_with(".md")
+            || path.ends_with(".rs")
+            || path.ends_with(".nepld")
+            || CONTRACTS.contains(&path)
+            || owner_contract(path))
 }
 
 fn delta(root: &Path, baseline: &Inventory) -> Result<Delta> {
@@ -244,12 +312,16 @@ fn delta(root: &Path, baseline: &Inventory) -> Result<Delta> {
         .iter()
         .map(|p| &p.file)
         .chain(&baseline.rustdoc_sources)
+        .chain(&baseline.document_sources)
         .chain(&baseline.capability_contracts)
     {
         before.insert(file.path.clone(), file.sha256.clone());
     }
     let mut after = BTreeMap::new();
-    for path in inventory(root)?.iter().filter(|p| scoped_path(p)) {
+    for path in inventory(root)?
+        .iter()
+        .filter(|p| scoped_path(p) || before.contains_key(*p))
+    {
         if !root.join(path).exists() {
             continue;
         }
@@ -318,6 +390,11 @@ pub(crate) fn write(root: &Path, commit: &str) -> Result<()> {
 
 pub(crate) fn check(root: &Path, require_current: bool) -> Result<()> {
     let saved: Inventory = json(root, OUTPUT)?;
+    if saved.schema != "nepl3.doc-inventory/3" {
+        return Err(
+            "unsupported inventory schema; regenerate the immutable baseline explicitly".into(),
+        );
+    }
     let expected = generate(root, &saved.baseline_commit)?;
     if saved != expected {
         return Err("documentation inventory differs from its immutable baseline; regenerate and independently review omissions/changes".into());
@@ -336,7 +413,7 @@ pub(crate) fn check(root: &Path, require_current: bool) -> Result<()> {
         if stale {
             "current completeness NOT established"
         } else {
-            "current source coverage matches baseline, semantic migration remains unvalidated"
+            "current audited source scope matches baseline, semantic migration remains unvalidated"
         }
     );
     if stale {
@@ -349,168 +426,4 @@ pub(crate) fn check(root: &Path, require_current: bool) -> Result<()> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::testing::Fixture;
-
-    #[test]
-    fn historical_review_source_is_not_a_documentation_migration_target() {
-        assert!(!scoped_path("conformance/results/review/AGENTS.md"));
-        assert!(!scoped_path("conformance/results/review/source/lib.rs"));
-        assert!(scoped_path("doc/development.md"));
-        assert!(scoped_path("crates/foundation/core/src/lib.rs"));
-    }
-
-    fn fixture() -> Result<(Fixture, String)> {
-        let files = Fixture::new()?;
-        files.git()?;
-        files.write("README.md", "# Root\n\n[Guide](doc/guide.md)\n")?;
-        files.write(
-            "doc/guide.md",
-            "# Guide\n\n| A | B |\n| - | - |\n| 1 | 2 |\n",
-        )?;
-        files.write(
-            "tools/src/lib.rs",
-            "//! Rust documentation stays owned by Rust source.\n",
-        )?;
-        for path in CONTRACTS {
-            files.write(path, "{}\n")?;
-        }
-        command(files.root(), "git", &["add", "--all"])?;
-        command(
-            files.root(),
-            "git",
-            &[
-                "-c",
-                "user.name=Inventory Test",
-                "-c",
-                "user.email=inventory@example.invalid",
-                "commit",
-                "--quiet",
-                "-m",
-                "synthetic inventory baseline",
-            ],
-        )?;
-        let commit = String::from_utf8(command(files.root(), "git", &["rev-parse", "HEAD"])?)?
-            .trim()
-            .to_owned();
-        fs::create_dir_all(files.root().join("doc/migration/generated"))?;
-        write(files.root(), &commit)?;
-        Ok((files, commit))
-    }
-
-    #[test]
-    fn real_checker_rejects_omitted_page_digest_and_structure_tampering() -> Result<()> {
-        let (files, _) = fixture()?;
-        check(files.root(), true)?;
-        let original: serde_json::Value = json(files.root(), OUTPUT)?;
-        for mutation in 0..3 {
-            let mut value = original.clone();
-            match mutation {
-                0 => {
-                    value["pages"]
-                        .as_array_mut()
-                        .ok_or("fixture pages missing")?
-                        .remove(0);
-                }
-                1 => value["pages"][0]["file"]["sha256"] = serde_json::json!("0".repeat(64)),
-                _ => value["pages"][0]["structure"]["elements"]["heading"] = serde_json::json!(999),
-            }
-            files.json(OUTPUT, &value)?;
-            assert!(check(files.root(), false).is_err());
-        }
-        Ok(())
-    }
-
-    #[test]
-    fn real_checker_reports_added_changed_removed_and_rejects_current_claim() -> Result<()> {
-        let (files, _) = fixture()?;
-        let saved: Inventory = json(files.root(), OUTPUT)?;
-        files.write("doc/new.md", "# New\n")?;
-        files.write("README.md", "# Changed\n")?;
-        fs::remove_file(files.root().join("doc/guide.md"))?;
-        assert_eq!(
-            delta(files.root(), &saved)?,
-            Delta {
-                added: vec!["doc/new.md".into()],
-                changed: vec!["README.md".into()],
-                removed: vec!["doc/guide.md".into()]
-            }
-        );
-        check(files.root(), false)?;
-        assert!(check(files.root(), true).is_err());
-        Ok(())
-    }
-
-    #[test]
-    fn commit_reference_and_missing_history_are_not_silently_accepted() -> Result<()> {
-        let files = Fixture::new()?;
-        files.git()?;
-        for bad in [
-            "HEAD",
-            "--help",
-            "25a096b",
-            "0000000000000000000000000000000000000000",
-        ] {
-            assert!(snapshot_paths(files.root(), bad).is_err());
-        }
-        Ok(())
-    }
-
-    #[test]
-    fn git_symlink_mode_is_rejected_without_creating_an_os_symlink() -> Result<()> {
-        let (files, _) = fixture()?;
-        files.write("link-target", "README.md")?;
-        let hash = String::from_utf8(command(
-            files.root(),
-            "git",
-            &["hash-object", "-w", "link-target"],
-        )?)?
-        .trim()
-        .to_owned();
-        command(
-            files.root(),
-            "git",
-            &[
-                "update-index",
-                "--add",
-                "--cacheinfo",
-                "120000",
-                &hash,
-                "doc/link.md",
-            ],
-        )?;
-        command(
-            files.root(),
-            "git",
-            &[
-                "-c",
-                "user.name=Inventory Test",
-                "-c",
-                "user.email=inventory@example.invalid",
-                "commit",
-                "--quiet",
-                "-m",
-                "synthetic symlink tree entry",
-            ],
-        )?;
-        let commit = String::from_utf8(command(files.root(), "git", &["rev-parse", "HEAD"])?)?
-            .trim()
-            .to_owned();
-        assert!(generate(files.root(), &commit).is_err());
-        Ok(())
-    }
-
-    #[test]
-    fn nonregular_output_and_oversized_current_input_are_rejected() -> Result<()> {
-        let (files, commit) = fixture()?;
-        fs::remove_file(files.root().join(OUTPUT))?;
-        fs::create_dir(files.root().join(OUTPUT))?;
-        assert!(write(files.root(), &commit).is_err());
-        fs::remove_dir(files.root().join(OUTPUT))?;
-        write(files.root(), &commit)?;
-        files.write("doc/huge.md", vec![b'x'; 1024 * 1024 + 1])?;
-        assert!(check(files.root(), false).is_err());
-        Ok(())
-    }
-}
+mod tests;
