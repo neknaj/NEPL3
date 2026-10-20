@@ -91,6 +91,27 @@ struct Guest {
     origin: MemberOrigin,
     selected: document::namespace::Selected,
 }
+/// Operation-local access to retained guest owners. The checked namespace
+/// separately exposes every member's exact immutable document.
+pub struct Members<'a> {
+    guests: &'a [Guest],
+}
+impl Members<'_> {
+    pub fn guest(
+        &self,
+        member: labels::MemberId,
+    ) -> Option<(MemberOrigin, &document::namespace::Selected)> {
+        self.guests
+            .get(usize::try_from(member.0.checked_sub(1)?).ok()?)
+            .map(|guest| (guest.origin, &guest.selected))
+    }
+}
+#[derive(Debug)]
+pub enum OperationError<E, F> {
+    Resolve(Error<E>),
+    Operation(F),
+}
+
 /// An owned summary for the exact retained inputs and explicit adoption list.
 /// A later rendering operation must revalidate/re-resolve using its own Budget;
 /// this is not a CheckedNamespace or permission to serialize arbitrary markup.
@@ -202,16 +223,50 @@ pub fn resolve<'s, 'a, C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<Resolution<'s, 'a>, Error<C::Error>> {
     b.poll()?;
-    let result = resolve_inner(input, adoption, host, b);
+    let result = resolve_inner(input, adoption, host, b, |_, _, _, _| {
+        Ok::<_, core::convert::Infallible>(())
+    })
+    .map(|(resolved, _)| resolved);
     b.poll()?;
     result
 }
-fn resolve_inner<'s, 'a, C: FoundationValueCodec>(
+/// Re-resolve the exact inputs and run one scoped operation while the checked
+/// namespace and retained member owners are alive. Temporary proof storage
+/// cannot escape through the callback's output or error. A stopped Budget takes
+/// precedence over either an operation result or error.
+pub fn resolve_with<'s, 'a, C: FoundationValueCodec, R, F>(
     input: &'s Selection<'a>,
     adoption: &[SentenceOccurrenceId],
     host: &mut SentenceAnnotationRenderer<'_, C>,
     b: &mut Budget,
-) -> Result<Resolution<'s, 'a>, Error<C::Error>> {
+    operation: impl FnOnce(
+        &labels::CheckedNamespace<'_, '_>,
+        Members<'_>,
+        &mut SentenceAnnotationRenderer<'_, C>,
+        &mut Budget,
+    ) -> Result<R, F>,
+) -> Result<(Resolution<'s, 'a>, R), OperationError<C::Error, F>> {
+    b.poll()
+        .map_err(|reason| OperationError::Resolve(Error::Stopped(reason)))?;
+    let result = resolve_inner(input, adoption, host, b, operation);
+    b.poll()
+        .map_err(|reason| OperationError::Resolve(Error::Stopped(reason)))?;
+    let (resolution, output) = result.map_err(OperationError::Resolve)?;
+    Ok((resolution, output.map_err(OperationError::Operation)?))
+}
+type OperationResult<'s, 'a, R, F> = (Resolution<'s, 'a>, Result<R, F>);
+fn resolve_inner<'s, 'a, C: FoundationValueCodec, R, F>(
+    input: &'s Selection<'a>,
+    adoption: &[SentenceOccurrenceId],
+    host: &mut SentenceAnnotationRenderer<'_, C>,
+    b: &mut Budget,
+    operation: impl FnOnce(
+        &labels::CheckedNamespace<'_, '_>,
+        Members<'_>,
+        &mut SentenceAnnotationRenderer<'_, C>,
+        &mut Budget,
+    ) -> Result<R, F>,
+) -> Result<OperationResult<'s, 'a, R, F>, Error<C::Error>> {
     let mut depths = Vec::new();
     for _ in input.owners() {
         push(&mut depths, 0_u64, b)?;
@@ -429,11 +484,15 @@ fn resolve_inner<'s, 'a, C: FoundationValueCodec>(
             b,
         )?;
     }
-    Ok(Resolution {
-        input,
-        adopted,
-        guests,
-        definitions: definition_sites,
-        references: reference_sites,
-    })
+    let output = operation(&resolved, Members { guests: &guests }, host, b);
+    Ok((
+        Resolution {
+            input,
+            adopted,
+            guests,
+            definitions: definition_sites,
+            references: reference_sites,
+        },
+        output,
+    ))
 }

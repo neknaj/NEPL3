@@ -177,42 +177,70 @@ fn prepare_members<'a, C: FoundationValueCodec>(
     budget: &mut Budget,
     admission: Admission,
 ) -> Result<PreparedNamespace<'a>, LocalPreparationError<'a, C::Error>> {
+    prepare_members_located(namespace, options, registry, codec, budget, admission)
+        .map_err(|error| error.error)
+}
+/// Exact member for member-local preparation errors; None denotes failure while
+/// inspecting the collection, before the member-specific preparation phase.
+#[derive(Debug)]
+pub struct MemberPreparationError<'a, E> {
+    pub member: Option<MemberId>,
+    pub error: LocalPreparationError<'a, E>,
+}
+fn prepare_members_located<'a, C: FoundationValueCodec>(
+    namespace: &CheckedNamespace<'_, 'a>,
+    options: &'a RenderOptions,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+    admission: Admission,
+) -> Result<PreparedNamespace<'a>, MemberPreparationError<'a, C::Error>> {
     let plans = nepl3_doc_core::prepare::inspect_namespace(namespace, registry, codec, budget)
-        .map_err(|error| match error {
-            nepl3_doc_core::prepare::PreparationError::Stopped(reason) => {
-                LocalPreparationError::Stopped(reason)
-            }
-            error => LocalPreparationError::Input(error),
+        .map_err(|error| MemberPreparationError {
+            member: None,
+            error: match error {
+                nepl3_doc_core::prepare::PreparationError::Stopped(reason) => {
+                    LocalPreparationError::Stopped(reason)
+                }
+                error => LocalPreparationError::Input(error),
+            },
         })?;
     let mut members = Vec::new();
-    for (document, plan) in namespace.documents().zip(plans) {
-        let mut links = Vec::new();
-        for requirement in &plan.requirements {
-            budget.charge(Resource::Work, 1)?;
-            if matches!(admission, Admission::Display)
-                && crate::display::admit_external(requirement, &mut links, budget)?
-            {
-                continue;
+    for (index, (document, plan)) in namespace.documents().zip(plans).enumerate() {
+        let result = (|| {
+            let mut links = Vec::new();
+            for requirement in &plan.requirements {
+                budget.charge(Resource::Work, 1)?;
+                if matches!(admission, Admission::Display)
+                    && crate::display::admit_external(requirement, &mut links, budget)?
+                {
+                    continue;
+                }
+                let admitted = match (admission, requirement) {
+                    (
+                        Admission::InlineMath,
+                        nepl3_doc_core::prepare::DocRequirement::Foreign { kind, .. },
+                    ) => *kind == nepl3_doc_core::model::EmbedKind::InlineMath,
+                    (
+                        Admission::Display,
+                        nepl3_doc_core::prepare::DocRequirement::Foreign { kind, .. },
+                    ) => crate::display::selected(*kind, true),
+                    _ => false,
+                };
+                if !admitted {
+                    return Err(LocalPreparationError::NeedsResolution(plan));
+                }
             }
-            let admitted = match (admission, requirement) {
-                (
-                    Admission::InlineMath,
-                    nepl3_doc_core::prepare::DocRequirement::Foreign { kind, .. },
-                ) => *kind == nepl3_doc_core::model::EmbedKind::InlineMath,
-                (
-                    Admission::Display,
-                    nepl3_doc_core::prepare::DocRequirement::Foreign { kind, .. },
-                ) => crate::display::selected(*kind, true),
-                _ => false,
-            };
-            if !admitted {
-                return Err(LocalPreparationError::NeedsResolution(plan));
-            }
-        }
-        let mut member =
-            prepare::prepare_rendering(document, options, plan.document_digest, budget)?;
-        member.external_links = links;
-        build::push(&mut members, member, budget)?;
+            let mut member =
+                prepare::prepare_rendering(document, options, plan.document_digest, budget)?;
+            member.external_links = links;
+            build::push(&mut members, member, budget)?;
+            Ok::<_, LocalPreparationError<'a, C::Error>>(())
+        })();
+        result.map_err(|error| MemberPreparationError {
+            member: Some(MemberId(index as u64)),
+            error,
+        })?;
     }
     Ok(PreparedNamespace { members })
 }

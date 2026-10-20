@@ -62,8 +62,38 @@ impl<E> From<StopReason> for Error<E> {
     }
 }
 
+#[derive(Clone, Copy)]
+pub(super) enum Preparation<'p, 'd> {
+    Inline(&'p nepl3_doc_html::namespace::PreparedForeignNamespace<'d>),
+    Display(&'p nepl3_doc_html::namespace::display::PreparedDisplayNamespace<'d>),
+}
+impl Preparation<'_, '_> {
+    fn render_part<E>(
+        self,
+        member: nepl3_doc_core::labels::namespace::MemberId,
+        adapter: &mut impl FnMut(
+            &nepl3_doc_core::model::DocEmbedView<'_>,
+            nepl3_doc_core::model::EmbedRef,
+            &mut Budget,
+        ) -> Result<nepl3_markup::html::HtmlRequest, E>,
+        b: &mut Budget,
+    ) -> Result<
+        nepl3_doc_html::namespace::PendingForeignPart,
+        nepl3_doc_html::namespace::ForeignPartError<E>,
+    > {
+        match self {
+            Self::Inline(prepared) => {
+                nepl3_doc_html::namespace::render_part_with_foreign(prepared, member, adapter, b)
+            }
+            Self::Display(prepared) => {
+                nepl3_doc_html::namespace::display::render_part(prepared, member, adapter, b)
+            }
+        }
+    }
+}
+
 pub(super) fn render_member<C: FoundationValueCodec>(
-    prepared: &nepl3_doc_html::namespace::PreparedForeignNamespace<'_>,
+    prepared: Preparation<'_, '_>,
     member: nepl3_doc_core::labels::namespace::MemberId,
     host: &mut super::SentenceAnnotationRenderer<'_, C>,
     b: &mut Budget,
@@ -75,62 +105,62 @@ pub(super) fn render_member<C: FoundationValueCodec>(
     Error<C::Error>,
 > {
     let mut foreign = Vec::new();
-    let rendered = nepl3_doc_html::namespace::render_part_with_foreign(
-        prepared,
-        member,
-        &mut |guest, embed, b| {
-            if guest.kind != EmbedKind::InlineMath {
-                return Err(Error::Selection);
-            }
-            let mut host = super::super::math::MathDisplayHost {
-                registry: host.registry,
-                math_surface: host.math_surface.ok_or(Error::Selection)?,
-                sentence_surface: Some(host.surface),
-                doc_surface: host.doc_surface,
-                codec: host.codec,
-            };
-            let result = host
-                .render_view(&guest.closure, nepl3_markup::mathml::Display::Inline, b)
-                .map_err(|error| {
-                    match b.charge(
-                        Resource::AllocationUnits,
-                        core::mem::size_of_val(&error) as u64,
-                    ) {
-                        Ok(()) => Error::Math(Box::new(error)),
-                        Err(reason) => Error::Stopped(reason),
-                    }
-                })?
-                .into_html(b)
-                .map_err(Error::Projection)?;
-            b.charge(
-                Resource::AllocationUnits,
-                core::mem::size_of::<super::DocumentMathRecord>() as u64,
-            )?;
-            foreign
-                .try_reserve_exact(1)
-                .map_err(|_| b.stop(StopReason::AllocationLimit))?;
-            foreign.push(super::DocumentMathRecord {
-                embed,
-                output: super::MathRecord {
-                    syntax: result.syntax,
-                    node_roots: result.node_roots,
-                    annotation_roots: result.annotation_roots,
-                    annotations: result.annotations,
-                },
-            });
-            Ok(result.markup)
-        },
-        b,
-    )
-    .map_err(|error| match error {
-        nepl3_doc_html::namespace::ForeignPartError::Member(_) => Error::Selection,
-        nepl3_doc_html::namespace::ForeignPartError::Render(
-            nepl3_doc_html::ForeignRenderError::Render(error),
-        ) => Error::Render(error),
-        nepl3_doc_html::namespace::ForeignPartError::Render(
-            nepl3_doc_html::ForeignRenderError::Foreign(error),
-        ) => error,
-    })?;
+    let rendered = prepared
+        .render_part(
+            member,
+            &mut |guest, embed, b| {
+                if guest.kind != EmbedKind::InlineMath {
+                    return Err(Error::Selection);
+                }
+                let mut host = super::super::math::MathDisplayHost {
+                    registry: host.registry,
+                    math_surface: host.math_surface.ok_or(Error::Selection)?,
+                    sentence_surface: Some(host.surface),
+                    doc_surface: host.doc_surface,
+                    codec: host.codec,
+                };
+                let result = host
+                    .render_view(&guest.closure, nepl3_markup::mathml::Display::Inline, b)
+                    .map_err(|error| {
+                        match b.charge(
+                            Resource::AllocationUnits,
+                            core::mem::size_of_val(&error) as u64,
+                        ) {
+                            Ok(()) => Error::Math(Box::new(error)),
+                            Err(reason) => Error::Stopped(reason),
+                        }
+                    })?
+                    .into_html(b)
+                    .map_err(Error::Projection)?;
+                b.charge(
+                    Resource::AllocationUnits,
+                    core::mem::size_of::<super::DocumentMathRecord>() as u64,
+                )?;
+                foreign
+                    .try_reserve_exact(1)
+                    .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+                foreign.push(super::DocumentMathRecord {
+                    embed,
+                    output: super::MathRecord {
+                        syntax: result.syntax,
+                        node_roots: result.node_roots,
+                        annotation_roots: result.annotation_roots,
+                        annotations: result.annotations,
+                    },
+                });
+                Ok(result.markup)
+            },
+            b,
+        )
+        .map_err(|error| match error {
+            nepl3_doc_html::namespace::ForeignPartError::Member(_) => Error::Selection,
+            nepl3_doc_html::namespace::ForeignPartError::Render(
+                nepl3_doc_html::ForeignRenderError::Render(error),
+            ) => Error::Render(error),
+            nepl3_doc_html::namespace::ForeignPartError::Render(
+                nepl3_doc_html::ForeignRenderError::Foreign(error),
+            ) => error,
+        })?;
     if foreign.len() != rendered.foreign.len() {
         return Err(Error::Selection);
     }
@@ -166,36 +196,42 @@ pub(super) fn preparation_error<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Error<C::Error> {
     match error {
+        LocalPreparationError::Input(PreparationError::Label(error)) => match error {
+            LabelError::Stopped(reason) => Error::Stopped(reason),
+            LabelError::Structure(error) => Error::Structure(error),
+            LabelError::ExpectedArticle => Error::ExpectedRoot(check::Category::Article),
+            LabelError::ExpectedSentence => Error::ExpectedRoot(check::Category::Sentence),
+            LabelError::ExpectedInline => Error::ExpectedRoot(check::Category::Inline),
+            error @ (LabelError::Duplicate { .. }
+            | LabelError::DuplicateOccurrence { .. }
+            | LabelError::Unresolved { .. }) => {
+                match error.diagnostic(document, registry, codec, b) {
+                    Ok(diagnostic) => match b.charge(
+                        nepl3_core::budget::Resource::AllocationUnits,
+                        core::mem::size_of::<Diagnostic>() as u64,
+                    ) {
+                        Ok(()) => Error::Label(Box::new(diagnostic)),
+                        Err(reason) => Error::Stopped(reason),
+                    },
+                    Err(error) => Error::LabelDiagnostic(error),
+                }
+            }
+        },
+        error => unlocated_preparation_error(error),
+    }
+}
+/// Convert collection-wide preparation failures without assigning a document.
+/// A label failure requires an exact owner and is not accepted through this path.
+pub(super) fn unlocated_preparation_error<E>(error: LocalPreparationError<'_, E>) -> Error<E> {
+    match error {
         LocalPreparationError::Stopped(reason) => Error::Stopped(reason),
         LocalPreparationError::NeedsResolution(plan) => Error::NeedsResolution(plan),
         LocalPreparationError::InvalidExternalUri { node } => Error::InvalidExternalUri { node },
         LocalPreparationError::Language => Error::LanguageOptions,
         LocalPreparationError::MissingVariant { node } => Error::MissingVariant { node },
         LocalPreparationError::ListStart { node, start } => Error::ListStart { node, start },
-        LocalPreparationError::Input(error) => match error {
-            PreparationError::Stopped(reason) => Error::Stopped(reason),
-            PreparationError::Boundary(error) => Error::Boundary(error),
-            PreparationError::Label(error) => match error {
-                LabelError::Stopped(reason) => Error::Stopped(reason),
-                LabelError::Structure(error) => Error::Structure(error),
-                LabelError::ExpectedArticle => Error::ExpectedRoot(check::Category::Article),
-                LabelError::ExpectedSentence => Error::ExpectedRoot(check::Category::Sentence),
-                LabelError::ExpectedInline => Error::ExpectedRoot(check::Category::Inline),
-                error @ (LabelError::Duplicate { .. }
-                | LabelError::DuplicateOccurrence { .. }
-                | LabelError::Unresolved { .. }) => {
-                    match error.diagnostic(document, registry, codec, b) {
-                        Ok(diagnostic) => match b.charge(
-                            nepl3_core::budget::Resource::AllocationUnits,
-                            core::mem::size_of::<Diagnostic>() as u64,
-                        ) {
-                            Ok(()) => Error::Label(Box::new(diagnostic)),
-                            Err(reason) => Error::Stopped(reason),
-                        },
-                        Err(error) => Error::LabelDiagnostic(error),
-                    }
-                }
-            },
-        },
+        LocalPreparationError::Input(PreparationError::Stopped(reason)) => Error::Stopped(reason),
+        LocalPreparationError::Input(PreparationError::Boundary(error)) => Error::Boundary(error),
+        LocalPreparationError::Input(PreparationError::Label(_)) => Error::Selection,
     }
 }
