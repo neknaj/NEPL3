@@ -200,7 +200,7 @@ fn render_inner<'a, C: FoundationValueCodec>(
                             closure,
                             embed,
                             candidate,
-                            &prepared,
+                            document::Preparation::Inline(&prepared),
                             &mut SentenceAnnotationRenderer {
                                 registry,
                                 surface: sentence_surface,

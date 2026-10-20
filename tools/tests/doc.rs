@@ -8,6 +8,8 @@ mod annotated_blocks;
 mod annotated_pages;
 #[path = "doc/article/display.rs"]
 mod article_display;
+#[path = "doc/article/host.rs"]
+mod article_host;
 #[path = "doc/article/namespace.rs"]
 mod article_namespace;
 #[path = "doc/code_pages.rs"]

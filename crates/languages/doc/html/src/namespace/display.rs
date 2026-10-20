@@ -26,6 +26,26 @@ pub fn prepare<'a, C: FoundationValueCodec>(
     .map(PreparedDisplayNamespace)
 }
 
+/// Like prepare, retaining the exact member for member-local failures.
+/// Collection inspection failures have no asserted member identity.
+pub fn prepare_located<'a, C: FoundationValueCodec>(
+    namespace: &CheckedNamespace<'_, 'a>,
+    options: &'a RenderOptions,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<PreparedDisplayNamespace<'a>, MemberPreparationError<'a, C::Error>> {
+    prepare_members_located(
+        namespace,
+        options,
+        registry,
+        codec,
+        budget,
+        Admission::Display,
+    )
+    .map(PreparedDisplayNamespace)
+}
+
 /// A structurally checked member with cross-member identities still pending.
 /// The composing host must insert it and validate the complete destination.
 pub fn render_part<E>(

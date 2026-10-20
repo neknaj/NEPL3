@@ -300,7 +300,7 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
                     closure,
                     embed,
                     candidate,
-                    &prepared,
+                    document::Preparation::Inline(&prepared),
                     &mut SentenceAnnotationRenderer {
                         registry,
                         surface,

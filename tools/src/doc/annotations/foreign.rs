@@ -8,7 +8,7 @@ pub(super) fn render<C: FoundationValueCodec>(
     closure: &ForeignClosureView<'_>,
     embed: EmbedRef,
     selected: Option<(&document::namespace::Selected, MemberId)>,
-    prepared: &nepl3_doc_html::namespace::PreparedForeignNamespace<'_>,
+    prepared: document::Preparation<'_, '_>,
     host: &mut SentenceAnnotationRenderer<'_, C>,
     b: &mut Budget,
 ) -> Result<(nepl3_markup::html::HtmlRequest, ForeignRecord), Error<C::Error>> {
