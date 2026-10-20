@@ -64,6 +64,14 @@ fn independent_sentence_retains_closure_roundtrips_and_requires_selection() -> R
                         "Sentence"
                     );
                     let shape = doc.value.validate_shape(b).map_err(err)?;
+                    let occurrences = shape.structural_occurrences(b).map_err(err)?;
+                    assert_eq!(
+                        occurrences.len(),
+                        1,
+                        "Doc traversal must not enter the foreign Sentence closure"
+                    );
+                    assert_eq!(occurrences[0].node, root.0);
+                    assert_eq!(occurrences[0].depth, 1);
                     assert_eq!(
                         shape.annotation_content(),
                         None,
@@ -923,6 +931,196 @@ fn article_selects_real_sentence_lowering_and_annotation_markup() -> Result<(), 
                 );
             }
         }
+        Ok(())
+    })
+}
+
+#[test]
+fn structural_article_selection_retains_unique_owners_and_deep_shared_occurrences()
+-> Result<(), String> {
+    use nepl3_tools::doc::annotations::{SentenceAnnotationRenderer, article};
+    let compiled = compiled()?;
+    let source = r#"article en Sentence "Title" body cons paragraph cons Sentence "Body" nil nil"#;
+    with_input_route(true, &compiled, source, "Article", |tree, profile, b, a| {
+        let registry = profile.registry();
+        let checked = tree
+            .tree()
+            .bundle
+            .validate_with_sources(registry, b, a)
+            .map_err(err)?;
+        let store = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+        let mut doc = nepl3_suite::adapters::sentence::literal::lower(
+            &checked,
+            &compiled.doc.package.schema,
+            Category::Article,
+            registry,
+            b,
+            &mut codec,
+        )
+        .map_err(err)?;
+        let DocRoot::Article(root) = doc.value.root else {
+            return Err("article".into());
+        };
+        let DocKind::Article { title, .. } = doc.value.nodes[root.0 as usize].kind else {
+            return Err("article".into());
+        };
+        let items = doc
+            .value
+            .nodes
+            .iter_mut()
+            .find_map(|node| match &mut node.kind {
+                DocKind::Paragraph { items } => Some(items),
+                _ => None,
+            })
+            .ok_or("paragraph")?;
+        items.push(FlowRef(title.0));
+        let mut fresh_admission = SourceAdmission::default();
+        let mut fresh_codec =
+            FoundationCodec::new(registry, &store, &mut fresh_admission).map_err(err)?;
+        let mut host = SentenceAnnotationRenderer {
+            registry,
+            surface: &compiled.others.get(3).ok_or("Sentence")?.schema,
+            math_surface: Some(&compiled.others.first().ok_or("Math")?.schema),
+            doc_surface: Some(&compiled.doc.package.schema),
+            codec: &mut fresh_codec,
+        };
+        let mut operation = budget();
+        let selected = article::collect_structural(&doc, &mut host, &mut operation).map_err(err)?;
+        assert!(core::ptr::eq(selected.document(), &doc));
+        assert_eq!(selected.owners().len(), 2);
+        assert_eq!(selected.sentences().len(), 3);
+        assert_eq!(selected.sentences()[0].owner, selected.sentences()[2].owner);
+        assert_ne!(
+            selected.sentences()[0].occurrence,
+            selected.sentences()[2].occurrence
+        );
+        assert_eq!(
+            selected.structure()[selected.sentences()[0].occurrence].depth,
+            2
+        );
+        assert_eq!(
+            selected.structure()[selected.sentences()[2].occurrence].depth,
+            4
+        );
+        assert_eq!(
+            selected.owners()[selected.sentences()[0].owner.0].embed(),
+            EmbedRef(0)
+        );
+        assert!(!selected.owners()[0].syntax().sources.is_empty());
+        let source_bytes = operation.usage().source_bytes;
+        let repeated = article::collect_structural(&doc, &mut host, &mut operation).map_err(err)?;
+        assert_eq!(repeated.sentences(), selected.sentences());
+        assert_eq!(
+            operation.usage().source_bytes,
+            source_bytes,
+            "the same admission ledger must not charge shared sources again"
+        );
+        let mut wrong_host = SentenceAnnotationRenderer {
+            registry,
+            surface: &compiled.doc.package.schema,
+            math_surface: None,
+            doc_surface: None,
+            codec: &mut fresh_codec,
+        };
+        assert!(matches!(
+            article::collect_structural(&doc, &mut wrong_host, &mut budget()),
+            Err(article::Error::Lower(_))
+        ));
+        // Leave exactly enough Work for the collector's prelude and the
+        // lower_view selection charge. The subsequent closure-validation Work
+        // must stop inside lowering, not during outer traversal.
+        let mut pre_admission = SourceAdmission::default();
+        let mut pre_codec =
+            FoundationCodec::new(registry, &store, &mut pre_admission).map_err(err)?;
+        let mut pre_budget = budget();
+        let pre_checked = doc
+            .validate_structure(registry, &mut pre_budget, pre_codec.source_admission())
+            .map_err(err)?;
+        let pre_structure = pre_checked
+            .shape()
+            .structural_occurrences(&mut pre_budget)
+            .map_err(err)?;
+        let prelude = pre_budget.usage().work
+            + doc.value.embeds.len() as u64
+            + pre_structure.len() as u64
+            + 1;
+        let first = doc.value.embeds.get(0).ok_or("first")?;
+        let selection_charge = (first.closure.syntax().schema.package.len()
+            + compiled
+                .others
+                .get(3)
+                .ok_or("Sentence")?
+                .schema
+                .package
+                .len()
+            + first.closure.syntax().category.len()) as u64
+            + 64;
+        let mut limits = budget().limits();
+        limits.work = prelude + selection_charge;
+        let mut limited = Budget::new(limits);
+        let mut limited_admission = SourceAdmission::default();
+        let mut limited_codec =
+            FoundationCodec::new(registry, &store, &mut limited_admission).map_err(err)?;
+        let mut limited_host = SentenceAnnotationRenderer {
+            registry,
+            surface: &compiled.others.get(3).ok_or("Sentence")?.schema,
+            math_surface: None,
+            doc_surface: None,
+            codec: &mut limited_codec,
+        };
+        assert!(matches!(
+            article::collect_structural(&doc, &mut limited_host, &mut limited),
+            Err(article::Error::Stopped(StopReason::WorkLimit))
+        ));
+        assert_eq!(limited.usage().work, prelude + selection_charge);
+        let mut cancelled = budget();
+        cancelled.cancel();
+        assert!(matches!(
+            article::collect_structural(&doc, &mut wrong_host, &mut cancelled),
+            Err(article::Error::Stopped(StopReason::Cancelled))
+        ));
+        Ok(())
+    })
+}
+
+#[test]
+fn structural_article_selection_rejects_late_invalid_sentence_without_partial_owners()
+-> Result<(), String> {
+    use nepl3_tools::doc::annotations::{SentenceAnnotationRenderer, article};
+    let compiled = compiled()?;
+    let source = r#"article en Sentence "Title" body cons paragraph cons Sentence sentence cons ruby text "" text "reading" nil nil nil"#;
+    with_input_route(true, &compiled, source, "Article", |tree, profile, b, a| {
+        let registry = profile.registry();
+        let checked = tree
+            .tree()
+            .bundle
+            .validate_with_sources(registry, b, a)
+            .map_err(err)?;
+        let store = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+        let doc = nepl3_suite::adapters::sentence::literal::lower(
+            &checked,
+            &compiled.doc.package.schema,
+            Category::Article,
+            registry,
+            b,
+            &mut codec,
+        )
+        .map_err(err)?;
+        let mut host = SentenceAnnotationRenderer {
+            registry,
+            surface: &compiled.others.get(3).ok_or("Sentence")?.schema,
+            math_surface: None,
+            doc_surface: None,
+            codec: &mut codec,
+        };
+        assert!(matches!(
+            article::collect_structural(&doc, &mut host, b),
+            Err(article::Error::Lower(_))
+        ));
         Ok(())
     })
 }
