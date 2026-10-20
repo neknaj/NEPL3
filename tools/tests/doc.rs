@@ -42,6 +42,8 @@ mod print;
 mod projection;
 #[path = "doc/resources.rs"]
 mod resources;
+#[path = "doc/sentence.rs"]
+mod sentence;
 #[path = "doc/text.rs"]
 mod text;
 use nepl3_core::{budget::*, source::*, value_codec::FoundationValueCodec};

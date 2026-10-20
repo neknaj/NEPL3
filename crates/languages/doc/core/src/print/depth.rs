@@ -31,7 +31,8 @@ pub fn guest_depths(shape: &ValidatedDocShape<'_>, b: &mut Budget) -> Result<Vec
         b.observe_depth(depth)?;
         let kind = &value.nodes[id].kind;
         let embed = match kind {
-            DocKind::Guest { syntax, .. }
+            DocKind::SentenceGuest { syntax }
+            | DocKind::Guest { syntax, .. }
             | DocKind::InlineMath { syntax }
             | DocKind::DisplayMath { syntax }
             | DocKind::CircuitFigure { syntax, .. }

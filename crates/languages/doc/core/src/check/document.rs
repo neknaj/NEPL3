@@ -266,6 +266,21 @@ impl DocumentSyntax {
                 index += 1;
             }
             let embed = match self.value.nodes[*node].kind {
+                DocKind::SentenceGuest { syntax } => {
+                    let embed = self
+                        .value
+                        .embeds
+                        .get(syntax.0 as usize)
+                        .ok_or(ShapeError::Embed(syntax.0))?;
+                    b.charge(
+                        Resource::Work,
+                        1 + embed.closure.syntax().category.len() as u64,
+                    )?;
+                    if embed.closure.syntax().category != "Sentence" {
+                        return Err(ShapeError::Embed(syntax.0).into());
+                    }
+                    Some(syntax.0)
+                }
                 DocKind::Guest { syntax, .. }
                 | DocKind::InlineMath { syntax }
                 | DocKind::DisplayMath { syntax }

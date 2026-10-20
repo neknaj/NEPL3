@@ -416,7 +416,8 @@
         "DisplayMath": [],
         "CircuitFigure": [],
         "Code": [],
-        "Guest": []
+        "Guest": [],
+        "Sentence": []
       },
       "constraints": []
     },
@@ -1020,6 +1021,18 @@
               }
             }
           ],
+          [
+            "syntax",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "SentenceGuest": [
           [
             "syntax",
             {
@@ -1672,7 +1685,8 @@
         "Math": [],
         "Circuit": [],
         "Grammar": [],
-        "Doc": []
+        "Doc": [],
+        "Sentence": []
       },
       "constraints": []
     },

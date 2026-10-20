@@ -320,6 +320,16 @@
       "entry": "ListItem",
       "kind": "ListItem",
       "source": "item none body nil"
+    },
+    {
+      "entry": "Sentence",
+      "kind": "SentenceGuest",
+      "source": "Sentence sentence cons text \"guest\" nil"
+    },
+    {
+      "entry": "Flow",
+      "kind": "SentenceGuest",
+      "source": "Sentence sentence cons text \"guest\" nil"
     }
   ]
 }

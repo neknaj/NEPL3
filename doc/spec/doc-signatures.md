@@ -33,6 +33,7 @@
 | 綴り | kind | 子（順序固定） | arity |
 |---|---|---|---:|
 | `sentence` | `Doc.Sentence` | inlines: List<Doc/Inline> | 1 |
+| `Sentence` | `Doc.SentenceGuest` | syntax: Sentence/Sentence | 1 |
 
 葉の認識規則：`sentence`。
 
@@ -51,6 +52,7 @@
 | `list` | `Doc.List` | style: Doc/ListStyle, items: List<Doc/ListItem> | 2 |
 | `rawcode` | `Doc.RawCode` | languageHint: Doc/OptionalText, text: @Text | 2 |
 | `image` | `Doc.Image` | asset: Doc/Asset, alt: Doc/Sentence, caption: Doc/OptionalSentence | 3 |
+| `Sentence` | `Doc.SentenceGuest` | syntax: Sentence/Sentence | 1 |
 
 葉の認識規則：`sentence`。
 

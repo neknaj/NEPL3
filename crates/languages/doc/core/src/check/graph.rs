@@ -205,10 +205,15 @@ impl DocValue {
                     }
                 }
             }
+            SentenceGuest { syntax } => self.embed(syntax.0, EmbedKind::Sentence, used)?,
             InlineMath { syntax } => self.embed(syntax.0, EmbedKind::InlineMath, used)?,
             DisplayMath { syntax } => self.embed(syntax.0, EmbedKind::DisplayMath, used)?,
             CircuitFigure { syntax, .. } => self.embed(syntax.0, EmbedKind::CircuitFigure, used)?,
             Code { syntax } => self.embed(syntax.0, EmbedKind::Code, used)?,
+            Guest {
+                language: crate::model::GuestLanguage::Sentence,
+                syntax,
+            } => return Err(ShapeError::Embed(syntax.0)),
             Guest { syntax, .. } => self.embed(syntax.0, EmbedKind::Guest, used)?,
             _ => {}
         }

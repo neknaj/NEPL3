@@ -33,6 +33,7 @@ fn host_request(
         (GuestLanguage::Circuit, "Circuit", "Design"),
         (GuestLanguage::Grammar, "Grammar", "Root"),
         (GuestLanguage::Doc, "Doc", "Article"),
+        (GuestLanguage::Sentence, "Sentence", "Sentence"),
     ];
     let bindings = selected
         .iter()
@@ -253,7 +254,7 @@ fn every_form_prints_through_real_parser_and_typed_first_receiver() -> Result<()
         })
         .collect::<Result<std::collections::BTreeSet<_>, String>>()?;
     assert_eq!(actual, expected);
-    assert_eq!(cases.len(), 64);
+    assert_eq!(cases.len(), 66);
     let compiled = compiled()?;
     let entries = [
         PrintEntry::Article,
@@ -810,13 +811,13 @@ fn printer_requires_explicit_current_guest_print_and_binding_at_first_receiver()
             cases.push((changed, PrintFailure::MissingBinding { embed: EmbedRef(0) }));
             let mut changed = request.clone();
             changed.bindings.push(changed.bindings[0].clone());
-            cases.push((changed, PrintFailure::ConflictingBinding { binding: 4 }));
+            cases.push((changed, PrintFailure::ConflictingBinding { binding: 5 }));
             let mut changed = request.clone();
             let mut conflicting = changed.bindings[0].clone();
             conflicting.schema.digest = nepl3_core::source::Digest([0; 32]);
             changed.bindings.push(conflicting);
             // One surface alias cannot select two different schemas in one Profile.
-            cases.push((changed, PrintFailure::ConflictingBinding { binding: 4 }));
+            cases.push((changed, PrintFailure::ConflictingBinding { binding: 5 }));
             let mut changed = request.clone();
             changed.bindings[0].category = "Design".into();
             cases.push((changed, PrintFailure::InvalidBinding { binding: 0 }));

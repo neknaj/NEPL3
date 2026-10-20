@@ -65,9 +65,12 @@ pub(crate) fn accepts(kind: &DocKind, category: Category) -> bool {
                 | Image { .. }
         ),
         Category::Flow => {
-            matches!(kind, Sentence { .. } | Parallel { .. }) || accepts(kind, Category::Block)
+            matches!(
+                kind,
+                Sentence { .. } | SentenceGuest { .. } | Parallel { .. }
+            ) || accepts(kind, Category::Block)
         }
-        Category::Sentence => matches!(kind, Sentence { .. }),
+        Category::Sentence => matches!(kind, Sentence { .. } | SentenceGuest { .. }),
         Category::Inline => matches!(
             kind,
             Text { .. }
@@ -107,7 +110,8 @@ pub(crate) fn edge(kind: &DocKind, index: usize) -> Option<(u64, Category)> {
                 None
             }
         }
-        Guest { .. }
+        SentenceGuest { .. }
+        | Guest { .. }
         | Alignment { .. }
         | ListStyle { .. }
         | Check { .. }
@@ -184,7 +188,8 @@ pub(crate) fn rewrite(
                 sentence.0 = map(sentence.0)?;
             }
         }
-        DocKind::Guest { .. }
+        DocKind::SentenceGuest { .. }
+        | DocKind::Guest { .. }
         | DocKind::Alignment { .. }
         | DocKind::ListStyle { .. }
         | DocKind::Check { .. }

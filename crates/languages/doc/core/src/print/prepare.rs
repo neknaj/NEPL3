@@ -5,6 +5,7 @@ pub(super) struct Guest<'a> {
 }
 pub(super) fn category(language: GuestLanguage) -> &'static str {
     match language {
+        GuestLanguage::Sentence => "Sentence",
         GuestLanguage::Math => "Expr",
         GuestLanguage::Circuit => "Design",
         GuestLanguage::Grammar => "Root",
@@ -91,11 +92,12 @@ pub(super) fn check<'a>(
             (binding.category.len() + embed.closure.syntax().category.len()) as u64,
         )?;
         let compatible = match embed.kind {
+            EmbedKind::Sentence => binding.language == GuestLanguage::Sentence,
             EmbedKind::InlineMath | EmbedKind::DisplayMath => {
                 binding.language == GuestLanguage::Math
             }
             EmbedKind::CircuitFigure => binding.language == GuestLanguage::Circuit,
-            EmbedKind::Code | EmbedKind::Guest => true,
+            EmbedKind::Code | EmbedKind::Guest => binding.language != GuestLanguage::Sentence,
         };
         if !compatible || binding.category != embed.closure.syntax().category {
             return Err(PrintFailure::GuestCategory { embed: id }.into());

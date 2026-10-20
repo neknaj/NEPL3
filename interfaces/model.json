@@ -867,7 +867,8 @@
     },
     "Doc/Sentence": {
       "union": {
-        "Sentence": "Doc:Sentence"
+        "Sentence": "Doc:Sentence",
+        "SentenceGuest": "Doc:SentenceGuest"
       }
     },
     "Doc:Parallel": {
@@ -890,7 +891,8 @@
         "Table": "Doc:Table",
         "List": "Doc:List",
         "RawCode": "Doc:RawCode",
-        "Image": "Doc:Image"
+        "Image": "Doc:Image",
+        "SentenceGuest": "Doc:SentenceGuest"
       }
     },
     "Doc:Variant": {
@@ -1801,6 +1803,14 @@
       "union": {
         "ListItem": "Doc:ListItem"
       }
+    },
+    "Doc:SentenceGuest": {
+      "record": [
+        [
+          "syntax",
+          "ForeignClosure"
+        ]
+      ]
     }
   },
   "external_types": [

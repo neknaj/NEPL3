@@ -42,7 +42,13 @@ fn source_index_is_reused_within_document_encoding() -> Result<(), String> {
             }
             assert_eq!(
                 measured.usage().work,
-                work - rebuild.usage().work,
+                // SentenceGuest changes the sorted DocKind search tree:
+                // Text lookup 28 -> 25 Work (five fixture nodes), Sentence
+                // lookup 37 -> 40 (one node); Ruby/Anno costs are unchanged.
+                // Total -12 is schema lookup, not source-index construction.
+                // Running this unchanged encoder with the old descriptor
+                // reproduces the historical numbers above exactly.
+                work - 12 - rebuild.usage().work,
                 "source index must not be rebuilt"
             );
             assert_eq!(

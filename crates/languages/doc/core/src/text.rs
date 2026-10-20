@@ -138,7 +138,10 @@ pub fn prepare<'a, C: FoundationValueCodec>(
     let guest_digests = crate::identity::wrap_components(&components, GUEST_DOMAIN, codec, b)?;
     for (index, guest_digest) in guest_digests.into_iter().enumerate() {
         b.charge(Resource::Work, 1)?;
-        if document.value.embeds.kinds[index] != EmbedKind::InlineMath {
+        if !matches!(
+            document.value.embeds.kinds[index],
+            EmbedKind::InlineMath | EmbedKind::Sentence
+        ) {
             continue;
         }
         b.charge(

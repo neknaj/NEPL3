@@ -1294,7 +1294,7 @@ fn pages_archive_plan_adapter_budgets_are_exact_and_sticky() -> Result<(), Strin
 }
 
 #[test]
-fn legacy_resolver_retains_pre_refactor_identity_and_usage() -> Result<(), String> {
+fn legacy_resolver_retains_usage_and_commits_current_schema() -> Result<(), String> {
     let r = setup()?;
     let set = page_set(vec![document(&r)?]);
     let empty = SourceStore::default();
@@ -1305,8 +1305,8 @@ fn legacy_resolver_retains_pre_refactor_identity_and_usage() -> Result<(), Strin
         .map_err(err)?
         .into_plan();
     // Measured independently on pre-refactor bd5220de with the identical fixture
-    // and fresh codec/admission. These constants protect compatibility, not new
-    // algorithm correctness (covered by archive digest oracles above).
+    // and fresh codec/admission. Usage constants protect the legacy execution
+    // cost; the schema-bound identity is checked independently below.
     let u = budget.usage();
     assert_eq!(
         (
@@ -1323,7 +1323,17 @@ fn legacy_resolver_retains_pre_refactor_identity_and_usage() -> Result<(), Strin
     assert_eq!(u.work, 35591);
     #[cfg(all(target_pointer_width = "64", target_has_atomic = "ptr"))]
     assert_eq!(u.allocation_units, 27254);
+    // Adding the explicit Sentence slot changes the Doc descriptor digest.
+    // The legacy identity domain stays v1, but old-schema values must not share
+    // the new identity. Verify the preimage independently, not a refreshed golden.
+    let set_value =
+        nepl3_doc_core::portable::pages::set_to_value(&set, &r, &mut c, &mut b()).map_err(err)?;
     assert_eq!(
+        plan.identity,
+        c.canonical_value_digest(nepl3_doc_core::pages::SET_DOMAIN, &set_value, &mut b())
+            .map_err(err)?
+    );
+    assert_ne!(
         plan.identity.0,
         [
             217, 34, 86, 93, 27, 210, 96, 153, 180, 123, 231, 35, 144, 210, 135, 132, 151, 132, 80,
@@ -1332,9 +1342,18 @@ fn legacy_resolver_retains_pre_refactor_identity_and_usage() -> Result<(), Strin
     );
     assert_eq!(plan.links.len(), 0);
     assert_eq!(plan.remaining.len(), 1);
+    let components = c
+        .foreign_group_entry_digests(&set.pages[0].document.value.embeds.group, &mut b())
+        .map_err(err)?;
+    let expected_guest = c
+        .canonical_value_digest(
+            nepl3_doc_core::prepare::GUEST_DOMAIN,
+            &NdfValue::Bytes(components[0].0.to_vec()),
+            &mut b(),
+        )
+        .map_err(err)?;
     assert!(
-        matches!(&plan.remaining[0].requirement,nepl3_doc_core::prepare::DocRequirement::Foreign{guest_digest,..}
-        if guest_digest.0==[225,252,72,62,147,114,222,11,155,47,35,217,162,40,83,53,131,190,85,252,181,114,74,203,181,90,26,165,155,84,58,158])
+        matches!(&plan.remaining[0].requirement, nepl3_doc_core::prepare::DocRequirement::Foreign { guest_digest, .. } if *guest_digest == expected_guest)
     );
     Ok(())
 }
