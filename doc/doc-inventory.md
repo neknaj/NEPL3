@@ -2,15 +2,29 @@
 
 この監査は、Docの意味モデルと交換schemaを設計する前に、実在する文書が必要とする情報を確定するための入力である。Docへの変換やR014の解消、J01〜J04の受入成功を示すものではない。
 
-## 監査した原本と分類
+## 現行の抽出と所有判定
 
-baselineは `25a096bc183c2b71200902884084cd4082d0aae3`。全trackedファイルを列挙し、57 Markdownページ、10 Rust source、その他の機械入力・履歴・assetを包含理由または除外理由付きで分類した。各ページとRust sourceのpath・SHA-256・byte長、および5つのDoc関連契約のSHA-256は [doc/migration/generated/doc-inventory.json](../doc/migration/generated/doc-inventory.json) にある。
+inventory schemaは `nepl3.doc-inventory/3` とする。snapshotは一つの完全なcommit IDから読み、現在の作業treeのregistryで過去の正本を推測しない。
+
+- `doc/canonical.json` と `examples/document/` 内の `.pages.json` を既存のcanonical registry parserで検査する。前者の入力pathはrepository root、後者はmanifestのdirectoryを基準とし、source・projection・aliasesが同じsnapshotに存在することを要求する。
+- 登録済みMarkdownは `registered-doc-projection` とし、NEPL3d正本、registry、解決済みaliases入力、宣言されたpage ID・相対route・rendererを記録する。生成コメントだけがある未登録ページは `unregistered-generated-projection` とし、canonical sourceをnullにする。コメントから任意pathを読み込まず、手書き正本とも判断しない。
+- 宣言されたrouteは公開済みURLではない。`published_url` はnullのまま保持し、生成内容の一致、実配信、alias/link検証は別の検査へ委ねる。
+- 全 `.nepld` のbyte長・digestを `document_sources` に記録する。Markdown・Rust sourceに加え、NEPL3d、全interfaces JSON、Doc/Sentence所有に関係するdesign、registry、aliasesをcurrent deltaの対象にする。宣言されたaliasesはファイル名の慣習に依存せず追跡する。registryが変わればcurrent一致は失効し、新たな宣言入力は再baselineで確定する。古いcommitに存在しない追加契約を捏造しない。
+- `conformance/results/` はcurrent deltaから除外するが、snapshotの `exclusions` へ理由付きで列挙する。履歴や未実施の受入を著者文書・成功証拠へ読み替えない。
+
+`feature_review_ids` のDG01〜DG09は観測した要素を再確認するための分類であり、現行実装にその機能が欠けているという判定ではない。型・schema・consumer・表示の対応は別途レビューする。生成Markdown内のruby/rt/anchorもraw HTMLとして記録されるため、HTML件数だけで新たなRawHtml機能が必要と判断しない。
+
+version 2以前の保存inventoryは、元のbaseline commitを指定して明示的に再生成する。schemaと正本分類の変更を、対象文書の意味・表示が移行済みである証拠にしない。
+
+## 初期監査の原本と分類
+
+以下の件数・不足表は初期監査の歴史記録であり、現在の網羅性を主張しない。初期baselineは `25a096bc183c2b71200902884084cd4082d0aae3`。全trackedファイルを列挙し、57 Markdownページ、10 Rust source、その他の機械入力・履歴・assetを包含理由または除外理由付きで分類した。各ページとRust sourceのpath・SHA-256・byte長、および記録対象契約のSHA-256は [doc/migration/generated/doc-inventory.json](../doc/migration/generated/doc-inventory.json) にある。
 
 | 分類 | 件数 | 正本と扱い |
 | --- | ---: | --- |
 | rootのGitHub/agent向け入口 | 5 | README、AGENTS、CODEX、CONTRIBUTING、SECURITY。現在は著者が編集するMarkdown。将来も入口を維持し、Docから生成するには先に対応契約が必要 |
 | doc内の著者文書 | 25 | `doc/history/README.md` も変更可能な説明文書として含む。履歴JSONと混同して除外しない |
-| signature表 | 4 | forms由来と宣言されているが、現在のtoolsに表の再生成器はない。再現可能な生成物として承認済みとは扱わない |
+| signature表 | 4 | forms由来と宣言されているが、初期監査時のtoolsに表の再生成器はなかった。再現可能な生成物として承認済みとは扱わない |
 | taskの生成文書 | 22 | 21 taskと索引。正本はtasks/status JSONで、現行toolsの生成対象。Doc移行時もJSONからの生成を維持 |
 | GitHub PR template | 1 | checkboxとリンクを含む運用template。プラットフォーム入力としてMarkdownを維持する明示的な除外 |
 | Rust API解説の所有元 | 10 source | doc commentの正本はRust source。source digestを記録しただけで、rustdocの全API抽出・リンク・表示を検証したとはしない |
@@ -41,7 +55,7 @@ baselineは `25a096bc183c2b71200902884084cd4082d0aae3`。全trackedファイル�
 
 ## 見出し・リンク・画像altのinline投影契約
 
-inventory schemaは `nepl3.doc-inventory/2`、inline抽出profileは `nepl3.markdown-inline-projection/1` とする。従来の抽出ではlink labelの改行が失われて単語が結合し、見出しとlink labelからmathが欠落した。修正に伴いschemaを更新し、同じbaseline commitから明示的に再生成した。parser版・元ファイルのdigest・対象ページは変更していない。
+inline抽出profileは `nepl3.markdown-inline-projection/1` を維持する。以下はinventory version 2導入時の抽出修正の記録である。従来の抽出ではlink labelの改行が失われて単語が結合し、見出しとlink labelからmathが欠落した。修正に伴いschemaを更新し、同じbaseline commitから明示的に再生成した。parser版・元ファイルのdigest・対象ページは変更していない。
 
 見出しの `text` とlink/imageの `label` は共通の投影処理で作る。それぞれに `inline_segments` を保持し、各segmentは `content.kind`、必要な場合の `content.value`、元sourceのUTF-8半開byte範囲 `source_bytes` を持つ。入れ子のimageに含まれる内容は、そのimage、外側のlink、包含する見出しへ同じ順序で一度ずつ反映する。
 
@@ -62,7 +76,7 @@ typed segmentを持つため、要約文字列に同じ`$`表記が現れても�
 
 監査の照合先はbaselineのforms、Doc syntax、model、contracts、markupである。以下の項目は必要情報と不足の記録であり、新constructorの承認済みsignatureではない。
 
-| gap ID | 観測と必要な情報 | 現在の不足・設計への影響 |
+| gap ID | 観測と必要な情報 | 初期監査時の不足・設計への影響 |
 | --- | --- | --- |
 | DG01 | 表の行/cell順、header、列対応・alignment、cell内inline/参照 | Docにtable/cell型がなく、HTML allowlistにもtable/thead/th/tdがない。T01のtyped field/schema方針、T02の順序付き交換値、T07の文書型へ影響 |
 | DG02 | ordered/unordered、開始番号、itemの入れ子、checkbox状態 | Paragraphの再帰だけではlistやtaskの意味を保持できず、ol/ul/li/inputも未定義。運用templateをprojectionとして残す選択も明記する |
@@ -88,7 +102,7 @@ cargo run --locked -p nepl3-tools -- doc-inventory --check-current
 cargo run --locked -p nepl3-tools -- doc-inventory --write --commit 25a096bc183c2b71200902884084cd4082d0aae3
 ```
 
-`--check` は完全な40桁commitからGit blobを再読込し、ページ欠落、digest、構造、分類の変更を保存inventoryと照合する。その後、現在のGit-visible Markdown、Rust source、Doc関連契約について追加・変更・削除を出力する。baselineが正しければcurrent deltaがあっても成功するが、現在の網羅性は未確認と明記する。`--check-current` はdeltaがあれば失敗する。これらは明示的な歴史監査であり、通常のrepository `check` は実行しない。
+`--check` は完全な40桁commitからGit blobを再読込し、ページ欠落、digest、構造、分類の変更を保存inventoryと照合する。その後、現在のGit-visible Markdown、Rust source、NEPL3d、記録対象契約について追加・変更・削除を出力する。baselineが正しければcurrent deltaがあっても成功するが、現在の網羅性は未確認と明記する。`--check-current` はdeltaがあれば失敗する。これらは明示的な歴史監査であり、通常のrepository `check` は実行しない。
 
 この変更で追加した監査文書、訂正した仕様、tools、生成taskはbaselineに存在しないか内容が異なるので、現在のstrict確認は失敗するのが正しい。新しいAPI判断で現在の網羅性を主張する前に、対象の文書・契約をcommitし、そのcommitで `--write`、差分の独立レビュー、`--check-current` を実行する。新baselineを記録するJSON自身はMarkdown/Rust/API仕様のcurrent比較対象ではないため、自己hash更新を要求しない。生成taskは過去commitのbyte列を読み、現在のgeneratorを動かしてbaselineを書き換えない。
 

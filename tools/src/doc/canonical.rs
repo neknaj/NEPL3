@@ -198,7 +198,7 @@ pub fn load(root: &Path, manifest: &str) -> Result<Registry> {
     parse_registry(&raw)
 }
 
-fn parse_registry(raw: &[u8]) -> Result<Registry> {
+pub(crate) fn parse_registry(raw: &[u8]) -> Result<Registry> {
     let text = std::str::from_utf8(raw)?;
     repository::json::validate(text)?;
     let registry: Registry = serde_json::from_str(text)?;

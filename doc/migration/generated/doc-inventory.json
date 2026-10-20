@@ -1,5 +1,5 @@
 {
-  "schema": "nepl3.doc-inventory/2",
+  "schema": "nepl3.doc-inventory/3",
   "baseline_commit": "25a096bc183c2b71200902884084cd4082d0aae3",
   "scope": "immutable-commit-baseline; no claim of current completeness or migration acceptance",
   "extractor": "pulldown-cmark/0.13.4",
@@ -37,6 +37,31 @@
       "path": "languages/doc/syntax.neplg",
       "sha256": "aa39275f6ec4e89aa83c8e5fd873234d5017759f840ad759588b28bf3fc9196f",
       "bytes": 5502
+    },
+    {
+      "path": "design/acceptance.json",
+      "sha256": "a715ad7370c0c5a88e9f9a29935e2fb3e574d5ad643bec07f70b4ab7c44a0f0e",
+      "bytes": 18759
+    },
+    {
+      "path": "design/dependencies.json",
+      "sha256": "85e2f040de7f187e8bbe2ac870b03e56e23797cbfe49e0441132d8b4551c8260",
+      "bytes": 5281
+    },
+    {
+      "path": "design/tasks.json",
+      "sha256": "65bc1d0760bfcb23f21878abee3f101d97eca50ebbddbca325a979bf6eaea7e9",
+      "bytes": 8843
+    },
+    {
+      "path": "implementation-status.json",
+      "sha256": "547097e9ead7b603a8f7c572687989c67343429014d5e3574a60602f48d27e9d",
+      "bytes": 6649
+    },
+    {
+      "path": "interfaces/acceptance-evidence.schema.json",
+      "sha256": "b7ecc3786b7ebbae272c8e9cb5e3b8264982b9c5deacb994905a1c1ce62be1da",
+      "bytes": 4604
     }
   ],
   "pages": [
@@ -48,10 +73,14 @@
       },
       "classification": "github-platform-template",
       "canonical_source": ".github/pull_request_template.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep operational Markdown template; account for checkboxes and links in inventory, not a duplicated specification page",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -154,7 +183,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG06",
           "DG09"
@@ -169,10 +198,14 @@
       },
       "classification": "authored-github-entry",
       "canonical_source": "AGENTS.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Preserve current Markdown entry; switch to generated platform projection only after reviewed Doc source exists",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 7,
@@ -463,7 +496,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG04",
           "DG06"
@@ -478,10 +511,14 @@
       },
       "classification": "authored-github-entry",
       "canonical_source": "CODEX.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Preserve current Markdown entry; switch to generated platform projection only after reviewed Doc source exists",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 1,
@@ -657,7 +694,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG03",
           "DG04",
           "DG06"
@@ -672,10 +709,14 @@
       },
       "classification": "authored-github-entry",
       "canonical_source": "CONTRIBUTING.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Preserve current Markdown entry; switch to generated platform projection only after reviewed Doc source exists",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 1,
@@ -874,7 +915,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG03",
           "DG04",
           "DG06"
@@ -889,10 +930,14 @@
       },
       "classification": "authored-github-entry",
       "canonical_source": "README.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Preserve current Markdown entry; switch to generated platform projection only after reviewed Doc source exists",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "code-block": 1,
@@ -1284,7 +1329,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG01",
           "DG03",
           "DG04",
@@ -1301,10 +1346,14 @@
       },
       "classification": "authored-github-entry",
       "canonical_source": "SECURITY.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Preserve current Markdown entry; switch to generated platform projection only after reviewed Doc source exists",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 1,
@@ -1431,7 +1480,7 @@
         "code_blocks": [],
         "inline_code": [],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG03",
           "DG06"
         ]
@@ -1445,10 +1494,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/README.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -2521,7 +2574,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG01",
           "DG02",
           "DG03",
@@ -2538,10 +2591,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/decisions/0001-repository-foundation.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 4,
@@ -2721,7 +2778,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG04",
           "DG06"
@@ -2736,10 +2793,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/decisions/0002-design-contract-corrections.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 1,
@@ -2911,7 +2972,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG01",
           "DG02",
           "DG03",
@@ -2928,10 +2989,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/decisions/0003-web-tea-doc-migration.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 1,
@@ -3125,7 +3190,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -3141,10 +3206,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/development.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "code-block": 5,
@@ -3716,7 +3785,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG03",
           "DG04",
           "DG06"
@@ -3731,10 +3800,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/history/README.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 1,
@@ -3936,7 +4009,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -3952,10 +4025,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/review.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 7,
@@ -4507,7 +4584,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG01",
           "DG02",
           "DG03",
@@ -4524,10 +4601,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/00-contract.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 7,
@@ -4770,7 +4851,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG04",
           "DG06"
@@ -4785,10 +4866,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/01-architecture.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "code-block": 2,
@@ -5138,7 +5223,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG04",
           "DG06"
         ]
@@ -5152,10 +5237,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/02-foundation.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 10,
@@ -5517,7 +5606,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG04",
           "DG05",
           "DG06"
@@ -5532,10 +5621,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/03-reader.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 9,
@@ -5988,7 +6081,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG04",
           "DG06"
@@ -6003,10 +6096,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/04-grammar.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "code-block": 1,
@@ -6339,7 +6436,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG04",
           "DG06"
         ]
@@ -6353,10 +6450,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/05-document.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "code-block": 2,
@@ -6804,7 +6905,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG04",
           "DG06"
         ]
@@ -6818,10 +6919,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/06-math.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 8,
@@ -7055,7 +7160,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG04",
           "DG05",
@@ -7071,10 +7176,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/07-circuit.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 10,
@@ -7356,7 +7465,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG04",
           "DG06"
@@ -7371,10 +7480,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/08-editor.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 11,
@@ -7617,7 +7730,7 @@
         "code_blocks": [],
         "inline_code": [],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG06"
         ]
       }
@@ -7630,10 +7743,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/09-portability.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 8,
@@ -7833,7 +7950,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG01",
           "DG04",
           "DG06"
@@ -7848,10 +7965,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/10-integration.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 9,
@@ -8192,7 +8313,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG01",
           "DG04",
           "DG06"
@@ -8207,10 +8328,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/11-conformance.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 7,
@@ -8563,7 +8688,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG04",
           "DG06"
         ]
@@ -8577,10 +8702,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/12-model-invariants.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 7,
@@ -8797,7 +8926,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG04",
           "DG06"
         ]
@@ -8811,10 +8940,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/13-reproducibility.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 6,
@@ -9074,7 +9207,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG04",
           "DG06"
         ]
@@ -9088,10 +9221,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/14-web-ui.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 8,
@@ -9505,7 +9642,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG01",
           "DG03",
           "DG04",
@@ -9521,10 +9658,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/15-site.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 5,
@@ -9788,7 +9929,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG03",
           "DG04",
           "DG06"
@@ -9803,10 +9944,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/16-doc-migration.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 6,
@@ -9966,7 +10111,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG01",
           "DG02",
           "DG04",
@@ -9982,10 +10127,14 @@
       },
       "classification": "declared-signature-projection",
       "canonical_source": "design/forms.json",
-      "migration_action": "Declared derived from forms, but a checked signature-table generator is not currently implemented; retain form source and implement reproducible Doc/Markdown projections",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
+      "migration_action": "Preserve declared forms ownership; generator/output equivalence requires a separate reproducibility check",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 10,
@@ -10675,7 +10824,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG01",
           "DG04",
           "DG06"
@@ -10690,10 +10839,14 @@
       },
       "classification": "declared-signature-projection",
       "canonical_source": "design/forms.json",
-      "migration_action": "Declared derived from forms, but a checked signature-table generator is not currently implemented; retain form source and implement reproducible Doc/Markdown projections",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
+      "migration_action": "Preserve declared forms ownership; generator/output equivalence requires a separate reproducibility check",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 11,
@@ -11508,7 +11661,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG01",
           "DG04",
           "DG06"
@@ -11523,10 +11676,14 @@
       },
       "classification": "declared-signature-projection",
       "canonical_source": "design/forms.json",
-      "migration_action": "Declared derived from forms, but a checked signature-table generator is not currently implemented; retain form source and implement reproducible Doc/Markdown projections",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
+      "migration_action": "Preserve declared forms ownership; generator/output equivalence requires a separate reproducibility check",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 12,
@@ -12922,7 +13079,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG01",
           "DG04",
           "DG06"
@@ -12937,10 +13094,14 @@
       },
       "classification": "declared-signature-projection",
       "canonical_source": "design/forms.json",
-      "migration_action": "Declared derived from forms, but a checked signature-table generator is not currently implemented; retain form source and implement reproducible Doc/Markdown projections",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
+      "migration_action": "Preserve declared forms ownership; generator/output equivalence requires a separate reproducibility check",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 4,
@@ -13552,7 +13713,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG01",
           "DG04",
           "DG06"
@@ -13567,10 +13728,14 @@
       },
       "classification": "authored-document",
       "canonical_source": "doc/spec/references.md",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Migrate page after capability design and semantic review; history README is evolving prose, not immutable evidence",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -13657,7 +13822,7 @@
           }
         ],
         "html_fragments": [],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG04",
           "DG06"
@@ -13672,10 +13837,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 1,
@@ -14284,7 +14453,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG01",
           "DG03",
           "DG04",
@@ -14301,10 +14470,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -14488,7 +14661,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -14505,10 +14678,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -14692,7 +14869,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -14709,10 +14886,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -14896,7 +15077,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -14913,10 +15094,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -15100,7 +15285,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -15117,10 +15302,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -15304,7 +15493,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -15321,10 +15510,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -15508,7 +15701,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -15525,10 +15718,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -15712,7 +15909,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -15729,10 +15926,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -15916,7 +16117,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -15933,10 +16134,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -16120,7 +16325,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -16137,10 +16342,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -16324,7 +16533,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -16341,10 +16550,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -16528,7 +16741,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -16545,10 +16758,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -16732,7 +16949,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -16749,10 +16966,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -16936,7 +17157,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -16953,10 +17174,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -17140,7 +17365,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -17157,10 +17382,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -17344,7 +17573,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -17361,10 +17590,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -17548,7 +17781,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -17565,10 +17798,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -17752,7 +17989,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -17769,10 +18006,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -17956,7 +18197,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -17973,10 +18214,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -18160,7 +18405,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -18177,10 +18422,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -18364,7 +18613,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -18381,10 +18630,14 @@
       },
       "classification": "generated-task-projection",
       "canonical_source": "design/tasks.json + implementation-status.json",
+      "canonical_registry": null,
+      "canonical_aliases": null,
+      "declared_route": null,
+      "declared_renderer": null,
       "migration_action": "Keep JSON as canonical input; migrate generator to emit Doc and required Markdown projections without hand editing generated pages",
       "stable_page_id": null,
       "published_url": null,
-      "identity_status": "Unassigned: inventory path is a source locator, not a stable public page ID or deployed URL; old renderer anchors require explicit mapping",
+      "identity_status": "Unassigned: no audited registry identity; a source path is not a stable deployed URL",
       "structure": {
         "elements": {
           "heading": 3,
@@ -18568,7 +18821,7 @@
             ]
           }
         ],
-        "gap_ids": [
+        "feature_review_ids": [
           "DG02",
           "DG03",
           "DG04",
@@ -18628,6 +18881,33 @@
       "path": "tools/src/testing.rs",
       "sha256": "dcb3b8df9bf059157f0e0ba4a82dd7e3cc4509ea904550ebc4a16e9127e16873",
       "bytes": 1450
+    }
+  ],
+  "document_sources": [
+    {
+      "path": "examples/document/integration.nepld",
+      "sha256": "1c640bcb2bce563d1fa8e628f6a5c33c64b360e3231862b10a24d07c4121b70f",
+      "bytes": 635
+    },
+    {
+      "path": "examples/document/parallel.nepld",
+      "sha256": "2f428566adfad6d6b09f9bae639e639a20399517ec96e0ece4862c56d87f4273",
+      "bytes": 564
+    },
+    {
+      "path": "examples/document/prefix.nepld",
+      "sha256": "96339c361431ddf87748839f74295cb0b54f55d35a7135da4c13e5b3c25416e9",
+      "bytes": 342
+    },
+    {
+      "path": "examples/document/references.nepld",
+      "sha256": "533d5d26e36ec4d61c0543957b7a25db6142ca6849a8ae90ecb2044dc49cd210",
+      "bytes": 337
+    },
+    {
+      "path": "examples/document/sentence.nepld",
+      "sha256": "1219b7df432f493163300ab8b4621861e694bc3a75fc20697673c0c7e245c655",
+      "bytes": 173
     }
   ],
   "exclusions": [
@@ -18749,26 +19029,6 @@
     },
     {
       "path": "examples/circuit/toggle.neplc",
-      "reason": "Canonical language/example input; link by identity and preserve source rather than copy into authored documentation"
-    },
-    {
-      "path": "examples/document/integration.nepld",
-      "reason": "Canonical language/example input; link by identity and preserve source rather than copy into authored documentation"
-    },
-    {
-      "path": "examples/document/parallel.nepld",
-      "reason": "Canonical language/example input; link by identity and preserve source rather than copy into authored documentation"
-    },
-    {
-      "path": "examples/document/prefix.nepld",
-      "reason": "Canonical language/example input; link by identity and preserve source rather than copy into authored documentation"
-    },
-    {
-      "path": "examples/document/references.nepld",
-      "reason": "Canonical language/example input; link by identity and preserve source rather than copy into authored documentation"
-    },
-    {
-      "path": "examples/document/sentence.nepld",
       "reason": "Canonical language/example input; link by identity and preserve source rather than copy into authored documentation"
     },
     {
