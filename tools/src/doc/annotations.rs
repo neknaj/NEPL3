@@ -92,7 +92,7 @@ pub struct ForeignMathRecord {
     pub output: MathRecord,
 }
 pub struct MathRecord {
-    /// Actual outer MathML <math> element in the current HTML arena.
+    /// Actual outer MathML `<math>` element in the current HTML arena.
     pub root: u64,
     pub display: nepl3_markup::mathml::Display,
     pub syntax: nepl3_math_core::model::MathSyntax,
