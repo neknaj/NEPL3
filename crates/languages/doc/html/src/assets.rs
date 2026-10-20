@@ -1,5 +1,7 @@
 //! Native prototype: explicit static SVG inputs, validated under this operation.
 //! These raw inputs are not portable proofs; local-only prepare remains unchanged.
+//! Display callbacks also admit Sentence owners. Image alt text still requires
+//! locally projectable text; unresolved Sentence alt is an explicit Alt error.
 use crate::*;
 use alloc::vec::Vec;
 use nepl3_core::{

@@ -1,4 +1,4 @@
-//! Native composition of retained Code and Math display guests. Selected host
+//! Native composition of retained Sentence, Code and Math display guests. Selected host
 //! adapters receive exact immutable closures; no guest is evaluated implicitly.
 use crate::*;
 use nepl3_core::{budget::Budget, schema::SchemaRegistry, value_codec::FoundationValueCodec};
@@ -57,7 +57,11 @@ pub fn render_display<E>(
 }
 pub(crate) fn selected(kind: EmbedKind, math: bool) -> bool {
     kind == EmbedKind::Code
-        || math && matches!(kind, EmbedKind::InlineMath | EmbedKind::DisplayMath)
+        || math
+            && matches!(
+                kind,
+                EmbedKind::Sentence | EmbedKind::InlineMath | EmbedKind::DisplayMath
+            )
 }
 
 /// External URLs select no external data: admit only the shared safe URI policy.

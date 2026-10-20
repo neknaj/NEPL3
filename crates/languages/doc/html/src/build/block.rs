@@ -49,7 +49,10 @@ impl Builder<'_, '_> {
                 for child in items {
                     self.b.charge(Resource::Work, 1)?;
                     let kind = &self.prepared.document.value.nodes[child.0 as usize].kind;
-                    let target = if matches!(kind, Sentence { .. } | Parallel { .. }) {
+                    let target = if matches!(
+                        kind,
+                        Sentence { .. } | SentenceGuest { .. } | Parallel { .. }
+                    ) {
                         match run {
                             Some(p) => p,
                             None => {

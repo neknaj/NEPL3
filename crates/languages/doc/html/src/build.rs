@@ -115,7 +115,23 @@ impl Builder<'_, '_> {
             .current_depth()
             .saturating_add(self.depths[job.parent as usize]);
         self.b.with_depth_at_least::<_, RenderError>(depth, |b| {
-            validate(&markup.fragment, slot, &markup.policy, b)?;
+            if self
+                .prepared
+                .document
+                .value
+                .embeds
+                .get(embed.0 as usize)
+                .ok_or(RenderError::InternalShape)?
+                .kind
+                == EmbedKind::Sentence
+            {
+                // Sentence references belong to the complete Doc namespace.
+                // Validate structure now; final validation rejects dangling or
+                // duplicate IDs across all inserted occurrences.
+                check_part(&markup.fragment, slot, &markup.policy, b)?;
+            } else {
+                validate(&markup.fragment, slot, &markup.policy, b)?;
+            }
             Ok(())
         })?;
         // Preserve the backend's output envelope across the guest boundary.
@@ -486,7 +502,8 @@ pub(crate) fn render_prepared_with_foreign<E>(
         let kind = &prepared.document.value.nodes[job.node as usize].kind;
         if let DocKind::InlineMath { syntax }
         | DocKind::DisplayMath { syntax }
-        | DocKind::Code { syntax } = kind
+        | DocKind::Code { syntax }
+        | DocKind::SentenceGuest { syntax } = kind
         {
             let embed = prepared
                 .document
