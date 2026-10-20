@@ -2,10 +2,12 @@
 mod document;
 pub(crate) mod edges;
 mod graph;
+mod occurrences;
 use crate::model::DocValue;
 use alloc::vec::Vec;
 pub use document::{StructureError, ValidatedDocumentSyntax};
 use nepl3_core::budget::StopReason;
+pub use occurrences::{OccurrenceParent, StructuralOccurrence};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Category {

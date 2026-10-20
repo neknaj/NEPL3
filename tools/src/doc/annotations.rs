@@ -10,6 +10,7 @@ use nepl3_core::{
 };
 use nepl3_sentence_core::{lower, portable, syntax::SentenceSyntax};
 use nepl3_suite::adapters::sentence::html;
+pub mod article;
 pub mod document;
 mod foreign;
 pub mod paragraph;
@@ -171,18 +172,26 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
         guest: &ForeignClosure,
         b: &mut Budget,
     ) -> Result<RenderedAnnotation, Error<C::Error>> {
+        let sentence = self.lower_view(&guest.view(), b)?;
+        self.render_sentence(sentence, b)
+    }
+
+    pub(crate) fn lower_view(
+        &mut self,
+        guest: &nepl3_core::syntax::ForeignClosureView<'_>,
+        b: &mut Budget,
+    ) -> Result<SentenceSyntax, Error<C::Error>> {
         b.charge(
             Resource::Work,
-            (guest.syntax.schema.package.len() as u64)
+            (guest.syntax().schema.package.len() as u64)
                 .saturating_add(self.surface.package.len() as u64)
-                .saturating_add(guest.syntax.category.len() as u64)
+                .saturating_add(guest.syntax().category.len() as u64)
                 .saturating_add(64),
         )?;
-        if &guest.syntax.schema != self.surface || guest.syntax.category != "Sentence" {
+        if &guest.syntax().schema != self.surface || guest.syntax().category != "Sentence" {
             return Err(Error::Selection);
         }
         let input = guest
-            .view()
             .validate_with_bundle(self.registry, b, self.codec.source_admission())
             .map_err(Error::Syntax)?;
         let mut forms = Vec::new();
@@ -214,7 +223,7 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
             b,
         )
         .map_err(Error::Lower)?;
-        self.render_sentence(sentence, b)
+        Ok(sentence)
     }
 
     fn render_sentence(
