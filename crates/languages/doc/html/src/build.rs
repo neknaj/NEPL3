@@ -442,7 +442,7 @@ pub(super) fn namespace_member_with_foreign<E>(
     adapter: &mut impl FnMut(&DocEmbedView<'_>, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
     budget: &mut Budget,
 ) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
-    render_prepared_with_foreign(prepared, &[], adapter, budget, false)
+    render_prepared_with_foreign(prepared, &prepared.external_links, adapter, budget, false)
 }
 
 pub(crate) fn render_prepared_with_foreign<E>(
