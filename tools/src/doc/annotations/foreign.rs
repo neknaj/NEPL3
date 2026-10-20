@@ -64,11 +64,14 @@ pub(super) fn render<C: FoundationValueCodec>(
         })?
         .into_html(b)
         .map_err(Error::Projection)?;
+    let root = result.markup.fragment.root;
     Ok((
         result.markup,
         ForeignRecord::Math(ForeignMathRecord {
             embed,
             output: MathRecord {
+                root,
+                display: nepl3_markup::mathml::Display::Inline,
                 syntax: result.syntax,
                 node_roots: result.node_roots,
                 annotation_roots: result.annotation_roots,

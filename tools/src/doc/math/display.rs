@@ -110,32 +110,40 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
         preference: Preference,
         budget: &mut Budget,
     ) -> Result<PreparedDisplay, Error<C::Error>> {
-        let tex = match preference {
-            Preference::MathMLOnly => TexPreparation::MathMLOnly,
-            Preference::KaTeXPreferred => {
-                let checked =
-                    check::expression(&mathml.syntax.value, budget).map_err(
-                        |error| match error {
-                            check::ShapeError::Stopped(reason) => Error::Stopped(reason),
-                            error => Error::Check(error),
-                        },
-                    )?;
-                match nepl3_math_tex::render(&checked, budget) {
-                    Ok(rendered) => {
-                        let (tex, occurrences) = rendered.into_parts();
-                        TexPreparation::Ready { tex, occurrences }
-                    }
-                    Err(nepl3_math_tex::Error::Unsupported { node, reason }) => {
-                        TexPreparation::Unsupported { node, reason }
-                    }
-                    Err(error) => {
-                        budget.poll()?;
-                        return Err(Error::Tex(error));
-                    }
-                }
-            }
-        };
-        budget.poll()?;
+        let tex = prepare_tex(&mathml.syntax.value, preference, budget)?;
         Ok(PreparedDisplay { mathml, tex })
     }
+}
+
+/// Prepare TeX from an already admitted retained Math value. This is not a
+/// source-boundary check; callers must retain their validated semantic owner.
+pub(crate) fn prepare_tex<E>(
+    value: &nepl3_math_core::model::MathValue,
+    preference: Preference,
+    budget: &mut Budget,
+) -> Result<TexPreparation, Error<E>> {
+    let tex = match preference {
+        Preference::MathMLOnly => TexPreparation::MathMLOnly,
+        Preference::KaTeXPreferred => {
+            let checked = check::expression(value, budget).map_err(|error| match error {
+                check::ShapeError::Stopped(reason) => Error::Stopped(reason),
+                error => Error::Check(error),
+            })?;
+            match nepl3_math_tex::render(&checked, budget) {
+                Ok(rendered) => {
+                    let (tex, occurrences) = rendered.into_parts();
+                    TexPreparation::Ready { tex, occurrences }
+                }
+                Err(nepl3_math_tex::Error::Unsupported { node, reason }) => {
+                    TexPreparation::Unsupported { node, reason }
+                }
+                Err(error) => {
+                    budget.poll()?;
+                    return Err(Error::Tex(error));
+                }
+            }
+        }
+    };
+    budget.poll()?;
+    Ok(tex)
 }

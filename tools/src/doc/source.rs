@@ -359,15 +359,26 @@ pub struct Compiled {
     pub others: Vec<nepl3_engine::package::LanguagePackage>,
 }
 pub fn compiled() -> Result<Compiled, String> {
-    compiled_with_sentence_forms(&[nepl3_grammar_core::compile::package::ForeignForm {
-        kind: "InlineMath",
-        category: "Inline",
-        spelling: "math",
-        field: "syntax",
-        alias: "Math",
-        guest_category: "Expr",
-        origin_reason: "Doc host selects Math expressions in Sentence Inline",
-    }])
+    compiled_with_sentence_forms(&[
+        nepl3_grammar_core::compile::package::ForeignForm {
+            kind: "InlineMath",
+            category: "Inline",
+            spelling: "math",
+            field: "syntax",
+            alias: "Math",
+            guest_category: "Expr",
+            origin_reason: "Doc host selects Math expressions in Sentence Inline",
+        },
+        nepl3_grammar_core::compile::package::ForeignForm {
+            kind: "DocumentInline",
+            category: "Inline",
+            spelling: "document",
+            field: "syntax",
+            alias: "Doc",
+            guest_category: "Inline",
+            origin_reason: "Doc host selects Doc Inline fragments in Sentence Inline",
+        },
+    ])
 }
 /// Compile the parsing profile with the host's explicit Sentence extensions.
 /// Rendering and document namespace resolution require corresponding adapters;

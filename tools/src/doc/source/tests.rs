@@ -1011,6 +1011,19 @@ fn doc_inline_printing_and_html_reenter_math_sentence_and_obey_limits() -> Resul
 #[test]
 fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Result<(), String> {
     let default = compiled()?;
+    // The default Doc host now selects both forms. Keep the rejection control
+    // explicit instead of treating DocumentInline as a standalone constructor.
+    let math_only =
+        compiled_with_sentence_forms(&[nepl3_grammar_core::compile::package::ForeignForm {
+            kind: "InlineMath",
+            category: "Inline",
+            spelling: "math",
+            field: "syntax",
+            alias: "Math",
+            guest_category: "Expr",
+            origin_reason: "math-only negative control",
+        }])?;
+
     let compiled =
         compiled_with_sentence_forms(&[nepl3_grammar_core::compile::package::ForeignForm {
             kind: "DocumentInline",
@@ -1029,8 +1042,9 @@ fn selected_sentence_doc_inline_keeps_owner_and_source_on_both_routes() -> Resul
     let source = r#"article en "Title" body cons display Math label x Sentence sentence cons document anchor target ruby text "字" text "じ" nil nil"#;
     for native in [false, true] {
         assert!(
-            with_input_route(native, &default, source, "Article", |_, _, _, _| Ok(())).is_err()
+            with_input_route(native, &math_only, source, "Article", |_, _, _, _| Ok(())).is_err()
         );
+        with_input_route(native, &default, source, "Article", |_, _, _, _| Ok(()))?;
         with_input_route(
             native,
             &compiled,
@@ -1826,5 +1840,84 @@ fn sibling_and_nested_foreign_arenas_keep_independent_local_maps() -> Result<(),
         )?);
     }
     assert_eq!(routes[0], routes[1]);
+    Ok(())
+}
+
+#[test]
+fn default_doc_profile_prints_and_reparses_both_sentence_foreign_forms() -> Result<(), String> {
+    use nepl3_math_core::print::GuestPrinter;
+    let compiled = compiled()?;
+    let source = r#"article en "Title" body cons display Math label x Sentence sentence cons document anchor target text "word" cons math frac 1 2 nil nil"#;
+    let expected = r#"sentence cons document anchor target text "word" cons math frac 1 2 nil"#;
+    for native in [false, true] {
+        let printed = with_input_route(
+            native,
+            &compiled,
+            source,
+            "Article",
+            |tree, profile, b, a| {
+                let registry = profile.registry();
+                let checked = tree
+                    .tree()
+                    .bundle
+                    .validate_with_sources(registry, b, a)
+                    .map_err(err)?;
+                let store = SourceStore::default();
+                let mut admission = SourceAdmission::default();
+                let mut codec =
+                    FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+                let doc = nepl3_suite::adapters::sentence::literal::lower(
+                    &checked,
+                    &compiled.doc.package.schema,
+                    Category::Article,
+                    registry,
+                    b,
+                    &mut codec,
+                )
+                .map_err(err)?;
+                let closure = doc.value.embeds.get(0).ok_or("Math closure")?;
+                let checked = closure
+                    .closure
+                    .syntax()
+                    .bundle
+                    .validate_with_sources(registry, b, codec.source_admission())
+                    .map_err(err)?;
+                let math = nepl3_math_core::lower::expression(
+                    &checked,
+                    &compiled.others[0].schema,
+                    nepl3_math_core::check::Category::Expr,
+                    registry,
+                    b,
+                    codec.source_admission(),
+                )
+                .map_err(err)?;
+                let mut printer = crate::doc::printing::SentenceGuestPrinter {
+                    registry,
+                    sentence_package: &compiled.others[3],
+                    math_surface: Some(&compiled.others[0].schema),
+                    doc_surface: Some(&compiled.doc.package.schema),
+                    codec: &mut codec,
+                };
+                printer
+                    .print(math.value.embeds.first().ok_or("Sentence closure")?, b)
+                    .map_err(err)
+            },
+        )?;
+        assert_eq!(printed, expected);
+        let reparsed = format!("article en Sentence {printed} body nil");
+        with_input_route(
+            native,
+            &compiled,
+            &reparsed,
+            "Article",
+            |tree, profile, b, a| {
+                tree.tree()
+                    .bundle
+                    .validate_with_sources(profile.registry(), b, a)
+                    .map_err(err)?;
+                Ok(())
+            },
+        )?;
+    }
     Ok(())
 }

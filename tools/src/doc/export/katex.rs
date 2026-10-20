@@ -1,6 +1,6 @@
 //! Native KaTeX generation capability; configured independently of Doc source.
 mod transport;
-use super::{err, math::Occurrence};
+use super::{err, math::generation::Occurrence};
 use crate::doc::math::display::TexPreparation;
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
@@ -145,7 +145,7 @@ pub fn generate_cached(
     let mut selected = Vec::new();
     for (index, record) in records.iter().enumerate() {
         b.charge(Resource::Work, 1).map_err(err)?;
-        if let TexPreparation::Ready { tex, .. } = &record.tex {
+        if let TexPreparation::Ready { tex, .. } = &*record.tex {
             if requests.len() == 256 {
                 return Err(err(b.stop(StopReason::NodeLimit)));
             }
@@ -327,7 +327,7 @@ pub fn generate_cached(
             .remove("outputBytes")
             .and_then(|v| v.as_u64())
             .ok_or("KaTeXHostShape")?;
-        let TexPreparation::Ready { tex, .. } = &records[index].tex else {
+        let TexPreparation::Ready { tex, .. } = &*records[index].tex else {
             return Err("KaTeXHostIdentity".into());
         };
         if input_bytes != tex.len() as u64 || output_bytes > 262144 {

@@ -60,6 +60,83 @@ fn pinned_native_katex_doc_and_pages() -> Result<(), Box<dyn std::error::Error>>
             64
         );
     }
+    // Actual Sentence routing, an annotated Math parent, and eligible nested
+    // Math all share the same generation-side worker and final arena roots.
+    let nested_source = root.join("nested.nepld");
+    fs::write(&nested_source, super::export::sentence::NESTED)?;
+    for mode in ["inline", "external"] {
+        let out = root.join(format!("nested-{mode}"));
+        let result = Command::new(binary)
+            .env("NEPL3_KATEX_NODE_MODULES", &packages)
+            .args(["doc-html", "export", "--css", mode])
+            .arg(&nested_source)
+            .arg(&out)
+            .output()?;
+        assert!(
+            result.status.success(),
+            "{}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+        let html = fs::read_to_string(out.join("document.html"))?;
+        assert!(!html.contains("<script"));
+        assert_eq!(html.matches("<math").count(), 5);
+        let manifest: serde_json::Value =
+            serde_json::from_slice(&fs::read(out.join("manifest.json"))?)?;
+        assert_eq!(
+            manifest["katex"]["visuals"]
+                .as_array()
+                .ok_or("nested visuals")?
+                .len(),
+            4
+        );
+        let diagnostics = manifest["math_diagnostics"]
+            .as_array()
+            .ok_or("nested diagnostics")?;
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0]["reason"], "FaithfulTexUnsupported");
+        assert!(diagnostics[0]["embed"].is_null());
+        assert!(
+            diagnostics[0]["owner_path"]
+                .as_array()
+                .is_some_and(|path| path.len() > 1)
+        );
+    }
+    let parse_source = root.join("nested-parse.nepld");
+    fs::write(
+        &parse_source,
+        "article en Sentence sentence cons math text \"🙂\" nil body nil",
+    )?;
+    for (name, modules, source) in [
+        ("nested-missing", root.join("absent"), &nested_source),
+        ("nested-parse", packages.clone(), &parse_source),
+    ] {
+        let out = root.join(name);
+        let result = Command::new(binary)
+            .env("NEPL3_KATEX_NODE_MODULES", modules)
+            .args(["doc-html", "export"])
+            .arg(source)
+            .arg(&out)
+            .output()?;
+        assert!(
+            result.status.success(),
+            "{}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+        let manifest: serde_json::Value =
+            serde_json::from_slice(&fs::read(out.join("manifest.json"))?)?;
+        assert!(manifest["katex"].is_null());
+        let diagnostics = manifest["math_diagnostics"]
+            .as_array()
+            .ok_or("fallback diagnostics")?;
+        assert!(diagnostics.iter().any(|d| {
+            d["owner_path"]
+                .as_array()
+                .is_some_and(|path| path.len() > 1)
+        }));
+        if name == "nested-parse" {
+            assert_eq!(diagnostics[0]["reason"], "KaTeXRendererParseError");
+        }
+    }
     // Three distinct occurrences/pages share admitted resources, not budgets.
     for i in 0..3 {
         fs::write(
@@ -98,6 +175,35 @@ fn pinned_native_katex_doc_and_pages() -> Result<(), Box<dyn std::error::Error>>
     for i in 0..3 {
         assert!(fs::read_to_string(out.join(format!("p{i}/index.html")))?.contains("<math"));
     }
+    fs::write(
+        root.join("p0.nepld"),
+        "article en \"Nested page\" body cons display Math label x Sentence sentence cons math frac 1 2 nil nil",
+    )?;
+    let out = root.join("pages-nested");
+    let result = Command::new(binary)
+        .env("NEPL3_KATEX_NODE_MODULES", &packages)
+        .args(["doc-html", "pages"])
+        .arg(&pages)
+        .arg(&out)
+        .output()?;
+    assert!(
+        result.status.success(),
+        "{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    let manifest: serde_json::Value =
+        serde_json::from_slice(&fs::read(out.join("manifest.json"))?)?;
+    assert_eq!(
+        manifest["katex"][0]["visuals"]
+            .as_array()
+            .ok_or("nested page visuals")?
+            .len(),
+        1
+    );
+    assert_eq!(
+        manifest["math_diagnostics"][0][0]["reason"],
+        "FaithfulTexUnsupported"
+    );
     // Missing configured assets is explicit optional absence, never success.
     let result = Command::new(binary)
         .env("NEPL3_KATEX_NODE_MODULES", root.join("absent"))
