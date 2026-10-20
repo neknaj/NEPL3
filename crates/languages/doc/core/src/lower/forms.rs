@@ -105,6 +105,26 @@ impl Adapter<'_, '_> {
                 title: SentenceRef(self.node(id, n, 1, C::Sentence)?),
                 body: BodyRef(self.node(id, n, 2, C::Body)?),
             },
+            ("Form:SentenceGuest", 1) => {
+                if !matches!(n.fields.first(), Some(FieldValue::Foreign(_))) {
+                    return Err(LowerError::Operand { node: id, field: 0 });
+                }
+                let syntax = EmbedRef(self.embeds.len() as u64);
+                push(
+                    &mut self.embeds,
+                    CapturedEmbed {
+                        kind: EmbedKind::Sentence,
+                        field: CaptureField {
+                            owner: 0,
+                            node: id,
+                            field: 0,
+                        },
+                        depth: self.b.current_depth(),
+                    },
+                    self.b,
+                )?;
+                DocKind::SentenceGuest { syntax }
+            }
             ("Form:Sentence", 1) => DocKind::Sentence {
                 inlines: self
                     .list(id, n, 0, C::Inline)?

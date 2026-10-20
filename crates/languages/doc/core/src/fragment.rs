@@ -107,7 +107,8 @@ impl DocumentSyntax {
                 Ok(mapping[id as usize])
             })?;
             let embed = match &mut node.kind {
-                DocKind::Guest { syntax, .. }
+                DocKind::SentenceGuest { syntax }
+                | DocKind::Guest { syntax, .. }
                 | DocKind::InlineMath { syntax }
                 | DocKind::DisplayMath { syntax }
                 | DocKind::CircuitFigure { syntax, .. }

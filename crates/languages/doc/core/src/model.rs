@@ -93,6 +93,7 @@ pub enum DocRoot {
 /// Explicit standard Doc surface wrapper, never inferred from a schema alias.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum GuestLanguage {
+    Sentence,
     Math,
     Circuit,
     Grammar,
@@ -132,6 +133,7 @@ pub enum ListKind {
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum EmbedKind {
+    Sentence,
     InlineMath,
     DisplayMath,
     CircuitFigure,
@@ -143,6 +145,10 @@ pub enum EmbedKind {
 /// example, an Inline from those to a Sentence even though both use an arena.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DocKind {
+    /// Explicit independent Sentence closure; no legacy inline arena copy.
+    SentenceGuest {
+        syntax: EmbedRef,
+    },
     /// A standalone foreign wrapper retains syntax and its concrete surface
     /// entry. Embedded operands continue to be owned by their parent slot.
     Guest {

@@ -1753,6 +1753,15 @@
               }
             }
           ]
+        },
+        "Sentence": {
+          "kind": "SentenceGuest",
+          "fields": [
+            {
+              "name": "syntax",
+              "read": "Sentence/Sentence"
+            }
+          ]
         }
       },
       "leaf": "sentence"
@@ -1903,6 +1912,15 @@
             {
               "name": "caption",
               "read": "Doc/OptionalSentence"
+            }
+          ]
+        },
+        "Sentence": {
+          "kind": "SentenceGuest",
+          "fields": [
+            {
+              "name": "syntax",
+              "read": "Sentence/Sentence"
             }
           ]
         }

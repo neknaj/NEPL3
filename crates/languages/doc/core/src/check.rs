@@ -65,6 +65,12 @@ impl<'a> ValidatedDocShape<'a> {
     /// Empty labels remain valid standalone Inline values. Foreign execution,
     /// assets, source ownership and rendering require their own checks.
     pub fn annotation_content(&self) -> Option<bool> {
+        if matches!(
+            self.value.nodes[edges::root(self.value.root).0 as usize].kind,
+            crate::model::DocKind::SentenceGuest { .. }
+        ) {
+            return None; // Foreign Sentence content requires explicit semantic selection.
+        }
         match self.value.root {
             crate::model::DocRoot::Sentence(_) | crate::model::DocRoot::Inline(_) => {
                 Some(self.root_content)

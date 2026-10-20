@@ -195,6 +195,7 @@ impl Adapter<'_, '_> {
             .get(child.0 as usize)
             .ok_or(SyntaxError::Reference)?;
         let accepted = match kind {
+            EmbedKind::Sentence => node.kind == "Form:SentenceGuest",
             EmbedKind::InlineMath | EmbedKind::DisplayMath => node.kind == "Form:MathGuest",
             EmbedKind::CircuitFigure => node.kind == "Form:CircuitGuest",
             EmbedKind::Code | EmbedKind::Guest => matches!(

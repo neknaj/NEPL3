@@ -104,7 +104,7 @@ pub(super) fn traverse<'a>(
             .ok()
             .and_then(|index| doc.nodes.get(index))
             .map(|n| &n.kind),
-        Some(DocKind::Sentence { .. })
+        Some(DocKind::Sentence { .. } | DocKind::SentenceGuest { .. })
     ) {
         return Err(PlainTextFailure::ExpectedSentence { node: sentence.0 }.into());
     }
@@ -165,7 +165,7 @@ pub(super) fn traverse<'a>(
                         DocKind::InlineImage { alt, .. } => {
                             push(&mut pending, Action::Node(alt.0, next), b)?
                         }
-                        DocKind::InlineMath { syntax } => {
+                        DocKind::SentenceGuest { syntax } | DocKind::InlineMath { syntax } => {
                             let mut found = None;
                             for value in resolved {
                                 b.charge(Resource::Work, 1)?;

@@ -266,6 +266,7 @@ pub(super) fn print(
                 }
                 out.atom(
                     match guest.language {
+                        GuestLanguage::Sentence => "Sentence",
                         GuestLanguage::Math => "Math",
                         GuestLanguage::Circuit => "Circuit",
                         GuestLanguage::Grammar => "Grammar",
@@ -336,6 +337,11 @@ pub(super) fn print(
                     }
                     use DocKind::*;
                     match &node.kind {
+                        SentenceGuest { syntax } => push(
+                            &mut queue,
+                            Action::Guest(*syntax, Some(GuestLanguage::Sentence)),
+                            b,
+                        )?,
                         Guest { language, syntax } => {
                             push(&mut queue, Action::Guest(*syntax, Some(*language)), b)?
                         }

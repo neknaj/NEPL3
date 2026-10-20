@@ -114,6 +114,12 @@ cons visit alt
 cons visit caption
 nil
 cons style head "marker" nil
+cons form SentenceGuest Sentence "Sentence"
+cons field syntax foreign Sentence Sentence
+nil
+group cons visit syntax
+nil
+cons style head "marker" nil
 cons form Sentence Sentence "sentence"
 cons field inlines listof local Inline
 nil
@@ -152,6 +158,12 @@ nil
 cons style head "marker" nil
 cons form Code Flow "code"
 cons field syntax local Guest
+nil
+group cons visit syntax
+nil
+cons style head "marker" nil
+cons form SentenceGuest Flow "Sentence"
+cons field syntax foreign Sentence Sentence
 nil
 group cons visit syntax
 nil

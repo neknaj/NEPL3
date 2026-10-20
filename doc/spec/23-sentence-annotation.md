@@ -440,3 +440,20 @@ Math node・注釈nodeの要素番号は各出現の移動先へ写像し、HTML
 PageSetは全ページの準備・描画・出力検査が成功するまで部分成果物を返さない。
 入力検査と再帰guest表示は同じ操作のsource admissionと累積Budgetを共有し、同じsnapshotの再検査でSourceBytesを二重計上しない。
 検査済み構文を使う内部の走査も、その公開入口で現在のdepth・source・closureを検査する。別操作や浅い位置のproofによって現在の入力検査を迂回する公開入口は設けない。
+
+## Docの明示的なSentence closure slot
+
+段階移行の入口として、Doc/SentenceとDoc/Flowは `Sentence` に続く独立Sentence/Sentenceを受け取る。
+Doc側は `SentenceGuest { syntax }` と `EmbedKind::Sentence` で閉じたforeign syntaxを保持し、Sentenceのinline arenaをDocへ複製しない。
+ArticleやSectionのtitle、Variant、table cell、caption、alt、OptionalSentenceも既存のSentenceRefを通してこのslotを保持する。
+従来のDoc-owned sentence literal/inline経路はこの段階では残る。Article全体のSentence所有への移行完了を意味しない。
+
+shape検査はslotのrole、到達性、未使用entryを検査する。構造検査はSentence category、閉じたsource/environment、最深の所有位置とcaller depthを検査する。
+`GuestLanguage::Sentence` はprint bindingの識別であり、汎用Doc/GuestやCodeの別入口を追加しない。
+fragmentはclosure groupと元のsource・Origin・Viewを保持し、選択したentryのindexだけを再配置する。
+Docのshape証明はforeign Sentenceのannotation contentを判定せず、そのrootに対するcontent照会はNoneを返す。
+
+printは明示的なSentence bindingとdocument/guest digestに対応するguestの印字結果を要求する。
+plainTextも対応するguest textが未選択ならUnresolvedEmbedを返し、空文字で代替しない。独立Sentence側のannotation policy適用は、textを供給するhostの責務である。
+local-only HTML準備はSentenceをForeign requirementとして返す。PageSet・CLIの自動描画、Doc namespaceへのguest定義の導入、旧Doc Inline型の除去はこのslotの追加だけでは成立しない。
+この段階では独立paragraph合成hostへのArticle走査の接続も未完了である。

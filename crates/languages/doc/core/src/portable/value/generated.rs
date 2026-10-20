@@ -227,6 +227,7 @@ Self::DisplayMath => variant(s,"EmbedKind","DisplayMath",[],b),
 Self::CircuitFigure => variant(s,"EmbedKind","CircuitFigure",[],b),
 Self::Code => variant(s,"EmbedKind","Code",[],b),
 Self::Guest => variant(s,"EmbedKind","Guest",[],b),
+Self::Sentence => variant(s,"EmbedKind","Sentence",[],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -238,6 +239,7 @@ match (tag,f.len()) {
 ("CircuitFigure",0)=>Ok(Self::CircuitFigure),
 ("Code",0)=>Ok(Self::Code),
 ("Guest",0)=>Ok(Self::Guest),
+("Sentence",0)=>Ok(Self::Sentence),
 _=>Err(PortableError::Shape),}
 }
 }
@@ -282,6 +284,7 @@ Self::OptionalRow {row} => variant(s,"DocKind","OptionalRow",[row.put(s,c,b)?],b
 Self::OptionalSentence {sentence} => variant(s,"DocKind","OptionalSentence",[sentence.put(s,c,b)?],b),
 Self::OptionalText {text} => variant(s,"DocKind","OptionalText",[text.put(s,c,b)?],b),
 Self::Guest {language,syntax} => variant(s,"DocKind","Guest",[language.put(s,c,b)?,syntax.put(s,c,b)?],b),
+Self::SentenceGuest {syntax} => variant(s,"DocKind","SentenceGuest",[syntax.put(s,c,b)?],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -326,6 +329,7 @@ match (tag,f.len()) {
 ("OptionalSentence",1)=>Ok(Self::OptionalSentence {sentence:Value::read(&f[0],s,c,b)?}),
 ("OptionalText",1)=>Ok(Self::OptionalText {text:Value::read(&f[0],s,c,b)?}),
 ("Guest",2)=>Ok(Self::Guest {language:Value::read(&f[0],s,c,b)?,syntax:Value::read(&f[1],s,c,b)?}),
+("SentenceGuest",1)=>Ok(Self::SentenceGuest {syntax:Value::read(&f[0],s,c,b)?}),
 _=>Err(PortableError::Shape),}
 }
 }
@@ -642,6 +646,7 @@ Self::Math => variant(s,"GuestLanguage","Math",[],b),
 Self::Circuit => variant(s,"GuestLanguage","Circuit",[],b),
 Self::Grammar => variant(s,"GuestLanguage","Grammar",[],b),
 Self::Doc => variant(s,"GuestLanguage","Doc",[],b),
+Self::Sentence => variant(s,"GuestLanguage","Sentence",[],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -652,6 +657,7 @@ match (tag,f.len()) {
 ("Circuit",0)=>Ok(Self::Circuit),
 ("Grammar",0)=>Ok(Self::Grammar),
 ("Doc",0)=>Ok(Self::Doc),
+("Sentence",0)=>Ok(Self::Sentence),
 _=>Err(PortableError::Shape),}
 }
 }
