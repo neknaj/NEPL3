@@ -158,7 +158,7 @@ pub(super) fn render_member<C: FoundationValueCodec>(
     Ok((rendered.part, foreign))
 }
 
-fn preparation_error<C: FoundationValueCodec>(
+pub(super) fn preparation_error<C: FoundationValueCodec>(
     error: LocalPreparationError<'_, C::Error>,
     document: &DocumentSyntax,
     registry: &SchemaRegistry,

@@ -6,6 +6,8 @@ mod annotated;
 mod annotated_blocks;
 #[path = "doc/annotated_pages.rs"]
 mod annotated_pages;
+#[path = "doc/article/namespace.rs"]
+mod article_namespace;
 #[path = "doc/code_pages.rs"]
 mod code_pages;
 #[path = "doc/context.rs"]
