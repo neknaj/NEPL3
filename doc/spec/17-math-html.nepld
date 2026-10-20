@@ -67,6 +67,26 @@ body
         cons "[一方/いっぽう]、[既/すで]に[書/か]き[出/だ]した[文書/ぶんしょ]の[数式表示/すうしきひょうじ]はJavaScriptを[要求/ようきゅう]しない。"
         cons "MathMLへ[切/き]り[替/か]えた[文書/ぶんしょ]の[閲覧/えつらん]にも、[閲覧環境/えつらんかんきょう]のMathML[対応/たいおう]が[必要/ひつよう]である。"
         nil
+      cons section nested_doc_math "Doc host[内/ない]の[入/い]れ[子数式/こすうしき]の[生成/せいせい]"
+        body
+          cons paragraph
+            cons "Doc hostは[直接配置/ちょくせつはいち]したMathと、Sentence・Doc Inline・Math[注釈内/ちゅうしゃくない]のMathをformula[出現単位/しゅつげんたんい]で[収集/しゅうしゅう]する。"
+            cons "[各/かく]Math[記録/きろく]は[式/しき]nodeのrootと[区別/くべつ]した[実際/じっさい]の[外側/そとがわ]math[要素/ようそ]、およびInline・Blockを[保持/ほじ]し、[合成/ごうせい]の[全段階/ぜんだんかい]で[同/おな]じ[位置変換/いちへんかん]を[適用/てきよう]する。"
+            cons "[最終/さいしゅう]Article・page arenaへ[変換済/へんかんず]みの[入/い]れ[子/こ]を[再度/さいど]offsetしない。"
+            nil
+          cons paragraph
+            cons "TeX[準備/じゅんび]は[同/おな]じ[入場済/にゅうじょうず]みMath[値/ち]から[共通/きょうつう]converterを[使/つか]い、[原文/げんぶん]の[再/さい]parse・[再/さい]lower・MathML[再描画/さいびょうが]を[行/おこな]わない。"
+            cons "MathMLOnlyとKaTeXPreferredを[明示/めいじ]し、[直接出現/ちょくせつしゅつげん]と[入/い]れ[子/こ]で[異/こと]なるPreferenceを[混在/こんざい]させない。"
+            cons "[生成候補/せいせいこうほ]のroot[重複/じゅうふく]と、[親子双方/おやこそうほう]へKaTeX visualを[付/つ]ける[曖昧/あいまい]な[構成/こうせい]を[拒否/きょひ]する。"
+            cons "[現在/げんざい]のconverterが[忠実/ちゅうじつ]に[扱/あつか]えないSentence[注釈/ちゅうしゃく]を[持/も]つ[親/おや]はMathMLを[保持/ほじ]し、その[中/なか]の[対応可能/たいおうかのう]な[式/しき]は[独立/どくりつ]にKaTeXを[生成/せいせい]できる。"
+            nil
+          cons paragraph
+            cons "[生成候補/せいせいこうほ]は[最終/さいしゅう]arena root[順/じゅん]に[並/なら]べ、[診断/しんだん]はDoc placement、Sentence[出現/しゅつげん]・[所有元/しょゆうもと]、[局所/きょくしょ]foreign[出現/しゅつげん]、Doc Math[出現/しゅつげん]、Math[注釈出現/ちゅうしゃくしゅつげん]を[区別/くべつ]するowner pathを[持/も]つ。"
+            cons "[入/い]れ[子/こ]の[局所/きょくしょ]EmbedRefを[外側/そとがわ]DocのEmbedRefとして[表示/ひょうじ]しない。"
+            cons "[生成結果/せいせいけっか]・fallbackはmanifestとhostが[保持/ほじ]するgeneration[記録/きろく]の[双方/そうほう]に[残/のこ]し、source[所有元/しょゆうもと]の[記録/きろく]と[結/むす]び[付/つ]ける。"
+            cons "これらは[外部/がいぶ]provider[入力/にゅうりょく]の[認証/にんしょう]やportable proofを[代替/だいたい]しない。"
+            nil
+          nil
       nil
   cons section ownership "2. [所有/しょゆう]と[境界/きょうかい]"
     body

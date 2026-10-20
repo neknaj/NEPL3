@@ -428,3 +428,6 @@ mod math;
 
 #[path = "export/links.rs"]
 mod links;
+
+#[path = "export/sentence.rs"]
+pub(super) mod sentence;

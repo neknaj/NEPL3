@@ -92,6 +92,9 @@ pub struct ForeignMathRecord {
     pub output: MathRecord,
 }
 pub struct MathRecord {
+    /// Actual outer MathML `<math>` element in the current HTML arena.
+    pub root: u64,
+    pub display: nepl3_markup::mathml::Display,
     pub syntax: nepl3_math_core::model::MathSyntax,
     pub node_roots: Vec<u64>,
     pub annotation_roots: Vec<nepl3_math_mathml::AnnotationRoot>,
@@ -104,6 +107,8 @@ impl MathRecord {
         b: &mut Budget,
     ) -> Result<(), super::math::ProjectionError> {
         b.with_depth(|b| {
+            b.charge(Resource::Work, 1)?;
+            self.root = map(self.root)?;
             for root in &mut self.node_roots {
                 b.charge(Resource::Work, 1)?;
                 *root = map(*root)?;

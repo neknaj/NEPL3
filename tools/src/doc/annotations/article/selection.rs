@@ -48,7 +48,21 @@ pub struct Selection<'a> {
     owners: Vec<Owner>,
     sentences: Vec<SentenceOccurrence>,
 }
+/// Owned selection data for a host that separately retains the exact outer
+/// DocumentSyntax. This container is not a validation or rendering proof.
+pub struct SelectionParts {
+    pub structure: Vec<StructuralOccurrence>,
+    pub owners: Vec<Owner>,
+    pub sentences: Vec<SentenceOccurrence>,
+}
 impl<'a> Selection<'a> {
+    pub fn into_parts(self) -> SelectionParts {
+        SelectionParts {
+            structure: self.structure,
+            owners: self.owners,
+            sentences: self.sentences,
+        }
+    }
     pub fn document(&self) -> &'a DocumentSyntax {
         self.document
     }

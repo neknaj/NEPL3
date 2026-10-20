@@ -142,6 +142,8 @@ pub(super) fn render_member<C: FoundationValueCodec>(
                 foreign.push(super::DocumentMathRecord {
                     embed,
                     output: super::MathRecord {
+                        root: result.markup.fragment.root,
+                        display: nepl3_markup::mathml::Display::Inline,
                         syntax: result.syntax,
                         node_roots: result.node_roots,
                         annotation_roots: result.annotation_roots,

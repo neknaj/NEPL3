@@ -26,10 +26,13 @@ pub enum Fallback {
         reason: nepl3_math_tex::Unsupported,
     },
 }
+pub mod generation;
 pub struct Occurrence {
     pub embed: EmbedRef,
+    pub placement: Option<usize>,
+    pub preference: Preference,
     pub root: u64,
-    pub tex: TexPreparation,
+    pub tex: std::sync::Arc<TexPreparation>,
     pub display: Display,
     /// Final arena indices with the independent guest sources retained.
     pub output: MathRecord,
@@ -97,12 +100,21 @@ where
         records
             .try_reserve_exact(1)
             .map_err(|_| err(b.stop(StopReason::AllocationLimit)))?;
+        b.charge(
+            Resource::AllocationUnits,
+            (core::mem::size_of::<TexPreparation>() + 2 * core::mem::size_of::<usize>()) as u64,
+        )
+        .map_err(err)?;
         records.push(Occurrence {
             embed,
+            placement: None,
+            preference: self.preference,
             root: result.markup.fragment.root,
-            tex,
+            tex: std::sync::Arc::new(tex),
             display,
             output: MathRecord {
+                root: result.markup.fragment.root,
+                display,
                 syntax: result.syntax,
                 node_roots: result.node_roots,
                 annotation_roots: result.annotation_roots,
@@ -122,18 +134,21 @@ pub fn compose(
     b: &mut Budget,
 ) -> Result<(), String> {
     let mut records = records.iter_mut();
-    for placement in placements {
+    for (position, placement) in placements.iter().enumerate() {
         b.charge(Resource::Work, 1).map_err(err)?;
         let guest = embeds
             .get(placement.embed.0 as usize)
             .ok_or("MathPlacement")?;
-        if guest.kind == EmbedKind::Code {
-            continue;
+        match guest.kind {
+            EmbedKind::Code | EmbedKind::Sentence => continue,
+            EmbedKind::InlineMath | EmbedKind::DisplayMath => {}
+            _ => return Err("MathPlacement".into()),
         }
         let record = records.next().ok_or("MathPlacement")?;
         if record.embed != placement.embed {
             return Err("MathPlacement".into());
         }
+        record.placement = Some(position);
         if record.root >= placement.elements {
             return Err("MathPlacement".into());
         }
@@ -162,12 +177,4 @@ pub fn compose(
     }
     b.poll().map_err(err)
 }
-/// Bounded host manifest bookkeeping; not a portable runtime diagnostic schema.
-pub fn diagnostics(records: &[Occurrence]) -> Vec<serde_json::Value> {
-    records.iter().enumerate().filter_map(|(occurrence, record)| record.fallback.map(|reason| {
-  serde_json::json!({"occurrence":occurrence,"embed":record.embed.0,"renderer":"MathML",
-   "host_detail":record.fallback_detail,
-   "detail":match reason { Fallback::UnsupportedTex {node, reason} => Some(serde_json::json!({"node":node,"reason":format!("{reason:?}")})), _ => None },
-   "reason":match reason { Fallback::HostCapabilityUnavailable => "KaTeXHostCapabilityUnavailable", Fallback::ResourceUnavailable => "KaTeXResourceUnavailable", Fallback::RendererParseError => "KaTeXRendererParseError", Fallback::UnsupportedTex {..} => "FaithfulTexUnsupported" }})
- })).collect()
-}
+pub use generation::diagnostics;

@@ -19,6 +19,7 @@ pub(super) struct RenderedOutput {
     files: BTreeMap<String, Vec<u8>>,
     manifest: String,
     math: Vec<Vec<super::super::math::Occurrence>>,
+    math_generation: Vec<Vec<super::super::math::generation::Occurrence>>,
     rendered: nepl3_doc_html::pages::RenderedPages,
 }
 impl RenderedOutput {
@@ -33,6 +34,7 @@ impl RenderedOutput {
             provenance: Some(DisplayProvenance {
                 pages: request.set,
                 math: self.math,
+                math_generation: self.math_generation,
                 rendered: self.rendered,
             }),
         };
@@ -111,6 +113,21 @@ pub(super) fn render(
             output_budget,
         )?;
     }
+    let mut page_generation = Vec::new();
+    for records in &page_math {
+        let generated =
+            super::super::math::generation::collect(records, &[], renderer, output_budget)?;
+        output_budget
+            .charge(
+                nepl3_core::budget::Resource::AllocationUnits,
+                (2 * core::mem::size_of_val(&generated)) as u64,
+            )
+            .map_err(err)?;
+        page_generation.try_reserve(1).map_err(|_| {
+            err(output_budget.stop(nepl3_core::budget::StopReason::AllocationLimit))
+        })?;
+        page_generation.push(generated);
+    }
     let mut rendered = displayed.pages;
     for (page, fragment) in request.set.pages.iter().zip(&mut rendered.fragments) {
         for input in aliases {
@@ -169,9 +186,14 @@ pub(super) fn render(
             renderer.as_str()
         );
         let native = super::super::katex::generate_cached(
-            &mut page_math[page_index],
+            &mut page_generation[page_index],
             &identity,
             native_cache.as_ref(),
+            output_budget,
+        )?;
+        super::super::math::generation::settle(
+            &mut page_math[page_index],
+            &page_generation[page_index],
             output_budget,
         )?;
         let mut document_css = CSS.to_owned();
@@ -275,7 +297,7 @@ pub(super) fn render(
         "registered_files":file_origins,
         "renderer":"nepl3-doc-html pages/4","options":{"parallel":"Rows","math_renderer":renderer.as_str()},
         "katex":katex_pages,
-        "math_diagnostics":page_math.iter().map(|records| super::super::math::diagnostics(records)).collect::<Vec<_>>(),"viewer_scripts":false,
+        "math_diagnostics":page_generation.iter().map(|records| super::super::math::diagnostics(records)).collect::<Vec<_>>(),"viewer_scripts":false,
         "packages":"compiled checked bootstrap fixtures","scope":"Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Retained Code uses shared syntax-only highlighting without guest evaluation; Math uses independent MathML with explicit renderer fallback diagnostics; assets and other foreign kinds remain unsupported. Not Pages deployment evidence.",
         "budget_scope":"Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
         "output_usage":{"work":output_budget.usage().work,"allocation_units":output_budget.usage().allocation_units,"output_bytes":output_budget.usage().output_bytes}
@@ -284,6 +306,7 @@ pub(super) fn render(
         files,
         manifest,
         math: page_math,
+        math_generation: page_generation,
         rendered,
     })
 }

@@ -59,6 +59,7 @@ pub struct GeneratedPages {
 pub struct DisplayProvenance {
     pub pages: PageSet,
     pub math: Vec<Vec<super::math::Occurrence>>,
+    pub math_generation: Vec<Vec<super::math::generation::Occurrence>>,
     pub rendered: nepl3_doc_html::pages::RenderedPages,
 }
 

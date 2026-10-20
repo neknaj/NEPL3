@@ -49,6 +49,9 @@ pub struct LocalDocument {
     pub stylesheet: String,
     pub document: nepl3_doc_core::model::DocumentSyntax,
     pub math: Vec<math::Occurrence>,
+    pub math_generation: Vec<math::generation::Occurrence>,
+    pub sentence_sources: Option<super::annotations::article::SelectionParts>,
+    pub sentences: Vec<super::annotations::article::render::SentenceRecord>,
     pub rendered: nepl3_doc_html::RenderedFragment,
 }
 
@@ -199,8 +202,33 @@ fn generate_impl(
             enum Prepared<'a> {
                 Local(nepl3_doc_html::display::PreparedDisplayArticle<'a>),
                 Svg(nepl3_doc_html::assets::PreparedSvgDisplayArticle<'a>),
+                Sentence(super::annotations::article::Selection<'a>),
             }
-            let prepared = if let Some((inputs, mode)) = assets {
+            output_budget
+                .charge(
+                    nepl3_core::budget::Resource::Work,
+                    doc.value.embeds.kinds.len() as u64,
+                )
+                .map_err(err)?;
+            let has_sentence = doc
+                .value
+                .embeds
+                .kinds
+                .contains(&nepl3_doc_core::model::EmbedKind::Sentence);
+            let prepared = if has_sentence {
+                if assets.is_some() {
+                    return Err("SentenceAssetSelectionUnsupported".into());
+                }
+                let mut host = sentence_host(compiled, profile.registry(), &mut codec)?;
+                Prepared::Sentence(
+                    super::annotations::article::collect_structural(
+                        &doc,
+                        &mut host,
+                        &mut output_budget,
+                    )
+                    .map_err(err)?,
+                )
+            } else if let Some((inputs, mode)) = assets {
                 Prepared::Svg(
                     nepl3_doc_html::assets::prepare_svg_display(
                         &doc,
@@ -232,8 +260,10 @@ fn generate_impl(
             });
             let render_start = Instant::now();
             let mut math = Vec::new();
+            let mut sentences = Vec::new();
             let mut adapter = |embed: &nepl3_doc_core::model::DocEmbedView<'_>,
                                index,
+                               codec: &mut nepl3_wire::foundation::FoundationCodec<'_>,
                                b: &mut nepl3_core::budget::Budget| {
                 if embed.kind == nepl3_doc_core::model::EmbedKind::Code {
                     code::render(embed, tree, profile, codec.source_admission(), b)
@@ -241,20 +271,37 @@ fn generate_impl(
                     math::DisplayHost {
                         compiled,
                         registry: profile.registry(),
-                        codec: &mut codec,
+                        codec,
                         preference: renderer,
                     }
                     .render(embed, index, &mut math, b)
                 }
             };
             let rendered = match &prepared {
-                Prepared::Local(p) => {
-                    nepl3_doc_html::display::render_display(p, &mut adapter, &mut output_budget)
-                        .map_err(err)?
-                }
-                Prepared::Svg(p) => {
-                    nepl3_doc_html::assets::render_svg_display(p, &mut adapter, &mut output_budget)
-                        .map_err(err)?
+                Prepared::Local(p) => nepl3_doc_html::display::render_display(
+                    p,
+                    &mut |guest, index, b| adapter(guest, index, &mut codec, b),
+                    &mut output_budget,
+                )
+                .map_err(err)?,
+                Prepared::Svg(p) => nepl3_doc_html::assets::render_svg_display(
+                    p,
+                    &mut |guest, index, b| adapter(guest, index, &mut codec, b),
+                    &mut output_budget,
+                )
+                .map_err(err)?,
+                Prepared::Sentence(input) => {
+                    let mut host = sentence_host(compiled, profile.registry(), &mut codec)?;
+                    let output = super::annotations::article::render::render(
+                        input,
+                        &options,
+                        &mut host,
+                        &mut adapter,
+                        &mut output_budget,
+                    )
+                    .map_err(err)?;
+                    sentences = output.sentences;
+                    output.article
                 }
             };
             math::compose(
@@ -270,7 +317,10 @@ fn generate_impl(
                 digest_hex(profile.digest()),
                 renderer.as_str()
             );
-            let katex = katex::generate(&mut math, &identity, &mut output_budget)?;
+            let mut generation =
+                math::generation::collect(&math, &sentences, renderer, &mut output_budget)?;
+            let katex = katex::generate(&mut generation, &identity, &mut output_budget)?;
+            math::generation::settle(&mut math, &generation, &mut output_budget)?;
             let mut document_css =
                 assets::document_css(&doc, assets.map(|(inputs, _)| inputs), &mut output_budget)?;
             let html = shell_with_assets(
@@ -308,13 +358,13 @@ fn generate_impl(
             }
             let manifest = serde_json::to_string_pretty(&serde_json::json!({
             "format":"nepl3.local-doc-export/1",
-            "scope":"Doc with retained Code and Math display and validated external URLs; page/relative links and assets require explicit resolution",
+            "scope":"Doc with retained Code, direct/nested Math, and asset-free typed Sentence display in Rows mode; validated external URLs; page/relative links, typed Sentence PageSet routing, and Sentence assets remain unsupported",
             "source_sha256":digest(input.as_bytes()),
             "profile_sha256":digest_hex(profile.digest()),
             "doc_schema_sha256":digest_hex(compiled.doc.package.schema.digest),
             "renderer":"nepl3-doc-html local/1",
             "options":{"parallel":"Rows","css":css.as_str(),"math_renderer":renderer.as_str()},
-            "math_diagnostics":math::diagnostics(&math),
+            "math_diagnostics":math::diagnostics(&generation),
             "katex":katex.as_ref().map(|k| serde_json::json!({"version":"0.18.7","generation":"native pinned worker","identity":k.identity(),"viewer_scripts":false,"fonts":"all fixed fonts embedded in CSS","license":"complete original license embedded in CSS","host_internal_work":"unobserved","host_internal_allocation":"unobserved","visuals":k.visuals.iter().map(|v| serde_json::json!({"math_arena_root":v.root,"scope":v.scope})).collect::<Vec<_>>(),"resources":k.files.iter().map(|f|serde_json::json!({"path":f.path,"mime":f.mime,"sha256":digest(&f.bytes),"bytes":f.bytes.len(),"placement":"embedded stylesheet"})).collect::<Vec<_>>()})),
             "stylesheet":{"sha256":digest(document_css.as_bytes()),"license":"MIT"},
             "font":{"family":"Klee One","weights":[400,600],"stylesheet":stylesheet::FONT_STYLESHEET,"bundled":false,"offline":"system fallback"},
@@ -326,7 +376,14 @@ fn generate_impl(
             "packages":"compiled checked bootstrap fixtures",
             "viewer_scripts":false
         })).map_err(err)? + "\n";
+            let sentence_sources = match prepared {
+                Prepared::Sentence(input) => Some(input.into_parts()),
+                _ => None,
+            };
             Ok(LocalDocument {
+                math_generation: generation,
+                sentence_sources,
+                sentences,
                 html,
                 manifest,
                 stylesheet: document_css,
@@ -544,4 +601,18 @@ fn shell_with_assets(
         .map_err(err)?;
     let html = format!("{head}{fragment}{tail}");
     Ok(html)
+}
+
+fn sentence_host<'a, C: nepl3_core::value_codec::FoundationValueCodec>(
+    compiled: &'a Compiled,
+    registry: &'a nepl3_core::schema::SchemaRegistry,
+    codec: &'a mut C,
+) -> Result<super::annotations::SentenceAnnotationRenderer<'a, C>, String> {
+    Ok(super::annotations::SentenceAnnotationRenderer {
+        registry,
+        surface: &compiled.others.get(3).ok_or("SentenceSelection")?.schema,
+        math_surface: Some(&compiled.others.first().ok_or("MathSelection")?.schema),
+        doc_surface: Some(&compiled.doc.package.schema),
+        codec,
+    })
 }
