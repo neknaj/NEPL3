@@ -185,11 +185,41 @@ pub(crate) fn requirements<'a, C: FoundationValueCodec>(
 /// admission before its digest and requirements can become rendering inputs.
 /// Reserve and charge the complete plan array before inspecting members. A
 /// reservation failure publishes no plan and performs no member processing.
+#[derive(Debug)]
+pub struct NamespacePreparationError<'a, E> {
+    /// None means collection preparation failed before a member was inspected.
+    pub member: Option<labels::namespace::MemberId>,
+    pub error: PreparationError<'a, E>,
+}
 pub fn inspect_namespace<'a, C: FoundationValueCodec>(
     namespace: &labels::namespace::CheckedNamespace<'_, 'a>,
     registry: &SchemaRegistry,
     c: &mut C,
     b: &mut Budget,
+) -> Result<Vec<DocPreparationPlan>, PreparationError<'a, C::Error>> {
+    inspect_namespace_located(namespace, registry, c, b).map_err(|failure| failure.error)
+}
+/// Preserve the exact member on source, closure, or requirement failures.
+pub fn inspect_namespace_located<'a, C: FoundationValueCodec>(
+    namespace: &labels::namespace::CheckedNamespace<'_, 'a>,
+    registry: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<Vec<DocPreparationPlan>, NamespacePreparationError<'a, C::Error>> {
+    let mut member = None;
+    let result = inspect_namespace_inner(namespace, registry, c, b, &mut member);
+    b.poll().map_err(|reason| NamespacePreparationError {
+        member,
+        error: PreparationError::Stopped(reason),
+    })?;
+    result.map_err(|error| NamespacePreparationError { member, error })
+}
+fn inspect_namespace_inner<'a, C: FoundationValueCodec>(
+    namespace: &labels::namespace::CheckedNamespace<'_, 'a>,
+    registry: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+    member: &mut Option<labels::namespace::MemberId>,
 ) -> Result<Vec<DocPreparationPlan>, PreparationError<'a, C::Error>> {
     b.poll()?;
     let mut plans = Vec::new();
@@ -203,7 +233,8 @@ pub fn inspect_namespace<'a, C: FoundationValueCodec>(
     plans
         .try_reserve_exact(count)
         .map_err(|_| b.stop(StopReason::AllocationLimit))?;
-    for document in documents {
+    for (index, document) in documents.enumerate() {
+        *member = Some(labels::namespace::MemberId(index as u64));
         let (value, components) =
             portable::to_value_with_guest_components(document, registry, c, b)?;
         let document_digest = c
