@@ -1,0 +1,187 @@
+article en "Group source archive v1"
+body
+  cons paragraph
+    cons sentence
+      cons text "The opt-in "
+      cons code "nepl3.group-archive"
+      cons text " revision 1 root "
+      cons code "GroupArchive"
+      cons text " contains "
+      cons code "sources: nepl3.source-archive/1 SourceSets"
+      cons text " and "
+      cons code "skeleton: Bytes"
+      cons text "."
+      nil
+    cons " This is a separate descriptor identity; source-set and syntax-archive identities do not change."
+    cons " JSON/Rust schema parity and dependency closure are checked by tools."
+    nil
+  cons paragraph
+    cons "The skeleton is structurally checked foundation ForeignClosureGroup data with empty source fields for each provenance and directly traversed syntax bundle."
+    cons " One local source set is consumed for every provenance in table order, followed by each entry's syntax bundles in child-first Finish order."
+    cons " Empty sets still consume one position."
+    cons " Owner/environment/entry order and indices are preserved; only the shared source table and local source memberships are canonicalized."
+    cons " Equal content does not merge owners, IDs or revisions."
+    nil
+  cons paragraph
+    cons "Each provenance's declarations are restored before its origins/maps are decoded."
+    cons " Each bundle's declarations are restored before its node geometry, origins/maps and views are decoded."
+    cons " Local stores use metered insertion."
+    cons " Missing/extra sets, nonempty skeleton source fields, invalid identities and ownership references reject."
+    cons " Encoding validates the original native group; decoding validates the fully reconstructed group before publishing it."
+    cons " Neither a different component nor the operation admission ledger supplies a missing local declaration."
+    nil
+  cons paragraph
+    cons "The transport shares typed source-field mechanics with SyntaxArchive."
+    cons " It does not rewrite opaque payloads or replace the expanded native v1 component identity."
+    cons " Legacy group decoding rejects the archive envelope."
+    cons " Standalone closure extraction and existing component digests are evaluated on the reconstructed native group."
+    cons " Default Doc integration, general Sentence payload adapters and real-data 4B Work recovery remain separate unfinished work."
+    nil
+  cons section descriptor "Replaced-field descriptor boundary"
+  body
+    cons paragraph
+      cons "Empty skeleton source lists do not establish their element types."
+      cons sentence
+        cons text " Before encode or decode, SyntaxArchive requires the selected Foundation descriptor to declare SyntaxBundle field 0 as "
+        cons code "sources: List(SourceContent)"
+        cons text "."
+        nil
+      cons " GroupArchive also requires ForeignProvenance field 1 to have that exact contract."
+      cons sentence
+        cons text " Each SourceContent named reference uses package "
+        cons code "nepl3.foundation"
+        cons text ", revision 1."
+        nil
+      cons " These checks apply even to empty inputs; an archive deliberately requires its complete replacement contract."
+      cons " The selected SchemaRef must match the finalized registry."
+      cons " Descriptor lookups and comparisons are charged to the current Budget and respect sticky cancellation."
+      cons " These checks supplement full original-native validation, checked skeleton and source-table boundaries, and reconstructed-native validation; they do not change v1 descriptors, wire bytes, or component identities."
+      nil
+    nil
+  cons section compact "Explicit compact component identity v2"
+  body
+    cons paragraph
+      cons sentence
+        cons text "The opt-in "
+        cons code "syntax::group::compact::encode"
+        cons text " returns the unchanged GroupArchive transport and a parallel vector of v2 entry digests."
+        nil
+      cons " Existing encode, decode, FoundationValueCodec, and v1 identity APIs do not implicitly select this path."
+      cons " The operation uses one supplied registry, SourceAdmission and Budget."
+      cons " It validates the original native group, the replaced-field descriptor contract, the complete empty-source skeleton, each full SourceContent commitment input, and the final archive envelope."
+      cons " A failure returns no successful transport/digest pair."
+      nil
+    cons paragraph
+      cons sentence
+        cons text "Let "
+        cons code "NDF(v)"
+        cons text " mean canonical NDF/1 bytes and "
+        cons code "H(d,v)"
+        cons text " mean SHA-256 of the literal UTF-8 domain "
+        cons code "d"
+        cons text " followed by NDF(v)."
+        nil
+      cons " Each domain below ends in one zero byte."
+      nil
+    cons list unordered
+      cons item none body cons paragraph
+        cons sentence
+          cons text "Source commitment: H("
+          cons code "NEPL3.Foreign.SourceContent.v2\\0"
+          cons text ", full SourceContent)."
+          nil
+        cons " The record retains the exact Foundation SchemaRef, full SourceRef, URI and text."
+        nil nil
+      cons item none body cons paragraph
+        cons "A local membership is a List of Bytes32 source commitments, ordered by the existing canonical source ID/revision/digest ordering."
+        cons " All declarations remain, including unused ones."
+        cons " Empty local sets occupy a position."
+        nil nil
+      cons item none body cons paragraph
+        cons sentence
+          cons text "Provenance: H("
+          cons code "NEPL3.Foreign.Provenance.v2\\0"
+          cons text ", List(skeleton provenance, List(local membership)))."
+          nil
+        cons " There is exactly one local set per provenance."
+        nil nil
+      cons item none body cons paragraph
+        cons sentence
+          cons text "Syntax: H("
+          cons code "NEPL3.Foreign.Syntax.v2\\0"
+          cons text ", List(skeleton ForeignSyntax, List(local memberships)))."
+          nil
+        cons " Direct foreign bundles contribute in the existing child-first Finish order, followed by their parent bundle."
+        cons " Memberships never cross an entry boundary."
+        cons " Opaque token payloads are preserved and not traversed."
+        nil nil
+      cons item none body cons paragraph
+        cons sentence
+          cons text "Environment: H("
+          cons code "NEPL3.Foreign.Environment.v2\\0"
+          cons text ", the encoded environment field)."
+          nil
+        cons " The owner table index and provenance table reference are excluded here."
+        nil nil
+      cons item none body cons paragraph
+        cons sentence
+          cons text "Entry: H("
+          cons code "NEPL3.Foreign.Entry.v2\\0"
+          cons text ", List(Bytes32 provenance commitment, Bytes32 environment commitment, Bytes32 syntax commitment))."
+          nil
+        cons " References select the appropriate components but their group table indices are not committed."
+        nil nil
+      nil
+    cons paragraph
+      cons "These two-element component envelopes are private hash preimages, not valid stand-alone native syntax or additional transport descriptors."
+      cons " Canonical NDF framing and separate domains preserve component and local membership boundaries."
+      cons " Components used only by other valid entries do not affect a selected entry identity."
+      nil
+    cons paragraph
+      cons "Source commitments are memoized only inside this operation."
+      cons " Sorted full SnapshotId lookup is metered; a hit requires exact admitted immutable snapshot equality, including URI and text."
+      cons " Independently allocated equal snapshots pay for equality."
+      cons " All lookup, insertion shift, component bookkeeping, copies, retained storage, encoded digest input, digest output and transport output consume the same Budget."
+      cons " A sticky stop remains a failure on retry."
+      cons " No proof or cache crosses operations."
+      nil
+    cons paragraph
+      cons "This Foundation API does not complete default Doc integration, foreign Sentence payload adaptation, or the historical real-data 4B Work acceptance milestone."
+      nil
+    cons section depths "Consuming-language depths"
+    body
+      cons paragraph
+        cons sentence
+          cons code "compact::encode_at_depths"
+          cons text " accepts a typed GroupAtDepths input containing the native group, one occurrence-depth maximum for every entry, and the caller's native registry."
+          nil
+        cons " This input is not a proof."
+        cons " Every call validates the complete input at those depths in the current active Budget depth, before codec boundary work."
+        cons " A distinct codec registry receives its own native validation; equivalent registry contents do not authorize skipping this second authority."
+        cons " The same private validation helper is used by the existing v1 depth-aware encoding path."
+        cons " Missing/extra entry depths and native errors remain GroupEncodingError::Structure; codec registry, archive/schema and encoding failures remain Codec."
+        cons " Codec stops are normalized without converting a stopped computation into a partial pair."
+        nil
+      cons paragraph
+        cons "The archive bytes and v2 identities do not include occurrence depths: valid placement changes validation cost and limits, not content identity."
+        cons " Depth-aware encoding shares capture and finalization with the ordinary compact operation and does not reconstruct then re-encode the group."
+        cons " Archive decoding alone still does not establish the consuming document's occurrence-depth requirements."
+        cons " Doc must compute and check its own shared-embed maximum depths after reconstruction."
+        nil
+      cons paragraph
+        cons sentence
+          cons text "The explicit "
+          cons link relative "28-doc-source-archive.md" none text "Doc source archive"
+          cons text " consumes this capability without changing existing Doc preparation or rendering identities."
+          nil
+        nil
+      cons paragraph
+        cons sentence
+          cons text "An identity-only capability is specified separately in "
+          cons link relative "32-group-identity-without-transport.md" none text "group commitments without transport"
+          cons text "."
+          nil
+        nil
+      nil
+    nil
+  nil
