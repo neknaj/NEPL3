@@ -1,4 +1,5 @@
 //! Native display options and bounded, domain-separated identity composition.
+pub mod input;
 use super::*;
 use nepl3_core::budget::{Resource, StopReason};
 /// Explicit native display selection. CLI and retained jobs keep their Rows default.

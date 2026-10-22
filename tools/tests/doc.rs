@@ -793,3 +793,6 @@ mod svg;
 
 #[path = "doc/pages/single.rs"]
 mod pages_single;
+
+#[path = "doc/pages/display.rs"]
+mod pages_display;

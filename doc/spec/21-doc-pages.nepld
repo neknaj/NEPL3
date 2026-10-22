@@ -314,7 +314,21 @@ body
           nil
         cons "sourceの[絶対/ぜったい]path、[親/おや]directory[移動/いどう]、root[外/がい]を[指/さ]すsymlinkを[拒否/きょひ]する。"
         cons "[入力/にゅうりょく]manifestは64KiB、ページ[数/すう]は128、[全入力/ぜんにゅうりょく]UTF-8 byte[合計/ごうけい]は10MBまでとする。"
-        cons "[現在/げんざい]の[表示/ひょうじ]はRowsに[固定/こてい]する。"
+        nil
+      cons paragraph
+        cons "display[省略時/しょうりゃくじ]の[表示/ひょうじ]はRowsとする。"
+        cons "displayのmodeはrows、columns、singleのいずれかを[明示/めいじ]する。"
+        cons "singleではlanguageを[必須/ひっす]とし、fallbacksを[順序付/じゅんじょづ]き[言語/げんご]リストとして[指定/してい]できる。[省略時/しょうりゃくじ]は[空/から]リストとする。"
+        cons "rowsとcolumnsにはlanguageやfallbacksを[指定/してい]しない。このdisplayでは、[未知/みち]のfieldやnullを[暗黙/あんもく]の[既定値/きていち]として[受/う]け[入/い]れない。manifest[全体/ぜんたい]で[重複/じゅうふく]JSON keyを[拒否/きょひ]する。"
+        nil
+      cons paragraph
+        cons "[次/つぎ]は[日本語/にほんご]を[優先/ゆうせん]し、[対応/たいおう]するvariantがない[場合/ばあい]に[英語/えいご]を[選/えら]ぶ[設定部分/せっていぶぶん]の[例/れい]である。"
+        cons sentence
+          cons code "{\"display\":{\"mode\":\"single\",\"language\":\"ja\",\"fallbacks\":[\"en\"]}}"
+          nil
+        nil
+      cons paragraph
+        cons "[言語選択/げんごせんたく]の[失敗/しっぱい]や[非表示/ひひょうじ]targetへの[参照/さんしょう]は、[保存前/ほぞんまえ]に[拒否/きょひ]する。[対話的/たいわてき]な[再開/さいかい]でも[最初/さいしょ]に[読/よ]んだ[表示設定/ひょうじせってい]を[固定/こてい]し、[追加/ついか]allowanceだけを[読/よ]み[直/なお]す。"
         nil
       cons paragraph
         cons sentence
