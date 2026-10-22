@@ -33,12 +33,6 @@ pub(super) fn render(
     renderer: super::super::MathRenderer,
     b: &mut Budget,
 ) -> Result<Output, String> {
-    if matches!(
-        request.options.parallel,
-        nepl3_doc_html::ParallelMode::Single { .. }
-    ) {
-        return Err("SentenceSingleUnsupported".into());
-    }
     let r = &compiled.doc.registry;
     let sources = SourceStore::default();
     let mut admission = SourceAdmission::default();
@@ -118,8 +112,19 @@ pub(super) fn render(
         let prepared = routed::prepare(&request.set, &borrowed, &request.options, r, &mut codec, b)
             .map_err(err)?;
         let mut sessions = Vec::new();
-        for selection in &selections {
-            push(&mut sessions, Session::new(selection), b)?;
+        for (page, selection) in selections.iter().enumerate() {
+            let session = Session::for_display::<std::convert::Infallible, String>(
+                selection,
+                &request.options,
+                b,
+            )
+            .map_err(|error| {
+                format!(
+                    "page {page} ({}): display selection: {error:?}",
+                    request.set.pages[page].registration.id
+                )
+            })?;
+            push(&mut sessions, session, b)?;
         }
         let rendered = routed::render(
             &prepared,
@@ -183,19 +188,11 @@ pub(super) fn render(
         let source = codec
             .canonical_value_digest(b"nepl3.local-doc-pages.sentence-input/1\0", &value, b)
             .map_err(err)?;
-        let mode = match request.options.parallel {
-            nepl3_doc_html::ParallelMode::Rows => 0,
-            nepl3_doc_html::ParallelMode::Columns => 1,
-            _ => return Err("SentenceSingleUnsupported".into()),
-        };
-        let mut identity = [0u8; 33];
-        identity[..32].copy_from_slice(&source.0);
-        identity[32] = mode;
-        b.charge(Resource::Work, 33).map_err(err)?;
+        let identity = display_identity(source, &request.options.parallel, b)?;
         (
             nepl3_doc_html::pages::RenderedCodePages {
                 pages: nepl3_doc_html::pages::RenderedPages {
-                    identity: Digest::of(&identity),
+                    identity,
                     fragments,
                 },
                 foreign,
@@ -212,4 +209,82 @@ pub(super) fn render(
         sources: parts,
         records,
     })
+}
+
+// Retain Rows/Columns identities; Single has a separately domain-tagged,
+// length-delimited native host contract, not a portable receipt.
+fn display_identity(
+    source: Digest,
+    mode: &nepl3_doc_html::ParallelMode,
+    b: &mut Budget,
+) -> Result<Digest, String> {
+    use nepl3_doc_html::ParallelMode;
+    match mode {
+        ParallelMode::Rows | ParallelMode::Columns => {
+            let mut bytes = [0u8; 33];
+            bytes[..32].copy_from_slice(&source.0);
+            bytes[32] = if matches!(mode, ParallelMode::Rows) {
+                0
+            } else {
+                1
+            };
+            b.charge(Resource::Work, 33).map_err(err)?;
+            Ok(Digest::of(&bytes))
+        }
+        ParallelMode::Single { .. } => super::display::bind_identity(
+            b"nepl3.local-doc-pages.sentence-single/1\0",
+            source,
+            mode,
+            b,
+        ),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn native_display_identity_preserves_legacy_modes_and_bounds_single_options()
+    -> Result<(), String> {
+        use nepl3_doc_html::ParallelMode;
+        let source = Digest([3; 32]);
+        for (mode, tag) in [(ParallelMode::Rows, 0), (ParallelMode::Columns, 1)] {
+            let mut old = [3u8; 33];
+            old[32] = tag;
+            assert_eq!(
+                display_identity(source, &mode, &mut crate::doc::source::budget())?,
+                Digest::of(&old)
+            );
+        }
+        let mode = ParallelMode::Single {
+            language: "fr".into(),
+            fallbacks: vec!["en".into(), "ja".into()],
+        };
+        let mut measured = crate::doc::source::budget();
+        measured.charge(Resource::Work, 7).map_err(err)?;
+        let actual = display_identity(source, &mode, &mut measured)?;
+        let mut expected = b"nepl3.local-doc-pages.sentence-single/1\0".to_vec();
+        expected.extend_from_slice(&[3; 32]);
+        expected.push(2);
+        expected.extend_from_slice(&2u64.to_le_bytes());
+        expected.extend_from_slice(b"fr");
+        expected.extend_from_slice(&2u64.to_le_bytes());
+        for value in [b"en", b"ja"] {
+            expected.extend_from_slice(&2u64.to_le_bytes());
+            expected.extend_from_slice(value);
+        }
+        assert_eq!(actual, Digest::of(&expected));
+        let mut limits = measured.limits();
+        limits.work = measured.usage().work;
+        limits.allocation_units = measured.usage().allocation_units;
+        let mut exact = Budget::new(limits);
+        exact.charge(Resource::Work, 7).map_err(err)?;
+        assert_eq!(display_identity(source, &mode, &mut exact)?, actual);
+        limits.allocation_units -= 1;
+        let mut short = Budget::new(limits);
+        short.charge(Resource::Work, 7).map_err(err)?;
+        assert!(display_identity(source, &mode, &mut short).is_err());
+        assert_eq!(short.poll(), Err(StopReason::AllocationLimit));
+        Ok(())
+    }
 }

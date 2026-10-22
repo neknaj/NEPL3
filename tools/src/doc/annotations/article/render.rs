@@ -182,7 +182,7 @@ impl<'s, 'a> Session<'s, 'a> {
             records: Vec::new(),
         }
     }
-    fn for_display<E, F>(
+    pub(crate) fn for_display<E, F>(
         input: &'s Selection<'a>,
         options: &RenderOptions,
         b: &mut Budget,
