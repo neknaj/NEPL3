@@ -240,6 +240,7 @@ python tools/audit/doc_html/export.py target/debug/nepl3-tools dist/doc-browser/
 ```
 
 Linuxではbrowser用のsystem libraryも必要なため、CIは`playwright install --with-deps`を使います。
+ブラウザjobは全体を60分で制限し、Python依存の導入は5分、OS依存と対応する3ブラウザの導入は30分の別stepで制限する。準備が遅い場合にも後続の2経路のsite build・実ブラウザ検証・payload固定を実行する余地を残すための時間配分であり、downloadの成功や完了時刻を保証するものではない。導入の失敗・取消・期限超過を成功扱いにせず、qualityはdoc-browserのsuccessを必須とする。検証を省略して成功にしない。各段階の開始・終了・結果はActionsのstep記録とlogで確認する。
 PowerShellで実行ログを保存する際は、[ローカル環境](#ローカル環境)のUTF-8の指針に従ってください。
 
 ## ページ集合と移行候補
