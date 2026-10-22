@@ -75,13 +75,12 @@ fn with_namespaces<T>(
 fn fixtures() -> (PageSet, Vec<DocumentSyntax>) {
     let mut input = set();
     for page in &mut input.pages {
-        if let DocKind::Link { target, .. } = &mut page.document.value.nodes[7].kind {
-            match target {
-                LinkTarget::Page { fragment, .. } | LinkTarget::Relative { fragment, .. } => {
-                    *fragment = Some("guest".into())
-                }
-                _ => {}
-            }
+        if let DocKind::Link {
+            target: LinkTarget::Page { fragment, .. } | LinkTarget::Relative { fragment, .. },
+            ..
+        } = &mut page.document.value.nodes[7].kind
+        {
+            *fragment = Some("guest".into());
         }
         // Outer local reference must be satisfied only by this page's guest.
         page.document.value.nodes[6].kind = DocKind::Reference {
