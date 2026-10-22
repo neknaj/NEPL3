@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/28&#45;doc&#45;source&#45;archive.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page doc&#45;source&#45;archive; source SHA-256 9aa4e0c4c020c6e0627e29dc5e7869c93d78a394a76423508b646758168ed3c5; alias input SHA-256 2b48da747a150f5fe34e6c80410d4b8f1361332828d27cb121938587a3631bdb; page input SHA-256 1853dfe6fc8791b8c82d6236de5982d75aefbd1f422bdd0b4697e184ad37e72c. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/28&#45;doc&#45;source&#45;archive.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page doc&#45;source&#45;archive; source SHA-256 9aa4e0c4c020c6e0627e29dc5e7869c93d78a394a76423508b646758168ed3c5; alias input SHA-256 2b48da747a150f5fe34e6c80410d4b8f1361332828d27cb121938587a3631bdb; page input SHA-256 c386ae073e929531f0226aac59758079eafcf96b0bd56ef84163630d07eafe1c. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="explicit-doc-source-archive-v1"></a>
 
