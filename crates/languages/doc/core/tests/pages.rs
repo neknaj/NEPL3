@@ -565,3 +565,6 @@ fn page_resolution_obeys_sticky_resource_limits() -> Result<(), String> {
     }
     Ok(())
 }
+
+#[path = "pages/namespace.rs"]
+mod namespace;

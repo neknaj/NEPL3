@@ -505,3 +505,11 @@ Sentence内のDoc断片とMathの記録は、まずSentence arenaへ、次に最
 Doc hostの既定profileは独立SentenceのInlineへ`math`（Math Expr）と`document`（Doc Inline）を明示選択する。これはstandalone Sentence標準へのconstructor追加ではなく、host profileの拡張である。選択されたsurface／parse-profile identityは両formを含む実内容から求め、以前のidentityへ固定しない。独立Sentence内では`math frac 1 2`、Doc Inlineを選ぶ場合は`document math Math frac 1 2`のように、各所有言語の構文を区別する。
 単体Doc HTML exportはSentence guestを含むasset-free Articleに型付きArticle hostを使用し、既定Rows表示で本文・Doc断片の参照と外部URLを検査する。Sentenceの所有元・構造出現・描画記録をLocalDocumentへ保持し、原文Docと共に返す。Sentenceを含まない既存SVG経路は維持するが、SentenceとAssetの組合せを黙って別経路へ落とさず未対応として返す。
 CLIでの単体Article対応からPageSetのSentence対応を推定しない。PageSetのroot namespace・routing・cross-page検査への統合と、Single／alt選択は未完了である。既存Math注釈内の入れ子数式の生成はPageSetでも共通の数式収集経路を使う。
+
+### PageSetへ明示採用したnamespaceのnativeリンク解決
+
+`doc-core::pages::namespace::resolve` は、PageSetの登録と、ページ順に明示された検査済みDoc namespaceを接続するnative操作である。各namespaceのmember 0は、そのPageSetが所有する同一Articleへのborrowでなければならず、等値な複製・順序違い・個数違いを拒否する。追加memberの採用とSentence所有元の保持はhostの責務であり、この操作はforeign closureやMath注釈を暗黙に走査・採用しない。
+
+各memberの構造・source・closureを現在のregistryと共通source admissionで再検査し、Page／Relative linkのsource位置をpage・member・nodeの組で保持する。Relativeは出力routeでなく、所有ページの論理sourceを基準にする。参照先fragmentは対象ページの明示採用namespace内で照合し、他ページの同名ラベルは衝突と扱わない。登録fileへのfragment、未登録page、sourceのrootを越えるrelative pathを拒否する。External URI・Asset・Foreign要件は解決済みとせず、そのmemberの型付き要件として保持する。
+
+結果は元PageSetとnamespaceへの不変borrowを持つ操作内の検査記録である。portable proof、既存PageSet identity、最終HTMLのID到達性、Sentence可視性、描画やCLI接続の完了を表さない。後続hostは採用所有元・表示選択・URI policy・出力全体のanchorを検査し、同じ累積Budgetを継続する。停止と失敗時は部分結果を返さない。通常のouter-only PageSet resolverと既存portable契約は変更しない。
