@@ -1,5 +1,5 @@
 //! Opt-in in-process CLI continuation. Only the allowance file is reread.
-//! Source documents, compiled definitions, output destination and renderer stay fixed.
+//! Source documents, compiled definitions, output destination, display selection and renderer stay fixed.
 use super::{
     Entry, GeneratedPages,
     resources::{
@@ -107,7 +107,10 @@ fn write_with_io(
         &compiled,
         loaded.inputs,
         selected,
-        renderer,
+        super::DisplayOptions {
+            document: loaded.display,
+            math_renderer: renderer,
+        },
         |previous, stage, reason, usage| {
             writeln!(
                 messages,
@@ -161,7 +164,7 @@ fn run(
     compiled: &Compiled,
     inputs: Vec<(Entry, String)>,
     mut limits: RetryLimits,
-    renderer: MathRenderer,
+    options: super::DisplayOptions,
     mut choose: impl FnMut(RetryLimits, &str, StopReason, Usage) -> Result<Option<RetryLimits>, String>,
 ) -> Result<GeneratedPages, String> {
     let mut preparing = Preparation::new(
@@ -215,7 +218,7 @@ fn run(
         }
     };
     let mut rendering = prepared
-        .into_render(limits.output_limits, renderer)
+        .into_render_with_display(limits.output_limits, options)
         .map_err(err)?;
     loop {
         match rendering.run() {
@@ -303,3 +306,8 @@ mod tests {
         Ok(())
     }
 }
+
+// The frozen-input regression deliberately changes host files at resume time.
+#[cfg(all(test, not(target_family = "wasm")))]
+#[path = "interactive/selection.rs"]
+mod selection_tests;

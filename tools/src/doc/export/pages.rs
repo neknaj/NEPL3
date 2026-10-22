@@ -6,7 +6,7 @@ use nepl3_doc_html::pages::{PagesHtmlRequest, render_pages_with_display};
 pub(crate) mod aliases;
 mod code;
 mod display;
-pub use display::Options as DisplayOptions;
+pub use display::{Options as DisplayOptions, input::Selection as DisplaySelection};
 pub mod interactive;
 mod render;
 mod sentence;
@@ -19,6 +19,8 @@ use nepl3_core::budget::Budget;
 #[serde(deny_unknown_fields)]
 pub struct Manifest {
     pub version: u64,
+    #[serde(default)]
+    pub display: DisplaySelection,
     pub pages: Vec<Entry>,
     #[serde(default)]
     pub files: Vec<Entry>,
@@ -372,12 +374,13 @@ pub fn write_with_renderer(
         &[],
         DisplayOptions {
             math_renderer: renderer,
-            ..Default::default()
+            document: loaded.display,
         },
     )?;
     write_generated(generated, output)
 }
 struct LoadedManifest {
+    display: RenderOptions,
     inputs: Vec<(Entry, String)>,
     files: Vec<(Entry, Vec<u8>)>,
     phases: resources::PhaseLimits,
@@ -391,6 +394,7 @@ fn load(manifest: &Path) -> crate::Result<LoadedManifest> {
     if bytes.len() > 65_536 {
         return Err("ManifestLimit".into());
     }
+    crate::repository::json::validate(std::str::from_utf8(&bytes)?)?;
     let manifest_data: Manifest = serde_json::from_slice(&bytes)?;
     if manifest_data.version != 1
         || manifest_data.pages.is_empty()
@@ -431,6 +435,7 @@ fn load(manifest: &Path) -> crate::Result<LoadedManifest> {
         resources.push((entry, content));
     }
     Ok(LoadedManifest {
+        display: manifest_data.display.into(),
         inputs,
         files: resources,
         phases: resources::PhaseLimits {
