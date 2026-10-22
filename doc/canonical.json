@@ -280,6 +280,14 @@
       "aliases": "doc/migration/aliases/25-source-archive.json",
       "route": "docs/spec/25-source-archive.html",
       "renderer": "nepl3-tools.markdown-annotated/4"
+    },
+    {
+      "id": "syntax-source-archive",
+      "source": "doc/spec/26-syntax-source-archive.nepld",
+      "projection": "doc/spec/26-syntax-source-archive.md",
+      "aliases": "doc/migration/aliases/26-syntax-source-archive.json",
+      "route": "docs/spec/26-syntax-source-archive.html",
+      "renderer": "nepl3-tools.markdown-annotated/4"
     }
   ],
   "files": [
