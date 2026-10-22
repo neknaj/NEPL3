@@ -328,6 +328,22 @@
       "aliases": "doc/migration/aliases/31-compact-markdown-pages.json",
       "route": "docs/spec/31-compact-markdown-pages.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "group-identity-without-transport",
+      "source": "doc/spec/32-group-identity-without-transport.nepld",
+      "projection": "doc/spec/32-group-identity-without-transport.md",
+      "aliases": "doc/migration/aliases/32-group-identity-without-transport.json",
+      "route": "docs/spec/32-group-identity-without-transport.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "doc-commitment-profile",
+      "source": "doc/spec/33-doc-commitment-profile.nepld",
+      "projection": "doc/spec/33-doc-commitment-profile.md",
+      "aliases": "doc/migration/aliases/33-doc-commitment-profile.json",
+      "route": "docs/spec/33-doc-commitment-profile.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
@@ -390,11 +406,6 @@
       "id": "acceptance-catalog-source",
       "source": "design/acceptance.json",
       "route": "sources/acceptance.json"
-    },
-    {
-      "id": "group-identity-without-transport-source",
-      "source": "doc/spec/32-group-identity-without-transport.md",
-      "route": "sources/32-group-identity-without-transport.md"
     }
   ],
   "output_limits": {

@@ -1,0 +1,76 @@
+article en "Group identity without transport"
+body
+  cons paragraph
+    cons "FoundationGroupCommitmentCodec is an optional capability separate from the archive codec."
+    cons " It returns a complete group commitment and ordered existing v2 entry commitments after depth-aware native and codec-registry validation."
+    cons " It produces no GroupArchive transport and has no default-success implementation."
+    nil
+  cons paragraph
+    cons sentence
+      cons text "The complete group digest uses domain "
+      cons code "NEPL3.Foreign.Group.v2\\0"
+      cons text " over exactly a three-element NDF List:"
+      nil
+    nil
+  cons list ordered 1
+    cons item none body cons paragraph
+      cons "The checked ForeignClosureGroup skeleton, with typed local source lists replaced by empty lists, retaining all other fields and table order."
+      nil nil
+    cons item none body cons paragraph
+      cons "A provenance-indexed List of membership-list sequences."
+      nil nil
+    cons item none body cons paragraph
+      cons "An entry-indexed List of child-first syntax membership-list sequences."
+      nil nil
+    nil
+  cons paragraph
+    cons "Every membership list contains the ordered SourceContent v2 commitments defined by the compact entry contract."
+    cons " Empty sets and component boundaries are preserved."
+    cons " Source commitments include the full Foundation SchemaRef, SourceRef, URI and text."
+    cons " Unused local declarations remain included."
+    cons " Native-invalid unreferenced provenance or environment rows are not admitted."
+    cons " Complete group identity intentionally binds table order and owner/provenance references; per-entry v2 identities retain their existing valid-remapping invariance."
+    nil
+  cons paragraph
+    cons "The operation preserves native occurrence depths/current outer depth, independent codec registry validation, replaced-source-field descriptor checks, skeleton structural validation, individual SourceContent checks and one cumulative admission ledger."
+    cons " Missing local declarations and conflicting snapshots reject."
+    cons " It charges actual Work, allocations, retained commitments and digest output."
+    cons " It does not charge or allocate nonexistent serialized skeleton/GroupArchive buffers."
+    cons " Existing archive APIs, transport bytes, identity domains and resource charges remain unchanged."
+    nil
+  cons paragraph
+    cons "Returned digests are data, not native validation proofs."
+    cons " A consuming Doc/PageSet profile must bind its remaining fields separately and explicitly select new identity domains."
+    cons " This capability alone establishes no rendering or historical-corpus success."
+    nil
+  cons paragraph
+    cons sentence
+      cons text "Identity-only document consumption is specified in "
+      cons link relative "33-doc-commitment-profile.md" none text "Doc commitment profile"
+      cons text "."
+      nil
+    nil
+  cons paragraph
+    cons "Identity-only capture does not build the archive union or SourceRef membership storage."
+    cons " It orders each local declaration set once, explicitly admits each source, and retains the same exact SourceSnapshot/digest cache and ordered commitment memberships."
+    cons " Archive capture keeps its existing union/membership behavior."
+    cons " Removing unused transport bookkeeping does not alter either identity preimage or skip source equality, descriptor, native validation or admission checks."
+    nil
+  cons paragraph
+    cons "Identity-only source digest lookup may use a next-index hint local to one canonically ordered source list."
+    cons " Every hit still compares the full identity and checks exact snapshot equality."
+    cons " Gaps fall back to bounded binary search; the hint is reset for each local list."
+    cons " Admission, duplicate rejection, miss-path schema validation and digest framing remain mandatory."
+    cons " Archive lookup is unchanged."
+    nil
+  cons paragraph
+    cons "On pointer-atomic targets, identity-only capture may retain one owned local source sequence and its canonical index permutation."
+    cons " Exact immutable-storage prefix matches permit sorting only newly appended declarations and merging the two orders."
+    cons " The merge rejects equal SourceId/revision across the boundary, regardless of digest."
+    cons " Shrinking or unrelated sequences use the ordinary complete ordering path."
+    cons " Independent snapshots never require a text comparison merely to reuse an order."
+    cons " Returned references always point to the current local input; every source still undergoes admission and exact digest-cache validation."
+    cons " Retained snapshots, indices, comparisons and output references are budgeted, and failed preparation leaves prior ordering metadata intact."
+    cons " Other targets keep ordinary ordering."
+    nil
+  nil
