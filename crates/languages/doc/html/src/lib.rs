@@ -10,6 +10,7 @@ pub mod pages;
 pub mod portable;
 mod prepare;
 pub mod schema;
+pub mod visibility;
 use alloc::{string::String, vec::Vec};
 use nepl3_core::{budget::StopReason, source::Digest};
 use nepl3_markup::html::{HtmlError, HtmlRequest};

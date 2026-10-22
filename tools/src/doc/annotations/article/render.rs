@@ -1,5 +1,5 @@
-//! Typed Sentence insertion for the all-variant, asset-free Article display
-//! subset. This host does not infer visibility for Single mode or image alt.
+//! Typed Sentence insertion for asset-free Article display. Namespace adoption
+//! remains all-occurrence; Single filters actual insertion, never image-alt projection.
 use super::{
     Selection,
     namespace::{self, MemberOrigin, SentenceOccurrenceId},
@@ -20,7 +20,7 @@ use nepl3_suite::adapters::sentence::{document_guests::OwnerId, html};
 #[derive(Debug)]
 pub enum Error<E, F> {
     Stopped(StopReason),
-    SingleMode,
+    Visibility(nepl3_doc_html::visibility::Error),
     Selection,
     Resolve(Box<namespace::Error<E>>),
     Document {
@@ -68,9 +68,9 @@ fn push<T>(items: &mut Vec<T>, value: T, b: &mut Budget) -> Result<(), StopReaso
     Ok(())
 }
 
-/// Render every structural Sentence occurrence in Rows/Columns mode. The shared
-/// display preparation rejects assets before any callback, so no image-alt
-/// occurrence or hidden variant can be confused with a visible placement.
+/// Adopt every structural Sentence occurrence, then render the selected display.
+/// Single uses the common Doc display inventory and retains original occurrence
+/// identities. Shared preparation still rejects assets before any callback.
 /// Other supported foreign kinds require the supplied explicit host adapter.
 pub fn render<'s, 'a, C: FoundationValueCodec, F>(
     input: &'s Selection<'a>,
@@ -80,9 +80,6 @@ pub fn render<'s, 'a, C: FoundationValueCodec, F>(
     b: &mut Budget,
 ) -> Result<Rendered<'s, 'a>, Error<C::Error, F>> {
     b.poll()?;
-    if matches!(options.parallel, ParallelMode::Single { .. }) {
-        return Err(Error::SingleMode);
-    }
     let mut adopted = Vec::new();
     for index in 0..input.sentences().len() {
         push(&mut adopted, SentenceOccurrenceId(index), b)?;
@@ -144,7 +141,7 @@ fn render_resolved<C: FoundationValueCodec, F>(
                 Err(reason) => Error::Stopped(reason),
             }
         })?;
-    let mut session = Session::new(input);
+    let mut session = Session::for_display(input, options, b)?;
     let mut adapter = |view: &DocEmbedView<'_>, embed: EmbedRef, b: &mut Budget| {
         session.render_guest(&prepared, members, host, other, view, embed, b)
     };
@@ -169,6 +166,7 @@ fn render_resolved<C: FoundationValueCodec, F>(
 pub(crate) struct Session<'s, 'a> {
     input: &'s Selection<'a>,
     next_sentence: usize,
+    selected: Option<Vec<SentenceOccurrenceId>>,
     next_member: u64,
     placement: usize,
     records: Vec<SentenceRecord>,
@@ -178,10 +176,65 @@ impl<'s, 'a> Session<'s, 'a> {
         Self {
             input,
             next_sentence: 0,
+            selected: None,
             next_member: 1,
             placement: 0,
             records: Vec::new(),
         }
+    }
+    fn for_display<E, F>(
+        input: &'s Selection<'a>,
+        options: &RenderOptions,
+        b: &mut Budget,
+    ) -> Result<Self, Error<E, F>> {
+        let mut session = Self::new(input);
+        if !matches!(options.parallel, ParallelMode::Single { .. }) {
+            return Ok(session);
+        }
+        let shape = input
+            .document()
+            .value
+            .validate_shape(b)
+            .map_err(|error| match error {
+                nepl3_doc_core::check::ShapeError::Stopped(reason) => Error::Stopped(reason),
+                _ => Error::Selection,
+            })?;
+        let visible = nepl3_doc_html::visibility::sentence_occurrences(&shape, options, b)
+            .map_err(|error| match error {
+                nepl3_doc_html::visibility::Error::Stopped(reason) => Error::Stopped(reason),
+                error => Error::Visibility(error),
+            })?;
+        let mut selected = Vec::new();
+        let mut next = 0;
+        for (index, sentence) in input.sentences().iter().enumerate() {
+            b.charge(Resource::Work, 1)?;
+            let Some(wanted) = visible.get(next) else {
+                break;
+            };
+            if wanted.structural_index == sentence.occurrence as u64 {
+                let original = input
+                    .structure()
+                    .get(sentence.occurrence)
+                    .ok_or(Error::Selection)?;
+                let owner = input
+                    .owners()
+                    .get(sentence.owner.0)
+                    .ok_or(Error::Selection)?;
+                if wanted.node != original.node
+                    || wanted.depth != original.depth
+                    || wanted.syntax != owner.embed()
+                {
+                    return Err(Error::Selection);
+                }
+                push(&mut selected, SentenceOccurrenceId(index), b)?;
+                next += 1;
+            }
+        }
+        if next != visible.len() {
+            return Err(Error::Selection);
+        }
+        session.selected = Some(selected);
+        Ok(session)
     }
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn render_guest<C: FoundationValueCodec, F>(
@@ -204,11 +257,14 @@ impl<'s, 'a> Session<'s, 'a> {
         if view.kind != EmbedKind::Sentence {
             return other(view, embed, host.codec, b).map_err(Error::Adapter);
         }
-        let occurrence = SentenceOccurrenceId(self.next_sentence);
+        let occurrence = match &self.selected {
+            Some(selected) => *selected.get(self.next_sentence).ok_or(Error::Selection)?,
+            None => SentenceOccurrenceId(self.next_sentence),
+        };
         let selected = self
             .input
             .sentences()
-            .get(self.next_sentence)
+            .get(occurrence.0)
             .ok_or(Error::Selection)?;
         let owner = self
             .input
@@ -217,6 +273,17 @@ impl<'s, 'a> Session<'s, 'a> {
             .ok_or(Error::Selection)?;
         if owner.embed() != embed {
             return Err(Error::Selection);
+        }
+        if self.selected.is_some() {
+            while let Some((origin, _)) = members.guest(MemberId(self.next_member)) {
+                b.charge(Resource::Work, 1)?;
+                if matches!(origin,MemberOrigin::SentenceInline{sentence,..} if sentence.0<occurrence.0)
+                {
+                    self.next_member += 1;
+                } else {
+                    break;
+                }
+            }
         }
         let registry = host.registry;
         let surface = host.surface;
@@ -307,8 +374,12 @@ impl<'s, 'a> Session<'s, 'a> {
         ),
         Error<E, F>,
     > {
-        if self.next_sentence != self.input.sentences().len()
-            || members.guest(MemberId(self.next_member)).is_some()
+        if self.next_sentence
+            != self
+                .selected
+                .as_ref()
+                .map_or(self.input.sentences().len(), Vec::len)
+            || (self.selected.is_none() && members.guest(MemberId(self.next_member)).is_some())
             || self.placement != rendered.foreign.len()
         {
             return Err(Error::Selection);
