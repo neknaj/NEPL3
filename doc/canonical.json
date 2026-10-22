@@ -272,6 +272,14 @@
       "aliases": "doc/decisions/0003-web-tea-doc-migration.aliases.json",
       "route": "docs/decisions/0003-web-tea-doc-migration.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "source-archive",
+      "source": "doc/spec/25-source-archive.nepld",
+      "projection": "doc/spec/25-source-archive.md",
+      "aliases": "doc/migration/aliases/25-source-archive.json",
+      "route": "docs/spec/25-source-archive.html",
+      "renderer": "nepl3-tools.markdown-annotated/4"
     }
   ],
   "files": [

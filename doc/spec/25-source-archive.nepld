@@ -1,0 +1,63 @@
+article en "Source-set archive v1"
+body
+  cons paragraph
+    cons sentence
+      cons text "This opt-in boundary uses package "
+      cons code "nepl3.source-archive"
+      cons text ", revision 1, root "
+      cons code "SourceSets"
+      cons text "."
+      nil
+    cons sentence
+      cons text " Its structural contract is "
+      cons code "interfaces/source-archive.json"
+      cons text " and "
+      cons code "nepl3_core::schema::archive::descriptor"
+      cons text "."
+      nil
+    cons sentence
+      cons text " It requires the registered foundation revision 1 schema for "
+      cons code "SourceContent"
+      cons text " and "
+      cons code "SourceRef"
+      cons text "."
+      nil
+    cons " The caller supplies both exact schema references and a finalized registry."
+    cons " Unknown versions or schema identities are rejected by the checked boundary."
+    nil
+  cons paragraph
+    cons "The first field is a canonical source table, ordered by complete source identity."
+    cons " A source ID and revision appear at most once, including entries with different content or URI."
+    cons " Actual content digests and locators are checked on import."
+    cons " The second field is an ordered list of local source sets."
+    cons sentence
+      cons text " Each set contains ordered, unique "
+      cons code "SourceRef"
+      cons text " memberships."
+      nil
+    cons " Set order is meaningful and is preserved."
+    cons " An empty set declares no source."
+    cons " A missing membership cannot be recovered from another set or the operation's admission ledger."
+    cons " Every table entry must be used by at least one set; unused entries are rejected."
+    cons " The encoder requires canonical input rather than silently sorting membership lists."
+    nil
+  cons paragraph
+    cons "Decode constructs checked snapshots once from the table."
+    cons " It resolves each set by metered native cloning, sharing immutable text on pointer-atomic targets and charging actual owned copies on other targets."
+    cons " It does not expand a separate NDF Text for every membership."
+    cons " Failed resolution does not mark partial membership as used."
+    cons " Limits and cancellation remain sticky; no partial archive result is returned."
+    cons " The admission ledger retains its normal monotonic failure semantics."
+    nil
+  cons paragraph
+    cons "This format archives source sets only."
+    cons " It does not rewrite SyntaxBundle, ForeignClosureGroup, token payloads, view bundles or arbitrary TypedValue records."
+    cons " Receiving graph adapters must validate syntax, origins and mappings against each local set."
+    cons " Legacy source/syntax decoders do not accept SourceSets records."
+    cons " Existing v1 semantic identity domains and default Doc conversion remain unchanged."
+    nil
+  cons paragraph
+    cons "Full syntax transport, typed nested payload coverage and real-data Work recovery remain separate unfinished stages."
+    cons " A smaller source-set archive is not evidence that the default 4-billion-Work Doc conversion succeeds."
+    nil
+  nil
