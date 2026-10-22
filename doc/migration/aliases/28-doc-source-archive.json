@@ -1,0 +1,6 @@
+[
+  { "section": null, "name": "explicit-doc-source-archive-v1" },
+  { "section": "encoding", "name": "encoding" },
+  { "section": "decoding", "name": "decoding" },
+  { "section": "resource", "name": "resource-and-acceptance-scope" }
+]
