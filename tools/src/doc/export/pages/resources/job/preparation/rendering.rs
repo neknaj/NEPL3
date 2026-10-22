@@ -7,7 +7,7 @@ use crate::doc::export::{
     pages::{self, render},
 };
 use nepl3_doc_core::pages::{PageDocument, PageRegistration, PageSet};
-use nepl3_doc_html::{ParallelMode, RenderOptions, pages::PagesHtmlRequest};
+use nepl3_doc_html::pages::PagesHtmlRequest;
 
 struct RenderData<'a> {
     compiled: &'a Compiled,
@@ -86,8 +86,23 @@ impl<'a> PreparedPages<'a> {
         output: OperationLimits,
         renderer: MathRenderer,
     ) -> Result<RenderJob<'a>, Box<RenderFailure>> {
+        self.into_render_with_display(
+            output,
+            pages::DisplayOptions {
+                math_renderer: renderer,
+                ..Default::default()
+            },
+        )
+    }
+    /// Freeze display selection together with the renderer for every retry.
+    /// Resuming a paused render can change allowance, never the owned request.
+    pub fn into_render_with_display(
+        self,
+        output: OperationLimits,
+        options: pages::DisplayOptions,
+    ) -> Result<RenderJob<'a>, Box<RenderFailure>> {
         let Self { mut data, account } = self;
-        match build(&mut data, account.usage(), output, renderer) {
+        match build(&mut data, account.usage(), output, options) {
             Ok(data) => Ok(RenderJob { data, account }),
             Err(error) => Err(Box::new(RenderFailure {
                 error,
@@ -102,7 +117,7 @@ fn build<'a>(
     data: &mut Data<'a>,
     usage: Usage,
     output: OperationLimits,
-    renderer: MathRenderer,
+    options: pages::DisplayOptions,
 ) -> Result<RenderData<'a>, String> {
     let mut documents = Vec::new();
     let mut code = Vec::new();
@@ -156,16 +171,14 @@ fn build<'a>(
                 pages: documents,
                 files: Vec::new(),
             },
-            options: RenderOptions {
-                parallel: ParallelMode::Rows,
-            },
+            options: options.document,
         },
         code,
         origins,
         evidence,
         preparation: std::mem::take(&mut data.attempts),
         renders: Vec::new(),
-        renderer,
+        renderer: options.math_renderer,
         output,
     })
 }
