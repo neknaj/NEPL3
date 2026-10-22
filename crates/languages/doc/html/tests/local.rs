@@ -778,3 +778,6 @@ fn unselected_parallel_still_requires_image_asset() -> Result<(), String> {
     ));
     Ok(())
 }
+
+#[path = "local/pages_namespace.rs"]
+mod pages_namespace;

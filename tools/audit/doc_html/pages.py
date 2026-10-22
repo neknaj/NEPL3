@@ -1,4 +1,4 @@
-"""Check actual multi-page Code output, links and responsive themes in CI."""
+"""Check actual multi-page Code and typed Sentence output, links and responsive themes in CI."""
 from pathlib import Path
 import json
 import re
@@ -13,8 +13,9 @@ GUESTS = [
 SOURCE = ('article en "Code page" body '
           + ''.join('cons paragraph cons code Doc ' + guest + ' nil\n' for guest in GUESTS)
           + 'cons paragraph cons sentence cons math Math frac 1 2 nil nil cons display Math frac 3 4 '
+          + 'cons paragraph cons Sentence sentence cons document anchor back text "Typed back" cons math frac 5 6 nil nil '
           + 'cons paragraph cons sentence cons link page "target" some "target" text "Target" nil nil nil')
-TARGET = 'article en "Target" body cons section target "Target section" body cons paragraph cons sentence cons link page "code" none text "Back" nil nil nil nil'
+TARGET = 'article en Sentence "Target [漢/かん]" body cons paragraph cons Sentence sentence cons document anchor target text "Target section" cons document link page "code" some "back" text "Back" nil nil nil'
 
 
 def block_network(route: Route) -> None:
@@ -54,7 +55,7 @@ def main() -> None:
                             for index, expected in enumerate(GUESTS):
                                 if blocks.nth(index).text_content() != expected:
                                     raise AssertionError(('Source changed', index))
-                            if page.locator('math[display="inline"]').count() != 1 or page.locator('math[display="block"]').count() != 1:
+                            if page.locator('math[display="inline"]').count() != 2 or page.locator('math[display="block"]').count() != 1:
                                 raise AssertionError('Missing page Math')
                             for math in page.locator('math').all():
                                 box = math.bounding_box()
@@ -78,8 +79,11 @@ def main() -> None:
                             # settles. Retry the real DOM assertion, never skip it.
                             expect(page.locator(':target')).to_have_count(1)
                             expect(page.locator(':target')).to_have_attribute('id', 'n-746172676574')
+                            expect(page.locator('.nepl-ruby')).to_have_count(1)
+                            expect(page.locator('.nepl-ruby .nepl-reading')).to_have_text('かん')
                             page.get_by_role('link', name='Back', exact=True).click()
-                            expect(page).to_have_url((output / 'code/index.html').as_uri())
+                            expect(page).to_have_url((output / 'code/index.html').as_uri() + '#n-6261636b')
+                            expect(page.locator(':target')).to_have_attribute('id', 'n-6261636b')
                             expect(page.locator('pre > code')).to_have_count(len(GUESTS))
                             results.append({'engine': implementation.name, 'theme': theme,
                                             'width': width, 'result': 'passed'})

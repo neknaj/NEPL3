@@ -7,6 +7,7 @@ pub(crate) mod aliases;
 mod code;
 pub mod interactive;
 mod render;
+mod sentence;
 use serde::Deserialize;
 use std::{collections::BTreeMap, io::Write};
 pub mod resources;
@@ -57,6 +58,8 @@ pub struct GeneratedPages {
     pub provenance: Option<DisplayProvenance>,
 }
 pub struct DisplayProvenance {
+    pub sentence_sources: Vec<super::super::annotations::article::SelectionParts>,
+    pub sentences: Vec<Vec<super::super::annotations::article::render::SentenceRecord>>,
     pub pages: PageSet,
     pub math: Vec<Vec<super::math::Occurrence>>,
     pub math_generation: Vec<Vec<super::math::generation::Occurrence>>,

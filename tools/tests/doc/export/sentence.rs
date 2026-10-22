@@ -74,8 +74,8 @@ fn sentence_export_retains_actual_math_roots_and_nested_owners() -> Result<(), S
 }
 
 #[test]
-fn repeated_sentence_formulas_keep_distinct_owner_paths_and_page_support_stays_explicit()
--> Result<(), String> {
+fn repeated_sentence_formulas_keep_distinct_owner_paths_in_article_and_pages() -> Result<(), String>
+{
     let compiled = compiled()?;
     let source = r#"article en Sentence "Title" body cons paragraph cons Sentence sentence cons math frac 1 2 nil cons Sentence sentence cons math frac 1 2 nil nil nil"#;
     let result = export::generate_with_renderer(
@@ -108,9 +108,12 @@ fn repeated_sentence_formulas_keep_distinct_owner_paths_and_page_support_stays_e
         },
         source.into(),
     )];
-    assert!(
-        export::pages::generate(&compiled, &pages).is_err(),
-        "standalone typed Article support does not silently replace PageSet namespace routing"
+    let generated = export::pages::generate(&compiled, &pages)?;
+    let provenance = generated.provenance.ok_or("Page provenance")?;
+    assert_eq!(provenance.math_generation[0].len(), 2);
+    assert_ne!(
+        provenance.math_generation[0][0].owner,
+        provenance.math_generation[0][1].owner
     );
     Ok(())
 }

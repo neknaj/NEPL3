@@ -16,7 +16,7 @@ use nepl3_doc_core::{
 };
 use nepl3_markup::html::{HtmlAttribute, HtmlHref, HtmlNode};
 
-mod anchors;
+pub(crate) mod anchors;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PagesHtmlRequest {

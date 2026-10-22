@@ -305,3 +305,80 @@ fn conversion_failure_retains_preparation_evidence() -> Result<(), String> {
     assert_eq!(failure.usage, total(&failure.preparation, &failure.renders));
     Ok(())
 }
+
+#[test]
+fn typed_sentence_pages_resume_without_reparsing_and_keep_nested_records() -> Result<(), String> {
+    let compiled = compiled()?;
+    let fixture = || {
+        let mut input = inputs();
+        input[0].1=r#"article en Sentence "One" body cons paragraph cons Sentence sentence cons math frac 1 2 cons document link page "two" some "target" text "next" nil nil nil"#.into();
+        input[1].1=r#"article en "Two" body cons section target "Target" body cons paragraph cons "Content." nil nil nil"#.into();
+        input
+    };
+    let Progress::Prepared(baseline_ready) = Preparation::new(
+        &compiled,
+        fixture(),
+        budget().limits(),
+        PreparationLimits::default(),
+    )?
+    .run() else {
+        return Err("baseline preparation".into());
+    };
+    let RenderProgress::Complete(baseline) = baseline_ready
+        .into_render(OperationLimits::default(), MathRenderer::MathMLOnly)
+        .map_err(|e| e.error)?
+        .run()
+    else {
+        return Err("baseline output".into());
+    };
+    let late_work = baseline.renders[0]
+        .usage
+        .work
+        .checked_sub(1)
+        .ok_or("baseline work")?;
+    let Progress::Prepared(ready) = Preparation::new(
+        &compiled,
+        fixture(),
+        budget().limits(),
+        PreparationLimits::default(),
+    )?
+    .run() else {
+        return Err("typed preparation".into());
+    };
+    let RenderProgress::Paused { job, .. } = ready
+        .into_render(
+            OperationLimits {
+                work: late_work,
+                ..OperationLimits::default()
+            },
+            MathRenderer::MathMLOnly,
+        )
+        .map_err(|e| e.error)?
+        .run()
+    else {
+        return Err("expected output pause".into());
+    };
+    assert_eq!(job.reason(), StopReason::WorkLimit);
+    assert_eq!(job.attempts()[0].usage.work, late_work);
+    assert_eq!(job.preparation().len(), 2);
+    let earlier = job.usage();
+    let RenderProgress::Complete(done) = job
+        .resume(budget().limits(), OperationLimits::default())
+        .map_err(|_| "resume")?
+        .run()
+    else {
+        return Err("typed render".into());
+    };
+    assert_eq!(done.preparation.len(), 2);
+    assert_eq!(done.renders.len(), 2);
+    assert!(done.usage.work > earlier.work);
+    assert_eq!(done.usage, total(&done.preparation, &done.renders));
+    let expected = pages::generate_with_renderer(&compiled, &fixture(), MathRenderer::MathMLOnly)?;
+    assert_eq!(done.generated.files, baseline.generated.files);
+    assert_eq!(done.generated.files, expected.files);
+    let provenance = done.generated.provenance.ok_or("typed provenance")?;
+    assert_eq!(provenance.math_generation[0].len(), 1);
+    assert!(!provenance.sentences[0].is_empty());
+    assert!(provenance.sentences[1].is_empty());
+    Ok(())
+}
