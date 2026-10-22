@@ -12,6 +12,7 @@ use nepl3_doc_core::labels::namespace::{CheckedNamespace, MemberId};
 use nepl3_markup::html::*;
 
 pub mod display;
+pub mod pages;
 
 pub struct PreparedNamespace<'a> {
     members: Vec<prepare::PreparedRendering<'a>>,

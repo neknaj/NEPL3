@@ -3,7 +3,7 @@
 use super::*;
 use nepl3_doc_core::model::{DocEmbedView, DocRoot, EmbedRef};
 
-pub struct PreparedDisplayNamespace<'a>(PreparedNamespace<'a>);
+pub struct PreparedDisplayNamespace<'a>(pub(super) PreparedNamespace<'a>);
 
 /// Admit the same safe external URIs and explicit foreign kinds as Article
 /// display rendering. Page/relative links, assets and unsupported guests remain

@@ -38,6 +38,10 @@ mod math;
 mod mixed;
 #[path = "doc/pages.rs"]
 mod pages;
+#[path = "doc/pages_boundary.rs"]
+mod pages_boundary;
+#[path = "doc/pages_sentence.rs"]
+mod pages_sentence;
 #[path = "doc/phases.rs"]
 mod phases;
 #[path = "doc/prepare.rs"]

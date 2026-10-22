@@ -5,13 +5,13 @@ use nepl3_markup::html::{HtmlAttribute, HtmlNode};
 
 /// IDs borrowed from the final selected output. This is an operation-local
 /// lookup table, not a validation proof or a cache across document revisions.
-pub(super) struct OutputAnchors<'a>(Vec<&'a str>);
+pub(crate) struct OutputAnchors<'a>(Vec<&'a str>);
 
 #[cfg(test)]
 mod tests;
 
 impl<'a> OutputAnchors<'a> {
-    pub(super) fn collect(nodes: &'a [HtmlNode], b: &mut Budget) -> Result<Self, StopReason> {
+    pub(crate) fn collect(nodes: &'a [HtmlNode], b: &mut Budget) -> Result<Self, StopReason> {
         b.poll()?;
         let mut ids = Vec::new();
         for node in nodes {
@@ -28,7 +28,7 @@ impl<'a> OutputAnchors<'a> {
         Ok(Self(ids))
     }
 
-    pub(super) fn contains(&self, id: &str, b: &mut Budget) -> Result<bool, StopReason> {
+    pub(crate) fn contains(&self, id: &str, b: &mut Budget) -> Result<bool, StopReason> {
         b.poll()?;
         for value in &self.0 {
             b.charge(Resource::Work, (id.len() + value.len()) as u64 + 1)?;

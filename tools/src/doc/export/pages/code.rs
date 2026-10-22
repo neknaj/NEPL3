@@ -76,6 +76,21 @@ impl PreparedPageCode {
         registry: &SchemaRegistry,
         b: &mut Budget,
     ) -> Result<HtmlRequest, String> {
+        let store = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(registry, &store, &mut admission).map_err(err)?;
+        self.render_with_codec(embed, index, &mut codec, b)
+    }
+    pub(super) fn render_with_codec<C: FoundationValueCodec>(
+        &self,
+        embed: &DocEmbedView<'_>,
+        index: EmbedRef,
+        codec: &mut C,
+        b: &mut Budget,
+    ) -> Result<HtmlRequest, String>
+    where
+        C::Error: std::fmt::Debug,
+    {
         b.poll().map_err(err)?;
         if embed.kind != EmbedKind::Code {
             return Err("CodeKind".into());
@@ -89,7 +104,11 @@ impl PreparedPageCode {
             }
         }
         let entry = selected.ok_or("CodeInputMissing")?;
-        if entry.digest != digest(embed, registry, b)? {
+        let value = codec.encode_foreign_view(&embed.closure, b).map_err(err)?;
+        let actual = codec
+            .canonical_value_digest(b"NEPL3.Doc.Host.CodeInput.v1\0", &value, b)
+            .map_err(err)?;
+        if entry.digest != actual {
             return Err("CodeInputMismatch".into());
         }
         // Shared embeds may appear more than once. Precharge the exact owned
@@ -201,6 +220,21 @@ mod tests {
         }
         let (document, prepared) = &cases[0];
         let embed = document.value.embeds.get(0).ok_or("embed missing")?;
+        let store = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(&compiled.doc.registry, &store, &mut admission).map_err(err)?;
+        let mut shared = budget();
+        codec
+            .encode_foreign_view(&embed.closure, &mut shared)
+            .map_err(err)?;
+        let admitted = shared.usage().source_bytes;
+        prepared.render_with_codec(&embed, EmbedRef(0), &mut codec, &mut shared)?;
+        assert_eq!(
+            shared.usage().source_bytes,
+            admitted,
+            "display reuses this operation's actual admission ledger"
+        );
         let foreign = cases[1]
             .0
             .value

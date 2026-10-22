@@ -16,6 +16,8 @@ pub(super) struct Context<'a> {
     pub aliases: &'a [aliases::PageAliases],
 }
 pub(super) struct RenderedOutput {
+    sentence_sources: Vec<super::super::super::annotations::article::SelectionParts>,
+    sentences: Vec<Vec<super::super::super::annotations::article::render::SentenceRecord>>,
     files: BTreeMap<String, Vec<u8>>,
     manifest: String,
     math: Vec<Vec<super::super::math::Occurrence>>,
@@ -32,6 +34,8 @@ impl RenderedOutput {
             files: self.files,
             manifest: self.manifest,
             provenance: Some(DisplayProvenance {
+                sentence_sources: self.sentence_sources,
+                sentences: self.sentences,
                 pages: request.set,
                 math: self.math,
                 math_generation: self.math_generation,
@@ -76,31 +80,62 @@ pub(super) fn render(
         })?;
         page_math.push(Vec::new());
     }
-    let displayed = render_pages_with_display(
-        request,
-        r,
-        &mut c,
-        output_budget,
-        &mut |page, embed, index, codec, b| {
-            let code = usize::try_from(page)
-                .ok()
-                .and_then(|page| page_code.get(page))
-                .ok_or("CodePageMissing")?;
-            if embed.kind == nepl3_doc_core::model::EmbedKind::Code {
-                code.render(embed, index, r, b)
-            } else {
-                let records = page_math.get_mut(page as usize).ok_or("MathPageMissing")?;
-                super::super::math::DisplayHost {
-                    compiled,
-                    registry: r,
-                    codec,
-                    preference: renderer,
+    let mut has_sentence = false;
+    for page in &request.set.pages {
+        output_budget
+            .charge(
+                nepl3_core::budget::Resource::Work,
+                page.document.value.embeds.kinds.len() as u64,
+            )
+            .map_err(err)?;
+        has_sentence |= page
+            .document
+            .value
+            .embeds
+            .kinds
+            .contains(&nepl3_doc_core::model::EmbedKind::Sentence);
+    }
+    let mut sentence_sources = Vec::new();
+    let mut sentences = Vec::new();
+    let displayed = if has_sentence {
+        let output = sentence::render(
+            compiled,
+            request,
+            page_code,
+            &mut page_math,
+            renderer,
+            output_budget,
+        )?;
+        sentence_sources = output.sources;
+        sentences = output.records;
+        output.displayed
+    } else {
+        render_pages_with_display(
+            request,
+            r,
+            &mut c,
+            output_budget,
+            &mut |page, embed, index, codec, b| {
+                let code = usize::try_from(page)
+                    .ok()
+                    .and_then(|page| page_code.get(page))
+                    .ok_or("CodePageMissing")?;
+                if embed.kind == nepl3_doc_core::model::EmbedKind::Code {
+                    code.render(embed, index, r, b)
+                } else {
+                    let records = page_math.get_mut(page as usize).ok_or("MathPageMissing")?;
+                    super::super::math::DisplayHost {
+                        compiled,
+                        registry: r,
+                        codec,
+                        preference: renderer,
+                    }
+                    .render(embed, index, records, b)
                 }
-                .render(embed, index, records, b)
-            }
-        },
-    )
-    .map_err(|e| format!("resolve/render: {e:?}; usage={:?}", output_budget.usage()))?;
+            },
+        )
+        .map_err(|e| format!("resolve/render: {e:?}; usage={:?}", output_budget.usage()))?
+    };
     for ((records, placements), page) in page_math
         .iter_mut()
         .zip(&displayed.foreign)
@@ -114,9 +149,13 @@ pub(super) fn render(
         )?;
     }
     let mut page_generation = Vec::new();
-    for records in &page_math {
-        let generated =
-            super::super::math::generation::collect(records, &[], renderer, output_budget)?;
+    for (page, records) in page_math.iter().enumerate() {
+        let generated = super::super::math::generation::collect(
+            records,
+            sentences.get(page).map(Vec::as_slice).unwrap_or(&[]),
+            renderer,
+            output_budget,
+        )?;
         output_budget
             .charge(
                 nepl3_core::budget::Resource::AllocationUnits,
@@ -295,14 +334,17 @@ pub(super) fn render(
         "output_budget":{"contract":"nepl3.local-doc-pages.execution/2","limits":resources::limits(output_budget.limits()),
             "initial_usage":resources::usage(initial_usage),"usage":resources::usage(output_budget.usage())},
         "registered_files":file_origins,
-        "renderer":"nepl3-doc-html pages/4","options":{"parallel":"Rows","math_renderer":renderer.as_str()},
+        "renderer":if has_sentence {"nepl3-doc-html sentence-pages/1"} else {"nepl3-doc-html pages/4"},"options":{"parallel":"Rows","math_renderer":renderer.as_str()},
         "katex":katex_pages,
         "math_diagnostics":page_generation.iter().map(|records| super::super::math::diagnostics(records)).collect::<Vec<_>>(),"viewer_scripts":false,
-        "packages":"compiled checked bootstrap fixtures","scope":"Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Retained Code uses shared syntax-only highlighting without guest evaluation; Math uses independent MathML with explicit renderer fallback diagnostics; assets and other foreign kinds remain unsupported. Not Pages deployment evidence.",
+        "packages":"compiled checked bootstrap fixtures","scope":if has_sentence {"Native all-occurrence typed Sentence namespaces with per-page retained owners, cross-page emitted-anchor checks and nested Math records. Rows/Columns only; no Single/image-alt/asset selection or portable namespace proof. Code remains syntax-only; output does not prove network availability or deployment."} else {"Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Retained Code uses shared syntax-only highlighting without guest evaluation; Math uses independent MathML with explicit renderer fallback diagnostics; assets and other foreign kinds remain unsupported. Not Pages deployment evidence."},
+        "identity_contract":if has_sentence {"nepl3.local-doc-pages.sentence-input/1 plus parallel mode"} else {"legacy Doc PageSet"},
         "budget_scope":"Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
         "output_usage":{"work":output_budget.usage().work,"allocation_units":output_budget.usage().allocation_units,"output_bytes":output_budget.usage().output_bytes}
     })).map_err(err)? + "\n";
     Ok(RenderedOutput {
+        sentence_sources,
+        sentences,
         files,
         manifest,
         math: page_math,

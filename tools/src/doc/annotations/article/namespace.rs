@@ -93,6 +93,7 @@ struct Guest {
 }
 /// Operation-local access to retained guest owners. The checked namespace
 /// separately exposes every member's exact immutable document.
+#[derive(Clone, Copy)]
 pub struct Members<'a> {
     guests: &'a [Guest],
 }
@@ -121,8 +122,40 @@ pub struct Resolution<'s, 'a> {
     guests: Vec<Guest>,
     definitions: Vec<Site>,
     references: Vec<Reference>,
+    definition_order: Vec<labels::DefinitionIndex>,
+    reference_order: Vec<labels::ReferenceIndex>,
 }
 impl<'s, 'a> Resolution<'s, 'a> {
+    pub(crate) fn members(&self) -> Members<'_> {
+        Members {
+            guests: &self.guests,
+        }
+    }
+    pub(crate) fn orders(&self) -> (&[labels::DefinitionIndex], &[labels::ReferenceIndex]) {
+        (&self.definition_order, &self.reference_order)
+    }
+    /// Reinspect immutable member documents within the same owning host operation.
+    /// The caller must first resolve owner selection with that operation's Budget.
+    pub(crate) fn inspect_members<C: FoundationValueCodec>(
+        &self,
+        host: &mut SentenceAnnotationRenderer<'_, C>,
+        b: &mut Budget,
+    ) -> Result<Vec<labels::Member<'_>>, Error<C::Error>> {
+        let mut members = Vec::new();
+        push(
+            &mut members,
+            inspect(self.input.document(), MemberOrigin::Article, host, b)?,
+            b,
+        )?;
+        for guest in &self.guests {
+            push(
+                &mut members,
+                inspect(&guest.selected.document, guest.origin, host, b)?,
+                b,
+            )?;
+        }
+        Ok(members)
+    }
     pub fn input(&self) -> &'s Selection<'a> {
         self.input
     }
@@ -492,6 +525,8 @@ fn resolve_inner<'s, 'a, C: FoundationValueCodec, R, F>(
             guests,
             definitions: definition_sites,
             references: reference_sites,
+            definition_order: definitions,
+            reference_order: references,
         },
         output,
     ))

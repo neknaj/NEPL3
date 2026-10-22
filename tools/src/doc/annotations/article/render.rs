@@ -144,22 +144,74 @@ fn render_resolved<C: FoundationValueCodec, F>(
                 Err(reason) => Error::Stopped(reason),
             }
         })?;
-    let mut records = Vec::new();
-    let mut next_sentence = 0;
-    let mut next_member = 1;
-    let mut placement = 0;
+    let mut session = Session::new(input);
     let mut adapter = |view: &DocEmbedView<'_>, embed: EmbedRef, b: &mut Budget| {
-        let current_placement = placement;
-        placement += 1;
+        session.render_guest(&prepared, members, host, other, view, embed, b)
+    };
+    let rendered =
+        display::render_article(&prepared, MemberId(0), &mut adapter, b).map_err(|error| {
+            match error {
+                display::ArticleError::Member(_) | display::ArticleError::ExpectedArticle(_) => {
+                    Error::Selection
+                }
+                display::ArticleError::Render(nepl3_doc_html::ForeignRenderError::Render(
+                    error,
+                )) => Error::Render(error),
+                display::ArticleError::Render(nepl3_doc_html::ForeignRenderError::Foreign(
+                    error,
+                )) => error,
+            }
+        })?;
+    session.finish(rendered, members, b)
+}
+
+/// One page's occurrence state; retained owners remain borrowed from Selection.
+pub(crate) struct Session<'s, 'a> {
+    input: &'s Selection<'a>,
+    next_sentence: usize,
+    next_member: u64,
+    placement: usize,
+    records: Vec<SentenceRecord>,
+}
+impl<'s, 'a> Session<'s, 'a> {
+    pub(crate) fn new(input: &'s Selection<'a>) -> Self {
+        Self {
+            input,
+            next_sentence: 0,
+            next_member: 1,
+            placement: 0,
+            records: Vec::new(),
+        }
+    }
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn render_guest<C: FoundationValueCodec, F>(
+        &mut self,
+        prepared: &display::PreparedDisplayNamespace<'_>,
+        members: namespace::Members<'_>,
+        host: &mut SentenceAnnotationRenderer<'_, C>,
+        other: &mut impl FnMut(
+            &DocEmbedView<'_>,
+            EmbedRef,
+            &mut C,
+            &mut Budget,
+        ) -> Result<HtmlRequest, F>,
+        view: &DocEmbedView<'_>,
+        embed: EmbedRef,
+        b: &mut Budget,
+    ) -> Result<HtmlRequest, Error<C::Error, F>> {
+        let current_placement = self.placement;
+        self.placement += 1;
         if view.kind != EmbedKind::Sentence {
             return other(view, embed, host.codec, b).map_err(Error::Adapter);
         }
-        let occurrence = SentenceOccurrenceId(next_sentence);
-        let selected = input
+        let occurrence = SentenceOccurrenceId(self.next_sentence);
+        let selected = self
+            .input
             .sentences()
-            .get(next_sentence)
+            .get(self.next_sentence)
             .ok_or(Error::Selection)?;
-        let owner = input
+        let owner = self
+            .input
             .owners()
             .get(selected.owner.0)
             .ok_or(Error::Selection)?;
@@ -176,12 +228,12 @@ fn render_resolved<C: FoundationValueCodec, F>(
             registry,
             host.codec,
             &mut |closure, embed, codec, b| {
-                let candidate = members.guest(MemberId(next_member));
+                let candidate = members.guest(MemberId(self.next_member));
                 let (markup, record) = foreign::render(
                     closure,
                     embed,
-                    candidate.map(|(_, selected)| (selected, MemberId(next_member))),
-                    document::Preparation::Display(&prepared),
+                    candidate.map(|(_, selected)| (selected, MemberId(self.next_member))),
+                    document::Preparation::Display(prepared),
                     &mut SentenceAnnotationRenderer {
                         registry,
                         surface,
@@ -198,7 +250,7 @@ fn render_resolved<C: FoundationValueCodec, F>(
                     {
                         return Err(annotations::Error::Selection);
                     }
-                    next_member += 1;
+                    self.next_member += 1;
                 }
                 push(&mut foreign_records, record, b)?;
                 Ok::<_, annotations::Error<C::Error>>(markup)
@@ -215,7 +267,7 @@ fn render_resolved<C: FoundationValueCodec, F>(
                 Err(reason) => Error::Stopped(reason),
             }
         })?;
-        if matches!(members.guest(MemberId(next_member)),Some((MemberOrigin::SentenceInline{sentence,..},_)) if sentence==occurrence)
+        if matches!(members.guest(MemberId(self.next_member)),Some((MemberOrigin::SentenceInline{sentence,..},_)) if sentence==occurrence)
         {
             return Err(Error::Selection);
         }
@@ -230,7 +282,7 @@ fn render_resolved<C: FoundationValueCodec, F>(
             })?;
         }
         push(
-            &mut records,
+            &mut self.records,
             SentenceRecord {
                 occurrence,
                 owner: selected.owner,
@@ -240,58 +292,61 @@ fn render_resolved<C: FoundationValueCodec, F>(
             },
             b,
         )?;
-        next_sentence += 1;
+        self.next_sentence += 1;
         Ok(markup)
-    };
-    let rendered =
-        display::render_article(&prepared, MemberId(0), &mut adapter, b).map_err(|error| {
-            match error {
-                display::ArticleError::Member(_) | display::ArticleError::ExpectedArticle(_) => {
-                    Error::Selection
-                }
-                display::ArticleError::Render(nepl3_doc_html::ForeignRenderError::Render(
-                    error,
-                )) => Error::Render(error),
-                display::ArticleError::Render(nepl3_doc_html::ForeignRenderError::Foreign(
-                    error,
-                )) => error,
-            }
-        })?;
-    if next_sentence != input.sentences().len()
-        || members.guest(MemberId(next_member)).is_some()
-        || placement != rendered.foreign.len()
-    {
-        return Err(Error::Selection);
     }
-    for record in &mut records {
-        b.charge(Resource::Work, 1)?;
-        let placement = rendered
-            .foreign
-            .get(record.placement)
-            .ok_or(Error::Selection)?;
-        let owner = input.owners().get(record.owner.0).ok_or(Error::Selection)?;
-        if placement.embed != owner.embed() {
+    pub(crate) fn finish<E, F>(
+        mut self,
+        rendered: nepl3_doc_html::RenderedInlineWithForeign,
+        members: namespace::Members<'_>,
+        b: &mut Budget,
+    ) -> Result<
+        (
+            nepl3_doc_html::RenderedInlineWithForeign,
+            Vec<SentenceRecord>,
+        ),
+        Error<E, F>,
+    > {
+        if self.next_sentence != self.input.sentences().len()
+            || members.guest(MemberId(self.next_member)).is_some()
+            || self.placement != rendered.foreign.len()
+        {
             return Err(Error::Selection);
         }
-        let mut map = |element| {
-            if element >= placement.elements {
-                return Err(crate::doc::math::ProjectionError::Mapping(element));
-            }
-            placement
-                .first_element
-                .checked_add(element)
-                .ok_or(crate::doc::math::ProjectionError::Mapping(element))
-        };
-        for origin in &mut record.origins {
+        for record in &mut self.records {
             b.charge(Resource::Work, 1)?;
-            if origin.node >= owner.syntax().value.nodes.len() as u64 {
+            let placement = rendered
+                .foreign
+                .get(record.placement)
+                .ok_or(Error::Selection)?;
+            let owner = self
+                .input
+                .owners()
+                .get(record.owner.0)
+                .ok_or(Error::Selection)?;
+            if placement.embed != owner.embed() {
                 return Err(Error::Selection);
             }
-            origin.element = map(origin.element).map_err(Error::Projection)?;
+            let mut map = |element| {
+                if element >= placement.elements {
+                    return Err(crate::doc::math::ProjectionError::Mapping(element));
+                }
+                placement
+                    .first_element
+                    .checked_add(element)
+                    .ok_or(crate::doc::math::ProjectionError::Mapping(element))
+            };
+            for origin in &mut record.origins {
+                b.charge(Resource::Work, 1)?;
+                if origin.node >= owner.syntax().value.nodes.len() as u64 {
+                    return Err(Error::Selection);
+                }
+                origin.element = map(origin.element).map_err(Error::Projection)?;
+            }
+            for foreign in &mut record.foreign {
+                foreign.remap(&mut map, b).map_err(Error::Projection)?;
+            }
         }
-        for foreign in &mut record.foreign {
-            foreign.remap(&mut map, b).map_err(Error::Projection)?;
-        }
+        Ok((rendered, self.records))
     }
-    Ok((rendered, records))
 }
