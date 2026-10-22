@@ -60,7 +60,7 @@ fn namespace_pages_check_actual_code_output_and_callback_stops() -> Result<(), S
                 b,
             )
             .map_err(err)?;
-            for scenario in 0..5 {
+            for scenario in 0..7 {
                 let mut called = 0;
                 let result = routed::render(
                     &prepared,
@@ -107,6 +107,14 @@ fn namespace_pages_check_actual_code_output_and_callback_stops() -> Result<(), S
                                 });
                             }
                         }
+                        if scenario == 5 {
+                            b.cancel();
+                        }
+                        if scenario == 6 {
+                            let mut limits = b.limits();
+                            limits.work += 1;
+                            *b = Budget::new(limits);
+                        }
                         Ok(HtmlRequest {
                             slot: HtmlSlot::Phrasing,
                             policy: HtmlPolicy { classes: vec![] },
@@ -126,11 +134,22 @@ fn namespace_pages_check_actual_code_output_and_callback_stops() -> Result<(), S
                         result,
                         Err(routed::RenderError::Stopped(StopReason::Cancelled))
                     )),
-                    3 => assert!(matches!(result, Err(routed::RenderError::Document { .. }))),
+                    3 => assert!(matches!(
+                        result,
+                        Err(routed::RenderError::Document {
+                            error: nepl3_doc_html::RenderError::OutputDepth { .. },
+                            ..
+                        })
+                    )),
                     4 => assert!(matches!(
                         result,
                         Err(routed::RenderError::Destination { .. })
                     )),
+                    5 => assert!(matches!(
+                        result,
+                        Err(routed::RenderError::Stopped(StopReason::Cancelled))
+                    )),
+                    6 => assert!(matches!(result, Err(routed::RenderError::ScopeMismatch))),
                     _ => unreachable!(),
                 }
             }

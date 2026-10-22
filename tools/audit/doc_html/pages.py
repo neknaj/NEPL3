@@ -79,8 +79,8 @@ def main() -> None:
                             # settles. Retry the real DOM assertion, never skip it.
                             expect(page.locator(':target')).to_have_count(1)
                             expect(page.locator(':target')).to_have_attribute('id', 'n-746172676574')
-                            expect(page.locator('ruby')).to_have_count(1)
-                            expect(page.locator('ruby rt')).to_have_text('かん')
+                            expect(page.locator('.nepl-ruby')).to_have_count(1)
+                            expect(page.locator('.nepl-ruby .nepl-reading')).to_have_text('かん')
                             page.get_by_role('link', name='Back', exact=True).click()
                             expect(page).to_have_url((output / 'code/index.html').as_uri() + '#n-6261636b')
                             expect(page.locator(':target')).to_have_attribute('id', 'n-6261636b')

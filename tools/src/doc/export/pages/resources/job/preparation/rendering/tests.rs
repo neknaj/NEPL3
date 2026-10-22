@@ -315,6 +315,27 @@ fn typed_sentence_pages_resume_without_reparsing_and_keep_nested_records() -> Re
         input[1].1=r#"article en "Two" body cons section target "Target" body cons paragraph cons "Content." nil nil nil"#.into();
         input
     };
+    let Progress::Prepared(baseline_ready) = Preparation::new(
+        &compiled,
+        fixture(),
+        budget().limits(),
+        PreparationLimits::default(),
+    )?
+    .run() else {
+        return Err("baseline preparation".into());
+    };
+    let RenderProgress::Complete(baseline) = baseline_ready
+        .into_render(OperationLimits::default(), MathRenderer::MathMLOnly)
+        .map_err(|e| e.error)?
+        .run()
+    else {
+        return Err("baseline output".into());
+    };
+    let late_work = baseline.renders[0]
+        .usage
+        .work
+        .checked_sub(1)
+        .ok_or("baseline work")?;
     let Progress::Prepared(ready) = Preparation::new(
         &compiled,
         fixture(),
@@ -327,7 +348,7 @@ fn typed_sentence_pages_resume_without_reparsing_and_keep_nested_records() -> Re
     let RenderProgress::Paused { job, .. } = ready
         .into_render(
             OperationLimits {
-                work: 0,
+                work: late_work,
                 ..OperationLimits::default()
             },
             MathRenderer::MathMLOnly,
@@ -337,6 +358,8 @@ fn typed_sentence_pages_resume_without_reparsing_and_keep_nested_records() -> Re
     else {
         return Err("expected output pause".into());
     };
+    assert_eq!(job.reason(), StopReason::WorkLimit);
+    assert_eq!(job.attempts()[0].usage.work, late_work);
     assert_eq!(job.preparation().len(), 2);
     let earlier = job.usage();
     let RenderProgress::Complete(done) = job
@@ -351,6 +374,7 @@ fn typed_sentence_pages_resume_without_reparsing_and_keep_nested_records() -> Re
     assert!(done.usage.work > earlier.work);
     assert_eq!(done.usage, total(&done.preparation, &done.renders));
     let expected = pages::generate_with_renderer(&compiled, &fixture(), MathRenderer::MathMLOnly)?;
+    assert_eq!(done.generated.files, baseline.generated.files);
     assert_eq!(done.generated.files, expected.files);
     let provenance = done.generated.provenance.ok_or("typed provenance")?;
     assert_eq!(provenance.math_generation[0].len(), 1);
