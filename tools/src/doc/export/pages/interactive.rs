@@ -307,6 +307,7 @@ mod tests {
     }
 }
 
-#[cfg(test)]
+// The frozen-input regression deliberately changes host files at resume time.
+#[cfg(all(test, not(target_family = "wasm")))]
 #[path = "interactive/selection.rs"]
 mod selection_tests;

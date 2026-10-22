@@ -794,5 +794,8 @@ mod svg;
 #[path = "doc/pages/single.rs"]
 mod pages_single;
 
+// These manifest integration tests launch the native CLI and mutate host files.
+// In-memory display and Sentence tests remain enabled on WASI.
+#[cfg(not(target_family = "wasm"))]
 #[path = "doc/pages/display.rs"]
 mod pages_display;
