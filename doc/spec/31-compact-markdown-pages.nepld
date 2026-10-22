@@ -1,0 +1,31 @@
+article en "Explicit compact Markdown footnote pages"
+body
+  cons paragraph
+    cons sentence
+      cons text "The opt-in renderer "
+      cons code "nepl3-tools.markdown-footnotes-compact-pages/1"
+      cons text " selects identity-only CompactV1 PageSet resolution."
+      nil
+    cons " All pages in one manifest must use this profile; mixing it with legacy identities is rejected."
+    cons " Legacy renderer names retain their existing identities, semantics and output routing."
+    cons " HTML export rejects this footnote-only profile; the explicit footnotes-pages command accepts it."
+    nil
+  cons paragraph
+    cons "The profile inherits footnote path/alias and SVG rules."
+    cons " Styles/alias counts and safe SVG input validation precede archive resolution."
+    cons " Math remains validated using its selected Math/Sentence/Doc surfaces; a compact guest commitment is not a Math lowering proof."
+    cons " Document bodies, footnotes, anchors, links and SVG bytes have the same viewing semantics while document/set/guest identities deliberately differ."
+    nil
+  cons paragraph
+    cons "Host compilation uses its unchanged standard surface setup; no archive descriptors are required by this profile."
+    cons " Each render attempt creates fresh codec admission and charges one cumulative output Budget."
+    cons " The identity-only capability validates complete native documents and hashes private preimages without producing archive transport buffers; it does not increase or reset any resource limit."
+    nil
+  cons paragraph
+    cons "Frozen inputs retain the selected renderer string."
+    cons " Receipt input PageSet, document and Math guest commitments use the explicit CompactV1 identities."
+    cons " Page context includes the renderer selection, and retries use that same identity route."
+    cons " No default manifest is automatically upgraded."
+    cons " Historical-corpus recovery requires running that corpus with this profile under its original normal resource limits."
+    nil
+  nil

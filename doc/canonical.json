@@ -304,6 +304,30 @@
       "aliases": "doc/migration/aliases/28-doc-source-archive.json",
       "route": "docs/spec/28-doc-source-archive.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "doc-pages-source-archive",
+      "source": "doc/spec/29-doc-pages-source-archive.nepld",
+      "projection": "doc/spec/29-doc-pages-source-archive.md",
+      "aliases": "doc/migration/aliases/29-doc-pages-source-archive.json",
+      "route": "docs/spec/29-doc-pages-source-archive.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "doc-pages-archive-resolution",
+      "source": "doc/spec/30-doc-pages-archive-resolution.nepld",
+      "projection": "doc/spec/30-doc-pages-archive-resolution.md",
+      "aliases": "doc/migration/aliases/30-doc-pages-archive-resolution.json",
+      "route": "docs/spec/30-doc-pages-archive-resolution.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "compact-markdown-pages",
+      "source": "doc/spec/31-compact-markdown-pages.nepld",
+      "projection": "doc/spec/31-compact-markdown-pages.md",
+      "aliases": "doc/migration/aliases/31-compact-markdown-pages.json",
+      "route": "docs/spec/31-compact-markdown-pages.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
@@ -371,11 +395,6 @@
       "id": "group-identity-without-transport-source",
       "source": "doc/spec/32-group-identity-without-transport.md",
       "route": "sources/32-group-identity-without-transport.md"
-    },
-    {
-      "id": "doc-pages-source-archive-source",
-      "source": "doc/spec/29-doc-pages-source-archive.md",
-      "route": "sources/29-doc-pages-source-archive.md"
     }
   ],
   "output_limits": {

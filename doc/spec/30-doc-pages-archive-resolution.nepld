@@ -1,0 +1,63 @@
+article en "Explicit archive PageSet resolution"
+body
+  cons paragraph
+    cons sentence
+      cons code "pages::archive::resolve"
+      cons text " opts into the archive identity profile."
+      nil
+    cons sentence
+      cons text " Ordinary "
+      cons code "pages::resolve"
+      cons text " keeps the legacy profile."
+      nil
+    cons " Both snapshot the original Budget limits and current depth, check page/file registrations before encoding, preserve page order, check labels, derive requirements, and resolve page/file targets and fragments in the same order with the same cumulative Budget."
+    cons " Native structure proofs remain scoped to the exact borrowed PageSet."
+    cons " No asset or guest lowering success is implied."
+    nil
+  cons paragraph
+    cons "The archive profile uses the exact checked PageSetArchive envelope for the set digest and each contained DocumentArchive envelope for its document digest."
+    cons sentence
+      cons text " Domains are "
+      cons code "NEPL3.Doc.Archive.Pages.v1\\0"
+      cons text " and "
+      cons code "NEPL3.Doc.Archive.Document.v1\\0"
+      cons text " respectively."
+      nil
+    cons sentence
+      cons text " Each original group's compact v2 entry commitment is wrapped by "
+      cons code "NEPL3.Doc.Archive.Guest.v1\\0"
+      cons text " before requirement derivation."
+      nil
+    cons " Existing legacy domains are unchanged."
+    cons " These profiles deliberately have different document/guest identities although their original document contents and link semantics may agree."
+    nil
+  cons paragraph
+    cons "CheckedPages exposes PageIdentityProfile."
+    cons " Its plan, document_digest and into_plan refer to that profile; consumers must select a compatible identity contract rather than infer it from positional field shapes."
+    cons " This marker is native metadata, not a portable proof."
+    cons sentence
+      cons text " The existing PageLinkPlan data schema can carry either profile's values, but the explicit archive plan adapters recompute archive resolution and compare canonical plan commitments under "
+      cons code "NEPL3.Doc.Archive.PagePlan.v1\\0"
+      cons text "."
+      nil
+    cons " Legacy plans reject through archive adapters and archive plans reject through legacy adapters."
+    cons " Decoding a supplied plan never creates CheckedPages."
+    nil
+  cons paragraph
+    cons "No default Markdown, HTML, Text or Print renderer is switched by these APIs."
+    cons " Tools profile selection and replay receipts require a separate explicit integration."
+    cons " The historical23page corpus must still be tested under the unchanged normal4B budget before claiming recovery."
+    nil
+  cons paragraph
+    cons "The explicit archive resolver reports a nested boundary stop as its top-level PageError::Stopped while retaining the Budget's original sticky reason."
+    cons " Legacy error classification is unchanged."
+    cons " The archive plan boundary shares this rule through its normal PortableError conversion."
+    nil
+  cons paragraph
+    cons sentence
+      cons text "The opt-in tools consumer is specified in "
+      cons link relative "31-compact-markdown-pages.md" none text "compact Markdown pages"
+      cons text "."
+      nil
+    nil
+  nil
