@@ -317,6 +317,16 @@ pub(super) fn render(
         initial_usage,
         renderer,
     );
+    let output_identity = if matches!(request.options.parallel, ParallelMode::Rows) {
+        output_identity
+    } else {
+        super::display::bind_identity(
+            b"nepl3.local-doc-pages.display-execution/1\0",
+            output_identity,
+            &request.options.parallel,
+            output_budget,
+        )?
+    };
     let phase_execution = if let Some(evidence) = retained_preparation {
         let mut encoded = Vec::from(b"nepl3.local-doc-pages.retained-preparation/1\0".as_slice());
         encoded.extend_from_slice(&output_identity.0);
@@ -327,18 +337,27 @@ pub(super) fn render(
         serde_json::json!({"contract":"nepl3.local-doc-pages.phases/1",
             "identity":digest_hex(resources::phase_identity(output_identity,profiles,phases))})
     };
+    let mut display_options = serde_json::json!({"parallel":match &request.options.parallel {ParallelMode::Rows=>"Rows",ParallelMode::Columns=>"Columns",ParallelMode::Single{..}=>"Single"},"math_renderer":renderer.as_str()});
+    if let ParallelMode::Single {
+        language,
+        fallbacks,
+    } = &request.options.parallel
+    {
+        display_options["language"] = serde_json::json!(language);
+        display_options["fallbacks"] = serde_json::json!(fallbacks);
+    }
     let manifest = serde_json::to_string_pretty(&serde_json::json!({
         "format":"nepl3.local-doc-pages/1","identity":digest_hex(rendered.identity),"pages":origins,"files":records,
         "execution_identity":digest_hex(output_identity),
         "phase_execution":phase_execution,
-        "output_budget":{"contract":"nepl3.local-doc-pages.execution/2","limits":resources::limits(output_budget.limits()),
+        "output_budget":{"contract":if matches!(request.options.parallel,ParallelMode::Rows){"nepl3.local-doc-pages.execution/2"}else{"nepl3.local-doc-pages.display-execution/1"},"limits":resources::limits(output_budget.limits()),
             "initial_usage":resources::usage(initial_usage),"usage":resources::usage(output_budget.usage())},
         "registered_files":file_origins,
-        "renderer":if has_sentence {"nepl3-doc-html sentence-pages/1"} else {"nepl3-doc-html pages/4"},"options":{"parallel":"Rows","math_renderer":renderer.as_str()},
+        "renderer":if has_sentence {"nepl3-doc-html sentence-pages/1"} else {"nepl3-doc-html pages/4"},"options":display_options,
         "katex":katex_pages,
         "math_diagnostics":page_generation.iter().map(|records| super::super::math::diagnostics(records)).collect::<Vec<_>>(),"viewer_scripts":false,
-        "packages":"compiled checked bootstrap fixtures","scope":if has_sentence {"Native all-occurrence typed Sentence namespaces with per-page retained owners, cross-page emitted-anchor checks and nested Math records. Rows/Columns only; no Single/image-alt/asset selection or portable namespace proof. Code remains syntax-only; output does not prove network availability or deployment."} else {"Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Retained Code uses shared syntax-only highlighting without guest evaluation; Math uses independent MathML with explicit renderer fallback diagnostics; assets and other foreign kinds remain unsupported. Not Pages deployment evidence."},
-        "identity_contract":if has_sentence {"nepl3.local-doc-pages.sentence-input/1 plus parallel mode"} else {"legacy Doc PageSet"},
+        "packages":"compiled checked bootstrap fixtures","scope":if has_sentence {"Native all-occurrence typed Sentence namespaces with per-page retained owners, cross-page emitted-anchor checks and nested Math records. Rows/Columns or explicit Single display selection; no image-alt/asset selection or portable namespace proof. Code remains syntax-only; output does not prove network availability or deployment."} else {"Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Retained Code uses shared syntax-only highlighting without guest evaluation; Math uses independent MathML with explicit renderer fallback diagnostics; assets and other foreign kinds remain unsupported. Not Pages deployment evidence."},
+        "identity_contract":if has_sentence {if matches!(request.options.parallel,ParallelMode::Single{..}) {"nepl3.local-doc-pages.sentence-single/1: source digest, Single tag 2, UTF-8 language and ordered fallbacks with little-endian u64 lengths"} else {"nepl3.local-doc-pages.sentence-input/1 plus parallel mode"}} else {"legacy Doc PageSet"},
         "budget_scope":"Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
         "output_usage":{"work":output_budget.usage().work,"allocation_units":output_budget.usage().allocation_units,"output_bytes":output_budget.usage().output_bytes}
     })).map_err(err)? + "\n";

@@ -5,6 +5,8 @@ use nepl3_doc_core::pages::{FileBytes, PageDocument, PageFile, PageRegistration,
 use nepl3_doc_html::pages::{PagesHtmlRequest, render_pages_with_display};
 pub(crate) mod aliases;
 mod code;
+mod display;
+pub use display::Options as DisplayOptions;
 pub mod interactive;
 mod render;
 mod sentence;
@@ -52,6 +54,27 @@ fn input_path(entry: &Entry) -> Result<&str, String> {
     }
     Ok(path)
 }
+/// Native host entry with explicit display options and one cumulative output budget.
+/// Parsing/lowering remain separately bounded; this does not add CLI options.
+pub fn generate_with_display_options(
+    compiled: &Compiled,
+    inputs: &[(Entry, String)],
+    resources: &[(Entry, Vec<u8>)],
+    phases: resources::PhaseLimits,
+    output_budget: &mut Budget,
+    options: DisplayOptions,
+) -> Result<GeneratedPages, String> {
+    generate_selected(
+        compiled,
+        inputs,
+        resources,
+        phases,
+        output_budget,
+        &[],
+        options,
+    )
+}
+
 pub struct GeneratedPages {
     pub files: BTreeMap<String, Vec<u8>>,
     pub manifest: String,
@@ -123,7 +146,7 @@ pub(crate) fn generate_with_aliases(
         phases,
         output_budget,
         aliases,
-        super::MathRenderer::KaTeXPreferred,
+        DisplayOptions::default(),
     )
 }
 pub fn generate_with_renderer(
@@ -138,7 +161,10 @@ pub fn generate_with_renderer(
         resources::PhaseLimits::default(),
         &mut budget(),
         &[],
-        renderer,
+        DisplayOptions {
+            math_renderer: renderer,
+            ..Default::default()
+        },
     )
 }
 fn generate_selected(
@@ -148,7 +174,7 @@ fn generate_selected(
     phases: resources::PhaseLimits,
     output_budget: &mut Budget,
     aliases: &[aliases::PageAliases],
-    renderer: super::MathRenderer,
+    options: DisplayOptions,
 ) -> Result<GeneratedPages, String> {
     output_budget.poll().map_err(err)?;
     let initial_usage = output_budget.usage();
@@ -258,9 +284,7 @@ fn generate_selected(
             pages,
             files: registered_files,
         },
-        options: RenderOptions {
-            parallel: ParallelMode::Rows,
-        },
+        options: options.document,
     };
     render::render(
         render::Context {
@@ -273,7 +297,7 @@ fn generate_selected(
             file_origins: &file_origins,
             phases,
             initial_usage,
-            renderer,
+            renderer: options.math_renderer,
             aliases,
         },
         output_budget,
@@ -346,7 +370,10 @@ pub fn write_with_renderer(
         loaded.phases,
         &mut loaded.output.budget(),
         &[],
-        renderer,
+        DisplayOptions {
+            math_renderer: renderer,
+            ..Default::default()
+        },
     )?;
     write_generated(generated, output)
 }
