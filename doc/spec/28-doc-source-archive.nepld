@@ -1,0 +1,90 @@
+article en "Explicit Doc source archive v1"
+body
+  cons paragraph
+    cons sentence
+      cons code "nepl3.doc-archive"
+      cons text " revision 1 defines "
+      cons code "DocumentArchive"
+      cons text " with ordered fields "
+      cons code "skeleton: nepl3.doc/1 DocumentSyntax"
+      cons text " and "
+      cons code "group: Bytes"
+      cons text "."
+      nil
+    cons " The latter is a checked GroupArchive/1 byte stream."
+    cons " The JSON contract and Rust descriptor are compared by the repository contract checker, including the Doc/Foundation dependency closure."
+    cons " The host must also register the source/group archive contracts required by its explicit archive codec."
+    cons " Missing contracts reject; they never select a v1 fallback."
+    nil
+  cons paragraph
+    cons "This is an opt-in transport API."
+    cons " Existing DocumentSyntax, PageSet, preparation, HTML, Text and Print APIs, operation domains and descriptor identities are unchanged."
+    cons " The ordinary FoundationValueCodec trait remains usable without archive support."
+    cons " The optional FoundationGroupArchiveCodec capability has a real concrete wire implementation and no success-shaped default."
+    cons " It shares its ordinary codec's registry, SourceAdmission and cumulative Budget."
+    cons " Schema capability selection is codec boundary work; once selected, group encoding preserves caller-relative semantic depths and checks a distinct codec registry independently."
+    nil
+  cons section encoding "Encoding"
+  body
+    cons paragraph
+      cons "Prepare the original native Doc structure and its maximum occurrence depth for each shared embed."
+      cons " Encode that exact group through the depth-aware compact Foundation operation, retaining GroupArchive bytes and ordered v2 guest component commitments."
+      cons " A provider result with a different component count rejects."
+      nil
+    cons paragraph
+      cons "Encode the otherwise unchanged Doc value with an empty Foundation group at the typed DocEmbeds.group field."
+      cons " Preserve embed kinds and references, document sources, origins, views and mappings."
+      cons " Validate the skeleton structurally as DocumentSyntax, then validate the complete DocumentArchive envelope before returning it."
+      cons " The skeleton is not independently valid native Doc syntax when it contains embeds."
+      cons " It does not replace the original native validation or prove render readiness."
+      nil
+    cons paragraph
+      cons sentence
+        cons text "The returned guest components are the v2 Foundation entry commitments defined in "
+        cons link relative "27-group-source-archive.md" none text "the group archive contract"
+        cons text "."
+        nil
+      cons " No new document or preparation-plan identity is defined by this transport API."
+      nil
+    nil
+  cons section decoding "Decoding"
+  body
+    cons paragraph
+      cons "Validate the explicit envelope and its Doc skeleton against their selected registry identities."
+      cons " Decode GroupArchive bytes into a native group, restoring and validating every local source declaration set."
+      cons " Decode the document's own source scope using the same admission ledger; conflicting document/guest identities reject."
+      cons " A globally admitted declaration cannot fill a missing local set."
+      nil
+    cons paragraph
+      cons "Private generated typed reader hooks restore DocValue.embeds and DocEmbeds.group without expanding the native group back into v1 NDF."
+      cons " All ordinary fields retain the existing read order and Work charges."
+      cons " The placeholder group must be empty in all three tables; a nonempty placeholder rejects."
+      cons " Opaque group payloads are not rewritten."
+      cons " Origins, mappings and views retain the existing document-local scope."
+      nil
+    cons paragraph
+      cons "Finally validate the complete restored native Doc structure, including the maximum depth of each shared embed across shallow/deep owner paths under the active outer Budget depth."
+      cons " Successful GroupArchive decoding alone cannot discharge this Doc requirement."
+      cons " Wrong archive/source membership, missing declarations, incompatible registries and malformed native values reject before a document is returned."
+      nil
+    nil
+  cons section resource "Resource and acceptance scope"
+  body
+    cons paragraph
+      cons "All descriptor lookup, capture, validation, allocation, canonical encoding, hashing, restoration and Doc validation use the supplied Budget."
+      cons " Caller-side raw NDF serialization/deserialization must use that same budget for a single composite boundary operation."
+      cons " Stops retain their reason and consumed usage; no successful partial document or archive is returned."
+      nil
+    cons paragraph
+      cons "Native/CBOR roundtrip, alternate codec parity, unchanged v1 boundaries, route mismatch, empty groups, nonempty placeholders, source conflicts, deepest shared occurrence, provider cardinality, cancellation and exact/one-short budgets are transport acceptance requirements."
+      cons " This milestone does not select a compact PageSet/preparation/rendering route or establish real-data generation under 4B Work."
+      nil
+    cons paragraph
+      cons sentence
+        cons text "Page-set structural transport is specified separately in "
+        cons link relative "29-doc-pages-source-archive.md" none text "Doc PageSet archive"
+        cons text "."
+        nil
+      nil
+    nil
+  nil

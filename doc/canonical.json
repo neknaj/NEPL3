@@ -296,6 +296,14 @@
       "aliases": "doc/migration/aliases/27-group-source-archive.json",
       "route": "docs/spec/27-group-source-archive.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "doc-source-archive",
+      "source": "doc/spec/28-doc-source-archive.nepld",
+      "projection": "doc/spec/28-doc-source-archive.md",
+      "aliases": "doc/migration/aliases/28-doc-source-archive.json",
+      "route": "docs/spec/28-doc-source-archive.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
@@ -360,14 +368,14 @@
       "route": "sources/acceptance.json"
     },
     {
-      "id": "doc-source-archive-source",
-      "source": "doc/spec/28-doc-source-archive.md",
-      "route": "sources/28-doc-source-archive.md"
-    },
-    {
       "id": "group-identity-without-transport-source",
       "source": "doc/spec/32-group-identity-without-transport.md",
       "route": "sources/32-group-identity-without-transport.md"
+    },
+    {
+      "id": "doc-pages-source-archive-source",
+      "source": "doc/spec/29-doc-pages-source-archive.md",
+      "route": "sources/29-doc-pages-source-archive.md"
     }
   ],
   "output_limits": {
@@ -385,7 +393,7 @@
     "work": 3000000000,
     "depth": 1000,
     "nodes": 48000000,
-    "allocation_units": 2400000000,
+    "allocation_units": 2600000000,
     "output_bytes": 10000000,
     "diagnostics": 1000,
     "events": 1000
