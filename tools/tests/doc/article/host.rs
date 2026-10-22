@@ -65,7 +65,14 @@ nil nil"#;
                         codec: &mut codec,
                     };
                     let selected = article::collect_structural(&root, &mut host, b).map_err(err)?;
-                    for parallel in [ParallelMode::Rows, ParallelMode::Columns] {
+                    for parallel in [
+                        ParallelMode::Rows,
+                        ParallelMode::Columns,
+                        ParallelMode::Single {
+                            language: "en".into(),
+                            fallbacks: vec![],
+                        },
+                    ] {
                         let output = render::render(
                             &selected,
                             &RenderOptions { parallel },
@@ -134,21 +141,6 @@ nil nil"#;
                         assert_eq!(docs, if nested_math { 5 } else { 4 });
                         assert_eq!(math, usize::from(nested_math));
                     }
-                    assert!(matches!(
-                        render::render(
-                            &selected,
-                            &RenderOptions {
-                                parallel: ParallelMode::Single {
-                                    language: "en".into(),
-                                    fallbacks: vec![]
-                                }
-                            },
-                            &mut host,
-                            &mut |_, _, _, _| Err::<HtmlRequest, _>("unexpected"),
-                            b
-                        ),
-                        Err(render::Error::SingleMode)
-                    ));
                     let mut cancelled = budget();
                     cancelled.cancel();
                     assert!(matches!(

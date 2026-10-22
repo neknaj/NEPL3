@@ -12,6 +12,10 @@ mod article_display;
 mod article_host;
 #[path = "doc/article/namespace.rs"]
 mod article_namespace;
+#[path = "doc/article/single.rs"]
+mod article_single;
+#[path = "doc/article/visibility.rs"]
+mod article_visibility;
 #[path = "doc/code_pages.rs"]
 mod code_pages;
 #[path = "doc/context.rs"]

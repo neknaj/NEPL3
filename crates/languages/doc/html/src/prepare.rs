@@ -123,6 +123,23 @@ pub(crate) fn prepare_rendering<'a, E>(
     identity: Digest,
     budget: &mut Budget,
 ) -> Result<PreparedRendering<'a>, LocalPreparationError<'a, E>> {
+    let selections = selection_table(&document.value, options, budget)?;
+    Ok(PreparedRendering {
+        document,
+        options,
+        selections,
+        identity,
+        images: Vec::new(),
+        external_links: Vec::new(),
+    })
+}
+
+/// Shared choice policy for preparation and structural display inventory.
+pub(crate) fn selection_table<'a, E>(
+    value: &DocValue,
+    options: &RenderOptions,
+    budget: &mut Budget,
+) -> Result<Vec<Option<VariantRef>>, LocalPreparationError<'a, E>> {
     if let ParallelMode::Single {
         language,
         fallbacks,
@@ -141,7 +158,7 @@ pub(crate) fn prepare_rendering<'a, E>(
         }
     }
     let mut selections = Vec::new();
-    for (index, node) in document.value.nodes.iter().enumerate() {
+    for (index, node) in value.nodes.iter().enumerate() {
         budget.charge(Resource::Work, 1)?;
         if let DocKind::List {
             kind: ListKind::Ordered { start },
@@ -164,8 +181,7 @@ pub(crate) fn prepare_rendering<'a, E>(
             'languages: for wanted in core::iter::once(language).chain(fallbacks) {
                 for variant in variants {
                     budget.charge(Resource::Work, 1)?;
-                    if let DocKind::Variant { language, .. } =
-                        &document.value.nodes[variant.0 as usize].kind
+                    if let DocKind::Variant { language, .. } = &value.nodes[variant.0 as usize].kind
                     {
                         budget.charge(Resource::Work, (wanted.len() + language.len()) as u64)?;
                         if wanted.eq_ignore_ascii_case(language) {
@@ -183,14 +199,10 @@ pub(crate) fn prepare_rendering<'a, E>(
             Resource::AllocationUnits,
             2 * core::mem::size_of::<Option<VariantRef>>() as u64,
         )?;
+        selections
+            .try_reserve(1)
+            .map_err(|_| budget.stop(StopReason::AllocationLimit))?;
         selections.push(selected);
     }
-    Ok(PreparedRendering {
-        document,
-        options,
-        selections,
-        identity,
-        images: Vec::new(),
-        external_links: Vec::new(),
-    })
+    Ok(selections)
 }
