@@ -288,6 +288,14 @@
       "aliases": "doc/migration/aliases/26-syntax-source-archive.json",
       "route": "docs/spec/26-syntax-source-archive.html",
       "renderer": "nepl3-tools.markdown-annotated/4"
+    },
+    {
+      "id": "group-source-archive",
+      "source": "doc/spec/27-group-source-archive.nepld",
+      "projection": "doc/spec/27-group-source-archive.md",
+      "aliases": "doc/migration/aliases/27-group-source-archive.json",
+      "route": "docs/spec/27-group-source-archive.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
@@ -350,6 +358,16 @@
       "id": "acceptance-catalog-source",
       "source": "design/acceptance.json",
       "route": "sources/acceptance.json"
+    },
+    {
+      "id": "doc-source-archive-source",
+      "source": "doc/spec/28-doc-source-archive.md",
+      "route": "sources/28-doc-source-archive.md"
+    },
+    {
+      "id": "group-identity-without-transport-source",
+      "source": "doc/spec/32-group-identity-without-transport.md",
+      "route": "sources/32-group-identity-without-transport.md"
     }
   ],
   "output_limits": {

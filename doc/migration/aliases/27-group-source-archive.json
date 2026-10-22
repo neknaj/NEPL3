@@ -1,0 +1,6 @@
+[
+  { "section": null, "name": "group-source-archive-v1" },
+  { "section": "descriptor", "name": "replaced-field-descriptor-boundary" },
+  { "section": "compact", "name": "explicit-compact-component-identity-v2" },
+  { "section": "depths", "name": "consuming-language-depths" }
+]
