@@ -7,6 +7,8 @@ fn passive_json_registration_has_narrow_source_and_matching_route_scope() -> Res
         "design/nested/contracts.json",
         "implementation-status.json",
         "doc/history/web-tea-import.json",
+        "doc/history/source-manifest.json",
+        "doc/history/design-validation.json",
     ] {
         let mut value = registry();
         value["files"] =
@@ -16,6 +18,19 @@ fn passive_json_registration_has_narrow_source_and_matching_route_scope() -> Res
     for (source, route) in [
         ("other.json", "sources/data.json"),
         ("doc/history/other.json", "sources/data.json"),
+        ("doc/history/Source-manifest.json", "sources/data.json"),
+        ("doc/history/source-manifest.json.bak", "sources/data.json"),
+        ("doc/history/design-validation.JSON", "sources/data.json"),
+        ("doc/history/design-validation.json", "sources/data.html"),
+        ("doc/history/source-manifest.json", "sources/data.md"),
+        (
+            "doc/history/nested/source-manifest.json",
+            "sources/data.json",
+        ),
+        (
+            "doc/history/../history/design-validation.json",
+            "sources/data.json",
+        ),
         ("doc/history/Web-tea-import.json", "sources/data.json"),
         ("doc/history/web-tea-import.json.bak", "sources/data.json"),
         (
@@ -44,9 +59,15 @@ fn passive_json_registration_has_narrow_source_and_matching_route_scope() -> Res
     let mut value = registry();
     value["pages"][0]["renderer"] = json!(projection::FOOTNOTES_RENDERER);
     value["pages"][0]["route"] = value["pages"][0]["projection"].clone();
-    value["files"] =
-        json!([{"id":"data", "source":"design/tasks.json", "route":"sources/tasks.json"}]);
-    assert!(parse_registry(&serde_json::to_vec(&value)?).is_err());
+    for source in [
+        "design/tasks.json",
+        "doc/history/web-tea-import.json",
+        "doc/history/source-manifest.json",
+        "doc/history/design-validation.json",
+    ] {
+        value["files"] = json!([{"id":"data", "source":source, "route":"sources/data.json"}]);
+        assert!(parse_registry(&serde_json::to_vec(&value)?).is_err());
+    }
     let mut value = registry();
     let mut files: Vec<_> = (0..128).map(|index| json!({"id":format!("f{index}"), "source":format!("design/{index}.json"), "route":format!("sources/{index}.json")})).collect();
     value["files"] = json!(files);
@@ -314,35 +335,56 @@ fn passive_json_preserves_bytes_links_and_dependency_identity() -> Result<()> {
 
 #[test]
 fn historical_receipt_requires_registration_and_keeps_opaque_bytes() -> Result<()> {
+    for source in [
+        "doc/history/web-tea-import.json",
+        "doc/history/source-manifest.json",
+        "doc/history/design-validation.json",
+    ] {
+        historical_receipt_preserves_registration_and_bytes(source)?;
+    }
+    Ok(())
+}
+
+fn historical_receipt_preserves_registration_and_bytes(source: &str) -> Result<()> {
     let fixture = Fixture::new()?;
-    let source = "doc/history/web-tea-import.json";
     let raw = b"opaque UTF-8\r\n<script>not executed</script>\r\n";
     fixture.write(source, raw)?;
     let mut value = registry();
     let unregistered = parse_registry(&serde_json::to_vec(&value)?)?;
     assert!(reference_inputs(fixture.root(), unregistered.files)?.is_empty());
-    value["files"] =
-        json!([{"id":"receipt", "source":source, "route":"sources/web-tea-import.json"}]);
+    value["files"] = json!([{"id":"receipt", "source":source, "route":"sources/receipt.json"}]);
     let registered = parse_registry(&serde_json::to_vec(&value)?)?;
     let inputs = reference_inputs(fixture.root(), registered.files)?;
     assert_eq!(inputs.len(), 1);
     assert_eq!(inputs[0].0.source, source);
-    assert_eq!(inputs[0].0.route, "sources/web-tea-import.json");
+    assert_eq!(inputs[0].0.route, "sources/receipt.json");
     assert_eq!(inputs[0].1, raw);
     Ok(())
 }
 
 #[test]
 fn historical_receipt_links_do_not_load_embedded_source_paths() -> Result<()> {
+    for source in [
+        "doc/history/web-tea-import.json",
+        "doc/history/source-manifest.json",
+        "doc/history/design-validation.json",
+    ] {
+        historical_receipt_checks_link_and_opaque_output(source)?;
+    }
+    Ok(())
+}
+
+fn historical_receipt_checks_link_and_opaque_output(source: &str) -> Result<()> {
+    let relative = source.strip_prefix("doc/").ok_or("doc source")?;
     let fixture = Fixture::new()?;
     let mut value = registry();
     value["pages"][0]["renderer"] = json!(projection::RENDERER);
-    value["files"] = json!([{"id":"receipt", "source":"doc/history/web-tea-import.json", "route":"sources/web-tea-import.json"}]);
+    value["files"] = json!([{"id":"receipt", "source":source, "route":"sources/receipt.json"}]);
     fixture.json("doc/canonical.json", &value)?;
     fixture.write("doc/aliases.json", "[]")?;
-    fixture.write("doc/sample.nepld", r#"article ja "History" body cons paragraph cons sentence cons link relative "history/web-tea-import.json" none text "Receipt" nil nil nil"#)?;
+    fixture.write("doc/sample.nepld", format!(r#"article ja "History" body cons paragraph cons sentence cons link relative "{relative}" none text "Receipt" nil nil nil"#))?;
     let raw = b"{\r\n  \"source\": \"private/unavailable.zip\", \"integration_decision\": \"doc/decisions/0003-web-tea-doc-migration.md\"\r\n}\r\n";
-    fixture.write("doc/history/web-tea-import.json", raw)?;
+    fixture.write(source, raw)?;
     assert!(!fixture.root().join("private/unavailable.zip").exists());
     assert!(
         !fixture
@@ -363,16 +405,11 @@ fn historical_receipt_links_do_not_load_embedded_source_paths() -> Result<()> {
             _ => None,
         })
         .collect();
-    assert!(
-        links
-            .iter()
-            .any(|link| link == "history/web-tea-import.json")
-    );
+    assert!(links.iter().any(|link| link == relative));
     let html = generate_html(fixture.root(), "doc/canonical.json")?;
-    assert_eq!(html.files["sources/web-tea-import.json"], raw);
+    assert_eq!(html.files["sources/receipt.json"], raw);
     assert!(
-        std::str::from_utf8(&html.files["docs/sample.html"])?
-            .contains("../sources/web-tea-import.json")
+        std::str::from_utf8(&html.files["docs/sample.html"])?.contains("../sources/receipt.json")
     );
     assert!(
         html.files
@@ -383,7 +420,7 @@ fn historical_receipt_links_do_not_load_embedded_source_paths() -> Result<()> {
     let files = manifest["files"].as_array().ok_or("files")?;
     let receipt = files
         .iter()
-        .find(|entry| entry["path"] == "sources/web-tea-import.json")
+        .find(|entry| entry["path"] == "sources/receipt.json")
         .ok_or("receipt")?;
     assert_eq!(receipt["mime"], "application/octet-stream");
     Ok(())

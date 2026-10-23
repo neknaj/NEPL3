@@ -368,6 +368,14 @@
       "aliases": "doc/migration/aliases/23-sentence-annotation.json",
       "route": "docs/spec/23-sentence-annotation.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "history",
+      "source": "doc/history/README.nepld",
+      "projection": "doc/history/README.md",
+      "aliases": "doc/migration/aliases/history.json",
+      "route": "docs/history/index.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
@@ -430,6 +438,16 @@
       "id": "doc-runtime-source",
       "source": "doc/progress/doc-runtime.md",
       "route": "sources/doc-runtime.md"
+    },
+    {
+      "id": "history-source-manifest",
+      "source": "doc/history/source-manifest.json",
+      "route": "sources/history/source-manifest.json"
+    },
+    {
+      "id": "history-design-validation",
+      "source": "doc/history/design-validation.json",
+      "route": "sources/history/design-validation.json"
     }
   ],
   "output_limits": {
