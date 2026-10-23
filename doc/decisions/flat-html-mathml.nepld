@@ -1,0 +1,26 @@
+article en "Flat HTML and MathML composition"
+body
+  cons paragraph
+    cons "HTML needs to contain the checked MathML produced for Doc math nodes. "
+    cons "Adding owned recursive fragments in both directions would make nesting depend on Rust call-stack traversal and destruction. "
+    cons sentence cons code "HtmlNode::MathElement" cons text " instead uses the same flat arena and U64 child references as HTML elements. " nil
+    cons "This extends the development schema's digest; receivers still require the exact selected digest."
+    nil
+  cons paragraph
+    cons "The owning namespace determines the allowed attributes and children. "
+    cons "Shared MathML rules check both representations. "
+    cons sentence cons text "Only " cons code "math" cons text " starts a foreign root in HTML, and only " cons code "mtext" cons text " accepts HTML phrasing. " nil
+    cons sentence cons code "MathMlNode::Html" cons text " denotes an actual HTML/Text root; an HTML span may itself contain another inline math root. " nil
+    cons "ID, anchor and Ruby ancestry checks continue across these boundaries without resetting state. "
+    cons "Tree traversal, serialization and destruction remain iterative/flat."
+    nil
+  cons paragraph
+    cons sentence cons text "The " cons link external "https://html.spec.whatwg.org/multipage/embedded-content-other.html" text "HTML Standard" cons text " classifies math as phrasing/flow and permits HTML phrasing in token elements. " nil
+    cons sentence cons text "NEPL3 deliberately uses the narrower existing " cons code "mtext" cons text " integration profile and requires inline math in phrasing slots. " nil
+    cons "The display restriction is a NEPL3 output contract, not a claim that HTML forbids block-display math in a paragraph."
+    nil
+  cons paragraph
+    cons "This supplies the structural composition boundary. "
+    cons "A complete PreparedArticle, resource ownership, guest-root remapping and the KaTeX adapter are separate requirements; structural validity does not establish them or browser layout."
+    nil
+  nil

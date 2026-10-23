@@ -384,6 +384,14 @@
       "aliases": "doc/migration/aliases/standalone-sentence-html.json",
       "route": "docs/decisions/standalone-sentence-html.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "flat-html-mathml",
+      "source": "doc/decisions/flat-html-mathml.nepld",
+      "projection": "doc/decisions/flat-html-mathml.md",
+      "aliases": "doc/migration/aliases/flat-html-mathml.json",
+      "route": "docs/decisions/flat-html-mathml.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
