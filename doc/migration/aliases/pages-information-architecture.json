@@ -1,0 +1,34 @@
+[
+  {
+    "section": null,
+    "name": "github-pages-の情報設計と安定-url"
+  },
+  {
+    "section": "stable_urls",
+    "name": "1-安定-url"
+  },
+  {
+    "section": "ownership",
+    "name": "2-repository-分割後の文書所有"
+  },
+  {
+    "section": "docs",
+    "name": "3-docs-の位置付け"
+  },
+  {
+    "section": "playground",
+    "name": "4-playground-の立場"
+  },
+  {
+    "section": "tutorial",
+    "name": "5-tutorial-の学習目標"
+  },
+  {
+    "section": "foundation_languages",
+    "name": "6-基礎言語の扱い"
+  },
+  {
+    "section": "url_principles",
+    "name": "7-url-安定性の原則"
+  }
+]

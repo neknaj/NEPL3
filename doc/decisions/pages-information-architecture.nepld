@@ -1,0 +1,217 @@
+article ja "GitHub Pages の[情報設計/じょうほうせっけい]と[安定/あんてい] URL"
+body
+  cons paragraph
+    cons sentence cons text "Decision status: adopted — PR #169、" cons ruby text "統合" text "とうごう" cons text "commit " cons code "e52fc8d8d5122b5f0977ee662dc85d2d56927a86" cons text "。" nil
+    nil
+  cons paragraph
+    cons "Implementation status: partial — この[決定/けってい]の[採用/さいよう]は、Playground・Tutorial・repository[分割/ぶんかつ]・[全公開/ぜんこうかい]routeの[実装完了/じっそうかんりょう]を[意味/いみ]しない。"
+    cons sentence cons ruby text "実装" text "じっそう" cons text "と" cons ruby text "正式受入" text "せいしきうけいれ" cons text "の" cons ruby text "状態" text "じょうたい" cons text "は " cons link relative "../../implementation-status.json" none text "implementation-status.json" cons text " とT18〜T21・T26で" cons ruby text "管理" text "かんり" cons text "する。" nil
+    nil
+  cons paragraph
+    cons "この[文書/ぶんしょ]は、NEPL3 ecosystem の GitHub Pages で[公開/こうかい]する[主要/しゅよう] surface の[安定/あんてい] URL と、その[役割/やくわり]を[定/さだ]める。"
+    cons "Pages は NEPL3d [等/とう]の[正本/せいほん]から[得/え]られる[公開/こうかい] projection と interactive surface の[配布先/はいふさき]であり、HTML [自体/じたい]を[正式文書/せいしきぶんしょ]の[正本/せいほん]とはしない。"
+    nil
+  cons section stable_urls "1. [安定/あんてい] URL"
+  body
+    cons paragraph
+      cons sentence cons ruby text "標準" text "ひょうじゅん" cons text " origin は " cons code "https://neknaj.github.io/NEPL3/" cons text " とし、NEPL3 " cons ruby text "本体" text "ほんたい" cons text " repository の Pages では" cons ruby text "次" text "つぎ" cons text "のトップレベル path を" cons ruby text "長期" text "ちょうき" cons text "に" cons ruby text "安定" text "あんてい" cons text "させる。" nil
+      nil
+    cons table cons default cons default nil
+      some row cons "path" cons "[役割/やくわり]" nil
+      cons row cons sentence cons code "/NEPL3/" nil cons "NEPL3 ecosystem と[共通基盤/きょうつうきばん]の[入口/いりぐち]" nil
+      cons row cons sentence cons code "/NEPL3/playground/" nil cons "NEPL3 [共通基盤/きょうつうきばん]と[言語/げんご] composition を[対話的/たいわてき]に[試/ため]す Playground" nil
+      cons row cons sentence cons code "/NEPL3/tutorial/" nil cons "NEPL3 の[共通原理/きょうつうげんり]と[言語作成/げんごさくせい]・composition を[段階的/だんかいてき]に[学/まな]ぶ Tutorial" nil
+      cons row cons sentence cons code "/NEPL3/docs/" nil cons "NEPL3 [共通基盤/きょうつうきばん]の[正式文書/せいしきぶんしょ]・[仕様/しよう]・[設計/せっけい]の[公開/こうかい] projection" nil
+      cons row cons sentence cons code "/NEPL3/api/rust/" nil cons "[現/げん] NEPL3 repository の Rust API reference。[利用者向/りようしゃむ]け Tutorial/Docs とは[分離/ぶんり]する" nil
+      nil
+    cons paragraph
+      cons sentence cons code "playground" cons text "、" cons code "tutorial" cons text "、" cons code "docs" cons text " は NEPL3d、NEPL3c、NEPL3h " cons ruby text "等" text "とう" cons text "の" cons ruby text "個別" text "こべつ" cons text " guest language の" cons ruby text "所有物" text "しょゆうぶつ" cons text "としない。" nil
+      cons "NEPL3 [本体/ほんたい] repository は、[共通/きょうつう] infrastructure、language composition、[共通/きょうつう] protocol/schema、ecosystem の[接続方法/せつぞくほうほう]を[主対象/しゅたいしょう]とする。"
+      nil
+    cons paragraph
+      cons sentence cons ruby text "既存計画" text "きそんけいかく" cons text "の " cons code "/NEPL3/docs/tutorials/" cons text " は" cons ruby text "公開" text "こうかい" cons text " URL として" cons ruby text "固定" text "こてい" cons text "せず、Tutorial の" cons ruby text "安定入口" text "あんていいりぐち" cons text "は " cons code "/NEPL3/tutorial/" cons text " とする。" nil
+      cons "[実装前/じっそうまえ]の planned route であるため、[公開互換性/こうかいごかんせい]のための[恒久/こうきゅう] alias とは[扱/あつか]わない。"
+      cons "[公開後/こうかいご]に route を[変更/へんこう]する[場合/ばあい]は、[安定/あんてい] page ID と redirect/alias を[明示/めいじ]して silent break を[避/さ]ける。"
+      nil
+    nil
+  cons section ownership "2. repository [分割後/ぶんかつご]の[文書所有/ぶんしょしょゆう]"
+  body
+    cons paragraph
+      cons "NEPL3d、NEPL3c、NEPL3h、NEPL3g [等/とう]が[独立/どくりつ] repository へ[分割/ぶんかつ]された[後/あと]、[各言語固有/かくげんごこゆう]の[詳細/しょうさい] reference、[完全/かんぜん]な syntax/semantics reference、[言語固有/げんごこゆう] tutorial、[言語固有/げんごこゆう] API/CLI、[言語固有/げんごこゆう] examples は[各/かく] repository が[所有/しょゆう]する。"
+      nil
+    cons paragraph
+      cons "NEPL3 [本体/ほんたい] repository の Pages に[各言語/かくげんご]の[詳細/しょうさい] reference を[複製/ふくせい]して[集約/しゅうやく]しない。"
+      cons "NEPL3 [本体側/ほんたいがわ]には、[各/かく] guest language の[存在/そんざい]、[役割/やくわり]、[共通基盤/きょうつうきばん]との[接続点/せつぞくてん]、[互換性/ごかんせい]・package identity、[対応/たいおう] repository への[安定/あんてい] link など ecosystem-level の[情報/じょうほう]だけを[置/お]く。"
+      nil
+    cons paragraph
+      cons "repository [分割前/ぶんかつまえ]に[同一/どういつ] repository [内/ない]へ[存在/そんざい]する[言語固有文書/げんごこゆうぶんしょ]についても、[将来/しょうらい]の[所有者/しょゆうしゃ]を[意識/いしき]し、NEPL3 [本体/ほんたい]の[共通文書/きょうつうぶんしょ]と[混同/こんどう]しない。"
+      cons "[分割時/ぶんかつじ]に URL を[維持/いじ]する[必要/ひつよう]がある[公開済/こうかいず]み entry point は[明示的/めいじてき] redirect/alias で[移行/いこう]する。"
+      nil
+    nil
+  cons section docs "3. Docs の[位置付/いちづ]け"
+  body
+    cons paragraph
+      cons "[正式/せいしき]な[文書/ぶんしょ]の[正本/せいほん]は[最終的/さいしゅうてき]に NEPL3d source とする。"
+      cons sentence cons text "GitHub Pages " cons ruby text "上" text "じょう" cons text "の " cons code "/docs/" cons text " " cons ruby text "以下" text "いか" cons text "の HTML は NEPL3d renderer が" cons ruby text "生成" text "せいせい" cons text "する" cons ruby text "公開" text "こうかい" cons text " projection であり、HTML を" cons ruby text "別" text "べつ" cons text "の" cons ruby text "正本" text "せいほん" cons text "として" cons ruby text "手" text "て" cons text "で" cons ruby text "保守" text "ほしゅ" cons text "しない。" nil
+      nil
+    cons paragraph
+      cons "Markdown から NEPL3d への[移行期間/いこうきかん]は、[既存/きそん] Markdown [正本/せいほん]と[移行済/いこうず]み NEPL3d [正本/せいほん]を[同/おな]じ[安定/あんてい] page ID / public route に[投影/とうえい]できるようにする。"
+      cons "[移行/いこう]の[目的/もくてき]は HTML site [自体/じたい]の[高度化/こうどか]ではなく、NEPL3d が[実際/じっさい]の[仕様/しよう]・[設計文書/せっけいぶんしょ]を[損失/そんしつ]なく[表現/ひょうげん]し、NEPL3 ecosystem の[正式文書言語/せいしきぶんしょげんご]として[利用/りよう]できることを[成立/せいりつ]させることである。"
+      nil
+    cons paragraph
+      cons "HTML/browser [側/がわ]の[検査/けんさ]は、[安全/あんぜん]な[出力/しゅつりょく]、[主要/しゅよう] route/link、asset の[成立/せいりつ]、[主要/しゅよう] browser での[閲覧可能性/えつらんかのうせい]など[公開/こうかい]に[必要/ひつよう]な[範囲/はんい]を[扱/あつか]う。"
+      cons "rustdoc や[最終/さいしゅう] HTML の[完全閉包検査/かんぜんへいほうけんさ]を、NEPL3d [本体/ほんたい]・[文書移行/ぶんしょいこう]の critical path に[置/お]かない。"
+      nil
+    nil
+  cons section playground "4. Playground の[立場/たちば]"
+  body
+    cons paragraph
+      cons "Playground は NEPL3h、NEPL3c、NEPL3d [等/とう]の[特定/とくてい] guest language の[専用/せんよう] IDE としない。"
+      cons "NEPL3 の[共通基盤/きょうつうきばん]を[直接観察/ちょくせつかんさつ]・[試験/しけん]できる[中立的/ちゅうりつてき]な surface とする。"
+      nil
+    cons paragraph
+      cons "Playground では[少/すく]なくとも[次/つぎ]を[扱/あつか]えるようにする。"
+      nil
+    cons list unordered
+      cons item none body
+        cons paragraph
+          cons "[共通/きょうつう]の[括弧/かっこ]なし[前置記法/ぜんちきほう]と arity/context による[構文確定/こうぶんかくてい]を[観察/かんさつ]する。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "[小/ちい]さな LanguagePackage / grammar を[定義/ていぎ]し、[最小/さいしょう]の NEPL3 guest language を[作/つく]る。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "[作成/さくせい]した[言語/げんご]を parse/check/print し、[構文/こうぶん]・[診断/しんだん]・Source/Origin [等/とう]の[共通機構/きょうつうきこう]を[確認/かくにん]する。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "[別/べつ] LanguagePackage を import/composition し、[一/ひと]つの source [内/ない]で[複数言語/ふくすうげんご]を[統合/とうごう]する。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons sentence cons code "annotation" cons text " のような" cons ruby text "基礎的" text "きそてき" cons text "な" cons ruby text "別言語" text "べつげんご" cons text "を import し、" cons ruby text "自作" text "じさく" cons text " guest language の syntax に" cons ruby text "対象付" text "たいしょうつ" cons text "き" cons ruby text "注釈" text "ちゅうしゃく" cons text "を" cons ruby text "組" text "く" cons text "み" cons ruby text "込" text "こ" cons text "む。" nil
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons sentence cons code "sentence" cons text " のように" cons ruby text "多数" text "たすう" cons text "の" cons ruby text "言語" text "げんご" cons text "から" cons ruby text "共有" text "きょうゆう" cons text "されることを" cons ruby text "意図" text "いと" cons text "した" cons ruby text "基礎言語" text "きそげんご" cons text "を" cons ruby text "利用" text "りよう" cons text "する。" nil
+          nil
+        nil
+      nil
+    cons paragraph
+      cons "[個別/こべつ] guest language は example/profile として Playground から[選択/せんたく]できるが、Playground の navigation・[概念/がいねん]モデル・[操作契約/そうさけいやく]そのものを[一/ひと]つの guest language の semantics に[合/あ]わせない。"
+      nil
+    nil
+  cons section tutorial "5. Tutorial の[学習目標/がくしゅうもくひょう]"
+  body
+    cons paragraph
+      cons "Tutorial も[特定/とくてい] guest language の[入門書/にゅうもんしょ]を[中心/ちゅうしん]にしない。"
+      cons "NEPL3 の[共通原理/きょうつうげんり]から[始/はじ]め、[利用者自身/りようしゃじしん]が[言語/げんご]を[構成/こうせい]し、[他言語/たげんご]を composition するところまでを[基本課程/きほんかてい]とする。"
+      nil
+    cons paragraph
+      cons "[初期/しょき] Tutorial は[概/おおむ]ね[次/つぎ]の[順序/じゅんじょ]を[想定/そうてい]する。"
+      nil
+    cons list ordered 1
+      cons item none body
+        cons paragraph
+          cons "NEPL3 の[目的/もくてき]: [多数/たすう]の[異/こと]なる[言語/げんご]を、[共通/きょうつう]の[括弧/かっこ]なし[前置記法/ぜんちきほう]と[共通/きょうつう] infrastructure の[上/うえ]で[組/く]み[合/あ]わせる。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "token、head、arity、context、prefix parse [等/とう]、[言語非依存/げんごひいそん]の[構文確定原理/こうぶんかくていげんり]を Playground で[確認/かくにん]する。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "[最小/さいしょう]の guest language を[定義/ていぎ]し、literal と[少数/しょうすう]の prefix form を parse/check/print できるようにする。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "LanguagePackage、schema、operation/provider、Profile [等/とう]、[他言語/たげんご]と composition するための[共通契約/きょうつうけいやく]を[確認/かくにん]する。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons sentence cons code "annotation" cons text " を" cons ruby text "別言語" text "べつげんご" cons text "として import し、" cons ruby text "自作言語" text "じさくげんご" cons text "に" cons ruby text "対象付" text "たいしょうつ" cons text "き" cons ruby text "注釈" text "ちゅうしゃく" cons text "を" cons ruby text "組" text "く" cons text "み" cons ruby text "込" text "こ" cons text "む。" nil
+          cons "annotation を[自作言語/じさくげんご]の[特別構文/とくべつこうぶん]として[再実装/さいじっそう]しない。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons sentence cons code "sentence" cons text " " cons ruby text "等" text "とう" cons text "の" cons ruby text "基礎言語" text "きそげんご" cons text "を" cons ruby text "必要" text "ひつよう" cons text "に" cons ruby text "応" text "おう" cons text "じて composition し、" cons ruby text "複数言語" text "ふくすうげんご" cons text "が" cons ruby text "一" text "ひと" cons text "つの source / document / structure " cons ruby text "内" text "ない" cons text "で" cons ruby text "共存" text "きょうぞん" cons text "する" cons ruby text "例" text "れい" cons text "を" cons ruby text "作" text "つく" cons text "る。" nil
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "Source/Origin、diagnostic、binding、portable representation など、composition [後/あと]も[共通/きょうつう] infrastructure が[維持/いじ]する[情報/じょうほう]を[確認/かくにん]する。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "[実在/じつざい]する[個別/こべつ] guest language は[共通原理/きょうつうげんり]の[応用例/おうようれい]として[軽/かる]く[扱/あつか]い、[詳細学習/しょうさいがくしゅう]は[各言語/かくげんご] repository の[文書/ぶんしょ]へ[接続/せつぞく]する。"
+          nil
+        nil
+      nil
+    cons paragraph
+      cons "この Tutorial の[到達点/とうたつてん]は、[既存/きそん]の[一言語/いちげんご]を[使/つか]えるようになることだけではなく、NEPL3 [上/じょう]で[小/ちい]さな[言語/げんご]を[作/つく]り、[独立/どくりつ]した[別言語/べつげんご]を import して[統合/とうごう]できることとする。"
+      nil
+    nil
+  cons section foundation_languages "6. [基礎言語/きそげんご]の[扱/あつか]い"
+  body
+    cons paragraph
+      cons sentence cons code "annotation" cons text "、" cons code "sentence" cons text " など、" cons ruby text "多数" text "たすう" cons text "の guest language から" cons ruby text "利用" text "りよう" cons text "されることを" cons ruby text "意図" text "いと" cons text "する" cons ruby text "基礎言語" text "きそげんご" cons text "は、" cons ruby text "個別" text "こべつ" cons text " domain language より" cons ruby text "広" text "ひろ" cons text "い" cons ruby text "共通教材" text "きょうつうきょうざい" cons text "として Playground/Tutorial から" cons ruby text "利用可能" text "りようかのう" cons text "にする。" nil
+      nil
+    cons paragraph
+      cons "ただし、それらを NEPL3 core に[暗黙統合/あんもくとうごう]された[特別構文/とくべつこうぶん]として[扱/あつか]わない。"
+      cons "Tutorial でも「[別/べつ] LanguagePackage を composition する」という NEPL3 の[通常/つうじょう]の[仕組/しく]みを[見/み]せる。"
+      cons "これにより、NEPL3 の[共通基盤/きょうつうきばん]が[特定/とくてい] language の syntax/semantics を[内蔵/ないぞう]しなくても language integration を[成立/せいりつ]させられることを[教材自体/きょうざいじたい]で[検証/けんしょう]する。"
+      nil
+    nil
+  cons section url_principles "7. URL [安定性/あんていせい]の[原則/げんそく]"
+  body
+    cons list unordered
+      cons item none body
+        cons paragraph
+          cons "public route は[表示名/ひょうじめい]や repository [内/ない] source path から[自動生成/じどうせいせい]しない。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "page / tutorial lesson / playground preset には[安定/あんてい] ID を[与/あた]える。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "source file の[移動/いどう]・[正本形式/せいほんけいしき]の Markdown から NEPL3d への[変更/へんこう]で public URL を[変更/へんこう]しない。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons sentence cons text "Playground の" cons ruby text "内部状態" text "ないぶじょうたい" cons text "は shareable な deep link を" cons ruby text "持" text "も" cons text "てるようにするが、トップレベル " cons code "/playground/" cons text " は" cons ruby text "固定" text "こてい" cons text "する。" nil
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "Tutorial の lesson URL も[安定/あんてい] ID を[基準/きじゅん]にし、[見出/みだ]し[変更/へんこう]だけで URL を[破壊/はかい]しない。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "repository [分割/ぶんかつ]に[伴/ともな]い[個別/こべつ] guest language の[詳細文書/しょうさいぶんしょ]を[移動/いどう]する[場合/ばあい]は、[既/すで]に[公開済/こうかいず]みの[入口/いりぐち]について[明示的/めいじてき]な[移行先/いこうさき]を[定/さだ]める。"
+          nil
+        nil
+      nil
+    cons paragraph
+      cons "この URL [設計/せっけい]は Pages [実装/じっそう]を[先行/せんこう]させるためのものではない。"
+      cons "NEPL3d [文書移行/ぶんしょいこう]、Playground、Tutorial、[各/かく] repository [分割/ぶんかつ]が[進/すす]んでも[公開/こうかい] path を[不用意/ふようい]に[変更/へんこう]しないため、[先/さき]に namespace を[予約/よやく]する[計画/けいかく]である。"
+      nil
+    nil
+  nil
