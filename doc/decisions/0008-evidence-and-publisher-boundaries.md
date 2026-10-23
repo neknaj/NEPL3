@@ -1,216 +1,151 @@
-# 証拠保存と文書publisherの責務を戻す
+<!-- Generated from doc/decisions/0008&#45;evidence&#45;and&#45;publisher&#45;boundaries.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page evidence&#45;publisher&#45;boundaries; source SHA-256 c25c32ce9855d410c16ee49776f952d438378b4641b2b4dc7aa562450e7791fc; alias input SHA-256 2a865cf4a8633fc98a0f52128fe0f977169057d46254b12a5d940ebbec2f8746; page input SHA-256 f0e4cf808ebc15c1d2bb13f6ed38b63ae579afdf5b790b6c1c2276421e41ca9a. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
-調査基準: `d87ca8c4ba18e74bc71efb0e2958af87ac971e1b`。2026-09-13。
-本変更は新機能開発ではなく、実装・証拠・開発優先度の是正である。
-先に調査とこの判断を記録し、以下の移行を実施・検証する。
+<a name="証拠保存と文書publisherの責務を戻す"></a>
 
-## 1. 現在起きていること
+# <ruby>証拠保存<rt>しょうこほぞん</rt></ruby>と<ruby>文書<rt>ぶんしょ</rt></ruby>publisherの<ruby>責務<rt>せきむ</rt></ruby>を<ruby>戻<rt>もど</rt></ruby>す
 
-Git管理対象の `conformance/results/` は10,472ファイル、221,122,398 bytes。
-Python本体と `.py.fixture` は1,061ファイル、3,236,358 bytesである。
-同じbyte列のPythonが91組あり、各組の最初の1個を除くコピーは205個。
-`tools/site/` はPython 52ファイル、4,146行（空行・試験を含む）。
-証拠全体の容量をpublisherだけの問題として扱わない。
+[正本（NEPL3d）](<0008-evidence-and-publisher-boundaries.nepld>)
 
-全Python一覧はGit blobから採取し、実行せず内容・定義・複合責務・同一hashを
-調査した。詳細一覧は `python -m tools.evidence.inventory <基準commit> <出力path>`
-で必要時に生成し、repositoryへ再複製しない。初回の内容分類では
-95件が要確認となった。追加の独立内容監査で、この95件は次の責務へ分類した。
-これは歴史的な全反例の再実行や現行testへの移植完了を意味しない。
+<ruby>調査基準<rt>ちょうさきじゅん</rt></ruby>\: `d87ca8c4ba18e74bc71efb0e2958af87ac971e1b`。2026\-09\-13。<ruby>本変更<rt>ほんへんこう</rt></ruby>は<ruby>新機能開発<rt>しんきのうかいはつ</rt></ruby>ではなく、<ruby>実装<rt>じっそう</rt></ruby>・<ruby>証拠<rt>しょうこ</rt></ruby>・<ruby>開発優先度<rt>かいはつゆうせんど</rt></ruby>の<ruby>是正<rt>ぜせい</rt></ruby>である。<ruby>先<rt>さき</rt></ruby>に<ruby>調査<rt>ちょうさ</rt></ruby>とこの<ruby>判断<rt>はんだん</rt></ruby>を<ruby>記録<rt>きろく</rt></ruby>し、<ruby>以下<rt>いか</rt></ruby>の<ruby>移行<rt>いこう</rt></ruby>を<ruby>実施<rt>じっし</rt></ruby>・<ruby>検証<rt>けんしょう</rt></ruby>する。
 
-| 主責務 | 件数 | 今後の扱い |
+<a name="n-6f62736572766174696f6e73"></a>
+
+<a name="1-現在起きていること"></a>
+
+## 1\. <ruby>現在<rt>げんざい</rt></ruby><ruby>起<rt>お</rt></ruby>きていること
+
+Git<ruby>管理対象<rt>かんりたいしょう</rt></ruby>の `conformance/results/` は10\,472ファイル、221\,122\,398 bytes。Python<ruby>本体<rt>ほんたい</rt></ruby>と `.py.fixture` は1\,061ファイル、3\,236\,358 bytesである。<ruby>同<rt>おな</rt></ruby>じbyte<ruby>列<rt>れつ</rt></ruby>のPythonが91<ruby>組<rt>くみ</rt></ruby>あり、<ruby>各組<rt>かくくみ</rt></ruby>の<ruby>最初<rt>さいしょ</rt></ruby>の1<ruby>個<rt>こ</rt></ruby>を<ruby>除<rt>のぞ</rt></ruby>くコピーは205<ruby>個<rt>こ</rt></ruby>。`tools/site/` はPython 52ファイル、4\,146<ruby>行<rt>ぎょう</rt></ruby>（<ruby>空行<rt>くうぎょう</rt></ruby>・<ruby>試験<rt>しけん</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>む）。<ruby>証拠全体<rt>しょうこぜんたい</rt></ruby>の<ruby>容量<rt>ようりょう</rt></ruby>をpublisherだけの<ruby>問題<rt>もんだい</rt></ruby>として<ruby>扱<rt>あつか</rt></ruby>わない。
+
+<ruby>全<rt>ぜん</rt></ruby>Python<ruby>一覧<rt>いちらん</rt></ruby>はGit blobから<ruby>採取<rt>さいしゅ</rt></ruby>し、<ruby>実行<rt>じっこう</rt></ruby>せず<ruby>内容<rt>ないよう</rt></ruby>・<ruby>定義<rt>ていぎ</rt></ruby>・<ruby>複合責務<rt>ふくごうせきむ</rt></ruby>・<ruby>同一<rt>どういつ</rt></ruby>hashを<ruby>調査<rt>ちょうさ</rt></ruby>した。<ruby>詳細一覧<rt>しょうさいいちらん</rt></ruby>は `python -m tools.evidence.inventory <基準commit> <出力path>` で<ruby>必要時<rt>ひつようじ</rt></ruby>に<ruby>生成<rt>せいせい</rt></ruby>し、repositoryへ<ruby>再複製<rt>さいふくせい</rt></ruby>しない。<ruby>初回<rt>しょかい</rt></ruby>の<ruby>内容分類<rt>ないようぶんるい</rt></ruby>では95<ruby>件<rt>けん</rt></ruby>が<ruby>要確認<rt>ようかくにん</rt></ruby>となった。<ruby>追加<rt>ついか</rt></ruby>の<ruby>独立内容監査<rt>どくりつないようかんさ</rt></ruby>で、この95<ruby>件<rt>けん</rt></ruby>は<ruby>次<rt>つぎ</rt></ruby>の<ruby>責務<rt>せきむ</rt></ruby>へ<ruby>分類<rt>ぶんるい</rt></ruby>した。これは<ruby>歴史的<rt>れきしてき</rt></ruby>な<ruby>全反例<rt>ぜんはんれい</rt></ruby>の<ruby>再実行<rt>さいじっこう</rt></ruby>や<ruby>現行<rt>げんこう</rt></ruby>testへの<ruby>移植完了<rt>いしょくかんりょう</rt></ruby>を<ruby>意味<rt>いみ</rt></ruby>しない。
+
+| <ruby>主責務<rt>しゅせきむ</rt></ruby> | <ruby>件数<rt>けんすう</rt></ruby> | <ruby>今後<rt>こんご</rt></ruby>の<ruby>扱<rt>あつか</rt></ruby>い |
 | --- | ---: | --- |
-| 既存toolのコピー・旧版 | 17 | Git revisionと既存toolを参照 |
-| ブラウザ表示・ナビゲーション観測 | 23 | 既存browser/site auditへ必要な回帰だけ追加 |
-| 文書内容・構造・生成結果の比較 | 12 | 通常の意味・projection試験へ |
-| hash一覧作成 | 3 | 共通収集器へ |
-| 固定review文章の書出し | 3 | review文章を直接保存 |
-| 境界・失敗の直接再現 | 7 | 必要な反例を通常testへ |
-| workerの偽応答・sleep | 4 | 管理されたtest fixtureへ |
-| 試験用コピー・Rust試験注入・修正 | 24 | source注入の共通frameworkは作らず通常Rust testへ |
-| 独立期待値生成 | 2 | production実装と統合せず独立性を維持 |
+| <ruby>既存<rt>きそん</rt></ruby>toolのコピー・<ruby>旧版<rt>きゅうはん</rt></ruby> | 17 | Git revisionと<ruby>既存<rt>きそん</rt></ruby>toolを<ruby>参照<rt>さんしょう</rt></ruby> |
+| ブラウザ<ruby>表示<rt>ひょうじ</rt></ruby>・ナビゲーション<ruby>観測<rt>かんそく</rt></ruby> | 23 | <ruby>既存<rt>きそん</rt></ruby>browser\/site auditへ<ruby>必要<rt>ひつよう</rt></ruby>な<ruby>回帰<rt>かいき</rt></ruby>だけ<ruby>追加<rt>ついか</rt></ruby> |
+| <ruby>文書内容<rt>ぶんしょないよう</rt></ruby>・<ruby>構造<rt>こうぞう</rt></ruby>・<ruby>生成結果<rt>せいせいけっか</rt></ruby>の<ruby>比較<rt>ひかく</rt></ruby> | 12 | <ruby>通常<rt>つうじょう</rt></ruby>の<ruby>意味<rt>いみ</rt></ruby>・projection<ruby>試験<rt>しけん</rt></ruby>へ |
+| hash<ruby>一覧作成<rt>いちらんさくせい</rt></ruby> | 3 | <ruby>共通収集器<rt>きょうつうしゅうしゅうき</rt></ruby>へ |
+| <ruby>固定<rt>こてい</rt></ruby>review<ruby>文章<rt>ぶんしょう</rt></ruby>の<ruby>書出<rt>かきだ</rt></ruby>し | 3 | review<ruby>文章<rt>ぶんしょう</rt></ruby>を<ruby>直接保存<rt>ちょくせつほぞん</rt></ruby> |
+| <ruby>境界<rt>きょうかい</rt></ruby>・<ruby>失敗<rt>しっぱい</rt></ruby>の<ruby>直接再現<rt>ちょくせつさいげん</rt></ruby> | 7 | <ruby>必要<rt>ひつよう</rt></ruby>な<ruby>反例<rt>はんれい</rt></ruby>を<ruby>通常<rt>つうじょう</rt></ruby>testへ |
+| workerの<ruby>偽応答<rt>にせおうとう</rt></ruby>・sleep | 4 | <ruby>管理<rt>かんり</rt></ruby>されたtest fixtureへ |
+| <ruby>試験用<rt>しけんよう</rt></ruby>コピー・Rust<ruby>試験注入<rt>しけんちゅうにゅう</rt></ruby>・<ruby>修正<rt>しゅうせい</rt></ruby> | 24 | source<ruby>注入<rt>ちゅうにゅう</rt></ruby>の<ruby>共通<rt>きょうつう</rt></ruby>frameworkは<ruby>作<rt>つく</rt></ruby>らず<ruby>通常<rt>つうじょう</rt></ruby>Rust testへ |
+| <ruby>独立期待値生成<rt>どくりつきたいちせいせい</rt></ruby> | 2 | production<ruby>実装<rt>じっそう</rt></ruby>と<ruby>統合<rt>とうごう</rt></ruby>せず<ruby>独立性<rt>どくりつせい</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby> |
 
-直近の [acquireのseal](https://github.com/neknaj/NEPL3/blob/d87ca8c4ba18e74bc71efb0e2958af87ac971e1b/conformance/results/doc-pages-acquire/review/seal.py.fixture) はレビュー本文の作成、
-sourceのコピー、全ファイルのhash列挙を兼ねる。同名のdownload reviewにも
-同じ保存算法がある。`verify.py.fixture` は通常・`-O`試験の実行とlog保存に
-加え、個別の期限probeを含む。保存算法と検証対象の論理が混ざっている。
-さらに4つの現行site試験が過去reviewのtarを直接fixtureとして参照している。
+<ruby>直近<rt>ちょっきん</rt></ruby>の [acquireのseal](<https\:\/\/github\.com\/neknaj\/NEPL3\/blob\/d87ca8c4ba18e74bc71efb0e2958af87ac971e1b\/conformance\/results\/doc\-pages\-acquire\/review\/seal\.py\.fixture>) はレビュー<ruby>本文<rt>ほんぶん</rt></ruby>の<ruby>作成<rt>さくせい</rt></ruby>、sourceのコピー、<ruby>全<rt>ぜん</rt></ruby>ファイルのhash<ruby>列挙<rt>れっきょ</rt></ruby>を<ruby>兼<rt>か</rt></ruby>ねる。<ruby>同名<rt>どうめい</rt></ruby>のdownload reviewにも<ruby>同<rt>おな</rt></ruby>じ<ruby>保存算法<rt>ほぞんさんぽう</rt></ruby>がある。`verify.py.fixture` は<ruby>通常<rt>つうじょう</rt></ruby>・`-O`<ruby>試験<rt>しけん</rt></ruby>の<ruby>実行<rt>じっこう</rt></ruby>とlog<ruby>保存<rt>ほぞん</rt></ruby>に<ruby>加<rt>くわ</rt></ruby>え、<ruby>個別<rt>こべつ</rt></ruby>の<ruby>期限<rt>きげん</rt></ruby>probeを<ruby>含<rt>ふく</rt></ruby>む。<ruby>保存算法<rt>ほぞんさんぽう</rt></ruby>と<ruby>検証対象<rt>けんしょうたいしょう</rt></ruby>の<ruby>論理<rt>ろんり</rt></ruby>が<ruby>混<rt>ま</rt></ruby>ざっている。さらに4つの<ruby>現行<rt>げんこう</rt></ruby>site<ruby>試験<rt>しけん</rt></ruby>が<ruby>過去<rt>かこ</rt></ruby>reviewのtarを<ruby>直接<rt>ちょくせつ</rt></ruby>fixtureとして<ruby>参照<rt>さんしょう</rt></ruby>している。
 
-PR #120/#121は未統合。CLIの未commit追加2ファイルは元worktreeに保全し、
-この是正へ含めない。公開issueは0件。26タスクの多数が未完で、T11のsuiteも
-未実装。publisherの細分化されたhelper完了を本体の進捗に代用していた。
+PR \#120\/\#121は<ruby>未統合<rt>みとうごう</rt></ruby>。CLIの<ruby>未<rt>み</rt></ruby>commit<ruby>追加<rt>ついか</rt></ruby>2ファイルは<ruby>元<rt>もと</rt></ruby>worktreeに<ruby>保全<rt>ほぜん</rt></ruby>し、この<ruby>是正<rt>ぜせい</rt></ruby>へ<ruby>含<rt>ふく</rt></ruby>めない。<ruby>公開<rt>こうかい</rt></ruby>issueは0<ruby>件<rt>けん</rt></ruby>。26タスクの<ruby>多数<rt>たすう</rt></ruby>が<ruby>未完<rt>みかん</rt></ruby>で、T11のsuiteも<ruby>未実装<rt>みじっそう</rt></ruby>。publisherの<ruby>細分化<rt>さいぶんか</rt></ruby>されたhelper<ruby>完了<rt>かんりょう</rt></ruby>を<ruby>本体<rt>ほんたい</rt></ruby>の<ruby>進捗<rt>しんちょく</rt></ruby>に<ruby>代用<rt>だいよう</rt></ruby>していた。
 
-最終差分はmain `b8bae3fd65440f5e48fbec67cbcbfac083b5f291` から独立して統合する。
-未統合PR #120/#121のcandidate/download/observations/stage追加は元branchと
-保全refに残し、この是正の最終treeへ含めない。既存mainのpublisher本体を維持し、
-そのfixture参照・試験配置・責務文書だけを整理する。未導入機能を同時導入して
-「整理が完了した」としない。移行途中の1f8b7d6試験と最終treeの試験は分けて記録する。
+<ruby>最終差分<rt>さいしゅうさぶん</rt></ruby>はmain `b8bae3fd65440f5e48fbec67cbcbfac083b5f291` から<ruby>独立<rt>どくりつ</rt></ruby>して<ruby>統合<rt>とうごう</rt></ruby>する。<ruby>未統合<rt>みとうごう</rt></ruby>PR \#120\/\#121のcandidate\/download\/observations\/stage<ruby>追加<rt>ついか</rt></ruby>は<ruby>元<rt>もと</rt></ruby>branchと<ruby>保全<rt>ほぜん</rt></ruby>refに<ruby>残<rt>のこ</rt></ruby>し、この<ruby>是正<rt>ぜせい</rt></ruby>の<ruby>最終<rt>さいしゅう</rt></ruby>treeへ<ruby>含<rt>ふく</rt></ruby>めない。<ruby>既存<rt>きそん</rt></ruby>mainのpublisher<ruby>本体<rt>ほんたい</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby>し、そのfixture<ruby>参照<rt>さんしょう</rt></ruby>・<ruby>試験配置<rt>しけんはいち</rt></ruby>・<ruby>責務文書<rt>せきむぶんしょ</rt></ruby>だけを<ruby>整理<rt>せいり</rt></ruby>する。<ruby>未導入機能<rt>みどうにゅうきのう</rt></ruby>を<ruby>同時導入<rt>どうじどうにゅう</rt></ruby>して「<ruby>整理<rt>せいり</rt></ruby>が<ruby>完了<rt>かんりょう</rt></ruby>した」としない。<ruby>移行途中<rt>いこうとちゅう</rt></ruby>の1f8b7d6<ruby>試験<rt>しけん</rt></ruby>と<ruby>最終<rt>さいしゅう</rt></ruby>treeの<ruby>試験<rt>しけん</rt></ruby>は<ruby>分<rt>わ</rt></ruby>けて<ruby>記録<rt>きろく</rt></ruby>する。
 
-## 2. 合理的な部分
+<a name="n-726174696f6e616c65"></a>
 
-対象revision、原stdout/stderr、実行環境、独立レビュー、hashは必要である。
-既存 `tools/src/evidence/` は受入群、target、source/spec identity、結果、logを
-検査しており、これを置換する二つ目の受入判定器は作らない。
-生成・検証・upload・公開・LKGは異なる状態として維持する。
-GitHubの成功だけからHTMLの正しさや全体受入合格を推定しない。
+<a name="2-合理的な部分"></a>
 
-## 3. 過剰・重複・一回限りの部分
+## 2\. <ruby>合理的<rt>ごうりてき</rt></ruby>な<ruby>部分<rt>ぶぶん</rt></ruby>
 
-- reviewごとの `seal/freeze/finalize/report` とsource丸ごとの再コピー。
-- 通常試験実行・終了コード・log保存を毎回別scriptに書くこと。
-- 回帰価値のあるprobeが管理されたtestへ移らず、結果配下でしか読めないこと。
-- 同じ処理を別processへ運ぶ小さなworkerとtransportの反復。
-- 各APIが安全であっても、完成したpublisherがないまま入口を増やすこと。
+<ruby>対象<rt>たいしょう</rt></ruby>revision、<ruby>原<rt>げん</rt></ruby>stdout\/stderr、<ruby>実行環境<rt>じっこうかんきょう</rt></ruby>、<ruby>独立<rt>どくりつ</rt></ruby>レビュー、hashは<ruby>必要<rt>ひつよう</rt></ruby>である。<ruby>既存<rt>きそん</rt></ruby> `tools/src/evidence/` は<ruby>受入群<rt>うけいれぐん</rt></ruby>、target、source\/spec identity、<ruby>結果<rt>けっか</rt></ruby>、logを<ruby>検査<rt>けんさ</rt></ruby>しており、これを<ruby>置換<rt>ちかん</rt></ruby>する<ruby>二<rt>ふた</rt></ruby>つ<ruby>目<rt>め</rt></ruby>の<ruby>受入判定器<rt>うけいれはんていき</rt></ruby>は<ruby>作<rt>つく</rt></ruby>らない。<ruby>生成<rt>せいせい</rt></ruby>・<ruby>検証<rt>けんしょう</rt></ruby>・upload・<ruby>公開<rt>こうかい</rt></ruby>・LKGは<ruby>異<rt>こと</rt></ruby>なる<ruby>状態<rt>じょうたい</rt></ruby>として<ruby>維持<rt>いじ</rt></ruby>する。GitHubの<ruby>成功<rt>せいこう</rt></ruby>だけからHTMLの<ruby>正<rt>ただ</rt></ruby>しさや<ruby>全体受入合格<rt>ぜんたいうけいれごうかく</rt></ruby>を<ruby>推定<rt>すいてい</rt></ruby>しない。
 
-ファイル名だけで全scriptの内容を断定しない。全Python一覧は用途・実行主体・
-保存理由・同一hashの関係を記録し、sourceコピー、保存算法、通常test runner、
-固有reproducer、要確認を分ける。複合用途は複合として扱う。
+<a name="n-657863657373"></a>
 
-## 4. 維持する保証とpublisherの分担
+<a name="3-過剰重複一回限りの部分"></a>
 
-| 機構 | 防ぐ失敗・既存保証 | 今後の所有者 |
+## 3\. <ruby>過剰<rt>かじょう</rt></ruby>・<ruby>重複<rt>ちょうふく</rt></ruby>・<ruby>一回限<rt>いっかいかぎ</rt></ruby>りの<ruby>部分<rt>ぶぶん</rt></ruby>
+
+- reviewごとの `seal/freeze/finalize/report` とsource<ruby>丸<rt>まる</rt></ruby>ごとの<ruby>再<rt>さい</rt></ruby>コピー。
+- <ruby>通常試験実行<rt>つうじょうしけんじっこう</rt></ruby>・<ruby>終了<rt>しゅうりょう</rt></ruby>コード・log<ruby>保存<rt>ほぞん</rt></ruby>を<ruby>毎回別<rt>まいかいべつ</rt></ruby>scriptに<ruby>書<rt>か</rt></ruby>くこと。
+- <ruby>回帰価値<rt>かいきかち</rt></ruby>のあるprobeが<ruby>管理<rt>かんり</rt></ruby>されたtestへ<ruby>移<rt>うつ</rt></ruby>らず、<ruby>結果配下<rt>けっかはいか</rt></ruby>でしか<ruby>読<rt>よ</rt></ruby>めないこと。
+- <ruby>同<rt>おな</rt></ruby>じ<ruby>処理<rt>しょり</rt></ruby>を<ruby>別<rt>べつ</rt></ruby>processへ<ruby>運<rt>はこ</rt></ruby>ぶ<ruby>小<rt>ちい</rt></ruby>さなworkerとtransportの<ruby>反復<rt>はんぷく</rt></ruby>。
+- <ruby>各<rt>かく</rt></ruby>APIが<ruby>安全<rt>あんぜん</rt></ruby>であっても、<ruby>完成<rt>かんせい</rt></ruby>したpublisherがないまま<ruby>入口<rt>いりぐち</rt></ruby>を<ruby>増<rt>ふ</rt></ruby>やすこと。
+
+ファイル<ruby>名<rt>めい</rt></ruby>だけで<ruby>全<rt>ぜん</rt></ruby>scriptの<ruby>内容<rt>ないよう</rt></ruby>を<ruby>断定<rt>だんてい</rt></ruby>しない。<ruby>全<rt>ぜん</rt></ruby>Python<ruby>一覧<rt>いちらん</rt></ruby>は<ruby>用途<rt>ようと</rt></ruby>・<ruby>実行主体<rt>じっこうしゅたい</rt></ruby>・<ruby>保存理由<rt>ほぞんりゆう</rt></ruby>・<ruby>同一<rt>どういつ</rt></ruby>hashの<ruby>関係<rt>かんけい</rt></ruby>を<ruby>記録<rt>きろく</rt></ruby>し、sourceコピー、<ruby>保存算法<rt>ほぞんさんぽう</rt></ruby>、<ruby>通常<rt>つうじょう</rt></ruby>test runner、<ruby>固有<rt>こゆう</rt></ruby>reproducer、<ruby>要確認<rt>ようかくにん</rt></ruby>を<ruby>分<rt>わ</rt></ruby>ける。<ruby>複合用途<rt>ふくごうようと</rt></ruby>は<ruby>複合<rt>ふくごう</rt></ruby>として<ruby>扱<rt>あつか</rt></ruby>う。
+
+<a name="n-67756172616e74656573"></a>
+
+<a name="4-維持する保証とpublisherの分担"></a>
+
+## 4\. <ruby>維持<rt>いじ</rt></ruby>する<ruby>保証<rt>ほしょう</rt></ruby>とpublisherの<ruby>分担<rt>ぶんたん</rt></ruby>
+
+| <ruby>機構<rt>きこう</rt></ruby> | <ruby>防<rt>ふせ</rt></ruby>ぐ<ruby>失敗<rt>しっぱい</rt></ruby>・<ruby>既存保証<rt>きそんほしょう</rt></ruby> | <ruby>今後<rt>こんご</rt></ruby>の<ruby>所有者<rt>しょゆうしゃ</rt></ruby> |
 | --- | --- | --- |
-| CIの成功・run identity | Actionsのneeds/outputsは同runを接続する。任意の別run artifactは自動で信頼されない | 同runの接続はworkflow。別run採用時だけ明示的な検証 |
-| tar・asset identity | artifact IDとZIP digestだけでは内部HTMLやsourceを検査できない | repositoryのpayload/内容validatorを維持 |
-| upload/downloadと資格情報 | Actions公式の固定版actionがHTTP/認証/転送を提供する | 公式actionで実現できる入口では独自HTTP/IPCを重ねない |
-| 公開の排他 | Actions concurrencyは同一repository/groupのjob/workflowを直列化するが、Pages側の原子的CASではない | 単一publisher workflow。異なるwriterを禁止し、不明状態は停止 |
-| 不明なPOST・再試行防止 | timeout後のremote結果をActions成功/失敗だけでは確定できない | mutation境界のintent/receiptと次回照合を維持 |
-| public smoke | deploy API成功は配信byte・全assetの成功ではない | repositoryのHTTP/内容検査を維持 |
-| LKGと復旧 | artifact retentionは永続保存でもLKGでもない | T20/S06の保存・対象照合・有限復旧は維持。未実装を合格にしない |
-| review evidence | action logは独立レビューやscopeを定義しない | 小さな共通収集/照合ツールと宣言データ |
+| CIの<ruby>成功<rt>せいこう</rt></ruby>・run identity | Actionsのneeds\/outputsは<ruby>同<rt>どう</rt></ruby>runを<ruby>接続<rt>せつぞく</rt></ruby>する。<ruby>任意<rt>にんい</rt></ruby>の<ruby>別<rt>べつ</rt></ruby>run artifactは<ruby>自動<rt>じどう</rt></ruby>で<ruby>信頼<rt>しんらい</rt></ruby>されない | <ruby>同<rt>どう</rt></ruby>runの<ruby>接続<rt>せつぞく</rt></ruby>はworkflow。<ruby>別<rt>べつ</rt></ruby>run<ruby>採用時<rt>さいようじ</rt></ruby>だけ<ruby>明示的<rt>めいじてき</rt></ruby>な<ruby>検証<rt>けんしょう</rt></ruby> |
+| tar・asset identity | artifact IDとZIP digestだけでは<ruby>内部<rt>ないぶ</rt></ruby>HTMLやsourceを<ruby>検査<rt>けんさ</rt></ruby>できない | repositoryのpayload\/<ruby>内容<rt>ないよう</rt></ruby>validatorを<ruby>維持<rt>いじ</rt></ruby> |
+| upload\/downloadと<ruby>資格情報<rt>しかくじょうほう</rt></ruby> | Actions<ruby>公式<rt>こうしき</rt></ruby>の<ruby>固定版<rt>こていばん</rt></ruby>actionがHTTP\/<ruby>認証<rt>にんしょう</rt></ruby>\/<ruby>転送<rt>てんそう</rt></ruby>を<ruby>提供<rt>ていきょう</rt></ruby>する | <ruby>公式<rt>こうしき</rt></ruby>actionで<ruby>実現<rt>じつげん</rt></ruby>できる<ruby>入口<rt>いりぐち</rt></ruby>では<ruby>独自<rt>どくじ</rt></ruby>HTTP\/IPCを<ruby>重<rt>かさ</rt></ruby>ねない |
+| <ruby>公開<rt>こうかい</rt></ruby>の<ruby>排他<rt>はいた</rt></ruby> | Actions concurrencyは<ruby>同一<rt>どういつ</rt></ruby>repository\/groupのjob\/workflowを<ruby>直列化<rt>ちょくれつか</rt></ruby>するが、Pages<ruby>側<rt>がわ</rt></ruby>の<ruby>原子的<rt>げんしてき</rt></ruby>CASではない | <ruby>単一<rt>たんいつ</rt></ruby>publisher workflow。<ruby>異<rt>こと</rt></ruby>なるwriterを<ruby>禁止<rt>きんし</rt></ruby>し、<ruby>不明状態<rt>ふめいじょうたい</rt></ruby>は<ruby>停止<rt>ていし</rt></ruby> |
+| <ruby>不明<rt>ふめい</rt></ruby>なPOST・<ruby>再試行防止<rt>さいしこうぼうし</rt></ruby> | timeout<ruby>後<rt>ご</rt></ruby>のremote<ruby>結果<rt>けっか</rt></ruby>をActions<ruby>成功<rt>せいこう</rt></ruby>\/<ruby>失敗<rt>しっぱい</rt></ruby>だけでは<ruby>確定<rt>かくてい</rt></ruby>できない | mutation<ruby>境界<rt>きょうかい</rt></ruby>のintent\/receiptと<ruby>次回照合<rt>じかいしょうごう</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby> |
+| public smoke | deploy API<ruby>成功<rt>せいこう</rt></ruby>は<ruby>配信<rt>はいしん</rt></ruby>byte・<ruby>全<rt>ぜん</rt></ruby>assetの<ruby>成功<rt>せいこう</rt></ruby>ではない | repositoryのHTTP\/<ruby>内容検査<rt>ないようけんさ</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby> |
+| LKGと<ruby>復旧<rt>ふっきゅう</rt></ruby> | artifact retentionは<ruby>永続保存<rt>えいぞくほぞん</rt></ruby>でもLKGでもない | T20\/S06の<ruby>保存<rt>ほぞん</rt></ruby>・<ruby>対象照合<rt>たいしょうしょうごう</rt></ruby>・<ruby>有限復旧<rt>ゆうげんふっきゅう</rt></ruby>は<ruby>維持<rt>いじ</rt></ruby>。<ruby>未実装<rt>みじっそう</rt></ruby>を<ruby>合格<rt>ごうかく</rt></ruby>にしない |
+| review evidence | action logは<ruby>独立<rt>どくりつ</rt></ruby>レビューやscopeを<ruby>定義<rt>ていぎ</rt></ruby>しない | <ruby>小<rt>ちい</rt></ruby>さな<ruby>共通収集<rt>きょうつうしゅうしゅう</rt></ruby>\/<ruby>照合<rt>しょうごう</rt></ruby>ツールと<ruby>宣言<rt>せんげん</rt></ruby>データ |
 
-独自transportを即削除するのではなく、必要な失敗試験を公式actionとの接続に
-引き継げた経路から廃止する。代替未検証の安全性を「GitHubが保証」としない。
-現行publisherは未完成であり、公開済み・復旧可能とはいえない。ただし補助系の
-hardening拡張は停止し、本是正後に新しいpublisher専用milestoneを追加しない。
-immutable releasesの設定承認待ちも本体開発の停止条件ではない。
+<ruby>独自<rt>どくじ</rt></ruby>transportを<ruby>即削除<rt>そくさくじょ</rt></ruby>するのではなく、<ruby>必要<rt>ひつよう</rt></ruby>な<ruby>失敗試験<rt>しっぱいしけん</rt></ruby>を<ruby>公式<rt>こうしき</rt></ruby>actionとの<ruby>接続<rt>せつぞく</rt></ruby>に<ruby>引<rt>ひ</rt></ruby>き<ruby>継<rt>つ</rt></ruby>げた<ruby>経路<rt>けいろ</rt></ruby>から<ruby>廃止<rt>はいし</rt></ruby>する。<ruby>代替未検証<rt>だいたいみけんしょう</rt></ruby>の<ruby>安全性<rt>あんぜんせい</rt></ruby>を「GitHubが<ruby>保証<rt>ほしょう</rt></ruby>」としない。<ruby>現行<rt>げんこう</rt></ruby>publisherは<ruby>未完成<rt>みかんせい</rt></ruby>であり、<ruby>公開済<rt>こうかいず</rt></ruby>み・<ruby>復旧可能<rt>ふっきゅうかのう</rt></ruby>とはいえない。ただし<ruby>補助系<rt>ほじょけい</rt></ruby>のhardening<ruby>拡張<rt>かくちょう</rt></ruby>は<ruby>停止<rt>ていし</rt></ruby>し、<ruby>本是正後<rt>ほんぜせいご</rt></ruby>に<ruby>新<rt>あたら</rt></ruby>しいpublisher<ruby>専用<rt>せんよう</rt></ruby>milestoneを<ruby>追加<rt>ついか</rt></ruby>しない。immutable releasesの<ruby>設定承認待<rt>せっていしょうにんま</rt></ruby>ちも<ruby>本体開発<rt>ほんたいかいはつ</rt></ruby>の<ruby>停止条件<rt>ていしじょうけん</rt></ruby>ではない。
 
-公式artifact転送にはdigest比較があるが、不一致の表示はwarningであるため、
-repository側の採用拒否まで自動保証されるとは扱わない。
-根拠: [artifactの共有と検査](https://docs.github.com/en/actions/tutorials/store-and-share-data)、
-[concurrencyの範囲](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)。
+<ruby>公式<rt>こうしき</rt></ruby>artifact<ruby>転送<rt>てんそう</rt></ruby>にはdigest<ruby>比較<rt>ひかく</rt></ruby>があるが、<ruby>不一致<rt>ふいっち</rt></ruby>の<ruby>表示<rt>ひょうじ</rt></ruby>はwarningであるため、repository<ruby>側<rt>がわ</rt></ruby>の<ruby>採用拒否<rt>さいようきょひ</rt></ruby>まで<ruby>自動保証<rt>じどうほしょう</rt></ruby>されるとは<ruby>扱<rt>あつか</rt></ruby>わない。<ruby>根拠<rt>こんきょ</rt></ruby>\: [artifactの<ruby>共有<rt>きょうゆう</rt></ruby>と<ruby>検査<rt>けんさ</rt></ruby>](<https\:\/\/docs\.github\.com\/en\/actions\/tutorials\/store\-and\-share\-data>)、[concurrencyの<ruby>範囲<rt>はんい</rt></ruby>](<https\:\/\/docs\.github\.com\/en\/actions\/how\-tos\/write\-workflows\/choose\-when\-workflows\-run\/control\-workflow\-concurrency>)。
 
-## 5. 統合・停止する機構
+<a name="n-636f6e736f6c69646174696f6e"></a>
 
-通常command実行、原log保存、manifest作成とhash検査を `tools/evidence/`
-へ集約する。対象command・scopeは `tools/evidence/specs/` の小さなJSONで指定する。
-独自の式、plugin、callback、実行言語、複雑なテンプレートは導入しない。
-初期APIはargv/cwd/期限、原stdout/stderr、終了状態、revision/environmentとhashの
-収集・照合に限定する。受入判定、probeの生成、レビュー文章の生成は担当しない。
-review本文は人/独立agentが書くdataとし、scriptに埋め込んで再生成しない。
-sourceはGit commitとpath/hashで指す。未保存変更を検証する場合はcommitするか、
-理由付き差分を残す。無条件にsource全文を証拠へ複写しない。
+<a name="5-統合停止する機構"></a>
 
-## 6. 新しい責務境界
+## 5\. <ruby>統合<rt>とうごう</rt></ruby>・<ruby>停止<rt>ていし</rt></ruby>する<ruby>機構<rt>きこう</rt></ruby>
 
-- `crates/`, `apps/`: NEPL3本体・言語backend・host入口。
-- `tools/generate/`: code generator。
-- `tools/src/site/`, Doc/markup crates: 文書生成。
-- `tools/site/`: 配布payloadとpublisher。通常testはtest領域へ分離する。
-- `tools/evidence/`: 共通の実行/証拠収集/照合。受入判定は既存Rust tools。
-- `tools/evidence/specs/`: 収集するcommandとscope。仕様適合ケースでもレビュー本文でもない。
-- `conformance/`: 共通仕様への適合を検査する入力・期待値・不変条件・target adapter。
-  native、portable、別実装の意味比較を維持する。
-- `conformance/results/`: 既存の参照が必要な歴史記録と小さな結果参照。
-  今後の汎用レビュー、CI log、deployment journalの保管先にはしない。
-- 独立レビューは対象commitとscopeを明記してPRへ残す。実行logはCI artifact、
-  公開attempt・journal・LKGはpublisherの永続状態として管理する。
-  必要な長期保全は外部archiveへ行い、Gitの中へsource履歴を複製しない。
-- 通常回帰testへ移す固有probeはtest sourceへ。一時的実験は `.tmp/`。
-  特殊reproducerを残すときだけ保存理由と対象revisionをmanifestへ記す。
+<ruby>通常<rt>つうじょう</rt></ruby>command<ruby>実行<rt>じっこう</rt></ruby>、<ruby>原<rt>げん</rt></ruby>log<ruby>保存<rt>ほぞん</rt></ruby>、manifest<ruby>作成<rt>さくせい</rt></ruby>とhash<ruby>検査<rt>けんさ</rt></ruby>を `tools/evidence/` へ<ruby>集約<rt>しゅうやく</rt></ruby>する。<ruby>対象<rt>たいしょう</rt></ruby>command・scopeは `tools/evidence/specs/` の<ruby>小<rt>ちい</rt></ruby>さなJSONで<ruby>指定<rt>してい</rt></ruby>する。<ruby>独自<rt>どくじ</rt></ruby>の<ruby>式<rt>しき</rt></ruby>、plugin、callback、<ruby>実行言語<rt>じっこうげんご</rt></ruby>、<ruby>複雑<rt>ふくざつ</rt></ruby>なテンプレートは<ruby>導入<rt>どうにゅう</rt></ruby>しない。<ruby>初期<rt>しょき</rt></ruby>APIはargv\/cwd\/<ruby>期限<rt>きげん</rt></ruby>、<ruby>原<rt>げん</rt></ruby>stdout\/stderr、<ruby>終了状態<rt>しゅうりょうじょうたい</rt></ruby>、revision\/environmentとhashの<ruby>収集<rt>しゅうしゅう</rt></ruby>・<ruby>照合<rt>しょうごう</rt></ruby>に<ruby>限定<rt>げんてい</rt></ruby>する。<ruby>受入判定<rt>うけいれはんてい</rt></ruby>、probeの<ruby>生成<rt>せいせい</rt></ruby>、レビュー<ruby>文章<rt>ぶんしょう</rt></ruby>の<ruby>生成<rt>せいせい</rt></ruby>は<ruby>担当<rt>たんとう</rt></ruby>しない。review<ruby>本文<rt>ほんぶん</rt></ruby>は<ruby>人<rt>ひと</rt></ruby>\/<ruby>独立<rt>どくりつ</rt></ruby>agentが<ruby>書<rt>か</rt></ruby>くdataとし、scriptに<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>んで<ruby>再生成<rt>さいせいせい</rt></ruby>しない。sourceはGit commitとpath\/hashで<ruby>指<rt>さ</rt></ruby>す。<ruby>未保存変更<rt>みほぞんへんこう</rt></ruby>を<ruby>検証<rt>けんしょう</rt></ruby>する<ruby>場合<rt>ばあい</rt></ruby>はcommitするか、<ruby>理由付<rt>りゆうつ</rt></ruby>き<ruby>差分<rt>さぶん</rt></ruby>を<ruby>残<rt>のこ</rt></ruby>す。<ruby>無条件<rt>むじょうけん</rt></ruby>にsource<ruby>全文<rt>ぜんぶん</rt></ruby>を<ruby>証拠<rt>しょうこ</rt></ruby>へ<ruby>複写<rt>ふくしゃ</rt></ruby>しない。
 
-## 7. 移行手順と優先度
+<a name="n-626f756e646172696573"></a>
 
-1. 全script一覧と重複を記録し、基準commit以前をhistorical evidenceとして凍結。
-   過去の結果やmanifestを機械的に書換えない。新規増殖を通常checkで防ぐ。
-   historical sourceを実行せず、現行testから直接依存しない境界を検査する。
-   正規test領域への回帰試験追加まで禁止する検査にしない。
-2. 確認済みの共通保存算法だけを抽出し、今回の是正の検証自体に使用する。
-   保存ツールを保存するための新しいseal scriptは作らない。
-3. 現行testの実行領域とhistorical inputを分離。必要なfixtureはhashを保って
-   test fixtureへ移し、由来を記載する。元証拠は履歴として保持する。
-4. publisherの入口と責務表を整理し、仕様・CI・タスク・開発手順を対応させる。
-   部分実装の安全性を落とさず、これ以上の独自protocol追加を止める。
-5. 本体へ戻る次工程はT08の名前scope/free_symbols・CheckedExpression。
-   Mathの表示/評価の前提をproduction APIとportable試験で実装する。
-   T20の未完了・本来の最終範囲は維持し、T08をpublisher完成待ちにしない。
-   最初はletのinit、sum/integralの上下限を外scope、indexをbodyのみへ束縛し、
-   shadowing/free_symbols・Origin・予算を検証する。free_symbolsだけで
-   CheckedExpression全体やM01/M02/M03の完成とはしない。
+<a name="6-新しい責務境界"></a>
 
-## 8. 完了条件
+## 6\. <ruby>新<rt>あたら</rt></ruby>しい<ruby>責務境界<rt>せきむきょうかい</rt></ruby>
 
-通常のrepository source検査は保全archive refに依存しない。2026年9月23日の整理で
-残存sourceとlegacy例外機構を撤去した。resultsは状態索引が所有する型付きJSONに限定する。
-履歴資料は固定revisionから取得し、進行中タスクの段階参照は元pathとSHA-256を保持する。
-Doc inventoryの過去baseline監査は別の操作・契約として残る。
+- `crates/`\, `apps/`\: NEPL3<ruby>本体<rt>ほんたい</rt></ruby>・<ruby>言語<rt>げんご</rt></ruby>backend・host<ruby>入口<rt>いりぐち</rt></ruby>。
+- `tools/generate/`\: code generator。
+- `tools/src/site/`\, Doc\/markup crates\: <ruby>文書生成<rt>ぶんしょせいせい</rt></ruby>。
+- `tools/site/`\: <ruby>配布<rt>はいふ</rt></ruby>payloadとpublisher。<ruby>通常<rt>つうじょう</rt></ruby>testはtest<ruby>領域<rt>りょういき</rt></ruby>へ<ruby>分離<rt>ぶんり</rt></ruby>する。
+- `tools/evidence/`\: <ruby>共通<rt>きょうつう</rt></ruby>の<ruby>実行<rt>じっこう</rt></ruby>\/<ruby>証拠収集<rt>しょうこしゅうしゅう</rt></ruby>\/<ruby>照合<rt>しょうごう</rt></ruby>。<ruby>受入判定<rt>うけいれはんてい</rt></ruby>は<ruby>既存<rt>きそん</rt></ruby>Rust tools。
+- `tools/evidence/specs/`\: <ruby>収集<rt>しゅうしゅう</rt></ruby>するcommandとscope。<ruby>仕様適合<rt>しようてきごう</rt></ruby>ケースでもレビュー<ruby>本文<rt>ほんぶん</rt></ruby>でもない。
+- `conformance/`\: <ruby>共通仕様<rt>きょうつうしよう</rt></ruby>への<ruby>適合<rt>てきごう</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する<ruby>入力<rt>にゅうりょく</rt></ruby>・<ruby>期待値<rt>きたいち</rt></ruby>・<ruby>不変条件<rt>ふへんじょうけん</rt></ruby>・target adapter。native、portable、<ruby>別実装<rt>べつじっそう</rt></ruby>の<ruby>意味比較<rt>いみひかく</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby>する。
+- `conformance/results/`\: <ruby>既存<rt>きそん</rt></ruby>の<ruby>参照<rt>さんしょう</rt></ruby>が<ruby>必要<rt>ひつよう</rt></ruby>な<ruby>歴史記録<rt>れきしきろく</rt></ruby>と<ruby>小<rt>ちい</rt></ruby>さな<ruby>結果参照<rt>けっかさんしょう</rt></ruby>。<ruby>今後<rt>こんご</rt></ruby>の<ruby>汎用<rt>はんよう</rt></ruby>レビュー、CI log、deployment journalの<ruby>保管先<rt>ほかんさき</rt></ruby>にはしない。
+- <ruby>独立<rt>どくりつ</rt></ruby>レビューは<ruby>対象<rt>たいしょう</rt></ruby>commitとscopeを<ruby>明記<rt>めいき</rt></ruby>してPRへ<ruby>残<rt>のこ</rt></ruby>す。<ruby>実行<rt>じっこう</rt></ruby>logはCI artifact、<ruby>公開<rt>こうかい</rt></ruby>attempt・journal・LKGはpublisherの<ruby>永続状態<rt>えいぞくじょうたい</rt></ruby>として<ruby>管理<rt>かんり</rt></ruby>する。<ruby>必要<rt>ひつよう</rt></ruby>な<ruby>長期保全<rt>ちょうきほぜん</rt></ruby>は<ruby>外部<rt>がいぶ</rt></ruby>archiveへ<ruby>行<rt>おこな</rt></ruby>い、Gitの<ruby>中<rt>なか</rt></ruby>へsource<ruby>履歴<rt>りれき</rt></ruby>を<ruby>複製<rt>ふくせい</rt></ruby>しない。
+- <ruby>通常回帰<rt>つうじょうかいき</rt></ruby>testへ<ruby>移<rt>うつ</rt></ruby>す<ruby>固有<rt>こゆう</rt></ruby>probeはtest sourceへ。<ruby>一時的実験<rt>いちじてきじっけん</rt></ruby>は `.tmp/`。<ruby>特殊<rt>とくしゅ</rt></ruby>reproducerを<ruby>残<rt>のこ</rt></ruby>すときだけ<ruby>保存理由<rt>ほぞんりゆう</rt></ruby>と<ruby>対象<rt>たいしょう</rt></ruby>revisionをmanifestへ<ruby>記<rt>しる</rt></ruby>す。
 
-通常main pushの `deliver-source` はGit管理sourceを再archiveするだけで、検査や
-runtime配布を所有しないため廃止する。CIのcommit参照と全検査gateは維持する。
-[GitHubのsource archive契約](https://docs.github.com/en/repositories/working-with-files/using-files/downloading-source-code-archives)
-に従い、commitのファイル内容と圧縮archiveのbyte同一性を区別する。
-LKGの元payload保全・実行log・正式release成果物をこの削減の対象にしない。
+<a name="n-6d6967726174696f6e"></a>
 
-新しい通常reviewで専用Pythonを作らず、同じ共通コマンドで結果を保存・照合
-できる。個別scriptの分類と例外理由が追える。historical evidenceは破壊しない。
-現行testのsourceとdataの場所が明確で、必要な失敗・境界試験が維持される。
-通常repository check/CIが通り、新規script増殖が検出される。
-仕様・開発手順・taskが新境界を指し、publisherの未保証範囲と本体の次作業を
-明示する。変更行数や新frameworkの大きさを成果と数えない。
+<a name="7-移行手順と優先度"></a>
 
-## 追加調査: 状態・正本・CI
+## 7\. <ruby>移行手順<rt>いこうてじゅん</rt></ruby>と<ruby>優先度<rt>ゆうせんど</rt></ruby>
 
-`task::completion()` は `depends_on` をcomplete時の条件として検査する。
-T21の早期監査とspec22のT26独立consumer先行は既に仕様が認めている。
-従ってT24/T12が未完という事実だけで着手違反とはしない。前段の必要な成果物が
-成立した範囲の段階着手と、依存タスクすべての完了を要求する完成判定を区別する。
-依存edgeを削除したり、preparatory等の新状態を増やしたりして説明を合わせない。
+1. <ruby>全<rt>ぜん</rt></ruby>script<ruby>一覧<rt>いちらん</rt></ruby>と<ruby>重複<rt>ちょうふく</rt></ruby>を<ruby>記録<rt>きろく</rt></ruby>し、<ruby>基準<rt>きじゅん</rt></ruby>commit<ruby>以前<rt>いぜん</rt></ruby>をhistorical evidenceとして<ruby>凍結<rt>とうけつ</rt></ruby>。<ruby>過去<rt>かこ</rt></ruby>の<ruby>結果<rt>けっか</rt></ruby>やmanifestを<ruby>機械的<rt>きかいてき</rt></ruby>に<ruby>書換<rt>かきか</rt></ruby>えない。<ruby>新規増殖<rt>しんきぞうしょく</rt></ruby>を<ruby>通常<rt>つうじょう</rt></ruby>checkで<ruby>防<rt>ふせ</rt></ruby>ぐ。historical sourceを<ruby>実行<rt>じっこう</rt></ruby>せず、<ruby>現行<rt>げんこう</rt></ruby>testから<ruby>直接依存<rt>ちょくせついぞん</rt></ruby>しない<ruby>境界<rt>きょうかい</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。<ruby>正規<rt>せいき</rt></ruby>test<ruby>領域<rt>りょういき</rt></ruby>への<ruby>回帰試験追加<rt>かいきしけんついか</rt></ruby>まで<ruby>禁止<rt>きんし</rt></ruby>する<ruby>検査<rt>けんさ</rt></ruby>にしない。
+1. <ruby>確認済<rt>かくにんず</rt></ruby>みの<ruby>共通保存算法<rt>きょうつうほぞんさんぽう</rt></ruby>だけを<ruby>抽出<rt>ちゅうしゅつ</rt></ruby>し、<ruby>今回<rt>こんかい</rt></ruby>の<ruby>是正<rt>ぜせい</rt></ruby>の<ruby>検証自体<rt>けんしょうじたい</rt></ruby>に<ruby>使用<rt>しよう</rt></ruby>する。<ruby>保存<rt>ほぞん</rt></ruby>ツールを<ruby>保存<rt>ほぞん</rt></ruby>するための<ruby>新<rt>あたら</rt></ruby>しいseal scriptは<ruby>作<rt>つく</rt></ruby>らない。
+1. <ruby>現行<rt>げんこう</rt></ruby>testの<ruby>実行領域<rt>じっこうりょういき</rt></ruby>とhistorical inputを<ruby>分離<rt>ぶんり</rt></ruby>。<ruby>必要<rt>ひつよう</rt></ruby>なfixtureはhashを<ruby>保<rt>たも</rt></ruby>ってtest fixtureへ<ruby>移<rt>うつ</rt></ruby>し、<ruby>由来<rt>ゆらい</rt></ruby>を<ruby>記載<rt>きさい</rt></ruby>する。<ruby>元証拠<rt>もとしょうこ</rt></ruby>は<ruby>履歴<rt>りれき</rt></ruby>として<ruby>保持<rt>ほじ</rt></ruby>する。
+1. publisherの<ruby>入口<rt>いりぐち</rt></ruby>と<ruby>責務表<rt>せきむひょう</rt></ruby>を<ruby>整理<rt>せいり</rt></ruby>し、<ruby>仕様<rt>しよう</rt></ruby>・CI・タスク・<ruby>開発手順<rt>かいはつてじゅん</rt></ruby>を<ruby>対応<rt>たいおう</rt></ruby>させる。<ruby>部分実装<rt>ぶぶんじっそう</rt></ruby>の<ruby>安全性<rt>あんぜんせい</rt></ruby>を<ruby>落<rt>お</rt></ruby>とさず、これ<ruby>以上<rt>いじょう</rt></ruby>の<ruby>独自<rt>どくじ</rt></ruby>protocol<ruby>追加<rt>ついか</rt></ruby>を<ruby>止<rt>と</rt></ruby>める。
+1. <ruby>本体<rt>ほんたい</rt></ruby>へ<ruby>戻<rt>もど</rt></ruby>る<ruby>次工程<rt>じこうてい</rt></ruby>はT08の<ruby>名前<rt>なまえ</rt></ruby>scope\/free\_symbols・CheckedExpression。Mathの<ruby>表示<rt>ひょうじ</rt></ruby>\/<ruby>評価<rt>ひょうか</rt></ruby>の<ruby>前提<rt>ぜんてい</rt></ruby>をproduction APIとportable<ruby>試験<rt>しけん</rt></ruby>で<ruby>実装<rt>じっそう</rt></ruby>する。T20の<ruby>未完了<rt>みかんりょう</rt></ruby>・<ruby>本来<rt>ほんらい</rt></ruby>の<ruby>最終範囲<rt>さいしゅうはんい</rt></ruby>は<ruby>維持<rt>いじ</rt></ruby>し、T08をpublisher<ruby>完成待<rt>かんせいま</rt></ruby>ちにしない。<ruby>最初<rt>さいしょ</rt></ruby>はletのinit、sum\/integralの<ruby>上下限<rt>じょうかげん</rt></ruby>を<ruby>外<rt>そと</rt></ruby>scope、indexをbodyのみへ<ruby>束縛<rt>そくばく</rt></ruby>し、shadowing\/free\_symbols・Origin・<ruby>予算<rt>よさん</rt></ruby>を<ruby>検証<rt>けんしょう</rt></ruby>する。free\_symbolsだけでCheckedExpression<ruby>全体<rt>ぜんたい</rt></ruby>やM01\/M02\/M03の<ruby>完成<rt>かんせい</rt></ruby>とはしない。
 
-進行中14タスクの証拠参照が全て空である点は是正する。既存の
-`implementation-status.json` を状態・参照の正本として再利用し、別の手書きledgerは
-追加しない。段階記録への参照は過去の対象scopeの索引であり、現HEADの合格ではない。
-生成task本文へ参照を投影する。既存の正式受入validatorは引き続き現在identityと
-全required targetを照合する。57群のnot-runを過去の部分試験から変更しない。
+<a name="n-636f6d706c6574696f6e"></a>
 
-意味仕様、機械契約、計画、観測、生成projectionを開発手順で区分する。同じ値を
-複数の正本で編集せず、不整合は同時訂正する。Doc正本はcanonical.jsonの対応に従う。
-doc-inventoryは固定commitを再検査する歴史的監査入力であり、現在の仕様や文書の
-正本ではない。削除で再現検査を壊さず、その大きさを理由に追加の管理機構も作らない。
-今回のscript inventoryも派生した監査資料であり、言語の規範ではない。
-詳細JSONの恒久保存案は撤回した。既存の`.json`/`.json.fixture`は2,623ファイル、
-1,176,707行。そのうち過去のresultsが1,047,270行を占める。minifyで行数だけを
-減らすのではなく、再取得できるsource一覧・snapshotと歴史的archiveの参照を
-Gitへ戻す。現行fixtureと正式schemaは意味と利用者を確認して別に扱う。
+<a name="8-完了条件"></a>
 
-CIはnativeのproduction/API・OS境界試験を残し、一度で足りる生成物一致・索引・
-publication protocol試験を独立host jobへ移す。必要なWindows/macOSのpath/process
-境界試験は選択して残す。qualityは新jobも要求し、必要な検査を解除しない。
+## 8\. <ruby>完了条件<rt>かんりょうじょうけん</rt></ruby>
 
-後続のworkflow監査では、repository checkがnative 3 OSと専用jobで重複し、
-fmt・rustdoc・allocation probe・全文書生成も3回実行されていた。これらは代表の
-Linux一回へ集約する。siteのgeneric試験は専用Linux jobを正本とし、他OSには
-junction、stdin引数の構築、実processの強制終了、実HTTP/期限、macOSのtemporary-root回帰を残す。
-Rustの全workspace試験とClippyは現時点では3 OSを維持し、未分類のhost試験を
-誤って省略しない。この変更は同じ検査の重複解消であり、browser/emulatorの
-実行頻度変更やrequired gateのskip許容は含まない。
+<ruby>通常<rt>つうじょう</rt></ruby>のrepository source<ruby>検査<rt>けんさ</rt></ruby>は<ruby>保全<rt>ほぜん</rt></ruby>archive refに<ruby>依存<rt>いぞん</rt></ruby>しない。2026<ruby>年<rt>ねん</rt></ruby>9<ruby>月<rt>がつ</rt></ruby>23<ruby>日<rt>にち</rt></ruby>の<ruby>整理<rt>せいり</rt></ruby>で<ruby>残存<rt>ざんそん</rt></ruby>sourceとlegacy<ruby>例外機構<rt>れいがいきこう</rt></ruby>を<ruby>撤去<rt>てっきょ</rt></ruby>した。resultsは<ruby>状態索引<rt>じょうたいさくいん</rt></ruby>が<ruby>所有<rt>しょゆう</rt></ruby>する<ruby>型付<rt>かたつ</rt></ruby>きJSONに<ruby>限定<rt>げんてい</rt></ruby>する。<ruby>履歴資料<rt>りれきしりょう</rt></ruby>は<ruby>固定<rt>こてい</rt></ruby>revisionから<ruby>取得<rt>しゅとく</rt></ruby>し、<ruby>進行中<rt>しんこうちゅう</rt></ruby>タスクの<ruby>段階参照<rt>だんかいさんしょう</rt></ruby>は<ruby>元<rt>もと</rt></ruby>pathとSHA\-256を<ruby>保持<rt>ほじ</rt></ruby>する。Doc inventoryの<ruby>過去<rt>かこ</rt></ruby>baseline<ruby>監査<rt>かんさ</rt></ruby>は<ruby>別<rt>べつ</rt></ruby>の<ruby>操作<rt>そうさ</rt></ruby>・<ruby>契約<rt>けいやく</rt></ruby>として<ruby>残<rt>のこ</rt></ruby>る。
 
-feature branchではpushとpull_requestが別concurrency groupで同時に全jobを
-起動していた。branchの自動実行はPRとmain pushへ一本化し、tag pushと手動実行を維持する。
-PRの対象branchは制限せず、依存branchをbaseとする段階PRにも同じ検査を適用する。
-PRなしのcheckpointを検証済み扱いにしない。main保護・qualityの条件は変更しない。
+<ruby>通常<rt>つうじょう</rt></ruby>main pushの `deliver-source` はGit<ruby>管理<rt>かんり</rt></ruby>sourceを<ruby>再<rt>さい</rt></ruby>archiveするだけで、<ruby>検査<rt>けんさ</rt></ruby>やruntime<ruby>配布<rt>はいふ</rt></ruby>を<ruby>所有<rt>しょゆう</rt></ruby>しないため<ruby>廃止<rt>はいし</rt></ruby>する。CIのcommit<ruby>参照<rt>さんしょう</rt></ruby>と<ruby>全検査<rt>ぜんけんさ</rt></ruby>gateは<ruby>維持<rt>いじ</rt></ruby>する。[GitHubのsource archive<ruby>契約<rt>けいやく</rt></ruby>](<https\:\/\/docs\.github\.com\/en\/repositories\/working\-with\-files\/using\-files\/downloading\-source\-code\-archives>)に<ruby>従<rt>したが</rt></ruby>い、commitのファイル<ruby>内容<rt>ないよう</rt></ruby>と<ruby>圧縮<rt>あっしゅく</rt></ruby>archiveのbyte<ruby>同一性<rt>どういつせい</rt></ruby>を<ruby>区別<rt>くべつ</rt></ruby>する。LKGの<ruby>元<rt>もと</rt></ruby>payload<ruby>保全<rt>ほぜん</rt></ruby>・<ruby>実行<rt>じっこう</rt></ruby>log・<ruby>正式<rt>せいしき</rt></ruby>release<ruby>成果物<rt>せいかぶつ</rt></ruby>をこの<ruby>削減<rt>さくげん</rt></ruby>の<ruby>対象<rt>たいしょう</rt></ruby>にしない。
 
-独立した参照監査後、無参照91単位とルートgitattributes指定のみの29単位を
-作業treeから取り除き、[Git履歴索引](../../conformance/history.md)へ移した。
-計8,406ファイル、154,303,564 bytes、JSON/JSON fixture 876,848行を参照化する。
-baselineを `archive/evidence-2026-09-13` refとしてremoteにも保全した。
-原manifestや原ログの内容は変更していない。過去の相互参照とbyte属性を検査する際は
-baseline全体を別checkoutへ復元し、現在treeへの部分復元と混ぜない。
-既存task/review台帳から参照される記録と現行fixtureは今回の削除対象ではない。
+<ruby>新<rt>あたら</rt></ruby>しい<ruby>通常<rt>つうじょう</rt></ruby>reviewで<ruby>専用<rt>せんよう</rt></ruby>Pythonを<ruby>作<rt>つく</rt></ruby>らず、<ruby>同<rt>おな</rt></ruby>じ<ruby>共通<rt>きょうつう</rt></ruby>コマンドで<ruby>結果<rt>けっか</rt></ruby>を<ruby>保存<rt>ほぞん</rt></ruby>・<ruby>照合<rt>しょうごう</rt></ruby>できる。<ruby>個別<rt>こべつ</rt></ruby>scriptの<ruby>分類<rt>ぶんるい</rt></ruby>と<ruby>例外理由<rt>れいがいりゆう</rt></ruby>が<ruby>追<rt>お</rt></ruby>える。historical evidenceは<ruby>破壊<rt>はかい</rt></ruby>しない。<ruby>現行<rt>げんこう</rt></ruby>testのsourceとdataの<ruby>場所<rt>ばしょ</rt></ruby>が<ruby>明確<rt>めいかく</rt></ruby>で、<ruby>必要<rt>ひつよう</rt></ruby>な<ruby>失敗<rt>しっぱい</rt></ruby>・<ruby>境界試験<rt>きょうかいしけん</rt></ruby>が<ruby>維持<rt>いじ</rt></ruby>される。<ruby>通常<rt>つうじょう</rt></ruby>repository check\/CIが<ruby>通<rt>とお</rt></ruby>り、<ruby>新規<rt>しんき</rt></ruby>script<ruby>増殖<rt>ぞうしょく</rt></ruby>が<ruby>検出<rt>けんしゅつ</rt></ruby>される。<ruby>仕様<rt>しよう</rt></ruby>・<ruby>開発手順<rt>かいはつてじゅん</rt></ruby>・taskが<ruby>新境界<rt>しんきょうかい</rt></ruby>を<ruby>指<rt>さ</rt></ruby>し、publisherの<ruby>未保証範囲<rt>みほしょうはんい</rt></ruby>と<ruby>本体<rt>ほんたい</rt></ruby>の<ruby>次作業<rt>じさぎょう</rt></ruby>を<ruby>明示<rt>めいじ</rt></ruby>する。<ruby>変更行数<rt>へんこうぎょうすう</rt></ruby>や<ruby>新<rt>しん</rt></ruby>frameworkの<ruby>大<rt>おお</rt></ruby>きさを<ruby>成果<rt>せいか</rt></ruby>と<ruby>数<rt>かぞ</rt></ruby>えない。
 
-この削減は作業treeの削減であり、Git objectやfresh full cloneの容量削減ではない。
-mainの祖先に属する旧blobは、通常のGit履歴から取得できる。2026年9月23日の整理では
-履歴を維持し、現在treeの複製を削除する。固有commitがないarchive refは確認後に削除し、
-固有commitを持つrefは保全する。共有履歴のrewriteは今回の対象外とする。
-今後のraw実行log・大きな証拠はCI artifact/承認済み外部archiveへ置き、Gitには
-小さな参照・scope・manifestを残す。今回の途中区切りで追加したraw logも最終tree
-から外し、local distの原manifest/logは外部退避の準備用に保全する。
+<a name="n-6164646974696f6e616c"></a>
+
+<a name="追加調査-状態正本ci"></a>
+
+## <ruby>追加調査<rt>ついかちょうさ</rt></ruby>\: <ruby>状態<rt>じょうたい</rt></ruby>・<ruby>正本<rt>せいほん</rt></ruby>・CI
+
+`task::completion()` は `depends_on` をcomplete<ruby>時<rt>じ</rt></ruby>の<ruby>条件<rt>じょうけん</rt></ruby>として<ruby>検査<rt>けんさ</rt></ruby>する。T21の<ruby>早期監査<rt>そうきかんさ</rt></ruby>とspec22のT26<ruby>独立<rt>どくりつ</rt></ruby>consumer<ruby>先行<rt>せんこう</rt></ruby>は<ruby>既<rt>すで</rt></ruby>に<ruby>仕様<rt>しよう</rt></ruby>が<ruby>認<rt>みと</rt></ruby>めている。<ruby>従<rt>したが</rt></ruby>ってT24\/T12が<ruby>未完<rt>みかん</rt></ruby>という<ruby>事実<rt>じじつ</rt></ruby>だけで<ruby>着手違反<rt>ちゃくしゅいはん</rt></ruby>とはしない。<ruby>前段<rt>ぜんだん</rt></ruby>の<ruby>必要<rt>ひつよう</rt></ruby>な<ruby>成果物<rt>せいかぶつ</rt></ruby>が<ruby>成立<rt>せいりつ</rt></ruby>した<ruby>範囲<rt>はんい</rt></ruby>の<ruby>段階着手<rt>だんかいちゃくしゅ</rt></ruby>と、<ruby>依存<rt>いぞん</rt></ruby>タスクすべての<ruby>完了<rt>かんりょう</rt></ruby>を<ruby>要求<rt>ようきゅう</rt></ruby>する<ruby>完成判定<rt>かんせいはんてい</rt></ruby>を<ruby>区別<rt>くべつ</rt></ruby>する。<ruby>依存<rt>いぞん</rt></ruby>edgeを<ruby>削除<rt>さくじょ</rt></ruby>したり、preparatory<ruby>等<rt>とう</rt></ruby>の<ruby>新状態<rt>しんじょうたい</rt></ruby>を<ruby>増<rt>ふ</rt></ruby>やしたりして<ruby>説明<rt>せつめい</rt></ruby>を<ruby>合<rt>あ</rt></ruby>わせない。
+
+<ruby>進行中<rt>しんこうちゅう</rt></ruby>14タスクの<ruby>証拠参照<rt>しょうこさんしょう</rt></ruby>が<ruby>全<rt>すべ</rt></ruby>て<ruby>空<rt>から</rt></ruby>である<ruby>点<rt>てん</rt></ruby>は<ruby>是正<rt>ぜせい</rt></ruby>する。<ruby>既存<rt>きそん</rt></ruby>の `implementation-status.json` を<ruby>状態<rt>じょうたい</rt></ruby>・<ruby>参照<rt>さんしょう</rt></ruby>の<ruby>正本<rt>せいほん</rt></ruby>として<ruby>再利用<rt>さいりよう</rt></ruby>し、<ruby>別<rt>べつ</rt></ruby>の<ruby>手書<rt>てが</rt></ruby>きledgerは<ruby>追加<rt>ついか</rt></ruby>しない。<ruby>段階記録<rt>だんかいきろく</rt></ruby>への<ruby>参照<rt>さんしょう</rt></ruby>は<ruby>過去<rt>かこ</rt></ruby>の<ruby>対象<rt>たいしょう</rt></ruby>scopeの<ruby>索引<rt>さくいん</rt></ruby>であり、<ruby>現<rt>げん</rt></ruby>HEADの<ruby>合格<rt>ごうかく</rt></ruby>ではない。<ruby>生成<rt>せいせい</rt></ruby>task<ruby>本文<rt>ほんぶん</rt></ruby>へ<ruby>参照<rt>さんしょう</rt></ruby>を<ruby>投影<rt>とうえい</rt></ruby>する。<ruby>既存<rt>きそん</rt></ruby>の<ruby>正式受入<rt>せいしきうけいれ</rt></ruby>validatorは<ruby>引<rt>ひ</rt></ruby>き<ruby>続<rt>つづ</rt></ruby>き<ruby>現在<rt>げんざい</rt></ruby>identityと<ruby>全<rt>ぜん</rt></ruby>required targetを<ruby>照合<rt>しょうごう</rt></ruby>する。57<ruby>群<rt>ぐん</rt></ruby>のnot\-runを<ruby>過去<rt>かこ</rt></ruby>の<ruby>部分試験<rt>ぶぶんしけん</rt></ruby>から<ruby>変更<rt>へんこう</rt></ruby>しない。
+
+<ruby>意味仕様<rt>いみしよう</rt></ruby>、<ruby>機械契約<rt>きかいけいやく</rt></ruby>、<ruby>計画<rt>けいかく</rt></ruby>、<ruby>観測<rt>かんそく</rt></ruby>、<ruby>生成<rt>せいせい</rt></ruby>projectionを<ruby>開発手順<rt>かいはつてじゅん</rt></ruby>で<ruby>区分<rt>くぶん</rt></ruby>する。<ruby>同<rt>おな</rt></ruby>じ<ruby>値<rt>あたい</rt></ruby>を<ruby>複数<rt>ふくすう</rt></ruby>の<ruby>正本<rt>せいほん</rt></ruby>で<ruby>編集<rt>へんしゅう</rt></ruby>せず、<ruby>不整合<rt>ふせいごう</rt></ruby>は<ruby>同時訂正<rt>どうじていせい</rt></ruby>する。Doc<ruby>正本<rt>せいほん</rt></ruby>はcanonical\.jsonの<ruby>対応<rt>たいおう</rt></ruby>に<ruby>従<rt>したが</rt></ruby>う。doc\-inventoryは<ruby>固定<rt>こてい</rt></ruby>commitを<ruby>再検査<rt>さいけんさ</rt></ruby>する<ruby>歴史的監査入力<rt>れきしてきかんさにゅうりょく</rt></ruby>であり、<ruby>現在<rt>げんざい</rt></ruby>の<ruby>仕様<rt>しよう</rt></ruby>や<ruby>文書<rt>ぶんしょ</rt></ruby>の<ruby>正本<rt>せいほん</rt></ruby>ではない。<ruby>削除<rt>さくじょ</rt></ruby>で<ruby>再現検査<rt>さいげんけんさ</rt></ruby>を<ruby>壊<rt>こわ</rt></ruby>さず、その<ruby>大<rt>おお</rt></ruby>きさを<ruby>理由<rt>りゆう</rt></ruby>に<ruby>追加<rt>ついか</rt></ruby>の<ruby>管理機構<rt>かんりきこう</rt></ruby>も<ruby>作<rt>つく</rt></ruby>らない。<ruby>今回<rt>こんかい</rt></ruby>のscript inventoryも<ruby>派生<rt>はせい</rt></ruby>した<ruby>監査資料<rt>かんさしりょう</rt></ruby>であり、<ruby>言語<rt>げんご</rt></ruby>の<ruby>規範<rt>きはん</rt></ruby>ではない。<ruby>詳細<rt>しょうさい</rt></ruby>JSONの<ruby>恒久保存案<rt>こうきゅうほぞんあん</rt></ruby>は<ruby>撤回<rt>てっかい</rt></ruby>した。<ruby>既存<rt>きそん</rt></ruby>の`.json`\/`.json.fixture`は2\,623ファイル、1\,176\,707<ruby>行<rt>ぎょう</rt></ruby>。そのうち<ruby>過去<rt>かこ</rt></ruby>のresultsが1\,047\,270<ruby>行<rt>ぎょう</rt></ruby>を<ruby>占<rt>し</rt></ruby>める。minifyで<ruby>行数<rt>ぎょうすう</rt></ruby>だけを<ruby>減<rt>へ</rt></ruby>らすのではなく、<ruby>再取得<rt>さいしゅとく</rt></ruby>できるsource<ruby>一覧<rt>いちらん</rt></ruby>・snapshotと<ruby>歴史的<rt>れきしてき</rt></ruby>archiveの<ruby>参照<rt>さんしょう</rt></ruby>をGitへ<ruby>戻<rt>もど</rt></ruby>す。<ruby>現行<rt>げんこう</rt></ruby>fixtureと<ruby>正式<rt>せいしき</rt></ruby>schemaは<ruby>意味<rt>いみ</rt></ruby>と<ruby>利用者<rt>りようしゃ</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>して<ruby>別<rt>べつ</rt></ruby>に<ruby>扱<rt>あつか</rt></ruby>う。
+
+CIはnativeのproduction\/API・OS<ruby>境界試験<rt>きょうかいしけん</rt></ruby>を<ruby>残<rt>のこ</rt></ruby>し、<ruby>一度<rt>いちど</rt></ruby>で<ruby>足<rt>た</rt></ruby>りる<ruby>生成物一致<rt>せいせいぶついっち</rt></ruby>・<ruby>索引<rt>さくいん</rt></ruby>・publication protocol<ruby>試験<rt>しけん</rt></ruby>を<ruby>独立<rt>どくりつ</rt></ruby>host jobへ<ruby>移<rt>うつ</rt></ruby>す。<ruby>必要<rt>ひつよう</rt></ruby>なWindows\/macOSのpath\/process<ruby>境界試験<rt>きょうかいしけん</rt></ruby>は<ruby>選択<rt>せんたく</rt></ruby>して<ruby>残<rt>のこ</rt></ruby>す。qualityは<ruby>新<rt>しん</rt></ruby>jobも<ruby>要求<rt>ようきゅう</rt></ruby>し、<ruby>必要<rt>ひつよう</rt></ruby>な<ruby>検査<rt>けんさ</rt></ruby>を<ruby>解除<rt>かいじょ</rt></ruby>しない。
+
+<ruby>後続<rt>こうぞく</rt></ruby>のworkflow<ruby>監査<rt>かんさ</rt></ruby>では、repository checkがnative 3 OSと<ruby>専用<rt>せんよう</rt></ruby>jobで<ruby>重複<rt>ちょうふく</rt></ruby>し、fmt・rustdoc・allocation probe・<ruby>全文書生成<rt>ぜんぶんしょせいせい</rt></ruby>も3<ruby>回実行<rt>かいじっこう</rt></ruby>されていた。これらは<ruby>代表<rt>だいひょう</rt></ruby>のLinux<ruby>一回<rt>いっかい</rt></ruby>へ<ruby>集約<rt>しゅうやく</rt></ruby>する。siteのgeneric<ruby>試験<rt>しけん</rt></ruby>は<ruby>専用<rt>せんよう</rt></ruby>Linux jobを<ruby>正本<rt>せいほん</rt></ruby>とし、<ruby>他<rt>ほか</rt></ruby>OSにはjunction、stdin<ruby>引数<rt>ひきすう</rt></ruby>の<ruby>構築<rt>こうちく</rt></ruby>、<ruby>実<rt>じつ</rt></ruby>processの<ruby>強制終了<rt>きょうせいしゅうりょう</rt></ruby>、<ruby>実<rt>じつ</rt></ruby>HTTP\/<ruby>期限<rt>きげん</rt></ruby>、macOSのtemporary\-root<ruby>回帰<rt>かいき</rt></ruby>を<ruby>残<rt>のこ</rt></ruby>す。Rustの<ruby>全<rt>ぜん</rt></ruby>workspace<ruby>試験<rt>しけん</rt></ruby>とClippyは<ruby>現時点<rt>げんじてん</rt></ruby>では3 OSを<ruby>維持<rt>いじ</rt></ruby>し、<ruby>未分類<rt>みぶんるい</rt></ruby>のhost<ruby>試験<rt>しけん</rt></ruby>を<ruby>誤<rt>あやま</rt></ruby>って<ruby>省略<rt>しょうりゃく</rt></ruby>しない。この<ruby>変更<rt>へんこう</rt></ruby>は<ruby>同<rt>おな</rt></ruby>じ<ruby>検査<rt>けんさ</rt></ruby>の<ruby>重複解消<rt>ちょうふくかいしょう</rt></ruby>であり、browser\/emulatorの<ruby>実行頻度変更<rt>じっこうひんどへんこう</rt></ruby>やrequired gateのskip<ruby>許容<rt>きょよう</rt></ruby>は<ruby>含<rt>ふく</rt></ruby>まない。
+
+feature branchではpushとpull\_requestが<ruby>別<rt>べつ</rt></ruby>concurrency groupで<ruby>同時<rt>どうじ</rt></ruby>に<ruby>全<rt>ぜん</rt></ruby>jobを<ruby>起動<rt>きどう</rt></ruby>していた。branchの<ruby>自動実行<rt>じどうじっこう</rt></ruby>はPRとmain pushへ<ruby>一本化<rt>いっぽんか</rt></ruby>し、tag pushと<ruby>手動実行<rt>しゅどうじっこう</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby>する。PRの<ruby>対象<rt>たいしょう</rt></ruby>branchは<ruby>制限<rt>せいげん</rt></ruby>せず、<ruby>依存<rt>いぞん</rt></ruby>branchをbaseとする<ruby>段階<rt>だんかい</rt></ruby>PRにも<ruby>同<rt>おな</rt></ruby>じ<ruby>検査<rt>けんさ</rt></ruby>を<ruby>適用<rt>てきよう</rt></ruby>する。PRなしのcheckpointを<ruby>検証済<rt>けんしょうず</rt></ruby>み<ruby>扱<rt>あつか</rt></ruby>いにしない。main<ruby>保護<rt>ほご</rt></ruby>・qualityの<ruby>条件<rt>じょうけん</rt></ruby>は<ruby>変更<rt>へんこう</rt></ruby>しない。
+
+<ruby>独立<rt>どくりつ</rt></ruby>した<ruby>参照監査後<rt>さんしょうかんさご</rt></ruby>、<ruby>無参照<rt>むさんしょう</rt></ruby>91<ruby>単位<rt>たんい</rt></ruby>とルートgitattributes<ruby>指定<rt>してい</rt></ruby>のみの29<ruby>単位<rt>たんい</rt></ruby>を<ruby>作業<rt>さぎょう</rt></ruby>treeから<ruby>取<rt>と</rt></ruby>り<ruby>除<rt>のぞ</rt></ruby>き、[Git<ruby>履歴索引<rt>りれきさくいん</rt></ruby>](<\.\.\/\.\.\/conformance\/history\.md>)へ<ruby>移<rt>うつ</rt></ruby>した。<ruby>計<rt>けい</rt></ruby>8\,406ファイル、154\,303\,564 bytes、JSON\/JSON fixture 876\,848<ruby>行<rt>ぎょう</rt></ruby>を<ruby>参照化<rt>さんしょうか</rt></ruby>する。baselineを `archive/evidence-2026-09-13` refとしてremoteにも<ruby>保全<rt>ほぜん</rt></ruby>した。<ruby>原<rt>げん</rt></ruby>manifestや<ruby>原<rt>げん</rt></ruby>ログの<ruby>内容<rt>ないよう</rt></ruby>は<ruby>変更<rt>へんこう</rt></ruby>していない。<ruby>過去<rt>かこ</rt></ruby>の<ruby>相互参照<rt>そうごさんしょう</rt></ruby>とbyte<ruby>属性<rt>ぞくせい</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する<ruby>際<rt>さい</rt></ruby>はbaseline<ruby>全体<rt>ぜんたい</rt></ruby>を<ruby>別<rt>べつ</rt></ruby>checkoutへ<ruby>復元<rt>ふくげん</rt></ruby>し、<ruby>現在<rt>げんざい</rt></ruby>treeへの<ruby>部分復元<rt>ぶぶんふくげん</rt></ruby>と<ruby>混<rt>ま</rt></ruby>ぜない。<ruby>既存<rt>きそん</rt></ruby>task\/review<ruby>台帳<rt>だいちょう</rt></ruby>から<ruby>参照<rt>さんしょう</rt></ruby>される<ruby>記録<rt>きろく</rt></ruby>と<ruby>現行<rt>げんこう</rt></ruby>fixtureは<ruby>今回<rt>こんかい</rt></ruby>の<ruby>削除対象<rt>さくじょたいしょう</rt></ruby>ではない。
+
+この<ruby>削減<rt>さくげん</rt></ruby>は<ruby>作業<rt>さぎょう</rt></ruby>treeの<ruby>削減<rt>さくげん</rt></ruby>であり、Git objectやfresh full cloneの<ruby>容量削減<rt>ようりょうさくげん</rt></ruby>ではない。mainの<ruby>祖先<rt>そせん</rt></ruby>に<ruby>属<rt>ぞく</rt></ruby>する<ruby>旧<rt>きゅう</rt></ruby>blobは、<ruby>通常<rt>つうじょう</rt></ruby>のGit<ruby>履歴<rt>りれき</rt></ruby>から<ruby>取得<rt>しゅとく</rt></ruby>できる。2026<ruby>年<rt>ねん</rt></ruby>9<ruby>月<rt>がつ</rt></ruby>23<ruby>日<rt>にち</rt></ruby>の<ruby>整理<rt>せいり</rt></ruby>では<ruby>履歴<rt>りれき</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby>し、<ruby>現在<rt>げんざい</rt></ruby>treeの<ruby>複製<rt>ふくせい</rt></ruby>を<ruby>削除<rt>さくじょ</rt></ruby>する。<ruby>固有<rt>こゆう</rt></ruby>commitがないarchive refは<ruby>確認後<rt>かくにんご</rt></ruby>に<ruby>削除<rt>さくじょ</rt></ruby>し、<ruby>固有<rt>こゆう</rt></ruby>commitを<ruby>持<rt>も</rt></ruby>つrefは<ruby>保全<rt>ほぜん</rt></ruby>する。<ruby>共有履歴<rt>きょうゆうりれき</rt></ruby>のrewriteは<ruby>今回<rt>こんかい</rt></ruby>の<ruby>対象外<rt>たいしょうがい</rt></ruby>とする。<ruby>今後<rt>こんご</rt></ruby>のraw<ruby>実行<rt>じっこう</rt></ruby>log・<ruby>大<rt>おお</rt></ruby>きな<ruby>証拠<rt>しょうこ</rt></ruby>はCI artifact\/<ruby>承認済<rt>しょうにんず</rt></ruby>み<ruby>外部<rt>がいぶ</rt></ruby>archiveへ<ruby>置<rt>お</rt></ruby>き、Gitには<ruby>小<rt>ちい</rt></ruby>さな<ruby>参照<rt>さんしょう</rt></ruby>・scope・manifestを<ruby>残<rt>のこ</rt></ruby>す。<ruby>今回<rt>こんかい</rt></ruby>の<ruby>途中区切<rt>とちゅうくぎ</rt></ruby>りで<ruby>追加<rt>ついか</rt></ruby>したraw logも<ruby>最終<rt>さいしゅう</rt></ruby>treeから<ruby>外<rt>はず</rt></ruby>し、local distの<ruby>原<rt>げん</rt></ruby>manifest\/logは<ruby>外部退避<rt>がいぶたいひ</rt></ruby>の<ruby>準備用<rt>じゅんびよう</rt></ruby>に<ruby>保全<rt>ほぜん</rt></ruby>する。

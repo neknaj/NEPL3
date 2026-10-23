@@ -464,6 +464,14 @@
       "aliases": "doc/migration/aliases/conformance-history.json",
       "route": "docs/conformance/history.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "evidence-publisher-boundaries",
+      "source": "doc/decisions/0008-evidence-and-publisher-boundaries.nepld",
+      "projection": "doc/decisions/0008-evidence-and-publisher-boundaries.md",
+      "aliases": "doc/migration/aliases/0008-evidence-and-publisher-boundaries.json",
+      "route": "docs/decisions/0008-evidence-and-publisher-boundaries.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
