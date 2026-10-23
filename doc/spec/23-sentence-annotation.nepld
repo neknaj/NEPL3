@@ -1,0 +1,1250 @@
+article ja "23. [構造化文章/こうぞうかぶんしょう]と[対象付/たいしょうつ]き[注釈/ちゅうしゃく]への[是正/ぜせい]"
+body
+  cons paragraph
+    cons sentence
+      cons text "この章は"
+      cons link relative "../decisions/multilanguage-hca.md" none text "#158の統合設計"
+      cons text "を具体化した、Sentenceと対象付きannotationの規範契約である。"
+      nil
+    cons sentence
+      cons text "契約の採用と実装完了は別であり、実装・正式受入の状態は "
+      cons link relative "../../implementation-status.json" none text "実装状態の正本"
+      cons text " を参照する。"
+      nil
+    nil
+  cons paragraph
+    cons "入出力・意味・失敗条件・source閉包・資源停止はこの章で定義する。"
+    cons sentence
+      cons code "literal::read"
+      cons text "等のRust名は現在の実装入口を指し、他言語の実装にRust ABIや内部module構成を要求しない。"
+      nil
+    cons sentence
+      cons link relative "../progress/doc-runtime.md" none text "Doc runtimeの記録"
+      cons text " は現在の接続範囲と履歴を説明し、"
+      cons link relative "../../design/tasks.json" none text "T07/T19/T21のタスク定義"
+      cons text " が移行順と成果物を所有する。"
+      nil
+    nil
+  cons section owners "[所有者/しょゆうしゃ]と[実装順/じっそうじゅん]"
+  body
+    cons paragraph
+      cons "NEPL3sentenceは独自LanguagePackage、Sentence root、sentence literalと前置構築、 単独parse/check/printを持つ文章言語である。"
+      cons "NEPL3aはSentenceと対象syntaxの付与関係、 NEPL3dは文書構造を所有する。"
+      cons "Doc本文をA経由にしない。"
+      cons " Sentence coreはfoundationだけへ依存し、Doc/Math/A/engine/hostへ依存しない。"
+      cons " reader adapter、language package compile、各hostとの橋渡しは外側へ置く。"
+      nil
+    cons paragraph
+      cons "この節の見出しは既存参照のため維持する。"
+      cons "実装順の正本はT07であり、本文は所有境界を定める。"
+      cons " Doc本文とannotationはそれぞれSentenceを使用し、Aの完成をD本文や公開の前提にしない。"
+      cons " 途中のモデル検査成功を独立言語の完成としない。"
+      cons "schema digestは実descriptorから計算する。"
+      cons " 実装が期待するschema identityは、同じdescriptorのcanonical hashから生成できる。"
+      cons " 生成したidentityの利用時も、registryのfinalize、登録の存在、package・revision・digestの 完全一致を確認する。"
+      cons "生成物検査とruntime descriptorのhash照合によって更新漏れを検出する。"
+      cons " 入力値・位置・source閉包・意味構造の検査は、各操作の契約に従って実行する。"
+      nil
+    nil
+  cons section model "[独立/どくりつ]した[文章/ぶんしょう]モデル"
+  body
+    cons paragraph
+      cons "rootはSentenceまたはInlineの型付き参照とし、公開LanguagePackageの既定rootはSentenceとする。"
+      cons " 有限arenaの各nodeはSentence、Text、Concat、Ruby、InlineAnno、Code、Emphasis、Strong、 Break、ExternalLink、ForeignInlineのいずれかである。"
+      cons "子は順序付きの型付きindexで表す。"
+      cons " Sentence/ConcatはInline列、Rubyはbaseとreading、InlineAnnoはbaseと順序付きnotesを持つ。"
+      cons " Code/Textは文字列、Emphasis/StrongはInline一つ、Breakは子なし、ExternalLinkはURIとlabelを持つ。"
+      cons " ForeignInlineは明示的なForeignClosureGroupのentryを参照し、言語名の閉じたenumを持たない。"
+      cons sentence
+        cons text " 複数のforeign値の所有情報を共有する場合は"
+        cons link relative "24-shared-foreign-owners.md" none text "Foundationの共有所有契約"
+        cons text "に従う。"
+        nil
+      cons "共有groupの検査だけで文章の出現深さやDoc consumer移行の成立を証明しない。"
+      nil
+    cons paragraph
+      cons "文章内の外部URL構造はSentenceが所有する。"
+      cons "page/section/anchorの名前解決、画像asset、 数式等は明示foreign-inline adapterの契約で扱い、D固有の名前空間をSentence coreへ移さない。"
+      cons " URIの存在確認・network accessやguestの意味解析・実行は文章の構造検査では行わない。"
+      cons " 安全な出力と外部参照の解決には後段の独立した検査を要求する。"
+      nil
+    cons paragraph
+      cons "arenaは型の一致、参照範囲、非循環性、全nodeと全foreign closureの到達性を検査する。"
+      cons " 共有部分木を許すが、深さは最初の訪問経路だけでなく最長経路で制限する。"
+      cons " 空Sentence、空Text、空Concatを許し、Rubyのbase/readingとInlineAnnoのbase/各noteは非空とする。"
+      cons " InlineAnnoのnotesは一つ以上とし、空Textをwrapperで包んでも非空にしない。"
+      cons " Breakは明示した文章内容として非空、ForeignInlineは構造上の内容であり、その表示可能性は adapter準備で検査する。"
+      cons "Text内の改行とBreakは別の意味値として保持する。"
+      nil
+    cons paragraph
+      cons "型・意味モデルはsource位置と独立させる。"
+      cons "syntax層は各nodeのSource/Origin、literalのView、 foreign閉包、field位置を明示して保持する。"
+      cons "source-less値に架空Spanを作らない。"
+      cons " 構造proofはsource閉包・binding・表示・hostへの挿入proofを兼ねない。"
+      cons " 全検査は共有BudgetでWork/Nodes/AllocationUnits/Depthを計上し、Stoppedから成功へ戻さない。"
+      nil
+    nil
+  cons section portable "Sentence[値/ち]のportable[境界/きょうかい]"
+  body
+    cons paragraph
+      cons sentence
+        cons code "portable::to_value/from_value"
+        cons text "は"
+        cons code "nepl3.sentence"
+        cons text "のSentenceValueを既存NDF値へ対応させる。"
+        nil
+      cons " finalize済みregistryと実descriptorの完全identityを照合し、同package・revisionでも異なるdigestを 採用しない。"
+      cons "型付きrecord/variantと順序付きfieldを用い、Rust enumの既定serialize形式へ依存しない。"
+      cons " foreignの深さを文章arenaと別々に判定しない。"
+      cons "共有部分木と共有closureを含む最深の所有位置を求め、 呼出元の深さに文章側の経路を加えたBudgetでguest閉包を検査する。"
+      cons "各arenaが単独で上限内でも、 合成後の深さが上限を超えれば両codec方向でStoppedを返す。"
+      cons " 送信前と受信後にnativeと同じarena検査を行う。"
+      cons "schemaだけに適合する循環・不正参照・空Ruby/Annoを 成功値にしない。"
+      cons "各foreign closureはhostが選んだFoundationValueCodecでsource・Origin・environmentを 検査する。"
+      cons "ambientなsourceによる欠落閉包の補完は認めず、guestの意味評価は行わない。"
+      nil
+    cons paragraph
+      cons "SentenceValueの局所node順・共有参照・notes順・文字列・Breakは保持する。"
+      cons "foreign bundleの内部は foundationの正準化規則に従うため、任意の送信元NodeRef番号を永久identityとはしない。"
+      cons " owner Originとguest Originを混ぜず、正準CBORの再encodeと意味上の参照対応を検査する。"
+      cons " この値境界は局所文章のSource/Viewを持つsyntax boundaryとは別であり、印字可能性や安全なHTMLのproofでもない。"
+      nil
+    nil
+  cons section locations "[局所/きょくしょ]syntaxの[位置情報/いちじょうほう]"
+  body
+    cons paragraph
+      cons sentence
+        cons code "SentenceSyntax"
+        cons text "はSentenceValueと独立したlocations、sources、origins、views、sourceMapsを持つ。"
+        nil
+      cons " locationsはvalue.nodesと同じ順序・長さで、各nodeへOriginId、任意head、任意coverを対応させる。"
+      cons " OriginIdは必須とし、source-less生成はSynthetic/Generated Originを使う。"
+      cons "架空Spanで穴を埋めない。"
+      cons " headがある場合はcoverを要求し、同snapshotまたは明示SourceMap経由で包含を検査する。"
+      cons " 意味arenaの共有edgeは構文の包含関係と同一ではないため、すべての意味上の子にsource順を強制しない。"
+      nil
+    cons paragraph
+      cons "SentenceViewはownerの意味node index、元head、ローカルViewBundleを持つ。"
+      cons "owner範囲、宣言済みsource、 ownerにcoverがある場合のhead包含、およびhead内の全ViewElementを検査する。"
+      cons "複数の原表記を一つの 意味nodeへ正規化する場合はownerを明示的に再対応させ、元のViewRefを別ViewBundleへ流用しない。"
+      cons " coverがない生成nodeでも、明示Source/Originと対応させた元表記のViewは保持できる。"
+      nil
+    cons paragraph
+      cons "owner.coverからView.headへの包含が成立しない場合、両者の完全なsnapshot identityが異なるときに限り、 View.headからowner.coverへの明示SourceMapによる包含も認める。"
+      cons "全byte・anchorの全incoming pathを 検査し、一経路だけの一致や未被覆部分は認めない。"
+      cons "同snapshotの過大なView.headはこの例外で許可しない。"
+      cons " これは生成nodeと原表記の来歴対応であり、最小の原文範囲や意味・文字列の同値性を保証しない。"
+      cons " NodeLocation自身のhead/cover包含、ViewElementのView.head内包含、source閉包検査は変更しない。"
+      cons " Doc等のhostは、さらに自身のtokenとView.headとの対応を検査する。"
+      nil
+    cons paragraph
+      cons "native検査とportable::syntaxの両方向で、重複snapshot revision、未宣言source、古いsnapshotへのSpan、 Origin参照、SourceMap、View閉包、foreignの合成深さを検査する。"
+      cons "portable受信はpayload自身のsourceで codecをscopeし、ambient sourceを欠落閉包の代わりにしない。"
+      cons "UTF-8 byte位置を保持し、editorで必要な UTF-16等への対応は共通Source/LineIndexに委譲する。"
+      cons " Viewの親子が変換前後のsourceへ分かれる場合も、nativeとportableで同じ明示SourceMapを使う。"
+      cons sentence
+        cons text " FoundationValueCodecの"
+        cons code "scoped_with_mappings"
+        cons text "はpayloadのsourceとmappingを同時に限定し、 View検査時に全mappingの端点・geometry・source admissionを検査する。"
+        nil
+      cons sentence
+        cons text "通常の"
+        cons code "scoped"
+        cons text "はmapを 引き継がない。"
+        nil
+      cons "受信側はmappingを検査してからViewをdecodeする。"
+      cons "SentenceだけでなくDoc/Mathの syntax境界もこの契約を使い、ambient mapや同じ本文で包含を補完しない。"
+      cons "wire形状の追加ではなく、 既存SourceMapをtyped codecへ正しく渡す共通境界の修正である。"
+      cons " scope内で不変に借用したsource/mappingに対するadmission・geometry・cycle proofは再利用できる。"
+      cons " 各Viewの検査とそのSpanのadmissionは省かず、別scopeへproofを持ち越さない。"
+      cons " SourceAdmissionを可変参照で公開する前にもproofを失効させる。"
+      cons "全mappingの検査を 各Viewで反復して文書全体の既存Budgetを浪費しない。"
+      cons " これは関連付けの構造検査であり、原ソースを再parseしたこと、任意の文章値が原文と意味一致すること、 binding、HTMLの安全性を証明しない。"
+      cons "それらはlanguage/adapterの操作で別に検査する。"
+      nil
+    nil
+  cons section literal "Sentence literalの[読取/よみと]りと[印字/いんじ]"
+  body
+    cons paragraph
+      cons sentence
+        cons text "Sentence coreの"
+        cons code "literal::read"
+        cons text "は、明示SourceSnapshotのUTF-8 windowからちょうど一つの 引用符付きliteralを読む。"
+        nil
+      cons "NoMatch/NeedMore/Failedでは構文や途中の文章を返さない。"
+      cons " 成功時はSentenceSyntaxに元source、denseな位置表、Direct Origin、元綴りのViewを残す。"
+      cons " このnative helperはLanguagePackageやreader/provider包絡そのものではなく、その解析本体である。"
+      cons " Doc coreへの依存なしで動作する。"
+      cons "Doc本文もこのreaderを明示adapter経由で使用し、 Doc coreの重複したSentence parsing APIは撤去した。"
+      cons "Doc consumerの意味arenaの所有移行は別の残件である。"
+      nil
+    cons paragraph
+      cons sentence
+        cons code "[base/reading]"
+        cons text "はRuby、"
+        cons code "{base/note/...}"
+        cons text "は文章内部のInlineAnnoへ対応する。"
+        nil
+      cons "入れ子を許し、 空のbase/reading/note、余分なRuby区切り、不正な括弧対応を型付き失敗とする。"
+      cons "literal内の 直接CR/LFは拒否し、escapeで生成するTextの改行とは区別する。"
+      cons "Unicode escapeの結果を再び 括弧や区切りとして解釈しない。"
+      cons "失敗位置とopening位置も元snapshotへ束縛する。"
+      nil
+    cons paragraph
+      cons sentence
+        cons code "literal::print"
+        cons text "はliteralで表現できるSentenceを印字する専用操作である。"
+        nil
+      cons "Text/Concat/Ruby/ InlineAnnoの文章内容を保持するが、元のescape綴りやarena共有を保存する操作ではない。"
+      cons " Break、code、強調、link、foreignはprefix/adapter出力が必要なためNotLiteralを返し、 Textや改行へ黙って変換しない。"
+      cons "独立LanguagePackageの汎用printerはprefixも扱う別の入口とする。"
+      cons " readerとprinterは非再帰で処理し、共有値を展開した実出力にもBudgetを適用する。"
+      nil
+    cons paragraph
+      cons sentence
+        cons text "reader/providerのliteral受渡しには"
+        cons code "SentenceLiteralPayload"
+        cons text "を用意する。"
+        nil
+      cons "SentenceValue、 denseなlocations、Direct Origin列、一つのroot所有Viewを順序付きfieldとして持ち、 SourceContentをliteralごとにwireへ複製しない。"
+      cons sentence
+        cons code "portable::literal"
+        cons text "の受信は呼出側が明示した 一つのSourceSnapshotだけでcodecをscopeする。"
+        nil
+      cons "同じID/revisionでも本文digestが異なるsource、 head外の位置、root以外が所有するView、prefix専用node、foreign、mappingを拒否する。"
+      cons " 一般の生成・変換済みsyntaxは閉包付きSentenceSyntaxを使い、このliteral契約へ縮小しない。"
+      cons " 受渡しの構造検査は本文の再parseによる意味一致のproofではない。"
+      cons "包むTokenのhead/Viewとの 照合はconsumerのlower操作が行う。"
+      cons "新schemaのdigestはdescriptorから算出し、旧Doc payloadの identityやdecoderをSentenceの契約として使い回さない。"
+      nil
+    cons paragraph
+      cons sentence
+        cons text "開発hostのSentence reader adapterは"
+        cons code "nepl3.sentence.reader"
+        cons text "の"
+        cons code "literal"
+        cons text "操作を明示登録する。"
+        nil
+      cons " ReadRequest/ReadReply、Unit state、SentenceLiteralPayloadを使用し、ReaderSessionの通常の 停止・再開・reply検査を通す。"
+      cons "操作schemaの正確なidentityを検査し、別operationや不正stateを 受理しない。"
+      cons "NoMatch、NeedMore、位置付きtyped診断、Stoppedを区別する。"
+      cons "これはDoc専用readerの aliasではなく独立したadapterであり、Sentence coreからreader/engine/toolsへ逆依存しない。"
+      cons " 開発hostのnative adapter検証と、独立processのportable provider比較、LanguagePackage経由の prefix parse/check/printは別の受入である。"
+      nil
+    nil
+  cons section surface "[独立/どくりつ]LanguagePackageの[表層/ひょうそう]"
+  body
+    cons paragraph
+      cons sentence
+        cons code "languages/Sentence/syntax.neplg"
+        cons text "をGrammar処理系で解析し、"
+        cons code "nepl3.syntax.sentence"
+        cons text "へcompileする。"
+        nil
+      cons sentence
+        cons text " 意味schemaの"
+        cons code "nepl3.sentence"
+        cons text "とは別identityである。"
+        nil
+      cons "公開rootはSentence、内部categoryはInline、 列は共通cons/nilを使う。"
+      cons sentence
+        cons text "各formの順序付きfieldは"
+        cons code "design/forms.json"
+        cons text "と対応させる。"
+        nil
+      nil
+    cons table cons default cons default cons default cons right nil
+      some row cons "category" cons "head" cons "順序付き引数" cons "arity" nil
+      cons row cons "Sentence" cons "sentence" cons "inlines: Inline列" cons "1" nil
+      cons row cons "Sentence" cons "引用符付きliteral" cons "—" cons "0" nil
+      cons row cons "Inline" cons "text / code" cons "text: Text" cons "1" nil
+      cons row cons "Inline" cons "concat" cons "inlines: Inline列" cons "1" nil
+      cons row cons "Inline" cons "ruby" cons "base: Inline, reading: Inline" cons "2" nil
+      cons row cons "Inline" cons "anno" cons "base: Inline, notes: Inline列" cons "2" nil
+      cons row cons "Inline" cons "em / strong" cons "inline: Inline" cons "1" nil
+      cons row cons "Inline" cons "break" cons "—" cons "0" nil
+      cons row cons "Inline" cons "link" cons "uri: Text, label: Inline" cons "2" nil
+      nil
+    cons paragraph
+      cons "このlinkは外部URIの文章内構造であり、Docのpage/section/anchorを暗黙解決しない。"
+      cons " foreign-inlineは登録されたadapterが別の具体formで導入する。"
+      cons "全guestを列挙するformや、 任意の文字列を未検査foreign値へ変換する入口は標準Sentence packageへ追加しない。"
+      nil
+    cons paragraph
+      cons sentence
+        cons code "lower::prefix_with_foreign"
+        cons text "は、hostが選択した追加Inline formを受け取る。"
+        nil
+      cons " 選択にはformのkind、guestの完全なschema identity、categoryを指定する。"
+      cons " 追加formは単一のforeign fieldを持ち、照合後に元の所有者から一括captureしたForeignClosureGroupへ保持する。"
+      cons " 標準constructorの上書き、重複した選択、未選択のform、guest identityとcategoryの不一致を拒否する。"
+      cons sentence
+        cons text " "
+        cons code "lower::presentation::sentence_with_foreign"
+        cons text "は同じ選択を使い、意味nodeとSource/Origin/Viewの対応を保持する。"
+        nil
+      cons " この変換が行う操作は構造の取込みであり、guestの実行は別途認可された操作が担当する。"
+      nil
+    cons paragraph
+      cons "SentenceのCode modeは空白（space/tab/CR/LF）だけをskipする。"
+      cons "独立comment・annotationや directiveをskipに入れない。"
+      cons sentence
+        cons text "旧Docのcomment readerをSentenceへ再利用せず、旧"
+        cons code "#"
+        cons text "入力、 arity不足、未消費の末尾入力を成功文書にしない。"
+        nil
+      cons "既存Docの旧comment撤去は別の移行境界である。"
+      nil
+    cons paragraph
+      cons "開発hostは具体OperationRefと実装identityへreader関数を登録し、ResolvedProfileの要求に 照合してdispatchする。"
+      cons "DocとSentenceが同じsource driverを使っても、SentenceへDoc schemaや Doc readerを要求しない。"
+      cons "native呼出しと所有Await経路は同じ検査済みParseTreeを返す。"
+      cons " source driverは引き続き開発hostの入口であり、完全なsuite/runtimeや独立process providerの完成を 意味しない。"
+      nil
+    cons paragraph
+      cons sentence
+        cons code "lower::prefix"
+        cons text "は選択済みsurface identityとValidatedSyntaxBundleを受け、現在のBudgetで source・schema・Origin・参照・循環・共有経路の深さを再検査してから標準10formを意味arenaへ投影する。"
+        nil
+      cons " BuiltinTextのpayload、Inline子、cons/nil列、constructorのfield数を言語側でも検査し、空Rubyや 空Anno等の意味制約を出力arenaで検査する。"
+      cons "先行する構文検査成功だけでは意味適合としない。"
+      cons " 非再帰で処理し、停止・不正入力時に部分的な意味値を返さない。"
+      nil
+    cons paragraph
+      cons "ProjectionはSentenceValueと入力syntax nodeから意味nodeへの局所対応を返す。"
+      cons " list constructorやBuiltinText operandは独立した意味nodeではないため対応値はNoneとする。"
+      cons " Source/Origin/Viewを持つ入力構文木は保持し、この対応表を別bundleへ持ち越さない。"
+      cons " source-less生成も元のSynthetic Originを持つ構文木と対応し、架空Spanを作らない。"
+      cons " この入口はprefix専用でありSentenceLiteralはUnsupportedとする。"
+      nil
+    cons paragraph
+      cons sentence
+        cons code "lower::literal::sentence"
+        cons text "はrootのSentenceLiteralを専用payload codecへ渡す。"
+        nil
+      cons "選択surface、 leaf shape、実tokenの存在、head/cover一致を検査し、tokenの正確なsnapshotをownerとしてdecodeする。"
+      cons " payloadとtokenのView/headがそれぞれ妥当なだけでは受理せず、両者の一致も検査する。"
+      cons " syntax leaf内の意味arenaという所有関係の深さを加え、停止時も呼出元のdepthへ戻す。"
+      cons " 旧Doc payloadや原文の再parseによるfallbackは使わない。"
+      nil
+    cons paragraph
+      cons sentence
+        cons code "lower::presentation::sentence"
+        cons text "は標準literal/prefixをSentenceSyntaxへ返す共通入口である。"
+        nil
+      cons " prefixでは投影mapからdenseな位置表を作り、元のSource/Origin/SourceMapを保持する。"
+      cons " form headのViewは対応する意味nodeへ、list/BuiltinText等の補助tokenのViewはrootの表記へ付与し、 全Viewを位置閉包とともに再検査する。"
+      cons "これは編集用の元SyntaxBundleを置き換えない。"
+      cons " literalのSentenceSyntaxはreader payload自身の文章内位置とOriginを保持する。"
+      cons "包んでいたleafの Originやbindingをpayload内のOriginへ同一化せず、呼出側は元SyntaxBundleも保持する。"
+      cons " source-less prefixは元Synthetic Originを使用し、架空Spanを作らない。"
+      cons " literalで表現可能なRuby/Annoの例では、両経路の意味値から得るliteral印字が一致することを検査する。"
+      cons " 任意foreign adapterの意味比較、表示の安全性、Doc本文移行の完了をこの一致から推定しない。"
+      nil
+    cons paragraph
+      cons sentence
+        cons code "print::prefix"
+        cons text "は標準Sentence表層の全constructorを印字する。"
+        nil
+      cons "Sentence rootと明示Inline入口に 対応し、Concat、Ruby、InlineAnnoの境界、notes順、Code、強調、Break、外部URIとlabelを保持する。"
+      cons " TextはBuiltinTextとしてescapeし、文章literalのRuby/Anno区切りとして再解釈しない。"
+      cons " 共有arenaをsourceへ展開した各出現と出力byteにもBudgetを適用し、失敗・停止時は部分文字列を返さない。"
+      cons " foreign-inlineは対応する表層adapterを別途選択する必要があるため、標準printerでは AdapterRequiredを返す。"
+      cons "印字は元の綴り・Source/Origin・共有indexを再現する操作ではない。"
+      cons " 本番packageで標準prefixのparse/lower/print一致とText payload復元を検査する。"
+      cons " foreign adapterを含む全意味往復とDoc consumer移行の完了とは区別する。"
+      nil
+    cons paragraph
+      cons sentence
+        cons code "print::prepare"
+        cons text "はSentenceの構造とforeign closureを検証し、不変借用する。"
+        nil
+      cons sentence
+        cons text " hostは選択したguest printerから、foreign Inline form全体のsourceを取得し、 "
+        cons code "PreparedPrint::resolve"
+        cons text "で入力とembedへ対応付ける。"
+        nil
+      cons sentence
+        cons code "render"
+        cons text "はそのsourceを出現順に組み込む。"
+        nil
+      cons " 別入力の結果、同じembedの重複指定、未解決のembedを拒否する。"
+      cons " sourceの文法と意味対応はhost側adapterの検証対象である。"
+      cons " 出力時にもWork・Allocation・OutputBytes・Depthを計上し、停止時は部分文字列を返さない。"
+      nil
+    nil
+  cons section plain_text "Sentenceのplain-text[生成/せいせい]"
+  body
+    cons paragraph
+      cons sentence
+        cons text "Sentence coreのnative API "
+        cons code "text::prepare"
+        cons text "は"
+        cons code "SentenceValue"
+        cons text "の構造とforeign closureを検証し、 入力とregistryの不変借用を保持する。"
+        nil
+      cons sentence
+        cons code "PreparedText::render"
+        cons text "は標準Inlineの順序に従って文章を生成する。"
+        nil
+      cons " TextとCodeは内容を保持し、強調と外部リンクは本文を、BreakはLFを出力する。"
+      cons " 共有nodeは各出現位置で出力する。"
+      nil
+    cons paragraph
+      cons sentence
+        cons code "BaseOnly"
+        cons text "は注釈のbase、"
+        cons code "WithReadings"
+        cons text "は"
+        cons code "base[reading]"
+        cons text "、"
+        cons code "WithAllNotes"
+        cons text "はさらに "
+        cons code "base{note/note}"
+        cons text "を出力する。"
+        nil
+      cons "RubyとInlineAnnoの内部にも同じ方針を適用する。"
+      cons " hostはforeign-inlineの文章を明示的に供給する。"
+      cons sentence
+        cons code "resolve"
+        cons text "が供給値を対象入力のembedへ結び付け、 生成時に所属と重複を検査する。"
+        nil
+      cons sentence
+        cons text "出力対象に必要な供給値が欠けた場合は"
+        cons code "Unresolved"
+        cons text "を返す。"
+        nil
+      cons " 注釈方針によって出力から除外される部分も、準備時の構造・foreign closure検査の対象とする。"
+      cons " 供給文章の意味的な正しさとproviderの認証は、hostのadapter契約に従う。"
+      nil
+    cons paragraph
+      cons "生成はWork・AllocationUnits・OutputBytes・Depthを計上し、失敗・停止時にはErrorを返す。"
+      cons " 成功時の返り値は全文のStringである。"
+      cons "元sourceの表記と位置情報は入力側で保持する。"
+      cons " このAPIの対象はnativeの意味値である。"
+      cons "portable operationの追加とDoc consumerの所有移行は後続作業とする。"
+      nil
+    nil
+  cons section html "SentenceのHTML[出力/しゅつりょく]adapter"
+  body
+    cons paragraph
+      cons sentence
+        cons text "suiteの"
+        cons code "sentence-html"
+        cons text " featureは、"
+        cons code "adapters::sentence::html::render"
+        cons text "を公開する。"
+        nil
+      cons " SentenceSyntaxを検証し、標準Inlineを共通markupのphrasing fragmentへ変換する純粋な処理である。"
+      cons " このfeatureのdomain依存はSentence coreであり、HTMLの構造検査とserializeはmarkupが担当する。"
+      cons " Text、Code、強調、Break、外部リンク、Ruby、InlineAnnoの内容・順序を保持する。"
+      cons sentence
+        cons text " RubyとAnnoには既存の"
+        cons code "nepl-ruby"
+        cons text "・"
+        cons code "nepl-anno"
+        cons text "等の表示classを用いる。"
+        nil
+      cons " hostは対応するstylesheetの出自と配置を管理する。"
+      cons "外部URIと出力文字はmarkupの安全性規則に従う。"
+      nil
+    cons paragraph
+      cons "返り値は元SentenceSyntaxの不変借用、検査済みの出力構造、各出力要素と意味nodeの対応を保持する。"
+      cons " 共有nodeの各出現は個別の出力要素を持つ。"
+      cons "元のSource・Origin・Viewは入力を参照して取得する。"
+      cons " 出力構造を変更するconsumerは、変更後の構造と対応情報を再検証する。"
+      cons " Work・Nodes・AllocationUnits・Depthを生成と検証に計上し、失敗・停止時は部分fragmentを返さない。"
+      cons " serializeのOutputBytesはmarkup側で計上する。"
+      nil
+    cons paragraph
+      cons sentence
+        cons text "標準入口はForeignInlineへ"
+        cons code "ForeignAdapterRequired"
+        cons text "を返す。"
+        nil
+      cons sentence
+        cons code "render_with_foreign"
+        cons text "では、 入力closureの検証後に、hostが選択したcallbackを各出現について実行する。"
+        nil
+      cons " callbackのowned markupは呼出元のDepthを保持してphrasingとして検査し、arenaを移動して結合する。"
+      cons sentence
+        cons text " "
+        cons code "ForeignPlacement"
+        cons text "はembedと出力arena内の連続範囲を対応付ける。"
+        nil
+      cons "guest内部の意味nodeとの対応は、 その言語の出力metadataを保持するhostが、この配置情報に従って更新する。"
+      cons " callback後にBudgetの停止を確認し、停止後に返された成功値と後続callbackを公開・実行しない。"
+      cons " Mathの文章注釈では、内側Mathのnode対応と注釈対応をSentenceの配置へ移し、 外側MathMLからHTMLへの変換でも同じ対応を更新する。"
+      nil
+    nil
+  cons section doc_reader "Doc[本文/ほんぶん]readerへの[接続/せつぞく]"
+  body
+    cons paragraph
+      cons "この節はconsumer所有移行中のadapter契約である。"
+      cons "Sentenceの恒久的な意味モデルと、現在のDoc consumer arenaへの変換を区別する。"
+      cons "移行完了後も必要なforeign adapterと、旧所有を除去するまでの互換変換を同じ完成条件にしない。"
+      nil
+    cons paragraph
+      cons sentence
+        cons text "Docの標準文法は独立Sentenceのliteral readerを使用し、suiteの"
+        cons code "doc-sentence"
+        cons text " featureで公開する "
+        cons code "nepl3_suite::adapters::sentence::document"
+        cons text "を通して現在のDoc consumerへ渡す。"
+        nil
+      cons sentence
+        cons text " adapterは"
+        cons code "no_std + alloc"
+        cons text "で動作し、DocとSentenceの公開型・検査を接続する。"
+        nil
+      cons " suiteの既定featureはこのdomain依存を有効にしない。"
+      cons "開発hostはfeatureを明示して利用する。"
+      cons " Doc/Sentence core間の直接依存と、coreからtoolsへの依存を禁止する。"
+      cons " adapterはSentenceSyntaxを検査し、全標準Inlineを同じarena index・順序でDoc値へ変換した後、 Doc側でも構造を再検査する。"
+      cons "CodeはDocのInlineCode、外部linkはLinkTarget::Externalへ対応し、 foreign CodeやDoc固有のpage参照へ読み替えない。"
+      cons "foreign-inlineは個別adapterを要求する。"
+      cons " Source/Origin/SourceMapとViewを保持し、元SentenceSyntaxのdense位置・View ownerも呼出側で保持できる。"
+      cons " 入力の共有・source-less Syntheticを展開や架空Spanで置き換えず、失敗・停止時は部分Doc値を返さない。"
+      nil
+    cons paragraph
+      cons "Doc catalogは独立Sentenceのdescriptorと標準literal readerを登録する。"
+      cons "readerは SentenceLiteralPayloadを返し、Doc固有のreader descriptor・SentencePayload codecを持たない。"
+      cons " suiteのliteral adapterがSentenceLiteralPayloadまたはSentenceSyntaxを一度だけ検査し、 既存の型付きSentence→Doc bridgeへ渡す。"
+      cons "旧Doc payloadへのfallbackは行わない。"
+      cons " codec経路は、検査済みの所有SentenceSyntaxと検査に用いた不変registryを私有の型付きownerへ束縛する。"
+      cons " このownerには公開constructorと可変syntax参照を与えず、bridgeは同じ値を再検査せずに変換できる。"
+      cons " 未検査SentenceSyntaxを受け取る公開bridgeは従来どおり検査する。"
+      cons "Doc構造と外tokenの検査は省かず、 codec・変換・後段検査は同じ累積BudgetとSourceAdmissionを使用し、停止後に成果物を返さない。"
+      nil
+    cons paragraph
+      cons "Doc consumerの正規化では、一つのsequence内の隣接Text列をまとめ、完成した文字列だけを新しいnodeとして保持する。"
+      cons " 結合途中のprefix全体を繰り返し複製せず、文字列のコピー・確保はその列の合計byte数に比例させる。"
+      cons " 共有される入力nodeは変更せず、元の順序と既存のOrigin合成順を保持する。"
+      cons "source-less部分を既知のsourceで補完しない。"
+      cons " 参照の走査・出力確保・Origin合成は引き続き累積Budgetへ計上する。"
+      cons "これは局所的な隣接Text結合の条件であり、 入れ子や共有を含む文書全体の正規化を線形時間と保証するものでも、consumer所有移行の完了を意味するものでもない。"
+      nil
+    cons paragraph
+      cons "このownerは操作内の検査結果の受渡しであり、portable proofやDoc consumer所有移行の完了証拠ではない。"
+      cons " Doc lowerの公開decoder境界はcallbackの停止を優先して伝播し、返却された局所Doc構造を 参照の再配置前に検査する。"
+      cons "その後で外tokenのhead/Viewと全位置の所属を検査する。"
+      cons " 生成されたrootのcoverと原Viewは、前述の全経路SourceMap条件で保持できる。"
+      cons " 文書の内部identityは生成manifestへ記録し、Markdownの出自は実際のsourceと参照入力に対応する。"
+      cons " この段階はreader/payloadの所有移行であり、Doc consumerの意味arenaにあるSentence/Inline表現は残る。"
+      cons " DocのInlineMath・DisplayMathをMath表示へ接続するadapterも引き続き必要である。"
+      cons " Mathの文章注釈は独立Sentenceを直接使用する。"
+      cons "Doc本文の二重所有は後続のconsumer所有移行で整理する。"
+      nil
+    nil
+  cons section foreign "hostが[選択/せんたく]するforeign Inlineの[構築/こうちく]"
+  body
+    cons paragraph
+      cons sentence
+        cons text "hostは、Grammar compilerの型付き"
+        cons code "ForeignForm"
+        cons text "を通じて、既存categoryへ単一のforeign fieldを持つformを追加できる。"
+        nil
+      cons " 宣言にはkind、category、spelling、field、foreign alias、guest category、生成理由を指定する。"
+      cons " compilerは追加宣言を含めてsurface descriptorを生成し、そのidentityでreaderと全formを構築する。"
+      cons " 既存kindとの衝突、重複kind、空の宣言情報、未定義category、同一読取りcontextでのspelling衝突を拒否する。"
+      cons " 元の文法sourceと由来を保持し、hostが生成した宣言には独立したSynthetic Originを付ける。"
+      cons " foreign aliasの実schemaとcategoryはParseProfileの解決時に検査する。"
+      nil
+    cons paragraph
+      cons sentence
+        cons text "Doc hostは、この経路でSentenceのInlineへ"
+        cons code "math Expr"
+        cons text "を追加し、MathのExprを明示的に選択する。"
+        nil
+      cons " 標準Sentence単独のpackageは従来の宣言集合を保持する。"
+      cons "選択後のsurfaceは追加宣言に対応するschema identityを持つ。"
+      cons " Math注釈のprinterはSentenceを構造としてlowerし、foreign MathをMath printerへ渡す。"
+      cons " 共有guestの呼出しには最深の出現位置を使用し、呼出元のDepthと累積Budgetを保持する。"
+      cons " HTMLのforeign adapterはMathの出力操作を選択し、内側Sentenceの本文・読みの対応を最終HTMLへ保持する。"
+      cons " 再解析後の構造比較、NDF受信後の表示、source対応、旧Doc注釈headの拒否をconsumer試験で検査する。"
+      cons " Mathの数値評価は注釈のSentence内部へ進入せず、注釈の表示と印字は選択したhost操作が担当する。"
+      nil
+    cons paragraph
+      cons "hostはSentenceのInlineへDocのInlineを選択するformも登録できる。"
+      cons " printerは選択したLanguagePackageのformから綴りを取得し、Doc InlineをDoc printerへ渡す。"
+      cons " Doc内のMathと、その注釈のSentenceへ再入する場合も、各言語のschema・categoryと累積Budgetを検査する。"
+      nil
+    cons paragraph
+      cons sentence
+        cons text "Doc Inlineの局所HTML表示は"
+        cons code "prepare_local_inline"
+        cons text "と"
+        cons code "render_inline"
+        cons text "を使用する。"
+        nil
+      cons " 準備段階でfragment内のlabel、前方参照、重複出現を検査し、link・asset・foreign guestの依存要求を返す。"
+      cons " 外部の依存要求を持たない入力から、専用の準備済み型とPhrasingのHTMLを生成する。"
+      cons " HTML要素は元のDoc nodeへの対応を保持する。"
+      cons "外側の文書のnamespaceと複数fragment間の参照はcomposition側で解決する。"
+      cons " Sentenceのforeign HTML adapterは、hostが選択したDoc Inlineを専用の準備・表示入口へ渡す。"
+      cons sentence
+        cons text " "
+        cons code "prepare_inline_with_foreign"
+        cons text "は、未解決要求がforeign guestだけであることを検査する。"
+        nil
+      cons sentence
+        cons text " "
+        cons code "render_inline_with_foreign"
+        cons text "は、準備済み文書が所有するclosureをhostへ渡し、返されたHTMLのPhrasing適合と合成後の構造を検査する。"
+        nil
+      cons " hostはDoc内のInlineMathを選択したMath出力へ接続し、その注釈のSentenceとDocへの再入を処理する。"
+      cons " 各guestの表示位置は出現ごとに記録し、共有embedの複数出現も独立したHTML要素へ対応付ける。"
+      cons " 合成結果はMathとDocの由来を型で区別し、保持した構文とHTML要素の対応を各合成段階で更新する。"
+      cons " 未解決labelはsource付き診断、link・assetは依存要求として返す。"
+      cons "未選択のguest操作は明示的に拒否する。"
+      cons " 複数fragmentのHTML IDが衝突した場合は合成を拒否し、停止時は部分HTMLを成功結果として返さない。"
+      cons " guestのHTMLもDoc出力の深さ上限256と、呼出元の累積Budgetに従う。"
+      cons sentence
+        cons text " 文書namespaceの名前解決は"
+        cons code "labels::namespace"
+        cons text "が担当する。"
+        nil
+      cons "hostは構造検査済みのArticle・Sentence・Inline断片を、表示出現順のmember列として明示する。"
+      cons " 検査結果は各定義・参照のmember、Doc node、元source位置を保持し、選択した全memberの定義を収集してから前方参照を解決する。"
+      cons " 同じ定義を持つmemberの複数出現とmember間の名前重複を拒否する。"
+      cons "未選択の断片やforeign closure内部の定義は自動導入しない。"
+      cons " 名前索引は宣言順のidentityを保持し、比較・確保を共通Budgetへ計上する。"
+      cons "名前解決のproofは選択した不変のmember列へ束縛する。"
+      cons sentence
+        cons text " native APIの"
+        cons code "resolve_interleaved"
+        cons text "は、定義と参照を別々の型付きindex列で指定し、member間の順序を交互に構成できる。"
+        nil
+      cons " 各indexは元member列の出現IDと、そのmemberが収集した局所site indexを持つ。"
+      cons "同じ文書を複数回選択しても出現IDを統合しない。"
+      cons " 各member内部のconstructor順を保ち、定義・参照それぞれについて全siteを一度ずつ列挙しなければならない。"
+      cons " 欠落・重複・範囲外・局所順の反転を型付きorder errorとして拒否してから名前解決する。"
+      cons "order errorを未解決labelの診断へ読み替えない。"
+      cons " このproofは選択したmemberと明示site順での名前解決だけを保証する。"
+      cons "hostが実際のArticle走査順を供給した証明でも、既存rendererがその順に出力する保証でもない。"
+      cons sentence
+        cons text " 従来の"
+        cons code "resolve"
+        cons text "はmemberごとの連続順を維持する。"
+        nil
+      cons "両入口は同じ名前解決処理を使い、空memberの走査とschedule検査も累積Budgetへ計上する。"
+      cons sentence
+        cons text " Doc HTMLの"
+        cons code "namespace::prepare"
+        cons text "はこのproofから全memberを取得し、共通codec・registry・source admissionで再検査する。"
+        nil
+      cons sentence
+        cons text " "
+        cons code "namespace::render"
+        cons text "はmember順にHTMLを合成し、全体のID・参照・構造と深さ上限を検査してから出力する。"
+        nil
+      cons " 出力はmemberごとの文書digestとDoc node・HTML要素の対応を保持する。"
+      cons "合成用wrapperへ架空のDoc ownerを割り当てない。"
+      cons " 表示言語の選択によって参照先が出力されない場合は最終検査で拒否する。"
+      cons "この入口ではlink・asset・foreign操作の未解決要求を返す。"
+      cons sentence
+        cons text " hostがSentence内の位置へ挿入する場合は、"
+        cons code "namespace::render_part"
+        cons text "から構造検査済みの"
+        cons code "PendingPart"
+        cons text "を取得する。"
+        nil
+      cons " この値はmember・文書digest・Doc node対応を保持し、文書内参照を未確定のまま合成先へ渡す。"
+      cons "単体のserialize用proofは付与しない。"
+      cons sentence
+        cons text " 共通HTMLの"
+        cons code "check_part"
+        cons text "は構造・属性・挿入slotを検査し、Sentence rendererは全guestの合成後にID重複と参照解決を確定する。"
+        nil
+      cons " 参照先のguestが未配置の場合はSentenceの表示全体を拒否し、部分HTMLを完成結果として返さない。"
+      cons sentence
+        cons text " InlineMathを含むnamespaceは"
+        cons code "namespace::prepare_with_foreign"
+        cons text "で準備する。"
+        nil
+      cons "対応するguest操作はInlineMathに限定し、他のforeign要素とlink・assetは未解決の依存要求として返す。"
+      cons sentence
+        cons text " "
+        cons code "namespace::render_part_with_foreign"
+        cons text "は指定memberのguest操作を実行し、Doc参照を保持した"
+        cons code "PendingPart"
+        cons text "とguestの表示位置を返す。"
+        nil
+      cons " guest出力は局所的に有効なPhrasingを要求し、Doc参照の最終解決は合成先が担当する。"
+      cons "停止時はpending出力も返さない。"
+      cons " Sentence annotation hostは、構造検査済みSentenceの子順からDoc断片の表示出現を事前収集する。"
+      cons " Rubyの読み・Annoの注釈と共有nodeの反復を含め、出現順に文書namespaceへ登録する。"
+      cons " 同じembedのDoc意味モデルは不変の共有値として保持し、描画結果と由来は表示出現ごとに記録する。"
+      cons sentence
+        cons text " 型付きSentenceを直接渡す"
+        cons code "render_syntax"
+        cons text "も、文書namespaceの準備前にSentenceの構造・source境界を検査し、同じ累積Budgetと深さ上限を適用する。"
+        nil
+      cons " 各Doc断片内のInlineMathも既存のMath出力へ接続し、Sentence全体の合成後にHTML参照を検査する。"
+      cons " 未解決参照は元sourceの診断を返し、member間の重複定義は両方の文書・nodeと位置付き診断を保持したエラーを返す。"
+      cons sentence
+        cons text " namespaceの"
+        cons code "Error::diagnostic"
+        cons text "は重複定義の主位置と既存定義の関連位置を各memberのsourceへ照合し、既存の"
+        cons code "DuplicateLabel"
+        cons text "診断を生成する。"
+        nil
+      cons " 各siteのnode・名前・位置をmemberの定義または参照と照合し、両sourceを使用して診断全体を検査する。"
+      cons "同じsnapshotを共有する断片も、この所属検査の対象とする。"
+      cons sentence
+        cons text " Doc断片の選択とlowerは、suiteの"
+        cons code "adapters::sentence::document_guests::collect"
+        cons text "が担当する。"
+        nil
+      cons " この公開APIはSentenceの局所syntaxを検査し、指定したschema identityとInline categoryに一致するclosureを解析する。"
+      cons sentence
+        cons text " 返却値は一意なDoc文書の所有列と、各表示出現から文書を参照する"
+        cons code "DocumentId"
+        cons text "の列を持つ。"
+        nil
+      cons " 同じembedは最深の出現位置で一度解析し、表示順と共有を保持する。"
+      cons sentence
+        cons text "処理は"
+        cons code "no_std + alloc"
+        cons text "で成立し、I/O・HTML・原子的参照カウントを要求しない。"
+        nil
+      cons " 他言語のguestは各adapterが担当し、名前解決と表示は後段で実行する。"
+      cons "開発hostはこの結果を既存のnamespaceとHTML処理へ接続する。"
+      nil
+    cons paragraph
+      cons sentence
+        cons text "複数の独立Sentenceを配置するnative consumerは、"
+        cons code "document_guests::collect_placed"
+        cons text "へ所有列と表示配置列を明示する。"
+        nil
+      cons " 配置は所有indexと呼出元からの相対深さを持ち、範囲外indexと未配置ownerを拒否する。"
+      cons "各ownerを最深の配置で一度検査・解析し、 Doc断片の所有はowner別に保持する。"
+      cons "同じownerの繰り返し配置はDoc値を共有するが、異なるownerを本文や局所embed番号の一致だけで統合しない。"
+      cons " 返却値は元の所有列・配置列の不変借用と、配置index・owner・局所embed・Doc所有indexの対応を保持する。"
+      cons " 出現列は配置順とSentence内の順序に従い、参照先のDoc断片を明示的なnamespace memberとして使用できる。"
+      cons " この操作は名前解決や描画を行わず、相対深さが実際のArticleの配置から求められた証明でもない。"
+      cons " 未選択guestを含むSentence構造とsource閉包を検査し、同じ累積Budgetで停止した場合は選択結果を返さない。"
+      cons " Article全体の走査・namespace統合と旧Doc Sentence所有の除去は、引き続きconsumer移行の残件である。"
+      nil
+    cons paragraph
+      cons "foreign Inlineの構造検査はguestを内容ありとして扱い、guest固有の表示内容を確定しない。"
+      cons sentence
+        cons text " "
+        cons code "CheckedShape::content_with_foreign"
+        cons text "はhostが明示したguestの内容判定を用いてRubyのbase/readingとAnnoのbase/noteの非空条件を再検査する。"
+        nil
+      cons " 各embedのcallbackは最深の共有出現の深さで一度だけ呼び、同じ累積Budgetを使う。"
+      cons "callback後の停止を成功や別errorで上書きしない。"
+      cons sentence
+        cons text " Doc guestの内容判定は元のDoc shapeの"
+        cons code "annotation_content"
+        cons text "から取得する。"
+        nil
+      cons "この入口はSentence/Inline rootだけに値を返し、Article等の空判定には使わない。"
+      cons "空labelのanchorは単独なら有効だが、Ruby/Annoの必要な内容にはならない。"
+      cons " native annotation hostはDocの意味モデルと明示選択したMath Exprの内容契約を使用する。"
+      cons "HTMLや文字列長からguestの内容を推定しない。"
+      cons " これは内容条件の検査であり、sourceの許可・名前解決・guest実行・完成HTMLの検査を代替しない。"
+      nil
+    cons paragraph
+      cons "このnamespaceは一つのSentence表示に属する。"
+      cons "外側のArticle全体とのnamespace共有、およびDocの旧Sentence所有の撤去はconsumer所有移行の残件である。"
+      cons sentence
+        cons text " 複数のSentenceを一つの文書へ配置するrendererは、suiteの"
+        cons code "html::render_part_with_foreign"
+        cons text "で"
+        cons code "PendingSentence"
+        cons text "を取得できる。"
+        nil
+      cons " この値は局所syntax・guest closure・Phrasing構造の検査と要素の由来を保持し、HTML IDの重複とfragment参照の解決を合成後の文書検査へ委譲する。"
+      cons " 各Sentenceのsource所有者を保持して要素位置を再対応させ、完成したHTML全体を検証した後にserializeする。"
+      cons sentence
+        cons text " "
+        cons code "PendingSentence"
+        cons text "はserializerへ直接渡せない。"
+        nil
+      cons sentence
+        cons text "単独表示の"
+        cons code "render_with_foreign"
+        cons text "は従来どおり文全体のIDと参照を検査する。"
+        nil
+      cons sentence
+        cons text " "
+        cons code "html::paragraph::compose"
+        cons text "はSentence断片を表示順に消費し、段落のHTMLを構成する。"
+        nil
+      cons " 各出現の入力Sentence、要素範囲、nodeの由来、foreign要素の位置を保持し、移動先の要素番号へ対応させる。"
+      cons " 段落全体の参照・重複ID・構造・深さを共通Budgetで検査し、失敗時は部分出力を返さない。"
+      cons " この段落合成はHTMLの操作であり、Docの文書モデルとArticle全体の名前解決への接続は引き続きconsumer移行で扱う。"
+      nil
+    cons paragraph
+      cons sentence
+        cons text "開発hostの"
+        cons code "doc::annotations::paragraph::render"
+        cons text "は、明示した独立Sentence所有列と配置列を、一つの段落namespaceへ接続する。"
+        nil
+      cons sentence
+        cons text " Doc Inlineの出現を"
+        cons code "collect_placed"
+        cons text "で収集し、全memberの名前解決とguest内容検査を行ってから、各Sentenceをpending HTMLとして描画する。"
+        nil
+      cons sentence
+        cons text " "
+        cons code "render_part_with_foreign_codec"
+        cons text "は再帰guestと同じSourceAdmissionを使用し、現在の深さで入力を検査する。"
+        nil
+      cons " 段落自身の階層を加えた深さを収集・内容検査・各Sentenceの描画へ渡し、完成した段落全体を検査した後だけ返す。"
+      cons " Doc fragmentの前方参照はSentenceをまたいで解決できるが、同じ定義を持つ配置の反復は重複定義となる。"
+      cons " Doc内のInlineMathとそのSentence注釈は既存の選択済みhostへ接続し、Math注釈の局所定義を段落namespaceへ導入しない。"
+      cons " foreignのdispatchとDoc/Mathの由来記録は単独annotation表示と共通にし、各配置のmetadataを完成した段落のHTML要素へ対応させる。"
+      cons " 返却値は元のSentenceを不変借用し、Doc断片の共有所有と配置ごとの表示位置を保持する。"
+      cons "失敗や停止時に部分段落を返さない。"
+      cons " この入口は明示配置の段落表示であり、Article走査・CLIの既存Article経路・旧Doc所有の撤去を完了したものではない。"
+      nil
+    nil
+  cons section annotation "[注釈/ちゅうしゃく]と[移行完了条件/いこうかんりょうじょうけん]"
+  body
+    cons paragraph
+      cons "以下は移行後にも維持する注釈契約と、旧経路を除去する際の受入条件である。"
+      cons "実施順・各段階の残件はT07と実装状態で管理する。"
+      cons "旧コメントの認識だけを先に削除する変更はmainへ統合しない。"
+      nil
+    cons paragraph
+      cons sentence
+        cons code "annotate Sentence target"
+        cons text "はarity 2の通常formであり、各host categoryへ固定shapeで登録する。"
+        nil
+      cons " runtimeのgeneric categoryや独立Comment、commented、特殊trivia導入子を追加しない。"
+      cons " targetのbinding/import/export/visibilityとdomain意味を保存し、構文とannotation relationは残す。"
+      cons " 文章中のInlineAnnoとは別kindである。"
+      cons "生成注釈も同じ正式syntaxを返す。"
+      nil
+    cons paragraph
+      cons "各categoryで無注釈とのbinding/domain比較、source/Origin保持、通常Doc HTMLから著者注釈の除外、 literal/prefixの意味一致、native/portable往復、Unicode境界、資源停止と不正入力を検査する。"
+      cons " 旧#消費、TriviaKind::Comment、wire/sidecar、各profile、再生成元、公式sourceを同じ移行で除去する。"
+      cons " 旧schema拒否と旧#負例を残し、互換decoder・flag・恒久移行runtimeは残さない。"
+      nil
+    cons section math_composition "Article・PageSetへのMath[表示/ひょうじ]の[合成/ごうせい]"
+    body
+      cons paragraph
+        cons "nativeのDoc HTML hostは、Code表示とInlineMath・DisplayMathを同じ文書走査へ接続できる。"
+        cons " InlineMathの返却markupはPhrasing、DisplayMathはBlockとして検査する。"
+        cons "DisplayMathの前後ではparagraph内のsentence runを分ける。"
+        cons " Code-only・local-onlyの既存入口は従来の選択範囲を維持し、追加のguestを暗黙に許可しない。"
+        cons " Mathの表示は式の評価を要求せず、17章のrenderer選択と明示的なfallback診断を維持する。"
+        nil
+      cons paragraph
+        cons "MathのSentence注釈に局所Doc namespaceがある場合、注釈内部で定義・参照の解決とID一意性を確定した後、Mathの表示出現ごとにそのHTML IDと局所fragment参照を束縛する。"
+        cons " この束縛は外側Docの名前解決へ定義を導入しない。"
+        cons "同じMathの独立した表示出現は区別できるが、同一注釈内の重複定義や、未選択の外側Doc anchorへの参照を救済しない。"
+        cons " 異なるMath出現や親Docと衝突するIDをそのまま採用せず、親Docの名前を偽装できない出現別prefixを使う。"
+        cons " これは検査済みの局所namespaceの束縛であり、任意の重複HTMLを修復する処理ではない。"
+        nil
+      cons paragraph
+        cons "hostの合成結果は、元Doc・Math・Sentenceと、対応先の実際の出力arenaを併せて保持する。"
+        cons " Math node・注釈nodeの要素番号は各出現の移動先へ写像し、HTML文字列だけに元arenaの番号を添えて対応保持済みとはしない。"
+        cons " PageSetは全ページの準備・描画・出力検査が成功するまで部分成果物を返さない。"
+        cons " 入力検査と再帰guest表示は同じ操作のsource admissionと累積Budgetを共有し、同じsnapshotの再検査でSourceBytesを二重計上しない。"
+        cons " 検査済み構文を使う内部の走査も、その公開入口で現在のdepth・source・closureを検査する。"
+        cons "別操作や浅い位置のproofによって現在の入力検査を迂回する公開入口は設けない。"
+        nil
+      nil
+    nil
+  cons section sentence_slot "Docの[明示的/めいじてき]なSentence closure slot"
+  body
+    cons paragraph
+      cons sentence
+        cons text "段階移行の入口として、Doc/SentenceとDoc/Flowは "
+        cons code "Sentence"
+        cons text " に続く独立Sentence/Sentenceを受け取る。"
+        nil
+      cons sentence
+        cons text " Doc側は "
+        cons code "SentenceGuest { syntax }"
+        cons text " と "
+        cons code "EmbedKind::Sentence"
+        cons text " で閉じたforeign syntaxを保持し、Sentenceのinline arenaをDocへ複製しない。"
+        nil
+      cons " ArticleやSectionのtitle、Variant、table cell、caption、alt、OptionalSentenceも既存のSentenceRefを通してこのslotを保持する。"
+      cons " 従来のDoc-owned sentence literal/inline経路はこの段階では残る。"
+      cons "Article全体のSentence所有への移行完了を意味しない。"
+      nil
+    cons paragraph
+      cons "shape検査はslotのrole、到達性、未使用entryを検査する。"
+      cons "構造検査はSentence category、閉じたsource/environment、最深の所有位置とcaller depthを検査する。"
+      cons sentence
+        cons text " "
+        cons code "GuestLanguage::Sentence"
+        cons text " はprint bindingの識別であり、汎用Doc/GuestやCodeの別入口を追加しない。"
+        nil
+      cons " fragmentはclosure groupと元のsource・Origin・Viewを保持し、選択したentryのindexだけを再配置する。"
+      cons " Docのshape証明はforeign Sentenceのannotation contentを判定せず、そのrootに対するcontent照会はNoneを返す。"
+      nil
+    cons paragraph
+      cons "printは明示的なSentence bindingとdocument/guest digestに対応するguestの印字結果を要求する。"
+      cons " plainTextも対応するguest textが未選択ならUnresolvedEmbedを返し、空文字で代替しない。"
+      cons "独立Sentence側のannotation policy適用は、textを供給するhostの責務である。"
+      cons " local-only HTML準備はSentenceをForeign requirementとして返す。"
+      cons "PageSet・CLIの自動描画、Doc namespaceへのguest定義の導入、旧Doc Inline型の除去はこのslotの追加だけでは成立しない。"
+      cons " Sentence意味変換の自動選択と独立paragraph合成hostへの接続は未完了である。"
+      cons "下記の明示的なguest描画はArticleの挿入境界を提供する。"
+      nil
+    cons section article_display "[明示的/めいじてき]なArticle guest[描画/びょうが]"
+    body
+      cons paragraph
+        cons sentence
+          cons code "prepare_display"
+          cons text " はArticleの構造・source・closureを検査し、未解決要求が対応済みのForeign（Sentence、InlineMath、DisplayMath、Code）だけの場合に限り描画入力を返す。"
+          nil
+        cons "CircuitFigure・独立Guest・未解決AssetはNeedsResolutionとして準備段階で返す。"
+        cons "既存の安全な外部URL処理を保ち、未解決要求を空の結果で置き換えない。"
+        cons sentence
+          cons text " "
+          cons code "render_display"
+          cons text " はtitle、本文、table cell等の表示順に元のclosureを選択済みadapterへ渡す。"
+          nil
+        cons "同じguestの複数表示は別のplacementを持ち、所有元と挿入範囲を保持する。"
+        cons " SentenceGuestの出力は挿入位置でphrasing構造を検査する。"
+        cons "Sentence間の参照はArticle全体で解決し、全体のID重複・未解決参照・不正なネストを検査してから結果を返す。"
+        cons "Math等の既存guest境界は引き続き個別の閉じたnamespace検査を行う。"
+        cons " adapter失敗・停止・深さ超過・不正なmarkupでは部分Articleを返さない。"
+        cons "入力検査とcallbackは呼出し側のBudgetを継続し、source admissionは選択したhostの同一操作で保持する。"
+        cons " この拡張は既存display／PageSetの明示選択されたadapterの挿入境界を共用する。"
+        cons "Sentence意味変換の自動選択、CLIへの接続、旧Doc inline所有の撤去までを完了としない。"
+        nil
+      nil
+    cons section occurrences "[構造上/こうぞうじょう]の[出現列/しゅつげんれつ]"
+    body
+      cons paragraph
+        cons sentence
+          cons code "ValidatedDocShape::structural_occurrences"
+          cons text " は不変の検査済みDoc arenaからconstructor順の出現列を返す。"
+          nil
+        cons "同じnodeの共有参照を展開し、各出現はnode index、親出現index、親のchild index、rootを1とする相対depthを保持する。"
+        cons " これは表示順やnamespaceへの採用を保証しない。"
+        cons "全Parallel variantとImage altも含み、foreign closureへは進入しない。"
+        cons "hostは表示選択・alt投影と意味上の名前解決を区別し、構造列を描画callback列へ無条件に対応付けない。"
+        cons " 走査は現在の呼出元depthを加算して再検査し、Work・確保量を累積Budgetへ計上する。"
+        cons "停止・overflow・確保失敗では部分列を返さない。"
+        cons "出現数はDAGのnode数に対して指数的になり得るため、この入口を既存の線形shape検査や飽和出現数による重複label検査の代用にしない。"
+        cons " 元sourceの再入場、foreign closureの深さ、HTML wrapperの挿入depth、表示対象の選択、Article全体のguest namespaceは別の検査を要する。"
+        cons "これだけでCLI接続やArticle走査の完成とはしない。"
+        nil
+      cons paragraph
+        cons sentence
+          cons text "hostの"
+          cons code "annotations::article::collect_structural"
+          cons text "は、この構造列から独立Sentenceの所有元を選択する。"
+          nil
+        cons "結果は元のArticleへの不変borrow、局所EmbedRefごとに一度だけlowerしたSentence、全構造出現列とSentence出現から所有元への対応を保持する。"
+        cons " 各所有元は最深の構造出現位置で、選択済みschema/category、同一codecとsource admission、累積Budgetを使ってlowerする。"
+        cons "異なるArticleの同じEmbedRefを同一所有元としない。"
+        cons "後続の不正なSentenceや停止が見つかれば部分所有元表を返さない。"
+        cons " 既存の注釈rendererと同じclosure loweringを共用し、Sentence内のDoc／Math guestは閉じた値として保持する。"
+        cons "全variant・altを含む構造収集であり、それらの定義を文書namespaceへ自動導入する操作ではない。"
+        cons "表示出現・名前解決・HTML位置への対応付けは、引き続き別のhost操作で確認する。"
+        nil
+      nil
+    cons section article_namespace "Article[本体/ほんたい]と[明示採用/めいじさいよう]したSentence[断片/だんぺん]の[名前解決/なまえかいけつ]"
+    body
+      cons paragraph
+        cons sentence
+          cons code "annotations::article::namespace::resolve"
+          cons text "は、元の構造収集結果と、hostが明示的に採用するSentence出現index列を受け取る。"
+          nil
+        cons "indexは構造順に狭義単調増加で、範囲外・重複・逆順を拒否する。"
+        cons "表示言語・alt・出力対象の選択をこの操作が推定することはない。"
+        cons " Article本体の局所siteは元のconstructor順で一度ずつ扱い、採用したSentence内の直接のDoc Inline断片のsiteをその出現位置へ挿入する。"
+        cons "共有された参照nodeの再出現は局所siteの重複列挙にせず、同じguest所有元の別出現は別memberとして扱う。"
+        cons "Math注釈の局所namespaceをArticleへ導入しない。"
+        cons " 所有元を現在のschema選択・source admission・呼出元depthで再検査し、最深の採用出現でDoc断片を収集する。"
+        cons sentence
+          cons text "既存の"
+          cons code "resolve_interleaved"
+          cons text "で全siteと局所順の完全性を検査してから前方参照を解決する。"
+          nil
+        cons "未採用の断片の定義は参照先にならない。"
+        cons " 結果は元のSelectionへの不変borrow、guest文書の共有所有、memberの由来、定義・参照nodeと宣言IDへの対応を保持する。"
+        cons "名前エラーは元sourceの診断と、Article／Sentence出現／局所Doc guest出現を区別する情報を保持する。"
+        cons "停止・不正入力では部分結果を返さない。"
+        cons " この結果は明示した採用集合での名前解決の記録であり、可視性、HTML安全性、portable proof、別のBudgetでの描画許可ではない。"
+        cons "描画操作は所有元と名前解決を再検査し、実際に出力したArticle全体のID・参照を確定する。"
+        cons "この操作単体はCLIへの接続や旧構造の撤去を行わない。"
+        cons "CLIの採用範囲は後述する。"
+        nil
+      nil
+    cons section namespace_display "[明示的/めいじてき]なnamespaceのArticle[描画/びょうが]"
+    body
+      cons paragraph
+        cons sentence
+          cons code "namespace::display::prepare"
+          cons text "は検査済みの採用member集合から表示用の準備を作る。"
+          nil
+        cons "各memberのsource・closureと要件を再検査し、Article displayと同じSentence／Code／InlineMath／DisplayMath、および共通URI規則を通るExternal linkだけを選択する。"
+        cons "Page／Relative link、未解決Asset、その他のguestはNeedsResolutionのままとする。"
+        cons sentence
+          cons text "既存の"
+          cons code "prepare_with_foreign"
+          cons text "のInlineMath限定契約は拡張しない。"
+          nil
+        cons sentence
+          cons text " "
+          cons code "render_part"
+          cons text "は個別memberの構造を検査したpending partを返す。"
+          nil
+        cons sentence
+          cons code "render_article"
+          cons text "は明示されたArticle memberだけをrootとして描画し、adapterが挿入した出力全体のID重複・未解決参照・nestingを最後に検査する。"
+          nil
+        cons "member集合を別のDivへ連結せず、guestを二重に出力しない。"
+        cons "External linkのnode対応は各member内で保持する。"
+        cons " この入口はSentence意味変換、採用集合と実際のcallbackの対応、可視性の決定を自動化しない。"
+        cons "hostは正しい所有元を選択し、実際の挿入位置のBudgetでpending partを描画する。"
+        cons "名前を持たないmemberの挿入省略や入替えを、最終ID検査だけで検知できるとはしない。"
+        cons "CLI接続とnested MathのKaTeX優先出力は別のhost層が担当し、portable受渡しの完成をこの入口から推定しない。"
+        nil
+      nil
+    cons section typed_host "[型付/かたつ]きSentenceを[持/も]つArticle host"
+    body
+      cons paragraph
+        cons sentence
+          cons code "annotations::article::namespace::resolve_with"
+          cons text "は、採用memberの再検査・名前解決後、局所のCheckedNamespaceと所有元情報が存続するscope内で一つのhost操作を呼ぶ。"
+          nil
+        cons "操作の結果・エラーから一時proofのborrowを持ち出せない。"
+        cons "既存のresolveの結果と検査は維持し、callbackのエラーよりも同じBudgetの停止を優先する。"
+        cons sentence
+          cons text " "
+          cons code "annotations::article::render::render"
+          cons text "は全構造Sentence出現を明示採用して実際のSentence意味値からArticleを描画する。"
+          nil
+        cons "Rows／Columnsでは全出現を挿入し、Singleでは共通の表示inventoryから得た元の構造出現indexを使って挿入対象を選ぶ。"
+        cons "namespaceへの採用集合を表示によって縮めず、hidden memberの定義・参照・重複・Sourceも検査する。"
+        cons "画像・Asset等は共通準備がcallback前に拒否する。"
+        cons "出現数・所有元EmbedRef・Doc memberの由来と消費数を照合し、同じ所有元の可視／非表示出現を混同しない。"
+        cons "Math／Code等の外側guestは別の明示adapterへ渡し、Sentenceの出現として消費しない。"
+        cons " Sentence内のDoc断片とMathの記録は、まずSentence arenaへ、次に最終Article arenaへ対応付ける。"
+        cons "Sentence・Docの元node、保持した所有元、入れ子Mathの位置を維持し、Article全体の名前・nesting検査後だけ結果を返す。"
+        cons "各挿入は実際のcallbackのBudgetと祖先depthを使用する。"
+        cons sentence
+          cons text " "
+          cons code "namespace::display::prepare_located"
+          cons text "はmember局所の準備失敗にMemberIdを付ける。"
+          nil
+        cons "集合全体の入場検査で生じた失敗はmemberを推定せずNoneとする。"
+        cons "Article hostはこの区別を保持し、guest内のURI等のnodeエラーを外側Articleのnodeとして扱わない。"
+        cons "既存prepareの返却型・選択規則は変えない。"
+        cons " このhostはHTML出力基盤への段階接続であり、単体CLIと入れ子MathのKaTeX優先変換への接続は後述のexport層が担当する。"
+        cons "PageSetへのnative組込みは後述のexport層が担当する。"
+        cons "単体Article CLIのSingle選択、画像altを含む表示選択、portable成果物の認証、旧Doc Inlineの撤去は未完了である。"
+        nil
+      nil
+    cons section cli "Doc CLIのSentence[選択/せんたく]"
+    body
+      cons paragraph
+        cons sentence
+          cons text "Doc hostの既定profileは独立SentenceのInlineへ"
+          cons code "math"
+          cons text "（Math Expr）と"
+          cons code "document"
+          cons text "（Doc Inline）を明示選択する。"
+          nil
+        cons "これはstandalone Sentence標準へのconstructor追加ではなく、host profileの拡張である。"
+        cons "選択されたsurface／parse-profile identityは両formを含む実内容から求め、以前のidentityへ固定しない。"
+        cons sentence
+          cons text "独立Sentence内では"
+          cons code "math frac 1 2"
+          cons text "、Doc Inlineを選ぶ場合は"
+          cons code "document math Math frac 1 2"
+          cons text "のように、各所有言語の構文を区別する。"
+          nil
+        cons " 単体Doc HTML exportはSentence guestを含むasset-free Articleに型付きArticle hostを使用し、既定Rows表示で本文・Doc断片の参照と外部URLを検査する。"
+        cons "Sentenceの所有元・構造出現・描画記録をLocalDocumentへ保持し、原文Docと共に返す。"
+        cons "Sentenceを含まない既存SVG経路は維持するが、SentenceとAssetの組合せを黙って別経路へ落とさず未対応として返す。"
+        cons " CLIでの単体Article対応からPageSetのSentence対応を推定しない。"
+        cons "PageSetは後述の専用namespace経路で接続し、単体Article CLIのSingle選択とalt選択は未完了である。"
+        cons "既存Math注釈内の入れ子数式の生成はPageSetでも共通の数式収集経路を使う。"
+        nil
+      nil
+    cons section pages_resolution "PageSetへ[明示採用/めいじさいよう]したnamespaceのnativeリンク[解決/かいけつ]"
+    body
+      cons paragraph
+        cons sentence
+          cons code "doc-core::pages::namespace::resolve"
+          cons text " は、PageSetの登録と、ページ順に明示された検査済みDoc namespaceを接続するnative操作である。"
+          nil
+        cons "各namespaceのmember 0は、そのPageSetが所有する同一Articleへのborrowでなければならず、等値な複製・順序違い・個数違いを拒否する。"
+        cons "追加memberの採用とSentence所有元の保持はhostの責務であり、この操作はforeign closureやMath注釈を暗黙に走査・採用しない。"
+        nil
+      cons paragraph
+        cons "各memberの構造・source・closureを現在のregistryと共通source admissionで再検査し、Page／Relative linkのsource位置をpage・member・nodeの組で保持する。"
+        cons "Relativeは出力routeでなく、所有ページの論理sourceを基準にする。"
+        cons "参照先fragmentは対象ページの明示採用namespace内で照合し、他ページの同名ラベルは衝突と扱わない。"
+        cons "登録fileへのfragment、未登録page、sourceのrootを越えるrelative pathを拒否する。"
+        cons "External URI・Asset・Foreign要件は解決済みとせず、そのmemberの型付き要件として保持する。"
+        nil
+      cons paragraph
+        cons "結果は元PageSetとnamespaceへの不変borrowを持つ操作内の検査記録である。"
+        cons "portable proof、既存PageSet identity、最終HTMLのID到達性、Sentence可視性、描画やCLI接続の完了を表さない。"
+        cons "後続hostは採用所有元・表示選択・URI policy・出力全体のanchorを検査し、同じ累積Budgetを継続する。"
+        cons "停止と失敗時は部分結果を返さない。"
+        cons "通常のouter-only PageSet resolverと既存portable契約は変更しない。"
+        nil
+      nil
+    cons section pages_export "[型付/かたつ]きSentenceを[含/ふく]むnative PageSet HTML export"
+    body
+      cons paragraph
+        cons sentence
+          cons code "doc-html::namespace::pages"
+          cons text " は明示採用namespaceのリンク計画からmemberごとの表示準備を構築する。"
+          nil
+        cons "描画器はArticle本体を所有して構築し、hostへ渡すcallbackはforeign出現のみに限定する。"
+        cons "Code callbackの実際の返却markupがDOM Idを持つ場合は拒否する。"
+        cons "member 0以外のCodeは所有元付きCode adapterが未実装のため未対応とする。"
+        cons "Docの固定HTML depthと全体markup検査を省かず、callback後の停止を通常エラーより優先し、limits／呼出元depthの変更を拒否する。"
+        nil
+      cons paragraph
+        cons "実際に出力されたBetweenArtifacts hrefはsource route・登録target・最終target fragmentを検査する。"
+        cons "targetのDOM Id表はページごとに一度構築して再利用する。"
+        cons "登録を迂回するArtifact hrefは拒否する。"
+        cons "名前解決で採用しただけの未出力anchorは到達可能なtargetにならない。"
+        cons "返値はnative断片と描画器由来のorigin／foreign placementであり、既存PageSet identityやportable proofを付与しない。"
+        nil
+      cons paragraph
+        cons "local PageSet exportはSentenceを含む場合に、全ページの型付き所有元収集・全構造Sentence出現の明示採用・元constructor順の名前解決を同じ出力操作で行う。"
+        cons "各ページのSessionが所有元・member・callbackの消費順を照合し、最終page arenaへSentence originと入れ子Math記録を写像する。"
+        cons "Sentenceを含まないページも同一集合で扱い、通常のlegacy-only出力経路は維持する。"
+        cons "native hostの明示的なDisplayOptionsではRows／Columns／Singleを選択できる。"
+        cons "retained native jobも同じ選択を固定して利用する。"
+        cons "CLIのpage manifestも明示選択を受け取り、省略時とretained wrapperの既定表示はRowsである。"
+        cons "画像altの選択、Asset組合せ、旧Inline撤去の完了を意味しない。"
+        nil
+      cons paragraph
+        cons sentence
+          cons text "typed host identityのRows／Columnsは、"
+          cons code "nepl3.local-doc-pages.sentence-input/1\\0"
+          cons text " と完全なPageSetのcanonical NDF/1 CBORから得たdigestに表示modeの1 byte（Rows=0、Columns=1）を続け、その33 byteをSHA-256に通す既存契約を維持する。"
+          nil
+        cons "Singleは別のbyte列をSHA-256に通す。"
+        cons sentence
+          cons text "その順序は "
+          cons code "nepl3.local-doc-pages.sentence-single/1\\0"
+          cons text "、同じ32 byteの入力digest、Singleのtag 2（1 byte）、要求言語のUTF-8 byte長（little-endian u64）と言語byte列、fallback件数（little-endian u64）、順序付きの各fallbackのUTF-8 byte長（little-endian u64）とbyte列である。"
+          nil
+        cons "要求optionsそのものを識別し、表示結果の等価性による正規化はしない。"
+        cons "連結時のWork・確保量とhash対象byte数を同じ出力Budgetへ課す。"
+        cons "これは固定の全出現採用を行うnative hostの入力同定であり、portable検査済みnamespaceの認証ではない。"
+        cons sentence
+          cons text "manifestのrendererを"
+          cons code "nepl3-doc-html sentence-pages/1"
+          cons text "とし、legacy identityと混同しない。"
+          nil
+        nil
+      cons paragraph
+        cons "出力段階のCode照合はSentence／Docと同じcodecのsource admissionを使う。"
+        cons "前段のCode構文解析に要した独立の入場・処理費は返却せず累積Budgetへ残す。"
+        cons "停止後のretained再開は準備済み文書を保全し、描画だけを再試行する。"
+        cons "名前エラーには所有ページのindexと登録IDを付す。"
+        cons "全ページが生成・検証・serializeされるまで部分出力を公開しない。"
+        nil
+      nil
+    cons section visibility "HTML[挿入対象/そうにゅうたいしょう]Sentence[出現/しゅつげん]の[構造/こうぞう]inventory"
+    body
+      cons paragraph
+        cons sentence
+          cons code "doc-html::visibility::sentence_occurrences"
+          cons text " は検査済みDoc shapeと表示optionsから、HTML guest callbackの対象となるSentence出現を列挙する。"
+          nil
+        cons "各要素は元の全構造出現列でのindex、node、EmbedRef、constructor depthを保持し、共有nodeの再出現を同じ所有元へ畳み込まない。"
+        cons "Parallelの選択は実描画準備と共通のselection tableを使い、要求言語・明示fallback順・ASCII大小文字を無視した比較・不正または重複言語・MissingVariantの既存規則を変えない。"
+        cons "hidden部分を含むarena全体のoption検査を保つ。"
+        nil
+      cons paragraph
+        cons "ImageとInlineImageのaltはHTML guest挿入でなくtext projectionの対象なので列挙しない。"
+        cons "Imageのcaptionは挿入対象として残す。"
+        cons "この一覧はforeign closureへ進入せず、Source/Originの入場、Sentence所有元のlower、namespaceへの採用、Asset解決、最終HTMLの安全性を証明しない。"
+        cons "本文がCSSで見えているかの判定でもない。"
+        cons "停止時は部分一覧を返さず、元の構造展開と選択・出力配列のWork／確保量を同じBudgetへ計上し、現在の呼出元depthを維持して検査する。"
+        cons "構造展開がDAGの共有を出現ごとに展開する費用も省略しない。"
+        nil
+      cons paragraph
+        cons "このinventoryだけでSingle対応を認証しない。"
+        cons "native Article Sessionは同一の不変Selectionに対して再検査したshapeから表示対象を得て、元の構造index・node・EmbedRef・depthを保持済み所有元へ照合する。"
+        cons "元のSentence出現IDを描画記録へ残し、挿入前にはそれ以前の非表示memberだけを飛ばす。"
+        cons "可視Sentenceの直接Doc memberはそのcallback内で全て消費したことを直ちに検査する。"
+        cons "末尾の非表示memberが未出力で残ることは許すが、実際のHTML参照がそのanchorを要求すれば最終検査で拒否する。"
+        cons "Code等を含む実callback位置とoriginの写像は表示順を維持する。"
+        cons "PageSet hostもページごとにこのSessionを作り、同じ明示的RenderOptionsを使う。"
+        cons "全出現の名前解決と、実際のページ間hrefが指す出力anchorの検査を分離する。"
+        cons "非表示の定義が名前解決に存在しても、実際のhrefの到達先として出力されなければ拒否する。"
+        cons "Rows／Columns用identity契約は維持する。"
+        nil
+      cons paragraph
+        cons sentence
+          cons code "pages::generate_with_display_options"
+          cons text "はnative host用の明示入口であり、DocのRenderOptionsとMath rendererをまとめたDisplayOptions、別々のparse／lower予算と既存の出力Budgetを受け取る。"
+          nil
+        cons "既存入口のRows既定値は変えない。"
+        cons "manifestのoptionsには実際のmodeを記し、Singleでは要求言語と順序付きfallbackも保持する。"
+        cons "CLIのpage manifestはstrict設定から同じ表示選択へ変換する。"
+        cons "portable namespace receiptは追加しない。"
+        cons "retained jobへの明示入口は後述する。"
+        nil
+      cons paragraph
+        cons "legacy-only PageSetの意味identityは入力同定のまま保持するが、非Rowsのexecution identityは表示optionsを必ず束縛する。"
+        cons sentence
+          cons text "従来の "
+          cons code "nepl3.local-doc-pages.execution/2"
+          cons text " のdigestをbaseとし、"
+          cons code "nepl3.local-doc-pages.display-execution/1\\0"
+          cons text "、32 byteのbase、mode tag（Columns=1、Single=2）を続ける。"
+          nil
+        cons "Singleはさらに上記と同じ言語長・言語・fallback件数・各長とbyte列を続け、SHA-256に通す。"
+        cons "全非Rows入力に共通のboundedな構築を使い、phase identityにもこのexecution identityを渡す。"
+        cons "Rowsの従来execution identityと既定CLI／retained出力は変更しない。"
+        cons "manifestのoutput_budget.contractは実際のexecution契約を示す。"
+        nil
+      cons paragraph
+        cons sentence
+          cons text "retained native PageSetでは "
+          cons code "PreparedPages::into_render_with_display"
+          cons text " が同じDisplayOptionsを受け取り、文書・Code証拠とともに表示選択を操作内で所有する。"
+          nil
+        cons "pause後のresumeは追加allowanceと出力上限だけを受け取り、言語・fallback順・rendererを変更できない。"
+        cons "停止した描画は同じ選択でatomicにやり直し、完了済みページを再parseせず、試行ごとの使用量を同じjob ledgerへ加算する。"
+        cons "意味上の選択失敗や非表示targetは終端失敗とし、資源停止へ読み替えない。"
+        cons "非Rowsのexecution identityはこの固定選択を束縛し、retained preparationとretry jobのidentityにも渡す。"
+        cons sentence
+          cons text "従来の "
+          cons code "into_render"
+          cons text " はRows既定のwrapperとして保つ。"
+          nil
+        cons "登録file／aliasのretained入力・portable証拠への拡張はこの入口に含めない。"
+        nil
+      cons paragraph
+        cons sentence
+          cons text "PageSet CLIの通常出力と対話的再開は、version 1 manifestの省略可能な "
+          cons code "display"
+          cons text " を受け取る。"
+          nil
+        cons "省略時はRows。"
+        cons sentence
+          cons text "明示する場合は "
+          cons code "{\"mode\":\"rows\"}"
+          cons text "、"
+          cons code "{\"mode\":\"columns\"}"
+          cons text "、または "
+          cons code "{\"mode\":\"single\",\"language\":\"ja\",\"fallbacks\":[\"en\"]}"
+          cons text " とする。"
+          nil
+        cons "modeは小文字の固定値であり、Singleのlanguageは必須、fallbacksだけ省略時に空リストとする。"
+        cons "未知field・mode、他modeのSingle用field、重複JSON key、nullは拒否する。"
+        cons "これは開発hostのstrict入力契約であり、coreのportable codecやRust enum表現を公開wire契約にするものではない。"
+        cons "選択の意味検査は共通描画器に委ね、失敗時は出力directoryを作らない。"
+        cons "対話的再開ではmanifestを再読せず、準備開始前に所有した選択を全再試行へ引き継ぐ。"
+        cons "変更できるのは既存の明示allowanceだけである。"
+        cons "単体Article CLIやcanonical専用設定の選択追加とは区別する。"
+        nil
+      nil
+    nil
+  nil

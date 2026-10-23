@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/05&#45;document.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page document; source SHA-256 a999e469cd9015e36af2029723f38d15ffafbae7a741268fb4f6b1e8e4db857a; alias input SHA-256 64a9b57605880e4195a0e4916ed09a70e2f29ee9b9c0f2430644eca1f267b2b8; page input SHA-256 767966bc48f4221ff81d20d0229f2642624998265a856f8f09638474d49812d8. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/05&#45;document.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page document; source SHA-256 a999e469cd9015e36af2029723f38d15ffafbae7a741268fb4f6b1e8e4db857a; alias input SHA-256 64a9b57605880e4195a0e4916ed09a70e2f29ee9b9c0f2430644eca1f267b2b8; page input SHA-256 faf3b6897b3a82656f630bd3c1ed40c298769e5f03d298e930a3c30a2f47fd93. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="05-doc言語"></a>
 
