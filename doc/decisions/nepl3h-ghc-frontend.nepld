@@ -1,0 +1,323 @@
+article ja "NEPL3h: GHCへ[接続/せつぞく]する[独立/どくりつ]frontend[案/あん]"
+body
+  cons paragraph
+    cons sentence cons ruby text "状態" text "じょうたい" cons text ": " cons strong concat cons ruby text "設計草案" text "せっけいそうあん" cons text "・" cons ruby text "実装未着手" text "じっそうみちゃくしゅ" nil cons text "。" nil
+    cons "2026-09-13のユーザー[提案/ていあん]を[整理/せいり]した[文書/ぶんしょ]である。"
+    cons " [今回/こんかい]の[変更/へんこう]は[文書/ぶんしょ]のみとする。"
+    cons "[文書/ぶんしょ]のmergeによってrepo[作成/さくせい]、[依存追加/いそんついか]、compiler[試作/しさく]、 [配布/はいふ]、タスク・[受入状態/うけいれじょうたい]の[変更/へんこう]をこの[文書/ぶんしょ]から[自動的/じどうてき]に[開始/かいし]しない。"
+    cons sentence cons text " " cons ruby text "当初" text "とうしょ" cons text "NEPL3h" cons ruby text "案" text "あん" cons text "を" cons ruby text "作成" text "さくせい" cons text "した" cons ruby text "際" text "さい" cons text "のNEPL3" cons ruby text "基準" text "きじゅん" cons text "は " cons code "3fed238a0021aca770d87c19ecc50fea080e62b1" cons text "。" nil
+    cons sentence cons text " " cons ruby text "今回" text "こんかい" cons text "のPRで" cons ruby text "再照合" text "さいしょうごう" cons text "し、branchへ" cons ruby text "取" text "と" cons text "り" cons ruby text "込" text "こ" cons text "んだmainは " cons code "d8ca89264ca17ebe6c4aba3874cac2775c15b98d" cons text "。" nil
+    cons " [当初/とうしょ]の[調査基準/ちょうさきじゅん]と[今回/こんかい]の[統合基準/とうごうきじゅん]を[区別/くべつ]し、GHC adapterの[動作検証済/どうさけんしょうず]みrevisionとは[扱/あつか]わない。"
+    cons " [以下/いか]のNEPL3h、[型名/かためい]、module[名/めい]、[拡張子/かくちょうし]は、[既存契約/きそんけいやく]への[参照/さんしょう]を[除/のぞ]いて[提案名/ていあんめい]である。"
+    nil
+  cons section contracts "[目的/もくてき]と[既存契約/きそんけいやく]との[関係/かんけい]"
+  body
+    cons paragraph
+      cons "NEPL3hを、NEPL3の[共通表層/きょうつうひょうそう]で[記述/きじゅつ]し、[通常/つうじょう]のGHC Haskellとして[名前解決/なまえかいけつ]・[型検査/かたけんさ]・ コンパイルするlanguage packageとする。"
+      cons "[独自/どくじ]のHaskell[風評価器/ふうひょうかき]や[標準/ひょうじゅん]ライブラリを [作/つく]る[計画/けいかく]ではない。"
+      cons "Haskellの[意味論/いみろん]は[当該/とうがい]packageが[所有/しょゆう]し、NEPL3[全体/ぜんたい]の[意味論/いみろん]にしない。"
+      cons sentence cons text " NEPLの" cons ruby text "多階層" text "たかいそう" cons text "・" cons ruby text "再帰的" text "さいきてき" cons text "なDSL" cons ruby text "埋" text "う" cons text "め" cons ruby text "込" text "こ" cons text "み、" cons ruby text "世代" text "せだい" cons text "ごとの" cons ruby text "主課題" text "しゅかだい" cons text "、" cons ruby text "純粋性" text "じゅんすいせい" cons text "と" cons ruby text "前方確定" text "ぜんぽうかくてい" cons text "の" cons ruby text "理由" text "りゆう" cons text "は " cons link relative "multilanguage-hca.md" none concat cons ruby text "統合案" text "とうごうあん" cons text "の" cons ruby text "目的" text "もくてき" cons text "・" cons ruby text "中核契約" text "ちゅうかくけいやく" nil cons text "にまとめる。" nil
+      cons "Hはこの[基盤/きばん]で[使/つか]う[実用的/じつようてき]な プログラミング[言語候補/げんごこうほ]の[一/ひと]つであり、[基盤/きばん]の[中心/ちゅうしん]や[最終到達点/さいしゅうとうたつてん]ではない。"
+      nil
+    cons paragraph
+      cons sentence cons link relative "../spec/22-external-extensions.md" none concat cons ruby text "外部拡張" text "がいぶかくちょう" cons text "の22" cons ruby text "章" text "しょう" nil cons text "、" cons link relative "../spec/03-reader.md" none text "reader" cons text "、 " cons link relative "../spec/09-portability.md" none ruby text "交換契約" text "こうかんけいやく" cons text "、" cons link relative "../spec/10-integration.md" none ruby text "統合" text "とうごう" cons text "、 " cons link relative "../spec/14-web-ui.md" none text "TEA/Worker" cons text "を" cons ruby text "接続先" text "せつぞくさき" cons text "とする。" nil
+      cons " foundationへ[言語一覧/げんごいちらん]enumやGHC[依存/いぞん]を[追加/ついか]せず、package/schema/operation/providerを[使/つか]う。"
+      cons " Rust APIの[互換性/ごかんせい]とschema revision・digest、[言語版/げんごばん]、GHC[版/ばん]、SDK[構成/こうせい]は[別/べつ]に[管理/かんり]する。"
+      nil
+    cons paragraph
+      cons "[新規/しんき]NEPL3hは[最初/さいしょ]から[独立/どくりつ]repoを[予定/よてい]し、NEPL3の[公開/こうかい]APIへ[固定/こてい]revisionで[依存/いぞん]する。"
+      cons " [固定/こてい]revisionから[開発/かいはつ]できることは、foundation[単独/たんどく]の[配布/はいふ]・T26/X01/X02の[成立/せいりつ]を[証明/しょうめい]しない。"
+      cons " [未完成/みかんせい]のprocess/provider[交換経路/こうかんけいろ]を[含/ふく]む22[章/しょう]の[受入条件/うけいれじょうけん]は、[実装時/じっそうじ]に[別途満/べっとみ]たす。"
+      cons " 22[章/しょう]のmonorepo[維持/いじ]は[既存実装/きそんじっそう]の[運用/うんよう]として[維持/いじ]する。"
+      cons "[既存/きそん]Doc・Grammar・Circuitを NEPL3d/g/c[等/とう]へ[抽出/ちゅうしゅつ]する[際/さい]は[同章/どうしょう]の[配布/はいふ]・[外部/がいぶ]consumer・native/portable[比較条件/ひかくじょうけん]を[満/み]たす。"
+      cons " Mathやmarkup、[統合製品/とうごうせいひん]の[配置/はいち]も[責務/せきむ]に[従/したが]い[別途決/べっとき]め、[既存/きそん]の[四言語/よんげんご]・[全体受入/ぜんたいうけいれ]を[縮小/しゅくしょう]しない。"
+      cons " この[草案/そうあん]は22[章/しょう]や[正式/せいしき]catalogの[置換/ちかん]ではなく、[新規外部/しんきがいぶ]packageの[段階案/だんかいあん]である。"
+      nil
+    nil
+  cons section ghc_entry "GHCへ[接続/せつぞく]する[位置/いち]"
+  body
+    cons rawcode some "text" "NEPL3h source → reader / prefix engine → 版付き構文モデル\n                                              ↓\n                                      独立GHC adapter\n                                              ↓\n普通のHaskell source → GHC parser ───────→ GHC parsed AST (GhcPs)\n                                              ↓\n                               renamer / typechecker / desugaring\n                                              ↓\n                              最適化・コード生成・GHC runtime\n"
+    cons paragraph
+      cons "FinkelのBuilderはGhcPsの[式/しき]・[型/かた]・[宣言等/せんげんとう]を[構築/こうちく]する[参考実装/さんこうじっそう]である。"
+      cons " GHC Coreへ[直接/ちょくせつ]lowerすると[名前解決/なまえかいけつ]・[型検査/かたけんさ]をこちらで[担/にな]う[問題/もんだい]が[生/しょう]じるため、parsed[段階/だんかい]へ[接続/せつぞく]する。"
+      cons " Finkel[固有/こゆう]のコード[表現/ひょうげん]やマクロ[体系/たいけい]を[恒久依存/こうきゅういそん]にせず、NEPL3hの[構文/こうぶん]から[直接変換/ちょくせつへんかん]する。"
+      cons " [具体的/ぐたいてき]なhook/constructorはGHC[版依存/ばんいそん]であり、Finkelの[実装/じっそう]を[無検査/むけんさ]で[移植/いしょく]しない。"
+      nil
+    cons paragraph
+      cons "Finkelのdriver hook[方式/ほうしき]では、[依存解析用/いそんかいせきよう]headerと[本体/ほんたい]の[処理/しょり]を[分/わ]ける。"
+      cons " [候補/こうほ]はT_HsPp/T_Hsc[相当/そうとう]の[経路/けいろ]であり、[単/たん]に[式/しき]ASTを[作/つく]るだけでは[混在/こんざい]buildにならない。"
+      cons " [通常/つうじょう]parser[後/ご]のparsedResultActionだけを[任意構文/にんいこうぶん]の[入口/いりぐち]と[見/み]なさず、[固定/こてい]GHCの driver/APIまたはcarrier module[経路/けいろ]を[検証/けんしょう]する。"
+      cons "pluginは[入口/いりぐち]の[一/ひと]つとし、adapter[本体/ほんたい]は [直接呼出/ちょくせつよびだ]し[可能/かのう]なライブラリにする。"
+      cons "cross compilerのhost pluginとtarget libraryを[区別/くべつ]する。"
+      nil
+    nil
+  cons section surface_semantics "[表層/ひょうそう]とHaskellの[意味/いみ]を[保存/ほぞん]する"
+  body
+    cons paragraph
+      cons "[基本/きほん]の[前置構築/ぜんちこうちく]をそのまま[使/つか]う。"
+      nil
+    cons rawcode some "text" "apply apply f x y\n    → Apply(Apply(Reference(f), Reference(x)), Reference(y))\n    → (f x) y\n\napply apply M.fromListWith + pairs\n    → M.fromListWith (+) pairs\n"
+    cons paragraph
+      cons "applyは[二項/にこう]constructor、[参照/さんしょう]された[関数/かんすう]は[値/あたい]である。"
+      cons "ライブラリ[関数/かんすう]ごとの[解析/かいせき]arity[登録/とうろく]は[不要/ふよう]。"
+      cons " これはNEPL3hで[共通/きょうつう]prefix[規則/きそく]を[使/つか]う[例/れい]であり、foundationや[全/ぜん]DSLへapplyの[意味/いみ]を[強制/きょうせい]しない。"
+      cons " [構文/こうぶん]arity、callability、saturationを[区別/くべつ]する。"
+      cons "[前方情報/ぜんぽうじょうほう]でshapeが[一意/いちい]なら[直接/ちょくせつ]headを[使/つか]え、 applyは[不要/ふよう]である。"
+      cons "[未確定/みかくてい]の[対象/たいしょう]はその[言語/げんご]のarity 0の[値参照/ちさんしょう]として[読/よ]み、[固定/こてい]arity 2の applyの[反復/はんぷく]で[適用数/てきようすう]を[表/あらわ]す。"
+      cons "ref[等/とう]の[明示形式/めいじけいしき]は[既知/きち]headと[値参照/ちさんしょう]を[区別/くべつ]する[一案/いちあん]であり、 [後方定義/こうほうていぎ]の[全参照/ぜんさんしょう]に[必須/ひっす]ではない。"
+      cons "Hが[通常関数/つうじょうかんすう]を[参照/さんしょう]として[扱/あつか]うのはH[固有/こゆう]の[選択/せんたく]である。"
+      cons sentence cons text " " cons ruby text "前方" text "ぜんぽう" cons text "のcontext" cons ruby text "更新" text "こうしん" cons text "と" cons ruby text "既読" text "きどく" cons text "shape" cons ruby text "不変" text "ふへん" cons text "の" cons ruby text "詳細" text "しょうさい" cons text "は" cons link relative "multilanguage-hca.md" none ruby text "統合案" text "とうごうあん" cons text "を" cons ruby text "参照" text "さんしょう" cons text "する。" nil
+      cons " readerにはqualified name、foldl'、[記号名/きごうめい]、module[名/めい]とliteralを[定義/ていぎ]する。"
+      cons " [構文/こうぶん]headと[同名/どうめい]の[関数/かんすう]を[参照/さんしょう]する[明示形式/めいじけいしき]も[必要/ひつよう]だが、その[綴/つづ]りはschema[設計時/せっけいじ]に[確定/かくてい]する。"
+      cons " [名前/なまえ]のhyphen[等/とう]を[黙/だま]って[変換/へんかん]しない。"
+      nil
+    cons paragraph
+      cons "[構文/こうぶん]モデルの[候補/こうほ]categoryはExpr/Pattern/Type/Declaration/Import/Export/Module。"
+      cons " Apply→HsApp、lambda→HsLam、if→HsIf、let→HsLet、case→HsCase、[数値/すうち]→HsOverLit[等/とう]を [対応候補/たいおうこうほ]とし、GHCの[全内部/ぜんないぶ]AST・[型検査状態/かたけんさじょうたい]をRust[側/がわ]に[複製/ふくせい]しない。"
+      cons " GHC APIの[引数/ひきすう]・[注釈/ちゅうしゃく]・parser[後処理/あとしょり]の[前提/ぜんてい]を[固定版/こていばん]で[確認/かくにん]する。"
+      nil
+    cons paragraph
+      cons "[型推論/かたすいろん]、[型/かた]クラス、ADT、[多相性/たそうせい]、[非正格評価/ひせいかくひょうか]、[再帰束縛/さいきそくばく]、IOはGHCへ[委譲/いじょう]する。"
+      cons sentence cons text " " cons ruby text "例" text "たと" cons text "えば " cons code "apply apply const 1 undefined" cons text " は" cons ruby text "非正格性" text "ひせいかくせい" cons text "の" cons ruby text "比較例" text "ひかくれい" cons text "にする。" nil
+      cons " [解析順/かいせきじゅん]を[評価順/ひょうかじゅん]にせず、[再帰/さいき]letを[単純/たんじゅん]なlambda[置換/ちかん]へ、ifを[先行評価/せんこうひょうか]する[通常関数/つうじょうかんすう]へ、 overloaded literalを[固定幅整数/こていはばせいすう]へ[勝手/かって]に[簡約/かんやく]しない。"
+      cons " [未対応拡張/みたいおうかくちょう]は[明示的/めいじてき]な[能力不足/のうりょくぶそく]として[拒否/きょひ]する。"
+      cons "[既存/きそん]libraryの[内部/ないぶ]で[使/つか]われる[拡張/かくちょう]と、 NEPL[表層/ひょうそう]から[直接書/ちょくせつか]ける[拡張/かくちょう]は[別/べつ]の[対応範囲/たいおうはんい]である。"
+      nil
+    nil
+  cons section cabal "[責務/せきむ]とCabal[統合/とうごう]"
+  body
+    cons table cons default cons default nil
+      some row cons "[部分/ぶぶん]" cons "[所有/しょゆう]する[責務/せきむ]" nil
+      cons row cons "NEPL3h frontend" cons "no_std + allocのreader、[構文/こうぶん]schema、[解析/かいせき]とSource/Origin" nil
+      cons row cons "GHC adapter" cons "parsed AST[構築/こうちく]、[版差/ばんさ]、compiler session、[型/かた]・[診断/しんだん]の[投影/とうえい]" nil
+      cons row cons "native/cross/browser driver" cons "[環境別起動/かんきょうべつきどう]、package[集合/しゅうごう]、[入出力/にゅうしゅつりょく]、[停止/ていし]" nil
+      cons row cons "plugin" cons "Cabal/GHC[統合用/とうごうよう]の[入口/いりぐち]。adapterと[変換/へんかん]を[共有/きょうゆう]" nil
+      cons row cons "DSL adapter" cons "NDF binding、Doc[等/とう]の[構造生成/こうぞうせいせい]、[境界/きょうかい]と[挿入先/そうにゅうさき]の[検査/けんさ]" nil
+      nil
+    cons paragraph
+      cons "Haskell[間/かん]では[通常/つうじょう]の[型/かた]・[関数/かんすう]・module/packageを[利用/りよう]する。"
+      cons "containers/text/aeson[等/とう]を Cabalの[通常依存/つうじょういそん]として[解決/かいけつ]し、[各関数/かくかんすう]へFFI wrapperやRust[往復/おうふく]serializationを[挟/はさ]まない。"
+      cons " NEPL3[専用/せんよう]package managerでHaskell[依存/いぞん]を[再解決/さいかいけつ]しない。"
+      nil
+    cons paragraph
+      cons sentence cons code ".neplhs" cons ruby text "等" text "とう" cons text "の" cons ruby text "独自拡張子" text "どくじかくちょうし" cons text "は" cons ruby text "仮案" text "かりあん" cons text "。" nil
+      cons sentence cons text "Cabalのsource discovery/" cons ruby text "前処理登録" text "まえしょりとうろく" cons text "か、build directory" cons ruby text "内" text "ない" cons text "の " cons code ".hs" cons text " carrier" cons ruby text "生成" text "せいせい" cons text "を" cons ruby text "明示的" text "めいじてき" cons text "に" cons ruby text "選" text "えら" cons text "ぶ" cons ruby text "必要" text "ひつよう" cons text "がある。" nil
+      cons "plugin[指定/してい]だけで[発見/はっけん]されると[仮定/かてい]しない。"
+      cons " carrierを[使/つか]う[場合/ばあい]はmodule/importと[正本/せいほん]identityを[保持/ほじ]し、[本体/ほんたい]は[構文/こうぶん]モデルからASTへ[変換/へんかん]する。"
+      cons " header[解析/かいせき]と[本体/ほんたい]lowerは[同/おな]じsnapshotを[参照/さんしょう]する。"
+      cons "frontendからproviderを[再起動/さいきどう]する[循環/じゅんかん]を[作/つく]らない。"
+      cons " [双方向互換/そうほうこうごかん]は「Haskell[依存/いぞん]AをNEPL3h library Bが[使/つか]い、[普通/ふつう]のHaskell consumer CがBをimport」 するbuildで[確/たし]かめる。"
+      cons "[複雑/ふくざつ]な[未対応構文/みたいおうこうぶん]は[通常/つうじょう]の.hs moduleからimportできる[経路/けいろ]を[保/たも]つ。"
+      nil
+    nil
+  cons section wasm_browser "Wasm[生成/せいせい]とブラウザ[内/ない]コンパイル"
+  body
+    cons table cons default cons default cons default nil
+      some row cons "[経路/けいろ]" cons "compilerの[場所/ばしょ]" cons "[実行/じっこう]するもの・[追加条件/ついかじょうけん]" nil
+      cons row cons "native[生成/せいせい]" cons "native host" cons "[通常/つうじょう]のGHC[実行/じっこう]ファイル" nil
+      cons row cons "Wasm cross[生成/せいせい]" cons "native host" cons "Wasm target[向/む]けGHCで[生成/せいせい]・linkした[独立/どくりつ].wasm" nil
+      cons row cons "[配布済/はいふず]みプログラム/マクロ" cons "[生成時/せいせいじ]のみcompilerを[使/つか]う" cons "browser/Wasmtimeでcommandまたはreactorを[実行/じっこう]" nil
+      cons row cons "[対話的編集/たいわてきへんしゅう]・[実行/じっこう]" cons "browser compiler Worker" cons "Wasm[化/か]GHCがbytecodeを[生成/せいせい]し、[同/どう]runtimeで[実行/じっこう]" nil
+      cons row cons "browser[内/ない].wasm export" cons "browser" cons "codegen・assembler/linker[等/とう]まで[別途対応/べっとたいおう]が[必要/ひつよう]" nil
+      nil
+    cons paragraph
+      cons "GHC 9.14.1[資料/しりょう]はtarget[専用/せんよう]buildを[要求/ようきゅう]する。"
+      cons "native compilerのflagだけでWasm[化/か]しない。"
+      cons " GHCのwasm32-wasiとNEPL3のwasm32-wasip2を[同/おな]じABIと[扱/あつか]わず、[初期/しょき]は[別実行単位/べつじっこうたんい]と [有限/ゆうげん]NDF[値/あたい]で[接続/せつぞく]する。"
+      cons "Component Model[接続/せつぞく]は[追加/ついか]adapterとして[検証/けんしょう]する。"
+      cons " browser runnerはWASI、[明示的/めいじてき]な[仮想/かそう]FS、[引数/ひきすう]、stdout/stderr、[必要/ひつよう]なJS[接続/せつぞく]を[提供/ていきょう]する。"
+      nil
+    cons paragraph
+      cons "GHC[開発版/かいはつばん]のghc-api-browser[試験/しけん]はbytecodeBackend/LinkInMemoryを[使/つか]う[先行例/せんこうれい]である。"
+      cons " これはNEPL3hの[実行証拠/じっこうしょうこ]でも、GHC 9.14.1[正式配布/せいしきはいふ]だけで[同/おな]じ[組合/くみあわ]せが[動/うご]く[保証/ほしょう]でもない。"
+      cons sentence cons text " native GHCとbrowser interpreterをbrokerで" cons ruby text "結" text "むす" cons text "ぶ " cons code "-fghci-browser" cons text " と" cons ruby text "区別" text "くべつ" cons text "する。" nil
+      cons " [静的/せいてき]Playgroundではcompilerもbrowserに[置/お]く[案/あん]とし、[外部変換/がいぶへんかん]サーバーを[必須/ひっす]にしない。"
+      cons " browser[経路/けいろ]ではRust CLI、GHC、Cabal、preprocessorのnative process[起動/きどう]を[要求/ようきゅう]しない。"
+      nil
+    cons paragraph
+      cons "compiler・interpreter・[既存/きそん]packageは[事前/じぜん]にWasm[向/む]けに[構築/こうちく]する。"
+      cons " SDKにはpackage database、interface、runtime、C[系依存/けいいそん]、loader、[仮想/かそう]FSの[配置/はいち]も[必要/ひつよう]になる。"
+      cons " [通常/つうじょう]Cabalをbrowserでそのまま[動/うご]かす[前提/ぜんてい]にせず、[利用可能/りようかのう]package[集合/しゅうごう]を[明示/めいじ]する。"
+      cons " native binaryを[流用/りゅうよう]せず、[非/ひ]relocatableなpackage[配置/はいち]にも[注意/ちゅうい]する。"
+      cons " GHC commit/build、ghc-wasm-meta revision、WASI toolchain、adapter、NDF/DSL binding、 loaderとpackage[集合/しゅうごう]を[一組/ひとくみ]で[固定/こてい]する。"
+      cons "[現時点/げんじてん]では[採用/さいよう]buildを[確定/かくてい]していない。"
+      nil
+    nil
+  cons section dsl_generation "DSL[構造生成/こうぞうせいせい]、[構文/こうぶん]マクロ、TH"
+  body
+    cons paragraph
+      cons sentence cons ruby text "共通" text "きょうつう" cons text "の" cons ruby text "生成" text "せいせい" cons text "slot・" cons ruby text "操作契約" text "そうさけいやく" cons text "・" cons ruby text "複数" text "ふくすう" cons text "producerと" cons ruby text "構文" text "こうぶん" cons text "コメントの" cons ruby text "所有関係" text "しょゆうかんけい" cons text "は、 " cons link relative "multilanguage-hca.md" none ruby text "統合案" text "とうごうあん" cons text "で" cons ruby text "定義" text "ていぎ" cons text "する。" nil
+      cons "Hはその[操作/そうさ]の[実装言語/じっそうげんご]の[一/ひと]つであり、 Doc/C/Aに[必須/ひっす]の[評価器/ひょうかき]にはしない。"
+      cons "[以下/いか]のHからDocへの[生成/せいせい]は[具体例/ぐたいれい]であり、 [全言語向/ぜんげんごむ]けの[標準呼出/ひょうじゅんよびだ]しをH[専用/せんよう]の[関数型/かんすうがた]へ[固定/こてい]するものではない。"
+      cons " [統合案/とうごうあん]のAnnotated<T>はparse treeへ[保持/ほじ]し、host loweringだけが[注釈/ちゅうしゃく]を[実行意味/じっこういみ]から[射影/しゃえい]する。"
+      cons sentence cons text " " cons ruby text "標準構文" text "ひょうじゅんこうぶん" cons text "はarity 2の" cons code "annotate Sentence target" cons text "に" cons ruby text "統一" text "とういつ" cons text "する。" nil
+      cons " Sentenceは[独立/どくりつ]したNEPL3sentenceが[所有/しょゆう]し、NEPL3aは[文章/ぶんしょう]とtargetの[付与関係/ふよかんけい]を[所有/しょゆう]する。"
+      cons " Dの[本文/ほんぶん]とMathの[文章注記/ぶんしょうちゅうき]はNEPL3sentenceを[利用/りよう]し、Aを[必須/ひっす]の[本文経路/ほんぶんけいろ]にしない。"
+      cons " [旧/きゅう]lexical commentの[恒久互換/こうきゅうごかん]、#:による[特殊/とくしゅ]trivia、[独立/どくりつ]comment、commented aliasを[追加/ついか]しない。"
+      cons " [現/げん]Grammarにgeneric categoryがあるとは[扱/あつか]わず、[各/かく]host surfaceに[具体的/ぐたいてき]な[固定/こてい]shapeを[登録/とうろく]する。"
+      cons " wrapperはtargetの[意味/いみ]に[加/くわ]えbinding/exportも[保存/ほぞん]する。"
+      cons "[文章/ぶんしょう]の[名前空間/なまえくうかん]は[独立/どくりつ]させる。"
+      cons sentence cons text " " cons ruby text "通常" text "つうじょう" cons text "の.hsファイルの" cons code "--" cons text "や" cons code "{- -}" cons text "はGHCの" cons ruby text "入口" text "いりぐち" cons text "が" cons ruby text "扱" text "あつか" cons text "う。" nil
+      cons "NEPL3h tokenizerに[同/おな]じskip commentを [追加/ついか]する[許可/きょか]にはならない。"
+      cons "NEPL3h[側/がわ]の[説明/せつめい]は[正式/せいしき]なannotate[構文/こうぶん]として[保持/ほじ]する。"
+      nil
+    cons paragraph
+      cons "[最初/さいしょ]の[合成例/ごうせいれい]は、[普通/ふつう]のHaskell[関数/かんすう]で[既存/きそん]libraryによる[集計結果/しゅうけいけっか]をDocの[表/ひょう]へ[変換/へんかん]するものとする。"
+      nil
+    cons rawcode some "haskell" "-- 説明用の型案。現行SDK APIではない。\nexpand :: ExpansionInput -> Either ExpansionError DocFragment\n"
+    cons paragraph
+      cons "これはD fragmentを[返/かえ]す[一操作/いちそうさ]のHaskell[実装例/じっそうれい]である。"
+      cons "Sentence[生成/せいせい]、C fragment[生成等/せいせいとう]は それぞれ[別/べつ]の[用途別操作契約/ようとべつそうさけいやく]を[持/も]ち、[共通出力/きょうつうしゅつりょく]をDocFragmentへ[統一/とういつ]しない。"
+      cons " [契約/けいやく]は[用途別/ようとべつ]packageまたはconsumer/adapterが[所有/しょゆう]し、H[側/がわ]の[関数型/かんすうがた]を[共通/きょうつう]ABIにしない。"
+      nil
+    cons paragraph
+      cons "hostが[明示的/めいじてき]に[操作/そうさ]を[選択/せんたく]して[評価/ひょうか]し、[埋/う]め[込/こ]みの[解析/かいせき]・[表示/ひょうじ]だけでは[実行/じっこう]しない。"
+      cons " Haskell[間/かん]では[通常/つうじょう]の[値/あたい]を[使/つか]い、NEPL3[境界/きょうかい]では[有限/ゆうげん]NDFデータを[使/つか]う。"
+      cons " HValue、closure、pointer、compiler sessionをportable valueにしない。"
+      cons " JSONデータ[処理用/しょりよう]aesonとcanonicalなNDF codecも[区別/くべつ]する。"
+      cons " [結果/けっか]はwire、schema、Source/Origin・[参照/さんしょう]、Doc[意味条件/いみじょうけん]、[挿入/そうにゅう]slotの[順/じゅん]に[検査/けんさ]する。"
+      cons " EnvironmentProjectionで[渡/わた]した[値/あたい]だけを[共有/きょうゆう]し、guest namespaceを[既定/きてい]で[分離/ぶんり]する。"
+      nil
+    cons paragraph
+      cons "コンパイル[済/ず]みmacro.wasmの[呼出/よびだ]しはcompiler[全体/ぜんたい]のbrowser[配布/はいふ]に[先行/せんこう]できる。"
+      cons " マクロを[編集/へんしゅう]する[場合/ばあい]はbrowser GHCで[再/さい]コンパイルして[再展開/さいてんかい]する。"
+      cons " 「マクロ[関数/かんすう]のコンパイル」「DSL[処理中/しょりちゅう]の[関数実行/かんすうじっこう]」「[生成構造/せいせいこうぞう]の[検査/けんさ]」を[分/わ]ける。"
+      cons " [普通/ふつう]の[関数/かんすう]によるDSL[生成/せいせい]にTHやFinkel[式構文/しきこうぶん]マクロを[必須/ひっす]にしない。"
+      cons " NEPL3h[自身/じしん]の[構文/こうぶん]マクロは[段階/だんかい]・[依存順/いぞんじゅん]・[生成名/せいせいめい]の[衛生性/えいせいせい]・Origin・[再展開/さいてんかい]を[別/べつ]に[定義/ていぎ]する。"
+      cons " renamerだけで[変数捕捉/へんすうほそく]が[防/ふせ]げるとは[扱/あつか]わない。"
+      cons "TH spliceも[表層構文/ひょうそうこうぶん]とtarget/capabilityごとに[検証/けんしょう]する。"
+      cons " readerをNEPL3hで[作/つく]る[場合/ばあい]は[依存/いぞん]を[先/さき]に[準備/じゅんび]し、[当該/とうがい]readerでの[解析完了/かいせきかんりょう]を[準備/じゅんび]の[条件/じょうけん]にしない。"
+      nil
+    nil
+  cons section diagnostics "[診断/しんだん]、identity、[停止/ていし]と[権限/けんげん]"
+  body
+    cons paragraph
+      cons "GHC[診断/しんだん]・[型/かた]・[名前解決結果/なまえかいけつけっか]を[元/もと]NEPLソースへ[戻/もど]す。"
+      cons "[位置不明/いちふめい]nodeへの[一括置換/いっかつちかん]を[避/さ]け、 UTF-8 byte、tab、[行列/ぎょうれつ]、[日本語/にほんご]、[補助平面文字/ほじょへいめんもじ]、エディタ[位置/いち]を[区別/くべつ]して[検査/けんさ]する。"
+      cons " HLS/formatter/renameが[別表層/べつひょうそう]を[自動理解/じどうりかい]するとは[扱/あつか]わない。"
+      nil
+    cons paragraph
+      cons "cacheと[応答/おうとう]identityにはsource[集合/しゅうごう]/revision、schema/frontend、GHC build/target/flags、 Cabal[依存/いぞん]、adapter/SDK、[参照資源/さんしょうしげん]、Profile/options、[要求/ようきゅう]IDとWorker epochを[含/ふく]める。"
+      cons " GHC sessionを[同時変更/どうじへんこう]せず[直列化/ちょくれつか]し、[古/ふる]い[応答/おうとう]を[新/あたら]しい[文書/ぶんしょ]に[採用/さいよう]しない。"
+      cons " [純粋/じゅんすい]TEA updateはCmdを[返/かえ]し、hostがcompiler Workerを[実行/じっこう]し、[結果/けっか]をMsgで[返/かえ]す。"
+      cons " UI coreからGHC・Worker・I/Oを[呼/よ]ばない。"
+      cons "[応答採用/おうとうさいよう]は14[章/しょう]の[完全/かんぜん]な[要求/ようきゅう]identityに[従/したが]い、 sessionEpoch・operationIdentityも[照合/しょうごう]する。"
+      cons "[上記/じょうき]の[列挙/れっきょ]を14[章/しょう]の[項目/こうもく]を[削/けず]る[定義/ていぎ]にしない。"
+      cons " [本体/ほんたい]だけの[変更/へんこう]、[依存/いぞん]マクロだけの[変更/へんこう]もcacheを[失効/しっこう]させる。"
+      nil
+    cons paragraph
+      cons "pureな[型/かた]やSafe Haskellは[終了性/しゅうりょうせい]・OS[隔離/かくり]を[保証/ほしょう]しない。"
+      cons "compiler[内/ない]のTH[等/とう]も[実行権限/じっこうけんげん]の[対象/たいしょう]。"
+      cons " compile、[評価/ひょうか]、[遅延結果/ちえんけっか]のserialization、[出力検査/しゅつりょくけんさ]の[全段階/ぜんだんかい]に[制限/せいげん]を[適用/てきよう]する。"
+      cons " GHC[内部/ないぶ]workをNEPL3 Budgetへ[自動換算/じどうかんさん]せず、host[期限/きげん]、[出力/しゅつりょく]/ノード/メモリ[上限/じょうげん]と [強制停止/きょうせいていし]を[別/べつ]に[設計/せっけい]する。"
+      cons "[停止時/ていしじ]はepochを[更新/こうしん]し、[失敗/しっぱい]を[再予算化/さいよさんか]で[成功/せいこう]へ[変/か]えない。"
+      cons " Workerは[停止手段/ていししゅだん]であって[権限隔離/けんげんかくり]の[全/すべ]てではない。"
+      cons "[純粋/じゅんすい]DSLマクロには[任意/にんい]JSFFI、network、 plugin、preprocessorを[既定/きてい]で[渡/わた]さず、[一般/いっぱん]アプリ[用/よう]capabilityと[分/わ]ける。"
+      cons " compiler[不在/ふざい]は[能力不足/のうりょくぶそく]とし、サーバーへ[原稿/げんこう]を[黙/だま]って[送信/そうしん]しない。"
+      cons " Doc previewのscript[禁止/きんし]と[生成済/せいせいず]み[文書/ぶんしょ]の[閲覧条件/えつらんじょうけん]は、このcompiler Workerから[独立/どくりつ]して[維持/いじ]する。"
+      nil
+    nil
+  cons section licensing "ライセンスと[配布方針/はいふほうしん]"
+  body
+    cons paragraph
+      cons "[自作/じさく]NEPL3hはMITを[予定/よてい]し、NEPL3の[現行/げんこう]MITを[維持/いじ]する。"
+      cons "[方式/ほうしき]の[参考/さんこう]とコードの[流用/りゅうよう]を[分/わ]け、 Finkel/GHCの[具体的/ぐたいてき]コードを[流用/りゅうよう]する[場合/ばあい]はBSD[条件/じょうけん]・[著作権/ちょさくけん]・[由来/ゆらい]を[保持/ほじ]する。"
+      cons " [自作部分/じさくぶぶん]のMITはcompiler/SDK[全体/ぜんたい]をMITだけで[再表示/さいひょうじ]する[許可/きょか]ではない。"
+      cons " これは[配布設計案/はいふせっけいあん]であり、[未作成/みさくせい]binaryや[全推移依存/ぜんすいいそん]の[法的適合性/ほうてきてきごうせい]を[確定/かくてい]した[監査/かんさ]ではない。"
+      nil
+    cons paragraph
+      cons "[標準/ひょうじゅん]Wasm[配布/はいふ]ではGMPを[使/つか]わないnative bignumを[第一候補/だいいちこうほ]にする。"
+      cons " ここでnativeは[整数/せいすう]backend[名/めい]であり、Wasm[対応/たいおう]を[外/はず]す[意味/いみ]ではない。"
+      cons " ghc-wasm-metaのrelease flavourが[使/つか]うGMPとnative flavourを[区別/くべつ]し、[対応/たいおう]GHC[版/ばん]も[確認/かくにん]する。"
+      cons " targetのGMPを[外/はず]しただけでcompiler/SDK[全体/ぜんたい]がGMPなしとは[判定/はんてい]しない。"
+      cons " GMP[利用/りよう]profileは[排除/はいじょ]せず、[実際/じっさい]に[選/えら]ぶLGPL[等/とう]の[配布条件/はいふじょうけん]を[明示/めいじ]する。"
+      nil
+    cons paragraph
+      cons "GMPの[公式条件/こうしきじょうけん]は[本体/ほんたい]をLGPLv3[以降/いこう]またはGPLv2[以降/いこう]とし、tests/demo[等/とう]は[別/べつ]に[扱/あつか]う。"
+      cons " LGPL[経路/けいろ]の[静的/せいてき]Wasm[配布/はいふ]では[通知/つうち]・[条文/じょうぶん]・[対応/たいおう]ソース/patchに[加/くわ]え、[改変/かいへん]libraryとの [再結合/さいけつごう]に[必要/ひつよう]なアプリ[側材料/がわざいりょう]・toolchain・[手順/てじゅん]を[揃/そろ]える。"
+      cons "repo URLやSBOMだけで[履行/りこう]としない。"
+      cons " [動的/どうてき]リンクやrepo/process[分割/ぶんかつ]だけで[義務/ぎむ]が[消/き]えるとも[扱/あつか]わない。"
+      nil
+    cons paragraph
+      cons "release[時/じ]はsource archive、native compiler、browser SDK/rootfs、macro.wasm、[利用者向/りようしゃむ]け [出力/しゅつりょく]ごとに、[実際/じっさい]の[同梱/どうこん]ファイル・リンク[物/もの]を[調/しら]べる。"
+      cons "GHC/BSD、GMP、WASI shim、LLVM、 Haskell/C/JS[依存/いぞん]の[条件/じょうけん]を[個別/こべつ]に[保持/ほじ]し、[容量削減/ようりょうさくげん]で[必要/ひつよう]なNOTICE/LICENSEを[除/のぞ]かない。"
+      cons " build[時/じ]だけのtoolと[出力/しゅつりょく]へ[入/はい]るruntimeを[区別/くべつ]する。"
+      cons " [自作/じさく]LICENSE、[第三者通知/だいさんしゃつうち]、[条文/じょうぶん]、[流用由来/りゅうようゆらい]、[配布物別/はいふぶつべつ]component[一覧/いちらん]はNEPL3h/[製品側/せいひんがわ]が[所有/しょゆう]する。"
+      cons " release gateは[版/ばん]・[由来/ゆらい]の[確定/かくてい]、[必要表示/ひつようひょうじ]の[同梱/どうこん]、[該当時/がいとうじ]のソース/[再/さい]リンク[材料/ざいりょう]の[提供/ていきょう]とする。"
+      nil
+    cons paragraph
+      cons "compiler[利用/りよう]だけでユーザーのプログラムや[生成/せいせい]DocをMIT/BSDへ[変更/へんこう]しない。"
+      cons " [出力/しゅつりょく]にコピーしたruntime、template、[文章/ぶんしょう]・[画像/がぞう]・コードには[元/もと]の[条件/じょうけん]を[適用/てきよう]する。"
+      cons " Wasm exportには[実際/じっさい]に[組/く]み[込/こ]んだ[依存/いぞん]に[対応/たいおう]する[通知/つうち]を[添/そ]える。"
+      nil
+    nil
+  cons section stages "[将来/しょうらい]の[実装段階/じっそうだんかい]と[受入案/うけいれあん]"
+  body
+    cons paragraph
+      cons "[以下/いか]は[未実行/みじっこう]の[案/あん]であり、[現在/げんざい]のtask/catalogへpassedを[追加/ついか]しない。"
+      cons " [診断/しんだん]・identity・[停止/ていし]・[配布条件/はいふじょうけん]は[各段階/かくだんかい]から[維持/いじ]し、[最後/さいご]まで[先送/さきおく]りしない。"
+      nil
+    cons table cons default cons default nil
+      some row cons "[段階/だんかい]" cons "[必要/ひつよう]な[証拠/しょうこ]" nil
+      cons row cons "reader/schema/AST" cons "applyの[入/い]れ[子/こ]、[名前衝突/なまえしょうとつ]、literal、[通常/つうじょう]GHC parser[由来/ゆらい]ASTとの[比較/ひかく]。[不正形/ふせいけい]を[拒否/きょひ]" nil
+      cons row cons "module/type/import" cons "GHCによる[型推論/かたすいろん]・[型/かた]クラス・[非正格性/ひせいかくせい]・[再帰/さいき]let、[元位置/もといち]への[型/かた]エラー" nil
+      cons row cons "Cabalと[双方向/そうほうこう]import" cons "containers/text/aeson[等/とう]、A→B→Cの[通常/つうじょう]package build、header/body snapshot[一致/いっち]" nil
+      cons row cons "native DSL[生成/せいせい]" cons "[集計/しゅうけい]→Doc[表/ひょう]、NDF[再検査/さいけんさ]、Origin/slot[不適合/ふてきごう]・[偽造結果/ぎぞうけっか]の[拒否/きょひ]" nil
+      cons row cons "[固定/こてい]browser[基準/きじゅん]" cons "upstream[例/れい]を[固定/こてい]buildで[再現後/さいげんご]、[同/どう]adapterからNEPL3hを[型検査/かたけんさ]・bytecode[実行/じっこう]" nil
+      cons row cons "cross Wasm" cons "command/reactorをWasmtimeとbrowserで[実行/じっこう]、nativeとの[有限値比較/ゆうげんちひかく]、32bit[整数差/せいすうさ]の[明示/めいじ]" nil
+      cons row cons "macro[利用/りよう]/[編集/へんしゅう]" cons "compiler[不在/ふざい]で[既製/きせい]macro[実行/じっこう]、[編集/へんしゅう]macroの[再/さい]compile、[依存変更/いそんへんこう]と[循環/じゅんかん]の[検出/けんしゅつ]" nil
+      cons row cons "[実行/じっこう]・[配布境界/はいふきょうかい]" cons "stale[応答/おうとう]、[非停止/ひていし]、[巨大出力/きょだいしゅつりょく]、serialization[中停止/ちゅうていし]、[権限不足/けんげんふそく]、SDK/[通知整合/つうちせいごう]" nil
+      cons row cons "[追加対応/ついかたいおう]" cons "TH・[構文/こうぶん]マクロ・エディタ、browser[内独立/ないどくりつ].wasm exportはそれぞれ[別/べつ]の[受入/うけいれ]" nil
+      nil
+    cons paragraph
+      cons "[最初/さいしょ]の[実用的/じつようてき]な[完成条件/かんせいじょうけん]は、[既存/きそん]Haskell libraryを[使/つか]うNEPL3h moduleを[普通/ふつう]のHaskellから [利用/りよう]でき、その[関数/かんすう]がDoc[等/とう]の[検査可能/けんさかのう]な[構造/こうぞう]を[返/かえ]すこと。"
+      cons "[全/ぜん]GHC[拡張/かくちょう]・[任意/にんい]FFIの[互換性/ごかんせい]を[推定/すいてい]しない。"
+      cons " [実装再開前/じっそうさいかいまえ]にschema/operation、GHC build、Cabal[方式/ほうしき]、SDK[集合/しゅうごう]と[権限/けんげん]profileを[具体化/ぐたいか]する。"
+      nil
+    nil
+  cons section sources "[根拠/こんきょ]と[未検証範囲/みけんしょうはんい]"
+  body
+    cons paragraph
+      cons "2026-09-13に[公式資料/こうしきしりょう]と[公開/こうかい]sourceを[再確認/さいかくにん]した。"
+      cons "[以下/いか]のGit revisionは[調査対象/ちょうさたいしょう]であり、 [採用/さいよう]toolchainやNEPL3hでのcompile[成功/せいこう]を[表/あらわ]さない。"
+      cons "[外部/がいぶ]sourceやraw logをこのrepoへ[複製/ふくせい]しない。"
+      nil
+    cons list unordered
+      cons item none body
+        cons paragraph
+          cons sentence cons link external "https://github.com/finkel-lang/finkel/blob/17f1cfc35a55d1977defdc96a4e422c91e5cdc80/finkel-kernel/src/Language/Finkel/Builder.hs" text "Finkel Builder" cons text " と " cons link external "https://github.com/finkel-lang/finkel/blob/17f1cfc35a55d1977defdc96a4e422c91e5cdc80/finkel-kernel/src/Language/Finkel/Hooks.hs" text "Hooks" cons text ": parsed ASTとdriver" cons ruby text "統合" text "とうごう" cons text "の" cons ruby text "参考" text "さんこう" cons text "。" nil
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons sentence cons link external "https://github.com/ghc/ghc/tree/82c73b223a985bc0bcc00cb6252b2b535082d831/testsuite/tests/ghc-api-browser" concat cons text "GHC browser" cons ruby text "試験" text "しけん" nil cons text ": README、playground001.hsのbytecode/session、SDK" cons ruby text "構成" text "こうせい" cons text "。" nil
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons sentence cons link external "https://downloads.haskell.org/ghc/9.14.1/docs/users_guide/wasm.html" text "GHC 9.14.1 Wasm" cons text "、" cons link external "https://downloads.haskell.org/ghc/9.14.1/docs/users_guide/extending_ghc.html" text "GHC API/plugins" cons text ": target" cons ruby text "専用" text "せんよう" cons text "build、browser mode、API" cons ruby text "境界" text "きょうかい" cons text "。" nil
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons sentence cons link external "https://github.com/haskell-wasm/ghc-wasm-meta/blob/358ea50b8496a69da6ce375c0c58bc049dbcb92d/README.md" text "ghc-wasm-meta" cons text ": flavour、WASI、" cons ruby text "配布構成" text "はいふこうせい" cons text "。" nil
+          cons "[追跡/ついせき]branchを[固定/こてい]releaseと[混同/こんどう]しない。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons sentence cons link external "https://www.haskell.org/onlinereport/haskell2010/haskellch3.html" text "Haskell 2010 Expressions" cons text "、" cons link external "https://www.haskell.org/onlinereport/haskell2010/haskellch4.html" text "Declarations" cons text "、" cons link external "https://cabal.readthedocs.io/en/stable/cabal-package-description-file.html" text "Cabal" cons text ": " cons ruby text "意味保存" text "いみほぞん" cons text "・build" cons ruby text "設計" text "せっけい" cons text "の" cons ruby text "参照" text "さんしょう" cons text "。" nil
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons sentence cons link external "https://github.com/finkel-lang/finkel/blob/17f1cfc35a55d1977defdc96a4e422c91e5cdc80/LICENSE" text "Finkel LICENSE" cons text "、" cons link external "https://github.com/ghc/ghc/blob/82c73b223a985bc0bcc00cb6252b2b535082d831/LICENSE" text "GHC LICENSE" cons text "、" cons link external "https://gmplib.org/manual/Copying" text "GMP" cons text "、" cons link external "https://spdx.org/licenses/LGPL-3.0-or-later.html" text "LGPLv3" cons text "、" cons link external "https://llvm.org/docs/DeveloperPolicy.html" text "LLVM" cons text ": " cons ruby text "配布物" text "はいふぶつ" cons text "ごとに" cons ruby text "確認" text "かくにん" cons text "する" cons ruby text "原文" text "げんぶん" cons text "。" nil
+          nil
+        nil
+      nil
+    cons paragraph
+      cons "ユーザー[提供/ていきょう]の[研究内容/けんきゅうないよう]をNEPL3[契約/けいやく]へ[対応付/たいおうづ]けた[草案/そうあん]であり、Finkel/GHCの[試作/しさく]、Cabal build、 browser[実行/じっこう]、ライセンス[全件監査/ぜんけんかんさ]は[今回実施/こんかいじっし]していない。"
+      cons "NEPL3h[実装/じっそう]は[明示的/めいじてき]な[再開指示/さいかいしじ]まで[行/おこな]わない。"
+      nil
+    nil
+  nil
