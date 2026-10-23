@@ -484,6 +484,11 @@ jobs:
       - name: Install pinned browser automation
         timeout-minutes: 5
         run: python -m pip install -r tools/audit/doc_html/requirements.txt
+      - name: Prefer the existing primary Ubuntu archive mirror
+        timeout-minutes: 1
+        run: |
+          python -m unittest discover -s tools/emulators/browser -p 'test_mirrors.py'
+          sudo "$(command -v python)" tools/emulators/browser/mirrors.py /etc/apt/apt-mirrors.txt
       - name: Install matching browser engines and OS dependencies
         timeout-minutes: 30
         run: python -m playwright install --with-deps chromium firefox webkit
