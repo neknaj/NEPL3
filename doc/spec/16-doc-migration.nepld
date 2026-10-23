@@ -249,6 +249,8 @@ body
         cons "[通常/つうじょう]のDoc pageのsource・projection・aliasはdoc/[配下/はいか]とする。"
         cons sentence cons ruby text "移行済" text "いこうず" cons text "みのSentence core READMEに" cons ruby text "限" text "かぎ" cons text "り、source " cons code "crates/languages/sentence/core/README.nepld" cons text " とprojection " cons code "crates/languages/sentence/core/README.md" cons text " の" cons ruby text "完全一致" text "かんぜんいっち" cons text "する" cons ruby text "組" text "く" cons text "みを" cons ruby text "許可" text "きょか" cons text "する。" nil
         cons "aliasはdoc/[配下/はいか]を[維持/いじ]し、[他/ほか]のcrate[文書/ぶんしょ]へ[許可/きょか]を[拡張/かくちょう]しない。"
+        cons sentence cons text "GitHubのセキュリティ" cons ruby text "入口" text "いりぐち" cons text "には、source " cons code "SECURITY.nepld" cons text " とprojection " cons code "SECURITY.md" cons text " の" cons ruby text "完全一致" text "かんぜんいっち" cons text "する" cons ruby text "組" text "く" cons text "みだけを" cons ruby text "許可" text "きょか" cons text "する。" nil
+        cons "この[例外/れいがい]もaliasはdoc/[配下/はいか]とし、[他/ほか]のroot[文書/ぶんしょ]や[異/こと]なる[組/く]み[合/あ]わせを[許可/きょか]しない。"
         cons "passive fileとfootnotesの[別/べつ]の[許可範囲/きょかはんい]は[各/かく]profileの[規則/きそく]に[従/したが]う。"
         cons "これはrepositoryの[生成先/せいせいさき]と[入力名/にゅうりょくめい]を[複数/ふくすう]OSで[同/おな]じように[扱/あつか]うためのhost[側/がわ]の[制約/せいやく]であり、Doc[本文/ほんぶん]やfoundationのSource URIからUnicodeを[除/のぞ]く[規則/きそく]ではない。"
         cons "fragment/percent[表記/ひょうき]をphysical inputへ[混/ま]ぜず、Markdown[検査/けんさ]だけ[成功/せいこう]して[同/おな]じsourceのHTML[生成/せいせい]がpath[違反/いはん]になる[不整合/ふせいごう]を[防/ふせ]ぐ。"

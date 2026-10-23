@@ -448,6 +448,14 @@
       "aliases": "doc/migration/aliases/math-runtime.json",
       "route": "docs/progress/math-runtime.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "security",
+      "source": "SECURITY.nepld",
+      "projection": "SECURITY.md",
+      "aliases": "doc/migration/aliases/SECURITY.json",
+      "route": "docs/project/security.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
