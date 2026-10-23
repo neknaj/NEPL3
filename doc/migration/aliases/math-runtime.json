@@ -1,0 +1,14 @@
+[
+  {
+    "section": null,
+    "name": "math-runtime-の段階実装"
+  },
+  {
+    "section": "status",
+    "name": "現在状態を確認する入口"
+  },
+  {
+    "section": "history",
+    "name": "構造数値helper導入時の記録"
+  }
+]
