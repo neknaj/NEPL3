@@ -1,0 +1,353 @@
+article ja "24. Foreign syntaxの[所有情報/しょゆうじょうほう]の[共有/きょうゆう]"
+body
+  cons paragraph
+    cons sentence
+      cons text "この章はdesign revision "
+      cons code "nepl3-design-2026-10-13-r7"
+      cons text " のFoundation契約とDoc/Sentence接続を定義する。"
+      nil
+    cons "採用理由は、各guestへ完全な所有情報を複製すると、所有情報量とguest数の積に比例する保存・検証が発生するためである。"
+    cons sentence
+      cons text "実装・正式受入の状態は"
+      cons link relative "../../implementation-status.json" none text "実装状態"
+      cons text "で管理する。"
+      nil
+    nil
+  cons section owners "[明示的/めいじてき]な[所有関係/しょゆうかんけい]"
+  body
+    cons paragraph
+      cons "ForeignClosureGroupはprovenances、environments、entriesの三つの配列を持つ。"
+      cons "ForeignGroupEntryはForeignOwnerEnvironmentRefとForeignSyntaxを持ち、ForeignOwnerEnvironmentはForeignProvenanceRefとEnvironmentEntryを持つ。"
+      cons "参照は各配列の局所indexである。"
+      cons "ForeignProvenanceは完全なOrigin配列、SourceContent配列、SourceMapping配列を保持する。"
+      nil
+    cons paragraph
+      cons "同じ所有者のprovenanceは一度だけ保持する。"
+      cons "選択したEnvironmentEntryは元のIDとdigestを保持する。"
+      cons "guestのEnvironmentRefはその選択したentryのID・digestと完全一致しなければならない。"
+      cons "同じprovenance内のenvironment ID重複、未使用のprovenance/environment、範囲外参照は型付き失敗とする。"
+      cons "異なる所有者の同じID・digestを根拠に、所有関係を統合しない。"
+      nil
+    cons paragraph
+      cons "Originは未参照要素を含めて元の順序・局所IDを保持し、前方参照を許す既存のgraph検査を使う。"
+      cons "別の所有者のOriginIdへ付け替えない。"
+      cons "各provenanceのsource閉包は独立して検査する。"
+      cons "同一table内の重複sourceを拒否し、table間では同じSourceAdmissionでsnapshotの整合を検査する。"
+      cons "各guest自身のsource・schema・syntaxの閉包も維持する。"
+      nil
+    cons paragraph
+      cons "native captureは検査済み所有者の明示的な集合と、owner/node/fieldの選択を受け取る。"
+      cons "同じ所有者の重複登録を拒否し、選択したforeign fieldとenvironmentの対応を検査する。"
+      cons "一時的な所有者の同一性判定に用いるaddressを保存形式やdigestへ含めない。"
+      nil
+    nil
+  cons section depth_resources "[深/ふか]さと[資源/しげん]"
+  body
+    cons paragraph
+      cons "共有は検査済みという永続的な権限を発行しない。"
+      cons "操作ごとの現在のBudgetとSourceAdmissionで再検査する。"
+      cons "使用側の意味上の深さはFoundationのtable構造から推測できない。"
+      cons "使用側は意味上の全出現を検査し、格納されたentryごとに、そのentryを参照する出現の最大深さを一つ渡す。"
+      cons "配列長はentriesの長さと一致しなければならない。"
+      cons "同じentryが複数箇所に現れる場合も、最初の出現だけで代用しない。"
+      nil
+    cons paragraph
+      cons "各guestは自身を参照する出現の最大深さで検査し、各selected environmentはそれを使う出現の最大深さ、各provenanceはそれを使う全出現の最大深さで検査する。"
+      cons "操作の現在のcaller depthを加算し、加算overflowをDepthLimitとする。"
+      cons "全groupの最大深さを無関係な成分へ適用しない。"
+      cons "過去のusageのdepth最大値を現在のcaller depthとして使わない。"
+      nil
+    cons paragraph
+      cons "実際の走査、文字列・byte量、graph edge、sort比較、scratch、copyをWork・Allocation等へ計上する。"
+      cons "所有情報の走査と複製は共有tableごとに一度とし、guestごとの処理とは分ける。"
+      cons "停止理由はSource・Origin・Schema・View等の型付きerrorに包まれても元のStopReasonを維持する。"
+      nil
+    nil
+  cons section sequential_validation "[同一操作内/どういつそうさない]の[逐次/ちくじ]guest[検査/けんさ]"
+  body
+    cons paragraph
+      cons "ForeignGroupValidationは一つのreceiving操作でのみ使うnative sessionである。"
+      cons "groupとregistryを不変借用し、guest syntaxと所有environmentのID・digest対応は毎回検査する。"
+      cons "provenanceとenvironmentは最初の成功時に実走査し、成分ごとの相対深さを記録する。"
+      cons "再使用時は現在のcaller depthへ相対深さを加えて再検査する。"
+      cons "失敗・途中結果は記録しない。"
+      nil
+    cons paragraph
+      cons "SourceAdmissionのnative scopeが変わった場合は全成分の記録を破棄して再検査する。"
+      cons "scopeを提供できないtargetでは共有検査を省略せず毎回実走査する。"
+      cons "sessionは未選択entry、重複environment、未使用成分を含む全groupの検査を代替しない。"
+      cons "Doc側は含有文書全体の構造検査を維持する。"
+      nil
+    cons paragraph
+      cons "同じ累積Budgetを操作の開始から終了まで使用する。"
+      cons "trusted codecを含むcallbackによるBudgetの置換・使用量の初期化は禁止する。"
+      cons "Limits一致やSourceAdmissionScopeはBudget identityの証明ではない。"
+      cons "sessionを別操作へ持ち越したりportable値へ変換したりしない。"
+      cons "Markdownの数式batchはこのsessionを文書ごとの局所変数として保持し、standalone数式APIは従来どおり完全検査する。"
+      nil
+    nil
+  cons section parser_mapping "Parserが[作/つく]るforeign bundleのmapping[所有範囲/しょゆうはんい]"
+  body
+    cons paragraph
+      cons "Parserの完成したforeign arenaは、そのarenaの開始後に正式受理されて自身へ取り込まれたReader mapping、および局所node・token・view・trivia・Origin・ReaderFactの位置と連結するmappingを保持する。"
+      cons "Originは未参照要素も対象とし、Generated.callsiteとSynthetic.anchorを含める。"
+      cons "完成rootのcover終端も対象にする。"
+      cons "ReaderFactはCapture・Presentation・Relationの両端とtriviaを含める。"
+      cons "nested read中に追加されたeffectも保守的に保持する。"
+      nil
+    cons paragraph
+      cons "連結性は完全なSnapshotIdとbyte区間で決める。"
+      cons "source側とtarget側の両方向をたどり、境界点と空区間を含め、交差したmappingは行全体を残す。"
+      cons "ExactとTransformedの端点を短縮せず、複数の逆経路と前向き派生編集の経路を保つ。"
+      cons "同じsource名だけでrevision/digestの異なるsnapshotを同一視しない。"
+      cons "残す行の宣言順は変えない。"
+      nil
+    cons paragraph
+      cons "これはoperation全体の過去の無関係なmapを各guestへ自動継承する従来動作を限定する所有契約である。"
+      cons "過去の離れた位置にあるmappingをpayloadだけから暗黙参照するproviderは、その依存位置を局所ReaderFact/view等へ明示する。"
+      cons "任意NDF payloadの内容から位置依存を推測しない。"
+      cons "builtin Textのようにviewを持たない場合も、そのreadで追加されたmappingは保持する。"
+      nil
+    cons paragraph
+      cons "完全なAcceptedTokenizationReportとParseReplyのsources/sourceMapsは変更しない。"
+      cons "外部replyの未参照mapを含むgeometry・Exact byte一致・cycle検査は選択より前に完了する。"
+      cons "入力検査を間引かず、完成したparser所有bundleの表だけを選択する。"
+      cons "sources・nodes・origins・environmentsは変更しない。"
+      cons "停止時は選択maskを返さず、frame/arenaを解放する前に全割当とfilter処理を計上する。"
+      cons "foreign captureは完成済みbundleのprovenance全体をそのまま保持し、この選択を再実行しない。"
+      nil
+    nil
+  cons section portable_borrow "Portable[境界/きょうかい]と[借用/しゃくよう]"
+  body
+    cons paragraph
+      cons "NDFのForeignClosureGroupは上記三配列を明示的に表す。"
+      cons "codecは登録schemaの完全一致、参照・source閉包、各EnvironmentEntryのcanonical digestを検査する。"
+      cons "runtime専用handle、pointer、暗黙のprocess内tableをportable値へ持ち込まない。"
+      nil
+    cons paragraph
+      cons "借用viewはguestと選択されたenvironment/provenanceを明示的に参照する。"
+      cons "使用側がviewを読むために完全なForeignClosureを再複製する必要はない。"
+      cons "独立したForeignClosureが必要な場合だけ、明示的なmaterializeで全成分をBudgetに計上して複製する。"
+      cons "このviewは別操作へ移せる検証証明ではない。"
+      nil
+    cons paragraph
+      cons "既存ForeignClosureのfield構造・意味は維持する。"
+      cons "Foundation descriptorへの型追加はcontent-addressed SchemaRefのdigestを変更する。"
+      cons "このpre-release設計変更は過去descriptorによるbyte列との同一性を保証しない。"
+      cons "古いschema identityやenvironment digestを暗黙に付け替えない。"
+      cons "同じ現在のSchemaRefの下では、groupから抽出したclosureと既存standalone codecの結果が一致することを検査する。"
+      nil
+    nil
+  cons section selection "[明示的/めいじてき]な[部分選択/ぶぶんせんたく]"
+  body
+    cons paragraph
+      cons "検査済みgroupから指定したentryの部分groupを作る操作は、指定順にentryを複製する。"
+      cons "重複指定は重複entryとして残す。"
+      cons "選択したenvironmentとprovenanceは一度だけ複製し、元のtable順を保つ。"
+      cons "未選択のtable要素を出力へ残さず、group内参照だけを付け替える。"
+      cons "各選択provenanceの全内容と、その内部のOriginId、environmentの元のID・digestは変更しない。"
+      nil
+    cons paragraph
+      cons "範囲外entry指定は型付き失敗とする。"
+      cons "空選択は空のgroupになる。"
+      cons "選択mapの構築・元table走査・複製をすべて計上し、出力を現在のregistry・SourceAdmission・Budgetで再検査する。"
+      cons "過去の検証証明を新しい操作へ返さない。"
+      cons "使用側の出現深さは部分選択後も使用側が別途検査する。"
+      nil
+    nil
+  cons section entry_identity "Guestの[成分/せいぶん]identity"
+  body
+    cons paragraph
+      cons sentence
+        cons code "foreign_group_entry_digests"
+        cons text " は現在のregistry・SourceAdmission・Budgetの下でgroupを検査・NDF化し、entry順のDigest配列を返す。"
+        nil
+      cons "この値は検証証明ではなく、使用側の意味上の出現深さの検査を代替しない。"
+      cons "同じdigestを持つ独立所有者も、明示的な参照を根拠なく統合しない。"
+      nil
+    cons paragraph
+      cons "各成分のhashはSHA-256(domain || canonical NDF/1 CBOR(value))とする。"
+      cons sentence
+        cons text "domain末尾の "
+        cons code "\\0"
+        cons text " は一つのNUL byteを表す。"
+        nil
+      nil
+    cons list unordered
+      cons item none body
+        cons paragraph
+          cons sentence
+            cons text "Provenance: "
+            cons code "NEPL3.Foreign.Provenance.v1\\0"
+            cons text " と完全なForeignProvenance record。"
+            nil
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons sentence
+            cons text "Environment: "
+            cons code "NEPL3.Foreign.Environment.v1\\0"
+            cons text " と選択されたEnvironmentEntry record。"
+            nil
+          cons "ForeignOwnerEnvironmentのprovenance参照は含めない。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons sentence
+            cons text "Syntax: "
+            cons code "NEPL3.Foreign.Syntax.v1\\0"
+            cons text " と完全なForeignSyntax record。"
+            nil
+          cons "ForeignGroupEntryのowner参照は含めない。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons sentence
+            cons text "Entry: "
+            cons code "NEPL3.Foreign.Entry.v1\\0"
+            cons text " と上記三digestをProvenance、Environment、Syntax順に並べたNDF List。"
+            nil
+          cons "各要素は32 byteのNDF Bytes値とする。"
+          nil
+        nil
+      nil
+    cons paragraph
+      cons "group全体を一度NDF化し、ProvenanceとEnvironmentの成分を各table要素につき一度hashする。"
+      cons "entryの構成時に所有者のbyte列を再hashしない。"
+      cons "各成分は互いに独立したcanonical digest呼出しで処理し、batch要求indexの構築費用を必要としない。"
+      cons "実際の変換・検査・hash・一時配列・digest出力を計上し、停止後に部分結果を返さず消費量を保持する。"
+      nil
+    cons paragraph
+      cons "tableの並べ替えと対応する参照付け替え、entryの部分選択・重複・順序変更は、選択されたguestのidentityを変えない。"
+      cons "使用していない別entry・別所有者の内容を個別guestのidentityへ含めない。"
+      cons "選択された成分のcanonical内容は完全に含める。"
+      cons "これは通常の暗号学的衝突耐性に依存する内容identityであり、canonical化前の表現差を区別する保証ではない。"
+      nil
+    cons paragraph
+      cons "旧ForeignClosure全体のflat digestとの同一性は保証しない。"
+      cons "Docのguest identityはSHA-256(operation domain || canonical NDF/1 CBOR(Bytes32(Entry digest)))とする。"
+      cons sentence
+        cons text "Prepareは "
+        cons code "NEPL3.Doc.Prepare.Guest.v2\\0"
+        cons text "、Printは "
+        cons code "NEPL3.Doc.Print.Guest.v2\\0"
+        cons text "、PlainTextは "
+        cons code "NEPL3.Doc.PlainText.Guest.v2\\0"
+        cons text " を使う。"
+        nil
+      cons "Document identityは既存のoperation domainと完全な現在のDocumentSyntaxを使い、schema identityの変更も含む。"
+      cons "旧guest identityを暗黙に受理しない。"
+      nil
+    cons paragraph
+      cons "DocValue.embedsはDocEmbeds recordであり、kindsとForeignClosureGroupを持つ。"
+      cons "kindsとentriesは同じ長さ・順序であり、EmbedRefは両者の同じslotを選ぶ。"
+      cons "長さ不一致、役割不一致、未使用slotを拒否する。"
+      cons "SentenceValue.embedsはForeignClosureGroupであり、ForeignInlineのEmbedRefはentriesのslotを選ぶ。"
+      cons "native lowerは元の検査済み所有者から一括captureし、Docでは変換中のcaller-relative深さと最終意味graphの最大出現深さを別々に検査する。"
+      cons "Sentenceも最終意味graphの最大深さで再検査する。"
+      nil
+    cons paragraph
+      cons "Doc fragmentは選択したentryとkindsを同じ順序で取り出し、意味nodeのEmbedRefを対応する新slotへ変更する。"
+      cons "同じslotへの複数参照は共有したまま残す。"
+      cons "選択provenanceの全Origin配列は保持する。"
+      cons "literal専用入力の空判定はentry数だけでなく、environment・provenance tableも含む。"
+      cons "隠れた所有tableを空literalとして受理しない。"
+      nil
+    cons paragraph
+      cons "借用viewのvalidateはstandalone ForeignClosureと同じ検査を行う。"
+      cons "encode_foreign_viewは同じstandalone wire layoutを返し、中間ForeignClosureの複製を不要にするが、NDF化・所有成分の検査費用は残る。"
+      cons sentence
+        cons text "host Code表示の操作内入力照合は "
+        cons code "NEPL3.Doc.Host.CodeInput.v1\\0"
+        cons text " とこのstandalone NDF値を使い、portable Prepare guest identityとは混同しない。"
+        nil
+      nil
+    cons paragraph
+      cons "Doc/SentenceのHTML・Math・annotation・printerの各受信callbackは、実際の出力祖先深さと再帰ceilingの下で借用viewを新たに検査する。"
+      cons "意味graphの深さ検査や保存済みprepared値だけでこの検査を省略しない。"
+      cons "同一Markdown生成操作の逐次数式entryだけは、上記ForeignGroupValidationの条件下で所有成分の検査を共有する。"
+      cons "別の受信操作、再帰annotation callback、その他のHTML経路へこのsessionを持ち越さない。"
+      cons "native/portable providerの経路同等性は未完了である。"
+      cons "共有保存・一括captureの改善を、全render経路の線形計算量や正式受入の成立へ拡張しない。"
+      nil
+    nil
+  cons section acceptance "[接続/せつぞく]と[受入/うけいれ]"
+  body
+    cons paragraph
+      cons "Foundation groupの成立と、Doc ArticleのSentence/Inline所有移行は別の完了条件である。"
+      cons "言語ごとの意味・順序・source対応・深さを保った接続を検証するまで、Doc移行やT07/T19/T21の正式受入を完了扱いにしない。"
+      cons "過去revisionの受入記録を新revisionで実行した結果へ書き換えない。"
+      nil
+    cons paragraph
+      cons "同一callback内の直後のloweringには、ForeignClosureView::validate_with_bundleが返す検査済みguest bundleを使用できる。"
+      cons "このAPIはguestの構文検査に加え、ownerとの対応・provenance・environmentの全検査が成功してから、その入力を借用したproofを返す。"
+      cons "既存validateも同じ検査経路を使用する。"
+      cons "これにより直後のbundle単独検査の重複を除く。"
+      cons "このAPI単独ではcallback間での検査省略を許可せず、同一Markdown操作の共有には上記sessionの条件を別途満たす。"
+      cons "Math loweringの公開受信境界検査、annotationの実際の挿入深さ検査、意味graphのshape検査は維持する。"
+      nil
+    nil
+  cons section combined_encoding "[同一操作内/どういつそうさない]のNDFと[成分/せいぶん]identityの[同時生成/どうじせいせい]"
+  body
+    cons paragraph
+      cons sentence
+        cons code "encode_foreign_group_with_entry_digests"
+        cons text " は、検査済みgroupのNDF値と、その同じ値から求めたentry順の成分digestを返す。"
+        nil
+      cons sentence
+        cons text "通常の "
+        cons code "encode_foreign_group"
+        cons text " と "
+        cons code "foreign_group_entry_digests"
+        cons text " を別々に呼んだ場合と、返す値・identityは一致しなければならない。"
+        nil
+      cons "既存provider向けの既定実装は両操作をそのまま呼び、最適化したproviderだけが直前の検査済みNDFを再利用する。"
+      cons "過去の操作・別registry・別SourceAdmission・別Budgetの検査を借用しない。"
+      nil
+    cons paragraph
+      cons "DocのArticle・Sentence・Inline・namespace preparationは、DocumentSyntaxへ実際に格納するgroupの同時生成結果を使える。"
+      cons "DocumentSyntaxのnative検査、文書のsource/map scope、生成NDFのschema検査は維持する。"
+      cons "成分数をentry数と照合し、既存Prepare Guest.v2 domainで包んでから要求列を作る。"
+      cons "Document.v1 identityとwire field順は変更しない。"
+      cons "これにより同じgroupを再びNDF化する費用を除くが、完全なDocumentSyntaxおよび各成分のhash計算は残る。"
+      cons "PageSetではpage順の成分配列を保持し、各pageのentry数との一致と最後のPageSet schema検査を確認してから利用する。"
+      cons "Print・PlainTextのidentity生成も、それぞれ既存のoperation domainで成分を包む。"
+      cons "PlainTextのInlineMath選択は全entryとの対応を確定した後に行う。"
+      cons "別の実行操作や実際のrender受信境界へ、支払済み検証を移転しない。"
+      nil
+    nil
+  cons section depth_encoding "[同一操作内/どういつそうさない]の[深/ふか]さ[検査/けんさ]とgroup[出力/しゅつりょく]"
+  body
+    cons paragraph
+      cons "Doc出力は、文書のsource・形状・位置・出現深さを準備した後、同じBudgetとSourceAdmissionでgroupの深さ検査とNDF出力を連続実行できる。"
+      cons "準備状態は検証証明ではない。"
+      cons "group検査と出力が成功するまでValidatedDocumentSyntaxを作らない。"
+      cons "公開validate_structureは引き続きgroupを含む全検査を実行する。"
+      nil
+    cons paragraph
+      cons "深さは元の文書検査の呼出し深さを基準とし、各entryの最深出現位置を一度だけ加算する。"
+      cons "codecと文書検査が同一の不変registryを借用する場合に限り、直後の重複native group検査を省ける。"
+      cons "異なるregistryでは両者の検査を保持する。"
+      cons "等価だが別のregistryも受理でき、追加処理量が必要となり得る。"
+      cons "pointerの値は公開identityやportable表現に含めない。"
+      nil
+    cons paragraph
+      cons "EnvironmentEntryのcanonical digest再計算、Foundation groupおよび外側のDoc schema検査、別の受信境界での検査を省かない。"
+      cons "native group失敗とcodec失敗の型を区別し、Docの既存Structure/ Foundation分類を保つ。"
+      cons "過去のproofを入力に取らず、停止・既消費量を保持し、失敗時に部分生成物を成功として返さない。"
+      nil
+    cons paragraph
+      cons sentence
+        cons text "Doc preparationが成分identityも必要とする場合は "
+        cons code "encode_foreign_group_at_depths_with_entry_digests"
+        cons text " を使い、深さ検査直後の同じNDFから成分を求める。"
+        nil
+      cons "既定providerは深さ付き出力と既存の成分計算を順に実行し、FoundationCodecだけが直前の出力を再利用する。"
+      cons "深さ検査のStructure失敗とcodec失敗の分類を保ち、groupの検査成功前に文書proofを作らない。"
+      cons "既存の深さ指定なしAPI・v1 identity・archiveの局所source検査も維持する。"
+      nil
+    nil
+  nil

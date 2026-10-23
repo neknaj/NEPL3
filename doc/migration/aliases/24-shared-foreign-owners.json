@@ -1,0 +1,46 @@
+[
+  {
+    "section": null,
+    "name": "24-foreign-syntaxの所有情報の共有"
+  },
+  {
+    "section": "owners",
+    "name": "明示的な所有関係"
+  },
+  {
+    "section": "depth_resources",
+    "name": "深さと資源"
+  },
+  {
+    "section": "sequential_validation",
+    "name": "同一操作内の逐次guest検査"
+  },
+  {
+    "section": "parser_mapping",
+    "name": "parserが作るforeign-bundleのmapping所有範囲"
+  },
+  {
+    "section": "portable_borrow",
+    "name": "portable境界と借用"
+  },
+  {
+    "section": "selection",
+    "name": "明示的な部分選択"
+  },
+  {
+    "section": "entry_identity",
+    "name": "guestの成分identity"
+  },
+  {
+    "section": "acceptance",
+    "name": "接続と受入"
+  },
+  {
+    "section": "combined_encoding",
+    "name": "同一操作内のndfと成分identityの同時生成"
+  },
+  {
+    "section": "depth_encoding",
+    "name": "同一操作内の深さ検査とgroup出力"
+  }
+]

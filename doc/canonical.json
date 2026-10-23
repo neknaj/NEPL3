@@ -352,6 +352,14 @@
       "aliases": "doc/migration/aliases/34-local-source-declaration-validation.json",
       "route": "docs/spec/34-local-source-declaration-validation.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "shared-foreign-owners",
+      "source": "doc/spec/24-shared-foreign-owners.nepld",
+      "projection": "doc/spec/24-shared-foreign-owners.md",
+      "aliases": "doc/migration/aliases/24-shared-foreign-owners.json",
+      "route": "docs/spec/24-shared-foreign-owners.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
@@ -364,11 +372,6 @@
       "id": "doc-inventory-source",
       "source": "doc/doc-inventory.md",
       "route": "sources/doc-inventory.md"
-    },
-    {
-      "id": "shared-foreign-owners-source",
-      "source": "doc/spec/24-shared-foreign-owners.md",
-      "route": "sources/24-shared-foreign-owners.md"
     },
     {
       "id": "sentence-annotation-source",
