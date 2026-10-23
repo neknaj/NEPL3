@@ -1,45 +1,23 @@
+<!-- Generated from crates/languages/sentence/core/README.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;core; source SHA-256 9471d3a29cf5bb9beebeb9cdb6efebe17f1f476d87e739294ff3bceb6ea132df; alias input SHA-256 897276f04d57487630a6fa781a04a9f4a5389813bea412190699d6c6029a3137; page input SHA-256 855ae6161224fc648b361d11eb11ac30abe0e74c9bf64f0f7320e31d476aa3af. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+
+<a name="independent-sentence-core"></a>
+
 # Independent Sentence core
 
-This `no_std + alloc` crate owns structured sentence content independently of
-Doc, syntax annotation, Math and host rendering. The migration contract is
-[spec 23](../../../../doc/spec/23-sentence-annotation.md).
+[正本（NEPL3d）](<README.nepld>)
 
-The current stage implements typed finite arenas, graph/category/nonempty
-annotation checks, the versioned schema descriptor and an explicit NDF value
-codec. The portable boundary checks both the exact schema and arena invariants,
-and delegates foreign source closures to the host-selected foundation codec.
-A shape proof alone does not
-validate foreign source closures, resolve document names or certify safe HTML.
+This `no_std + alloc` crate owns structured sentence content independently of Doc\, syntax annotation\, Math and host rendering\. The migration contract is [spec 23](<\.\.\/\.\.\/\.\.\/\.\.\/doc\/spec\/23\-sentence\-annotation\.md>)\.
 
-`SentenceSyntax` separately retains dense node locations, source snapshots,
-Origin arenas and owner-indexed token views. Native and portable checks enforce
-their declaration closure; this does not prove source/meaning equivalence.
+The current stage implements typed finite arenas\, graph\/category\/nonempty annotation checks\, the versioned schema descriptor and an explicit NDF value codec\. The portable boundary checks both the exact schema and arena invariants\, and delegates foreign source closures to the host\-selected foundation codec\. A shape proof alone does not validate foreign source closures\, resolve document names or certify safe HTML\.
 
-`literal::read` recognizes one quoted sentence and returns its closed syntax;
-`literal::print` emits the literal-expressible content subset. Ruby/InlineAnno,
-escape spelling and original positions remain distinct. Prefix-only forms
-return a typed `NotLiteral` error instead of losing their meaning.
+`SentenceSyntax` separately retains dense node locations\, source snapshots\, Origin arenas and owner\-indexed token views\. Native and portable checks enforce their declaration closure\; this does not prove source\/meaning equivalence\.
 
-`portable::literal` transfers one literal against an explicit owner snapshot,
-without repeating the document's source bytes in every token payload. It checks
-root ownership and source containment; generated/mapped syntax uses the general
-closed syntax envelope. This codec is not the reader/provider implementation.
+`literal::read` recognizes one quoted sentence and returns its closed syntax\; `literal::print` emits the literal\-expressible content subset\. Ruby\/InlineAnno\, escape spelling and original positions remain distinct\. Prefix\-only forms return a typed `NotLiteral` error instead of losing their meaning\.
 
-`text::prepare` validates a native value and its foreign closures while borrowing
-the value and registry immutably. Its `render` method produces plain text with
-base-only, Ruby-reading or all-note output. A host supplies foreign text through
-input-bound `resolve` values. Work, allocation, depth and output limits apply;
-errors return no partial string. The native projection and its limits are defined
-in spec 23; portable operation registration remains a separate integration step.
+`portable::literal` transfers one literal against an explicit owner snapshot\, without repeating the document\'s source bytes in every token payload\. It checks root ownership and source containment\; generated\/mapped syntax uses the general closed syntax envelope\. This codec is not the reader\/provider implementation\.
 
-The development host now compiles the independent LanguagePackage and parses
-literal/prefix sources with the production engine. The standard prefix printer
-handles all ten forms; foreign output requires a surface adapter. Standard prefix
-lowering preserves a mapping to the retained input syntax. The presentation entry
-accepts literal/prefix syntax with checked owner positions and views. Foreign
-adapters, full semantic roundtrips and Doc/Math migration remain part of
-the same ongoing recovery. This stage is not a completed language or removal of
-lexical comments. Do not merge it as a completed migration.
+`text::prepare` validates a native value and its foreign closures while borrowing the value and registry immutably\. Its `render` method produces plain text with base\-only\, Ruby\-reading or all\-note output\. A host supplies foreign text through input\-bound `resolve` values\. Work\, allocation\, depth and output limits apply\; errors return no partial string\. The native projection and its limits are defined in spec 23\; portable operation registration remains a separate integration step\.
 
-Sentence integration into Doc and docs-only publication precede the full
-annotation migration; Doc content does not depend on annotation completion.
+The development host now compiles the independent LanguagePackage and parses literal\/prefix sources with the production engine\. The standard prefix printer handles all ten forms\; foreign output requires a surface adapter\. Standard prefix lowering preserves a mapping to the retained input syntax\. The presentation entry accepts literal\/prefix syntax with checked owner positions and views\. Foreign adapters\, full semantic roundtrips and Doc\/Math migration remain part of the same ongoing recovery\. This stage is not a completed language or removal of lexical comments\. Do not merge it as a completed migration\.
+
+Sentence integration into Doc and docs\-only publication precede the full annotation migration\; Doc content does not depend on annotation completion\.

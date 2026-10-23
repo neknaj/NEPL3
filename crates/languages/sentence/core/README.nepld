@@ -1,0 +1,45 @@
+article en "Independent Sentence core"
+body
+  cons paragraph
+    cons sentence cons text "This " cons code "no_std + alloc" cons text " crate owns structured sentence content independently of Doc, syntax annotation, Math and host rendering. " nil
+    cons sentence cons text "The migration contract is " cons link relative "../../../../doc/spec/23-sentence-annotation.md" none text "spec 23" cons text "." nil
+    nil
+  cons paragraph
+    cons "The current stage implements typed finite arenas, graph/category/nonempty annotation checks, the versioned schema descriptor and an explicit NDF value codec. "
+    cons "The portable boundary checks both the exact schema and arena invariants, and delegates foreign source closures to the host-selected foundation codec. "
+    cons "A shape proof alone does not validate foreign source closures, resolve document names or certify safe HTML."
+    nil
+  cons paragraph
+    cons sentence cons code "SentenceSyntax" cons text " separately retains dense node locations, source snapshots, Origin arenas and owner-indexed token views. " nil
+    cons "Native and portable checks enforce their declaration closure; this does not prove source/meaning equivalence."
+    nil
+  cons paragraph
+    cons sentence cons code "literal::read" cons text " recognizes one quoted sentence and returns its closed syntax; " cons code "literal::print" cons text " emits the literal-expressible content subset. " nil
+    cons "Ruby/InlineAnno, escape spelling and original positions remain distinct. "
+    cons sentence cons text "Prefix-only forms return a typed " cons code "NotLiteral" cons text " error instead of losing their meaning." nil
+    nil
+  cons paragraph
+    cons sentence cons code "portable::literal" cons text " transfers one literal against an explicit owner snapshot, without repeating the document's source bytes in every token payload. " nil
+    cons "It checks root ownership and source containment; generated/mapped syntax uses the general closed syntax envelope. "
+    cons "This codec is not the reader/provider implementation."
+    nil
+  cons paragraph
+    cons sentence cons code "text::prepare" cons text " validates a native value and its foreign closures while borrowing the value and registry immutably. " nil
+    cons sentence cons text "Its " cons code "render" cons text " method produces plain text with base-only, Ruby-reading or all-note output. " nil
+    cons sentence cons text "A host supplies foreign text through input-bound " cons code "resolve" cons text " values. " nil
+    cons "Work, allocation, depth and output limits apply; errors return no partial string. "
+    cons "The native projection and its limits are defined in spec 23; portable operation registration remains a separate integration step."
+    nil
+  cons paragraph
+    cons "The development host now compiles the independent LanguagePackage and parses literal/prefix sources with the production engine. "
+    cons "The standard prefix printer handles all ten forms; foreign output requires a surface adapter. "
+    cons "Standard prefix lowering preserves a mapping to the retained input syntax. "
+    cons "The presentation entry accepts literal/prefix syntax with checked owner positions and views. "
+    cons "Foreign adapters, full semantic roundtrips and Doc/Math migration remain part of the same ongoing recovery. "
+    cons "This stage is not a completed language or removal of lexical comments. "
+    cons "Do not merge it as a completed migration."
+    nil
+  cons paragraph
+    cons "Sentence integration into Doc and docs-only publication precede the full annotation migration; Doc content does not depend on annotation completion."
+    nil
+  nil

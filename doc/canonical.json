@@ -392,6 +392,14 @@
       "aliases": "doc/migration/aliases/flat-html-mathml.json",
       "route": "docs/decisions/flat-html-mathml.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "sentence-core",
+      "source": "crates/languages/sentence/core/README.nepld",
+      "projection": "crates/languages/sentence/core/README.md",
+      "aliases": "doc/migration/aliases/sentence-core.json",
+      "route": "docs/crates/sentence-core.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
