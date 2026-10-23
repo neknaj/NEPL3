@@ -1,18 +1,32 @@
-# 24. Foreign syntaxの所有情報の共有
+<!-- Generated from doc/spec/24&#45;shared&#45;foreign&#45;owners.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page shared&#45;foreign&#45;owners; source SHA-256 00f2578d2cadeaf471d09b2f9173c68e03aed42f0ff1c87df196602ea91d0039; alias input SHA-256 c1fc5af51bade653be7176d29fe1ca0c97cd37ebc15122fa95cf18a2c17de3e1; page input SHA-256 b58ca6ba52aaab68dbb542af96b62e0f1f5e4b7e8878ddc946e18f3dce5449c8. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
-この章はdesign revision `nepl3-design-2026-10-13-r7` のFoundation契約とDoc/Sentence接続を定義する。採用理由は、各guestへ完全な所有情報を複製すると、所有情報量とguest数の積に比例する保存・検証が発生するためである。実装・正式受入の状態は[実装状態](../../implementation-status.json)で管理する。
+<a name="24-foreign-syntaxの所有情報の共有"></a>
 
-## 明示的な所有関係
+# 24\. Foreign syntaxの<ruby>所有情報<rt>しょゆうじょうほう</rt></ruby>の<ruby>共有<rt>きょうゆう</rt></ruby>
+
+[正本（NEPL3d）](<24-shared-foreign-owners.nepld>)
+
+この章はdesign revision `nepl3-design-2026-10-13-r7` のFoundation契約とDoc\/Sentence接続を定義する。採用理由は、各guestへ完全な所有情報を複製すると、所有情報量とguest数の積に比例する保存・検証が発生するためである。実装・正式受入の状態は[実装状態](<\.\.\/\.\.\/implementation\-status\.json>)で管理する。
+
+<a name="n-6f776e657273"></a>
+
+<a name="明示的な所有関係"></a>
+
+## <ruby>明示的<rt>めいじてき</rt></ruby>な<ruby>所有関係<rt>しょゆうかんけい</rt></ruby>
 
 ForeignClosureGroupはprovenances、environments、entriesの三つの配列を持つ。ForeignGroupEntryはForeignOwnerEnvironmentRefとForeignSyntaxを持ち、ForeignOwnerEnvironmentはForeignProvenanceRefとEnvironmentEntryを持つ。参照は各配列の局所indexである。ForeignProvenanceは完全なOrigin配列、SourceContent配列、SourceMapping配列を保持する。
 
-同じ所有者のprovenanceは一度だけ保持する。選択したEnvironmentEntryは元のIDとdigestを保持する。guestのEnvironmentRefはその選択したentryのID・digestと完全一致しなければならない。同じprovenance内のenvironment ID重複、未使用のprovenance/environment、範囲外参照は型付き失敗とする。異なる所有者の同じID・digestを根拠に、所有関係を統合しない。
+同じ所有者のprovenanceは一度だけ保持する。選択したEnvironmentEntryは元のIDとdigestを保持する。guestのEnvironmentRefはその選択したentryのID・digestと完全一致しなければならない。同じprovenance内のenvironment ID重複、未使用のprovenance\/environment、範囲外参照は型付き失敗とする。異なる所有者の同じID・digestを根拠に、所有関係を統合しない。
 
 Originは未参照要素を含めて元の順序・局所IDを保持し、前方参照を許す既存のgraph検査を使う。別の所有者のOriginIdへ付け替えない。各provenanceのsource閉包は独立して検査する。同一table内の重複sourceを拒否し、table間では同じSourceAdmissionでsnapshotの整合を検査する。各guest自身のsource・schema・syntaxの閉包も維持する。
 
-native captureは検査済み所有者の明示的な集合と、owner/node/fieldの選択を受け取る。同じ所有者の重複登録を拒否し、選択したforeign fieldとenvironmentの対応を検査する。一時的な所有者の同一性判定に用いるaddressを保存形式やdigestへ含めない。
+native captureは検査済み所有者の明示的な集合と、owner\/node\/fieldの選択を受け取る。同じ所有者の重複登録を拒否し、選択したforeign fieldとenvironmentの対応を検査する。一時的な所有者の同一性判定に用いるaddressを保存形式やdigestへ含めない。
 
-## 深さと資源
+<a name="n-64657074685f7265736f7572636573"></a>
+
+<a name="深さと資源"></a>
+
+## <ruby>深<rt>ふか</rt></ruby>さと<ruby>資源<rt>しげん</rt></ruby>
 
 共有は検査済みという永続的な権限を発行しない。操作ごとの現在のBudgetとSourceAdmissionで再検査する。使用側の意味上の深さはFoundationのtable構造から推測できない。使用側は意味上の全出現を検査し、格納されたentryごとに、そのentryを参照する出現の最大深さを一つ渡す。配列長はentriesの長さと一致しなければならない。同じentryが複数箇所に現れる場合も、最初の出現だけで代用しない。
 
@@ -20,7 +34,11 @@ native captureは検査済み所有者の明示的な集合と、owner/node/fiel
 
 実際の走査、文字列・byte量、graph edge、sort比較、scratch、copyをWork・Allocation等へ計上する。所有情報の走査と複製は共有tableごとに一度とし、guestごとの処理とは分ける。停止理由はSource・Origin・Schema・View等の型付きerrorに包まれても元のStopReasonを維持する。
 
-## 同一操作内の逐次guest検査
+<a name="n-73657175656e7469616c5f76616c69646174696f6e"></a>
+
+<a name="同一操作内の逐次guest検査"></a>
+
+## <ruby>同一操作内<rt>どういつそうさない</rt></ruby>の<ruby>逐次<rt>ちくじ</rt></ruby>guest<ruby>検査<rt>けんさ</rt></ruby>
 
 ForeignGroupValidationは一つのreceiving操作でのみ使うnative sessionである。groupとregistryを不変借用し、guest syntaxと所有environmentのID・digest対応は毎回検査する。provenanceとenvironmentは最初の成功時に実走査し、成分ごとの相対深さを記録する。再使用時は現在のcaller depthへ相対深さを加えて再検査する。失敗・途中結果は記録しない。
 
@@ -28,73 +46,101 @@ SourceAdmissionのnative scopeが変わった場合は全成分の記録を破�
 
 同じ累積Budgetを操作の開始から終了まで使用する。trusted codecを含むcallbackによるBudgetの置換・使用量の初期化は禁止する。Limits一致やSourceAdmissionScopeはBudget identityの証明ではない。sessionを別操作へ持ち越したりportable値へ変換したりしない。Markdownの数式batchはこのsessionを文書ごとの局所変数として保持し、standalone数式APIは従来どおり完全検査する。
 
-## Parserが作るforeign bundleのmapping所有範囲
+<a name="n-7061727365725f6d617070696e67"></a>
 
-Parserの完成したforeign arenaは、そのarenaの開始後に正式受理されて自身へ取り込まれたReader mapping、および局所node・token・view・trivia・Origin・ReaderFactの位置と連結するmappingを保持する。Originは未参照要素も対象とし、Generated.callsiteとSynthetic.anchorを含める。完成rootのcover終端も対象にする。ReaderFactはCapture・Presentation・Relationの両端とtriviaを含める。nested read中に追加されたeffectも保守的に保持する。
+<a name="parserが作るforeign-bundleのmapping所有範囲"></a>
 
-連結性は完全なSnapshotIdとbyte区間で決める。source側とtarget側の両方向をたどり、境界点と空区間を含め、交差したmappingは行全体を残す。ExactとTransformedの端点を短縮せず、複数の逆経路と前向き派生編集の経路を保つ。同じsource名だけでrevision/digestの異なるsnapshotを同一視しない。残す行の宣言順は変えない。
+## Parserが<ruby>作<rt>つく</rt></ruby>るforeign bundleのmapping<ruby>所有範囲<rt>しょゆうはんい</rt></ruby>
 
-これはoperation全体の過去の無関係なmapを各guestへ自動継承する従来動作を限定する所有契約である。過去の離れた位置にあるmappingをpayloadだけから暗黙参照するproviderは、その依存位置を局所ReaderFact/view等へ明示する。任意NDF payloadの内容から位置依存を推測しない。builtin Textのようにviewを持たない場合も、そのreadで追加されたmappingは保持する。
+Parserの完成したforeign arenaは、そのarenaの開始後に正式受理されて自身へ取り込まれたReader mapping、および局所node・token・view・trivia・Origin・ReaderFactの位置と連結するmappingを保持する。Originは未参照要素も対象とし、Generated\.callsiteとSynthetic\.anchorを含める。完成rootのcover終端も対象にする。ReaderFactはCapture・Presentation・Relationの両端とtriviaを含める。nested read中に追加されたeffectも保守的に保持する。
 
-完全なAcceptedTokenizationReportとParseReplyのsources/sourceMapsは変更しない。外部replyの未参照mapを含むgeometry・Exact byte一致・cycle検査は選択より前に完了する。入力検査を間引かず、完成したparser所有bundleの表だけを選択する。sources・nodes・origins・environmentsは変更しない。停止時は選択maskを返さず、frame/arenaを解放する前に全割当とfilter処理を計上する。foreign captureは完成済みbundleのprovenance全体をそのまま保持し、この選択を再実行しない。
+連結性は完全なSnapshotIdとbyte区間で決める。source側とtarget側の両方向をたどり、境界点と空区間を含め、交差したmappingは行全体を残す。ExactとTransformedの端点を短縮せず、複数の逆経路と前向き派生編集の経路を保つ。同じsource名だけでrevision\/digestの異なるsnapshotを同一視しない。残す行の宣言順は変えない。
 
-## Portable境界と借用
+これはoperation全体の過去の無関係なmapを各guestへ自動継承する従来動作を限定する所有契約である。過去の離れた位置にあるmappingをpayloadだけから暗黙参照するproviderは、その依存位置を局所ReaderFact\/view等へ明示する。任意NDF payloadの内容から位置依存を推測しない。builtin Textのようにviewを持たない場合も、そのreadで追加されたmappingは保持する。
+
+完全なAcceptedTokenizationReportとParseReplyのsources\/sourceMapsは変更しない。外部replyの未参照mapを含むgeometry・Exact byte一致・cycle検査は選択より前に完了する。入力検査を間引かず、完成したparser所有bundleの表だけを選択する。sources・nodes・origins・environmentsは変更しない。停止時は選択maskを返さず、frame\/arenaを解放する前に全割当とfilter処理を計上する。foreign captureは完成済みbundleのprovenance全体をそのまま保持し、この選択を再実行しない。
+
+<a name="n-706f727461626c655f626f72726f77"></a>
+
+<a name="portable境界と借用"></a>
+
+## Portable<ruby>境界<rt>きょうかい</rt></ruby>と<ruby>借用<rt>しゃくよう</rt></ruby>
 
 NDFのForeignClosureGroupは上記三配列を明示的に表す。codecは登録schemaの完全一致、参照・source閉包、各EnvironmentEntryのcanonical digestを検査する。runtime専用handle、pointer、暗黙のprocess内tableをportable値へ持ち込まない。
 
-借用viewはguestと選択されたenvironment/provenanceを明示的に参照する。使用側がviewを読むために完全なForeignClosureを再複製する必要はない。独立したForeignClosureが必要な場合だけ、明示的なmaterializeで全成分をBudgetに計上して複製する。このviewは別操作へ移せる検証証明ではない。
+借用viewはguestと選択されたenvironment\/provenanceを明示的に参照する。使用側がviewを読むために完全なForeignClosureを再複製する必要はない。独立したForeignClosureが必要な場合だけ、明示的なmaterializeで全成分をBudgetに計上して複製する。このviewは別操作へ移せる検証証明ではない。
 
-既存ForeignClosureのfield構造・意味は維持する。Foundation descriptorへの型追加はcontent-addressed SchemaRefのdigestを変更する。このpre-release設計変更は過去descriptorによるbyte列との同一性を保証しない。古いschema identityやenvironment digestを暗黙に付け替えない。同じ現在のSchemaRefの下では、groupから抽出したclosureと既存standalone codecの結果が一致することを検査する。
+既存ForeignClosureのfield構造・意味は維持する。Foundation descriptorへの型追加はcontent\-addressed SchemaRefのdigestを変更する。このpre\-release設計変更は過去descriptorによるbyte列との同一性を保証しない。古いschema identityやenvironment digestを暗黙に付け替えない。同じ現在のSchemaRefの下では、groupから抽出したclosureと既存standalone codecの結果が一致することを検査する。
 
-## 明示的な部分選択
+<a name="n-73656c656374696f6e"></a>
+
+<a name="明示的な部分選択"></a>
+
+## <ruby>明示的<rt>めいじてき</rt></ruby>な<ruby>部分選択<rt>ぶぶんせんたく</rt></ruby>
 
 検査済みgroupから指定したentryの部分groupを作る操作は、指定順にentryを複製する。重複指定は重複entryとして残す。選択したenvironmentとprovenanceは一度だけ複製し、元のtable順を保つ。未選択のtable要素を出力へ残さず、group内参照だけを付け替える。各選択provenanceの全内容と、その内部のOriginId、environmentの元のID・digestは変更しない。
 
 範囲外entry指定は型付き失敗とする。空選択は空のgroupになる。選択mapの構築・元table走査・複製をすべて計上し、出力を現在のregistry・SourceAdmission・Budgetで再検査する。過去の検証証明を新しい操作へ返さない。使用側の出現深さは部分選択後も使用側が別途検査する。
 
-## Guestの成分identity
+<a name="n-656e7472795f6964656e74697479"></a>
+
+<a name="guestの成分identity"></a>
+
+## Guestの<ruby>成分<rt>せいぶん</rt></ruby>identity
 
 `foreign_group_entry_digests` は現在のregistry・SourceAdmission・Budgetの下でgroupを検査・NDF化し、entry順のDigest配列を返す。この値は検証証明ではなく、使用側の意味上の出現深さの検査を代替しない。同じdigestを持つ独立所有者も、明示的な参照を根拠なく統合しない。
 
-各成分のhashはSHA-256(domain || canonical NDF/1 CBOR(value))とする。domain末尾の `\0` は一つのNUL byteを表す。
+各成分のhashはSHA\-256\(domain \|\| canonical NDF\/1 CBOR\(value\)\)とする。domain末尾の `\0` は一つのNUL byteを表す。
 
-- Provenance: `NEPL3.Foreign.Provenance.v1\0` と完全なForeignProvenance record。
-- Environment: `NEPL3.Foreign.Environment.v1\0` と選択されたEnvironmentEntry record。ForeignOwnerEnvironmentのprovenance参照は含めない。
-- Syntax: `NEPL3.Foreign.Syntax.v1\0` と完全なForeignSyntax record。ForeignGroupEntryのowner参照は含めない。
-- Entry: `NEPL3.Foreign.Entry.v1\0` と上記三digestをProvenance、Environment、Syntax順に並べたNDF List。各要素は32 byteのNDF Bytes値とする。
+- Provenance\: `NEPL3.Foreign.Provenance.v1\0` と完全なForeignProvenance record。
+- Environment\: `NEPL3.Foreign.Environment.v1\0` と選択されたEnvironmentEntry record。ForeignOwnerEnvironmentのprovenance参照は含めない。
+- Syntax\: `NEPL3.Foreign.Syntax.v1\0` と完全なForeignSyntax record。ForeignGroupEntryのowner参照は含めない。
+- Entry\: `NEPL3.Foreign.Entry.v1\0` と上記三digestをProvenance、Environment、Syntax順に並べたNDF List。各要素は32 byteのNDF Bytes値とする。
 
 group全体を一度NDF化し、ProvenanceとEnvironmentの成分を各table要素につき一度hashする。entryの構成時に所有者のbyte列を再hashしない。各成分は互いに独立したcanonical digest呼出しで処理し、batch要求indexの構築費用を必要としない。実際の変換・検査・hash・一時配列・digest出力を計上し、停止後に部分結果を返さず消費量を保持する。
 
 tableの並べ替えと対応する参照付け替え、entryの部分選択・重複・順序変更は、選択されたguestのidentityを変えない。使用していない別entry・別所有者の内容を個別guestのidentityへ含めない。選択された成分のcanonical内容は完全に含める。これは通常の暗号学的衝突耐性に依存する内容identityであり、canonical化前の表現差を区別する保証ではない。
 
-旧ForeignClosure全体のflat digestとの同一性は保証しない。Docのguest identityはSHA-256(operation domain || canonical NDF/1 CBOR(Bytes32(Entry digest)))とする。Prepareは `NEPL3.Doc.Prepare.Guest.v2\0`、Printは `NEPL3.Doc.Print.Guest.v2\0`、PlainTextは `NEPL3.Doc.PlainText.Guest.v2\0` を使う。Document identityは既存のoperation domainと完全な現在のDocumentSyntaxを使い、schema identityの変更も含む。旧guest identityを暗黙に受理しない。
+旧ForeignClosure全体のflat digestとの同一性は保証しない。Docのguest identityはSHA\-256\(operation domain \|\| canonical NDF\/1 CBOR\(Bytes32\(Entry digest\)\)\)とする。Prepareは `NEPL3.Doc.Prepare.Guest.v2\0`、Printは `NEPL3.Doc.Print.Guest.v2\0`、PlainTextは `NEPL3.Doc.PlainText.Guest.v2\0` を使う。Document identityは既存のoperation domainと完全な現在のDocumentSyntaxを使い、schema identityの変更も含む。旧guest identityを暗黙に受理しない。
 
-DocValue.embedsはDocEmbeds recordであり、kindsとForeignClosureGroupを持つ。kindsとentriesは同じ長さ・順序であり、EmbedRefは両者の同じslotを選ぶ。長さ不一致、役割不一致、未使用slotを拒否する。SentenceValue.embedsはForeignClosureGroupであり、ForeignInlineのEmbedRefはentriesのslotを選ぶ。native lowerは元の検査済み所有者から一括captureし、Docでは変換中のcaller-relative深さと最終意味graphの最大出現深さを別々に検査する。Sentenceも最終意味graphの最大深さで再検査する。
+DocValue\.embedsはDocEmbeds recordであり、kindsとForeignClosureGroupを持つ。kindsとentriesは同じ長さ・順序であり、EmbedRefは両者の同じslotを選ぶ。長さ不一致、役割不一致、未使用slotを拒否する。SentenceValue\.embedsはForeignClosureGroupであり、ForeignInlineのEmbedRefはentriesのslotを選ぶ。native lowerは元の検査済み所有者から一括captureし、Docでは変換中のcaller\-relative深さと最終意味graphの最大出現深さを別々に検査する。Sentenceも最終意味graphの最大深さで再検査する。
 
 Doc fragmentは選択したentryとkindsを同じ順序で取り出し、意味nodeのEmbedRefを対応する新slotへ変更する。同じslotへの複数参照は共有したまま残す。選択provenanceの全Origin配列は保持する。literal専用入力の空判定はentry数だけでなく、environment・provenance tableも含む。隠れた所有tableを空literalとして受理しない。
 
-借用viewのvalidateはstandalone ForeignClosureと同じ検査を行う。encode_foreign_viewは同じstandalone wire layoutを返し、中間ForeignClosureの複製を不要にするが、NDF化・所有成分の検査費用は残る。host Code表示の操作内入力照合は `NEPL3.Doc.Host.CodeInput.v1\0` とこのstandalone NDF値を使い、portable Prepare guest identityとは混同しない。
+借用viewのvalidateはstandalone ForeignClosureと同じ検査を行う。encode\_foreign\_viewは同じstandalone wire layoutを返し、中間ForeignClosureの複製を不要にするが、NDF化・所有成分の検査費用は残る。host Code表示の操作内入力照合は `NEPL3.Doc.Host.CodeInput.v1\0` とこのstandalone NDF値を使い、portable Prepare guest identityとは混同しない。
 
-Doc/SentenceのHTML・Math・annotation・printerの各受信callbackは、実際の出力祖先深さと再帰ceilingの下で借用viewを新たに検査する。意味graphの深さ検査や保存済みprepared値だけでこの検査を省略しない。同一Markdown生成操作の逐次数式entryだけは、上記ForeignGroupValidationの条件下で所有成分の検査を共有する。別の受信操作、再帰annotation callback、その他のHTML経路へこのsessionを持ち越さない。native/portable providerの経路同等性は未完了である。共有保存・一括captureの改善を、全render経路の線形計算量や正式受入の成立へ拡張しない。
+Doc\/SentenceのHTML・Math・annotation・printerの各受信callbackは、実際の出力祖先深さと再帰ceilingの下で借用viewを新たに検査する。意味graphの深さ検査や保存済みprepared値だけでこの検査を省略しない。同一Markdown生成操作の逐次数式entryだけは、上記ForeignGroupValidationの条件下で所有成分の検査を共有する。別の受信操作、再帰annotation callback、その他のHTML経路へこのsessionを持ち越さない。native\/portable providerの経路同等性は未完了である。共有保存・一括captureの改善を、全render経路の線形計算量や正式受入の成立へ拡張しない。
 
-## 接続と受入
+<a name="n-616363657074616e6365"></a>
 
-Foundation groupの成立と、Doc ArticleのSentence/Inline所有移行は別の完了条件である。言語ごとの意味・順序・source対応・深さを保った接続を検証するまで、Doc移行やT07/T19/T21の正式受入を完了扱いにしない。過去revisionの受入記録を新revisionで実行した結果へ書き換えない。
+<a name="接続と受入"></a>
 
-同一callback内の直後のloweringには、ForeignClosureView::validate_with_bundleが返す検査済みguest bundleを使用できる。このAPIはguestの構文検査に加え、ownerとの対応・provenance・environmentの全検査が成功してから、その入力を借用したproofを返す。既存validateも同じ検査経路を使用する。これにより直後のbundle単独検査の重複を除く。このAPI単独ではcallback間での検査省略を許可せず、同一Markdown操作の共有には上記sessionの条件を別途満たす。Math loweringの公開受信境界検査、annotationの実際の挿入深さ検査、意味graphのshape検査は維持する。
+## <ruby>接続<rt>せつぞく</rt></ruby>と<ruby>受入<rt>うけいれ</rt></ruby>
 
-## 同一操作内のNDFと成分identityの同時生成
+Foundation groupの成立と、Doc ArticleのSentence\/Inline所有移行は別の完了条件である。言語ごとの意味・順序・source対応・深さを保った接続を検証するまで、Doc移行やT07\/T19\/T21の正式受入を完了扱いにしない。過去revisionの受入記録を新revisionで実行した結果へ書き換えない。
+
+同一callback内の直後のloweringには、ForeignClosureView\:\:validate\_with\_bundleが返す検査済みguest bundleを使用できる。このAPIはguestの構文検査に加え、ownerとの対応・provenance・environmentの全検査が成功してから、その入力を借用したproofを返す。既存validateも同じ検査経路を使用する。これにより直後のbundle単独検査の重複を除く。このAPI単独ではcallback間での検査省略を許可せず、同一Markdown操作の共有には上記sessionの条件を別途満たす。Math loweringの公開受信境界検査、annotationの実際の挿入深さ検査、意味graphのshape検査は維持する。
+
+<a name="n-636f6d62696e65645f656e636f64696e67"></a>
+
+<a name="同一操作内のndfと成分identityの同時生成"></a>
+
+## <ruby>同一操作内<rt>どういつそうさない</rt></ruby>のNDFと<ruby>成分<rt>せいぶん</rt></ruby>identityの<ruby>同時生成<rt>どうじせいせい</rt></ruby>
 
 `encode_foreign_group_with_entry_digests` は、検査済みgroupのNDF値と、その同じ値から求めたentry順の成分digestを返す。通常の `encode_foreign_group` と `foreign_group_entry_digests` を別々に呼んだ場合と、返す値・identityは一致しなければならない。既存provider向けの既定実装は両操作をそのまま呼び、最適化したproviderだけが直前の検査済みNDFを再利用する。過去の操作・別registry・別SourceAdmission・別Budgetの検査を借用しない。
 
-DocのArticle・Sentence・Inline・namespace preparationは、DocumentSyntaxへ実際に格納するgroupの同時生成結果を使える。DocumentSyntaxのnative検査、文書のsource/map scope、生成NDFのschema検査は維持する。成分数をentry数と照合し、既存Prepare Guest.v2 domainで包んでから要求列を作る。Document.v1 identityとwire field順は変更しない。これにより同じgroupを再びNDF化する費用を除くが、完全なDocumentSyntaxおよび各成分のhash計算は残る。PageSetではpage順の成分配列を保持し、各pageのentry数との一致と最後のPageSet schema検査を確認してから利用する。Print・PlainTextのidentity生成も、それぞれ既存のoperation domainで成分を包む。PlainTextのInlineMath選択は全entryとの対応を確定した後に行う。別の実行操作や実際のrender受信境界へ、支払済み検証を移転しない。
+DocのArticle・Sentence・Inline・namespace preparationは、DocumentSyntaxへ実際に格納するgroupの同時生成結果を使える。DocumentSyntaxのnative検査、文書のsource\/map scope、生成NDFのschema検査は維持する。成分数をentry数と照合し、既存Prepare Guest\.v2 domainで包んでから要求列を作る。Document\.v1 identityとwire field順は変更しない。これにより同じgroupを再びNDF化する費用を除くが、完全なDocumentSyntaxおよび各成分のhash計算は残る。PageSetではpage順の成分配列を保持し、各pageのentry数との一致と最後のPageSet schema検査を確認してから利用する。Print・PlainTextのidentity生成も、それぞれ既存のoperation domainで成分を包む。PlainTextのInlineMath選択は全entryとの対応を確定した後に行う。別の実行操作や実際のrender受信境界へ、支払済み検証を移転しない。
 
-## 同一操作内の深さ検査とgroup出力
+<a name="n-64657074685f656e636f64696e67"></a>
 
-Doc出力は、文書のsource・形状・位置・出現深さを準備した後、同じBudgetとSourceAdmissionでgroupの深さ検査とNDF出力を連続実行できる。準備状態は検証証明ではない。group検査と出力が成功するまでValidatedDocumentSyntaxを作らない。公開validate_structureは引き続きgroupを含む全検査を実行する。
+<a name="同一操作内の深さ検査とgroup出力"></a>
+
+## <ruby>同一操作内<rt>どういつそうさない</rt></ruby>の<ruby>深<rt>ふか</rt></ruby>さ<ruby>検査<rt>けんさ</rt></ruby>とgroup<ruby>出力<rt>しゅつりょく</rt></ruby>
+
+Doc出力は、文書のsource・形状・位置・出現深さを準備した後、同じBudgetとSourceAdmissionでgroupの深さ検査とNDF出力を連続実行できる。準備状態は検証証明ではない。group検査と出力が成功するまでValidatedDocumentSyntaxを作らない。公開validate\_structureは引き続きgroupを含む全検査を実行する。
 
 深さは元の文書検査の呼出し深さを基準とし、各entryの最深出現位置を一度だけ加算する。codecと文書検査が同一の不変registryを借用する場合に限り、直後の重複native group検査を省ける。異なるregistryでは両者の検査を保持する。等価だが別のregistryも受理でき、追加処理量が必要となり得る。pointerの値は公開identityやportable表現に含めない。
 
-EnvironmentEntryのcanonical digest再計算、Foundation groupおよび外側のDoc schema検査、別の受信境界での検査を省かない。native group失敗とcodec失敗の型を区別し、Docの既存Structure/ Foundation分類を保つ。過去のproofを入力に取らず、停止・既消費量を保持し、失敗時に部分生成物を成功として返さない。
+EnvironmentEntryのcanonical digest再計算、Foundation groupおよび外側のDoc schema検査、別の受信境界での検査を省かない。native group失敗とcodec失敗の型を区別し、Docの既存Structure\/ Foundation分類を保つ。過去のproofを入力に取らず、停止・既消費量を保持し、失敗時に部分生成物を成功として返さない。
 
 Doc preparationが成分identityも必要とする場合は `encode_foreign_group_at_depths_with_entry_digests` を使い、深さ検査直後の同じNDFから成分を求める。既定providerは深さ付き出力と既存の成分計算を順に実行し、FoundationCodecだけが直前の出力を再利用する。深さ検査のStructure失敗とcodec失敗の分類を保ち、groupの検査成功前に文書proofを作らない。既存の深さ指定なしAPI・v1 identity・archiveの局所source検査も維持する。
