@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/15&#45;site.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page site; source SHA-256 8cca6e5ac51a421b1a830d823b0025f5f1aee5a88a95f480c61c484a061ca95d; alias input SHA-256 4447b5e98720cbfcb6df9ded70f221095091b1d9f630497be982a07aa7c823c2; page input SHA-256 b574bc7aeb7bf487bdc9bc4733fd10df71c106f6394b7ab2226e09a39dc4f7f7. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/15&#45;site.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page site; source SHA-256 8cca6e5ac51a421b1a830d823b0025f5f1aee5a88a95f480c61c484a061ca95d; alias input SHA-256 4447b5e98720cbfcb6df9ded70f221095091b1d9f630497be982a07aa7c823c2; page input SHA-256 4292489062f7e1b53ade5c157abcd33ff97c633062bdb3c9e9f20c57d185e5ec. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="15-静的サイト例github-pages"></a>
 

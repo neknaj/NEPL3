@@ -408,6 +408,14 @@
       "aliases": "doc/migration/aliases/migration-generated.json",
       "route": "docs/migration/generated/index.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "pages-information-architecture",
+      "source": "doc/decisions/pages-information-architecture.nepld",
+      "projection": "doc/decisions/pages-information-architecture.md",
+      "aliases": "doc/migration/aliases/pages-information-architecture.json",
+      "route": "docs/decisions/pages-information-architecture.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
@@ -425,11 +433,6 @@
       "id": "foundation-runtime-source",
       "source": "doc/progress/foundation-runtime.md",
       "route": "sources/foundation-runtime.md"
-    },
-    {
-      "id": "pages-information-architecture-source",
-      "source": "doc/decisions/pages-information-architecture.md",
-      "route": "sources/pages-information-architecture.md"
     },
     {
       "id": "tasks-source",
