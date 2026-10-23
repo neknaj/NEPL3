@@ -456,6 +456,14 @@
       "aliases": "doc/migration/aliases/SECURITY.json",
       "route": "docs/project/security.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "conformance-history",
+      "source": "conformance/history.nepld",
+      "projection": "conformance/history.md",
+      "aliases": "doc/migration/aliases/conformance-history.json",
+      "route": "docs/conformance/history.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
