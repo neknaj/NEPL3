@@ -83,8 +83,8 @@ pub struct Registry {
     #[serde(default)]
     pub lower_limits: super::export::pages::resources::OperationLimits,
     pub pages: Vec<Page>,
-    /// Passive Markdown or explicitly scoped JSON destinations, or static SVG
-    /// files in an all-footnotes batch. None becomes a semantic Doc page.
+    /// Passive Markdown, explicitly scoped JSON/example/test sources, or static
+    /// SVG files in an all-footnotes batch. None becomes a semantic Doc page.
     #[serde(default)]
     pub files: Vec<ReferenceFile>,
     /// Markdown batch allowance; old-only checks keep per-page limits.
@@ -143,7 +143,14 @@ fn passive_paths(file: &ReferenceFile, svg: bool) -> bool {
         ))
         && file.source.ends_with(".json")
         && file.route.ends_with(".json");
-    markdown || json
+    // Exact inert examples/test source needed by the authoring guide, not a
+    // general source-file export facility. No parser or compiler is invoked.
+    let example = matches!(
+        file.source.as_str(),
+        "examples/document/line-break.nepld" | "examples/document/linear-combination.nepld"
+    ) && file.route.ends_with(".nepld");
+    let rust_test = file.source == "tools/tests/doc/print.rs" && file.route.ends_with(".rs");
+    markdown || json || example || rust_test
 }
 
 fn reference_inputs(

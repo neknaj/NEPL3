@@ -1,0 +1,34 @@
+[
+  {
+    "section": null,
+    "name": "doc文書の執筆指針"
+  },
+  {
+    "section": "literal",
+    "name": "sentence-literalを標準にする場面"
+  },
+  {
+    "section": "explicit",
+    "name": "明示的なsentence構築を選ぶ場面"
+  },
+  {
+    "section": "breaks",
+    "name": "明示的な改行はbreak"
+  },
+  {
+    "section": "parallel",
+    "name": "sentenceとparallelの使い分け"
+  },
+  {
+    "section": "ruby_anno",
+    "name": "rubyとannoの対象"
+  },
+  {
+    "section": "structure",
+    "name": "構造と確認"
+  },
+  {
+    "section": "links",
+    "name": "urlと参照"
+  }
+]
