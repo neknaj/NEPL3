@@ -425,3 +425,94 @@ fn historical_receipt_checks_link_and_opaque_output(source: &str) -> Result<()> 
     assert_eq!(receipt["mime"], "application/octet-stream");
     Ok(())
 }
+
+#[test]
+fn sentence_readme_registration_requires_exact_paired_paths() -> Result<()> {
+    let source = "crates/languages/sentence/core/README.nepld";
+    let projection = "crates/languages/sentence/core/README.md";
+    let mut value = registry();
+    value["pages"][0]["source"] = json!(source);
+    value["pages"][0]["projection"] = json!(projection);
+    parse_registry(&serde_json::to_vec(&value)?)?;
+    for (field, invalid) in [
+        ("source", "crates/languages/sentence/core/readme.nepld"),
+        ("source", "crates/languages/sentence/core/README.nepld.bak"),
+        (
+            "source",
+            "crates/languages/sentence/core/../core/README.nepld",
+        ),
+        ("source", "crates/languages/math/core/README.nepld"),
+        ("source", "doc/README.nepld"),
+        ("projection", "doc/README.md"),
+        ("projection", "crates/languages/sentence/core/readme.md"),
+        ("projection", "crates/languages/sentence/core/README.md.bak"),
+        ("projection", "crates/languages/math/core/README.md"),
+        ("aliases", "crates/languages/sentence/core/aliases.json"),
+    ] {
+        let mut invalid_value = value.clone();
+        invalid_value["pages"][0][field] = json!(invalid);
+        assert!(
+            parse_registry(&serde_json::to_vec(&invalid_value)?).is_err(),
+            "{field}: {invalid}"
+        );
+    }
+    let mut duplicate = value.clone();
+    let mut second = value["pages"][0].clone();
+    second["id"] = json!("other");
+    second["route"] = json!("docs/other.html");
+    duplicate["pages"]
+        .as_array_mut()
+        .ok_or("pages")?
+        .push(second);
+    assert!(parse_registry(&serde_json::to_vec(&duplicate)?).is_err());
+    Ok(())
+}
+
+#[test]
+fn sentence_readme_exports_to_nested_projection_and_links_to_doc_page() -> Result<()> {
+    let fixture = Fixture::new()?;
+    let mut value = registry();
+    value["pages"][0]["renderer"] = json!(projection::RENDERER);
+    value["pages"].as_array_mut().ok_or("pages")?.push(json!({
+        "id":"sentence-core",
+        "source":"crates/languages/sentence/core/README.nepld",
+        "projection":"crates/languages/sentence/core/README.md",
+        "aliases":"doc/core-aliases.json",
+        "route":"docs/crates/sentence-core.html",
+        "renderer":projection::RENDERER
+    }));
+    fixture.json("doc/canonical.json", &value)?;
+    fixture.write("doc/aliases.json", "[]")?;
+    fixture.write(
+        "doc/core-aliases.json",
+        r#"[{"section":null,"name":"independent-sentence-core"}]"#,
+    )?;
+    fixture.write(
+        "doc/sample.nepld",
+        r#"article en "Spec" body cons paragraph cons "Contract." nil nil"#,
+    )?;
+    fixture.write("crates/languages/sentence/core/README.nepld", r#"article en "Independent Sentence core" body cons paragraph cons sentence cons link relative "../../../../doc/sample.md" none text "Spec" nil nil nil"#)?;
+    let output = fixture.root().join("generated");
+    markdown(fixture.root(), "doc/canonical.json", &output)?;
+    let projected = fs::read_to_string(output.join("crates/languages/sentence/core/README.md"))?;
+    assert!(projected.contains("[正本（NEPL3d）](<README.nepld>)"));
+    let links: Vec<_> = pulldown_cmark::Parser::new(&projected)
+        .filter_map(|e| match e {
+            pulldown_cmark::Event::Start(pulldown_cmark::Tag::Link { dest_url, .. }) => {
+                Some(dest_url.into_string())
+            }
+            _ => None,
+        })
+        .collect();
+    assert_eq!(links, ["README.nepld", "../../../../doc/sample.md"]);
+    let rendered = generate_html(fixture.root(), "doc/canonical.json")?;
+    let page = rendered
+        .files
+        .iter()
+        .find(|(path, _)| path.as_str() == "docs/crates/sentence-core.html")
+        .ok_or("core page")?;
+    let html = std::str::from_utf8(page.1)?;
+    assert!(html.contains("href=\"../sample.html\""));
+    assert!(html.contains("independent-sentence-core"));
+    Ok(())
+}
