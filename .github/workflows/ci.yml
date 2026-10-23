@@ -472,8 +472,8 @@ jobs:
     name: Doc HTML browser layout
     needs: [repository-contract]
     runs-on: ubuntu-latest
-    # Retain both site builds and audits when package mirrors are slow.
-    timeout-minutes: 35
+    # Bound setup separately and leave time for both site builds and audits.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -481,10 +481,17 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.13'
-      - name: Install pinned browser automation and matching engines
+      - name: Install pinned browser automation
+        timeout-minutes: 5
+        run: python -m pip install -r tools/audit/doc_html/requirements.txt
+      - name: Prefer the existing primary Ubuntu archive mirror
+        timeout-minutes: 1
         run: |
-          python -m pip install -r tools/audit/doc_html/requirements.txt
-          python -m playwright install --with-deps chromium firefox webkit
+          python -m unittest discover -s tools/emulators/browser -p 'test_mirrors.py'
+          sudo "$(command -v python)" tools/emulators/browser/mirrors.py /etc/apt/apt-mirrors.txt
+      - name: Install matching browser engines and OS dependencies
+        timeout-minutes: 30
+        run: python -m playwright install --with-deps chromium firefox webkit
       - name: Execute foundation source positions in three browsers
         run: |
           rustup target add wasm32-unknown-unknown
