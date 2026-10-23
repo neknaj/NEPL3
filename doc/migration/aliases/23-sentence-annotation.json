@@ -1,0 +1,94 @@
+[
+  {
+    "section": null,
+    "name": "23-構造化文章と対象付き注釈への是正"
+  },
+  {
+    "section": "owners",
+    "name": "所有者と実装順"
+  },
+  {
+    "section": "model",
+    "name": "独立した文章モデル"
+  },
+  {
+    "section": "portable",
+    "name": "sentence値のportable境界"
+  },
+  {
+    "section": "locations",
+    "name": "局所syntaxの位置情報"
+  },
+  {
+    "section": "literal",
+    "name": "sentence-literalの読取りと印字"
+  },
+  {
+    "section": "surface",
+    "name": "独立languagepackageの表層"
+  },
+  {
+    "section": "plain_text",
+    "name": "sentenceのplain-text生成"
+  },
+  {
+    "section": "html",
+    "name": "sentenceのhtml出力adapter"
+  },
+  {
+    "section": "doc_reader",
+    "name": "doc本文readerへの接続"
+  },
+  {
+    "section": "foreign",
+    "name": "hostが選択するforeign-inlineの構築"
+  },
+  {
+    "section": "annotation",
+    "name": "注釈と移行完了条件"
+  },
+  {
+    "section": "math_composition",
+    "name": "articlepagesetへのmath表示の合成"
+  },
+  {
+    "section": "sentence_slot",
+    "name": "docの明示的なsentence-closure-slot"
+  },
+  {
+    "section": "article_display",
+    "name": "明示的なarticle-guest描画"
+  },
+  {
+    "section": "occurrences",
+    "name": "構造上の出現列"
+  },
+  {
+    "section": "article_namespace",
+    "name": "article本体と明示採用したsentence断片の名前解決"
+  },
+  {
+    "section": "namespace_display",
+    "name": "明示的なnamespaceのarticle描画"
+  },
+  {
+    "section": "typed_host",
+    "name": "型付きsentenceを持つarticle-host"
+  },
+  {
+    "section": "cli",
+    "name": "doc-cliのsentence選択"
+  },
+  {
+    "section": "pages_resolution",
+    "name": "pagesetへ明示採用したnamespaceのnativeリンク解決"
+  },
+  {
+    "section": "pages_export",
+    "name": "型付きsentenceを含むnative-pageset-html-export"
+  },
+  {
+    "section": "visibility",
+    "name": "html挿入対象sentence出現の構造inventory"
+  }
+]
