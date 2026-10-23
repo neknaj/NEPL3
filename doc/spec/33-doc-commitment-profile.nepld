@@ -1,0 +1,59 @@
+article en "Identity-only Doc PageSet profile"
+body
+  cons paragraph
+    cons sentence
+      cons code "pages::compact::resolve"
+      cons text " selects PageIdentityProfile::CompactV1."
+      nil
+    cons " It requires the optional FoundationGroupCommitmentCodec rather than producing archive transport."
+    cons " LegacyV1 and ArchiveV1 retain their existing preimages, domains and adapters."
+    nil
+  cons paragraph
+    cons "A private document preimage is exactly a two-element NDF List containing:"
+    nil
+  cons list ordered 1
+    cons item none body cons paragraph
+      cons "The structurally checked Doc DocumentSyntax skeleton whose typed embed group is empty; all other fields, embed kinds/references, sources, origins, views and mappings are unchanged."
+      nil nil
+    cons item none body cons paragraph
+      cons "Bytes32 of the complete Foundation group commitment from spec32."
+      nil nil
+    nil
+  cons paragraph
+    cons "The original native Doc and maximum consuming occurrence depth of every guest are validated first."
+    cons " A provider's component count must match the native group."
+    cons " The retained native proof stays operation-local; the skeleton is not standalone native Doc syntax."
+    cons " No fabricated schema record or transport decode API is used."
+    nil
+  cons paragraph
+    cons "A private PageSet preimage is a two-element List containing the ordered page list and checked PageFiles."
+    cons " Each page is a two-element List of checked PageRegistration and the private document preimage."
+    cons " Files bind registrations and exact content bytes."
+    cons " These lists are internal hash preimages only, not portable PageSet/archive values."
+    nil
+  cons paragraph
+    cons sentence
+      cons text "Domains are "
+      cons code "NEPL3.Doc.Compact.Pages.v1\\0"
+      cons text ", "
+      cons code "NEPL3.Doc.Compact.Document.v1\\0"
+      cons text ", and "
+      cons code "NEPL3.Doc.Compact.Guest.v1\\0"
+      cons text "; the last wraps the existing v2 entry commitments."
+      nil
+    cons sentence
+      cons text " The explicit plan adapters recompute this profile and compare canonical plan data under "
+      cons code "NEPL3.Doc.Compact.PagePlan.v1\\0"
+      cons text "."
+      nil
+    cons " Cross-profile plans reject."
+    cons " CheckedPages exposes the selected profile; native structures/text helpers retain original limits, outer-depth and borrowed-document scope."
+    cons " Registration and link-resolution ordering remain shared with existing resolvers."
+    cons " Stops retain their sticky reason."
+    nil
+  cons paragraph
+    cons "All native/schema validation, source admission, preimage construction and hashing use the same cumulative Budget."
+    cons " No serialized archive bytes are produced, and no output limit is reset or increased."
+    cons " This profile alone does not select a tools renderer or prove historical-corpus generation succeeds."
+    nil
+  nil
