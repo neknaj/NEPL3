@@ -1,0 +1,51 @@
+article ja "[検証記録/けんしょうきろく]の[履歴/りれき]"
+body
+  cons paragraph
+    cons "[過去/かこ]のsource、レビューscript、workspace、[生成物/せいせいぶつ]、[実行/じっこう]logはGit revisionから[取得/しゅとく]する。"
+    cons sentence cons ruby text "現在" text "げんざい" cons text "の" cons ruby text "段階記録" text "だんかいきろく" cons text "への" cons ruby text "参照" text "さんしょう" cons text "は " cons code "implementation-status.json" cons text " と " cons code "conformance/results/stages/" cons text " が" cons ruby text "所有" text "しょゆう" cons text "する。" nil
+    cons "[各参照/かくさんしょう]は[元記録/もときろく]のrevision・path・SHA-256を[保持/ほじ]し、[記録時点/きろくじてん]の[検証範囲/けんしょうはんい]を[示/しめ]す。"
+    nil
+  cons table cons default cons default cons default nil
+    some row cons "revision" cons "[対象/たいしょう]path" cons "[確認/かくにん]できる[記録/きろく]" nil
+    cons row
+      cons sentence cons code "44bb19235cbf8039af2fceca59c0c9d7c261db00" nil
+      cons sentence cons code "conformance/results/acceptance/e01.json" nil
+      cons "E01の7[環境/かんきょう]・[各/かく]228[観測/かんそく]と[認証付/にんしょうつ]きlog[復元/ふくげん]を[確認/かくにん]した[固定入力/こていにゅうりょく]の[正式記録/せいしききろく]。OriginGraphのsource[変更後/へんこうご]は[現在入力/げんざいにゅうりょく]の[証拠/しょうこ]として[再利用/さいりよう]せず、[元記録/もときろく]はこのGit revisionから[取得/しゅとく]する。"
+      nil
+    cons row
+      cons sentence cons code "d87ca8c4ba18e74bc71efb0e2958af87ac971e1b" nil
+      cons sentence cons code "conformance/results/" nil
+      cons "2026[年/ねん]9[月/がつ]13[日/にち]までの[検証/けんしょう]archive。mainの[祖先/そせん]として[到達可能/とうたつかのう]。"
+      nil
+    cons row
+      cons sentence cons code "fd8057199f2f32fb36455210df36e78015b77fab" nil
+      cons sentence cons code "conformance/results/" nil
+      cons "[今回/こんかい]の[整理前/せいりまえ]の2,046ファイル。[後続/こうぞく]の[文書移行/ぶんしょいこう]・[外部/がいぶ]consumer・runtime[段階記録/だんかいきろく]を[含/ふく]む。"
+      nil
+    cons row
+      cons sentence cons code "fd8057199f2f32fb36455210df36e78015b77fab" nil
+      cons sentence cons code "conformance/results/reader-builtins/allocation-baseline.log" cons text "、" cons code "allocation-working.log" nil
+      cons "R020の[同一/どういつ]allocation probeによる[修正前後/しゅうせいぜんご]の[観測/かんそく]。"
+      nil
+    cons row
+      cons sentence cons code "fd8057199f2f32fb36455210df36e78015b77fab" nil
+      cons sentence cons code "conformance/results/markup-html/independent.json" nil
+      cons "R049〜R051の[独立/どくりつ]レビュー[記録/きろく]。"
+      nil
+    cons row
+      cons sentence cons code "011d4162126a059da39553c9cdee53b62967c2f0" nil
+      cons "runtime source"
+      cons sentence cons text "T11/T12の" cons ruby text "段階試験対象" text "だんかいしけんたいしょう" cons text "。mainから" cons ruby text "到達不能" text "とうたつふのう" cons text "な4 commitを" cons ruby text "持" text "も" cons text "つ " cons code "archive/runtime-ownership-2026-09-23" cons text " で" cons ruby text "保全" text "ほぜん" cons text "する。" nil
+      nil
+    nil
+  cons paragraph
+    cons "[例/れい]："
+    nil
+  cons rawcode some "sh" "git show fd8057199f2f32fb36455210df36e78015b77fab:conformance/results/reader-builtins/allocation-baseline.log\ngit worktree add --detach ../NEPL3-history fd8057199f2f32fb36455210df36e78015b77fab\n"
+  cons paragraph
+    cons "[現行試験/げんこうしけん]が[使用/しよう]する[最小/さいしょう]fixtureは、その[試験/しけん]のdirectoryで[管理/かんり]する。"
+    cons sentence cons code "tools/site/fixtures/provenance.json" cons text " はtar fixtureの" cons ruby text "元" text "もと" cons text "revision・path・digestと" cons ruby text "保持理由" text "ほじりゆう" cons text "を" cons ruby text "記録" text "きろく" cons text "する。" nil
+    cons "[過去/かこ]の[実行結果/じっこうけっか]は[対象/たいしょう]revisionとscopeに[属/ぞく]する。"
+    cons "[現在/げんざい]のHEADと[正式受入/せいしきうけいれ]の[状態/じょうたい]は、[現在/げんざい]の[試験/しけん]と[状態索引/じょうたいさくいん]で[確認/かくにん]する。"
+    nil
+  nil

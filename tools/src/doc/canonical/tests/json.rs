@@ -611,6 +611,114 @@ fn security_exports_to_root_projection_and_links_to_doc_page() -> Result<()> {
 }
 
 #[test]
+fn conformance_history_registration_requires_exact_paired_paths() -> Result<()> {
+    let source = "conformance/history.nepld";
+    let projection = "conformance/history.md";
+    let mut value = registry();
+    value["pages"][0]["source"] = json!(source);
+    value["pages"][0]["projection"] = json!(projection);
+    parse_registry(&serde_json::to_vec(&value)?)?;
+    for (field, invalid) in [
+        ("source", "conformance/History.nepld"),
+        ("source", "conformance/history.nepld.bak"),
+        ("source", "conformance/../conformance/history.nepld"),
+        ("source", "crates/languages/math/core/README.nepld"),
+        ("source", "doc/README.nepld"),
+        ("projection", "doc/README.md"),
+        ("projection", "conformance/History.md"),
+        ("projection", "conformance/history.md.bak"),
+        ("projection", "crates/languages/math/core/README.md"),
+        ("aliases", "crates/languages/sentence/core/aliases.json"),
+        ("aliases", "aliases.json"),
+        ("aliases", "conformance/aliases.json"),
+        ("source", "conformance/other.nepld"),
+        ("projection", "conformance/other.md"),
+    ] {
+        let mut invalid_value = value.clone();
+        invalid_value["pages"][0][field] = json!(invalid);
+        assert!(
+            parse_registry(&serde_json::to_vec(&invalid_value)?).is_err(),
+            "{field}: {invalid}"
+        );
+    }
+    let mut arbitrary_root = value.clone();
+    arbitrary_root["pages"][0]["source"] = json!("README.nepld");
+    arbitrary_root["pages"][0]["projection"] = json!("README.md");
+    assert!(parse_registry(&serde_json::to_vec(&arbitrary_root)?).is_err());
+    let mut arbitrary_conformance = value.clone();
+    arbitrary_conformance["pages"][0]["source"] = json!("conformance/other.nepld");
+    arbitrary_conformance["pages"][0]["projection"] = json!("conformance/other.md");
+    assert!(parse_registry(&serde_json::to_vec(&arbitrary_conformance)?).is_err());
+    let mut duplicate = value.clone();
+    let mut second = value["pages"][0].clone();
+    second["id"] = json!("other");
+    second["route"] = json!("docs/other.html");
+    duplicate["pages"]
+        .as_array_mut()
+        .ok_or("pages")?
+        .push(second);
+    assert!(parse_registry(&serde_json::to_vec(&duplicate)?).is_err());
+    Ok(())
+}
+
+#[test]
+fn conformance_history_exports_to_conformance_projection_and_links_to_doc_page() -> Result<()> {
+    let fixture = Fixture::new()?;
+    let mut value = registry();
+    value["pages"][0]["renderer"] = json!(projection::RENDERER);
+    value["pages"].as_array_mut().ok_or("pages")?.push(json!({
+        "id":"conformance-history",
+        "source":"conformance/history.nepld",
+        "projection":"conformance/history.md",
+        "aliases":"doc/core-aliases.json",
+        "route":"docs/conformance/history.html",
+        "renderer":projection::RENDERER
+    }));
+    fixture.json("doc/canonical.json", &value)?;
+    fixture.write("doc/aliases.json", "[]")?;
+    fixture.write(
+        "doc/core-aliases.json",
+        r#"[{"section":null,"name":"history"}]"#,
+    )?;
+    fixture.write(
+        "doc/sample.nepld",
+        r#"article en "Spec" body cons paragraph cons sentence cons link relative "../conformance/history.md" none text "History" nil nil nil"#,
+    )?;
+    fixture.write("conformance/history.nepld", r#"article en "History" body cons paragraph cons sentence cons link relative "../doc/sample.md" none text "Spec" nil nil nil"#)?;
+    let output = fixture.root().join("generated");
+    markdown(fixture.root(), "doc/canonical.json", &output)?;
+    let projected = fs::read_to_string(output.join("conformance/history.md"))?;
+    assert!(projected.contains("[正本（NEPL3d）](<history.nepld>)"));
+    let links: Vec<_> = pulldown_cmark::Parser::new(&projected)
+        .filter_map(|e| match e {
+            pulldown_cmark::Event::Start(pulldown_cmark::Tag::Link { dest_url, .. }) => {
+                Some(dest_url.into_string())
+            }
+            _ => None,
+        })
+        .collect();
+    assert_eq!(links, ["history.nepld", "../doc/sample.md"]);
+    let rendered = generate_html(fixture.root(), "doc/canonical.json")?;
+    let page = rendered
+        .files
+        .iter()
+        .find(|(path, _)| path.as_str() == "docs/conformance/history.html")
+        .ok_or("history page")?;
+    let html = std::str::from_utf8(page.1)?;
+    assert!(html.contains("href=\"../sample.html\""));
+    assert!(html.contains("id=\"history\""));
+    let incoming = rendered
+        .files
+        .iter()
+        .find(|(path, _)| path.as_str() == "docs/sample.html")
+        .ok_or("sample page")?;
+    assert!(std::str::from_utf8(incoming.1)?.contains("href=\"conformance/history.html\""));
+    let sample = fs::read_to_string(output.join("doc/sample.md"))?;
+    assert!(pulldown_cmark::Parser::new(&sample).any(|e| matches!(e, pulldown_cmark::Event::Start(pulldown_cmark::Tag::Link { dest_url, .. }) if dest_url.as_ref() == "../conformance/history.md")));
+    Ok(())
+}
+
+#[test]
 fn authoring_passive_sources_require_exact_names_and_matching_extensions() -> Result<()> {
     for (source, suffix) in [
         ("examples/document/line-break.nepld", "nepld"),
