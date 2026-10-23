@@ -518,6 +518,99 @@ fn sentence_readme_exports_to_nested_projection_and_links_to_doc_page() -> Resul
 }
 
 #[test]
+fn security_registration_requires_exact_paired_paths() -> Result<()> {
+    let source = "SECURITY.nepld";
+    let projection = "SECURITY.md";
+    let mut value = registry();
+    value["pages"][0]["source"] = json!(source);
+    value["pages"][0]["projection"] = json!(projection);
+    parse_registry(&serde_json::to_vec(&value)?)?;
+    for (field, invalid) in [
+        ("source", "security.nepld"),
+        ("source", "SECURITY.nepld.bak"),
+        ("source", "doc/../SECURITY.nepld"),
+        ("source", "crates/languages/math/core/README.nepld"),
+        ("source", "doc/README.nepld"),
+        ("projection", "doc/README.md"),
+        ("projection", "security.md"),
+        ("projection", "SECURITY.md.bak"),
+        ("projection", "crates/languages/math/core/README.md"),
+        ("aliases", "crates/languages/sentence/core/aliases.json"),
+        ("aliases", "aliases.json"),
+    ] {
+        let mut invalid_value = value.clone();
+        invalid_value["pages"][0][field] = json!(invalid);
+        assert!(
+            parse_registry(&serde_json::to_vec(&invalid_value)?).is_err(),
+            "{field}: {invalid}"
+        );
+    }
+    let mut arbitrary_root = value.clone();
+    arbitrary_root["pages"][0]["source"] = json!("README.nepld");
+    arbitrary_root["pages"][0]["projection"] = json!("README.md");
+    assert!(parse_registry(&serde_json::to_vec(&arbitrary_root)?).is_err());
+    let mut duplicate = value.clone();
+    let mut second = value["pages"][0].clone();
+    second["id"] = json!("other");
+    second["route"] = json!("docs/other.html");
+    duplicate["pages"]
+        .as_array_mut()
+        .ok_or("pages")?
+        .push(second);
+    assert!(parse_registry(&serde_json::to_vec(&duplicate)?).is_err());
+    Ok(())
+}
+
+#[test]
+fn security_exports_to_root_projection_and_links_to_doc_page() -> Result<()> {
+    let fixture = Fixture::new()?;
+    let mut value = registry();
+    value["pages"][0]["renderer"] = json!(projection::RENDERER);
+    value["pages"].as_array_mut().ok_or("pages")?.push(json!({
+        "id":"security",
+        "source":"SECURITY.nepld",
+        "projection":"SECURITY.md",
+        "aliases":"doc/core-aliases.json",
+        "route":"docs/project/security.html",
+        "renderer":projection::RENDERER
+    }));
+    fixture.json("doc/canonical.json", &value)?;
+    fixture.write("doc/aliases.json", "[]")?;
+    fixture.write(
+        "doc/core-aliases.json",
+        r#"[{"section":null,"name":"security"}]"#,
+    )?;
+    fixture.write(
+        "doc/sample.nepld",
+        r#"article en "Spec" body cons paragraph cons "Contract." nil nil"#,
+    )?;
+    fixture.write("SECURITY.nepld", r#"article en "Security" body cons paragraph cons sentence cons link relative "doc/sample.md" none text "Spec" nil nil nil"#)?;
+    let output = fixture.root().join("generated");
+    markdown(fixture.root(), "doc/canonical.json", &output)?;
+    let projected = fs::read_to_string(output.join("SECURITY.md"))?;
+    assert!(projected.contains("[正本（NEPL3d）](<SECURITY.nepld>)"));
+    let links: Vec<_> = pulldown_cmark::Parser::new(&projected)
+        .filter_map(|e| match e {
+            pulldown_cmark::Event::Start(pulldown_cmark::Tag::Link { dest_url, .. }) => {
+                Some(dest_url.into_string())
+            }
+            _ => None,
+        })
+        .collect();
+    assert_eq!(links, ["SECURITY.nepld", "doc/sample.md"]);
+    let rendered = generate_html(fixture.root(), "doc/canonical.json")?;
+    let page = rendered
+        .files
+        .iter()
+        .find(|(path, _)| path.as_str() == "docs/project/security.html")
+        .ok_or("security page")?;
+    let html = std::str::from_utf8(page.1)?;
+    assert!(html.contains("href=\"../sample.html\""));
+    assert!(html.contains("id=\"security\""));
+    Ok(())
+}
+
+#[test]
 fn authoring_passive_sources_require_exact_names_and_matching_extensions() -> Result<()> {
     for (source, suffix) in [
         ("examples/document/line-break.nepld", "nepld"),
