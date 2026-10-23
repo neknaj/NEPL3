@@ -432,6 +432,14 @@
       "aliases": "doc/migration/aliases/authoring.json",
       "route": "docs/authoring.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "doc-runtime",
+      "source": "doc/progress/doc-runtime.nepld",
+      "projection": "doc/progress/doc-runtime.md",
+      "aliases": "doc/migration/aliases/doc-runtime.json",
+      "route": "docs/progress/doc-runtime.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
@@ -481,11 +489,6 @@
       "route": "sources/multilanguage-hca.md"
     },
     {
-      "id": "doc-runtime-source",
-      "source": "doc/progress/doc-runtime.md",
-      "route": "sources/doc-runtime.md"
-    },
-    {
       "id": "history-source-manifest",
       "source": "doc/history/source-manifest.json",
       "route": "sources/history/source-manifest.json"
@@ -523,10 +526,10 @@
   },
   "html_output_limits": {
     "source_bytes": 10000000,
-    "work": 3200000000,
+    "work": 3600000000,
     "depth": 1000,
-    "nodes": 48000000,
-    "allocation_units": 3000000000,
+    "nodes": 56000000,
+    "allocation_units": 3400000000,
     "output_bytes": 10000000,
     "diagnostics": 1000,
     "events": 1000
@@ -550,5 +553,11 @@
     "output_bytes": 10000000,
     "diagnostics": 1000,
     "events": 1000
-  }
+  },
+  "compatibility": [
+    {
+      "page": "doc-runtime",
+      "route": "sources/doc-runtime.md"
+    }
+  ]
 }

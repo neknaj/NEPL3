@@ -599,6 +599,31 @@ body
         cons "source、renderer、schema、registry、assetが[同/おな]じなら[生成/せいせい]byte[列/れつ]と[意味構造/いみこうぞう]が[再現/さいげん]できることを[検査/けんさ]し、[時刻/じこく]やnetworkによる[差/さ]を[持/も]ち[込/こ]まない。"
         nil
       nil
+  cons section compatibilityMarkdown "Output-only legacy Markdown endpoints"
+    body
+      cons paragraph
+        cons "The canonical registry may explicitly map a registered page ID to a legacy sources/*.md endpoint through compatibility entries. "
+        cons "Only the annotated page-context renderer is supported; unknown pages, other renderers, invalid paths and colliding routes are rejected. "
+        cons "These endpoints are output copies, not independently authored pages or semantic PageFile registrations."
+        nil
+      cons paragraph
+        cons "A single immutable capture of the registry, canonical sources, aliases and passive references supplies both fresh Markdown generation and HTML input. "
+        cons "Existing repository Markdown is neither read nor trusted for this copy, so stale or missing projections do not prevent regeneration. "
+        cons "Mixed-site HTML substitutions apply only to the HTML reference copies and do not change the Markdown dependency context. "
+        cons "Relative links in the raw Markdown endpoint retain their repository meaning; the copy is not advertised as a second navigable HTML page."
+        nil
+      cons paragraph
+        cons "Snapshot copying is bounded host preparation, separate from each renderer's explicit runtime budget. "
+        cons "At most 128 pages and 128 passive files are captured, with 10,000,000 source bytes, 1,048,576 alias bytes and 2,097,152 passive bytes in aggregate. "
+        cons "At most 128 compatibility copies are allowed, each at most 262,144 bytes and together at most 2,097,152 bytes. "
+        cons "The output receipt is limited to 8 MiB and records source and alias identities, Markdown input context, renderer, route, byte length and delivered hash."
+        nil
+      cons paragraph
+        cons "Compatibility routes are checked against canonical, passive and generated outputs, including case-insensitive and file/directory collisions. "
+        cons "Markdown or HTML failure produces no completed output directory; no partial compatibility copy is published. "
+        cons "The host does not relax PageSet uniqueness, retry immutability, source admission, or sticky Stop semantics."
+        nil
+      nil
   cons section completion "5. [完了条件/かんりょうじょうけん]"
     body cons paragraph
       cons "J01〜J04がすべてpassedで、inventoryの[対象/たいしょう]ページがDoc[正本/せいほん]へ[移/うつ]り、[機械入力/きかいにゅうりょく]・byte[保存履歴/ほぞんりれき]を[除/のぞ]く[手書/てが]きMarkdown[本文/ほんぶん]の[二重管理/にじゅうかんり]がなくなった[時点/じてん]を、T21の[完了/かんりょう]とする。"

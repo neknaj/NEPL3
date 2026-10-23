@@ -420,6 +420,95 @@ fn generate_batch(
     batch.render(initial_usage, budget)
 }
 
+pub(super) struct CompatibilityPrepared {
+    pub inputs: Vec<(super::super::export::pages::Entry, String)>,
+    pub aliases: Vec<super::super::export::pages::aliases::PageAliases>,
+    pub references: ReferenceInputs,
+    pub markdown: Generated,
+}
+
+/// One bounded immutable source snapshot feeds both projections. Generated
+/// repository Markdown is never read as an input or adopted as an expectation.
+pub(super) fn prepare_compatibility(
+    root: &Path,
+    manifest: &str,
+    raw: Vec<u8>,
+    budget: &mut Budget,
+) -> Result<CompatibilityPrepared> {
+    budget.poll().map_err(err)?;
+    compatibility_from_captured(capture(root, raw)?, manifest, budget)
+}
+
+fn compatibility_from_captured(
+    captured: Captured,
+    manifest: &str,
+    budget: &mut Budget,
+) -> Result<CompatibilityPrepared> {
+    let snapshot: Vec<_> = captured
+        .inputs
+        .iter()
+        .map(|input| {
+            serde_json::json!({
+                "page": input.page.id, "source": input.page.source,
+                "source_sha256": references::hash(input.source.as_bytes()),
+                "aliases": input.page.aliases, "alias_sha256": references::hash(&input.aliases),
+            })
+        })
+        .collect();
+    let mut inputs = Vec::new();
+    let mut aliases = Vec::new();
+    for input in &captured.inputs {
+        inputs.push((
+            super::super::export::pages::Entry {
+                id: input.page.id.clone(),
+                source: input.page.projection.clone(),
+                input: Some(input.page.source.clone()),
+                route: input.page.route.clone(),
+            },
+            input.source.clone(),
+        ));
+        aliases.push(super::super::export::pages::aliases::PageAliases::parse(
+            input.page.id.clone(),
+            input.aliases.clone(),
+        )?);
+    }
+    // capture bounds the source corpus to MAX_SOURCE_BYTES, aliases to 1 MiB,
+    // passive data to 2 MiB and pages/files to 128 each. These host snapshot
+    // copies are separate from each renderer's runtime Budget and receipts.
+    let references = captured
+        .references
+        .iter()
+        .map(|(entry, bytes)| {
+            (
+                super::super::export::pages::Entry {
+                    id: entry.id.clone(),
+                    source: entry.source.clone(),
+                    route: entry.route.clone(),
+                    input: entry.input.clone(),
+                },
+                bytes.clone(),
+            )
+        })
+        .collect();
+    let initial = budget.usage();
+    let mut markdown = prepare_captured(captured, manifest, budget)?.render(initial, budget)?;
+    if markdown.manifest.len() > 8 * 1024 * 1024 {
+        return Err("CompatibilityReceiptLimit".into());
+    }
+    let mut receipt: serde_json::Value = serde_json::from_str(&markdown.manifest)?;
+    receipt["compatibility_snapshot"] = snapshot.into();
+    markdown.manifest = serde_json::to_string_pretty(&receipt)? + "\n";
+    if markdown.manifest.len() > 8 * 1024 * 1024 {
+        return Err("CompatibilityReceiptLimit".into());
+    }
+    Ok(CompatibilityPrepared {
+        inputs,
+        aliases,
+        references,
+        markdown,
+    })
+}
+
 fn prepare_batch(
     root: &Path,
     manifest: &str,
@@ -428,13 +517,21 @@ fn prepare_batch(
 ) -> Result<PreparedBatch> {
     budget.poll().map_err(err)?;
     charge(budget, Resource::Work, 1)?;
+    prepare_captured(capture(root, raw)?, manifest, budget)
+}
+
+fn prepare_captured(
+    captured: Captured,
+    manifest: &str,
+    budget: &mut Budget,
+) -> Result<PreparedBatch> {
     let Captured {
         raw,
         inputs,
         references,
         needs_group,
         phases,
-    } = capture(root, raw)?;
+    } = captured;
     let compiled = crate::doc::source::compiled()?;
     let prepared = if needs_group {
         Some(prepare_group(
@@ -937,6 +1034,34 @@ mod retained_tests {
         assert_eq!(expected.manifest, actual.manifest);
         assert!(actual.files[0].1.contains("Before"));
         assert!(actual.files[0].1.contains("[^"));
+        Ok(())
+    }
+    #[test]
+    fn compatibility_snapshot_survives_repository_mutation() -> Result<()> {
+        let f = crate::testing::Fixture::new()?;
+        let raw = serde_json::to_vec(
+            &serde_json::json!({"version":1,"pages":[{"id":"sample","source":"doc/sample.nepld","projection":"doc/sample.md","aliases":"doc/aliases.json","route":"docs/sample.html","renderer":RENDERER}],"files":[{"id":"guide","source":"doc/guide.md","route":"sources/guide.md"}],"compatibility":[{"page":"sample","route":"sources/sample.md"}]}),
+        )?;
+        f.write(
+            "doc/sample.nepld",
+            "article en \"Before\" body cons paragraph cons \"Frozen body.\" nil nil",
+        )?;
+        f.write("doc/aliases.json", "[]")?;
+        f.write("doc/guide.md", "Frozen passive")?;
+        let captured = capture(f.root(), raw)?;
+        f.write("doc/guide.md", "Changed passive")?;
+        f.write("doc/sample.nepld", "invalid replacement")?;
+        f.write("doc/aliases.json", "invalid replacement")?;
+        let prepared = compatibility_from_captured(
+            captured,
+            "doc/canonical.json",
+            &mut crate::doc::source::budget(),
+        )?;
+        assert!(prepared.inputs[0].1.contains("Frozen body"));
+        assert_eq!(prepared.aliases[0].raw, b"[]");
+        assert_eq!(prepared.references[0].1, b"Frozen passive");
+        assert!(prepared.markdown.files[0].1.contains(r"Frozen body\."));
+        assert!(!prepared.markdown.files[0].1.contains("invalid replacement"));
         Ok(())
     }
 }

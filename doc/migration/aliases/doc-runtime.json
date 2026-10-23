@@ -1,0 +1,86 @@
+[
+  {
+    "section": null,
+    "name": "doc-runtime-の段階実装"
+  },
+  {
+    "section": "status",
+    "name": "現在状態を確認する入口"
+  },
+  {
+    "section": "history",
+    "name": "段階別の履歴"
+  },
+  {
+    "section": "code_pages",
+    "name": "2026-10-05-htmlページ集合のcode合成"
+  },
+  {
+    "section": "math_footnotes",
+    "name": "2026-10-05-明示math-surfaceをfootnotes集合へ接続"
+  },
+  {
+    "section": "markdown_math",
+    "name": "2026-10-05-markdown-math-fragmentのnative準備"
+  },
+  {
+    "section": "accepted_prefix",
+    "name": "2026-09-21-collectorの環境検査済みprefixを保持"
+  },
+  {
+    "section": "source_environment",
+    "name": "2026-09-21-変更されていないsourcestoreの環境比較を再利用"
+  },
+  {
+    "section": "source_measurement",
+    "name": "2026-09-21-source集合の反復走査の基準測定"
+  },
+  {
+    "section": "collector_admission",
+    "name": "2026-09-21-同期collectorのadmission再利用"
+  },
+  {
+    "section": "host_ledger",
+    "name": "2026-09-21-同期hostの台帳交換を追跡"
+  },
+  {
+    "section": "sentence_recovery",
+    "name": "158を優先するsentence注釈の回復"
+  },
+  {
+    "section": "host_migration",
+    "name": "同期host接続と文書移行までの残り"
+  },
+  {
+    "section": "execution",
+    "name": "現在の実行経路"
+  },
+  {
+    "section": "validation",
+    "name": "検証の境界"
+  },
+  {
+    "section": "remaining",
+    "name": "残り"
+  },
+  {
+    "section": "tokenizer",
+    "name": "tokenizer同期接続の次段階"
+  },
+  {
+    "section": "grammar_budget",
+    "name": "grammar仕様原稿の検査と割当課金"
+  },
+  {
+    "section": "document_budget",
+    "name": "doc仕様原稿の次の性能境界"
+  },
+  {
+    "section": "html_math",
+    "name": "通常htmlのmath接続native実装中"
+  },
+  {
+    "section": "html_allowance",
+    "name": "canonical-html-corpus-allowance-for-native-math-documentation"
+  }
+]
