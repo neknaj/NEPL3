@@ -424,14 +424,17 @@
       "aliases": "doc/migration/aliases/nepl3h-ghc-frontend.json",
       "route": "docs/decisions/nepl3h-ghc-frontend.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "authoring",
+      "source": "doc/authoring.nepld",
+      "projection": "doc/authoring.md",
+      "aliases": "doc/migration/aliases/authoring.json",
+      "route": "docs/authoring.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
-    {
-      "id": "authoring-source",
-      "source": "doc/authoring.md",
-      "route": "sources/authoring.md"
-    },
     {
       "id": "doc-inventory-source",
       "source": "doc/doc-inventory.md",
@@ -491,6 +494,21 @@
       "id": "history-design-validation",
       "source": "doc/history/design-validation.json",
       "route": "sources/history/design-validation.json"
+    },
+    {
+      "id": "authoring-line-break",
+      "source": "examples/document/line-break.nepld",
+      "route": "sources/examples/line-break.nepld"
+    },
+    {
+      "id": "authoring-linear-combination",
+      "source": "examples/document/linear-combination.nepld",
+      "route": "sources/examples/linear-combination.nepld"
+    },
+    {
+      "id": "authoring-print-tests",
+      "source": "tools/tests/doc/print.rs",
+      "route": "sources/tests/doc-print.rs"
     }
   ],
   "output_limits": {
@@ -505,10 +523,10 @@
   },
   "html_output_limits": {
     "source_bytes": 10000000,
-    "work": 3000000000,
+    "work": 3200000000,
     "depth": 1000,
     "nodes": 48000000,
-    "allocation_units": 2800000000,
+    "allocation_units": 3000000000,
     "output_bytes": 10000000,
     "diagnostics": 1000,
     "events": 1000

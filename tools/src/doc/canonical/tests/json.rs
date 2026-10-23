@@ -516,3 +516,113 @@ fn sentence_readme_exports_to_nested_projection_and_links_to_doc_page() -> Resul
     assert!(html.contains("independent-sentence-core"));
     Ok(())
 }
+
+#[test]
+fn authoring_passive_sources_require_exact_names_and_matching_extensions() -> Result<()> {
+    for (source, suffix) in [
+        ("examples/document/line-break.nepld", "nepld"),
+        ("examples/document/linear-combination.nepld", "nepld"),
+        ("tools/tests/doc/print.rs", "rs"),
+    ] {
+        let mut value = registry();
+        value["files"] =
+            json!([{"id":"source", "source":source, "route":format!("sources/example.{suffix}")}]);
+        parse_registry(&serde_json::to_vec(&value)?)?;
+        for invalid_source in [
+            source.to_uppercase(),
+            format!("{source}.bak"),
+            source.replace("/", "/../"),
+        ] {
+            let mut invalid = value.clone();
+            invalid["files"][0]["source"] = json!(invalid_source);
+            assert!(parse_registry(&serde_json::to_vec(&invalid)?).is_err());
+        }
+        for route in [
+            "sources/example.html",
+            "sources/example.json",
+            "source/example.nepld",
+        ] {
+            let mut invalid = value.clone();
+            invalid["files"][0]["route"] = json!(route);
+            assert!(parse_registry(&serde_json::to_vec(&invalid)?).is_err());
+        }
+        let mut mismatched = value.clone();
+        mismatched["files"][0]["route"] = json!(if suffix == "rs" {
+            "sources/example.nepld"
+        } else {
+            "sources/example.rs"
+        });
+        assert!(parse_registry(&serde_json::to_vec(&mismatched)?).is_err());
+        value["pages"][0]["renderer"] = json!(projection::FOOTNOTES_RENDERER);
+        value["pages"][0]["route"] = json!("doc/sample.md");
+        assert!(parse_registry(&serde_json::to_vec(&value)?).is_err());
+    }
+    for source in [
+        "examples/document/other.nepld",
+        "tools/tests/doc/other.rs",
+        "tools/tests/doc/print.nepld",
+        "examples/document/line-break.rs",
+    ] {
+        let mut value = registry();
+        let extension = Path::new(source)
+            .extension()
+            .and_then(|x| x.to_str())
+            .ok_or("extension")?;
+        value["files"] = json!([{"id":"source", "source":source, "route":format!("sources/example.{extension}")}]);
+        assert!(parse_registry(&serde_json::to_vec(&value)?).is_err());
+    }
+    Ok(())
+}
+
+#[test]
+fn authoring_passive_source_export_is_inert_and_byte_preserving() -> Result<()> {
+    for (source, extension) in [
+        ("examples/document/line-break.nepld", "nepld"),
+        ("examples/document/linear-combination.nepld", "nepld"),
+        ("tools/tests/doc/print.rs", "rs"),
+    ] {
+        let fixture = Fixture::new()?;
+        let mut value = registry();
+        let route = format!("sources/example.{extension}");
+        let relative = format!("../{source}");
+        value["pages"][0]["renderer"] = json!(projection::RENDERER);
+        value["files"] = json!([{"id":"source", "source":source, "route":route}]);
+        fixture.json("doc/canonical.json", &value)?;
+        fixture.write("doc/aliases.json", "[]")?;
+        fixture.write("doc/sample.nepld", format!(r#"article en "Guide" body cons paragraph cons sentence cons link relative "{relative}" none text "Source" nil nil nil"#))?;
+        // Intentionally neither valid Doc nor Rust: export is not execution.
+        let raw = b"opaque UTF-8\r\n<script>not executed</script>\r\nprivate/unavailable.nepld\r\n";
+        fixture.write(source, raw)?;
+        let projected = projection::generate(
+            fixture.root(),
+            "doc/canonical.json",
+            &mut super::super::super::source::budget(),
+        )?;
+        let links: Vec<_> = pulldown_cmark::Parser::new(&projected.files[0].1)
+            .filter_map(|event| match event {
+                pulldown_cmark::Event::Start(pulldown_cmark::Tag::Link { dest_url, .. }) => {
+                    Some(dest_url.into_string())
+                }
+                _ => None,
+            })
+            .collect();
+        assert!(links.contains(&relative));
+        assert!(!projected.files.iter().any(|(path, _)| path == &route));
+        let generated = generate_html(fixture.root(), "doc/canonical.json")?;
+        assert_eq!(generated.files[&route], raw);
+        assert!(
+            std::str::from_utf8(&generated.files["docs/sample.html"])?
+                .contains(&format!("../{route}"))
+        );
+        assert!(!fixture.root().join("private/unavailable.nepld").exists());
+        let manifest: serde_json::Value = serde_json::from_str(&generated.manifest)?;
+        let entry = manifest["files"]
+            .as_array()
+            .ok_or("files")?
+            .iter()
+            .find(|x| x["path"] == route)
+            .ok_or("source receipt")?;
+        assert_eq!(entry["mime"], "application/octet-stream");
+    }
+    Ok(())
+}
