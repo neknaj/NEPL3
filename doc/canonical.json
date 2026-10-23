@@ -416,6 +416,14 @@
       "aliases": "doc/migration/aliases/pages-information-architecture.json",
       "route": "docs/decisions/pages-information-architecture.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "nepl3h-ghc-frontend",
+      "source": "doc/decisions/nepl3h-ghc-frontend.nepld",
+      "projection": "doc/decisions/nepl3h-ghc-frontend.md",
+      "aliases": "doc/migration/aliases/nepl3h-ghc-frontend.json",
+      "route": "docs/decisions/nepl3h-ghc-frontend.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [

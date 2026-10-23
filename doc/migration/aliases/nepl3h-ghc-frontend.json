@@ -1,0 +1,46 @@
+[
+  {
+    "section": null,
+    "name": "nepl3h-ghcへ接続する独立frontend案"
+  },
+  {
+    "section": "contracts",
+    "name": "目的と既存契約との関係"
+  },
+  {
+    "section": "ghc_entry",
+    "name": "ghcへ接続する位置"
+  },
+  {
+    "section": "surface_semantics",
+    "name": "表層とhaskellの意味を保存する"
+  },
+  {
+    "section": "cabal",
+    "name": "責務とcabal統合"
+  },
+  {
+    "section": "wasm_browser",
+    "name": "wasm生成とブラウザ内コンパイル"
+  },
+  {
+    "section": "dsl_generation",
+    "name": "dsl構造生成構文マクロth"
+  },
+  {
+    "section": "diagnostics",
+    "name": "診断identity停止と権限"
+  },
+  {
+    "section": "licensing",
+    "name": "ライセンスと配布方針"
+  },
+  {
+    "section": "stages",
+    "name": "将来の実装段階と受入案"
+  },
+  {
+    "section": "sources",
+    "name": "根拠と未検証範囲"
+  }
+]

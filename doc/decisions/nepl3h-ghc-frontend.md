@@ -1,37 +1,30 @@
-# NEPL3h: GHCへ接続する独立frontend案
+<!-- Generated from doc/decisions/nepl3h&#45;ghc&#45;frontend.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page nepl3h&#45;ghc&#45;frontend; source SHA-256 b0b2dd2603aa12c8d7bc7ad07cb4ff832935d6a524140430feb7075690aed651; alias input SHA-256 87aa7a6037776d3ecfe812cade562b0660d18b3fa3133fcfc0ca78f904cf2440; page input SHA-256 d9b57e54a604cf1675c9f2347526a9639a8c8b5e94cc41b5f89679e034516bfa. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
-状態: **設計草案・実装未着手**。2026-09-13のユーザー提案を整理した文書である。
-今回の変更は文書のみとする。文書のmergeによってrepo作成、依存追加、compiler試作、
-配布、タスク・受入状態の変更をこの文書から自動的に開始しない。
-当初NEPL3h案を作成した際のNEPL3基準は `3fed238a0021aca770d87c19ecc50fea080e62b1`。
-今回のPRで再照合し、branchへ取り込んだmainは `d8ca89264ca17ebe6c4aba3874cac2775c15b98d`。
-当初の調査基準と今回の統合基準を区別し、GHC adapterの動作検証済みrevisionとは扱わない。
-以下のNEPL3h、型名、module名、拡張子は、既存契約への参照を除いて提案名である。
+<a name="nepl3h-ghcへ接続する独立frontend案"></a>
 
-## 目的と既存契約との関係
+# NEPL3h\: GHCへ<ruby>接続<rt>せつぞく</rt></ruby>する<ruby>独立<rt>どくりつ</rt></ruby>frontend<ruby>案<rt>あん</rt></ruby>
 
-NEPL3hを、NEPL3の共通表層で記述し、通常のGHC Haskellとして名前解決・型検査・
-コンパイルするlanguage packageとする。独自のHaskell風評価器や標準ライブラリを
-作る計画ではない。Haskellの意味論は当該packageが所有し、NEPL3全体の意味論にしない。
-NEPLの多階層・再帰的なDSL埋め込み、世代ごとの主課題、純粋性と前方確定の理由は
-[統合案の目的・中核契約](multilanguage-hca.md)にまとめる。Hはこの基盤で使う実用的な
-プログラミング言語候補の一つであり、基盤の中心や最終到達点ではない。
+[正本（NEPL3d）](<nepl3h-ghc-frontend.nepld>)
 
-[外部拡張の22章](../spec/22-external-extensions.md)、[reader](../spec/03-reader.md)、
-[交換契約](../spec/09-portability.md)、[統合](../spec/10-integration.md)、
-[TEA/Worker](../spec/14-web-ui.md)を接続先とする。
-foundationへ言語一覧enumやGHC依存を追加せず、package/schema/operation/providerを使う。
-Rust APIの互換性とschema revision・digest、言語版、GHC版、SDK構成は別に管理する。
+<ruby>状態<rt>じょうたい</rt></ruby>\: <strong><ruby>設計草案<rt>せっけいそうあん</rt></ruby>・<ruby>実装未着手<rt>じっそうみちゃくしゅ</rt></ruby></strong>。2026\-09\-13のユーザー<ruby>提案<rt>ていあん</rt></ruby>を<ruby>整理<rt>せいり</rt></ruby>した<ruby>文書<rt>ぶんしょ</rt></ruby>である。 <ruby>今回<rt>こんかい</rt></ruby>の<ruby>変更<rt>へんこう</rt></ruby>は<ruby>文書<rt>ぶんしょ</rt></ruby>のみとする。<ruby>文書<rt>ぶんしょ</rt></ruby>のmergeによってrepo<ruby>作成<rt>さくせい</rt></ruby>、<ruby>依存追加<rt>いそんついか</rt></ruby>、compiler<ruby>試作<rt>しさく</rt></ruby>、 <ruby>配布<rt>はいふ</rt></ruby>、タスク・<ruby>受入状態<rt>うけいれじょうたい</rt></ruby>の<ruby>変更<rt>へんこう</rt></ruby>をこの<ruby>文書<rt>ぶんしょ</rt></ruby>から<ruby>自動的<rt>じどうてき</rt></ruby>に<ruby>開始<rt>かいし</rt></ruby>しない。 <ruby>当初<rt>とうしょ</rt></ruby>NEPL3h<ruby>案<rt>あん</rt></ruby>を<ruby>作成<rt>さくせい</rt></ruby>した<ruby>際<rt>さい</rt></ruby>のNEPL3<ruby>基準<rt>きじゅん</rt></ruby>は `3fed238a0021aca770d87c19ecc50fea080e62b1`。 <ruby>今回<rt>こんかい</rt></ruby>のPRで<ruby>再照合<rt>さいしょうごう</rt></ruby>し、branchへ<ruby>取<rt>と</rt></ruby>り<ruby>込<rt>こ</rt></ruby>んだmainは `d8ca89264ca17ebe6c4aba3874cac2775c15b98d`。 <ruby>当初<rt>とうしょ</rt></ruby>の<ruby>調査基準<rt>ちょうさきじゅん</rt></ruby>と<ruby>今回<rt>こんかい</rt></ruby>の<ruby>統合基準<rt>とうごうきじゅん</rt></ruby>を<ruby>区別<rt>くべつ</rt></ruby>し、GHC adapterの<ruby>動作検証済<rt>どうさけんしょうず</rt></ruby>みrevisionとは<ruby>扱<rt>あつか</rt></ruby>わない。 <ruby>以下<rt>いか</rt></ruby>のNEPL3h、<ruby>型名<rt>かためい</rt></ruby>、module<ruby>名<rt>めい</rt></ruby>、<ruby>拡張子<rt>かくちょうし</rt></ruby>は、<ruby>既存契約<rt>きそんけいやく</rt></ruby>への<ruby>参照<rt>さんしょう</rt></ruby>を<ruby>除<rt>のぞ</rt></ruby>いて<ruby>提案名<rt>ていあんめい</rt></ruby>である。
 
-新規NEPL3hは最初から独立repoを予定し、NEPL3の公開APIへ固定revisionで依存する。
-固定revisionから開発できることは、foundation単独の配布・T26/X01/X02の成立を証明しない。
-未完成のprocess/provider交換経路を含む22章の受入条件は、実装時に別途満たす。
-22章のmonorepo維持は既存実装の運用として維持する。既存Doc・Grammar・Circuitを
-NEPL3d/g/c等へ抽出する際は同章の配布・外部consumer・native/portable比較条件を満たす。
-Mathやmarkup、統合製品の配置も責務に従い別途決め、既存の四言語・全体受入を縮小しない。
-この草案は22章や正式catalogの置換ではなく、新規外部packageの段階案である。
+<a name="n-636f6e747261637473"></a>
 
-## GHCへ接続する位置
+<a name="目的と既存契約との関係"></a>
+
+## <ruby>目的<rt>もくてき</rt></ruby>と<ruby>既存契約<rt>きそんけいやく</rt></ruby>との<ruby>関係<rt>かんけい</rt></ruby>
+
+NEPL3hを、NEPL3の<ruby>共通表層<rt>きょうつうひょうそう</rt></ruby>で<ruby>記述<rt>きじゅつ</rt></ruby>し、<ruby>通常<rt>つうじょう</rt></ruby>のGHC Haskellとして<ruby>名前解決<rt>なまえかいけつ</rt></ruby>・<ruby>型検査<rt>かたけんさ</rt></ruby>・ コンパイルするlanguage packageとする。<ruby>独自<rt>どくじ</rt></ruby>のHaskell<ruby>風評価器<rt>ふうひょうかき</rt></ruby>や<ruby>標準<rt>ひょうじゅん</rt></ruby>ライブラリを <ruby>作<rt>つく</rt></ruby>る<ruby>計画<rt>けいかく</rt></ruby>ではない。Haskellの<ruby>意味論<rt>いみろん</rt></ruby>は<ruby>当該<rt>とうがい</rt></ruby>packageが<ruby>所有<rt>しょゆう</rt></ruby>し、NEPL3<ruby>全体<rt>ぜんたい</rt></ruby>の<ruby>意味論<rt>いみろん</rt></ruby>にしない。 NEPLの<ruby>多階層<rt>たかいそう</rt></ruby>・<ruby>再帰的<rt>さいきてき</rt></ruby>なDSL<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>み、<ruby>世代<rt>せだい</rt></ruby>ごとの<ruby>主課題<rt>しゅかだい</rt></ruby>、<ruby>純粋性<rt>じゅんすいせい</rt></ruby>と<ruby>前方確定<rt>ぜんぽうかくてい</rt></ruby>の<ruby>理由<rt>りゆう</rt></ruby>は [<ruby>統合案<rt>とうごうあん</rt></ruby>の<ruby>目的<rt>もくてき</rt></ruby>・<ruby>中核契約<rt>ちゅうかくけいやく</rt></ruby>](<multilanguage\-hca\.md>)にまとめる。Hはこの<ruby>基盤<rt>きばん</rt></ruby>で<ruby>使<rt>つか</rt></ruby>う<ruby>実用的<rt>じつようてき</rt></ruby>な プログラミング<ruby>言語候補<rt>げんごこうほ</rt></ruby>の<ruby>一<rt>ひと</rt></ruby>つであり、<ruby>基盤<rt>きばん</rt></ruby>の<ruby>中心<rt>ちゅうしん</rt></ruby>や<ruby>最終到達点<rt>さいしゅうとうたつてん</rt></ruby>ではない。
+
+[<ruby>外部拡張<rt>がいぶかくちょう</rt></ruby>の22<ruby>章<rt>しょう</rt></ruby>](<\.\.\/spec\/22\-external\-extensions\.md>)、[reader](<\.\.\/spec\/03\-reader\.md>)、 [<ruby>交換契約<rt>こうかんけいやく</rt></ruby>](<\.\.\/spec\/09\-portability\.md>)、[<ruby>統合<rt>とうごう</rt></ruby>](<\.\.\/spec\/10\-integration\.md>)、 [TEA\/Worker](<\.\.\/spec\/14\-web\-ui\.md>)を<ruby>接続先<rt>せつぞくさき</rt></ruby>とする。 foundationへ<ruby>言語一覧<rt>げんごいちらん</rt></ruby>enumやGHC<ruby>依存<rt>いぞん</rt></ruby>を<ruby>追加<rt>ついか</rt></ruby>せず、package\/schema\/operation\/providerを<ruby>使<rt>つか</rt></ruby>う。 Rust APIの<ruby>互換性<rt>ごかんせい</rt></ruby>とschema revision・digest、<ruby>言語版<rt>げんごばん</rt></ruby>、GHC<ruby>版<rt>ばん</rt></ruby>、SDK<ruby>構成<rt>こうせい</rt></ruby>は<ruby>別<rt>べつ</rt></ruby>に<ruby>管理<rt>かんり</rt></ruby>する。
+
+<ruby>新規<rt>しんき</rt></ruby>NEPL3hは<ruby>最初<rt>さいしょ</rt></ruby>から<ruby>独立<rt>どくりつ</rt></ruby>repoを<ruby>予定<rt>よてい</rt></ruby>し、NEPL3の<ruby>公開<rt>こうかい</rt></ruby>APIへ<ruby>固定<rt>こてい</rt></ruby>revisionで<ruby>依存<rt>いぞん</rt></ruby>する。 <ruby>固定<rt>こてい</rt></ruby>revisionから<ruby>開発<rt>かいはつ</rt></ruby>できることは、foundation<ruby>単独<rt>たんどく</rt></ruby>の<ruby>配布<rt>はいふ</rt></ruby>・T26\/X01\/X02の<ruby>成立<rt>せいりつ</rt></ruby>を<ruby>証明<rt>しょうめい</rt></ruby>しない。 <ruby>未完成<rt>みかんせい</rt></ruby>のprocess\/provider<ruby>交換経路<rt>こうかんけいろ</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>む22<ruby>章<rt>しょう</rt></ruby>の<ruby>受入条件<rt>うけいれじょうけん</rt></ruby>は、<ruby>実装時<rt>じっそうじ</rt></ruby>に<ruby>別途満<rt>べっとみ</rt></ruby>たす。 22<ruby>章<rt>しょう</rt></ruby>のmonorepo<ruby>維持<rt>いじ</rt></ruby>は<ruby>既存実装<rt>きそんじっそう</rt></ruby>の<ruby>運用<rt>うんよう</rt></ruby>として<ruby>維持<rt>いじ</rt></ruby>する。<ruby>既存<rt>きそん</rt></ruby>Doc・Grammar・Circuitを NEPL3d\/g\/c<ruby>等<rt>とう</rt></ruby>へ<ruby>抽出<rt>ちゅうしゅつ</rt></ruby>する<ruby>際<rt>さい</rt></ruby>は<ruby>同章<rt>どうしょう</rt></ruby>の<ruby>配布<rt>はいふ</rt></ruby>・<ruby>外部<rt>がいぶ</rt></ruby>consumer・native\/portable<ruby>比較条件<rt>ひかくじょうけん</rt></ruby>を<ruby>満<rt>み</rt></ruby>たす。 Mathやmarkup、<ruby>統合製品<rt>とうごうせいひん</rt></ruby>の<ruby>配置<rt>はいち</rt></ruby>も<ruby>責務<rt>せきむ</rt></ruby>に<ruby>従<rt>したが</rt></ruby>い<ruby>別途決<rt>べっとき</rt></ruby>め、<ruby>既存<rt>きそん</rt></ruby>の<ruby>四言語<rt>よんげんご</rt></ruby>・<ruby>全体受入<rt>ぜんたいうけいれ</rt></ruby>を<ruby>縮小<rt>しゅくしょう</rt></ruby>しない。 この<ruby>草案<rt>そうあん</rt></ruby>は22<ruby>章<rt>しょう</rt></ruby>や<ruby>正式<rt>せいしき</rt></ruby>catalogの<ruby>置換<rt>ちかん</rt></ruby>ではなく、<ruby>新規外部<rt>しんきがいぶ</rt></ruby>packageの<ruby>段階案<rt>だんかいあん</rt></ruby>である。
+
+<a name="n-6768635f656e747279"></a>
+
+<a name="ghcへ接続する位置"></a>
+
+## GHCへ<ruby>接続<rt>せつぞく</rt></ruby>する<ruby>位置<rt>いち</rt></ruby>
 
 ```text
 NEPL3h source → reader / prefix engine → 版付き構文モデル
@@ -45,20 +38,17 @@ NEPL3h source → reader / prefix engine → 版付き構文モデル
                               最適化・コード生成・GHC runtime
 ```
 
-FinkelのBuilderはGhcPsの式・型・宣言等を構築する参考実装である。
-GHC Coreへ直接lowerすると名前解決・型検査をこちらで担う問題が生じるため、parsed段階へ接続する。
-Finkel固有のコード表現やマクロ体系を恒久依存にせず、NEPL3hの構文から直接変換する。
-具体的なhook/constructorはGHC版依存であり、Finkelの実装を無検査で移植しない。
+FinkelのBuilderはGhcPsの<ruby>式<rt>しき</rt></ruby>・<ruby>型<rt>かた</rt></ruby>・<ruby>宣言等<rt>せんげんとう</rt></ruby>を<ruby>構築<rt>こうちく</rt></ruby>する<ruby>参考実装<rt>さんこうじっそう</rt></ruby>である。 GHC Coreへ<ruby>直接<rt>ちょくせつ</rt></ruby>lowerすると<ruby>名前解決<rt>なまえかいけつ</rt></ruby>・<ruby>型検査<rt>かたけんさ</rt></ruby>をこちらで<ruby>担<rt>にな</rt></ruby>う<ruby>問題<rt>もんだい</rt></ruby>が<ruby>生<rt>しょう</rt></ruby>じるため、parsed<ruby>段階<rt>だんかい</rt></ruby>へ<ruby>接続<rt>せつぞく</rt></ruby>する。 Finkel<ruby>固有<rt>こゆう</rt></ruby>のコード<ruby>表現<rt>ひょうげん</rt></ruby>やマクロ<ruby>体系<rt>たいけい</rt></ruby>を<ruby>恒久依存<rt>こうきゅういそん</rt></ruby>にせず、NEPL3hの<ruby>構文<rt>こうぶん</rt></ruby>から<ruby>直接変換<rt>ちょくせつへんかん</rt></ruby>する。 <ruby>具体的<rt>ぐたいてき</rt></ruby>なhook\/constructorはGHC<ruby>版依存<rt>ばんいそん</rt></ruby>であり、Finkelの<ruby>実装<rt>じっそう</rt></ruby>を<ruby>無検査<rt>むけんさ</rt></ruby>で<ruby>移植<rt>いしょく</rt></ruby>しない。
 
-Finkelのdriver hook方式では、依存解析用headerと本体の処理を分ける。
-候補はT_HsPp/T_Hsc相当の経路であり、単に式ASTを作るだけでは混在buildにならない。
-通常parser後のparsedResultActionだけを任意構文の入口と見なさず、固定GHCの
-driver/APIまたはcarrier module経路を検証する。pluginは入口の一つとし、adapter本体は
-直接呼出し可能なライブラリにする。cross compilerのhost pluginとtarget libraryを区別する。
+Finkelのdriver hook<ruby>方式<rt>ほうしき</rt></ruby>では、<ruby>依存解析用<rt>いそんかいせきよう</rt></ruby>headerと<ruby>本体<rt>ほんたい</rt></ruby>の<ruby>処理<rt>しょり</rt></ruby>を<ruby>分<rt>わ</rt></ruby>ける。 <ruby>候補<rt>こうほ</rt></ruby>はT\_HsPp\/T\_Hsc<ruby>相当<rt>そうとう</rt></ruby>の<ruby>経路<rt>けいろ</rt></ruby>であり、<ruby>単<rt>たん</rt></ruby>に<ruby>式<rt>しき</rt></ruby>ASTを<ruby>作<rt>つく</rt></ruby>るだけでは<ruby>混在<rt>こんざい</rt></ruby>buildにならない。 <ruby>通常<rt>つうじょう</rt></ruby>parser<ruby>後<rt>ご</rt></ruby>のparsedResultActionだけを<ruby>任意構文<rt>にんいこうぶん</rt></ruby>の<ruby>入口<rt>いりぐち</rt></ruby>と<ruby>見<rt>み</rt></ruby>なさず、<ruby>固定<rt>こてい</rt></ruby>GHCの driver\/APIまたはcarrier module<ruby>経路<rt>けいろ</rt></ruby>を<ruby>検証<rt>けんしょう</rt></ruby>する。pluginは<ruby>入口<rt>いりぐち</rt></ruby>の<ruby>一<rt>ひと</rt></ruby>つとし、adapter<ruby>本体<rt>ほんたい</rt></ruby>は <ruby>直接呼出<rt>ちょくせつよびだ</rt></ruby>し<ruby>可能<rt>かのう</rt></ruby>なライブラリにする。cross compilerのhost pluginとtarget libraryを<ruby>区別<rt>くべつ</rt></ruby>する。
 
-## 表層とHaskellの意味を保存する
+<a name="n-737572666163655f73656d616e74696373"></a>
 
-基本の前置構築をそのまま使う。
+<a name="表層とhaskellの意味を保存する"></a>
+
+## <ruby>表層<rt>ひょうそう</rt></ruby>とHaskellの<ruby>意味<rt>いみ</rt></ruby>を<ruby>保存<rt>ほぞん</rt></ruby>する
+
+<ruby>基本<rt>きほん</rt></ruby>の<ruby>前置構築<rt>ぜんちこうちく</rt></ruby>をそのまま<ruby>使<rt>つか</rt></ruby>う。
 
 ```text
 apply apply f x y
@@ -69,204 +59,134 @@ apply apply M.fromListWith + pairs
     → M.fromListWith (+) pairs
 ```
 
-applyは二項constructor、参照された関数は値である。ライブラリ関数ごとの解析arity登録は不要。
-これはNEPL3hで共通prefix規則を使う例であり、foundationや全DSLへapplyの意味を強制しない。
-構文arity、callability、saturationを区別する。前方情報でshapeが一意なら直接headを使え、
-applyは不要である。未確定の対象はその言語のarity 0の値参照として読み、固定arity 2の
-applyの反復で適用数を表す。ref等の明示形式は既知headと値参照を区別する一案であり、
-後方定義の全参照に必須ではない。Hが通常関数を参照として扱うのはH固有の選択である。
-前方のcontext更新と既読shape不変の詳細は[統合案](multilanguage-hca.md)を参照する。
-readerにはqualified name、foldl'、記号名、module名とliteralを定義する。
-構文headと同名の関数を参照する明示形式も必要だが、その綴りはschema設計時に確定する。
-名前のhyphen等を黙って変換しない。
+applyは<ruby>二項<rt>にこう</rt></ruby>constructor、<ruby>参照<rt>さんしょう</rt></ruby>された<ruby>関数<rt>かんすう</rt></ruby>は<ruby>値<rt>あたい</rt></ruby>である。ライブラリ<ruby>関数<rt>かんすう</rt></ruby>ごとの<ruby>解析<rt>かいせき</rt></ruby>arity<ruby>登録<rt>とうろく</rt></ruby>は<ruby>不要<rt>ふよう</rt></ruby>。 これはNEPL3hで<ruby>共通<rt>きょうつう</rt></ruby>prefix<ruby>規則<rt>きそく</rt></ruby>を<ruby>使<rt>つか</rt></ruby>う<ruby>例<rt>れい</rt></ruby>であり、foundationや<ruby>全<rt>ぜん</rt></ruby>DSLへapplyの<ruby>意味<rt>いみ</rt></ruby>を<ruby>強制<rt>きょうせい</rt></ruby>しない。 <ruby>構文<rt>こうぶん</rt></ruby>arity、callability、saturationを<ruby>区別<rt>くべつ</rt></ruby>する。<ruby>前方情報<rt>ぜんぽうじょうほう</rt></ruby>でshapeが<ruby>一意<rt>いちい</rt></ruby>なら<ruby>直接<rt>ちょくせつ</rt></ruby>headを<ruby>使<rt>つか</rt></ruby>え、 applyは<ruby>不要<rt>ふよう</rt></ruby>である。<ruby>未確定<rt>みかくてい</rt></ruby>の<ruby>対象<rt>たいしょう</rt></ruby>はその<ruby>言語<rt>げんご</rt></ruby>のarity 0の<ruby>値参照<rt>ちさんしょう</rt></ruby>として<ruby>読<rt>よ</rt></ruby>み、<ruby>固定<rt>こてい</rt></ruby>arity 2の applyの<ruby>反復<rt>はんぷく</rt></ruby>で<ruby>適用数<rt>てきようすう</rt></ruby>を<ruby>表<rt>あらわ</rt></ruby>す。ref<ruby>等<rt>とう</rt></ruby>の<ruby>明示形式<rt>めいじけいしき</rt></ruby>は<ruby>既知<rt>きち</rt></ruby>headと<ruby>値参照<rt>ちさんしょう</rt></ruby>を<ruby>区別<rt>くべつ</rt></ruby>する<ruby>一案<rt>いちあん</rt></ruby>であり、 <ruby>後方定義<rt>こうほうていぎ</rt></ruby>の<ruby>全参照<rt>ぜんさんしょう</rt></ruby>に<ruby>必須<rt>ひっす</rt></ruby>ではない。Hが<ruby>通常関数<rt>つうじょうかんすう</rt></ruby>を<ruby>参照<rt>さんしょう</rt></ruby>として<ruby>扱<rt>あつか</rt></ruby>うのはH<ruby>固有<rt>こゆう</rt></ruby>の<ruby>選択<rt>せんたく</rt></ruby>である。 <ruby>前方<rt>ぜんぽう</rt></ruby>のcontext<ruby>更新<rt>こうしん</rt></ruby>と<ruby>既読<rt>きどく</rt></ruby>shape<ruby>不変<rt>ふへん</rt></ruby>の<ruby>詳細<rt>しょうさい</rt></ruby>は[<ruby>統合案<rt>とうごうあん</rt></ruby>](<multilanguage\-hca\.md>)を<ruby>参照<rt>さんしょう</rt></ruby>する。 readerにはqualified name、foldl\'、<ruby>記号名<rt>きごうめい</rt></ruby>、module<ruby>名<rt>めい</rt></ruby>とliteralを<ruby>定義<rt>ていぎ</rt></ruby>する。 <ruby>構文<rt>こうぶん</rt></ruby>headと<ruby>同名<rt>どうめい</rt></ruby>の<ruby>関数<rt>かんすう</rt></ruby>を<ruby>参照<rt>さんしょう</rt></ruby>する<ruby>明示形式<rt>めいじけいしき</rt></ruby>も<ruby>必要<rt>ひつよう</rt></ruby>だが、その<ruby>綴<rt>つづ</rt></ruby>りはschema<ruby>設計時<rt>せっけいじ</rt></ruby>に<ruby>確定<rt>かくてい</rt></ruby>する。 <ruby>名前<rt>なまえ</rt></ruby>のhyphen<ruby>等<rt>とう</rt></ruby>を<ruby>黙<rt>だま</rt></ruby>って<ruby>変換<rt>へんかん</rt></ruby>しない。
 
-構文モデルの候補categoryはExpr/Pattern/Type/Declaration/Import/Export/Module。
-Apply→HsApp、lambda→HsLam、if→HsIf、let→HsLet、case→HsCase、数値→HsOverLit等を
-対応候補とし、GHCの全内部AST・型検査状態をRust側に複製しない。
-GHC APIの引数・注釈・parser後処理の前提を固定版で確認する。
+<ruby>構文<rt>こうぶん</rt></ruby>モデルの<ruby>候補<rt>こうほ</rt></ruby>categoryはExpr\/Pattern\/Type\/Declaration\/Import\/Export\/Module。 Apply→HsApp、lambda→HsLam、if→HsIf、let→HsLet、case→HsCase、<ruby>数値<rt>すうち</rt></ruby>→HsOverLit<ruby>等<rt>とう</rt></ruby>を <ruby>対応候補<rt>たいおうこうほ</rt></ruby>とし、GHCの<ruby>全内部<rt>ぜんないぶ</rt></ruby>AST・<ruby>型検査状態<rt>かたけんさじょうたい</rt></ruby>をRust<ruby>側<rt>がわ</rt></ruby>に<ruby>複製<rt>ふくせい</rt></ruby>しない。 GHC APIの<ruby>引数<rt>ひきすう</rt></ruby>・<ruby>注釈<rt>ちゅうしゃく</rt></ruby>・parser<ruby>後処理<rt>あとしょり</rt></ruby>の<ruby>前提<rt>ぜんてい</rt></ruby>を<ruby>固定版<rt>こていばん</rt></ruby>で<ruby>確認<rt>かくにん</rt></ruby>する。
 
-型推論、型クラス、ADT、多相性、非正格評価、再帰束縛、IOはGHCへ委譲する。
-例えば `apply apply const 1 undefined` は非正格性の比較例にする。
-解析順を評価順にせず、再帰letを単純なlambda置換へ、ifを先行評価する通常関数へ、
-overloaded literalを固定幅整数へ勝手に簡約しない。
-未対応拡張は明示的な能力不足として拒否する。既存libraryの内部で使われる拡張と、
-NEPL表層から直接書ける拡張は別の対応範囲である。
+<ruby>型推論<rt>かたすいろん</rt></ruby>、<ruby>型<rt>かた</rt></ruby>クラス、ADT、<ruby>多相性<rt>たそうせい</rt></ruby>、<ruby>非正格評価<rt>ひせいかくひょうか</rt></ruby>、<ruby>再帰束縛<rt>さいきそくばく</rt></ruby>、IOはGHCへ<ruby>委譲<rt>いじょう</rt></ruby>する。 <ruby>例<rt>たと</rt></ruby>えば `apply apply const 1 undefined` は<ruby>非正格性<rt>ひせいかくせい</rt></ruby>の<ruby>比較例<rt>ひかくれい</rt></ruby>にする。 <ruby>解析順<rt>かいせきじゅん</rt></ruby>を<ruby>評価順<rt>ひょうかじゅん</rt></ruby>にせず、<ruby>再帰<rt>さいき</rt></ruby>letを<ruby>単純<rt>たんじゅん</rt></ruby>なlambda<ruby>置換<rt>ちかん</rt></ruby>へ、ifを<ruby>先行評価<rt>せんこうひょうか</rt></ruby>する<ruby>通常関数<rt>つうじょうかんすう</rt></ruby>へ、 overloaded literalを<ruby>固定幅整数<rt>こていはばせいすう</rt></ruby>へ<ruby>勝手<rt>かって</rt></ruby>に<ruby>簡約<rt>かんやく</rt></ruby>しない。 <ruby>未対応拡張<rt>みたいおうかくちょう</rt></ruby>は<ruby>明示的<rt>めいじてき</rt></ruby>な<ruby>能力不足<rt>のうりょくぶそく</rt></ruby>として<ruby>拒否<rt>きょひ</rt></ruby>する。<ruby>既存<rt>きそん</rt></ruby>libraryの<ruby>内部<rt>ないぶ</rt></ruby>で<ruby>使<rt>つか</rt></ruby>われる<ruby>拡張<rt>かくちょう</rt></ruby>と、 NEPL<ruby>表層<rt>ひょうそう</rt></ruby>から<ruby>直接書<rt>ちょくせつか</rt></ruby>ける<ruby>拡張<rt>かくちょう</rt></ruby>は<ruby>別<rt>べつ</rt></ruby>の<ruby>対応範囲<rt>たいおうはんい</rt></ruby>である。
 
-## 責務とCabal統合
+<a name="n-636162616c"></a>
 
-| 部分 | 所有する責務 |
+<a name="責務とcabal統合"></a>
+
+## <ruby>責務<rt>せきむ</rt></ruby>とCabal<ruby>統合<rt>とうごう</rt></ruby>
+
+| <ruby>部分<rt>ぶぶん</rt></ruby> | <ruby>所有<rt>しょゆう</rt></ruby>する<ruby>責務<rt>せきむ</rt></ruby> |
 | --- | --- |
-| NEPL3h frontend | no_std + allocのreader、構文schema、解析とSource/Origin |
-| GHC adapter | parsed AST構築、版差、compiler session、型・診断の投影 |
-| native/cross/browser driver | 環境別起動、package集合、入出力、停止 |
-| plugin | Cabal/GHC統合用の入口。adapterと変換を共有 |
-| DSL adapter | NDF binding、Doc等の構造生成、境界と挿入先の検査 |
+| NEPL3h frontend | no\_std \+ allocのreader、<ruby>構文<rt>こうぶん</rt></ruby>schema、<ruby>解析<rt>かいせき</rt></ruby>とSource\/Origin |
+| GHC adapter | parsed AST<ruby>構築<rt>こうちく</rt></ruby>、<ruby>版差<rt>ばんさ</rt></ruby>、compiler session、<ruby>型<rt>かた</rt></ruby>・<ruby>診断<rt>しんだん</rt></ruby>の<ruby>投影<rt>とうえい</rt></ruby> |
+| native\/cross\/browser driver | <ruby>環境別起動<rt>かんきょうべつきどう</rt></ruby>、package<ruby>集合<rt>しゅうごう</rt></ruby>、<ruby>入出力<rt>にゅうしゅつりょく</rt></ruby>、<ruby>停止<rt>ていし</rt></ruby> |
+| plugin | Cabal\/GHC<ruby>統合用<rt>とうごうよう</rt></ruby>の<ruby>入口<rt>いりぐち</rt></ruby>。adapterと<ruby>変換<rt>へんかん</rt></ruby>を<ruby>共有<rt>きょうゆう</rt></ruby> |
+| DSL adapter | NDF binding、Doc<ruby>等<rt>とう</rt></ruby>の<ruby>構造生成<rt>こうぞうせいせい</rt></ruby>、<ruby>境界<rt>きょうかい</rt></ruby>と<ruby>挿入先<rt>そうにゅうさき</rt></ruby>の<ruby>検査<rt>けんさ</rt></ruby> |
 
-Haskell間では通常の型・関数・module/packageを利用する。containers/text/aeson等を
-Cabalの通常依存として解決し、各関数へFFI wrapperやRust往復serializationを挟まない。
-NEPL3専用package managerでHaskell依存を再解決しない。
+Haskell<ruby>間<rt>かん</rt></ruby>では<ruby>通常<rt>つうじょう</rt></ruby>の<ruby>型<rt>かた</rt></ruby>・<ruby>関数<rt>かんすう</rt></ruby>・module\/packageを<ruby>利用<rt>りよう</rt></ruby>する。containers\/text\/aeson<ruby>等<rt>とう</rt></ruby>を Cabalの<ruby>通常依存<rt>つうじょういそん</rt></ruby>として<ruby>解決<rt>かいけつ</rt></ruby>し、<ruby>各関数<rt>かくかんすう</rt></ruby>へFFI wrapperやRust<ruby>往復<rt>おうふく</rt></ruby>serializationを<ruby>挟<rt>はさ</rt></ruby>まない。 NEPL3<ruby>専用<rt>せんよう</rt></ruby>package managerでHaskell<ruby>依存<rt>いぞん</rt></ruby>を<ruby>再解決<rt>さいかいけつ</rt></ruby>しない。
 
-`.neplhs`等の独自拡張子は仮案。Cabalのsource discovery/前処理登録か、build directory内の
-`.hs` carrier生成を明示的に選ぶ必要がある。plugin指定だけで発見されると仮定しない。
-carrierを使う場合はmodule/importと正本identityを保持し、本体は構文モデルからASTへ変換する。
-header解析と本体lowerは同じsnapshotを参照する。frontendからproviderを再起動する循環を作らない。
-双方向互換は「Haskell依存AをNEPL3h library Bが使い、普通のHaskell consumer CがBをimport」
-するbuildで確かめる。複雑な未対応構文は通常の.hs moduleからimportできる経路を保つ。
+`.neplhs`<ruby>等<rt>とう</rt></ruby>の<ruby>独自拡張子<rt>どくじかくちょうし</rt></ruby>は<ruby>仮案<rt>かりあん</rt></ruby>。Cabalのsource discovery\/<ruby>前処理登録<rt>まえしょりとうろく</rt></ruby>か、build directory<ruby>内<rt>ない</rt></ruby>の `.hs` carrier<ruby>生成<rt>せいせい</rt></ruby>を<ruby>明示的<rt>めいじてき</rt></ruby>に<ruby>選<rt>えら</rt></ruby>ぶ<ruby>必要<rt>ひつよう</rt></ruby>がある。plugin<ruby>指定<rt>してい</rt></ruby>だけで<ruby>発見<rt>はっけん</rt></ruby>されると<ruby>仮定<rt>かてい</rt></ruby>しない。 carrierを<ruby>使<rt>つか</rt></ruby>う<ruby>場合<rt>ばあい</rt></ruby>はmodule\/importと<ruby>正本<rt>せいほん</rt></ruby>identityを<ruby>保持<rt>ほじ</rt></ruby>し、<ruby>本体<rt>ほんたい</rt></ruby>は<ruby>構文<rt>こうぶん</rt></ruby>モデルからASTへ<ruby>変換<rt>へんかん</rt></ruby>する。 header<ruby>解析<rt>かいせき</rt></ruby>と<ruby>本体<rt>ほんたい</rt></ruby>lowerは<ruby>同<rt>おな</rt></ruby>じsnapshotを<ruby>参照<rt>さんしょう</rt></ruby>する。frontendからproviderを<ruby>再起動<rt>さいきどう</rt></ruby>する<ruby>循環<rt>じゅんかん</rt></ruby>を<ruby>作<rt>つく</rt></ruby>らない。 <ruby>双方向互換<rt>そうほうこうごかん</rt></ruby>は「Haskell<ruby>依存<rt>いぞん</rt></ruby>AをNEPL3h library Bが<ruby>使<rt>つか</rt></ruby>い、<ruby>普通<rt>ふつう</rt></ruby>のHaskell consumer CがBをimport」 するbuildで<ruby>確<rt>たし</rt></ruby>かめる。<ruby>複雑<rt>ふくざつ</rt></ruby>な<ruby>未対応構文<rt>みたいおうこうぶん</rt></ruby>は<ruby>通常<rt>つうじょう</rt></ruby>の\.hs moduleからimportできる<ruby>経路<rt>けいろ</rt></ruby>を<ruby>保<rt>たも</rt></ruby>つ。
 
-## Wasm生成とブラウザ内コンパイル
+<a name="n-7761736d5f62726f77736572"></a>
 
-| 経路 | compilerの場所 | 実行するもの・追加条件 |
+<a name="wasm生成とブラウザ内コンパイル"></a>
+
+## Wasm<ruby>生成<rt>せいせい</rt></ruby>とブラウザ<ruby>内<rt>ない</rt></ruby>コンパイル
+
+| <ruby>経路<rt>けいろ</rt></ruby> | compilerの<ruby>場所<rt>ばしょ</rt></ruby> | <ruby>実行<rt>じっこう</rt></ruby>するもの・<ruby>追加条件<rt>ついかじょうけん</rt></ruby> |
 | --- | --- | --- |
-| native生成 | native host | 通常のGHC実行ファイル |
-| Wasm cross生成 | native host | Wasm target向けGHCで生成・linkした独立.wasm |
-| 配布済みプログラム/マクロ | 生成時のみcompilerを使う | browser/Wasmtimeでcommandまたはreactorを実行 |
-| 対話的編集・実行 | browser compiler Worker | Wasm化GHCがbytecodeを生成し、同runtimeで実行 |
-| browser内.wasm export | browser | codegen・assembler/linker等まで別途対応が必要 |
+| native<ruby>生成<rt>せいせい</rt></ruby> | native host | <ruby>通常<rt>つうじょう</rt></ruby>のGHC<ruby>実行<rt>じっこう</rt></ruby>ファイル |
+| Wasm cross<ruby>生成<rt>せいせい</rt></ruby> | native host | Wasm target<ruby>向<rt>む</rt></ruby>けGHCで<ruby>生成<rt>せいせい</rt></ruby>・linkした<ruby>独立<rt>どくりつ</rt></ruby>\.wasm |
+| <ruby>配布済<rt>はいふず</rt></ruby>みプログラム\/マクロ | <ruby>生成時<rt>せいせいじ</rt></ruby>のみcompilerを<ruby>使<rt>つか</rt></ruby>う | browser\/Wasmtimeでcommandまたはreactorを<ruby>実行<rt>じっこう</rt></ruby> |
+| <ruby>対話的編集<rt>たいわてきへんしゅう</rt></ruby>・<ruby>実行<rt>じっこう</rt></ruby> | browser compiler Worker | Wasm<ruby>化<rt>か</rt></ruby>GHCがbytecodeを<ruby>生成<rt>せいせい</rt></ruby>し、<ruby>同<rt>どう</rt></ruby>runtimeで<ruby>実行<rt>じっこう</rt></ruby> |
+| browser<ruby>内<rt>ない</rt></ruby>\.wasm export | browser | codegen・assembler\/linker<ruby>等<rt>とう</rt></ruby>まで<ruby>別途対応<rt>べっとたいおう</rt></ruby>が<ruby>必要<rt>ひつよう</rt></ruby> |
 
-GHC 9.14.1資料はtarget専用buildを要求する。native compilerのflagだけでWasm化しない。
-GHCのwasm32-wasiとNEPL3のwasm32-wasip2を同じABIと扱わず、初期は別実行単位と
-有限NDF値で接続する。Component Model接続は追加adapterとして検証する。
-browser runnerはWASI、明示的な仮想FS、引数、stdout/stderr、必要なJS接続を提供する。
+GHC 9\.14\.1<ruby>資料<rt>しりょう</rt></ruby>はtarget<ruby>専用<rt>せんよう</rt></ruby>buildを<ruby>要求<rt>ようきゅう</rt></ruby>する。native compilerのflagだけでWasm<ruby>化<rt>か</rt></ruby>しない。 GHCのwasm32\-wasiとNEPL3のwasm32\-wasip2を<ruby>同<rt>おな</rt></ruby>じABIと<ruby>扱<rt>あつか</rt></ruby>わず、<ruby>初期<rt>しょき</rt></ruby>は<ruby>別実行単位<rt>べつじっこうたんい</rt></ruby>と <ruby>有限<rt>ゆうげん</rt></ruby>NDF<ruby>値<rt>あたい</rt></ruby>で<ruby>接続<rt>せつぞく</rt></ruby>する。Component Model<ruby>接続<rt>せつぞく</rt></ruby>は<ruby>追加<rt>ついか</rt></ruby>adapterとして<ruby>検証<rt>けんしょう</rt></ruby>する。 browser runnerはWASI、<ruby>明示的<rt>めいじてき</rt></ruby>な<ruby>仮想<rt>かそう</rt></ruby>FS、<ruby>引数<rt>ひきすう</rt></ruby>、stdout\/stderr、<ruby>必要<rt>ひつよう</rt></ruby>なJS<ruby>接続<rt>せつぞく</rt></ruby>を<ruby>提供<rt>ていきょう</rt></ruby>する。
 
-GHC開発版のghc-api-browser試験はbytecodeBackend/LinkInMemoryを使う先行例である。
-これはNEPL3hの実行証拠でも、GHC 9.14.1正式配布だけで同じ組合せが動く保証でもない。
-native GHCとbrowser interpreterをbrokerで結ぶ `-fghci-browser` と区別する。
-静的Playgroundではcompilerもbrowserに置く案とし、外部変換サーバーを必須にしない。
-browser経路ではRust CLI、GHC、Cabal、preprocessorのnative process起動を要求しない。
+GHC<ruby>開発版<rt>かいはつばん</rt></ruby>のghc\-api\-browser<ruby>試験<rt>しけん</rt></ruby>はbytecodeBackend\/LinkInMemoryを<ruby>使<rt>つか</rt></ruby>う<ruby>先行例<rt>せんこうれい</rt></ruby>である。 これはNEPL3hの<ruby>実行証拠<rt>じっこうしょうこ</rt></ruby>でも、GHC 9\.14\.1<ruby>正式配布<rt>せいしきはいふ</rt></ruby>だけで<ruby>同<rt>おな</rt></ruby>じ<ruby>組合<rt>くみあわ</rt></ruby>せが<ruby>動<rt>うご</rt></ruby>く<ruby>保証<rt>ほしょう</rt></ruby>でもない。 native GHCとbrowser interpreterをbrokerで<ruby>結<rt>むす</rt></ruby>ぶ `-fghci-browser` と<ruby>区別<rt>くべつ</rt></ruby>する。 <ruby>静的<rt>せいてき</rt></ruby>Playgroundではcompilerもbrowserに<ruby>置<rt>お</rt></ruby>く<ruby>案<rt>あん</rt></ruby>とし、<ruby>外部変換<rt>がいぶへんかん</rt></ruby>サーバーを<ruby>必須<rt>ひっす</rt></ruby>にしない。 browser<ruby>経路<rt>けいろ</rt></ruby>ではRust CLI、GHC、Cabal、preprocessorのnative process<ruby>起動<rt>きどう</rt></ruby>を<ruby>要求<rt>ようきゅう</rt></ruby>しない。
 
-compiler・interpreter・既存packageは事前にWasm向けに構築する。
-SDKにはpackage database、interface、runtime、C系依存、loader、仮想FSの配置も必要になる。
-通常Cabalをbrowserでそのまま動かす前提にせず、利用可能package集合を明示する。
-native binaryを流用せず、非relocatableなpackage配置にも注意する。
-GHC commit/build、ghc-wasm-meta revision、WASI toolchain、adapter、NDF/DSL binding、
-loaderとpackage集合を一組で固定する。現時点では採用buildを確定していない。
+compiler・interpreter・<ruby>既存<rt>きそん</rt></ruby>packageは<ruby>事前<rt>じぜん</rt></ruby>にWasm<ruby>向<rt>む</rt></ruby>けに<ruby>構築<rt>こうちく</rt></ruby>する。 SDKにはpackage database、interface、runtime、C<ruby>系依存<rt>けいいそん</rt></ruby>、loader、<ruby>仮想<rt>かそう</rt></ruby>FSの<ruby>配置<rt>はいち</rt></ruby>も<ruby>必要<rt>ひつよう</rt></ruby>になる。 <ruby>通常<rt>つうじょう</rt></ruby>Cabalをbrowserでそのまま<ruby>動<rt>うご</rt></ruby>かす<ruby>前提<rt>ぜんてい</rt></ruby>にせず、<ruby>利用可能<rt>りようかのう</rt></ruby>package<ruby>集合<rt>しゅうごう</rt></ruby>を<ruby>明示<rt>めいじ</rt></ruby>する。 native binaryを<ruby>流用<rt>りゅうよう</rt></ruby>せず、<ruby>非<rt>ひ</rt></ruby>relocatableなpackage<ruby>配置<rt>はいち</rt></ruby>にも<ruby>注意<rt>ちゅうい</rt></ruby>する。 GHC commit\/build、ghc\-wasm\-meta revision、WASI toolchain、adapter、NDF\/DSL binding、 loaderとpackage<ruby>集合<rt>しゅうごう</rt></ruby>を<ruby>一組<rt>ひとくみ</rt></ruby>で<ruby>固定<rt>こてい</rt></ruby>する。<ruby>現時点<rt>げんじてん</rt></ruby>では<ruby>採用<rt>さいよう</rt></ruby>buildを<ruby>確定<rt>かくてい</rt></ruby>していない。
 
-## DSL構造生成、構文マクロ、TH
+<a name="n-64736c5f67656e65726174696f6e"></a>
 
-共通の生成slot・操作契約・複数producerと構文コメントの所有関係は、
-[統合案](multilanguage-hca.md)で定義する。Hはその操作の実装言語の一つであり、
-Doc/C/Aに必須の評価器にはしない。以下のHからDocへの生成は具体例であり、
-全言語向けの標準呼出しをH専用の関数型へ固定するものではない。
-統合案のAnnotated<T>はparse treeへ保持し、host loweringだけが注釈を実行意味から射影する。
-標準構文はarity 2の`annotate Sentence target`に統一する。
-Sentenceは独立したNEPL3sentenceが所有し、NEPL3aは文章とtargetの付与関係を所有する。
-Dの本文とMathの文章注記はNEPL3sentenceを利用し、Aを必須の本文経路にしない。
-旧lexical commentの恒久互換、#:による特殊trivia、独立comment、commented aliasを追加しない。
-現Grammarにgeneric categoryがあるとは扱わず、各host surfaceに具体的な固定shapeを登録する。
-wrapperはtargetの意味に加えbinding/exportも保存する。文章の名前空間は独立させる。
-通常の.hsファイルの`--`や`{- -}`はGHCの入口が扱う。NEPL3h tokenizerに同じskip commentを
-追加する許可にはならない。NEPL3h側の説明は正式なannotate構文として保持する。
+<a name="dsl構造生成構文マクロth"></a>
 
-最初の合成例は、普通のHaskell関数で既存libraryによる集計結果をDocの表へ変換するものとする。
+## DSL<ruby>構造生成<rt>こうぞうせいせい</rt></ruby>、<ruby>構文<rt>こうぶん</rt></ruby>マクロ、TH
+
+<ruby>共通<rt>きょうつう</rt></ruby>の<ruby>生成<rt>せいせい</rt></ruby>slot・<ruby>操作契約<rt>そうさけいやく</rt></ruby>・<ruby>複数<rt>ふくすう</rt></ruby>producerと<ruby>構文<rt>こうぶん</rt></ruby>コメントの<ruby>所有関係<rt>しょゆうかんけい</rt></ruby>は、 [<ruby>統合案<rt>とうごうあん</rt></ruby>](<multilanguage\-hca\.md>)で<ruby>定義<rt>ていぎ</rt></ruby>する。Hはその<ruby>操作<rt>そうさ</rt></ruby>の<ruby>実装言語<rt>じっそうげんご</rt></ruby>の<ruby>一<rt>ひと</rt></ruby>つであり、 Doc\/C\/Aに<ruby>必須<rt>ひっす</rt></ruby>の<ruby>評価器<rt>ひょうかき</rt></ruby>にはしない。<ruby>以下<rt>いか</rt></ruby>のHからDocへの<ruby>生成<rt>せいせい</rt></ruby>は<ruby>具体例<rt>ぐたいれい</rt></ruby>であり、 <ruby>全言語向<rt>ぜんげんごむ</rt></ruby>けの<ruby>標準呼出<rt>ひょうじゅんよびだ</rt></ruby>しをH<ruby>専用<rt>せんよう</rt></ruby>の<ruby>関数型<rt>かんすうがた</rt></ruby>へ<ruby>固定<rt>こてい</rt></ruby>するものではない。 <ruby>統合案<rt>とうごうあん</rt></ruby>のAnnotated\<T\>はparse treeへ<ruby>保持<rt>ほじ</rt></ruby>し、host loweringだけが<ruby>注釈<rt>ちゅうしゃく</rt></ruby>を<ruby>実行意味<rt>じっこういみ</rt></ruby>から<ruby>射影<rt>しゃえい</rt></ruby>する。 <ruby>標準構文<rt>ひょうじゅんこうぶん</rt></ruby>はarity 2の`annotate Sentence target`に<ruby>統一<rt>とういつ</rt></ruby>する。 Sentenceは<ruby>独立<rt>どくりつ</rt></ruby>したNEPL3sentenceが<ruby>所有<rt>しょゆう</rt></ruby>し、NEPL3aは<ruby>文章<rt>ぶんしょう</rt></ruby>とtargetの<ruby>付与関係<rt>ふよかんけい</rt></ruby>を<ruby>所有<rt>しょゆう</rt></ruby>する。 Dの<ruby>本文<rt>ほんぶん</rt></ruby>とMathの<ruby>文章注記<rt>ぶんしょうちゅうき</rt></ruby>はNEPL3sentenceを<ruby>利用<rt>りよう</rt></ruby>し、Aを<ruby>必須<rt>ひっす</rt></ruby>の<ruby>本文経路<rt>ほんぶんけいろ</rt></ruby>にしない。 <ruby>旧<rt>きゅう</rt></ruby>lexical commentの<ruby>恒久互換<rt>こうきゅうごかん</rt></ruby>、\#\:による<ruby>特殊<rt>とくしゅ</rt></ruby>trivia、<ruby>独立<rt>どくりつ</rt></ruby>comment、commented aliasを<ruby>追加<rt>ついか</rt></ruby>しない。 <ruby>現<rt>げん</rt></ruby>Grammarにgeneric categoryがあるとは<ruby>扱<rt>あつか</rt></ruby>わず、<ruby>各<rt>かく</rt></ruby>host surfaceに<ruby>具体的<rt>ぐたいてき</rt></ruby>な<ruby>固定<rt>こてい</rt></ruby>shapeを<ruby>登録<rt>とうろく</rt></ruby>する。 wrapperはtargetの<ruby>意味<rt>いみ</rt></ruby>に<ruby>加<rt>くわ</rt></ruby>えbinding\/exportも<ruby>保存<rt>ほぞん</rt></ruby>する。<ruby>文章<rt>ぶんしょう</rt></ruby>の<ruby>名前空間<rt>なまえくうかん</rt></ruby>は<ruby>独立<rt>どくりつ</rt></ruby>させる。 <ruby>通常<rt>つうじょう</rt></ruby>の\.hsファイルの`--`や`{- -}`はGHCの<ruby>入口<rt>いりぐち</rt></ruby>が<ruby>扱<rt>あつか</rt></ruby>う。NEPL3h tokenizerに<ruby>同<rt>おな</rt></ruby>じskip commentを <ruby>追加<rt>ついか</rt></ruby>する<ruby>許可<rt>きょか</rt></ruby>にはならない。NEPL3h<ruby>側<rt>がわ</rt></ruby>の<ruby>説明<rt>せつめい</rt></ruby>は<ruby>正式<rt>せいしき</rt></ruby>なannotate<ruby>構文<rt>こうぶん</rt></ruby>として<ruby>保持<rt>ほじ</rt></ruby>する。
+
+<ruby>最初<rt>さいしょ</rt></ruby>の<ruby>合成例<rt>ごうせいれい</rt></ruby>は、<ruby>普通<rt>ふつう</rt></ruby>のHaskell<ruby>関数<rt>かんすう</rt></ruby>で<ruby>既存<rt>きそん</rt></ruby>libraryによる<ruby>集計結果<rt>しゅうけいけっか</rt></ruby>をDocの<ruby>表<rt>ひょう</rt></ruby>へ<ruby>変換<rt>へんかん</rt></ruby>するものとする。
 
 ```haskell
 -- 説明用の型案。現行SDK APIではない。
 expand :: ExpansionInput -> Either ExpansionError DocFragment
 ```
 
-これはD fragmentを返す一操作のHaskell実装例である。Sentence生成、C fragment生成等は
-それぞれ別の用途別操作契約を持ち、共通出力をDocFragmentへ統一しない。
-契約は用途別packageまたはconsumer/adapterが所有し、H側の関数型を共通ABIにしない。
+これはD fragmentを<ruby>返<rt>かえ</rt></ruby>す<ruby>一操作<rt>いちそうさ</rt></ruby>のHaskell<ruby>実装例<rt>じっそうれい</rt></ruby>である。Sentence<ruby>生成<rt>せいせい</rt></ruby>、C fragment<ruby>生成等<rt>せいせいとう</rt></ruby>は それぞれ<ruby>別<rt>べつ</rt></ruby>の<ruby>用途別操作契約<rt>ようとべつそうさけいやく</rt></ruby>を<ruby>持<rt>も</rt></ruby>ち、<ruby>共通出力<rt>きょうつうしゅつりょく</rt></ruby>をDocFragmentへ<ruby>統一<rt>とういつ</rt></ruby>しない。 <ruby>契約<rt>けいやく</rt></ruby>は<ruby>用途別<rt>ようとべつ</rt></ruby>packageまたはconsumer\/adapterが<ruby>所有<rt>しょゆう</rt></ruby>し、H<ruby>側<rt>がわ</rt></ruby>の<ruby>関数型<rt>かんすうがた</rt></ruby>を<ruby>共通<rt>きょうつう</rt></ruby>ABIにしない。
 
-hostが明示的に操作を選択して評価し、埋め込みの解析・表示だけでは実行しない。
-Haskell間では通常の値を使い、NEPL3境界では有限NDFデータを使う。
-HValue、closure、pointer、compiler sessionをportable valueにしない。
-JSONデータ処理用aesonとcanonicalなNDF codecも区別する。
-結果はwire、schema、Source/Origin・参照、Doc意味条件、挿入slotの順に検査する。
-EnvironmentProjectionで渡した値だけを共有し、guest namespaceを既定で分離する。
+hostが<ruby>明示的<rt>めいじてき</rt></ruby>に<ruby>操作<rt>そうさ</rt></ruby>を<ruby>選択<rt>せんたく</rt></ruby>して<ruby>評価<rt>ひょうか</rt></ruby>し、<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みの<ruby>解析<rt>かいせき</rt></ruby>・<ruby>表示<rt>ひょうじ</rt></ruby>だけでは<ruby>実行<rt>じっこう</rt></ruby>しない。 Haskell<ruby>間<rt>かん</rt></ruby>では<ruby>通常<rt>つうじょう</rt></ruby>の<ruby>値<rt>あたい</rt></ruby>を<ruby>使<rt>つか</rt></ruby>い、NEPL3<ruby>境界<rt>きょうかい</rt></ruby>では<ruby>有限<rt>ゆうげん</rt></ruby>NDFデータを<ruby>使<rt>つか</rt></ruby>う。 HValue、closure、pointer、compiler sessionをportable valueにしない。 JSONデータ<ruby>処理用<rt>しょりよう</rt></ruby>aesonとcanonicalなNDF codecも<ruby>区別<rt>くべつ</rt></ruby>する。 <ruby>結果<rt>けっか</rt></ruby>はwire、schema、Source\/Origin・<ruby>参照<rt>さんしょう</rt></ruby>、Doc<ruby>意味条件<rt>いみじょうけん</rt></ruby>、<ruby>挿入<rt>そうにゅう</rt></ruby>slotの<ruby>順<rt>じゅん</rt></ruby>に<ruby>検査<rt>けんさ</rt></ruby>する。 EnvironmentProjectionで<ruby>渡<rt>わた</rt></ruby>した<ruby>値<rt>あたい</rt></ruby>だけを<ruby>共有<rt>きょうゆう</rt></ruby>し、guest namespaceを<ruby>既定<rt>きてい</rt></ruby>で<ruby>分離<rt>ぶんり</rt></ruby>する。
 
-コンパイル済みmacro.wasmの呼出しはcompiler全体のbrowser配布に先行できる。
-マクロを編集する場合はbrowser GHCで再コンパイルして再展開する。
-「マクロ関数のコンパイル」「DSL処理中の関数実行」「生成構造の検査」を分ける。
-普通の関数によるDSL生成にTHやFinkel式構文マクロを必須にしない。
-NEPL3h自身の構文マクロは段階・依存順・生成名の衛生性・Origin・再展開を別に定義する。
-renamerだけで変数捕捉が防げるとは扱わない。TH spliceも表層構文とtarget/capabilityごとに検証する。
-readerをNEPL3hで作る場合は依存を先に準備し、当該readerでの解析完了を準備の条件にしない。
+コンパイル<ruby>済<rt>ず</rt></ruby>みmacro\.wasmの<ruby>呼出<rt>よびだ</rt></ruby>しはcompiler<ruby>全体<rt>ぜんたい</rt></ruby>のbrowser<ruby>配布<rt>はいふ</rt></ruby>に<ruby>先行<rt>せんこう</rt></ruby>できる。 マクロを<ruby>編集<rt>へんしゅう</rt></ruby>する<ruby>場合<rt>ばあい</rt></ruby>はbrowser GHCで<ruby>再<rt>さい</rt></ruby>コンパイルして<ruby>再展開<rt>さいてんかい</rt></ruby>する。 「マクロ<ruby>関数<rt>かんすう</rt></ruby>のコンパイル」「DSL<ruby>処理中<rt>しょりちゅう</rt></ruby>の<ruby>関数実行<rt>かんすうじっこう</rt></ruby>」「<ruby>生成構造<rt>せいせいこうぞう</rt></ruby>の<ruby>検査<rt>けんさ</rt></ruby>」を<ruby>分<rt>わ</rt></ruby>ける。 <ruby>普通<rt>ふつう</rt></ruby>の<ruby>関数<rt>かんすう</rt></ruby>によるDSL<ruby>生成<rt>せいせい</rt></ruby>にTHやFinkel<ruby>式構文<rt>しきこうぶん</rt></ruby>マクロを<ruby>必須<rt>ひっす</rt></ruby>にしない。 NEPL3h<ruby>自身<rt>じしん</rt></ruby>の<ruby>構文<rt>こうぶん</rt></ruby>マクロは<ruby>段階<rt>だんかい</rt></ruby>・<ruby>依存順<rt>いぞんじゅん</rt></ruby>・<ruby>生成名<rt>せいせいめい</rt></ruby>の<ruby>衛生性<rt>えいせいせい</rt></ruby>・Origin・<ruby>再展開<rt>さいてんかい</rt></ruby>を<ruby>別<rt>べつ</rt></ruby>に<ruby>定義<rt>ていぎ</rt></ruby>する。 renamerだけで<ruby>変数捕捉<rt>へんすうほそく</rt></ruby>が<ruby>防<rt>ふせ</rt></ruby>げるとは<ruby>扱<rt>あつか</rt></ruby>わない。TH spliceも<ruby>表層構文<rt>ひょうそうこうぶん</rt></ruby>とtarget\/capabilityごとに<ruby>検証<rt>けんしょう</rt></ruby>する。 readerをNEPL3hで<ruby>作<rt>つく</rt></ruby>る<ruby>場合<rt>ばあい</rt></ruby>は<ruby>依存<rt>いぞん</rt></ruby>を<ruby>先<rt>さき</rt></ruby>に<ruby>準備<rt>じゅんび</rt></ruby>し、<ruby>当該<rt>とうがい</rt></ruby>readerでの<ruby>解析完了<rt>かいせきかんりょう</rt></ruby>を<ruby>準備<rt>じゅんび</rt></ruby>の<ruby>条件<rt>じょうけん</rt></ruby>にしない。
 
-## 診断、identity、停止と権限
+<a name="n-646961676e6f7374696373"></a>
 
-GHC診断・型・名前解決結果を元NEPLソースへ戻す。位置不明nodeへの一括置換を避け、
-UTF-8 byte、tab、行列、日本語、補助平面文字、エディタ位置を区別して検査する。
-HLS/formatter/renameが別表層を自動理解するとは扱わない。
+<a name="診断identity停止と権限"></a>
 
-cacheと応答identityにはsource集合/revision、schema/frontend、GHC build/target/flags、
-Cabal依存、adapter/SDK、参照資源、Profile/options、要求IDとWorker epochを含める。
-GHC sessionを同時変更せず直列化し、古い応答を新しい文書に採用しない。
-純粋TEA updateはCmdを返し、hostがcompiler Workerを実行し、結果をMsgで返す。
-UI coreからGHC・Worker・I/Oを呼ばない。応答採用は14章の完全な要求identityに従い、
-sessionEpoch・operationIdentityも照合する。上記の列挙を14章の項目を削る定義にしない。
-本体だけの変更、依存マクロだけの変更もcacheを失効させる。
+## <ruby>診断<rt>しんだん</rt></ruby>、identity、<ruby>停止<rt>ていし</rt></ruby>と<ruby>権限<rt>けんげん</rt></ruby>
 
-pureな型やSafe Haskellは終了性・OS隔離を保証しない。compiler内のTH等も実行権限の対象。
-compile、評価、遅延結果のserialization、出力検査の全段階に制限を適用する。
-GHC内部workをNEPL3 Budgetへ自動換算せず、host期限、出力/ノード/メモリ上限と
-強制停止を別に設計する。停止時はepochを更新し、失敗を再予算化で成功へ変えない。
-Workerは停止手段であって権限隔離の全てではない。純粋DSLマクロには任意JSFFI、network、
-plugin、preprocessorを既定で渡さず、一般アプリ用capabilityと分ける。
-compiler不在は能力不足とし、サーバーへ原稿を黙って送信しない。
-Doc previewのscript禁止と生成済み文書の閲覧条件は、このcompiler Workerから独立して維持する。
+GHC<ruby>診断<rt>しんだん</rt></ruby>・<ruby>型<rt>かた</rt></ruby>・<ruby>名前解決結果<rt>なまえかいけつけっか</rt></ruby>を<ruby>元<rt>もと</rt></ruby>NEPLソースへ<ruby>戻<rt>もど</rt></ruby>す。<ruby>位置不明<rt>いちふめい</rt></ruby>nodeへの<ruby>一括置換<rt>いっかつちかん</rt></ruby>を<ruby>避<rt>さ</rt></ruby>け、 UTF\-8 byte、tab、<ruby>行列<rt>ぎょうれつ</rt></ruby>、<ruby>日本語<rt>にほんご</rt></ruby>、<ruby>補助平面文字<rt>ほじょへいめんもじ</rt></ruby>、エディタ<ruby>位置<rt>いち</rt></ruby>を<ruby>区別<rt>くべつ</rt></ruby>して<ruby>検査<rt>けんさ</rt></ruby>する。 HLS\/formatter\/renameが<ruby>別表層<rt>べつひょうそう</rt></ruby>を<ruby>自動理解<rt>じどうりかい</rt></ruby>するとは<ruby>扱<rt>あつか</rt></ruby>わない。
 
-## ライセンスと配布方針
+cacheと<ruby>応答<rt>おうとう</rt></ruby>identityにはsource<ruby>集合<rt>しゅうごう</rt></ruby>\/revision、schema\/frontend、GHC build\/target\/flags、 Cabal<ruby>依存<rt>いぞん</rt></ruby>、adapter\/SDK、<ruby>参照資源<rt>さんしょうしげん</rt></ruby>、Profile\/options、<ruby>要求<rt>ようきゅう</rt></ruby>IDとWorker epochを<ruby>含<rt>ふく</rt></ruby>める。 GHC sessionを<ruby>同時変更<rt>どうじへんこう</rt></ruby>せず<ruby>直列化<rt>ちょくれつか</rt></ruby>し、<ruby>古<rt>ふる</rt></ruby>い<ruby>応答<rt>おうとう</rt></ruby>を<ruby>新<rt>あたら</rt></ruby>しい<ruby>文書<rt>ぶんしょ</rt></ruby>に<ruby>採用<rt>さいよう</rt></ruby>しない。 <ruby>純粋<rt>じゅんすい</rt></ruby>TEA updateはCmdを<ruby>返<rt>かえ</rt></ruby>し、hostがcompiler Workerを<ruby>実行<rt>じっこう</rt></ruby>し、<ruby>結果<rt>けっか</rt></ruby>をMsgで<ruby>返<rt>かえ</rt></ruby>す。 UI coreからGHC・Worker・I\/Oを<ruby>呼<rt>よ</rt></ruby>ばない。<ruby>応答採用<rt>おうとうさいよう</rt></ruby>は14<ruby>章<rt>しょう</rt></ruby>の<ruby>完全<rt>かんぜん</rt></ruby>な<ruby>要求<rt>ようきゅう</rt></ruby>identityに<ruby>従<rt>したが</rt></ruby>い、 sessionEpoch・operationIdentityも<ruby>照合<rt>しょうごう</rt></ruby>する。<ruby>上記<rt>じょうき</rt></ruby>の<ruby>列挙<rt>れっきょ</rt></ruby>を14<ruby>章<rt>しょう</rt></ruby>の<ruby>項目<rt>こうもく</rt></ruby>を<ruby>削<rt>けず</rt></ruby>る<ruby>定義<rt>ていぎ</rt></ruby>にしない。 <ruby>本体<rt>ほんたい</rt></ruby>だけの<ruby>変更<rt>へんこう</rt></ruby>、<ruby>依存<rt>いぞん</rt></ruby>マクロだけの<ruby>変更<rt>へんこう</rt></ruby>もcacheを<ruby>失効<rt>しっこう</rt></ruby>させる。
 
-自作NEPL3hはMITを予定し、NEPL3の現行MITを維持する。方式の参考とコードの流用を分け、
-Finkel/GHCの具体的コードを流用する場合はBSD条件・著作権・由来を保持する。
-自作部分のMITはcompiler/SDK全体をMITだけで再表示する許可ではない。
-これは配布設計案であり、未作成binaryや全推移依存の法的適合性を確定した監査ではない。
+pureな<ruby>型<rt>かた</rt></ruby>やSafe Haskellは<ruby>終了性<rt>しゅうりょうせい</rt></ruby>・OS<ruby>隔離<rt>かくり</rt></ruby>を<ruby>保証<rt>ほしょう</rt></ruby>しない。compiler<ruby>内<rt>ない</rt></ruby>のTH<ruby>等<rt>とう</rt></ruby>も<ruby>実行権限<rt>じっこうけんげん</rt></ruby>の<ruby>対象<rt>たいしょう</rt></ruby>。 compile、<ruby>評価<rt>ひょうか</rt></ruby>、<ruby>遅延結果<rt>ちえんけっか</rt></ruby>のserialization、<ruby>出力検査<rt>しゅつりょくけんさ</rt></ruby>の<ruby>全段階<rt>ぜんだんかい</rt></ruby>に<ruby>制限<rt>せいげん</rt></ruby>を<ruby>適用<rt>てきよう</rt></ruby>する。 GHC<ruby>内部<rt>ないぶ</rt></ruby>workをNEPL3 Budgetへ<ruby>自動換算<rt>じどうかんさん</rt></ruby>せず、host<ruby>期限<rt>きげん</rt></ruby>、<ruby>出力<rt>しゅつりょく</rt></ruby>\/ノード\/メモリ<ruby>上限<rt>じょうげん</rt></ruby>と <ruby>強制停止<rt>きょうせいていし</rt></ruby>を<ruby>別<rt>べつ</rt></ruby>に<ruby>設計<rt>せっけい</rt></ruby>する。<ruby>停止時<rt>ていしじ</rt></ruby>はepochを<ruby>更新<rt>こうしん</rt></ruby>し、<ruby>失敗<rt>しっぱい</rt></ruby>を<ruby>再予算化<rt>さいよさんか</rt></ruby>で<ruby>成功<rt>せいこう</rt></ruby>へ<ruby>変<rt>か</rt></ruby>えない。 Workerは<ruby>停止手段<rt>ていししゅだん</rt></ruby>であって<ruby>権限隔離<rt>けんげんかくり</rt></ruby>の<ruby>全<rt>すべ</rt></ruby>てではない。<ruby>純粋<rt>じゅんすい</rt></ruby>DSLマクロには<ruby>任意<rt>にんい</rt></ruby>JSFFI、network、 plugin、preprocessorを<ruby>既定<rt>きてい</rt></ruby>で<ruby>渡<rt>わた</rt></ruby>さず、<ruby>一般<rt>いっぱん</rt></ruby>アプリ<ruby>用<rt>よう</rt></ruby>capabilityと<ruby>分<rt>わ</rt></ruby>ける。 compiler<ruby>不在<rt>ふざい</rt></ruby>は<ruby>能力不足<rt>のうりょくぶそく</rt></ruby>とし、サーバーへ<ruby>原稿<rt>げんこう</rt></ruby>を<ruby>黙<rt>だま</rt></ruby>って<ruby>送信<rt>そうしん</rt></ruby>しない。 Doc previewのscript<ruby>禁止<rt>きんし</rt></ruby>と<ruby>生成済<rt>せいせいず</rt></ruby>み<ruby>文書<rt>ぶんしょ</rt></ruby>の<ruby>閲覧条件<rt>えつらんじょうけん</rt></ruby>は、このcompiler Workerから<ruby>独立<rt>どくりつ</rt></ruby>して<ruby>維持<rt>いじ</rt></ruby>する。
 
-標準Wasm配布ではGMPを使わないnative bignumを第一候補にする。
-ここでnativeは整数backend名であり、Wasm対応を外す意味ではない。
-ghc-wasm-metaのrelease flavourが使うGMPとnative flavourを区別し、対応GHC版も確認する。
-targetのGMPを外しただけでcompiler/SDK全体がGMPなしとは判定しない。
-GMP利用profileは排除せず、実際に選ぶLGPL等の配布条件を明示する。
+<a name="n-6c6963656e73696e67"></a>
 
-GMPの公式条件は本体をLGPLv3以降またはGPLv2以降とし、tests/demo等は別に扱う。
-LGPL経路の静的Wasm配布では通知・条文・対応ソース/patchに加え、改変libraryとの
-再結合に必要なアプリ側材料・toolchain・手順を揃える。repo URLやSBOMだけで履行としない。
-動的リンクやrepo/process分割だけで義務が消えるとも扱わない。
+<a name="ライセンスと配布方針"></a>
 
-release時はsource archive、native compiler、browser SDK/rootfs、macro.wasm、利用者向け
-出力ごとに、実際の同梱ファイル・リンク物を調べる。GHC/BSD、GMP、WASI shim、LLVM、
-Haskell/C/JS依存の条件を個別に保持し、容量削減で必要なNOTICE/LICENSEを除かない。
-build時だけのtoolと出力へ入るruntimeを区別する。
-自作LICENSE、第三者通知、条文、流用由来、配布物別component一覧はNEPL3h/製品側が所有する。
-release gateは版・由来の確定、必要表示の同梱、該当時のソース/再リンク材料の提供とする。
+## ライセンスと<ruby>配布方針<rt>はいふほうしん</rt></ruby>
 
-compiler利用だけでユーザーのプログラムや生成DocをMIT/BSDへ変更しない。
-出力にコピーしたruntime、template、文章・画像・コードには元の条件を適用する。
-Wasm exportには実際に組み込んだ依存に対応する通知を添える。
+<ruby>自作<rt>じさく</rt></ruby>NEPL3hはMITを<ruby>予定<rt>よてい</rt></ruby>し、NEPL3の<ruby>現行<rt>げんこう</rt></ruby>MITを<ruby>維持<rt>いじ</rt></ruby>する。<ruby>方式<rt>ほうしき</rt></ruby>の<ruby>参考<rt>さんこう</rt></ruby>とコードの<ruby>流用<rt>りゅうよう</rt></ruby>を<ruby>分<rt>わ</rt></ruby>け、 Finkel\/GHCの<ruby>具体的<rt>ぐたいてき</rt></ruby>コードを<ruby>流用<rt>りゅうよう</rt></ruby>する<ruby>場合<rt>ばあい</rt></ruby>はBSD<ruby>条件<rt>じょうけん</rt></ruby>・<ruby>著作権<rt>ちょさくけん</rt></ruby>・<ruby>由来<rt>ゆらい</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>する。 <ruby>自作部分<rt>じさくぶぶん</rt></ruby>のMITはcompiler\/SDK<ruby>全体<rt>ぜんたい</rt></ruby>をMITだけで<ruby>再表示<rt>さいひょうじ</rt></ruby>する<ruby>許可<rt>きょか</rt></ruby>ではない。 これは<ruby>配布設計案<rt>はいふせっけいあん</rt></ruby>であり、<ruby>未作成<rt>みさくせい</rt></ruby>binaryや<ruby>全推移依存<rt>ぜんすいいそん</rt></ruby>の<ruby>法的適合性<rt>ほうてきてきごうせい</rt></ruby>を<ruby>確定<rt>かくてい</rt></ruby>した<ruby>監査<rt>かんさ</rt></ruby>ではない。
 
-## 将来の実装段階と受入案
+<ruby>標準<rt>ひょうじゅん</rt></ruby>Wasm<ruby>配布<rt>はいふ</rt></ruby>ではGMPを<ruby>使<rt>つか</rt></ruby>わないnative bignumを<ruby>第一候補<rt>だいいちこうほ</rt></ruby>にする。 ここでnativeは<ruby>整数<rt>せいすう</rt></ruby>backend<ruby>名<rt>めい</rt></ruby>であり、Wasm<ruby>対応<rt>たいおう</rt></ruby>を<ruby>外<rt>はず</rt></ruby>す<ruby>意味<rt>いみ</rt></ruby>ではない。 ghc\-wasm\-metaのrelease flavourが<ruby>使<rt>つか</rt></ruby>うGMPとnative flavourを<ruby>区別<rt>くべつ</rt></ruby>し、<ruby>対応<rt>たいおう</rt></ruby>GHC<ruby>版<rt>ばん</rt></ruby>も<ruby>確認<rt>かくにん</rt></ruby>する。 targetのGMPを<ruby>外<rt>はず</rt></ruby>しただけでcompiler\/SDK<ruby>全体<rt>ぜんたい</rt></ruby>がGMPなしとは<ruby>判定<rt>はんてい</rt></ruby>しない。 GMP<ruby>利用<rt>りよう</rt></ruby>profileは<ruby>排除<rt>はいじょ</rt></ruby>せず、<ruby>実際<rt>じっさい</rt></ruby>に<ruby>選<rt>えら</rt></ruby>ぶLGPL<ruby>等<rt>とう</rt></ruby>の<ruby>配布条件<rt>はいふじょうけん</rt></ruby>を<ruby>明示<rt>めいじ</rt></ruby>する。
 
-以下は未実行の案であり、現在のtask/catalogへpassedを追加しない。
-診断・identity・停止・配布条件は各段階から維持し、最後まで先送りしない。
+GMPの<ruby>公式条件<rt>こうしきじょうけん</rt></ruby>は<ruby>本体<rt>ほんたい</rt></ruby>をLGPLv3<ruby>以降<rt>いこう</rt></ruby>またはGPLv2<ruby>以降<rt>いこう</rt></ruby>とし、tests\/demo<ruby>等<rt>とう</rt></ruby>は<ruby>別<rt>べつ</rt></ruby>に<ruby>扱<rt>あつか</rt></ruby>う。 LGPL<ruby>経路<rt>けいろ</rt></ruby>の<ruby>静的<rt>せいてき</rt></ruby>Wasm<ruby>配布<rt>はいふ</rt></ruby>では<ruby>通知<rt>つうち</rt></ruby>・<ruby>条文<rt>じょうぶん</rt></ruby>・<ruby>対応<rt>たいおう</rt></ruby>ソース\/patchに<ruby>加<rt>くわ</rt></ruby>え、<ruby>改変<rt>かいへん</rt></ruby>libraryとの <ruby>再結合<rt>さいけつごう</rt></ruby>に<ruby>必要<rt>ひつよう</rt></ruby>なアプリ<ruby>側材料<rt>がわざいりょう</rt></ruby>・toolchain・<ruby>手順<rt>てじゅん</rt></ruby>を<ruby>揃<rt>そろ</rt></ruby>える。repo URLやSBOMだけで<ruby>履行<rt>りこう</rt></ruby>としない。 <ruby>動的<rt>どうてき</rt></ruby>リンクやrepo\/process<ruby>分割<rt>ぶんかつ</rt></ruby>だけで<ruby>義務<rt>ぎむ</rt></ruby>が<ruby>消<rt>き</rt></ruby>えるとも<ruby>扱<rt>あつか</rt></ruby>わない。
 
-| 段階 | 必要な証拠 |
+release<ruby>時<rt>じ</rt></ruby>はsource archive、native compiler、browser SDK\/rootfs、macro\.wasm、<ruby>利用者向<rt>りようしゃむ</rt></ruby>け <ruby>出力<rt>しゅつりょく</rt></ruby>ごとに、<ruby>実際<rt>じっさい</rt></ruby>の<ruby>同梱<rt>どうこん</rt></ruby>ファイル・リンク<ruby>物<rt>もの</rt></ruby>を<ruby>調<rt>しら</rt></ruby>べる。GHC\/BSD、GMP、WASI shim、LLVM、 Haskell\/C\/JS<ruby>依存<rt>いぞん</rt></ruby>の<ruby>条件<rt>じょうけん</rt></ruby>を<ruby>個別<rt>こべつ</rt></ruby>に<ruby>保持<rt>ほじ</rt></ruby>し、<ruby>容量削減<rt>ようりょうさくげん</rt></ruby>で<ruby>必要<rt>ひつよう</rt></ruby>なNOTICE\/LICENSEを<ruby>除<rt>のぞ</rt></ruby>かない。 build<ruby>時<rt>じ</rt></ruby>だけのtoolと<ruby>出力<rt>しゅつりょく</rt></ruby>へ<ruby>入<rt>はい</rt></ruby>るruntimeを<ruby>区別<rt>くべつ</rt></ruby>する。 <ruby>自作<rt>じさく</rt></ruby>LICENSE、<ruby>第三者通知<rt>だいさんしゃつうち</rt></ruby>、<ruby>条文<rt>じょうぶん</rt></ruby>、<ruby>流用由来<rt>りゅうようゆらい</rt></ruby>、<ruby>配布物別<rt>はいふぶつべつ</rt></ruby>component<ruby>一覧<rt>いちらん</rt></ruby>はNEPL3h\/<ruby>製品側<rt>せいひんがわ</rt></ruby>が<ruby>所有<rt>しょゆう</rt></ruby>する。 release gateは<ruby>版<rt>ばん</rt></ruby>・<ruby>由来<rt>ゆらい</rt></ruby>の<ruby>確定<rt>かくてい</rt></ruby>、<ruby>必要表示<rt>ひつようひょうじ</rt></ruby>の<ruby>同梱<rt>どうこん</rt></ruby>、<ruby>該当時<rt>がいとうじ</rt></ruby>のソース\/<ruby>再<rt>さい</rt></ruby>リンク<ruby>材料<rt>ざいりょう</rt></ruby>の<ruby>提供<rt>ていきょう</rt></ruby>とする。
+
+compiler<ruby>利用<rt>りよう</rt></ruby>だけでユーザーのプログラムや<ruby>生成<rt>せいせい</rt></ruby>DocをMIT\/BSDへ<ruby>変更<rt>へんこう</rt></ruby>しない。 <ruby>出力<rt>しゅつりょく</rt></ruby>にコピーしたruntime、template、<ruby>文章<rt>ぶんしょう</rt></ruby>・<ruby>画像<rt>がぞう</rt></ruby>・コードには<ruby>元<rt>もと</rt></ruby>の<ruby>条件<rt>じょうけん</rt></ruby>を<ruby>適用<rt>てきよう</rt></ruby>する。 Wasm exportには<ruby>実際<rt>じっさい</rt></ruby>に<ruby>組<rt>く</rt></ruby>み<ruby>込<rt>こ</rt></ruby>んだ<ruby>依存<rt>いぞん</rt></ruby>に<ruby>対応<rt>たいおう</rt></ruby>する<ruby>通知<rt>つうち</rt></ruby>を<ruby>添<rt>そ</rt></ruby>える。
+
+<a name="n-737461676573"></a>
+
+<a name="将来の実装段階と受入案"></a>
+
+## <ruby>将来<rt>しょうらい</rt></ruby>の<ruby>実装段階<rt>じっそうだんかい</rt></ruby>と<ruby>受入案<rt>うけいれあん</rt></ruby>
+
+<ruby>以下<rt>いか</rt></ruby>は<ruby>未実行<rt>みじっこう</rt></ruby>の<ruby>案<rt>あん</rt></ruby>であり、<ruby>現在<rt>げんざい</rt></ruby>のtask\/catalogへpassedを<ruby>追加<rt>ついか</rt></ruby>しない。 <ruby>診断<rt>しんだん</rt></ruby>・identity・<ruby>停止<rt>ていし</rt></ruby>・<ruby>配布条件<rt>はいふじょうけん</rt></ruby>は<ruby>各段階<rt>かくだんかい</rt></ruby>から<ruby>維持<rt>いじ</rt></ruby>し、<ruby>最後<rt>さいご</rt></ruby>まで<ruby>先送<rt>さきおく</rt></ruby>りしない。
+
+| <ruby>段階<rt>だんかい</rt></ruby> | <ruby>必要<rt>ひつよう</rt></ruby>な<ruby>証拠<rt>しょうこ</rt></ruby> |
 | --- | --- |
-| reader/schema/AST | applyの入れ子、名前衝突、literal、通常GHC parser由来ASTとの比較。不正形を拒否 |
-| module/type/import | GHCによる型推論・型クラス・非正格性・再帰let、元位置への型エラー |
-| Cabalと双方向import | containers/text/aeson等、A→B→Cの通常package build、header/body snapshot一致 |
-| native DSL生成 | 集計→Doc表、NDF再検査、Origin/slot不適合・偽造結果の拒否 |
-| 固定browser基準 | upstream例を固定buildで再現後、同adapterからNEPL3hを型検査・bytecode実行 |
-| cross Wasm | command/reactorをWasmtimeとbrowserで実行、nativeとの有限値比較、32bit整数差の明示 |
-| macro利用/編集 | compiler不在で既製macro実行、編集macroの再compile、依存変更と循環の検出 |
-| 実行・配布境界 | stale応答、非停止、巨大出力、serialization中停止、権限不足、SDK/通知整合 |
-| 追加対応 | TH・構文マクロ・エディタ、browser内独立.wasm exportはそれぞれ別の受入 |
+| reader\/schema\/AST | applyの<ruby>入<rt>い</rt></ruby>れ<ruby>子<rt>こ</rt></ruby>、<ruby>名前衝突<rt>なまえしょうとつ</rt></ruby>、literal、<ruby>通常<rt>つうじょう</rt></ruby>GHC parser<ruby>由来<rt>ゆらい</rt></ruby>ASTとの<ruby>比較<rt>ひかく</rt></ruby>。<ruby>不正形<rt>ふせいけい</rt></ruby>を<ruby>拒否<rt>きょひ</rt></ruby> |
+| module\/type\/import | GHCによる<ruby>型推論<rt>かたすいろん</rt></ruby>・<ruby>型<rt>かた</rt></ruby>クラス・<ruby>非正格性<rt>ひせいかくせい</rt></ruby>・<ruby>再帰<rt>さいき</rt></ruby>let、<ruby>元位置<rt>もといち</rt></ruby>への<ruby>型<rt>かた</rt></ruby>エラー |
+| Cabalと<ruby>双方向<rt>そうほうこう</rt></ruby>import | containers\/text\/aeson<ruby>等<rt>とう</rt></ruby>、A→B→Cの<ruby>通常<rt>つうじょう</rt></ruby>package build、header\/body snapshot<ruby>一致<rt>いっち</rt></ruby> |
+| native DSL<ruby>生成<rt>せいせい</rt></ruby> | <ruby>集計<rt>しゅうけい</rt></ruby>→Doc<ruby>表<rt>ひょう</rt></ruby>、NDF<ruby>再検査<rt>さいけんさ</rt></ruby>、Origin\/slot<ruby>不適合<rt>ふてきごう</rt></ruby>・<ruby>偽造結果<rt>ぎぞうけっか</rt></ruby>の<ruby>拒否<rt>きょひ</rt></ruby> |
+| <ruby>固定<rt>こてい</rt></ruby>browser<ruby>基準<rt>きじゅん</rt></ruby> | upstream<ruby>例<rt>れい</rt></ruby>を<ruby>固定<rt>こてい</rt></ruby>buildで<ruby>再現後<rt>さいげんご</rt></ruby>、<ruby>同<rt>どう</rt></ruby>adapterからNEPL3hを<ruby>型検査<rt>かたけんさ</rt></ruby>・bytecode<ruby>実行<rt>じっこう</rt></ruby> |
+| cross Wasm | command\/reactorをWasmtimeとbrowserで<ruby>実行<rt>じっこう</rt></ruby>、nativeとの<ruby>有限値比較<rt>ゆうげんちひかく</rt></ruby>、32bit<ruby>整数差<rt>せいすうさ</rt></ruby>の<ruby>明示<rt>めいじ</rt></ruby> |
+| macro<ruby>利用<rt>りよう</rt></ruby>\/<ruby>編集<rt>へんしゅう</rt></ruby> | compiler<ruby>不在<rt>ふざい</rt></ruby>で<ruby>既製<rt>きせい</rt></ruby>macro<ruby>実行<rt>じっこう</rt></ruby>、<ruby>編集<rt>へんしゅう</rt></ruby>macroの<ruby>再<rt>さい</rt></ruby>compile、<ruby>依存変更<rt>いそんへんこう</rt></ruby>と<ruby>循環<rt>じゅんかん</rt></ruby>の<ruby>検出<rt>けんしゅつ</rt></ruby> |
+| <ruby>実行<rt>じっこう</rt></ruby>・<ruby>配布境界<rt>はいふきょうかい</rt></ruby> | stale<ruby>応答<rt>おうとう</rt></ruby>、<ruby>非停止<rt>ひていし</rt></ruby>、<ruby>巨大出力<rt>きょだいしゅつりょく</rt></ruby>、serialization<ruby>中停止<rt>ちゅうていし</rt></ruby>、<ruby>権限不足<rt>けんげんふそく</rt></ruby>、SDK\/<ruby>通知整合<rt>つうちせいごう</rt></ruby> |
+| <ruby>追加対応<rt>ついかたいおう</rt></ruby> | TH・<ruby>構文<rt>こうぶん</rt></ruby>マクロ・エディタ、browser<ruby>内独立<rt>ないどくりつ</rt></ruby>\.wasm exportはそれぞれ<ruby>別<rt>べつ</rt></ruby>の<ruby>受入<rt>うけいれ</rt></ruby> |
 
-最初の実用的な完成条件は、既存Haskell libraryを使うNEPL3h moduleを普通のHaskellから
-利用でき、その関数がDoc等の検査可能な構造を返すこと。全GHC拡張・任意FFIの互換性を推定しない。
-実装再開前にschema/operation、GHC build、Cabal方式、SDK集合と権限profileを具体化する。
+<ruby>最初<rt>さいしょ</rt></ruby>の<ruby>実用的<rt>じつようてき</rt></ruby>な<ruby>完成条件<rt>かんせいじょうけん</rt></ruby>は、<ruby>既存<rt>きそん</rt></ruby>Haskell libraryを<ruby>使<rt>つか</rt></ruby>うNEPL3h moduleを<ruby>普通<rt>ふつう</rt></ruby>のHaskellから <ruby>利用<rt>りよう</rt></ruby>でき、その<ruby>関数<rt>かんすう</rt></ruby>がDoc<ruby>等<rt>とう</rt></ruby>の<ruby>検査可能<rt>けんさかのう</rt></ruby>な<ruby>構造<rt>こうぞう</rt></ruby>を<ruby>返<rt>かえ</rt></ruby>すこと。<ruby>全<rt>ぜん</rt></ruby>GHC<ruby>拡張<rt>かくちょう</rt></ruby>・<ruby>任意<rt>にんい</rt></ruby>FFIの<ruby>互換性<rt>ごかんせい</rt></ruby>を<ruby>推定<rt>すいてい</rt></ruby>しない。 <ruby>実装再開前<rt>じっそうさいかいまえ</rt></ruby>にschema\/operation、GHC build、Cabal<ruby>方式<rt>ほうしき</rt></ruby>、SDK<ruby>集合<rt>しゅうごう</rt></ruby>と<ruby>権限<rt>けんげん</rt></ruby>profileを<ruby>具体化<rt>ぐたいか</rt></ruby>する。
 
-## 根拠と未検証範囲
+<a name="n-736f7572636573"></a>
 
-2026-09-13に公式資料と公開sourceを再確認した。以下のGit revisionは調査対象であり、
-採用toolchainやNEPL3hでのcompile成功を表さない。外部sourceやraw logをこのrepoへ複製しない。
+<a name="根拠と未検証範囲"></a>
 
-- [Finkel Builder](https://github.com/finkel-lang/finkel/blob/17f1cfc35a55d1977defdc96a4e422c91e5cdc80/finkel-kernel/src/Language/Finkel/Builder.hs) と [Hooks](https://github.com/finkel-lang/finkel/blob/17f1cfc35a55d1977defdc96a4e422c91e5cdc80/finkel-kernel/src/Language/Finkel/Hooks.hs): parsed ASTとdriver統合の参考。
-- [GHC browser試験](https://github.com/ghc/ghc/tree/82c73b223a985bc0bcc00cb6252b2b535082d831/testsuite/tests/ghc-api-browser): README、playground001.hsのbytecode/session、SDK構成。
-- [GHC 9.14.1 Wasm](https://downloads.haskell.org/ghc/9.14.1/docs/users_guide/wasm.html)、[GHC API/plugins](https://downloads.haskell.org/ghc/9.14.1/docs/users_guide/extending_ghc.html): target専用build、browser mode、API境界。
-- [ghc-wasm-meta](https://github.com/haskell-wasm/ghc-wasm-meta/blob/358ea50b8496a69da6ce375c0c58bc049dbcb92d/README.md): flavour、WASI、配布構成。追跡branchを固定releaseと混同しない。
-- [Haskell 2010 Expressions](https://www.haskell.org/onlinereport/haskell2010/haskellch3.html)、[Declarations](https://www.haskell.org/onlinereport/haskell2010/haskellch4.html)、[Cabal](https://cabal.readthedocs.io/en/stable/cabal-package-description-file.html): 意味保存・build設計の参照。
-- [Finkel LICENSE](https://github.com/finkel-lang/finkel/blob/17f1cfc35a55d1977defdc96a4e422c91e5cdc80/LICENSE)、[GHC LICENSE](https://github.com/ghc/ghc/blob/82c73b223a985bc0bcc00cb6252b2b535082d831/LICENSE)、[GMP](https://gmplib.org/manual/Copying)、[LGPLv3](https://spdx.org/licenses/LGPL-3.0-or-later.html)、[LLVM](https://llvm.org/docs/DeveloperPolicy.html): 配布物ごとに確認する原文。
+## <ruby>根拠<rt>こんきょ</rt></ruby>と<ruby>未検証範囲<rt>みけんしょうはんい</rt></ruby>
 
-ユーザー提供の研究内容をNEPL3契約へ対応付けた草案であり、Finkel/GHCの試作、Cabal build、
-browser実行、ライセンス全件監査は今回実施していない。NEPL3h実装は明示的な再開指示まで行わない。
+2026\-09\-13に<ruby>公式資料<rt>こうしきしりょう</rt></ruby>と<ruby>公開<rt>こうかい</rt></ruby>sourceを<ruby>再確認<rt>さいかくにん</rt></ruby>した。<ruby>以下<rt>いか</rt></ruby>のGit revisionは<ruby>調査対象<rt>ちょうさたいしょう</rt></ruby>であり、 <ruby>採用<rt>さいよう</rt></ruby>toolchainやNEPL3hでのcompile<ruby>成功<rt>せいこう</rt></ruby>を<ruby>表<rt>あらわ</rt></ruby>さない。<ruby>外部<rt>がいぶ</rt></ruby>sourceやraw logをこのrepoへ<ruby>複製<rt>ふくせい</rt></ruby>しない。
+
+- [Finkel Builder](<https\:\/\/github\.com\/finkel\-lang\/finkel\/blob\/17f1cfc35a55d1977defdc96a4e422c91e5cdc80\/finkel\-kernel\/src\/Language\/Finkel\/Builder\.hs>) と [Hooks](<https\:\/\/github\.com\/finkel\-lang\/finkel\/blob\/17f1cfc35a55d1977defdc96a4e422c91e5cdc80\/finkel\-kernel\/src\/Language\/Finkel\/Hooks\.hs>)\: parsed ASTとdriver<ruby>統合<rt>とうごう</rt></ruby>の<ruby>参考<rt>さんこう</rt></ruby>。
+- [GHC browser<ruby>試験<rt>しけん</rt></ruby>](<https\:\/\/github\.com\/ghc\/ghc\/tree\/82c73b223a985bc0bcc00cb6252b2b535082d831\/testsuite\/tests\/ghc\-api\-browser>)\: README、playground001\.hsのbytecode\/session、SDK<ruby>構成<rt>こうせい</rt></ruby>。
+- [GHC 9\.14\.1 Wasm](<https\:\/\/downloads\.haskell\.org\/ghc\/9\.14\.1\/docs\/users\_guide\/wasm\.html>)、[GHC API\/plugins](<https\:\/\/downloads\.haskell\.org\/ghc\/9\.14\.1\/docs\/users\_guide\/extending\_ghc\.html>)\: target<ruby>専用<rt>せんよう</rt></ruby>build、browser mode、API<ruby>境界<rt>きょうかい</rt></ruby>。
+- [ghc\-wasm\-meta](<https\:\/\/github\.com\/haskell\-wasm\/ghc\-wasm\-meta\/blob\/358ea50b8496a69da6ce375c0c58bc049dbcb92d\/README\.md>)\: flavour、WASI、<ruby>配布構成<rt>はいふこうせい</rt></ruby>。<ruby>追跡<rt>ついせき</rt></ruby>branchを<ruby>固定<rt>こてい</rt></ruby>releaseと<ruby>混同<rt>こんどう</rt></ruby>しない。
+- [Haskell 2010 Expressions](<https\:\/\/www\.haskell\.org\/onlinereport\/haskell2010\/haskellch3\.html>)、[Declarations](<https\:\/\/www\.haskell\.org\/onlinereport\/haskell2010\/haskellch4\.html>)、[Cabal](<https\:\/\/cabal\.readthedocs\.io\/en\/stable\/cabal\-package\-description\-file\.html>)\: <ruby>意味保存<rt>いみほぞん</rt></ruby>・build<ruby>設計<rt>せっけい</rt></ruby>の<ruby>参照<rt>さんしょう</rt></ruby>。
+- [Finkel LICENSE](<https\:\/\/github\.com\/finkel\-lang\/finkel\/blob\/17f1cfc35a55d1977defdc96a4e422c91e5cdc80\/LICENSE>)、[GHC LICENSE](<https\:\/\/github\.com\/ghc\/ghc\/blob\/82c73b223a985bc0bcc00cb6252b2b535082d831\/LICENSE>)、[GMP](<https\:\/\/gmplib\.org\/manual\/Copying>)、[LGPLv3](<https\:\/\/spdx\.org\/licenses\/LGPL\-3\.0\-or\-later\.html>)、[LLVM](<https\:\/\/llvm\.org\/docs\/DeveloperPolicy\.html>)\: <ruby>配布物<rt>はいふぶつ</rt></ruby>ごとに<ruby>確認<rt>かくにん</rt></ruby>する<ruby>原文<rt>げんぶん</rt></ruby>。
+
+ユーザー<ruby>提供<rt>ていきょう</rt></ruby>の<ruby>研究内容<rt>けんきゅうないよう</rt></ruby>をNEPL3<ruby>契約<rt>けいやく</rt></ruby>へ<ruby>対応付<rt>たいおうづ</rt></ruby>けた<ruby>草案<rt>そうあん</rt></ruby>であり、Finkel\/GHCの<ruby>試作<rt>しさく</rt></ruby>、Cabal build、 browser<ruby>実行<rt>じっこう</rt></ruby>、ライセンス<ruby>全件監査<rt>ぜんけんかんさ</rt></ruby>は<ruby>今回実施<rt>こんかいじっし</rt></ruby>していない。NEPL3h<ruby>実装<rt>じっそう</rt></ruby>は<ruby>明示的<rt>めいじてき</rt></ruby>な<ruby>再開指示<rt>さいかいしじ</rt></ruby>まで<ruby>行<rt>おこな</rt></ruby>わない。
