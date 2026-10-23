@@ -1,0 +1,23 @@
+article en "Standalone Sentence preparation and HTML"
+body
+  cons paragraph
+    cons "Math annotations need Doc phrasing output without fabricating an Article or discarding Ruby/Anno through plain-text projection. "
+    cons "The existing Article renderer already owns these inline transformations, so standalone Sentence rendering uses the same builder and stylesheet."
+    nil
+  cons paragraph
+    cons sentence cons code "CheckedSentenceLabels" cons text " and " cons code "PreparedLocalSentence" cons text " are separate borrowed proofs; they cannot authorize an Article operation. " nil
+    cons "Standalone labels are local to that Sentence, including forward references and duplicate occurrence checks. "
+    cons "Article rendering retains its existing whole-Article namespace. "
+    cons "No surrounding labels or foreign meanings are implicitly imported."
+    nil
+  cons paragraph
+    cons "The existing neutral DocumentSyntax and DocPreparationPlan representations already carry the root, full input identity and requirements. "
+    cons "Their field layout does not change. "
+    cons "Plan codecs rederive the plan according to the supplied document root; decoding a plan is never authority to render. "
+    cons "Links, assets and foreign closures still require explicit resolution, and local preparation returns that requirement list instead of emitting placeholders."
+    nil
+  cons paragraph
+    cons "This establishes the Doc-side phrasing path. "
+    cons "Host selection of a Doc annotation, Math label composition and final resource delivery remain separate work; this change does not declare the full Math display or Doc preparation acceptance done."
+    nil
+  nil

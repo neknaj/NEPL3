@@ -376,6 +376,14 @@
       "aliases": "doc/migration/aliases/history.json",
       "route": "docs/history/index.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "standalone-sentence-html",
+      "source": "doc/decisions/standalone-sentence-html.nepld",
+      "projection": "doc/decisions/standalone-sentence-html.md",
+      "aliases": "doc/migration/aliases/standalone-sentence-html.json",
+      "route": "docs/decisions/standalone-sentence-html.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
