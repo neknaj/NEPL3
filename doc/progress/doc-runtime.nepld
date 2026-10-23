@@ -1,0 +1,565 @@
+article ja "Doc runtime の[段階実装/だんかいじっそう]"
+body
+  cons paragraph
+    cons "T07 は[進行中/しんこうちゅう]。"
+    cons sentence cons code "doc/spec/05-document.md" cons text " と " cons code "design/forms.json" cons text " を" cons ruby text "最終契約" text "さいしゅうけいやく" cons text "とし、" cons ruby text "以下" text "いか" cons text "の native API ができたことを T07 " cons ruby text "全体" text "ぜんたい" cons text "の" cons ruby text "完了" text "かんりょう" cons text "へ" cons ruby text "読" text "よ" cons text "み" cons ruby text "替" text "か" cons text "えない。" nil
+    nil
+  cons section status "[現在状態/げんざいじょうたい]を[確認/かくにん]する[入口/いりぐち]"
+  body
+      cons paragraph
+        cons sentence cons ruby text "正本" text "せいほん" cons text "の" cons ruby text "一覧" text "いちらん" cons text "は " cons code "doc/canonical.json" cons text "、" cons ruby text "実装" text "じっそう" cons text "・" cons ruby text "受入" text "うけいれ" cons text "の" cons ruby text "状態" text "じょうたい" cons text "は " cons code "implementation-status.json" cons text "、 " cons ruby text "到達条件" text "とうたつじょうけん" cons text "は " cons code "design/tasks.json" cons text " を" cons ruby text "参照" text "さんしょう" cons text "する。" nil
+        cons "[以下/いか]の[履歴/りれき]にある「[未完了/みかんりょう]」「[停止/ていし]」は、 その[段階/だんかい]の[結果/けっか]であり、[現在/げんざい]の[残件/ざんけん]を[列挙/れっきょ]したものではない。"
+        nil
+      cons paragraph
+        cons "[第/だい]05[章/しょう]は[通常/つうじょう]のpage[予算/よさん]でparse/lowerと[文書集合/ぶんしょしゅうごう]のHTML[生成/せいせい]が[成立/せいりつ]し、[正本登録済/せいほんとうろくず]みである。"
+        cons " [内容比較/ないようひかく]、[旧見出/きゅうみだ]しalias、17[章/しょう]・23[章/しょう]へのリンクを[検査/けんさ]した[移行結果/いこうけっか]はregistryから[辿/たど]る。"
+        cons " Markdown[集合/しゅうごう]のWork[上限/じょうげん]はページ[追加/ついか]に[対応/たいおう]する[別/べつ]の[実行設定/じっこうせってい]であり、[単体/たんたい]の[性能保証/せいのうほしょう]ではない。"
+        cons " source[集合/しゅうごう]の[増大/ぞうだい]については、readerの[競合検査/きょうごうけんさ]とadmissionだけを[実行/じっこう]する[限定測定/げんていそくてい]を[追加/ついか]した。"
+        cons " parser[全体/ぜんたい]の[実時間/じつじかん]・[実/じつ]メモリは[未測定/みそくてい]であり、[単体文書/たんたいぶんしょ]の[予算適合/よさんてきごう]やこの[限定測定/げんていそくてい]から[推定/すいてい]しない。"
+        cons " [次/つぎ]の[性能改善/せいのうかいぜん]では、[以下/いか]の[測定/そくてい]を[基/もと]に[既存集合/きそんしゅうごう]の[再走査/さいそうさ]と[検証/けんしょう]scopeの[寿命/じゅみょう]を[調/しら]べる。"
+        cons " [受入済/うけいれず]みcollectorの[再/さい]admissionは、[台帳/だいちょう]の[一致/いっち]を[確認/かくにん]できる[同期/どうき]readで[再利用/さいりよう]する。"
+        cons " [同期/どうき]hostもcallback[境界/きょうかい]ごとの[交換検出/こうかんけんしゅつ]を[通/とお]す。"
+        cons "SourceStoreを[明示準備/めいじじゅんび]した[経路/けいろ]では、 [環境集合/かんきょうしゅうごう]の[所有付/しょゆうつ]きscopeも[再利用/さいりよう]する。"
+        cons "[正常/せいじょう]な[同期/どうき]readでは、collectorが[保持/ほじ]する [環境検査済/かんきょうけんさず]みprefixを[引/ひ]き[継/つ]ぎ、[追加/ついか]sourceだけを[検査/けんさ]する。"
+        cons "resume[経路/けいろ]は[残件/ざんけん]である。"
+        nil
+      cons paragraph
+        cons "Doc coreの[重複/じゅうふく]Sentence parserと[公開/こうかい]parsing APIは[撤去/てっきょ]した。"
+        cons "literalの[意味/いみ]・[診断位置/しんだんいち]は [独立/どくりつ]Sentenceで、Doc normalizationとの[一致/いっち]はhost bridgeで[検査/けんさ]する。"
+        cons "Doc portable[試験/しけん]は source・Origin・Viewを[持/も]つ[型付/かたつ]きfixtureを[使/つか]う。"
+        cons "Doc[専用/せんよう]SentencePayload/readerは[撤去/てっきょ]し、 [独立/どくりつ]SentenceLiteralPayload/SentenceSyntaxをsuiteの[型付/かたつ]きadapterで[受信/じゅしん]する。"
+        cons " Doc lowerはcallbackの[停止/ていし]と[局所構造/きょくしょこうぞう]を[再配置前/さいはいちまえ]に[検査/けんさ]し、[元/もと]tokenとの[所属/しょぞく]を[保持/ほじ]する。"
+        cons " [生成/せいせい]rootのcoverと[原/げん]Viewは、[異/こと]なるsnapshot[間/かん]の[明示/めいじ]SourceMapによる[全経路対応/ぜんけいろたいおう]で[保存/ほぞん]する。"
+        cons " Doc[消費用/しょうひよう]arenaのSentence/Inline[表現/ひょうげん]は[残/のこ]っており、[意味所有全体/いみしょゆうぜんたい]の[移行完了/いこうかんりょう]ではない。"
+        cons " Sentence consumerの[所有移行/しょゆういこう]、NEPL3a、[旧/きゅう]lexical commentの[全面撤去/ぜんめんてっきょ]、T07/T21[全体/ぜんたい]は [未完了/みかんりょう]のままである。"
+        cons "HTML/rustdocの[高度化/こうどか]をこれらの[本体開発/ほんたいかいはつ]の[前提/ぜんてい]にしない。"
+        nil
+    nil
+  cons section history "[段階別/だんかいべつ]の[履歴/りれき]"
+  body
+      cons section code_pages "2026-10-05: HTMLページ[集合/しゅうごう]のCode[合成/ごうせい]"
+      body
+          cons paragraph
+            cons sentence cons text "native " cons code "render_pages_with_code" cons text "は、" cons ruby text "参照解決後" text "さんしょうかいけつご" cons text "に" cons ruby text "正確" text "せいかく" cons text "なページとembedをadapterへ" cons ruby text "渡" text "わた" cons text "す。" nil
+            cons sentence cons text " " cons ruby text "旧" text "きゅう" cons code "render_pages" cons text "とportable codecのCode" cons ruby text "拒否" text "きょひ" cons text "は" cons ruby text "維持" text "いじ" cons text "する。" nil
+            cons "[新/しん]profileはCode[装飾/そうしょく]のDOM Idを [拒否/きょひ]し、[言語選択/げんごせんたく]で[隠/かく]れたDoc anchorをCode[内/ない]のIdで[代用/だいよう]させない。"
+            cons "DataIdは[保持/ほじ]する。"
+            nil
+          cons paragraph
+            cons "[開発/かいはつ]hostは[元/もと]のvalidated ParseTree/profileのscope[内/ない]で[共有/きょうゆう]highlightを[準備/じゅんび]し、 canonical guest digestで[消費入力/しょうひにゅうりょく]を[照合/しょうごう]する。"
+            cons "[繰/く]り[返/かえ]し[出現/しゅつげん]のSpan/Text[複製/ふくせい]は[予算計上/よさんけいじょう]する。"
+            cons " Codeの[意味/いみ]lower・[評価/ひょうか]・[再/さい]parseは[行/おこな]わない。"
+            cons "[全体/ぜんたい]のリンク・markup[検査後/けんさご]に[出力/しゅつりょく]する。"
+            cons " reader facts、Pagesの[画像/がぞう]・[他/た]guest、portable Code[操作/そうさ]と[全体受入/ぜんたいうけいれ]は[未完了/みかんりょう]である。"
+            nil
+        nil
+      cons section math_footnotes "2026-10-05: [明示/めいじ]Math surfaceをfootnotes[集合/しゅうごう]へ[接続/せつぞく]"
+      body
+          cons paragraph
+            cons sentence cons code "render_footnotes_svg_math" cons text "はsurface identityを" cons ruby text "受" text "う" cons text "け" cons ruby text "取" text "と" cons text "り、" cons ruby text "全" text "ぜん" cons text "Math occurrenceを" cons ruby text "準備" text "じゅんび" cons text "してから checked PageSetのforeign" cons ruby text "要求" text "ようきゅう" cons text "を" cons ruby text "解決" text "かいけつ" cons text "する。" nil
+            cons "[未対応/みたいおう]guest・[未使用/みしよう]embed・[到達不能/とうたつふのう]Mathを[拒否/きょひ]する。"
+            cons " [見出/みだ]し・[本文/ほんぶん]・[脚注/きゃくちゅう]・[対応済/たいおうず]みtable cellのInlineMathと、[本文/ほんぶん]のDisplayMathを[構造/こうぞう]から[出力/しゅつりょく]する。"
+            cons " RubyのHTML[内/ない]・link label[内/ない]のMath、およびtableのpipeを[含/ふく]むTeXは[拒否/きょひ]する。"
+            nil
+          cons paragraph
+            cons "footnotes[集合/しゅうごう]CLIはcompile[済/ず]みの[標準/ひょうじゅん]surfaceを[明示選択/めいじせんたく]する。"
+            cons "[使用/しよう]pageのcontextとreceiptに Math embedの[検査済/けんさず]みguest digestを[加/くわ]え、Mathを[含/ふく]まないpageのMarkdownは[維持/いじ]する。"
+            cons " [旧/きゅう]APIのNeedsResolutionは[変更/へんこう]しない。"
+            cons "[実/じつ]GitHub[描画/びょうが]・MathJax[比較/ひかく]・T07/T21[受入/うけいれ]は[未検証/みけんしょう]である。"
+            nil
+        nil
+      cons section markdown_math "2026-10-05: Markdown Math fragmentのnative[準備/じゅんび]"
+      body
+          cons paragraph
+            cons sentence cons code "MathDisplayHost::prepare_markdown_node" cons text "は" cons ruby text "実" text "じつ" cons text "DocのInlineMath/DisplayMathを、 " cons ruby text "既存" text "きそん" cons text "の" cons ruby text "独立" text "どくりつ" cons text "MathML" cons ruby text "検査" text "けんさ" cons text "と" cons ruby text "構造" text "こうぞう" cons text "TeX" cons ruby text "生成" text "せいせい" cons text "へ" cons ruby text "渡" text "わた" cons text "す。" nil
+            cons "[評価/ひょうか]は[行/おこな]わず、Codeは[受理/じゅり]しない。"
+            cons " TeXで[保持/ほじ]できないForeignAnnotation[等/とう]は[型付/かたつ]きUnsupportedとして[返/かえ]し、 [注釈/ちゅうしゃく]を[省/はぶ]いた[式/しき]やMathMLの[文字列化/もじれつか]で[代用/だいよう]しない。"
+            nil
+          cons paragraph
+            cons sentence cons code "PreparedMarkdown" cons text "は" cons ruby text "同" text "おな" cons text "じ" cons ruby text "不変" text "ふへん" cons text "Docへのborrowとnode" cons ruby text "番号" text "ばんごう" cons text "を" cons ruby text "保持" text "ほじ" cons text "するnative handleである。" nil
+            cons " portable[受渡/うけわた]し・[遠隔/えんかく]providerの[証明/しょうめい]には[使用/しよう]しない。"
+            cons "[生成時/せいせいじ]と[同/おな]じLimitsを[要求/ようきゅう]し、 [呼出側/よびだしがわ]は[準備/じゅんび]から[出力/しゅつりょく]まで[同/おな]じ[累積/るいせき]Budgetを[使/つか]う。"
+            cons "Limits[一致/いっち]だけでは[使用量/しようりょう]の[継続/けいぞく]を[証明/しょうめい]しない。"
+            cons " InlineはGitHubのドル・backtick[区切/くぎ]り、DisplayBlockはmath fenced code blockを[生成/せいせい]する。"
+            cons " [空/から]のTeX、[改行/かいぎょう]・backtickを[含/ふく]むTeX、TableCell[内/ない]のpipeは[明示的/めいじてき]に[拒否/きょひ]し、[別/べつ]の[式/しき]へ[書/か]き[換/か]えない。"
+            cons " [文書/ぶんしょ]の[隣接文字/りんせつもじ]・list/table[構造/こうぞう]に[合/あ]わせた[配置/はいち]は[呼出側/よびだしがわ]の[責務/せきむ]として[残/のこ]る。"
+            nil
+          cons paragraph
+            cons "これはfragment[準備/じゅんび]の[段階/だんかい]であり、footnotes page-set・CLI・canonical context identityへは [未接続/みせつぞく]である。"
+            cons "[既存/きそん]footnotes APIはMathをNeedsResolutionとして[拒否/きょひ]する。"
+            cons " GitHubの[実描画/じつびょうが]、MathJaxとの[差分/さぶん]、[全数式/ぜんすうしき]の[意味同等性/いみどうとうせい]、T07/T21[受入/うけいれ]は[未検証/みけんしょう]である。"
+            cons sentence cons text " " cons ruby text "出力記法" text "しゅつりょくきほう" cons text "の" cons ruby text "参照" text "さんしょう" cons text "は" cons link external "https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/writing-mathematical-expressions" concat cons text "GitHub" cons ruby text "公式" text "こうしき" cons text "の" cons ruby text "数式記法" text "すうしききほう" nil cons text "。" nil
+            nil
+        nil
+      cons section accepted_prefix "2026-09-21: collectorの[環境検査済/かんきょうけんさず]みprefixを[保持/ほじ]"
+      body
+          cons paragraph
+            cons "[正常/せいじょう]な[同期/どうき]readが[返/かえ]すcollectorに、[開始時/かいしじ]のsource[長/ちょう]までの[競合検査/きょうごうけんさ]scopeを[保存/ほぞん]する。"
+            cons " [新規生成/しんきせいせい]sourceは[次/つぎ]のreadで[検査/けんさ]する。"
+            cons "[公開/こうかい]appendは[追加分/ついかぶん]をこの[証明/しょうめい]へ[含/ふく]めず、 checkpointとrollbackは[元/もと]の[検査範囲/けんさはんい]を[実/じつ]source[列/れつ]と[一緒/いっしょ]に[保持/ほじ]する。"
+            cons " [別/べつ]store・[未準備/みじゅんび]store・raw[復元/ふくげん]・resume・[停止/ていし]ではこの[省略/しょうりゃく]を[推定/すいてい]しない。"
+            cons " SourceChecksの[補助/ほじょ]cacheは[検査済/けんさず]みの[値列/あたいれつ]であり、collector[内/ない]のindexではない。"
+            nil
+          cons paragraph
+            cons sentence cons ruby text "限定測定" text "げんていそくてい" cons code "accepted_prefix_growth_measurement" cons text "はsourceを1" cons ruby text "件" text "けん" cons text "ずつ" cons ruby text "増" text "ふ" cons text "やして" cons ruby text "競合検査" text "きょうごうけんさ" cons text "だけを 128/256/512" cons ruby text "回行" text "かいおこな" cons text "う。" nil
+            cons "source[構築/こうちく]・parser・admissionは[含/ふく]めない。"
+            cons " [従来/じゅうらい]のWorkは8,384/33,152/131,840、prefix[保持時/ほじじ]は10,797/21,677/43,437だった。"
+            cons " 128[件/けん]では[定数費用/ていすうひよう]によりWorkが[増/ふ]えるが、[増大入力/ぞうだいにゅうりょく]の[反復比較/はんぷくひかく]は[線形/せんけい]に[変/か]わる。"
+            cons " Windows debugの[参考時間/さんこうじかん]は[従来/じゅうらい]0.26/0.78/3.02 ms、prefix[保持時/ほじじ]0.046/0.073/0.147 ms。"
+            cons " これは[全/ぜん]parserの[実時間/じつじかん]や[実/じつ]heapの[改善率/かいぜんりつ]ではない。"
+            cons "[別分岐/べつぶんき]が[同/おな]じ[長/なが]さの[場合/ばあい]、rollback[後/ご]の [別/べつ]suffix、[環境競合/かんきょうきょうごう]、[検査停止/けんさていし]、[実/じつ]host[生成直後/せいせいちょくご]の[未検査/みけんさ]suffixを[回帰試験/かいきしけん]で[確認/かくにん]した。"
+            nil
+        nil
+      cons section source_environment "2026-09-21: [変更/へんこう]されていないSourceStoreの[環境比較/かんきょうひかく]を[再利用/さいりよう]"
+      body
+          cons paragraph
+            cons "SourceStoreのscopeは[集合/しゅうごう]を[構築/こうちく]した[後/あと]に[明示準備/めいじじゅんび]する。"
+            cons "[新規挿入/しんきそうにゅう]と[非空編集/ひくうへんしゅう]のcommitで [失効/しっこう]し、[同値/どうち]の[重複挿入/じゅうふくそうにゅう]・[空編集/くうへんしゅう]・[途中停止/とちゅうていし]では[維持/いじ]する。"
+            cons "[再準備/さいじゅんび]しない[場合/ばあい]と[非/ひ]atomic targetは[従来/じゅうらい]の[内容比較/ないようひかく]を[使/つか]う。"
+            cons "[台帳/だいちょう]のscopeとは[別/べつ]であり、schemaや[資源入場/しげんにゅうじょう]を[証明/しょうめい]しない。"
+            cons " [共通開発/きょうつうかいはつ]hostのparse[入口/いりぐち]で[準備/じゅんび]し、tokenizerは[同/おな]じ[集合/しゅうごう]の[反復比較/はんぷくひかく]だけを[省/はぶ]く。"
+            nil
+          cons paragraph
+            cons sentence cons ruby text "限定測定" text "げんていそくてい" cons code "environment_scope_growth_measurement" cons text "は128/256/512" cons ruby text "件" text "けん" cons text "の" cons ruby text "環境" text "かんきょう" cons text "をそれぞれ 127/255/511" cons ruby text "回再比較" text "かいさいひかく" cons text "する。" nil
+            cons "[初回/しょかい]の[保存/ほぞん]とfixture[構築/こうちく]、parser、accepted sourceは[含/ふく]めない。"
+            cons " [未準備時/みじゅんびじ]のWorkは16,256/65,280/261,632、[準備時/じゅんびじ]は0であり、[各回/かくかい]のBudget pollは[維持/いじ]する。"
+            cons " Windows debugの[参考実時間/さんこうじつじかん]は[未準備/みじゅんび]0.38/1.42/5.85 ms、[準備/じゅんび]0.011/0.016/0.033 msだった。"
+            cons " この[測定/そくてい]は[環境比較/かんきょうひかく]だけのもので、parser[全体/ぜんたい]の[性能/せいのう]・[実/じつ]heap[削減/さくげん]・[全/ぜん]source[経路/けいろ]の[線形化/せんけいか]を [示/しめ]さない。"
+            cons "AllocationUnitsは[実/じつ]heap[計測/けいそく]ではない。"
+            cons "[独立/どくりつ]レビューで[求/もと]められた[編集/へんしゅう]commit [直前/ちょくぜん]のAllocation[停止/ていし]も、[集合/しゅうごう]とscopeの[不変性/ふへんせい]を[回帰試験/かいきしけん]で[確認/かくにん]した。"
+            nil
+        nil
+      cons section source_measurement "2026-09-21: source[集合/しゅうごう]の[反復走査/はんぷくそうさ]の[基準測定/きじゅんそくてい]"
+      body
+          cons paragraph
+            cons sentence cons code "tokenizer::source_checks::tests::source_scope_growth_measurement" cons text " は" cons ruby text "明示実行" text "めいじじっこう" cons text "するignored testである。" nil
+            cons " [固定/こてい]32 sourceと、[読取/よみと]りごとに1 source[増/ふ]える[入力/にゅうりょく]を128/256/512[回処理/かいしょり]する。"
+            cons " [測定対象/そくていたいしょう]のaccepted sourceは[各/かく]1 KiB、[固定/こてい]environmentの32 sourceは[各/かく]4 bytesである。"
+            cons " fixture[構築/こうちく]・parser・I/Oを[測定/そくてい]に[含/ふく]めない。"
+            cons " [同/おな]じscope[内/ない]で[実際/じっさい]のSourceChecksとSourceAdmissionを[再利用/さいりよう]する。"
+            nil
+          cons table cons right cons right cons right cons right nil
+            some row cons "[増大入力/ぞうだいにゅうりょく]の[読取/よみと]り[回数/かいすう]" cons "admission[走査回数/そうさかいすう]" cons "[競合検査/きょうごうけんさ]Work" cons "admission Work" nil
+            cons row cons "128" cons "8,256" cons "32,960" cons "144,462" nil
+            cons row cons "256" cons "32,896" cons "82,304" cons "477,190" nil
+            cons row cons "512" cons "131,328" cons "230,144" cons "1,714,046" nil
+            nil
+          cons paragraph
+            cons "Windows native releaseの[一回/いっかい]の[実測/じっそく]では、この[二段階/にだんかい]の[合計時間/ごうけいじかん]は[約/やく]0.17/0.57/2.25 msだった。"
+            cons " [細粒度/さいりゅうど]timerの[費用/ひよう]を[含/ふく]む[参考値/さんこうち]であり、[安定/あんてい]した[性能閾値/せいのうしきいち]や[処理系全体/しょりけいぜんたい]の[二次時間/にじじかん]を[主張/しゅちょう]しない。"
+            cons " [固定入力/こていにゅうりょく]のadmission[走査/そうさ]は4,096/8,192/16,384[回/かい]である。"
+            cons " AllocationUnitsも[出力/しゅつりょく]するが[契約上/けいやくじょう]の[課金値/かきんち]であり、[実/じつ]heap[使用量/しようりょう]ではない。"
+            cons " [測定/そくてい]testはsource bytesの[二重課金/にじゅうかきん]がないことも[検査/けんさ]する。"
+            nil
+          cons paragraph
+            cons "この[経路/けいろ]には[増大/ぞうだい]する[既存集合/きそんしゅうごう]の[二次的/にじてき]な[走査/そうさ]が[残/のこ]る。"
+            cons "[検証省略/けんしょうしょうりゃく]の[実装/じっそう]はまだ[行/おこな]っていない。"
+            cons " AcceptedTokenizationReportのscopeと[長/なが]さだけでは、[現在/げんざい]のSourceAdmissionでの[受入済/うけいれず]みを[証明/しょうめい]できない。"
+            cons " [集合/しゅうごう]の[分岐/ぶんき]・rollback・[別/べつ]admission・[環境変更/かんきょうへんこう]を[扱/あつか]う[失効条件/しっこうじょうけん]を[保/たも]った[上/うえ]で[改善/かいぜん]する。"
+            nil
+        nil
+      cons section collector_admission "2026-09-21: [同期/どうき]collectorのadmission[再利用/さいりよう]"
+      body
+          cons paragraph
+            cons "[上記測定後/じょうきそくていご]、atomic pointerを[持/も]つtargetで、hostなし[同期/どうき]readが[返/かえ]す[所有/しょゆう]されたcollectorに SourceAdmissionのopaque scopeを[保持/ほじ]する[経路/けいろ]を[追加/ついか]した。"
+            cons "[同/おな]じ[台帳/だいちょう]なら[入場済/にゅうじょうず]みsourceの [再/さい]admissionを[走査/そうさ]せず、[別台帳/べつだいちょう]では[全/ぜん]sourceを[検査/けんさ]する。"
+            cons "source[環境/かんきょう]との[競合検査/きょうごうけんさ]は[維持/いじ]する。"
+            cons " checkpointとrollbackは[実際/じっさい]のsource[集合/しゅうごう]とscopeを[一緒/いっしょ]に[保持/ほじ]する。"
+            cons " [公開/こうかい]append/diagnosticへ[別台帳/べつだいちょう]を[渡/わた]す[場合/ばあい]は[以前/いぜん]の[証明/しょうめい]を[失効/しっこう]させる。"
+            nil
+          cons paragraph
+            cons "host callback[中/ちゅう]の[台帳交換/だいちょうこうかん]をまだ[追跡/ついせき]しないため、host[付/つ]きread・Await・Reserve・resume・ Stopped・raw[復元/ふくげん]には[証明/しょうめい]を[付/つ]けない。"
+            cons "[非/ひ]atomic targetも[全検査/ぜんけんさ]を[維持/いじ]する。"
+            cons " したがって[全/ぜん]source[処理/しょり]の[線形化/せんけいか]、Doc host[全体/ぜんたい]の[高速化/こうそくか]、[実/じつ]heap[削減/さくげん]が[完了/かんりょう]したとはしない。"
+            cons " [次段階/じだんかい]はcallback/resumeを[含/ふく]む[台帳寿命/だいちょうじゅみょう]と、[残/のこ]るSourceChecksの[集合比較/しゅうごうひかく]である。"
+            nil
+        nil
+      cons section host_ledger "2026-09-21: [同期/どうき]hostの[台帳交換/だいちょうこうかん]を[追跡/ついせき]"
+      body
+          cons paragraph
+            cons "[同期/どうき]hostのprovider/reservation callbackを[共通/きょうつう]wrapperで[囲/かこ]み、[各返却時点/かくへんきゃくじてん]の[台帳/だいちょう]を [読取/よみと]り[開始時/かいしじ]のscopeと[照合/しょうごう]する。"
+            cons "[失効/しっこう]は[累積/るいせき]し、[複数/ふくすう]callbackでAからBへ[交換/こうかん]した[後/あと]に Aへ[戻/もど]っても[証明/しょうめい]を[再発行/さいはっこう]しない。"
+            cons "[正常終端/せいじょうしゅうたん]かつ[台帳交換/だいちょうこうかん]・host errorがない[場合/ばあい]だけ、 host[付/つ]きreadも[受入済/うけいれず]みcollectorの[証明/しょうめい]を[保持/ほじ]する。"
+            nil
+          cons paragraph
+            cons "callback[内部/ないぶ]だけで[台帳/だいちょう]を[交換/こうかん]して[元/もと]へ[戻/もど]した[場合/ばあい]、[返却/へんきゃく]sourceはruntimeによって [現在/げんざい]の[台帳/だいちょう]へ[再検査/さいけんさ]・[入場/にゅうじょう]される。"
+            cons "callback[内部/ないぶ]の[任意状態/にんいじょうたい]を[証明/しょうめい]しているわけではない。"
+            cons " [試験/しけん]は[二/ふた]つのprovider[呼出/よびだ]しでsourceを[実際/じっさい]に[生成/せいせい]し、A→B→Aで[失効/しっこう]した[後/あと]に [最初/さいしょ]のsourceの[再/さい]admissionが[必要/ひつよう]になることをSourceBytesで[確認/かくにん]する。"
+            cons " reservationの[交換/こうかん]、None、エラー[返却/へんきゃく]でも[失効/しっこう]を[累積/るいせき]する。"
+            cons " resume/portableからは[引/ひ]き[続/つづ]き[証明/しょうめい]を[発行/はっこう]しない。"
+            nil
+          cons paragraph
+            cons "[実文書/じつぶんしょ]6[件/けん]のparse/lower/labels[試験/しけん]も[成功/せいこう]した。"
+            cons "[第/だい]05[章/しょう]はそれぞれ73,092,384 / 66,285,115 / 8,413,256 Workで、[各段階/かくだんかい]の[通常/つうじょう]100,000,000 Work[枠内/わくない]だった。"
+            cons " [未採用/みさいよう]の[第/だい]21[章草案/しょうそうあん]はparseが113,044,768 Workであり、[明示/めいじ]した[草案用枠/そうあんようわく]での[成功/せいこう]を [通常/つうじょう]ページ[枠/わく]への[適合/てきごう]や[正本移行完了/せいほんいこうかんりょう]とは[扱/あつか]わない。"
+            cons "[実時間/じつじかん]の[比較実験/ひかくじっけん]・[実/じつ]heap[測定/そくてい]は[別途必要/べっとひつよう]である。"
+            nil
+        nil
+    nil
+  cons section sentence_recovery "#158を[優先/ゆうせん]するSentence・[注釈/ちゅうしゃく]の[回復/かいふく]"
+  body
+      cons paragraph
+        cons sentence cons ruby text "今後" text "こんご" cons text "の" cons ruby text "是正順序" text "ぜせいじゅんじょ" cons text "は" cons link relative "../spec/23-sentence-annotation.md" none concat cons text "23" cons ruby text "章" text "しょう" nil cons text "に" cons ruby text "従" text "したが" cons text "う。" nil
+        cons "Doc[固有機能/こゆうきのう]を[広/ひろ]げる[前/まえ]に、 Sentenceの[独立言語化/どくりつげんごか]からDoc[本文/ほんぶん]の[文章境界/ぶんしょうきょうかい]を[移行/いこう]し、[実文書性能/じつぶんしょせいのう]とT19 docs-only Pagesを[優先/ゆうせん]する。"
+        cons " NEPL3a[完成/かんせい]・[旧/きゅう]comment-as-triviaの[全面移行/ぜんめんいこう]でD[本文/ほんぶん]・[公開/こうかい]を[止/と]めない。"
+        cons "これらは[後続/こうぞく]で[完了/かんりょう]させる。"
+        cons " [以下/いか]の[既存/きそん]API・[性能調査/せいのうちょうさ]はその[時点/じてん]の[実装記録/じっそうきろく]であり、[旧所有関係/きゅうしょゆうかんけい]を[維持/いじ]する[決定/けってい]ではない。"
+        nil
+      cons paragraph
+        cons sentence cons ruby text "最初" text "さいしょ" cons text "の" cons ruby text "実装" text "じっそう" cons text "として" cons code "nepl3-sentence-core" cons text "を" cons ruby text "追加" text "ついか" cons text "した。" nil
+        cons sentence cons text "foundationだけに" cons ruby text "依存" text "いぞん" cons text "する" cons code "no_std + alloc" cons text "の " cons ruby text "順序付" text "じゅんじょづ" cons text "き" cons ruby text "有限" text "ゆうげん" cons text "arena、category/" cons ruby text "参照" text "さんしょう" cons text "/" cons ruby text "循環" text "じゅんかん" cons text "/" cons ruby text "到達性" text "とうたつせい" cons text "・" cons ruby text "非空文章部" text "ひくうぶんしょうぶ" cons text "の" cons ruby text "検査" text "けんさ" cons text "と" cons ruby text "独立" text "どくりつ" cons text "schemaを" cons ruby text "持" text "も" cons text "つ。" nil
+        cons sentence cons text " descriptorは" cons ruby text "既存生成器" text "きそんせいせいき" cons text "で" cons code "interfaces/sentence.json" cons text "から" cons ruby text "生成" text "せいせい" cons text "し、" cons ruby text "実" text "じつ" cons text "descriptorからidentityを" cons ruby text "計算" text "けいさん" cons text "する。" nil
+        cons " [通常/つうじょう]のURL[構造/こうぞう]とforeign[参照/さんしょう]を[保持/ほじ]するが、guest[実行/じっこう]やDの[名前解決/なまえかいけつ]、[安全/あんぜん]なHTMLの[認証/にんしょう]はしない。"
+        nil
+      cons paragraph
+        cons "[新規/しんき]10[試験/しけん]は[成功/せいこう]した。"
+        cons "[共有/きょうゆう]DAGの[最長深/さいちょうふか]さ、10[万段/まんだん]の[非再帰検査/ひさいきけんさ]、[資源停止/しげんていし]、foreign[参照共有/さんしょうきょうゆう]・ [未使用拒否/みしようきょひ]、root category、schema[所有者/しょゆうしゃ]・revision・field[順/じゅん]の[境界/きょうかい]を[含/ふく]む。"
+        cons " [独立/どくりつ]レビューで[不足/ふそく]を[指摘/してき]されたforeign/root[試験/しけん]を[追加/ついか]し、[再/さい]レビューで[指摘/してき]なしを[確認/かくにん]した。"
+        cons " ARMv6-M、wasm32-unknown-unknown、wasm32-wasip2はbuild[確認/かくにん]であり、target[上/じょう]の[実行証拠/じっこうしょうこ]ではない。"
+        nil
+      cons paragraph
+        cons "[続/つづ]いてSentenceValueのNDF codecを[実装/じっそう]した。"
+        cons "[実/じつ]descriptorの[完全/かんぜん]identity、[受信前/じゅしんまえ]schema[検査/けんさ]と [受信後/じゅしんご]arena[検査/けんさ]、foundationによるforeign[閉包検査/へいほうけんさ]を[行/おこな]う。"
+        cons "[手組/てぐ]みwire fixtureと[実/じつ]CBOR[往復/おうふく]、 [共有参照/きょうゆうさんしょう]、Unicode、1[万段/まんだん]の[意味上/いみじょう]の[深/ふか]さ、[処理途中/しょりとちゅう]の[非/ひ]ゼロ[予算停止/よさんていし]、[不正/ふせい]owner source/hashを[検査/けんさ]する。"
+        cons " この[値/あたい]codecはSentence[局所/きょくしょ]syntaxの[位置情報/いちじょうほう]・reader payloadを[完成/かんせい]させるものではない。"
+        cons " codec[追加後/ついかご]のSentence[全/ぜん]19[試験/しけん]はnativeとWasmtime 44.0.1[上/じょう]のwasm32-wasip2で[成功/せいこう]した。"
+        cons " ARMv6-Mとwasm32-unknown-unknownは[引/ひ]き[続/つづ]きbuild[検査/けんさ]であり、browser[実行/じっこう]は[未検証/みけんしょう]である。"
+        cons " これは[同/おな]じRust[実装/じっそう]のtarget[別検証/べつけんしょう]で、[独立/どくりつ]した[第/だい]2provider[実装/じっそう]の[適合/てきごう]を[意味/いみ]しない。"
+        cons " Source/Origin[境界/きょうかい]の[準備中/じゅんびちゅう]に、[値/あたい]codecで[文章/ぶんしょう]とforeignの[深/ふか]さを[別々/べつべつ]に[検査/けんさ]していた[欠陥/けっかん]を[確認/かくにん]した。"
+        cons " [最深/さいしん]の[所有位置/しょゆういち]に[親/おや]Budget[深/ふか]さを[加/くわ]えてguestを[検査/けんさ]するよう[修正/しゅうせい]した。"
+        cons "[文章/ぶんしょう]42[段/だん]・guest30[段/だん]は [単独/たんどく]では[上限/じょうげん]60に[収/おさ]まるが、[合成時/ごうせいじ]は[送受信/そうじゅしん]とも[拒否/きょひ]する。"
+        cons "[短経路/たんけいろ]から[先/さき]に[到達/とうたつ]する[共有/きょうゆう]guestでも [最長経路/さいちょうけいろ]を[使/つか]い、[呼出元/よびだしもと]の[深/ふか]さを[戻/もど]す。"
+        cons "[独立/どくりつ]レビューと[回帰試験/かいきしけん]で[確認/かくにん]した。"
+        nil
+      cons paragraph
+        cons "[続/つづ]いてSentenceSyntaxの[局所/きょくしょ]Source/Origin/View[境界/きょうかい]を[追加/ついか]した。"
+        cons "[意味/いみ]arenaと[同順/どうじゅん]・[同長/どうちょう]の[位置表/いちひょう]、 [必須/ひっす]Origin、[任意/にんい]head/cover、Viewのowner、payload[自身/じしん]のsource/mapを[両/りょう]codec[方向/ほうこう]で[検査/けんさ]する。"
+        cons " [架空/かくう]Spanを[要求/ようきゅう]せず、[生成値/せいせいち]はSynthetic/Generated Originを[使/つか]う。"
+        cons "これは[位置/いち]の[閉包/へいほう]・[関連付/かんれんづ]けの [検査/けんさ]であり、まだ[未実装/みじっそう]のreaderによる[原文/げんぶん]と[意味値/いみち]の[一致/いっち]を[証明/しょうめい]しない。"
+        nil
+      cons paragraph
+        cons "[独立/どくりつ]レビューで、[明示/めいじ]SourceMapを[持/も]つViewの[親子/おやこ]をnativeでは[受理/じゅり]しportableでは[拒否/きょひ]する[欠陥/けっかん]を [確認/かくにん]し、foundation codecとSentence/Doc/Mathのsyntax[境界/きょうかい]を[一緒/いっしょ]に[修正/しゅうせい]した。"
+        cons "mapを[各/かく]Viewで [再検査/さいけんさ]する[初版/しょはん]は[実/じつ]14ページ[文書/ぶんしょ]でWorkLimitとなった。"
+        cons "[不変/ふへん]scopeに[閉/と]じた[検査結果/けんさけっか]を[再利用/さいりよう]し、 [既存上限/きそんじょうげん]のまま[生成成功/せいせいせいこう]を[確認/かくにん]した。"
+        cons "[各/かく]Viewは[再検査/さいけんさ]し、scopeの[再束縛/さいそくばく]とSourceAdmissionへの [可変/かへん]アクセスでは[親子双方/おやこそうほう]のcacheを[失効/しっこう]させる。"
+        cons "scope[越/こ]しのadmission[置換/ちかん]を[含/ふく]む[負例/ふれい]を[維持/いじ]する。"
+        cons " SentenceはCIのWASI[実行/じっこう]・Wasm/ARM build[対象/たいしょう]にも[追加/ついか]した。"
+        cons " [最終差分/さいしゅうさぶん]の[全/ぜん]workspace[試験/しけん]は730[成功/せいこう]・[失敗/しっぱい]0・[既定/きてい]ignore 2（[所有/しょゆう]continuation[性能比較/せいのうひかく]、 Node/npm[依存/いぞん]KaTeX corpus）。"
+        cons "Sentence/Wire/Doc/MathはWasmtime 44.0.1で134[成功/せいこう]・[失敗/しっぱい]0・ ignore 0、ARMv6-Mとbrowser[向/む]けWasmのbuildも[成功/せいこう]した。"
+        cons "[独立/どくりつ]レビューの[追加指摘/ついかしてき]を[修正/しゅうせい]し、 [再/さい]レビューで[指摘/してき]なしを[確認/かくにん]した。"
+        cons "Sentenceのreader/LanguagePackageと[注釈/ちゅうしゃく]・consumer[移行/いこう]、 [旧/きゅう]コメントの[撤去/てっきょ]は[引/ひ]き[続/つづ]き[未完了/みかんりょう]である。"
+        nil
+      cons paragraph
+        cons "Sentence literalの[解析本体/かいせきほんたい]と[専用印字/せんよういんじ]を[独立/どくりつ]coreへ[移/うつ]した。"
+        cons "Doc[型/かた]へ[依存/いぞん]せず、Ruby/InlineAnno、 escape[前/まえ]のView、[元/もと]Source/Originとdense[位置表/いちひょう]を[保/たも]つ。"
+        cons "Unicode escapeの[途中/とちゅう]、[空注釈部/くうちゅうしゃくぶ]、 [不正/ふせい]delimiter、1,000[段/だん]の[入/い]れ[子/こ]、[共有/きょうゆう]DAGの[出力膨張/しゅつりょくぼうちょう]、[明示/めいじ]windowとCBORの[往復/おうふく]を[検査/けんさ]した。"
+        cons " literalで[表現/ひょうげん]できないBreak[等/とう]はNotLiteralとして[返/かえ]し、Textへ[黙/だま]って[変/か]えない。"
+        cons " この[追加後/ついかご]のSentence[全/ぜん]33[試験/しけん]はnative/WASIで[成功/せいこう]し、[独立/どくりつ]レビューで[指摘/してき]なしを[確認/かくにん]した。"
+        cons " LanguagePackage、reader/provider[包絡/ほうらく]、prefixと[汎用印字/はんよういんじ]は[次/つぎ]の[実装/じっそう]であり、D[本文/ほんぶん]への[接続/せつぞく]を NEPL3a[完成/かんせい]より[先行/せんこう]する。"
+        cons "#165はCIと[独立最終/どくりつさいしゅう]レビュー[後/ご]にmainへ[統合済/とうごうず]みである。"
+        nil
+      cons paragraph
+        cons "[局所/きょくしょ]syntaxのSource/Origin[境界/きょうかい]、literal/prefixと[独立/どくりつ]LanguagePackage、annotation adapter、 Doc/Math consumerおよび[公式/こうしき]sourceの[移行/いこう]は[未完了/みかんりょう]である。"
+        cons "[旧/きゅう]コメント[処理/しょり]だけは[先/さき]に[削除/さくじょ]せず、 [移行後/いこうご]にschema・wire・[生成器/せいせいき]まで[撤去/てっきょ]する。"
+        cons "T07や[受入状態/うけいれじょうたい]をこのモデル[検査/けんさ]でpassedにしない。"
+        nil
+    nil
+  cons section host_migration "[同期/どうき]host[接続/せつぞく]と[文書移行/ぶんしょいこう]までの[残/のこ]り"
+  body
+      cons paragraph
+        cons sentence cons code "nepl3_tools::doc::host::NativeHost" cons text " は、" cons ruby text "明示" text "めいじ" cons text "Profileの" cons ruby text "実装" text "じっそう" cons text "identityと" cons ruby text "操作登録" text "そうさとうろく" cons text "を " cons ruby text "照合" text "しょうごう" cons text "してDoc sentence・Name・Number・Trivia providerを" cons ruby text "実行" text "じっこう" cons text "する。" nil
+        cons " [呼出/よびだ]しに[宣言/せんげん]されたsource[閉包/へいほう]だけを[使用/しよう]し、[同/おな]じBudget/SourceAdmissionを[保持/ほじ]する。"
+        cons " [予約/よやく]IDは[操作内/そうさない]で[単調/たんちょう]に[発行/はっこう]し、[停止/ていし]した[予約/よやく]ではIDを[消費/しょうひ]しない。"
+        cons sentence cons text " " cons code "ParseSession::read_with_host" cons text "へ" cons ruby text "接続" text "せつぞく" cons text "することで、" cons ruby text "各同期" text "かくどうき" cons text "callで" cons ruby text "成長中" text "せいちょうちゅう" cons text "のparse arenaを " cons ruby text "外向" text "そとむ" cons text "けcontinuationへ" cons ruby text "複写" text "ふくしゃ" cons text "する" cons ruby text "処理" text "しょり" cons text "を" cons ruby text "避" text "さ" cons text "ける。" nil
+        cons "providerのreply[検査/けんさ]は[省略/しょうりゃく]しない。"
+        cons " catalogのVec[全体/ぜんたい]とreply Boxは、[実際/じっさい]の[確保/かくほ]・provider[実行/じっこう]より[先/さき]に[予算計上/よさんけいじょう]する。"
+        nil
+      cons paragraph
+        cons "#158に[基/もと]づく[境界是正/きょうかいぜせい]では、source hostの[環境/かんきょう]・reader stateを[固定/こてい]4[言語/げんご]の[列挙/れっきょ]から [解決済/かいけつず]みProfileの[登録/とうろく]へ[変更/へんこう]した。"
+        cons "default categoryとreader modeも[解決済/かいけつず]みentryを[使/つか]う。"
+        cons " portable Await[経路/けいろ]も[同/おな]じ[登録実装/とうろくじっそう]の[照合/しょうごう]を[通/とお]し、schemaのpackage[文字列/もじれつ]によるdispatchを[除/のぞ]いた。"
+        cons " [追加/ついか]alias・[登録順変更/とうろくじゅんへんこう]・[非/ひ]root categoryでnative/portableの[構文木一致/こうぶんぎいっち]を[確認/かくにん]し、 [同/おな]じ[操作/そうさ]schemaでも[別/べつ]implementation digestなら[両経路/りょうけいろ]で[拒否/きょひ]する。"
+        cons " [開発/かいはつ]fixtureの[言語構成/げんごこうせい]は[依然/いぜん]として[明示選択/めいじせんたく]であり、[一般/いっぱん]suite[完成/かんせい]やSentence/A[抽出/ちゅうしゅつ]、 comment-as-trivia[撤去/てっきょ]の[完了/かんりょう]を[意味/いみ]しない。"
+        nil
+      cons paragraph
+        cons "この[接続/せつぞく]だけをHTML backendの[未保存変更/みほぞんへんこう]から[分離/ぶんり]して[検証/けんしょう]し、nativeのDoc[試験/しけん]32[件/けん]、 WASI31[件/けん]が[成功/せいこう]した。"
+        cons "[差/さ]はhost processを[使用/しよう]するnative[専用/せんよう]seed[検査/けんさ]である。"
+        cons " [独立/どくりつ]レビューでも[通常経路/つうじょうけいろ]・[同期経路/どうきけいろ]・fallbackの[構文木一致/こうぶんぎいっち]、[登録/とうろく]/sourceの[不正入力/ふせいにゅうりょく]、 [予約停止/よやくていし]とconstructorの[全/ぜん]Allocation[上限/じょうげん]を[確認/かくにん]した。"
+        nil
+      cons paragraph
+        cons sentence cons code "linear-combination.nepld" cons text "の" cons ruby text "約" text "やく" cons text "13KB" cons ruby text "全文" text "ぜんぶん" cons text "は、" cons ruby text "同期接続後" text "どうきせつぞくご" cons text "もWork" cons ruby text "上限" text "じょうげん" cons text "100,000,000で " cons ruby text "停止" text "ていし" cons text "する。" nil
+        cons "これはHTML[出力/しゅつりょく]や[文書移行/ぶんしょいこう]の[完成証拠/かんせいしょうこ]ではない。"
+        cons "reader/tokenizerの [継続状態/けいぞくじょうたい]コピーを[削減/さくげん]し、[同/おな]じ[入力/にゅうりょく]・[予算/よさん]・[位置/いち]・[診断/しんだん]を[用/もち]いた[回帰検査/かいきけんさ]を[進/すす]める。"
+        cons " その[後/ご]、[文書間/ぶんしょかん]リンクとasset[解決/かいけつ]、HTML artifact、[意味同等性/いみどうとうせい]・[安定/あんてい]URLの[検証/けんしょう]を [接続/せつぞく]して、[準備/じゅんび]できたページからnepld[正本/せいほん]とPages[配布/はいふ]へ[進/すす]める。"
+        nil
+    nil
+  cons section execution "[現在/げんざい]の[実行経路/じっこうけいろ]"
+  body
+      cons paragraph
+        cons sentence cons code "nepl3-doc-core" cons text " は " cons code "no_std" cons text " + " cons code "alloc" cons text "、production " cons ruby text "依存" text "いぞん" cons text "は " cons code "nepl3-core" cons text " だけ。" nil
+        cons "DocValue は[型付/かたつ]き arena であり、[構造検査/こうぞうけんさ]・[正規化/せいきか]・source/Origin/View [閉包検査/へいほうけんさ]と[明示/めいじ] NDF adapter を[提供/ていきょう]する。"
+        cons "[深/ふか]い[入力/にゅうりょく]は[平坦/へいたん]な[参照/さんしょう]と[反復処理/はんぷくしょり]を[使/つか]い、[共有/きょうゆう] DAG の[最大経路/さいだいけいろ]と guest [内部検査/ないぶけんさ]の Depth を[合成/ごうせい]する。"
+        nil
+      cons paragraph
+        cons "sentence recognizer は[元/もと] SourceSnapshot を[借用/しゃくよう]し、Matched / NoMatch / NeedMore / [位置付/いちつ]き Failed を[返/かえ]す。"
+        cons "tools の[明示/めいじ] provider がこれを ReadRequest → ReadReply の[正式包絡/せいしきほうらく]へ[接続/せつぞく]する。"
+        cons "[失敗/しっぱい]は[型付/かたつ]き Diagnostic と Report、[停止/ていし]は[元/もと] StopReason を[保持/ほじ]する。"
+        cons sentence cons text "literal の token payload は" cons ruby text "独立" text "どくりつ" cons text " Sentence の " cons code "SentenceLiteralPayload" cons text "、" cons ruby text "内部" text "ないぶ" cons text " View は" cons ruby text "外側" text "そとがわ" cons text " prefix parser の" cons ruby text "子" text "こ" cons text " arity にならない。" nil
+        nil
+      cons paragraph
+        cons "[正式/せいしき]な Doc/Math/Circuit/Grammar の[文法/ぶんぽう] source から[保存/ほぞん]した seed を[実/じつ] compiler へ[渡/わた]し、4 alias と[各/かく] checked environment を[明示/めいじ]した Profile で ParseSession を[実行/じっこう]する。"
+        cons "runtime provider [登録/とうろく]は[実/じつ] Name/Trivia/Number と[独立/どくりつ] Sentence literal のみ。"
+        cons "Facts [拡張/かくちょう]は compile [時/じ]の[署名登録/しょめいとうろく]であり、[未実装/みじっそう]の Doc Facts callback を runtime [実装/じっそう]として[広告/こうこく]しない。"
+        nil
+      cons paragraph
+        cons sentence cons code "lower::prefix" cons text " は host が" cons ruby text "選択" text "せんたく" cons text "を" cons ruby text "検査" text "けんさ" cons text "した SyntaxBundle と" cons ruby text "明示" text "めいじ" cons text " surface SchemaRef/category を" cons ruby text "受" text "う" cons text "け、" cons ruby text "現在" text "げんざい" cons text "の Budget/SourceAdmission で" cons ruby text "再検査" text "さいけんさ" cons text "して Doc arena へ" cons ruby text "変換" text "へんかん" cons text "する。" nil
+        cons "[構造/こうぞう] proof は PreparedArticle や guest の[意味/いみ] proof ではない。"
+        cons "prefix constructor と sentence recognizer は[同/おな]じ[正規化/せいきか]を[使/つか]う。"
+        cons "[実/じつ] ParseSession の literal payload と prefix lower の[正常例/せいじょうれい]は[同/おな]じ[意味正規形/いみせいきけい]となる。"
+        nil
+      cons paragraph
+        cons sentence cons text "suite の " cons code "adapters::sentence::literal::lower" cons text " は" cons ruby text "独立" text "どくりつ" cons text " Sentence codec と" cons ruby text "既存" text "きそん" cons text "の Sentence → Doc adapter を " cons code "lower::document_with_decoder" cons text " へ" cons ruby text "渡" text "わた" cons text "し、prefix と" cons ruby text "受理済" text "じゅりず" cons text "み SentenceLiteral を" cons ruby text "一括" text "いっかつ" cons text " lower する。" nil
+        cons "callback [後/ご]の[停止検査/ていしけんさ]と、[結合前/けつごうまえ]の payload [局所閉包検査/きょくしょへいほうけんさ]を[行/おこな]う。"
+        cons "payload[自身/じしん]のsource[閉包/へいほう]、[外/そと]tokenのhead/View[完全一致/かんぜんいっち]、[意味/いみ]Span/Originのtoken[内包含/ないほうがん]（[明示/めいじ]SourceMapを[含/ふく]む）を[検査/けんさ]する。"
+        cons "[元/もと]hostのOrigin[列/れつ]と[各/かく]token-local Viewを[維持/いじ]し、payload Originのみ[末尾/まつび]へ[再配置/さいはいち]する。"
+        cons "[各/かく]snapshotのSourceBytesを[操作内/そうさない]で[一度/いちど]だけ[計上/けいじょう]し、[停止時/ていしじ]は[入力構文木/にゅうりょくこうぶんぎ]を[変更/へんこう]しない。"
+        cons sentence cons ruby text "従来" text "じゅうらい" cons text "のcodec" cons ruby text "不要" text "ふよう" cons text "な" cons code "lower::prefix" cons text "はliteral leafに" cons ruby text "対" text "たい" cons text "して" cons ruby text "明示" text "めいじ" cons text "Unsupportedを" cons ruby text "維持" text "いじ" cons text "する。" nil
+        nil
+      cons paragraph
+        cons "[補助/ほじょ] constructor は[独立/どくりつ] fragment として lower/codec でき、[親/おや] operand では[型付/かたつ]き enum/Option へ[取/と]り[込/こ]む。"
+        cons "[取/と]り[込/こ]んだ wrapper を[意味的/いみてき]な[子/こ]に[残/のこ]さず、[元/もと] View/Origin/source [宣言/せんげん]を[保存/ほぞん]する。"
+        cons sentence cons text "Code の DocGuest は " cons code "foreign Doc Article" cons text " で、" cons ruby text "同" text "どう" cons text " alias でも" cons ruby text "独立" text "どくりつ" cons text " bundle/environment を" cons ruby text "保持" text "ほじ" cons text "する。" nil
+        cons "[構文/こうぶん]は[正/ただ]しいが[注釈/ちゅうしゃく]が[意味的/いみてき]に[不正/ふせい]な guest も Code の[表示準備/ひょうじじゅんび]のために[意味/いみ] lower しない。"
+        cons "host への[復帰/ふっき]を[実/じつ] parse で[検査/けんさ]する。"
+        nil
+    nil
+  cons section validation "[検証/けんしょう]の[境界/きょうかい]"
+  body
+      cons paragraph
+        cons sentence cons code "labels::check" cons text " はArticle" cons ruby text "内" text "ない" cons text "のSection/Anchorを" cons ruby text "先" text "さき" cons text "に" cons ruby text "収集" text "しゅうしゅう" cons text "し、" cons ruby text "前方" text "ぜんぽう" cons text "Referenceを" cons ruby text "同一" text "どういつ" cons text "DocLabelIdへ" cons ruby text "解決" text "かいけつ" cons text "する。" nil
+        cons "[重複名/ちょうふくめい]・[未解決名/みかいけつめい]と[共有/きょうゆう]DAG[上/じょう]の[複数表示経路/ふくすうひょうじけいろ]を[型付/かたつ]き[失敗/しっぱい]にし、[名前/なまえ]selectionと[定義全体/ていぎぜんたい]rangeを[分離/ぶんり]して[保持/ほじ]する。"
+        cons "source-less[位置/いち]はNoneのまま、foreign guestのlabelは[集計/しゅうけい]しない。"
+        cons sentence cons code "LabelError::diagnostic" cons text " は" cons ruby text "意味失敗" text "いみしっぱい" cons text "を" cons ruby text "通常" text "つうじょう" cons text "のschema-validated Diagnosticへ" cons ruby text "変換" text "へんかん" cons text "し、" cons ruby text "名前" text "なまえ" cons text "と" cons ruby text "複数経路" text "ふくすうけいろ" cons text "を" cons ruby text "構造化引数" text "こうぞうかひきすう" cons text "へ、" cons ruby text "先行定義" text "せんこうていぎ" cons text "をrelated" cons ruby text "位置" text "いち" cons text "へ" cons ruby text "保持" text "ほじ" cons text "する。" nil
+        cons "[構築自身/こうちくじしん]の[停止時/ていしじ]も[元/もと]の[借用/しゃくよう]エラーは[残/のこ]る。"
+        cons "CheckedLabelsはlabel[検査/けんさ]だけのproofで、foreign Requirement[解決/かいけつ]やPreparedArticleではない。"
+        nil
+      cons paragraph
+        cons "Doc arena の node/root、Origin、[局所/きょくしょ] View と source map は portable [往復/おうふく]で[保持/ほじ]する。"
+        cons "[共通/きょうつう] codec は source [表/ひょう]を identity [順/じゅん]、guest syntax graph を[正準/せいじゅん] NodeRef [座標/ざひょう]へ[整/ととの]えるため、[未正準/みせいじゅん]な native [表/ひょう]の[列順/れつじゅん]や guest NodeRef [数値/すうち]そのものの Rust Eq は wire の[要件/ようけん]ではない。"
+        cons "source の identity/URI/content、owner Origin ID と[環境/かんきょう] digest、および[実/じつ] CBOR の[正準再/せいじゅんさい] encode を[照合/しょうごう]する。"
+        nil
+      cons paragraph
+        cons "[管理対象/かんりたいしょう]は Doc core の[構造/こうぞう]・literal・[正規化/せいきか]・source/ForeignClosure・[初回/しょかい] CBOR と、tools の[実/じつ] compiler/parse/prefix lower・helper [範囲/はんい]・DocGuest・resource [停止/ていし]。"
+        cons "host seed と[元/もと] source/adapter の[一致/いっち]だけは Python process を[使/つか]う native [専用試験/せんようしけん]で、[同/おな]じ[保存/ほぞん] seed を[使/つか]う[実処理/じつしょり]は WASI でも[実行/じっこう]する。"
+        cons "browser target は compile [検査/けんさ]であり[実描画/じつびょうが]の[成功/せいこう]ではない。"
+        nil
+      cons paragraph
+        cons sentence cons code "text::plain_text" cons text " は" cons ruby text "正式" text "せいしき" cons text "PlainTextRequestを" cons ruby text "受" text "う" cons text "け、document/guestの" cons ruby text "正準" text "せいじゅん" cons text "digestへ" cons ruby text "束縛" text "そくばく" cons text "した" cons ruby text "明示" text "めいじ" cons text "host textを" cons ruby text "用" text "もち" cons text "いてSentenceを" cons ruby text "投影" text "とうえい" cons text "する。" nil
+        cons "BaseOnly / WithReadings / WithAllNotesの[固定規則/こていきそく]と、[表示/ひょうじ]しないnote/readingには[未提供/みていきょう]embed textを[要求/ようきゅう]しない[規則/きそく]を[実行/じっこう]する。"
+        cons "[全提供/ぜんていきょう]entryはpolicyにかかわらず[検査/けんさ]する。"
+        cons "[型付/かたつ]きrequest/replyの[初回/しょかい]CBOR、[実/じつ]prefix→lower→[投影/とうえい]、[元/もと]source[変更/へんこう]・guest[差替/さしか]え・owner[環境変更/かんきょうへんこう]、[準備中/じゅんびちゅう]と[出力中/しゅつりょくちゅう]の[停止/ていし]を[管理対象/かんりたいしょう]で[検査/けんさ]する。"
+        cons "[公開/こうかい]prepareはidentity[取得/しゅとく]だけで、[公開実行/こうかいじっこう]が[再検査/さいけんさ]と[資源計上/しげんけいじょう]を[省略/しょうりゃく]するproofではない。"
+        cons "これはguest[意味/いみ]checkやPreparedArticleの[完成/かんせい]を[表/あらわ]さない。"
+        nil
+      cons paragraph
+        cons sentence cons code "print::print" cons text " はPrintRequest/Replyの" cons ruby text "正式操作" text "せいしきそうさ" cons text "としてPrefix/Compactを" cons ruby text "出力" text "しゅつりょく" cons text "する。" nil
+        cons "64 form・20 entryは[元/もと]の[表層入力/ひょうそうにゅうりょく]を[実/じつ]parse/lowerし、[印字後/いんじご]に[同/おな]じ[実経路/じつけいろ]へ[戻/もど]す。"
+        cons "MathGuest / CircuitGuest / Guestの[独立/どくりつ]rootと4 wrapperを[保持/ほじ]する。"
+        cons "[明示/めいじ]host guest-printはdocumentとForeignClosureのdigestへ[束縛/そくばく]し、[原文取得/げんぶんしゅとく]だけを[意味一致/いみいっち]proofとして[扱/あつか]わない。"
+        cons "[名前/なまえ]と[言語/げんご]は[共通/きょうつう]reader[語彙/ごい]で[印字可能性/いんじかのうせい]を[検査/けんさ]し、source-less[不適合/ふてきごう]は[元値/もとあたい]を[変/か]えず[型付/かたつ]き[失敗/しっぱい]にする。"
+        cons "Doc coreはguest[意味処理/いみしょり]もsnapshot[発行/はっこう]も[行/おこな]わない。"
+        nil
+    nil
+  cons section remaining "[残/のこ]り"
+  body
+      cons paragraph
+        cons sentence cons code "prepare::inspect" cons text " はArticleの" cons ruby text "全" text "ぜん" cons text "variant・labelを" cons ruby text "検査" text "けんさ" cons text "し、Link/Assetの" cons ruby text "意味" text "いみ" cons text "node" cons ruby text "別要求" text "べつようきゅう" cons text "とForeignClosure" cons ruby text "別要求" text "べつようきゅう" cons text "を" cons ruby text "列挙" text "れっきょ" cons text "する。" nil
+        cons "[正式/せいしき]DocPreparationPlanはdocument/guestのcanonical digestへ[束縛/そくばく]され、[独立受信時/どくりつじゅしんじ]には[明示/めいじ]documentから[全要求/ぜんようきゅう]を[再導出/さいどうしゅつ]する。"
+        cons "[実/じつ]sourceのCode/InlineMathは[構文/こうぶん]のまま[保持/ほじ]し、[外部資源/がいぶしげん]を[読/よ]まず[評価/ひょうか]しない。"
+        cons "これは[準備入力/じゅんびにゅうりょく]の[発見/はっけん]であり、[下記/かき]の[資源解決/しげんかいけつ]・HTML[出力/しゅつりょく]の[完成/かんせい]ではない。"
+        nil
+      cons list unordered
+        cons item none body
+          cons paragraph
+            cons "[公開/こうかい]suiteでのhost guest-printの[供給/きょうきゅう]と、[対象/たいしょう]guest parserによる[構造正規形/こうぞうせいきけい]・source[対応/たいおう]の[検査/けんさ]。"
+            cons "[現在/げんざい]の[管理対象/かんりたいしょう]は[実/じつ]generic engine parser/checked tree/printerを[使/つか]う[構文往復/こうぶんおうふく]であり、raw PrintedGuestのtextだけで[一致/いっち]proofを[得/え]ない。"
+            cons "この[残/のこ]りは[全/ぜん]guestの[意味/いみ]lower/checkを[要求/ようきゅう]するものではなく、[意味不正/いみふせい]・[回復構文/かいふくこうぶん]を[表示用/ひょうじよう]Codeとして[保持/ほじ]する[契約/けいやく]を[維持/いじ]する。"
+            cons "Math/Circuit[等/とう]の[意味/いみ]check・[評価/ひょうか]の[完成/かんせい]でもない。"
+            nil
+          nil
+        cons item none body
+          cons paragraph
+            cons "[外部/がいぶ] page・asset [解決/かいけつ]、foreign Requirementを[含/ふく]む[完全/かんぜん]なcheck/prepare、HTML backend と rendering。"
+            cons "schema に[表/ひょう]・list・link・code・asset があることだけで、これらの[実装済/じっそうず]みを[主張/しゅちょう]しない。"
+            nil
+          nil
+        cons item none body
+          cons paragraph
+            cons "Doc の[正式/せいしき] lower [操作/そうさ]の Report/[部分結果包絡/ぶぶんけっかほうらく]と[全/ぜん] suite adapter。"
+            cons "native helper の Result を、[別実装/べつじっそう]の[操作包絡/そうさほうらく]の[完成/かんせい]として[扱/あつか]わない。"
+            nil
+          nil
+        nil
+      cons paragraph
+        cons sentence cons ruby text "設計入力" text "せっけいにゅうりょく" cons text "は main " cons code "b5295cef655aa59affffd6644f2902268d071953" cons text " の" cons ruby text "文書監査" text "ぶんしょかんさ" cons text "。" nil
+        cons sentence cons text "inventory SHA-256 は " cons code "daf94085913930f05c1655d2adbef4f56651864f9a97ac4d261400449c98499e" cons text "、61 Markdown / 231 Rust source owner、52 " cons ruby text "表" text "ひょう" cons text " / 1283 cell、39 list / 233 item、1134 inline code、12 code block、249 link、1 image。" nil
+        cons "[追加/ついか] element category はない。"
+        cons "この[監査/かんさ]は[実装中差分/じっそうちゅうさぶん]の completeness、rustdoc [意味監査/いみかんさ]、T21 の[移行完了/いこうかんりょう]とは[別/べつ]である。"
+        nil
+    nil
+  cons section tokenizer "Tokenizer[同期接続/どうきせつぞく]の[次段階/じだんかい]"
+  body
+      cons paragraph
+        cons "prefix engineからtokenizerの[同期/どうき]hostを[使用/しよう]し、[成功/せいこう]callで[外側/そとがわ]tokenizer[継続/けいぞく]を[発行/はっこう]しない [経路/けいろ]を[追加/ついか]した。"
+        cons "[独立/どくりつ]レビューで[見/み]つかった[明示/めいじ]Stoppedエラーと[入/い]れ[子/こ]の[停止原因/ていしげんいん]もBudgetへ [保持/ほじ]する。"
+        cons "[既存所有経路/きそんしょゆうけいろ]との[構文木/こうぶんぎ]・[診断/しんだん]・source/map[比較/ひかく]を[維持/いじ]する。"
+        cons " HTMLの[全文再現試験/ぜんぶんさいげんしけん]では[同/おな]じWork[上限/じょうげん]100,000,000のまま[停止位置/ていしいち]が1412から1897へ[進/すす]んだが、 13KB[文書/ぶんしょ]の[完走/かんそう]には[至/いた]っていない。"
+        cons "これは[部分改善/ぶぶんかいぜん]であり、[文書移行/ぶんしょいこう]やHTML[全体/ぜんたい]の[成功/せいこう]ではない。"
+        cons " [次/つぎ]は[共有/きょうゆう]sourceの[実/じつ]コピー[費用/ひよう]と[外部/がいぶ]echo[比較費用/ひかくひよう]の[分離/ぶんり]を[検討/けんとう]し、[外部入力/がいぶにゅうりょく]の[検査/けんさ]を[維持/いじ]して [本文/ほんぶん]の[反復/はんぷく]コピー[課金/かきん]を[解消/かいしょう]する。"
+        nil
+      cons paragraph
+        cons "[続/つづ]く[実装/じっそう]では、[実/じつ]コピーと[比較前/ひかくまえ]の[走査費用/そうさひよう]を[分離/ぶんり]し、source storeの[重複検索/ちょうふくけんさく]を [予算付/よさんつ]きの[二分探索/にぶんたんさく]へ[変更/へんこう]した。"
+        cons "[公開/こうかい]snapshot[列/れつ]の[順序/じゅんじょ]、[外部/がいぶ]echoの[全文比較上限/ぜんぶんひかくじょうげん]、 source[編集/へんしゅう]の[原子的/げんしてき]な[反映/はんえい]は[維持/いじ]する。"
+        cons "[同期/どうき]reader callbackは[外部継続/がいぶけいぞく]を[受/う]け[取/と]らず、 [排他的/はいたてき]なprivate slotを[既存/きそん]の[返却値検査経路/へんきゃくちけんさけいろ]へ[渡/わた]す。"
+        cons " [同/おな]じ[全文試験/ぜんぶんしけん]は[停止位置/ていしいち]3399まで[進/すす]んだが、なおWork[上限/じょうげん]で[停止/ていし]する。"
+        cons " [途中/とちゅう]の[線形検索版/せんけいけんさくばん]ではGrammar bootstrapも[既存上限/きそんじょうげん]で[停止/ていし]したため、その[版/ばん]を[完成扱/かんせいあつか]いにせず、 [二分探索版/にぶんたんさくばん]でbootstrapを[再実行/さいじっこう]して[成功/せいこう]を[確認/かくにん]した。"
+        cons "workspace[試験/しけん]とClippyも[成功/せいこう]した。"
+        cons " [当時/とうじ]の[残件/ざんけん]はsource admission・[診断/しんだん]source・Origin graphの[繰/く]り[返/かえ]し[検索/けんさく]だった。"
+        nil
+      cons paragraph
+        cons sentence cons text "2026-09-13、" cons code "272228c" cons text "で" cons ruby text "同" text "おな" cons text "じ" cons ruby text "約" text "やく" cons text "13KB" cons ruby text "全文" text "ぜんぶん" cons text "を" cons code "doc-html export" cons text "へ" cons ruby text "再入力" text "さいにゅうりょく" cons text "したところ、 " cons ruby text "既存" text "きそん" cons text "の" cons ruby text "各操作" text "かくそうさ" cons text "Work" cons ruby text "上限" text "じょうげん" cons text "100,000,000のままHTMLまで" cons ruby text "成功" text "せいこう" cons text "した。" nil
+        cons "[使用/しよう]Workはparse/validateが 20,362,601、lowerが2,987,790、prepare/render/serializeが6,986,518だった。"
+        cons " これらは[別々/べつべつ]の[予算/よさん]を[持/も]つ[操作/そうさ]であり、[一/ひと]つのend-to-end[予算/よさん]の[値/あたい]ではない。"
+        cons sentence cons text " " cons ruby text "入力" text "にゅうりょく" cons text "SHA-256は" cons code "9099bbbe48ed75a0768997789229188f53e43348fe930522b119908dfdb7a889" cons text "。" nil
+        cons " [上記/じょうき]3399での[停止/ていし]は[過去/かこ]の[途中版/とちゅうばん]の[記録/きろく]で、[現行/げんこう]の[再現結果/さいげんけっか]ではない。"
+        cons " この[全文/ぜんぶん]HTML[試験/しけん]はnative/WASIで[成功/せいこう]している。"
+        cons "[多数/たすう]ページ、[全/ぜん]foreign、Pages[配信/はいしん]の [性能/せいのう]・[完成/かんせい]までを[一例/いちれい]の[成功/せいこう]から[推定/すいてい]しない。"
+        nil
+    nil
+  cons section grammar_budget "Grammar[仕様原稿/しようげんこう]の[検査/けんさ]と[割当課金/わりあてかきん]"
+  body
+      cons paragraph
+        cons "[第/だい]04[章/しょう]の[未公開/みこうかい]NEPL3d[原稿/げんこう]を、[既存/きそん]の[原稿用/げんこうよう]parse/lower/labels[試験/しけん]へ[追加/ついか]した。"
+        cons " [前段/ぜんだん]の[修正時点/しゅうせいじてん]では、[通常/つうじょう]ページのAllocation[上限/じょうげん]500,000,000で[完成木/かんせいき]の[検査中/けんさちゅう]に[停止/ていし]した。"
+        cons " その[時点/じてん]ではcanonical registryへ[登録/とうろく]せず、Markdown[正本/せいほん]を[維持/いじ]した。"
+        cons " [未公開原稿用/みこうかいげんこうよう]の[既存/きそん]の[有限予算/ゆうげんよさん]で[処理/しょり]できることと、[正本切替/せいほんきりかえ]の[準備完了/じゅんびかんりょう]は[区別/くべつ]する。"
+        nil
+      cons paragraph
+        cons "[調査/ちょうさ]で、SyntaxBundle[検査/けんさ]が[共有/きょうゆう]SourceSnapshotにも[本文/ほんぶん]コピー[分/ぶん]を[課金/かきん]し、 [借用/しゃくよう]するOrigin[配列/はいれつ]にも[所有配列分/しょゆうはいれつぶん]を[課金/かきん]していたことが[分/わ]かった。"
+        cons " SourceStoreの[予算付/よさんつ]き[参照挿入/さんしょうそうにゅう]を[使/つか]い、Origin[検査自身/けんさじしん]が[計上/けいじょう]するscratchだけを[課金/かきん]する。"
+        cons " Source[入場/にゅうじょう]、[重複拒否/ちょうふくきょひ]、[全/ぜん]Originの[参照/さんしょう]・cycle[検査/けんさ]、[非/ひ]atomic targetの[実/じつ]コピー[費用/ひよう]は[維持/いじ]する。"
+        cons " [長短/ちょうたん]sourceの[共有費用/きょうゆうひよう]、source[挿入時/そうにゅうじ]の[停止/ていし]、[未使用/みしよう]Originの[不正参照/ふせいさんしょう]を[回帰試験/かいきしけん]にした。"
+        cons " この[課金修正/かきんしゅうせい]のみでは[第/だい]04[章/しょう]は[通常上限/つうじょうじょうげん]で[停止/ていし]し、[性能課題/せいのうかだい]は[未解消/みかいしょう]だった。"
+        nil
+      cons paragraph
+        cons "[続/つづ]く[計測/けいそく]で、schema[検査/けんさ]のpending stackがpop[後/ご]の[容量/ようりょう]を[再利用/さいりよう]していても、 [各/かく]pushで[新規/しんき]slot[分/ぶん]を[課金/かきん]していたことが[分/わ]かった。"
+        cons "[論理的/ろんりてき]な[予約/よやく]slot[数/すう]を[保持/ほじ]し、 [倍増時/ばいぞうじ]の[追加容量/ついかようりょう]を[確保前/かくほまえ]に[課金/かきん]する。"
+        cons "allocatorの[余剰/よじょう]capacityは[課金判定/かきんはんてい]に[使/つか]わない。"
+        cons " [各子/かくこ]のWorkはqueue[投入前/とうにゅうまえ]に[課金/かきん]し、[広/ひろ]い[入力/にゅうりょく]の[無制限/むせいげん]な[展開/てんかい]を[防/ふせ]ぐ。"
+        cons " [全値/ぜんち]の[型検査/かたけんさ]・Nodes・[深/ふか]さ・[左/ひだり]から[右/みぎ]の[検査順/けんさじゅん]は[維持/いじ]する。"
+        nil
+      cons paragraph
+        cons "この[修正/しゅうせい]で[第/だい]04[章/しょう]は[通常予算内/つうじょうよさんない]のparse/lower/labelsを[通過/つうか]した。"
+        cons " parseのWorkは94,666,857、Allocationは341,191,768、lowerのWorkは85,689,406だった。"
+        cons " SourceMapの[一意/いちい]な[直接対応/ちょくせつたいおう]を[範囲/はんい]として[検査/けんさ]する[改善/かいぜん]も[加/くわ]えたが、 この[原稿/げんこう]の[停止解消/ていしかいしょう]に[寄与/きよ]したのはschema stackの[課金修正/かきんしゅうせい]である。"
+        cons " [一文書/いちぶんしょ]の[成功/せいこう]を[全仕様移行/ぜんしよういこう]や[全受入群/ぜんうけいれぐん]の[達成/たっせい]とは[扱/あつか]わない。"
+        nil
+    nil
+  cons section document_budget "Doc[仕様原稿/しようげんこう]の[次/つぎ]の[性能境界/せいのうきょうかい]"
+  body
+      cons paragraph
+        cons "[第/だい]05[章/しょう]の[原稿/げんこう]で[欠/か]けていたguest printerの[深/ふか]さ[合成/ごうせい]とDoc/Math adapterの[停止契約/ていしけいやく]を[補/おぎな]い、 [独立/どくりつ]Sentence readerから[現/げん]Doc consumerへ[変換/へんかん]する[段階/だんかい]を[正文/せいぶん]と[原稿/げんこう]に[明記/めいき]した。"
+        cons " [修正後/しゅうせいご]のCLIによる[通常/つうじょう]Work[上限/じょうげん]100,000,000でのHTML[出力/しゅつりょく]はcursor 47,445でWorkLimitとなり、 [正本切替/せいほんきりかえ]は[行/おこな]っていない。"
+        nil
+      cons paragraph
+        cons "Work[計測/けいそく]からSourceMapのsnapshot[検索/けんさく]を[調/しら]べ、[直前/ちょくぜん]の[検索位置/けんさくいち]に[隣接/りんせつ]するidentityを [二分探索/にぶんたんさく]の[前/まえ]に[照合/しょうごう]する[改善/かいぜん]を[加/くわ]えた。"
+        cons "[完全/かんぜん]なSnapshotIdの[比較/ひかく]、cycle[検査/けんさ]、[重複/じゅうふく]edge、 [各比較前/かくひかくまえ]の[課金/かきん]を[維持/いじ]する。"
+        cons "[順序付/じゅんじょづ]きedgeを[反復/はんぷく]する257[頂点/ちょうてん]のstarでは、[修正前/しゅうせいまえ]の WorkLimitに[対/たい]し[修正後/しゅうせいご]は435,257 Workで[検査/けんさ]できた。"
+        cons "[第/だい]05[章/しょう]は[通常予算/つうじょうよさん]で[停止/ていし]しており、 この[小/ちい]さい[回帰試験/かいきしけん]を[同原稿/どうげんこう]の[性能課題/せいのうかだい]の[解消/かいしょう]とは[扱/あつか]わない。"
+        nil
+      cons paragraph
+        cons "[続/つづ]いてreaderのprovider[境界/きょうかい]で、[新規/しんき]mappingがなく[全包含関係/ぜんほうがんかんけい]を[同一/どういつ]snapshot[内/ない]で [直接確認/ちょくせつかくにん]できる[場合/ばあい]に[限/かぎ]り、private checkpointで[検査済/けんさず]みのmapping[集合/しゅうごう]の[再検査/さいけんさ]を[省/はぶ]いた。"
+        cons " viewのschema・[参照/さんしょう]・cycle、factのmetadataとsource[位置/いち]の[検査/けんさ]は[引/ひ]き[続/つづ]き[実行/じっこう]する。"
+        cons " [間接的/かんせつてき]な[包含関係/ほうがんかんけい]または[新規/しんき]mappingがある[場合/ばあい]は[従来通/じゅうらいどお]り[集合全体/しゅうごうぜんたい]を[検査/けんさ]する。"
+        cons " [不正/ふせい]KindRef、[空/くう]Capture[名/めい]、[未登録/みとうろく]Presentation/Relation schema、[追加/ついか]mapによるcycle、 [停止予算/ていしよさん]を[負例/ふれい]として[検査/けんさ]した。"
+        cons "readerのnative[試験/しけん]とWASI runtime[試験/しけん]、 [追加負例/ついかふれい]を[含/ふく]むlibrary[試験/しけん]は[成功/せいこう]し、[独立/どくりつ]レビューの[指摘/してき]を[修正/しゅうせい]した。"
+        nil
+      cons paragraph
+        cons "[同/おな]じ[第/だい]05[章/しょう]の[通常/つうじょう]HTML[出力/しゅつりょく]はcursor 54,300まで[進/すす]んだが、Work[上限/じょうげん]100,000,000で [停止/ていし]した。"
+        cons "[予算/よさん]を[変更/へんこう]しておらず、[第/だい]05[章/しょう]の[正本切替/せいほんきりかえ]および[性能課題/せいのうかだい]の[解消/かいしょう]は[未達/みたつ]である。"
+        nil
+      cons paragraph
+        cons "[次/つぎ]のWork[計測/けいそく]ではtokenizerの[受入済/うけいれず]みsourceに[対/たい]する[競合検索/きょうごうけんさく]が[約/やく]30,804,689を[占/し]めた。"
+        cons " [単発検索/たんぱつけんさく]のhintとbatch[検索/けんさく]は[実文書/じつぶんしょ]で[改善/かいぜん]せず[撤回/てっかい]した。"
+        cons " tokenizer session[内/ない]で、[照合/しょうごう]した[宣言集合/せんげんしゅうごう]と[受入済/うけいれず]みprefixのimmutable snapshotを[保持/ほじ]し、 [次回/じかい]も[完全一致/かんぜんいっち]する[部分/ぶぶん]の[競合検索/きょうごうけんさく]だけを[再利用/さいりよう]する。"
+        cons "[宣言集合/せんげんしゅうごう]の[変更/へんこう]・prefix[変更/へんこう]は [再検査/さいけんさ]し、source admission・report[検査/けんさ]・[継続/けいぞく]scope[検査/けんさ]は[従来通/じゅうらいどお]り[実行/じっこう]する。"
+        cons " [保持/ほじ]するsnapshotは[所有/しょゆう]し、allocatorのaddress[再利用/さいりよう]を[同一性/どういつせい]の[根拠/こんきょ]にしない。"
+        cons " [外部/がいぶ]decode[値/あたい]は[内容比較/ないようひかく]を[省/はぶ]かず、closeで[保持情報/ほじじょうほう]を[解放/かいほう]する。"
+        cons " [検査/けんさ]の[順序/じゅんじょ]・Usageは[変/か]わり[得/え]るが、[停止/ていし]を[成功/せいこう]へ[変換/へんかん]したり[新/あたら]しい[予算/よさん]へ[移/うつ]したりしない。"
+        nil
+      cons paragraph
+        cons "この[変更/へんこう]の[通常/つうじょう]HTML[出力/しゅつりょく]はcursor 70,193でWorkLimitとなった。"
+        cons "[上限/じょうげん]は[同/おな]じ100,000,000で、 [第/だい]05[章/しょう]の[完走/かんそう]と[正本化/せいほんか]はまだ[未達/みたつ]である。"
+        cons "[環境変更/かんきょうへんこう]、[変更/へんこう]されたsuffix、[同一内容/どういつないよう]の [別/べつ]storage、[部分的/ぶぶんてき]なcache[確保後/かくほご]の[停止/ていし]と[再検査/さいけんさ]を[回帰試験/かいきしけん]で[確認/かくにん]する。"
+        nil
+      cons paragraph
+        cons "さらに、[新/あたら]しいsource/mapと[診断/しんだん]/eventがなく、[全/ぜん]artifactの[位置/いち]を[消費範囲内/しょうひはんいない]で [直接確認/ちょくせつかくにん]できるprovider[応答/おうとう]では、そのsnapshotだけで[通常/つうじょう]の[応答検査/おうとうけんさ]を[行/おこな]う。"
+        cons " [範囲外/はんいがい]の[合法/ごうほう]なPresentation/Relationは[従来/じゅうらい]のresolverへ[戻/もど]し、[不正/ふせい]なschema・[参照/さんしょう]・ report、[新規/しんき]sourceの[競合/きょうごう]を[省略/しょうりゃく]しない。"
+        cons "private checkpointの[無関係/むかんけい]なsource[集合/しゅうごう]を tokenごとに[再構築/さいこうちく]していた[費用/ひよう]を[減/へ]らした。"
+        nil
+      cons paragraph
+        cons "[第/だい]05[章/しょう]は[通常予算/つうじょうよさん]でparse 88,653,715 Work、lower 66,285,115 Work、 labels 8,413,256 Workに[収/おさ]まり、この[予算/よさん]を[原稿/げんこう]の[回帰試験/かいきしけん]にも[適用/てきよう]した。"
+        cons " [単独/たんどく]HTML[出力/しゅつりょく]はWorkLimitではなく17[章/しょう]・23[章/しょう]への2リンクのNeedsResolutionまで[進/すす]む。"
+        cons " これはHTML[生成/せいせい]・リンク[解決/かいけつ]・[文書/ぶんしょ]の[意味比較/いみひかく]・[正本切替/せいほんきりかえ]の[完了/かんりょう]を[意味/いみ]しない。"
+        nil
+      cons paragraph
+        cons sentence cons ruby text "第" text "だい" cons text "05" cons ruby text "章" text "しょう" cons text "の" cons ruby text "正本移行" text "せいほんいこう" cons text "では、" cons ruby text "原稿" text "げんこう" cons text "を " cons code "doc/spec/05-document.nepld" cons text " へ" cons ruby text "移" text "うつ" cons text "し、" cons ruby text "旧見出" text "きゅうみだ" cons text "し16" cons ruby text "件" text "けん" cons text "を aliasとして" cons ruby text "登録" text "とうろく" cons text "した。" nil
+        cons "[第/だい]23[章/しょう]は[未移行/みいこう]Markdownの[原文参照/げんぶんさんしょう]であり、Doc[正本/せいほん]へ[昇格/しょうかく]させない。"
+        cons " [本文/ほんぶん]の[独立比較/どくりつひかく]でinline code92[個/こ]、RawCode2[個/こ]、15[節/せつ]、リンク2[件/けん]の[保存/ほぞん]を[確認/かくにん]した。"
+        cons " 18ページのHTML[集合/しゅうごう]は[通常/つうじょう]のpage[予算/よさん]で[生成/せいせい]でき、[第/だい]05[章/しょう]のparseは87,582,341 Work、 lowerは65,610,740 Workとなった。"
+        cons "JavaScript[無効/むこう]のChromium/Firefox/WebKitで[本文/ほんぶん]と 17[章/しょう]HTML・23[章原文/しょうげんぶん]へのリンクを[確認/かくにん]した。"
+        cons "[混在/こんざい]siteでは23[章/しょう]を[既生成/きせいせい]HTMLへ[接続/せつぞく]する。"
+        nil
+      cons paragraph
+        cons "Markdown[集合/しゅうごう]の[旧/きゅう]Work[上限/じょうげん]1,600,000,000では[停止/ていし]し、[途中出力/とちゅうしゅつりょく]を[採用/さいよう]しなかった。"
+        cons " 18ページ[用/よう]に[集合/しゅうごう]Workだけを1,900,000,000へ[変更/へんこう]した[別実行/べつじっこう]は1,615,489,130 Work、 63,205,674 Nodesで[完了/かんりょう]した。"
+        cons "Nodes[上限/じょうげん]64,000,000と[各/かく]pageの[通常予算/つうじょうよさん]は[維持/いじ]する。"
+        cons " [既存/きそん]17ページの[本文/ほんぶん]は[不変/ふへん]で、[集合入力/しゅうごうにゅうりょく]digestに[伴/ともな]うmetadataだけが[更新/こうしん]される。"
+        cons " [停止診断/ていししんだん]にはpage・[段階/だんかい]・Usageを[加/くわ]え、[文書集合/ぶんしょしゅうごう]の[停止/ていし]と[単体解析/たんたいかいせき]の[停止/ていし]を[区別/くべつ]する。"
+        cons " この[移行/いこう]はT07/T21[全体/ぜんたい]や[未移行/みいこう]の[残/のこ]り6[章/しょう]の[完成/かんせい]を[意味/いみ]しない。"
+        nil
+    nil
+  cons section html_math "[通常/つうじょう]HTMLのMath[接続/せつぞく]（native、[実装中/じっそうちゅう]）"
+  body
+      cons paragraph
+        cons sentence cons ruby text "通常" text "つうじょう" cons text "の " cons code "doc-html export" cons text "、SVG" cons ruby text "付" text "つ" cons text "きexport、" cons code "doc-html pages" cons text " にInlineMath・DisplayMathの" cons ruby text "表示経路" text "ひょうじけいろ" cons text "を" cons ruby text "追加" text "ついか" cons text "した。" nil
+        cons " [既存/きそん]のMath lower/check/MathMLとSentence annotation hostを[共用/きょうよう]し、[分数等/ぶんすうとう]の[構造/こうぞう]を[保/たも]ったままHTMLへ[合成/ごうせい]する。"
+        cons "MathをSVGへ[変換/へんかん]したり、[式/しき]を[暗黙評価/あんもくひょうか]したりする[必要/ひつよう]はない。"
+        cons " Doc/Math core[間/かん]の[直接依存/ちょくせついぞん]は[追加/ついか]していない。"
+        cons "Code[表示/ひょうじ]・Ruby/Anno・Parallel Rows・[元/もと]sourceと[要素対応/ようそたいおう]を[保持/ほじ]する。"
+        nil
+      cons paragraph
+        cons sentence cons ruby text "既定設定" text "きていせってい" cons text "は " cons code "katex-preferred" cons text "。" nil
+        cons sentence cons text "このnative hostではKaTeXの" cons ruby text "完全" text "かんぜん" cons text "な" cons ruby text "資源" text "しげん" cons text "・identity・アクセシビリティ" cons ruby text "付" text "つ" cons text "き" cons ruby text "実行接続" text "じっこうせつぞく" cons text "がまだないため、" cons code "KaTeXHostCapabilityUnavailable" cons text " をmanifestへ" cons ruby text "記録" text "きろく" cons text "して" cons ruby text "独立" text "どくりつ" cons text "MathMLを" cons ruby text "表示" text "ひょうじ" cons text "する。" nil
+        cons sentence cons text " " cons ruby text "忠実" text "ちゅうじつ" cons text "なTeXへ" cons ruby text "変換" text "へんかん" cons text "できない" cons ruby text "注釈付" text "ちゅうしゃくつ" cons text "き" cons ruby text "数式" text "すうしき" cons text "では " cons code "FaithfulTexUnsupported" cons text " と" cons ruby text "具体的" text "ぐたいてき" cons text "なnode/reasonを" cons ruby text "残" text "のこ" cons text "す。" nil
+        cons sentence cons text " " cons code "--math-renderer mathml-only" cons text " はKaTeXの" cons ruby text "準備" text "じゅんび" cons text "を" cons ruby text "要求" text "ようきゅう" cons text "せず、" cons ruby text "明示的" text "めいじてき" cons text "に" cons ruby text "独立" text "どくりつ" cons text "MathMLを" cons ruby text "選" text "えら" cons text "ぶ。" nil
+        cons "[閲覧/えつらん]にJavaScriptは[不要/ふよう]だが、MathML[対応/たいおう]ブラウザは[必要/ひつよう]である。"
+        cons " この[接続/せつぞく]はT24[全体/ぜんたい]、KaTeX[実行/じっこう]、Web Worker、[全/ぜん]constructorのブラウザ[受入/うけいれ]の[完了/かんりょう]を[意味/いみ]しない。"
+        nil
+      cons paragraph
+        cons sentence cons ruby text "回帰試験" text "かいきしけん" cons text "は " cons code "tools/tests/doc/export/math.rs" cons text "、" cons ruby text "通常" text "つうじょう" cons text "CLI・Code/PageSet" cons ruby text "試験" text "しけん" cons text "、" cons ruby text "既存" text "きそん" cons text "Sentence/Math" cons ruby text "再帰注釈試験" text "さいきちゅうしゃくしけん" cons text "に" cons ruby text "置" text "お" cons text "く。" nil
+        cons " source snapshotの[共通/きょうつう]admission、[文中/ぶんちゅう]・[別行/べつぎょう]slot、[出現別局所/しゅつげんべつきょくしょ]ID、[表示/ひょうじ]されない[外側/そとがわ]anchorの[拒否/きょひ]、[停止後/ていしご]の[成功拒否/せいこうきょひ]、[部分/ぶぶん]ページ[未公開/みこうかい]を[検査/けんさ]する。"
+        cons " [描画検査/びょうがけんさ]は[通常/つうじょう]export/pagesの[既存/きそん]browser auditへ[組/く]み[込/こ]み、[実行結果/じっこうけっか]と[未実行/みじっこう]のtargetを[区別/くべつ]する。"
+        nil
+      cons section html_allowance "Canonical HTML corpus allowance for native Math documentation"
+      body
+          cons paragraph
+            cons "The pre-change canonical site consumed 2,299,455,662 allocation units under an explicit 2,300,000,000-unit HTML corpus limit (only 544,338 units of headroom). "
+            cons "The added Math composition and renderer-identity documentation increased admitted source bytes from 1,246,201 to 1,247,640 and the next full site stopped during serialization. "
+            cons "The registry selects 2,400,000,000 allocation units for this corpus before a new operation starts. "
+            cons "Core/default budgets, allocation charging, cancellation and sticky Stop semantics are unchanged; no stopped budget is resumed and no automatic budget-increase fallback is introduced. "
+            cons "The full build must record its actual final usage and remain within this finite allowance."
+            nil
+        nil
+    nil
+  nil

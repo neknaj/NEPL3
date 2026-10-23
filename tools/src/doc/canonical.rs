@@ -9,6 +9,7 @@ use std::{
     path::Path,
 };
 
+mod compatibility;
 mod projection;
 pub(crate) mod references;
 #[cfg(test)]
@@ -87,6 +88,9 @@ pub struct Registry {
     /// SVG files in an all-footnotes batch. None becomes a semantic Doc page.
     #[serde(default)]
     pub files: Vec<ReferenceFile>,
+    /// Output-only copies of freshly generated canonical Markdown.
+    #[serde(default)]
+    pub compatibility: Vec<compatibility::Copy>,
     /// Markdown batch allowance; old-only checks keep per-page limits.
     #[serde(default)]
     pub output_limits: super::export::pages::resources::OutputLimits,
@@ -355,6 +359,7 @@ pub(crate) fn parse_registry(raw: &[u8]) -> Result<Registry> {
             }
         }
     }
+    compatibility::validate(&registry)?;
     Ok(registry)
 }
 
@@ -651,7 +656,8 @@ pub(crate) fn generate_html_with_projections(
     manifest: &str,
     projections: &[references::Projection],
 ) -> Result<super::export::pages::GeneratedPages> {
-    let registry = load(root, manifest)?;
+    let raw = bounded(root, manifest, MAX_REGISTRY)?;
+    let registry = parse_registry(&raw)?;
     let phases = registry.phases();
     if registry
         .pages
@@ -661,40 +667,68 @@ pub(crate) fn generate_html_with_projections(
         return Err("footnote-only registry requires Markdown export".into());
     }
     let mut output_budget = registry.html_output_limits.budget();
-    let mut resources = reference_inputs(root, registry.files)?;
-    references::apply(&mut resources, projections)?;
-    let mut inputs = Vec::new();
-    let mut aliases = Vec::new();
-    let mut alias_bytes = 0usize;
-    let mut total = 0u64;
-    for page in registry.pages {
-        let raw = bounded(root, &page.aliases, MAX_REGISTRY)?;
-        alias_bytes = alias_bytes
-            .checked_add(raw.len())
-            .ok_or("AliasInputLimit")?;
-        if alias_bytes > 10_000_000 {
-            return Err("AliasInputLimit".into());
+    let (inputs, aliases, mut resources, markdown) = if registry.compatibility.is_empty() {
+        let resources = reference_inputs(
+            root,
+            registry
+                .files
+                .iter()
+                .map(|f| ReferenceFile {
+                    id: f.id.clone(),
+                    source: f.source.clone(),
+                    route: f.route.clone(),
+                })
+                .collect(),
+        )?;
+        let mut inputs = Vec::new();
+        let mut aliases = Vec::new();
+        let mut alias_bytes = 0usize;
+        let mut total = 0u64;
+        for page in &registry.pages {
+            let raw = bounded(root, &page.aliases, MAX_REGISTRY)?;
+            alias_bytes = alias_bytes
+                .checked_add(raw.len())
+                .ok_or("AliasInputLimit")?;
+            if alias_bytes > 10_000_000 {
+                return Err("AliasInputLimit".into());
+            }
+            aliases.push(super::export::pages::aliases::PageAliases::parse(
+                page.id.clone(),
+                raw,
+            )?);
+            let bytes = bounded(root, &page.source, super::export::MAX_SOURCE_BYTES)?;
+            total = total.checked_add(bytes.len() as u64).ok_or("SourceLimit")?;
+            if total > super::export::MAX_SOURCE_BYTES {
+                return Err("SourceLimit".into());
+            }
+            let source = String::from_utf8(bytes)?;
+            inputs.push((
+                super::export::pages::Entry {
+                    id: page.id.clone(),
+                    source: page.projection.clone(),
+                    input: Some(page.source.clone()),
+                    route: page.route.clone(),
+                },
+                source,
+            ));
         }
-        aliases.push(super::export::pages::aliases::PageAliases::parse(
-            page.id.clone(),
+        (inputs, aliases, resources, None)
+    } else {
+        let prepared = projection::prepare_compatibility(
+            root,
+            manifest,
             raw,
-        )?);
-        let bytes = bounded(root, &page.source, super::export::MAX_SOURCE_BYTES)?;
-        total = total.checked_add(bytes.len() as u64).ok_or("SourceLimit")?;
-        if total > super::export::MAX_SOURCE_BYTES {
-            return Err("SourceLimit".into());
-        }
-        let source = String::from_utf8(bytes)?;
-        inputs.push((
-            super::export::pages::Entry {
-                id: page.id,
-                source: page.projection,
-                input: Some(page.source),
-                route: page.route,
-            },
-            source,
-        ));
-    }
+            &mut registry.output_limits.budget(),
+        )?;
+        (
+            prepared.inputs,
+            prepared.aliases,
+            prepared.references,
+            Some(prepared.markdown),
+        )
+    };
+    // Site-only passive HTML substitutions never contaminate Markdown inputs.
+    references::apply(&mut resources, projections)?;
     let mut generated = super::export::pages::generate_with_aliases(
         &super::source::compiled()?,
         &inputs,
@@ -704,6 +738,9 @@ pub(crate) fn generate_html_with_projections(
         &aliases,
     )?;
     references::record(&mut generated, projections)?;
+    if let Some(markdown) = markdown {
+        compatibility::append(&registry, markdown, &mut generated)?;
+    }
     Ok(generated)
 }
 

@@ -162,3 +162,53 @@ fn collisions_do_not_overwrite_generated_documents() {
     let mut files = BTreeMap::from([("assets".into(), Vec::new())]);
     assert!(insert(&mut files, "assets/site.css", Vec::new()).is_err());
 }
+
+#[test]
+fn composition_preserves_fresh_legacy_markdown_compatibility() -> Result<()> {
+    let f = crate::testing::Fixture::new()?;
+    f.write(
+        "doc/sample.nepld",
+        "article en \"Title\" body cons paragraph cons \"Frozen body.\" nil nil",
+    )?;
+    f.write("doc/aliases.json", "[]")?;
+    f.json("doc/canonical.json", &serde_json::json!({"version":1,"pages":[{"id":"sample","source":"doc/sample.nepld","projection":"doc/sample.md","aliases":"doc/aliases.json","route":"docs/sample.html","renderer":"nepl3-tools.markdown-annotated-pages/4"}],"compatibility":[{"page":"sample","route":"sources/sample.md"}]}))?;
+    let registry = canonical::load(f.root(), "doc/canonical.json")?;
+    for base in ["/NEPL3/", "/acceptance/project/"] {
+        let doc = canonical::generate_html(f.root(), "doc/canonical.json")?;
+        let legacy = doc
+            .files
+            .get("sources/sample.md")
+            .ok_or("legacy output")?
+            .clone();
+        let receipt = doc.manifest.clone();
+        let site = compose(
+            &SiteConfig {
+                version: 1,
+                base_path: base.into(),
+            },
+            &registry,
+            doc,
+            "commit",
+            "design",
+            &RendererIdentity {
+                executable_sha256: "test".into(),
+                build_rustc: "test",
+            },
+            None,
+        )?;
+        assert_eq!(site.files.get("sources/sample.md"), Some(&legacy));
+        assert_eq!(
+            site.files.get("doc-manifest.json"),
+            Some(&receipt.into_bytes())
+        );
+        let manifest: serde_json::Value = serde_json::from_str(&site.manifest)?;
+        assert!(
+            manifest["files"]
+                .as_array()
+                .ok_or("receipt files")?
+                .iter()
+                .any(|v| v["path"] == "sources/sample.md" && v["sha256"] == hash(&legacy))
+        );
+    }
+    Ok(())
+}

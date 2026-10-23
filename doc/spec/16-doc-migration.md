@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/16&#45;doc&#45;migration.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page doc&#45;migration; source SHA-256 3d3cb6a2e1df9332c940ed6fc6a2b14023ce5e86a08ac50e0e8a2f34bd9dfce6; alias input SHA-256 712a8a1556e6febd09de7225d16c57a69bfb8a21eec4cc64dfe96d9b1bea5202; page input SHA-256 be02c467a8e4bacbd35b5860c5922776c207f54e5fe878cbb2ae33c97bbfd2ce. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/16&#45;doc&#45;migration.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page doc&#45;migration; source SHA-256 c43ab8c2d3084614a24f24d28fe01f77986b3d245795e3a4193ede971f98e140; alias input SHA-256 712a8a1556e6febd09de7225d16c57a69bfb8a21eec4cc64dfe96d9b1bea5202; page input SHA-256 7738c3d6e47ac1e002e8460a30c368d71d533d8e31a7fb4f777b252b3043f6a0. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="16-正式文書のnepl3-doc-dsl移行"></a>
 
@@ -138,6 +138,18 @@ job\_executionのcontractはnepl3\.canonical\-markdown\.retry\-job\/1とし、<r
 compiler<ruby>開発<rt>かいはつ</rt></ruby>で<ruby>現行<rt>げんこう</rt></ruby>rendererが<ruby>壊<rt>こわ</rt></ruby>れた<ruby>場合<rt>ばあい</rt></ruby>にも<ruby>仕様<rt>しよう</rt></ruby>を<ruby>読<rt>よ</rt></ruby>めるよう、<ruby>最後<rt>さいご</rt></ruby>に<ruby>動作検証済<rt>どうさけんしょうず</rt></ruby>みの<ruby>文書<rt>ぶんしょ</rt></ruby>renderer\/package\/assetを、versionとdigestで<ruby>固定<rt>こてい</rt></ruby>して<ruby>利用<rt>りよう</rt></ruby>できる。<ruby>新<rt>あたら</rt></ruby>しいDoc sourceはそのrendererで<ruby>受理<rt>じゅり</rt></ruby>できる<ruby>版<rt>ばん</rt></ruby>かを<ruby>確認<rt>かくにん</rt></ruby>し、<ruby>非互換<rt>ひごかん</rt></ruby>なら<ruby>停止<rt>ていし</rt></ruby>して、<ruby>互換<rt>ごかん</rt></ruby>なrendererの<ruby>確立<rt>かくりつ</rt></ruby>を<ruby>先<rt>さき</rt></ruby>に<ruby>行<rt>おこな</rt></ruby>う。<ruby>失敗後<rt>しっぱいご</rt></ruby>に、<ruby>黙<rt>だま</rt></ruby>って<ruby>旧<rt>きゅう</rt></ruby>rendererへfallbackしない。<ruby>明示選択<rt>めいじせんたく</rt></ruby>した<ruby>旧<rt>きゅう</rt></ruby>rendererでの<ruby>文書<rt>ぶんしょ</rt></ruby>buildと、<ruby>同<rt>どう</rt></ruby>revisionの<ruby>処理系<rt>しょりけい</rt></ruby>がDocを<ruby>正<rt>ただ</rt></ruby>しく<ruby>扱<rt>あつか</rt></ruby>うruntime<ruby>受入<rt>うけいれ</rt></ruby>を、<ruby>別<rt>べつ</rt></ruby>の<ruby>結果<rt>けっか</rt></ruby>として<ruby>記録<rt>きろく</rt></ruby>する。
 
 <ruby>配布済<rt>はいふず</rt></ruby>み<ruby>文書<rt>ぶんしょ</rt></ruby>snapshotの<ruby>閲覧<rt>えつらん</rt></ruby>に、compilerを<ruby>要求<rt>ようきゅう</rt></ruby>しない。<ruby>過去<rt>かこ</rt></ruby>releaseの<ruby>文書<rt>ぶんしょ</rt></ruby>・asset・<ruby>例<rt>れい</rt></ruby>は、そのreleaseのidentityで<ruby>固定<rt>こてい</rt></ruby>する。source、renderer、schema、registry、assetが<ruby>同<rt>おな</rt></ruby>じなら<ruby>生成<rt>せいせい</rt></ruby>byte<ruby>列<rt>れつ</rt></ruby>と<ruby>意味構造<rt>いみこうぞう</rt></ruby>が<ruby>再現<rt>さいげん</rt></ruby>できることを<ruby>検査<rt>けんさ</rt></ruby>し、<ruby>時刻<rt>じこく</rt></ruby>やnetworkによる<ruby>差<rt>さ</rt></ruby>を<ruby>持<rt>も</rt></ruby>ち<ruby>込<rt>こ</rt></ruby>まない。
+
+<a name="n-636f6d7061746962696c6974794d61726b646f776e"></a>
+
+## Output\-only legacy Markdown endpoints
+
+The canonical registry may explicitly map a registered page ID to a legacy sources\/\*\.md endpoint through compatibility entries\. Only the annotated page\-context renderer is supported\; unknown pages\, other renderers\, invalid paths and colliding routes are rejected\. These endpoints are output copies\, not independently authored pages or semantic PageFile registrations\.
+
+A single immutable capture of the registry\, canonical sources\, aliases and passive references supplies both fresh Markdown generation and HTML input\. Existing repository Markdown is neither read nor trusted for this copy\, so stale or missing projections do not prevent regeneration\. Mixed\-site HTML substitutions apply only to the HTML reference copies and do not change the Markdown dependency context\. Relative links in the raw Markdown endpoint retain their repository meaning\; the copy is not advertised as a second navigable HTML page\.
+
+Snapshot copying is bounded host preparation\, separate from each renderer\'s explicit runtime budget\. At most 128 pages and 128 passive files are captured\, with 10\,000\,000 source bytes\, 1\,048\,576 alias bytes and 2\,097\,152 passive bytes in aggregate\. At most 128 compatibility copies are allowed\, each at most 262\,144 bytes and together at most 2\,097\,152 bytes\. The output receipt is limited to 8 MiB and records source and alias identities\, Markdown input context\, renderer\, route\, byte length and delivered hash\.
+
+Compatibility routes are checked against canonical\, passive and generated outputs\, including case\-insensitive and file\/directory collisions\. Markdown or HTML failure produces no completed output directory\; no partial compatibility copy is published\. The host does not relax PageSet uniqueness\, retry immutability\, source admission\, or sticky Stop semantics\.
 
 <a name="n-636f6d706c6574696f6e"></a>
 

@@ -1,418 +1,275 @@
-# Doc runtime の段階実装
+<!-- Generated from doc/progress/doc&#45;runtime.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page doc&#45;runtime; source SHA-256 8f7b42ee2d493d4393924727b4845516592b4b8a220315296b1a17889480eb88; alias input SHA-256 7001cf5c747496ccf5286b26026ac9c14a311f9df708b2dcf0596a4b598d5e62; page input SHA-256 9ec6a7e8982421de18315941ede10c38e457dfbd7da71dc67f1ad852be62c9c5. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
-T07 は進行中。`doc/spec/05-document.md` と `design/forms.json` を最終契約とし、以下の native API ができたことを T07 全体の完了へ読み替えない。
+<a name="doc-runtime-の段階実装"></a>
 
-## 現在状態を確認する入口
+# Doc runtime の<ruby>段階実装<rt>だんかいじっそう</rt></ruby>
 
-正本の一覧は `doc/canonical.json`、実装・受入の状態は `implementation-status.json`、
-到達条件は `design/tasks.json` を参照する。以下の履歴にある「未完了」「停止」は、
-その段階の結果であり、現在の残件を列挙したものではない。
+[正本（NEPL3d）](<doc-runtime.nepld>)
 
-第05章は通常のpage予算でparse/lowerと文書集合のHTML生成が成立し、正本登録済みである。
-内容比較、旧見出しalias、17章・23章へのリンクを検査した移行結果はregistryから辿る。
-Markdown集合のWork上限はページ追加に対応する別の実行設定であり、単体の性能保証ではない。
-source集合の増大については、readerの競合検査とadmissionだけを実行する限定測定を追加した。
-parser全体の実時間・実メモリは未測定であり、単体文書の予算適合やこの限定測定から推定しない。
-次の性能改善では、以下の測定を基に既存集合の再走査と検証scopeの寿命を調べる。
-受入済みcollectorの再admissionは、台帳の一致を確認できる同期readで再利用する。
-同期hostもcallback境界ごとの交換検出を通す。SourceStoreを明示準備した経路では、
-環境集合の所有付きscopeも再利用する。正常な同期readでは、collectorが保持する
-環境検査済みprefixを引き継ぎ、追加sourceだけを検査する。resume経路は残件である。
+T07 は<ruby>進行中<rt>しんこうちゅう</rt></ruby>。`doc/spec/05-document.md` と `design/forms.json` を<ruby>最終契約<rt>さいしゅうけいやく</rt></ruby>とし、<ruby>以下<rt>いか</rt></ruby>の native API ができたことを T07 <ruby>全体<rt>ぜんたい</rt></ruby>の<ruby>完了<rt>かんりょう</rt></ruby>へ<ruby>読<rt>よ</rt></ruby>み<ruby>替<rt>か</rt></ruby>えない。
 
-Doc coreの重複Sentence parserと公開parsing APIは撤去した。literalの意味・診断位置は
-独立Sentenceで、Doc normalizationとの一致はhost bridgeで検査する。Doc portable試験は
-source・Origin・Viewを持つ型付きfixtureを使う。Doc専用SentencePayload/readerは撤去し、
-独立SentenceLiteralPayload/SentenceSyntaxをsuiteの型付きadapterで受信する。
-Doc lowerはcallbackの停止と局所構造を再配置前に検査し、元tokenとの所属を保持する。
-生成rootのcoverと原Viewは、異なるsnapshot間の明示SourceMapによる全経路対応で保存する。
-Doc消費用arenaのSentence/Inline表現は残っており、意味所有全体の移行完了ではない。
-Sentence consumerの所有移行、NEPL3a、旧lexical commentの全面撤去、T07/T21全体は
-未完了のままである。HTML/rustdocの高度化をこれらの本体開発の前提にしない。
+<a name="n-737461747573"></a>
 
-## 段階別の履歴
+<a name="現在状態を確認する入口"></a>
 
-### 2026-10-05: HTMLページ集合のCode合成
+## <ruby>現在状態<rt>げんざいじょうたい</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>する<ruby>入口<rt>いりぐち</rt></ruby>
 
-native `render_pages_with_code`は、参照解決後に正確なページとembedをadapterへ渡す。
-旧`render_pages`とportable codecのCode拒否は維持する。新profileはCode装飾のDOM Idを
-拒否し、言語選択で隠れたDoc anchorをCode内のIdで代用させない。DataIdは保持する。
+<ruby>正本<rt>せいほん</rt></ruby>の<ruby>一覧<rt>いちらん</rt></ruby>は `doc/canonical.json`、<ruby>実装<rt>じっそう</rt></ruby>・<ruby>受入<rt>うけいれ</rt></ruby>の<ruby>状態<rt>じょうたい</rt></ruby>は `implementation-status.json`、 <ruby>到達条件<rt>とうたつじょうけん</rt></ruby>は `design/tasks.json` を<ruby>参照<rt>さんしょう</rt></ruby>する。<ruby>以下<rt>いか</rt></ruby>の<ruby>履歴<rt>りれき</rt></ruby>にある「<ruby>未完了<rt>みかんりょう</rt></ruby>」「<ruby>停止<rt>ていし</rt></ruby>」は、 その<ruby>段階<rt>だんかい</rt></ruby>の<ruby>結果<rt>けっか</rt></ruby>であり、<ruby>現在<rt>げんざい</rt></ruby>の<ruby>残件<rt>ざんけん</rt></ruby>を<ruby>列挙<rt>れっきょ</rt></ruby>したものではない。
 
-開発hostは元のvalidated ParseTree/profileのscope内で共有highlightを準備し、
-canonical guest digestで消費入力を照合する。繰り返し出現のSpan/Text複製は予算計上する。
-Codeの意味lower・評価・再parseは行わない。全体のリンク・markup検査後に出力する。
-reader facts、Pagesの画像・他guest、portable Code操作と全体受入は未完了である。
+<ruby>第<rt>だい</rt></ruby>05<ruby>章<rt>しょう</rt></ruby>は<ruby>通常<rt>つうじょう</rt></ruby>のpage<ruby>予算<rt>よさん</rt></ruby>でparse\/lowerと<ruby>文書集合<rt>ぶんしょしゅうごう</rt></ruby>のHTML<ruby>生成<rt>せいせい</rt></ruby>が<ruby>成立<rt>せいりつ</rt></ruby>し、<ruby>正本登録済<rt>せいほんとうろくず</rt></ruby>みである。 <ruby>内容比較<rt>ないようひかく</rt></ruby>、<ruby>旧見出<rt>きゅうみだ</rt></ruby>しalias、17<ruby>章<rt>しょう</rt></ruby>・23<ruby>章<rt>しょう</rt></ruby>へのリンクを<ruby>検査<rt>けんさ</rt></ruby>した<ruby>移行結果<rt>いこうけっか</rt></ruby>はregistryから<ruby>辿<rt>たど</rt></ruby>る。 Markdown<ruby>集合<rt>しゅうごう</rt></ruby>のWork<ruby>上限<rt>じょうげん</rt></ruby>はページ<ruby>追加<rt>ついか</rt></ruby>に<ruby>対応<rt>たいおう</rt></ruby>する<ruby>別<rt>べつ</rt></ruby>の<ruby>実行設定<rt>じっこうせってい</rt></ruby>であり、<ruby>単体<rt>たんたい</rt></ruby>の<ruby>性能保証<rt>せいのうほしょう</rt></ruby>ではない。 source<ruby>集合<rt>しゅうごう</rt></ruby>の<ruby>増大<rt>ぞうだい</rt></ruby>については、readerの<ruby>競合検査<rt>きょうごうけんさ</rt></ruby>とadmissionだけを<ruby>実行<rt>じっこう</rt></ruby>する<ruby>限定測定<rt>げんていそくてい</rt></ruby>を<ruby>追加<rt>ついか</rt></ruby>した。 parser<ruby>全体<rt>ぜんたい</rt></ruby>の<ruby>実時間<rt>じつじかん</rt></ruby>・<ruby>実<rt>じつ</rt></ruby>メモリは<ruby>未測定<rt>みそくてい</rt></ruby>であり、<ruby>単体文書<rt>たんたいぶんしょ</rt></ruby>の<ruby>予算適合<rt>よさんてきごう</rt></ruby>やこの<ruby>限定測定<rt>げんていそくてい</rt></ruby>から<ruby>推定<rt>すいてい</rt></ruby>しない。 <ruby>次<rt>つぎ</rt></ruby>の<ruby>性能改善<rt>せいのうかいぜん</rt></ruby>では、<ruby>以下<rt>いか</rt></ruby>の<ruby>測定<rt>そくてい</rt></ruby>を<ruby>基<rt>もと</rt></ruby>に<ruby>既存集合<rt>きそんしゅうごう</rt></ruby>の<ruby>再走査<rt>さいそうさ</rt></ruby>と<ruby>検証<rt>けんしょう</rt></ruby>scopeの<ruby>寿命<rt>じゅみょう</rt></ruby>を<ruby>調<rt>しら</rt></ruby>べる。 <ruby>受入済<rt>うけいれず</rt></ruby>みcollectorの<ruby>再<rt>さい</rt></ruby>admissionは、<ruby>台帳<rt>だいちょう</rt></ruby>の<ruby>一致<rt>いっち</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>できる<ruby>同期<rt>どうき</rt></ruby>readで<ruby>再利用<rt>さいりよう</rt></ruby>する。 <ruby>同期<rt>どうき</rt></ruby>hostもcallback<ruby>境界<rt>きょうかい</rt></ruby>ごとの<ruby>交換検出<rt>こうかんけんしゅつ</rt></ruby>を<ruby>通<rt>とお</rt></ruby>す。SourceStoreを<ruby>明示準備<rt>めいじじゅんび</rt></ruby>した<ruby>経路<rt>けいろ</rt></ruby>では、 <ruby>環境集合<rt>かんきょうしゅうごう</rt></ruby>の<ruby>所有付<rt>しょゆうつ</rt></ruby>きscopeも<ruby>再利用<rt>さいりよう</rt></ruby>する。<ruby>正常<rt>せいじょう</rt></ruby>な<ruby>同期<rt>どうき</rt></ruby>readでは、collectorが<ruby>保持<rt>ほじ</rt></ruby>する <ruby>環境検査済<rt>かんきょうけんさず</rt></ruby>みprefixを<ruby>引<rt>ひ</rt></ruby>き<ruby>継<rt>つ</rt></ruby>ぎ、<ruby>追加<rt>ついか</rt></ruby>sourceだけを<ruby>検査<rt>けんさ</rt></ruby>する。resume<ruby>経路<rt>けいろ</rt></ruby>は<ruby>残件<rt>ざんけん</rt></ruby>である。
 
-### 2026-10-05: 明示Math surfaceをfootnotes集合へ接続
+Doc coreの<ruby>重複<rt>じゅうふく</rt></ruby>Sentence parserと<ruby>公開<rt>こうかい</rt></ruby>parsing APIは<ruby>撤去<rt>てっきょ</rt></ruby>した。literalの<ruby>意味<rt>いみ</rt></ruby>・<ruby>診断位置<rt>しんだんいち</rt></ruby>は <ruby>独立<rt>どくりつ</rt></ruby>Sentenceで、Doc normalizationとの<ruby>一致<rt>いっち</rt></ruby>はhost bridgeで<ruby>検査<rt>けんさ</rt></ruby>する。Doc portable<ruby>試験<rt>しけん</rt></ruby>は source・Origin・Viewを<ruby>持<rt>も</rt></ruby>つ<ruby>型付<rt>かたつ</rt></ruby>きfixtureを<ruby>使<rt>つか</rt></ruby>う。Doc<ruby>専用<rt>せんよう</rt></ruby>SentencePayload\/readerは<ruby>撤去<rt>てっきょ</rt></ruby>し、 <ruby>独立<rt>どくりつ</rt></ruby>SentenceLiteralPayload\/SentenceSyntaxをsuiteの<ruby>型付<rt>かたつ</rt></ruby>きadapterで<ruby>受信<rt>じゅしん</rt></ruby>する。 Doc lowerはcallbackの<ruby>停止<rt>ていし</rt></ruby>と<ruby>局所構造<rt>きょくしょこうぞう</rt></ruby>を<ruby>再配置前<rt>さいはいちまえ</rt></ruby>に<ruby>検査<rt>けんさ</rt></ruby>し、<ruby>元<rt>もと</rt></ruby>tokenとの<ruby>所属<rt>しょぞく</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>する。 <ruby>生成<rt>せいせい</rt></ruby>rootのcoverと<ruby>原<rt>げん</rt></ruby>Viewは、<ruby>異<rt>こと</rt></ruby>なるsnapshot<ruby>間<rt>かん</rt></ruby>の<ruby>明示<rt>めいじ</rt></ruby>SourceMapによる<ruby>全経路対応<rt>ぜんけいろたいおう</rt></ruby>で<ruby>保存<rt>ほぞん</rt></ruby>する。 Doc<ruby>消費用<rt>しょうひよう</rt></ruby>arenaのSentence\/Inline<ruby>表現<rt>ひょうげん</rt></ruby>は<ruby>残<rt>のこ</rt></ruby>っており、<ruby>意味所有全体<rt>いみしょゆうぜんたい</rt></ruby>の<ruby>移行完了<rt>いこうかんりょう</rt></ruby>ではない。 Sentence consumerの<ruby>所有移行<rt>しょゆういこう</rt></ruby>、NEPL3a、<ruby>旧<rt>きゅう</rt></ruby>lexical commentの<ruby>全面撤去<rt>ぜんめんてっきょ</rt></ruby>、T07\/T21<ruby>全体<rt>ぜんたい</rt></ruby>は <ruby>未完了<rt>みかんりょう</rt></ruby>のままである。HTML\/rustdocの<ruby>高度化<rt>こうどか</rt></ruby>をこれらの<ruby>本体開発<rt>ほんたいかいはつ</rt></ruby>の<ruby>前提<rt>ぜんてい</rt></ruby>にしない。
 
-`render_footnotes_svg_math`はsurface identityを受け取り、全Math occurrenceを準備してから
-checked PageSetのforeign要求を解決する。未対応guest・未使用embed・到達不能Mathを拒否する。
-見出し・本文・脚注・対応済みtable cellのInlineMathと、本文のDisplayMathを構造から出力する。
-RubyのHTML内・link label内のMath、およびtableのpipeを含むTeXは拒否する。
+<a name="n-686973746f7279"></a>
 
-footnotes集合CLIはcompile済みの標準surfaceを明示選択する。使用pageのcontextとreceiptに
-Math embedの検査済みguest digestを加え、Mathを含まないpageのMarkdownは維持する。
-旧APIのNeedsResolutionは変更しない。実GitHub描画・MathJax比較・T07/T21受入は未検証である。
+<a name="段階別の履歴"></a>
 
-### 2026-10-05: Markdown Math fragmentのnative準備
+## <ruby>段階別<rt>だんかいべつ</rt></ruby>の<ruby>履歴<rt>りれき</rt></ruby>
 
-`MathDisplayHost::prepare_markdown_node`は実DocのInlineMath/DisplayMathを、
-既存の独立MathML検査と構造TeX生成へ渡す。評価は行わず、Codeは受理しない。
-TeXで保持できないForeignAnnotation等は型付きUnsupportedとして返し、
-注釈を省いた式やMathMLの文字列化で代用しない。
+<a name="n-636f64655f7061676573"></a>
 
-`PreparedMarkdown`は同じ不変Docへのborrowとnode番号を保持するnative handleである。
-portable受渡し・遠隔providerの証明には使用しない。生成時と同じLimitsを要求し、
-呼出側は準備から出力まで同じ累積Budgetを使う。Limits一致だけでは使用量の継続を証明しない。
-InlineはGitHubのドル・backtick区切り、DisplayBlockはmath fenced code blockを生成する。
-空のTeX、改行・backtickを含むTeX、TableCell内のpipeは明示的に拒否し、別の式へ書き換えない。
-文書の隣接文字・list/table構造に合わせた配置は呼出側の責務として残る。
+<a name="2026-10-05-htmlページ集合のcode合成"></a>
 
-これはfragment準備の段階であり、footnotes page-set・CLI・canonical context identityへは
-未接続である。既存footnotes APIはMathをNeedsResolutionとして拒否する。
-GitHubの実描画、MathJaxとの差分、全数式の意味同等性、T07/T21受入は未検証である。
-出力記法の参照は[GitHub公式の数式記法](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/writing-mathematical-expressions)。
+### 2026\-10\-05\: HTMLページ<ruby>集合<rt>しゅうごう</rt></ruby>のCode<ruby>合成<rt>ごうせい</rt></ruby>
 
-### 2026-09-21: collectorの環境検査済みprefixを保持
+native `render_pages_with_code`は、<ruby>参照解決後<rt>さんしょうかいけつご</rt></ruby>に<ruby>正確<rt>せいかく</rt></ruby>なページとembedをadapterへ<ruby>渡<rt>わた</rt></ruby>す。 <ruby>旧<rt>きゅう</rt></ruby>`render_pages`とportable codecのCode<ruby>拒否<rt>きょひ</rt></ruby>は<ruby>維持<rt>いじ</rt></ruby>する。<ruby>新<rt>しん</rt></ruby>profileはCode<ruby>装飾<rt>そうしょく</rt></ruby>のDOM Idを <ruby>拒否<rt>きょひ</rt></ruby>し、<ruby>言語選択<rt>げんごせんたく</rt></ruby>で<ruby>隠<rt>かく</rt></ruby>れたDoc anchorをCode<ruby>内<rt>ない</rt></ruby>のIdで<ruby>代用<rt>だいよう</rt></ruby>させない。DataIdは<ruby>保持<rt>ほじ</rt></ruby>する。
 
-正常な同期readが返すcollectorに、開始時のsource長までの競合検査scopeを保存する。
-新規生成sourceは次のreadで検査する。公開appendは追加分をこの証明へ含めず、
-checkpointとrollbackは元の検査範囲を実source列と一緒に保持する。
-別store・未準備store・raw復元・resume・停止ではこの省略を推定しない。
-SourceChecksの補助cacheは検査済みの値列であり、collector内のindexではない。
+<ruby>開発<rt>かいはつ</rt></ruby>hostは<ruby>元<rt>もと</rt></ruby>のvalidated ParseTree\/profileのscope<ruby>内<rt>ない</rt></ruby>で<ruby>共有<rt>きょうゆう</rt></ruby>highlightを<ruby>準備<rt>じゅんび</rt></ruby>し、 canonical guest digestで<ruby>消費入力<rt>しょうひにゅうりょく</rt></ruby>を<ruby>照合<rt>しょうごう</rt></ruby>する。<ruby>繰<rt>く</rt></ruby>り<ruby>返<rt>かえ</rt></ruby>し<ruby>出現<rt>しゅつげん</rt></ruby>のSpan\/Text<ruby>複製<rt>ふくせい</rt></ruby>は<ruby>予算計上<rt>よさんけいじょう</rt></ruby>する。 Codeの<ruby>意味<rt>いみ</rt></ruby>lower・<ruby>評価<rt>ひょうか</rt></ruby>・<ruby>再<rt>さい</rt></ruby>parseは<ruby>行<rt>おこな</rt></ruby>わない。<ruby>全体<rt>ぜんたい</rt></ruby>のリンク・markup<ruby>検査後<rt>けんさご</rt></ruby>に<ruby>出力<rt>しゅつりょく</rt></ruby>する。 reader facts、Pagesの<ruby>画像<rt>がぞう</rt></ruby>・<ruby>他<rt>た</rt></ruby>guest、portable Code<ruby>操作<rt>そうさ</rt></ruby>と<ruby>全体受入<rt>ぜんたいうけいれ</rt></ruby>は<ruby>未完了<rt>みかんりょう</rt></ruby>である。
 
-限定測定`accepted_prefix_growth_measurement`はsourceを1件ずつ増やして競合検査だけを
-128/256/512回行う。source構築・parser・admissionは含めない。
-従来のWorkは8,384/33,152/131,840、prefix保持時は10,797/21,677/43,437だった。
-128件では定数費用によりWorkが増えるが、増大入力の反復比較は線形に変わる。
-Windows debugの参考時間は従来0.26/0.78/3.02 ms、prefix保持時0.046/0.073/0.147 ms。
-これは全parserの実時間や実heapの改善率ではない。別分岐が同じ長さの場合、rollback後の
-別suffix、環境競合、検査停止、実host生成直後の未検査suffixを回帰試験で確認した。
+<a name="n-6d6174685f666f6f746e6f746573"></a>
 
-### 2026-09-21: 変更されていないSourceStoreの環境比較を再利用
+<a name="2026-10-05-明示math-surfaceをfootnotes集合へ接続"></a>
 
-SourceStoreのscopeは集合を構築した後に明示準備する。新規挿入と非空編集のcommitで
-失効し、同値の重複挿入・空編集・途中停止では維持する。再準備しない場合と非atomic
-targetは従来の内容比較を使う。台帳のscopeとは別であり、schemaや資源入場を証明しない。
-共通開発hostのparse入口で準備し、tokenizerは同じ集合の反復比較だけを省く。
+### 2026\-10\-05\: <ruby>明示<rt>めいじ</rt></ruby>Math surfaceをfootnotes<ruby>集合<rt>しゅうごう</rt></ruby>へ<ruby>接続<rt>せつぞく</rt></ruby>
 
-限定測定`environment_scope_growth_measurement`は128/256/512件の環境をそれぞれ
-127/255/511回再比較する。初回の保存とfixture構築、parser、accepted sourceは含めない。
-未準備時のWorkは16,256/65,280/261,632、準備時は0であり、各回のBudget pollは維持する。
-Windows debugの参考実時間は未準備0.38/1.42/5.85 ms、準備0.011/0.016/0.033 msだった。
-この測定は環境比較だけのもので、parser全体の性能・実heap削減・全source経路の線形化を
-示さない。AllocationUnitsは実heap計測ではない。独立レビューで求められた編集commit
-直前のAllocation停止も、集合とscopeの不変性を回帰試験で確認した。
+`render_footnotes_svg_math`はsurface identityを<ruby>受<rt>う</rt></ruby>け<ruby>取<rt>と</rt></ruby>り、<ruby>全<rt>ぜん</rt></ruby>Math occurrenceを<ruby>準備<rt>じゅんび</rt></ruby>してから checked PageSetのforeign<ruby>要求<rt>ようきゅう</rt></ruby>を<ruby>解決<rt>かいけつ</rt></ruby>する。<ruby>未対応<rt>みたいおう</rt></ruby>guest・<ruby>未使用<rt>みしよう</rt></ruby>embed・<ruby>到達不能<rt>とうたつふのう</rt></ruby>Mathを<ruby>拒否<rt>きょひ</rt></ruby>する。 <ruby>見出<rt>みだ</rt></ruby>し・<ruby>本文<rt>ほんぶん</rt></ruby>・<ruby>脚注<rt>きゃくちゅう</rt></ruby>・<ruby>対応済<rt>たいおうず</rt></ruby>みtable cellのInlineMathと、<ruby>本文<rt>ほんぶん</rt></ruby>のDisplayMathを<ruby>構造<rt>こうぞう</rt></ruby>から<ruby>出力<rt>しゅつりょく</rt></ruby>する。 RubyのHTML<ruby>内<rt>ない</rt></ruby>・link label<ruby>内<rt>ない</rt></ruby>のMath、およびtableのpipeを<ruby>含<rt>ふく</rt></ruby>むTeXは<ruby>拒否<rt>きょひ</rt></ruby>する。
 
-### 2026-09-21: source集合の反復走査の基準測定
+footnotes<ruby>集合<rt>しゅうごう</rt></ruby>CLIはcompile<ruby>済<rt>ず</rt></ruby>みの<ruby>標準<rt>ひょうじゅん</rt></ruby>surfaceを<ruby>明示選択<rt>めいじせんたく</rt></ruby>する。<ruby>使用<rt>しよう</rt></ruby>pageのcontextとreceiptに Math embedの<ruby>検査済<rt>けんさず</rt></ruby>みguest digestを<ruby>加<rt>くわ</rt></ruby>え、Mathを<ruby>含<rt>ふく</rt></ruby>まないpageのMarkdownは<ruby>維持<rt>いじ</rt></ruby>する。 <ruby>旧<rt>きゅう</rt></ruby>APIのNeedsResolutionは<ruby>変更<rt>へんこう</rt></ruby>しない。<ruby>実<rt>じつ</rt></ruby>GitHub<ruby>描画<rt>びょうが</rt></ruby>・MathJax<ruby>比較<rt>ひかく</rt></ruby>・T07\/T21<ruby>受入<rt>うけいれ</rt></ruby>は<ruby>未検証<rt>みけんしょう</rt></ruby>である。
 
-`tokenizer::source_checks::tests::source_scope_growth_measurement` は明示実行するignored testである。
-固定32 sourceと、読取りごとに1 source増える入力を128/256/512回処理する。
-測定対象のaccepted sourceは各1 KiB、固定environmentの32 sourceは各4 bytesである。
-fixture構築・parser・I/Oを測定に含めない。
-同じscope内で実際のSourceChecksとSourceAdmissionを再利用する。
+<a name="n-6d61726b646f776e5f6d617468"></a>
 
-| 増大入力の読取り回数 | admission走査回数 | 競合検査Work | admission Work |
+<a name="2026-10-05-markdown-math-fragmentのnative準備"></a>
+
+### 2026\-10\-05\: Markdown Math fragmentのnative<ruby>準備<rt>じゅんび</rt></ruby>
+
+`MathDisplayHost::prepare_markdown_node`は<ruby>実<rt>じつ</rt></ruby>DocのInlineMath\/DisplayMathを、 <ruby>既存<rt>きそん</rt></ruby>の<ruby>独立<rt>どくりつ</rt></ruby>MathML<ruby>検査<rt>けんさ</rt></ruby>と<ruby>構造<rt>こうぞう</rt></ruby>TeX<ruby>生成<rt>せいせい</rt></ruby>へ<ruby>渡<rt>わた</rt></ruby>す。<ruby>評価<rt>ひょうか</rt></ruby>は<ruby>行<rt>おこな</rt></ruby>わず、Codeは<ruby>受理<rt>じゅり</rt></ruby>しない。 TeXで<ruby>保持<rt>ほじ</rt></ruby>できないForeignAnnotation<ruby>等<rt>とう</rt></ruby>は<ruby>型付<rt>かたつ</rt></ruby>きUnsupportedとして<ruby>返<rt>かえ</rt></ruby>し、 <ruby>注釈<rt>ちゅうしゃく</rt></ruby>を<ruby>省<rt>はぶ</rt></ruby>いた<ruby>式<rt>しき</rt></ruby>やMathMLの<ruby>文字列化<rt>もじれつか</rt></ruby>で<ruby>代用<rt>だいよう</rt></ruby>しない。
+
+`PreparedMarkdown`は<ruby>同<rt>おな</rt></ruby>じ<ruby>不変<rt>ふへん</rt></ruby>Docへのborrowとnode<ruby>番号<rt>ばんごう</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>するnative handleである。 portable<ruby>受渡<rt>うけわた</rt></ruby>し・<ruby>遠隔<rt>えんかく</rt></ruby>providerの<ruby>証明<rt>しょうめい</rt></ruby>には<ruby>使用<rt>しよう</rt></ruby>しない。<ruby>生成時<rt>せいせいじ</rt></ruby>と<ruby>同<rt>おな</rt></ruby>じLimitsを<ruby>要求<rt>ようきゅう</rt></ruby>し、 <ruby>呼出側<rt>よびだしがわ</rt></ruby>は<ruby>準備<rt>じゅんび</rt></ruby>から<ruby>出力<rt>しゅつりょく</rt></ruby>まで<ruby>同<rt>おな</rt></ruby>じ<ruby>累積<rt>るいせき</rt></ruby>Budgetを<ruby>使<rt>つか</rt></ruby>う。Limits<ruby>一致<rt>いっち</rt></ruby>だけでは<ruby>使用量<rt>しようりょう</rt></ruby>の<ruby>継続<rt>けいぞく</rt></ruby>を<ruby>証明<rt>しょうめい</rt></ruby>しない。 InlineはGitHubのドル・backtick<ruby>区切<rt>くぎ</rt></ruby>り、DisplayBlockはmath fenced code blockを<ruby>生成<rt>せいせい</rt></ruby>する。 <ruby>空<rt>から</rt></ruby>のTeX、<ruby>改行<rt>かいぎょう</rt></ruby>・backtickを<ruby>含<rt>ふく</rt></ruby>むTeX、TableCell<ruby>内<rt>ない</rt></ruby>のpipeは<ruby>明示的<rt>めいじてき</rt></ruby>に<ruby>拒否<rt>きょひ</rt></ruby>し、<ruby>別<rt>べつ</rt></ruby>の<ruby>式<rt>しき</rt></ruby>へ<ruby>書<rt>か</rt></ruby>き<ruby>換<rt>か</rt></ruby>えない。 <ruby>文書<rt>ぶんしょ</rt></ruby>の<ruby>隣接文字<rt>りんせつもじ</rt></ruby>・list\/table<ruby>構造<rt>こうぞう</rt></ruby>に<ruby>合<rt>あ</rt></ruby>わせた<ruby>配置<rt>はいち</rt></ruby>は<ruby>呼出側<rt>よびだしがわ</rt></ruby>の<ruby>責務<rt>せきむ</rt></ruby>として<ruby>残<rt>のこ</rt></ruby>る。
+
+これはfragment<ruby>準備<rt>じゅんび</rt></ruby>の<ruby>段階<rt>だんかい</rt></ruby>であり、footnotes page\-set・CLI・canonical context identityへは <ruby>未接続<rt>みせつぞく</rt></ruby>である。<ruby>既存<rt>きそん</rt></ruby>footnotes APIはMathをNeedsResolutionとして<ruby>拒否<rt>きょひ</rt></ruby>する。 GitHubの<ruby>実描画<rt>じつびょうが</rt></ruby>、MathJaxとの<ruby>差分<rt>さぶん</rt></ruby>、<ruby>全数式<rt>ぜんすうしき</rt></ruby>の<ruby>意味同等性<rt>いみどうとうせい</rt></ruby>、T07\/T21<ruby>受入<rt>うけいれ</rt></ruby>は<ruby>未検証<rt>みけんしょう</rt></ruby>である。 <ruby>出力記法<rt>しゅつりょくきほう</rt></ruby>の<ruby>参照<rt>さんしょう</rt></ruby>は[GitHub<ruby>公式<rt>こうしき</rt></ruby>の<ruby>数式記法<rt>すうしききほう</rt></ruby>](<https\:\/\/docs\.github\.com\/en\/get\-started\/writing\-on\-github\/working\-with\-advanced\-formatting\/writing\-mathematical\-expressions>)。
+
+<a name="n-61636365707465645f707265666978"></a>
+
+<a name="2026-09-21-collectorの環境検査済みprefixを保持"></a>
+
+### 2026\-09\-21\: collectorの<ruby>環境検査済<rt>かんきょうけんさず</rt></ruby>みprefixを<ruby>保持<rt>ほじ</rt></ruby>
+
+<ruby>正常<rt>せいじょう</rt></ruby>な<ruby>同期<rt>どうき</rt></ruby>readが<ruby>返<rt>かえ</rt></ruby>すcollectorに、<ruby>開始時<rt>かいしじ</rt></ruby>のsource<ruby>長<rt>ちょう</rt></ruby>までの<ruby>競合検査<rt>きょうごうけんさ</rt></ruby>scopeを<ruby>保存<rt>ほぞん</rt></ruby>する。 <ruby>新規生成<rt>しんきせいせい</rt></ruby>sourceは<ruby>次<rt>つぎ</rt></ruby>のreadで<ruby>検査<rt>けんさ</rt></ruby>する。<ruby>公開<rt>こうかい</rt></ruby>appendは<ruby>追加分<rt>ついかぶん</rt></ruby>をこの<ruby>証明<rt>しょうめい</rt></ruby>へ<ruby>含<rt>ふく</rt></ruby>めず、 checkpointとrollbackは<ruby>元<rt>もと</rt></ruby>の<ruby>検査範囲<rt>けんさはんい</rt></ruby>を<ruby>実<rt>じつ</rt></ruby>source<ruby>列<rt>れつ</rt></ruby>と<ruby>一緒<rt>いっしょ</rt></ruby>に<ruby>保持<rt>ほじ</rt></ruby>する。 <ruby>別<rt>べつ</rt></ruby>store・<ruby>未準備<rt>みじゅんび</rt></ruby>store・raw<ruby>復元<rt>ふくげん</rt></ruby>・resume・<ruby>停止<rt>ていし</rt></ruby>ではこの<ruby>省略<rt>しょうりゃく</rt></ruby>を<ruby>推定<rt>すいてい</rt></ruby>しない。 SourceChecksの<ruby>補助<rt>ほじょ</rt></ruby>cacheは<ruby>検査済<rt>けんさず</rt></ruby>みの<ruby>値列<rt>あたいれつ</rt></ruby>であり、collector<ruby>内<rt>ない</rt></ruby>のindexではない。
+
+<ruby>限定測定<rt>げんていそくてい</rt></ruby>`accepted_prefix_growth_measurement`はsourceを1<ruby>件<rt>けん</rt></ruby>ずつ<ruby>増<rt>ふ</rt></ruby>やして<ruby>競合検査<rt>きょうごうけんさ</rt></ruby>だけを 128\/256\/512<ruby>回行<rt>かいおこな</rt></ruby>う。source<ruby>構築<rt>こうちく</rt></ruby>・parser・admissionは<ruby>含<rt>ふく</rt></ruby>めない。 <ruby>従来<rt>じゅうらい</rt></ruby>のWorkは8\,384\/33\,152\/131\,840、prefix<ruby>保持時<rt>ほじじ</rt></ruby>は10\,797\/21\,677\/43\,437だった。 128<ruby>件<rt>けん</rt></ruby>では<ruby>定数費用<rt>ていすうひよう</rt></ruby>によりWorkが<ruby>増<rt>ふ</rt></ruby>えるが、<ruby>増大入力<rt>ぞうだいにゅうりょく</rt></ruby>の<ruby>反復比較<rt>はんぷくひかく</rt></ruby>は<ruby>線形<rt>せんけい</rt></ruby>に<ruby>変<rt>か</rt></ruby>わる。 Windows debugの<ruby>参考時間<rt>さんこうじかん</rt></ruby>は<ruby>従来<rt>じゅうらい</rt></ruby>0\.26\/0\.78\/3\.02 ms、prefix<ruby>保持時<rt>ほじじ</rt></ruby>0\.046\/0\.073\/0\.147 ms。 これは<ruby>全<rt>ぜん</rt></ruby>parserの<ruby>実時間<rt>じつじかん</rt></ruby>や<ruby>実<rt>じつ</rt></ruby>heapの<ruby>改善率<rt>かいぜんりつ</rt></ruby>ではない。<ruby>別分岐<rt>べつぶんき</rt></ruby>が<ruby>同<rt>おな</rt></ruby>じ<ruby>長<rt>なが</rt></ruby>さの<ruby>場合<rt>ばあい</rt></ruby>、rollback<ruby>後<rt>ご</rt></ruby>の <ruby>別<rt>べつ</rt></ruby>suffix、<ruby>環境競合<rt>かんきょうきょうごう</rt></ruby>、<ruby>検査停止<rt>けんさていし</rt></ruby>、<ruby>実<rt>じつ</rt></ruby>host<ruby>生成直後<rt>せいせいちょくご</rt></ruby>の<ruby>未検査<rt>みけんさ</rt></ruby>suffixを<ruby>回帰試験<rt>かいきしけん</rt></ruby>で<ruby>確認<rt>かくにん</rt></ruby>した。
+
+<a name="n-736f757263655f656e7669726f6e6d656e74"></a>
+
+<a name="2026-09-21-変更されていないsourcestoreの環境比較を再利用"></a>
+
+### 2026\-09\-21\: <ruby>変更<rt>へんこう</rt></ruby>されていないSourceStoreの<ruby>環境比較<rt>かんきょうひかく</rt></ruby>を<ruby>再利用<rt>さいりよう</rt></ruby>
+
+SourceStoreのscopeは<ruby>集合<rt>しゅうごう</rt></ruby>を<ruby>構築<rt>こうちく</rt></ruby>した<ruby>後<rt>あと</rt></ruby>に<ruby>明示準備<rt>めいじじゅんび</rt></ruby>する。<ruby>新規挿入<rt>しんきそうにゅう</rt></ruby>と<ruby>非空編集<rt>ひくうへんしゅう</rt></ruby>のcommitで <ruby>失効<rt>しっこう</rt></ruby>し、<ruby>同値<rt>どうち</rt></ruby>の<ruby>重複挿入<rt>じゅうふくそうにゅう</rt></ruby>・<ruby>空編集<rt>くうへんしゅう</rt></ruby>・<ruby>途中停止<rt>とちゅうていし</rt></ruby>では<ruby>維持<rt>いじ</rt></ruby>する。<ruby>再準備<rt>さいじゅんび</rt></ruby>しない<ruby>場合<rt>ばあい</rt></ruby>と<ruby>非<rt>ひ</rt></ruby>atomic targetは<ruby>従来<rt>じゅうらい</rt></ruby>の<ruby>内容比較<rt>ないようひかく</rt></ruby>を<ruby>使<rt>つか</rt></ruby>う。<ruby>台帳<rt>だいちょう</rt></ruby>のscopeとは<ruby>別<rt>べつ</rt></ruby>であり、schemaや<ruby>資源入場<rt>しげんにゅうじょう</rt></ruby>を<ruby>証明<rt>しょうめい</rt></ruby>しない。 <ruby>共通開発<rt>きょうつうかいはつ</rt></ruby>hostのparse<ruby>入口<rt>いりぐち</rt></ruby>で<ruby>準備<rt>じゅんび</rt></ruby>し、tokenizerは<ruby>同<rt>おな</rt></ruby>じ<ruby>集合<rt>しゅうごう</rt></ruby>の<ruby>反復比較<rt>はんぷくひかく</rt></ruby>だけを<ruby>省<rt>はぶ</rt></ruby>く。
+
+<ruby>限定測定<rt>げんていそくてい</rt></ruby>`environment_scope_growth_measurement`は128\/256\/512<ruby>件<rt>けん</rt></ruby>の<ruby>環境<rt>かんきょう</rt></ruby>をそれぞれ 127\/255\/511<ruby>回再比較<rt>かいさいひかく</rt></ruby>する。<ruby>初回<rt>しょかい</rt></ruby>の<ruby>保存<rt>ほぞん</rt></ruby>とfixture<ruby>構築<rt>こうちく</rt></ruby>、parser、accepted sourceは<ruby>含<rt>ふく</rt></ruby>めない。 <ruby>未準備時<rt>みじゅんびじ</rt></ruby>のWorkは16\,256\/65\,280\/261\,632、<ruby>準備時<rt>じゅんびじ</rt></ruby>は0であり、<ruby>各回<rt>かくかい</rt></ruby>のBudget pollは<ruby>維持<rt>いじ</rt></ruby>する。 Windows debugの<ruby>参考実時間<rt>さんこうじつじかん</rt></ruby>は<ruby>未準備<rt>みじゅんび</rt></ruby>0\.38\/1\.42\/5\.85 ms、<ruby>準備<rt>じゅんび</rt></ruby>0\.011\/0\.016\/0\.033 msだった。 この<ruby>測定<rt>そくてい</rt></ruby>は<ruby>環境比較<rt>かんきょうひかく</rt></ruby>だけのもので、parser<ruby>全体<rt>ぜんたい</rt></ruby>の<ruby>性能<rt>せいのう</rt></ruby>・<ruby>実<rt>じつ</rt></ruby>heap<ruby>削減<rt>さくげん</rt></ruby>・<ruby>全<rt>ぜん</rt></ruby>source<ruby>経路<rt>けいろ</rt></ruby>の<ruby>線形化<rt>せんけいか</rt></ruby>を <ruby>示<rt>しめ</rt></ruby>さない。AllocationUnitsは<ruby>実<rt>じつ</rt></ruby>heap<ruby>計測<rt>けいそく</rt></ruby>ではない。<ruby>独立<rt>どくりつ</rt></ruby>レビューで<ruby>求<rt>もと</rt></ruby>められた<ruby>編集<rt>へんしゅう</rt></ruby>commit <ruby>直前<rt>ちょくぜん</rt></ruby>のAllocation<ruby>停止<rt>ていし</rt></ruby>も、<ruby>集合<rt>しゅうごう</rt></ruby>とscopeの<ruby>不変性<rt>ふへんせい</rt></ruby>を<ruby>回帰試験<rt>かいきしけん</rt></ruby>で<ruby>確認<rt>かくにん</rt></ruby>した。
+
+<a name="n-736f757263655f6d6561737572656d656e74"></a>
+
+<a name="2026-09-21-source集合の反復走査の基準測定"></a>
+
+### 2026\-09\-21\: source<ruby>集合<rt>しゅうごう</rt></ruby>の<ruby>反復走査<rt>はんぷくそうさ</rt></ruby>の<ruby>基準測定<rt>きじゅんそくてい</rt></ruby>
+
+`tokenizer::source_checks::tests::source_scope_growth_measurement` は<ruby>明示実行<rt>めいじじっこう</rt></ruby>するignored testである。 <ruby>固定<rt>こてい</rt></ruby>32 sourceと、<ruby>読取<rt>よみと</rt></ruby>りごとに1 source<ruby>増<rt>ふ</rt></ruby>える<ruby>入力<rt>にゅうりょく</rt></ruby>を128\/256\/512<ruby>回処理<rt>かいしょり</rt></ruby>する。 <ruby>測定対象<rt>そくていたいしょう</rt></ruby>のaccepted sourceは<ruby>各<rt>かく</rt></ruby>1 KiB、<ruby>固定<rt>こてい</rt></ruby>environmentの32 sourceは<ruby>各<rt>かく</rt></ruby>4 bytesである。 fixture<ruby>構築<rt>こうちく</rt></ruby>・parser・I\/Oを<ruby>測定<rt>そくてい</rt></ruby>に<ruby>含<rt>ふく</rt></ruby>めない。 <ruby>同<rt>おな</rt></ruby>じscope<ruby>内<rt>ない</rt></ruby>で<ruby>実際<rt>じっさい</rt></ruby>のSourceChecksとSourceAdmissionを<ruby>再利用<rt>さいりよう</rt></ruby>する。
+
+| <ruby>増大入力<rt>ぞうだいにゅうりょく</rt></ruby>の<ruby>読取<rt>よみと</rt></ruby>り<ruby>回数<rt>かいすう</rt></ruby> | admission<ruby>走査回数<rt>そうさかいすう</rt></ruby> | <ruby>競合検査<rt>きょうごうけんさ</rt></ruby>Work | admission Work |
 | ---: | ---: | ---: | ---: |
-| 128 | 8,256 | 32,960 | 144,462 |
-| 256 | 32,896 | 82,304 | 477,190 |
-| 512 | 131,328 | 230,144 | 1,714,046 |
-
-Windows native releaseの一回の実測では、この二段階の合計時間は約0.17/0.57/2.25 msだった。
-細粒度timerの費用を含む参考値であり、安定した性能閾値や処理系全体の二次時間を主張しない。
-固定入力のadmission走査は4,096/8,192/16,384回である。
-AllocationUnitsも出力するが契約上の課金値であり、実heap使用量ではない。
-測定testはsource bytesの二重課金がないことも検査する。
-
-この経路には増大する既存集合の二次的な走査が残る。検証省略の実装はまだ行っていない。
-AcceptedTokenizationReportのscopeと長さだけでは、現在のSourceAdmissionでの受入済みを証明できない。
-集合の分岐・rollback・別admission・環境変更を扱う失効条件を保った上で改善する。
-
-### 2026-09-21: 同期collectorのadmission再利用
-
-上記測定後、atomic pointerを持つtargetで、hostなし同期readが返す所有されたcollectorに
-SourceAdmissionのopaque scopeを保持する経路を追加した。同じ台帳なら入場済みsourceの
-再admissionを走査せず、別台帳では全sourceを検査する。source環境との競合検査は維持する。
-checkpointとrollbackは実際のsource集合とscopeを一緒に保持する。
-公開append/diagnosticへ別台帳を渡す場合は以前の証明を失効させる。
-
-host callback中の台帳交換をまだ追跡しないため、host付きread・Await・Reserve・resume・
-Stopped・raw復元には証明を付けない。非atomic targetも全検査を維持する。
-したがって全source処理の線形化、Doc host全体の高速化、実heap削減が完了したとはしない。
-次段階はcallback/resumeを含む台帳寿命と、残るSourceChecksの集合比較である。
-
-### 2026-09-21: 同期hostの台帳交換を追跡
-
-同期hostのprovider/reservation callbackを共通wrapperで囲み、各返却時点の台帳を
-読取り開始時のscopeと照合する。失効は累積し、複数callbackでAからBへ交換した後に
-Aへ戻っても証明を再発行しない。正常終端かつ台帳交換・host errorがない場合だけ、
-host付きreadも受入済みcollectorの証明を保持する。
-
-callback内部だけで台帳を交換して元へ戻した場合、返却sourceはruntimeによって
-現在の台帳へ再検査・入場される。callback内部の任意状態を証明しているわけではない。
-試験は二つのprovider呼出しでsourceを実際に生成し、A→B→Aで失効した後に
-最初のsourceの再admissionが必要になることをSourceBytesで確認する。
-reservationの交換、None、エラー返却でも失効を累積する。
-resume/portableからは引き続き証明を発行しない。
-
-実文書6件のparse/lower/labels試験も成功した。第05章はそれぞれ73,092,384 /
-66,285,115 / 8,413,256 Workで、各段階の通常100,000,000 Work枠内だった。
-未採用の第21章草案はparseが113,044,768 Workであり、明示した草案用枠での成功を
-通常ページ枠への適合や正本移行完了とは扱わない。実時間の比較実験・実heap測定は別途必要である。
-
-## #158を優先するSentence・注釈の回復
-
-今後の是正順序は[23章](../spec/23-sentence-annotation.md)に従う。Doc固有機能を広げる前に、
-Sentenceの独立言語化からDoc本文の文章境界を移行し、実文書性能とT19 docs-only Pagesを優先する。
-NEPL3a完成・旧comment-as-triviaの全面移行でD本文・公開を止めない。これらは後続で完了させる。
-以下の既存API・性能調査はその時点の実装記録であり、旧所有関係を維持する決定ではない。
-
-最初の実装として`nepl3-sentence-core`を追加した。foundationだけに依存する`no_std + alloc`の
-順序付き有限arena、category/参照/循環/到達性・非空文章部の検査と独立schemaを持つ。
-descriptorは既存生成器で`interfaces/sentence.json`から生成し、実descriptorからidentityを計算する。
-通常のURL構造とforeign参照を保持するが、guest実行やDの名前解決、安全なHTMLの認証はしない。
-
-新規10試験は成功した。共有DAGの最長深さ、10万段の非再帰検査、資源停止、foreign参照共有・
-未使用拒否、root category、schema所有者・revision・field順の境界を含む。
-独立レビューで不足を指摘されたforeign/root試験を追加し、再レビューで指摘なしを確認した。
-ARMv6-M、wasm32-unknown-unknown、wasm32-wasip2はbuild確認であり、target上の実行証拠ではない。
-
-続いてSentenceValueのNDF codecを実装した。実descriptorの完全identity、受信前schema検査と
-受信後arena検査、foundationによるforeign閉包検査を行う。手組みwire fixtureと実CBOR往復、
-共有参照、Unicode、1万段の意味上の深さ、処理途中の非ゼロ予算停止、不正owner source/hashを検査する。
-この値codecはSentence局所syntaxの位置情報・reader payloadを完成させるものではない。
-codec追加後のSentence全19試験はnativeとWasmtime 44.0.1上のwasm32-wasip2で成功した。
-ARMv6-Mとwasm32-unknown-unknownは引き続きbuild検査であり、browser実行は未検証である。
-これは同じRust実装のtarget別検証で、独立した第2provider実装の適合を意味しない。
-Source/Origin境界の準備中に、値codecで文章とforeignの深さを別々に検査していた欠陥を確認した。
-最深の所有位置に親Budget深さを加えてguestを検査するよう修正した。文章42段・guest30段は
-単独では上限60に収まるが、合成時は送受信とも拒否する。短経路から先に到達する共有guestでも
-最長経路を使い、呼出元の深さを戻す。独立レビューと回帰試験で確認した。
-
-続いてSentenceSyntaxの局所Source/Origin/View境界を追加した。意味arenaと同順・同長の位置表、
-必須Origin、任意head/cover、Viewのowner、payload自身のsource/mapを両codec方向で検査する。
-架空Spanを要求せず、生成値はSynthetic/Generated Originを使う。これは位置の閉包・関連付けの
-検査であり、まだ未実装のreaderによる原文と意味値の一致を証明しない。
-
-独立レビューで、明示SourceMapを持つViewの親子をnativeでは受理しportableでは拒否する欠陥を
-確認し、foundation codecとSentence/Doc/Mathのsyntax境界を一緒に修正した。mapを各Viewで
-再検査する初版は実14ページ文書でWorkLimitとなった。不変scopeに閉じた検査結果を再利用し、
-既存上限のまま生成成功を確認した。各Viewは再検査し、scopeの再束縛とSourceAdmissionへの
-可変アクセスでは親子双方のcacheを失効させる。scope越しのadmission置換を含む負例を維持する。
-SentenceはCIのWASI実行・Wasm/ARM build対象にも追加した。
-最終差分の全workspace試験は730成功・失敗0・既定ignore 2（所有continuation性能比較、
-Node/npm依存KaTeX corpus）。Sentence/Wire/Doc/MathはWasmtime 44.0.1で134成功・失敗0・
-ignore 0、ARMv6-Mとbrowser向けWasmのbuildも成功した。独立レビューの追加指摘を修正し、
-再レビューで指摘なしを確認した。Sentenceのreader/LanguagePackageと注釈・consumer移行、
-旧コメントの撤去は引き続き未完了である。
-
-Sentence literalの解析本体と専用印字を独立coreへ移した。Doc型へ依存せず、Ruby/InlineAnno、
-escape前のView、元Source/Originとdense位置表を保つ。Unicode escapeの途中、空注釈部、
-不正delimiter、1,000段の入れ子、共有DAGの出力膨張、明示windowとCBORの往復を検査した。
-literalで表現できないBreak等はNotLiteralとして返し、Textへ黙って変えない。
-この追加後のSentence全33試験はnative/WASIで成功し、独立レビューで指摘なしを確認した。
-LanguagePackage、reader/provider包絡、prefixと汎用印字は次の実装であり、D本文への接続を
-NEPL3a完成より先行する。#165はCIと独立最終レビュー後にmainへ統合済みである。
-
-局所syntaxのSource/Origin境界、literal/prefixと独立LanguagePackage、annotation adapter、
-Doc/Math consumerおよび公式sourceの移行は未完了である。旧コメント処理だけは先に削除せず、
-移行後にschema・wire・生成器まで撤去する。T07や受入状態をこのモデル検査でpassedにしない。
+| 128 | 8\,256 | 32\,960 | 144\,462 |
+| 256 | 32\,896 | 82\,304 | 477\,190 |
+| 512 | 131\,328 | 230\,144 | 1\,714\,046 |
 
-## 同期host接続と文書移行までの残り
+Windows native releaseの<ruby>一回<rt>いっかい</rt></ruby>の<ruby>実測<rt>じっそく</rt></ruby>では、この<ruby>二段階<rt>にだんかい</rt></ruby>の<ruby>合計時間<rt>ごうけいじかん</rt></ruby>は<ruby>約<rt>やく</rt></ruby>0\.17\/0\.57\/2\.25 msだった。 <ruby>細粒度<rt>さいりゅうど</rt></ruby>timerの<ruby>費用<rt>ひよう</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>む<ruby>参考値<rt>さんこうち</rt></ruby>であり、<ruby>安定<rt>あんてい</rt></ruby>した<ruby>性能閾値<rt>せいのうしきいち</rt></ruby>や<ruby>処理系全体<rt>しょりけいぜんたい</rt></ruby>の<ruby>二次時間<rt>にじじかん</rt></ruby>を<ruby>主張<rt>しゅちょう</rt></ruby>しない。 <ruby>固定入力<rt>こていにゅうりょく</rt></ruby>のadmission<ruby>走査<rt>そうさ</rt></ruby>は4\,096\/8\,192\/16\,384<ruby>回<rt>かい</rt></ruby>である。 AllocationUnitsも<ruby>出力<rt>しゅつりょく</rt></ruby>するが<ruby>契約上<rt>けいやくじょう</rt></ruby>の<ruby>課金値<rt>かきんち</rt></ruby>であり、<ruby>実<rt>じつ</rt></ruby>heap<ruby>使用量<rt>しようりょう</rt></ruby>ではない。 <ruby>測定<rt>そくてい</rt></ruby>testはsource bytesの<ruby>二重課金<rt>にじゅうかきん</rt></ruby>がないことも<ruby>検査<rt>けんさ</rt></ruby>する。
 
-`nepl3_tools::doc::host::NativeHost` は、明示Profileの実装identityと操作登録を
-照合してDoc sentence・Name・Number・Trivia providerを実行する。
-呼出しに宣言されたsource閉包だけを使用し、同じBudget/SourceAdmissionを保持する。
-予約IDは操作内で単調に発行し、停止した予約ではIDを消費しない。
-`ParseSession::read_with_host`へ接続することで、各同期callで成長中のparse arenaを
-外向けcontinuationへ複写する処理を避ける。providerのreply検査は省略しない。
-catalogのVec全体とreply Boxは、実際の確保・provider実行より先に予算計上する。
+この<ruby>経路<rt>けいろ</rt></ruby>には<ruby>増大<rt>ぞうだい</rt></ruby>する<ruby>既存集合<rt>きそんしゅうごう</rt></ruby>の<ruby>二次的<rt>にじてき</rt></ruby>な<ruby>走査<rt>そうさ</rt></ruby>が<ruby>残<rt>のこ</rt></ruby>る。<ruby>検証省略<rt>けんしょうしょうりゃく</rt></ruby>の<ruby>実装<rt>じっそう</rt></ruby>はまだ<ruby>行<rt>おこな</rt></ruby>っていない。 AcceptedTokenizationReportのscopeと<ruby>長<rt>なが</rt></ruby>さだけでは、<ruby>現在<rt>げんざい</rt></ruby>のSourceAdmissionでの<ruby>受入済<rt>うけいれず</rt></ruby>みを<ruby>証明<rt>しょうめい</rt></ruby>できない。 <ruby>集合<rt>しゅうごう</rt></ruby>の<ruby>分岐<rt>ぶんき</rt></ruby>・rollback・<ruby>別<rt>べつ</rt></ruby>admission・<ruby>環境変更<rt>かんきょうへんこう</rt></ruby>を<ruby>扱<rt>あつか</rt></ruby>う<ruby>失効条件<rt>しっこうじょうけん</rt></ruby>を<ruby>保<rt>たも</rt></ruby>った<ruby>上<rt>うえ</rt></ruby>で<ruby>改善<rt>かいぜん</rt></ruby>する。
 
-#158に基づく境界是正では、source hostの環境・reader stateを固定4言語の列挙から
-解決済みProfileの登録へ変更した。default categoryとreader modeも解決済みentryを使う。
-portable Await経路も同じ登録実装の照合を通し、schemaのpackage文字列によるdispatchを除いた。
-追加alias・登録順変更・非root categoryでnative/portableの構文木一致を確認し、
-同じ操作schemaでも別implementation digestなら両経路で拒否する。
-開発fixtureの言語構成は依然として明示選択であり、一般suite完成やSentence/A抽出、
-comment-as-trivia撤去の完了を意味しない。
+<a name="n-636f6c6c6563746f725f61646d697373696f6e"></a>
 
-この接続だけをHTML backendの未保存変更から分離して検証し、nativeのDoc試験32件、
-WASI31件が成功した。差はhost processを使用するnative専用seed検査である。
-独立レビューでも通常経路・同期経路・fallbackの構文木一致、登録/sourceの不正入力、
-予約停止とconstructorの全Allocation上限を確認した。
+<a name="2026-09-21-同期collectorのadmission再利用"></a>
 
-`linear-combination.nepld`の約13KB全文は、同期接続後もWork上限100,000,000で
-停止する。これはHTML出力や文書移行の完成証拠ではない。reader/tokenizerの
-継続状態コピーを削減し、同じ入力・予算・位置・診断を用いた回帰検査を進める。
-その後、文書間リンクとasset解決、HTML artifact、意味同等性・安定URLの検証を
-接続して、準備できたページからnepld正本とPages配布へ進める。
+### 2026\-09\-21\: <ruby>同期<rt>どうき</rt></ruby>collectorのadmission<ruby>再利用<rt>さいりよう</rt></ruby>
 
-## 現在の実行経路
+<ruby>上記測定後<rt>じょうきそくていご</rt></ruby>、atomic pointerを<ruby>持<rt>も</rt></ruby>つtargetで、hostなし<ruby>同期<rt>どうき</rt></ruby>readが<ruby>返<rt>かえ</rt></ruby>す<ruby>所有<rt>しょゆう</rt></ruby>されたcollectorに SourceAdmissionのopaque scopeを<ruby>保持<rt>ほじ</rt></ruby>する<ruby>経路<rt>けいろ</rt></ruby>を<ruby>追加<rt>ついか</rt></ruby>した。<ruby>同<rt>おな</rt></ruby>じ<ruby>台帳<rt>だいちょう</rt></ruby>なら<ruby>入場済<rt>にゅうじょうず</rt></ruby>みsourceの <ruby>再<rt>さい</rt></ruby>admissionを<ruby>走査<rt>そうさ</rt></ruby>せず、<ruby>別台帳<rt>べつだいちょう</rt></ruby>では<ruby>全<rt>ぜん</rt></ruby>sourceを<ruby>検査<rt>けんさ</rt></ruby>する。source<ruby>環境<rt>かんきょう</rt></ruby>との<ruby>競合検査<rt>きょうごうけんさ</rt></ruby>は<ruby>維持<rt>いじ</rt></ruby>する。 checkpointとrollbackは<ruby>実際<rt>じっさい</rt></ruby>のsource<ruby>集合<rt>しゅうごう</rt></ruby>とscopeを<ruby>一緒<rt>いっしょ</rt></ruby>に<ruby>保持<rt>ほじ</rt></ruby>する。 <ruby>公開<rt>こうかい</rt></ruby>append\/diagnosticへ<ruby>別台帳<rt>べつだいちょう</rt></ruby>を<ruby>渡<rt>わた</rt></ruby>す<ruby>場合<rt>ばあい</rt></ruby>は<ruby>以前<rt>いぜん</rt></ruby>の<ruby>証明<rt>しょうめい</rt></ruby>を<ruby>失効<rt>しっこう</rt></ruby>させる。
 
-`nepl3-doc-core` は `no_std` + `alloc`、production 依存は `nepl3-core` だけ。DocValue は型付き arena であり、構造検査・正規化・source/Origin/View 閉包検査と明示 NDF adapter を提供する。深い入力は平坦な参照と反復処理を使い、共有 DAG の最大経路と guest 内部検査の Depth を合成する。
+host callback<ruby>中<rt>ちゅう</rt></ruby>の<ruby>台帳交換<rt>だいちょうこうかん</rt></ruby>をまだ<ruby>追跡<rt>ついせき</rt></ruby>しないため、host<ruby>付<rt>つ</rt></ruby>きread・Await・Reserve・resume・ Stopped・raw<ruby>復元<rt>ふくげん</rt></ruby>には<ruby>証明<rt>しょうめい</rt></ruby>を<ruby>付<rt>つ</rt></ruby>けない。<ruby>非<rt>ひ</rt></ruby>atomic targetも<ruby>全検査<rt>ぜんけんさ</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby>する。 したがって<ruby>全<rt>ぜん</rt></ruby>source<ruby>処理<rt>しょり</rt></ruby>の<ruby>線形化<rt>せんけいか</rt></ruby>、Doc host<ruby>全体<rt>ぜんたい</rt></ruby>の<ruby>高速化<rt>こうそくか</rt></ruby>、<ruby>実<rt>じつ</rt></ruby>heap<ruby>削減<rt>さくげん</rt></ruby>が<ruby>完了<rt>かんりょう</rt></ruby>したとはしない。 <ruby>次段階<rt>じだんかい</rt></ruby>はcallback\/resumeを<ruby>含<rt>ふく</rt></ruby>む<ruby>台帳寿命<rt>だいちょうじゅみょう</rt></ruby>と、<ruby>残<rt>のこ</rt></ruby>るSourceChecksの<ruby>集合比較<rt>しゅうごうひかく</rt></ruby>である。
 
-sentence recognizer は元 SourceSnapshot を借用し、Matched / NoMatch / NeedMore / 位置付き Failed を返す。tools の明示 provider がこれを ReadRequest → ReadReply の正式包絡へ接続する。失敗は型付き Diagnostic と Report、停止は元 StopReason を保持する。literal の token payload は独立 Sentence の `SentenceLiteralPayload`、内部 View は外側 prefix parser の子 arity にならない。
+<a name="n-686f73745f6c6564676572"></a>
 
-正式な Doc/Math/Circuit/Grammar の文法 source から保存した seed を実 compiler へ渡し、4 alias と各 checked environment を明示した Profile で ParseSession を実行する。runtime provider 登録は実 Name/Trivia/Number と独立 Sentence literal のみ。Facts 拡張は compile 時の署名登録であり、未実装の Doc Facts callback を runtime 実装として広告しない。
+<a name="2026-09-21-同期hostの台帳交換を追跡"></a>
 
-`lower::prefix` は host が選択を検査した SyntaxBundle と明示 surface SchemaRef/category を受け、現在の Budget/SourceAdmission で再検査して Doc arena へ変換する。構造 proof は PreparedArticle や guest の意味 proof ではない。prefix constructor と sentence recognizer は同じ正規化を使う。実 ParseSession の literal payload と prefix lower の正常例は同じ意味正規形となる。
-
-suite の `adapters::sentence::literal::lower` は独立 Sentence codec と既存の Sentence → Doc adapter を `lower::document_with_decoder` へ渡し、prefix と受理済み SentenceLiteral を一括 lower する。callback 後の停止検査と、結合前の payload 局所閉包検査を行う。payload自身のsource閉包、外tokenのhead/View完全一致、意味Span/Originのtoken内包含（明示SourceMapを含む）を検査する。元hostのOrigin列と各token-local Viewを維持し、payload Originのみ末尾へ再配置する。各snapshotのSourceBytesを操作内で一度だけ計上し、停止時は入力構文木を変更しない。従来のcodec不要な`lower::prefix`はliteral leafに対して明示Unsupportedを維持する。
+### 2026\-09\-21\: <ruby>同期<rt>どうき</rt></ruby>hostの<ruby>台帳交換<rt>だいちょうこうかん</rt></ruby>を<ruby>追跡<rt>ついせき</rt></ruby>
 
-補助 constructor は独立 fragment として lower/codec でき、親 operand では型付き enum/Option へ取り込む。取り込んだ wrapper を意味的な子に残さず、元 View/Origin/source 宣言を保存する。Code の DocGuest は `foreign Doc Article` で、同 alias でも独立 bundle/environment を保持する。構文は正しいが注釈が意味的に不正な guest も Code の表示準備のために意味 lower しない。host への復帰を実 parse で検査する。
-
-## 検証の境界
+<ruby>同期<rt>どうき</rt></ruby>hostのprovider\/reservation callbackを<ruby>共通<rt>きょうつう</rt></ruby>wrapperで<ruby>囲<rt>かこ</rt></ruby>み、<ruby>各返却時点<rt>かくへんきゃくじてん</rt></ruby>の<ruby>台帳<rt>だいちょう</rt></ruby>を <ruby>読取<rt>よみと</rt></ruby>り<ruby>開始時<rt>かいしじ</rt></ruby>のscopeと<ruby>照合<rt>しょうごう</rt></ruby>する。<ruby>失効<rt>しっこう</rt></ruby>は<ruby>累積<rt>るいせき</rt></ruby>し、<ruby>複数<rt>ふくすう</rt></ruby>callbackでAからBへ<ruby>交換<rt>こうかん</rt></ruby>した<ruby>後<rt>あと</rt></ruby>に Aへ<ruby>戻<rt>もど</rt></ruby>っても<ruby>証明<rt>しょうめい</rt></ruby>を<ruby>再発行<rt>さいはっこう</rt></ruby>しない。<ruby>正常終端<rt>せいじょうしゅうたん</rt></ruby>かつ<ruby>台帳交換<rt>だいちょうこうかん</rt></ruby>・host errorがない<ruby>場合<rt>ばあい</rt></ruby>だけ、 host<ruby>付<rt>つ</rt></ruby>きreadも<ruby>受入済<rt>うけいれず</rt></ruby>みcollectorの<ruby>証明<rt>しょうめい</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>する。
 
-`labels::check` はArticle内のSection/Anchorを先に収集し、前方Referenceを同一DocLabelIdへ解決する。重複名・未解決名と共有DAG上の複数表示経路を型付き失敗にし、名前selectionと定義全体rangeを分離して保持する。source-less位置はNoneのまま、foreign guestのlabelは集計しない。`LabelError::diagnostic` は意味失敗を通常のschema-validated Diagnosticへ変換し、名前と複数経路を構造化引数へ、先行定義をrelated位置へ保持する。構築自身の停止時も元の借用エラーは残る。CheckedLabelsはlabel検査だけのproofで、foreign Requirement解決やPreparedArticleではない。
-
-Doc arena の node/root、Origin、局所 View と source map は portable 往復で保持する。共通 codec は source 表を identity 順、guest syntax graph を正準 NodeRef 座標へ整えるため、未正準な native 表の列順や guest NodeRef 数値そのものの Rust Eq は wire の要件ではない。source の identity/URI/content、owner Origin ID と環境 digest、および実 CBOR の正準再 encode を照合する。
-
-管理対象は Doc core の構造・literal・正規化・source/ForeignClosure・初回 CBOR と、tools の実 compiler/parse/prefix lower・helper 範囲・DocGuest・resource 停止。host seed と元 source/adapter の一致だけは Python process を使う native 専用試験で、同じ保存 seed を使う実処理は WASI でも実行する。browser target は compile 検査であり実描画の成功ではない。
-
-`text::plain_text` は正式PlainTextRequestを受け、document/guestの正準digestへ束縛した明示host textを用いてSentenceを投影する。BaseOnly / WithReadings / WithAllNotesの固定規則と、表示しないnote/readingには未提供embed textを要求しない規則を実行する。全提供entryはpolicyにかかわらず検査する。型付きrequest/replyの初回CBOR、実prefix→lower→投影、元source変更・guest差替え・owner環境変更、準備中と出力中の停止を管理対象で検査する。公開prepareはidentity取得だけで、公開実行が再検査と資源計上を省略するproofではない。これはguest意味checkやPreparedArticleの完成を表さない。
-
-`print::print` はPrintRequest/Replyの正式操作としてPrefix/Compactを出力する。64 form・20 entryは元の表層入力を実parse/lowerし、印字後に同じ実経路へ戻す。MathGuest / CircuitGuest / Guestの独立rootと4 wrapperを保持する。明示host guest-printはdocumentとForeignClosureのdigestへ束縛し、原文取得だけを意味一致proofとして扱わない。名前と言語は共通reader語彙で印字可能性を検査し、source-less不適合は元値を変えず型付き失敗にする。Doc coreはguest意味処理もsnapshot発行も行わない。
-
-## 残り
-
-`prepare::inspect` はArticleの全variant・labelを検査し、Link/Assetの意味node別要求とForeignClosure別要求を列挙する。正式DocPreparationPlanはdocument/guestのcanonical digestへ束縛され、独立受信時には明示documentから全要求を再導出する。実sourceのCode/InlineMathは構文のまま保持し、外部資源を読まず評価しない。これは準備入力の発見であり、下記の資源解決・HTML出力の完成ではない。
-
-- 公開suiteでのhost guest-printの供給と、対象guest parserによる構造正規形・source対応の検査。現在の管理対象は実generic engine parser/checked tree/printerを使う構文往復であり、raw PrintedGuestのtextだけで一致proofを得ない。この残りは全guestの意味lower/checkを要求するものではなく、意味不正・回復構文を表示用Codeとして保持する契約を維持する。Math/Circuit等の意味check・評価の完成でもない。
-- 外部 page・asset 解決、foreign Requirementを含む完全なcheck/prepare、HTML backend と rendering。schema に表・list・link・code・asset があることだけで、これらの実装済みを主張しない。
-- Doc の正式 lower 操作の Report/部分結果包絡と全 suite adapter。native helper の Result を、別実装の操作包絡の完成として扱わない。
-
-設計入力は main `b5295cef655aa59affffd6644f2902268d071953` の文書監査。inventory SHA-256 は `daf94085913930f05c1655d2adbef4f56651864f9a97ac4d261400449c98499e`、61 Markdown / 231 Rust source owner、52 表 / 1283 cell、39 list / 233 item、1134 inline code、12 code block、249 link、1 image。追加 element category はない。この監査は実装中差分の completeness、rustdoc 意味監査、T21 の移行完了とは別である。
-
-## Tokenizer同期接続の次段階
-
-prefix engineからtokenizerの同期hostを使用し、成功callで外側tokenizer継続を発行しない
-経路を追加した。独立レビューで見つかった明示Stoppedエラーと入れ子の停止原因もBudgetへ
-保持する。既存所有経路との構文木・診断・source/map比較を維持する。
-HTMLの全文再現試験では同じWork上限100,000,000のまま停止位置が1412から1897へ進んだが、
-13KB文書の完走には至っていない。これは部分改善であり、文書移行やHTML全体の成功ではない。
-次は共有sourceの実コピー費用と外部echo比較費用の分離を検討し、外部入力の検査を維持して
-本文の反復コピー課金を解消する。
-
-続く実装では、実コピーと比較前の走査費用を分離し、source storeの重複検索を
-予算付きの二分探索へ変更した。公開snapshot列の順序、外部echoの全文比較上限、
-source編集の原子的な反映は維持する。同期reader callbackは外部継続を受け取らず、
-排他的なprivate slotを既存の返却値検査経路へ渡す。
-同じ全文試験は停止位置3399まで進んだが、なおWork上限で停止する。
-途中の線形検索版ではGrammar bootstrapも既存上限で停止したため、その版を完成扱いにせず、
-二分探索版でbootstrapを再実行して成功を確認した。workspace試験とClippyも成功した。
-当時の残件はsource admission・診断source・Origin graphの繰り返し検索だった。
-
-2026-09-13、`272228c`で同じ約13KB全文を`doc-html export`へ再入力したところ、
-既存の各操作Work上限100,000,000のままHTMLまで成功した。使用Workはparse/validateが
-20,362,601、lowerが2,987,790、prepare/render/serializeが6,986,518だった。
-これらは別々の予算を持つ操作であり、一つのend-to-end予算の値ではない。
-入力SHA-256は`9099bbbe48ed75a0768997789229188f53e43348fe930522b119908dfdb7a889`。
-上記3399での停止は過去の途中版の記録で、現行の再現結果ではない。
-この全文HTML試験はnative/WASIで成功している。多数ページ、全foreign、Pages配信の
-性能・完成までを一例の成功から推定しない。
-
-## Grammar仕様原稿の検査と割当課金
-
-第04章の未公開NEPL3d原稿を、既存の原稿用parse/lower/labels試験へ追加した。
-前段の修正時点では、通常ページのAllocation上限500,000,000で完成木の検査中に停止した。
-その時点ではcanonical registryへ登録せず、Markdown正本を維持した。
-未公開原稿用の既存の有限予算で処理できることと、正本切替の準備完了は区別する。
-
-調査で、SyntaxBundle検査が共有SourceSnapshotにも本文コピー分を課金し、
-借用するOrigin配列にも所有配列分を課金していたことが分かった。
-SourceStoreの予算付き参照挿入を使い、Origin検査自身が計上するscratchだけを課金する。
-Source入場、重複拒否、全Originの参照・cycle検査、非atomic targetの実コピー費用は維持する。
-長短sourceの共有費用、source挿入時の停止、未使用Originの不正参照を回帰試験にした。
-この課金修正のみでは第04章は通常上限で停止し、性能課題は未解消だった。
-
-続く計測で、schema検査のpending stackがpop後の容量を再利用していても、
-各pushで新規slot分を課金していたことが分かった。論理的な予約slot数を保持し、
-倍増時の追加容量を確保前に課金する。allocatorの余剰capacityは課金判定に使わない。
-各子のWorkはqueue投入前に課金し、広い入力の無制限な展開を防ぐ。
-全値の型検査・Nodes・深さ・左から右の検査順は維持する。
-
-この修正で第04章は通常予算内のparse/lower/labelsを通過した。
-parseのWorkは94,666,857、Allocationは341,191,768、lowerのWorkは85,689,406だった。
-SourceMapの一意な直接対応を範囲として検査する改善も加えたが、
-この原稿の停止解消に寄与したのはschema stackの課金修正である。
-一文書の成功を全仕様移行や全受入群の達成とは扱わない。
-
-## Doc仕様原稿の次の性能境界
-
-第05章の原稿で欠けていたguest printerの深さ合成とDoc/Math adapterの停止契約を補い、
-独立Sentence readerから現Doc consumerへ変換する段階を正文と原稿に明記した。
-修正後のCLIによる通常Work上限100,000,000でのHTML出力はcursor 47,445でWorkLimitとなり、
-正本切替は行っていない。
-
-Work計測からSourceMapのsnapshot検索を調べ、直前の検索位置に隣接するidentityを
-二分探索の前に照合する改善を加えた。完全なSnapshotIdの比較、cycle検査、重複edge、
-各比較前の課金を維持する。順序付きedgeを反復する257頂点のstarでは、修正前の
-WorkLimitに対し修正後は435,257 Workで検査できた。第05章は通常予算で停止しており、
-この小さい回帰試験を同原稿の性能課題の解消とは扱わない。
-
-続いてreaderのprovider境界で、新規mappingがなく全包含関係を同一snapshot内で
-直接確認できる場合に限り、private checkpointで検査済みのmapping集合の再検査を省いた。
-viewのschema・参照・cycle、factのmetadataとsource位置の検査は引き続き実行する。
-間接的な包含関係または新規mappingがある場合は従来通り集合全体を検査する。
-不正KindRef、空Capture名、未登録Presentation/Relation schema、追加mapによるcycle、
-停止予算を負例として検査した。readerのnative試験とWASI runtime試験、
-追加負例を含むlibrary試験は成功し、独立レビューの指摘を修正した。
-
-同じ第05章の通常HTML出力はcursor 54,300まで進んだが、Work上限100,000,000で
-停止した。予算を変更しておらず、第05章の正本切替および性能課題の解消は未達である。
-
-次のWork計測ではtokenizerの受入済みsourceに対する競合検索が約30,804,689を占めた。
-単発検索のhintとbatch検索は実文書で改善せず撤回した。
-tokenizer session内で、照合した宣言集合と受入済みprefixのimmutable snapshotを保持し、
-次回も完全一致する部分の競合検索だけを再利用する。宣言集合の変更・prefix変更は
-再検査し、source admission・report検査・継続scope検査は従来通り実行する。
-保持するsnapshotは所有し、allocatorのaddress再利用を同一性の根拠にしない。
-外部decode値は内容比較を省かず、closeで保持情報を解放する。
-検査の順序・Usageは変わり得るが、停止を成功へ変換したり新しい予算へ移したりしない。
-
-この変更の通常HTML出力はcursor 70,193でWorkLimitとなった。上限は同じ100,000,000で、
-第05章の完走と正本化はまだ未達である。環境変更、変更されたsuffix、同一内容の
-別storage、部分的なcache確保後の停止と再検査を回帰試験で確認する。
-
-さらに、新しいsource/mapと診断/eventがなく、全artifactの位置を消費範囲内で
-直接確認できるprovider応答では、そのsnapshotだけで通常の応答検査を行う。
-範囲外の合法なPresentation/Relationは従来のresolverへ戻し、不正なschema・参照・
-report、新規sourceの競合を省略しない。private checkpointの無関係なsource集合を
-tokenごとに再構築していた費用を減らした。
-
-第05章は通常予算でparse 88,653,715 Work、lower 66,285,115 Work、
-labels 8,413,256 Workに収まり、この予算を原稿の回帰試験にも適用した。
-単独HTML出力はWorkLimitではなく17章・23章への2リンクのNeedsResolutionまで進む。
-これはHTML生成・リンク解決・文書の意味比較・正本切替の完了を意味しない。
-
-第05章の正本移行では、原稿を `doc/spec/05-document.nepld` へ移し、旧見出し16件を
-aliasとして登録した。第23章は未移行Markdownの原文参照であり、Doc正本へ昇格させない。
-本文の独立比較でinline code92個、RawCode2個、15節、リンク2件の保存を確認した。
-18ページのHTML集合は通常のpage予算で生成でき、第05章のparseは87,582,341 Work、
-lowerは65,610,740 Workとなった。JavaScript無効のChromium/Firefox/WebKitで本文と
-17章HTML・23章原文へのリンクを確認した。混在siteでは23章を既生成HTMLへ接続する。
-
-Markdown集合の旧Work上限1,600,000,000では停止し、途中出力を採用しなかった。
-18ページ用に集合Workだけを1,900,000,000へ変更した別実行は1,615,489,130 Work、
-63,205,674 Nodesで完了した。Nodes上限64,000,000と各pageの通常予算は維持する。
-既存17ページの本文は不変で、集合入力digestに伴うmetadataだけが更新される。
-停止診断にはpage・段階・Usageを加え、文書集合の停止と単体解析の停止を区別する。
-この移行はT07/T21全体や未移行の残り6章の完成を意味しない。
-
-## 通常HTMLのMath接続（native、実装中）
-
-通常の `doc-html export`、SVG付きexport、`doc-html pages` にInlineMath・DisplayMathの表示経路を追加した。
-既存のMath lower/check/MathMLとSentence annotation hostを共用し、分数等の構造を保ったままHTMLへ合成する。MathをSVGへ変換したり、式を暗黙評価したりする必要はない。
-Doc/Math core間の直接依存は追加していない。Code表示・Ruby/Anno・Parallel Rows・元sourceと要素対応を保持する。
-
-既定設定は `katex-preferred`。このnative hostではKaTeXの完全な資源・identity・アクセシビリティ付き実行接続がまだないため、`KaTeXHostCapabilityUnavailable` をmanifestへ記録して独立MathMLを表示する。
-忠実なTeXへ変換できない注釈付き数式では `FaithfulTexUnsupported` と具体的なnode/reasonを残す。
-`--math-renderer mathml-only` はKaTeXの準備を要求せず、明示的に独立MathMLを選ぶ。閲覧にJavaScriptは不要だが、MathML対応ブラウザは必要である。
-この接続はT24全体、KaTeX実行、Web Worker、全constructorのブラウザ受入の完了を意味しない。
-
-回帰試験は `tools/tests/doc/export/math.rs`、通常CLI・Code/PageSet試験、既存Sentence/Math再帰注釈試験に置く。
-source snapshotの共通admission、文中・別行slot、出現別局所ID、表示されない外側anchorの拒否、停止後の成功拒否、部分ページ未公開を検査する。
-描画検査は通常export/pagesの既存browser auditへ組み込み、実行結果と未実行のtargetを区別する。
+callback<ruby>内部<rt>ないぶ</rt></ruby>だけで<ruby>台帳<rt>だいちょう</rt></ruby>を<ruby>交換<rt>こうかん</rt></ruby>して<ruby>元<rt>もと</rt></ruby>へ<ruby>戻<rt>もど</rt></ruby>した<ruby>場合<rt>ばあい</rt></ruby>、<ruby>返却<rt>へんきゃく</rt></ruby>sourceはruntimeによって <ruby>現在<rt>げんざい</rt></ruby>の<ruby>台帳<rt>だいちょう</rt></ruby>へ<ruby>再検査<rt>さいけんさ</rt></ruby>・<ruby>入場<rt>にゅうじょう</rt></ruby>される。callback<ruby>内部<rt>ないぶ</rt></ruby>の<ruby>任意状態<rt>にんいじょうたい</rt></ruby>を<ruby>証明<rt>しょうめい</rt></ruby>しているわけではない。 <ruby>試験<rt>しけん</rt></ruby>は<ruby>二<rt>ふた</rt></ruby>つのprovider<ruby>呼出<rt>よびだ</rt></ruby>しでsourceを<ruby>実際<rt>じっさい</rt></ruby>に<ruby>生成<rt>せいせい</rt></ruby>し、A→B→Aで<ruby>失効<rt>しっこう</rt></ruby>した<ruby>後<rt>あと</rt></ruby>に <ruby>最初<rt>さいしょ</rt></ruby>のsourceの<ruby>再<rt>さい</rt></ruby>admissionが<ruby>必要<rt>ひつよう</rt></ruby>になることをSourceBytesで<ruby>確認<rt>かくにん</rt></ruby>する。 reservationの<ruby>交換<rt>こうかん</rt></ruby>、None、エラー<ruby>返却<rt>へんきゃく</rt></ruby>でも<ruby>失効<rt>しっこう</rt></ruby>を<ruby>累積<rt>るいせき</rt></ruby>する。 resume\/portableからは<ruby>引<rt>ひ</rt></ruby>き<ruby>続<rt>つづ</rt></ruby>き<ruby>証明<rt>しょうめい</rt></ruby>を<ruby>発行<rt>はっこう</rt></ruby>しない。
+
+<ruby>実文書<rt>じつぶんしょ</rt></ruby>6<ruby>件<rt>けん</rt></ruby>のparse\/lower\/labels<ruby>試験<rt>しけん</rt></ruby>も<ruby>成功<rt>せいこう</rt></ruby>した。<ruby>第<rt>だい</rt></ruby>05<ruby>章<rt>しょう</rt></ruby>はそれぞれ73\,092\,384 \/ 66\,285\,115 \/ 8\,413\,256 Workで、<ruby>各段階<rt>かくだんかい</rt></ruby>の<ruby>通常<rt>つうじょう</rt></ruby>100\,000\,000 Work<ruby>枠内<rt>わくない</rt></ruby>だった。 <ruby>未採用<rt>みさいよう</rt></ruby>の<ruby>第<rt>だい</rt></ruby>21<ruby>章草案<rt>しょうそうあん</rt></ruby>はparseが113\,044\,768 Workであり、<ruby>明示<rt>めいじ</rt></ruby>した<ruby>草案用枠<rt>そうあんようわく</rt></ruby>での<ruby>成功<rt>せいこう</rt></ruby>を <ruby>通常<rt>つうじょう</rt></ruby>ページ<ruby>枠<rt>わく</rt></ruby>への<ruby>適合<rt>てきごう</rt></ruby>や<ruby>正本移行完了<rt>せいほんいこうかんりょう</rt></ruby>とは<ruby>扱<rt>あつか</rt></ruby>わない。<ruby>実時間<rt>じつじかん</rt></ruby>の<ruby>比較実験<rt>ひかくじっけん</rt></ruby>・<ruby>実<rt>じつ</rt></ruby>heap<ruby>測定<rt>そくてい</rt></ruby>は<ruby>別途必要<rt>べっとひつよう</rt></ruby>である。
+
+<a name="n-73656e74656e63655f7265636f76657279"></a>
+
+<a name="158を優先するsentence注釈の回復"></a>
+
+## \#158を<ruby>優先<rt>ゆうせん</rt></ruby>するSentence・<ruby>注釈<rt>ちゅうしゃく</rt></ruby>の<ruby>回復<rt>かいふく</rt></ruby>
+
+<ruby>今後<rt>こんご</rt></ruby>の<ruby>是正順序<rt>ぜせいじゅんじょ</rt></ruby>は[23<ruby>章<rt>しょう</rt></ruby>](<\.\.\/spec\/23\-sentence\-annotation\.md>)に<ruby>従<rt>したが</rt></ruby>う。Doc<ruby>固有機能<rt>こゆうきのう</rt></ruby>を<ruby>広<rt>ひろ</rt></ruby>げる<ruby>前<rt>まえ</rt></ruby>に、 Sentenceの<ruby>独立言語化<rt>どくりつげんごか</rt></ruby>からDoc<ruby>本文<rt>ほんぶん</rt></ruby>の<ruby>文章境界<rt>ぶんしょうきょうかい</rt></ruby>を<ruby>移行<rt>いこう</rt></ruby>し、<ruby>実文書性能<rt>じつぶんしょせいのう</rt></ruby>とT19 docs\-only Pagesを<ruby>優先<rt>ゆうせん</rt></ruby>する。 NEPL3a<ruby>完成<rt>かんせい</rt></ruby>・<ruby>旧<rt>きゅう</rt></ruby>comment\-as\-triviaの<ruby>全面移行<rt>ぜんめんいこう</rt></ruby>でD<ruby>本文<rt>ほんぶん</rt></ruby>・<ruby>公開<rt>こうかい</rt></ruby>を<ruby>止<rt>と</rt></ruby>めない。これらは<ruby>後続<rt>こうぞく</rt></ruby>で<ruby>完了<rt>かんりょう</rt></ruby>させる。 <ruby>以下<rt>いか</rt></ruby>の<ruby>既存<rt>きそん</rt></ruby>API・<ruby>性能調査<rt>せいのうちょうさ</rt></ruby>はその<ruby>時点<rt>じてん</rt></ruby>の<ruby>実装記録<rt>じっそうきろく</rt></ruby>であり、<ruby>旧所有関係<rt>きゅうしょゆうかんけい</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby>する<ruby>決定<rt>けってい</rt></ruby>ではない。
+
+<ruby>最初<rt>さいしょ</rt></ruby>の<ruby>実装<rt>じっそう</rt></ruby>として`nepl3-sentence-core`を<ruby>追加<rt>ついか</rt></ruby>した。foundationだけに<ruby>依存<rt>いぞん</rt></ruby>する`no_std + alloc`の <ruby>順序付<rt>じゅんじょづ</rt></ruby>き<ruby>有限<rt>ゆうげん</rt></ruby>arena、category\/<ruby>参照<rt>さんしょう</rt></ruby>\/<ruby>循環<rt>じゅんかん</rt></ruby>\/<ruby>到達性<rt>とうたつせい</rt></ruby>・<ruby>非空文章部<rt>ひくうぶんしょうぶ</rt></ruby>の<ruby>検査<rt>けんさ</rt></ruby>と<ruby>独立<rt>どくりつ</rt></ruby>schemaを<ruby>持<rt>も</rt></ruby>つ。 descriptorは<ruby>既存生成器<rt>きそんせいせいき</rt></ruby>で`interfaces/sentence.json`から<ruby>生成<rt>せいせい</rt></ruby>し、<ruby>実<rt>じつ</rt></ruby>descriptorからidentityを<ruby>計算<rt>けいさん</rt></ruby>する。 <ruby>通常<rt>つうじょう</rt></ruby>のURL<ruby>構造<rt>こうぞう</rt></ruby>とforeign<ruby>参照<rt>さんしょう</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>するが、guest<ruby>実行<rt>じっこう</rt></ruby>やDの<ruby>名前解決<rt>なまえかいけつ</rt></ruby>、<ruby>安全<rt>あんぜん</rt></ruby>なHTMLの<ruby>認証<rt>にんしょう</rt></ruby>はしない。
+
+<ruby>新規<rt>しんき</rt></ruby>10<ruby>試験<rt>しけん</rt></ruby>は<ruby>成功<rt>せいこう</rt></ruby>した。<ruby>共有<rt>きょうゆう</rt></ruby>DAGの<ruby>最長深<rt>さいちょうふか</rt></ruby>さ、10<ruby>万段<rt>まんだん</rt></ruby>の<ruby>非再帰検査<rt>ひさいきけんさ</rt></ruby>、<ruby>資源停止<rt>しげんていし</rt></ruby>、foreign<ruby>参照共有<rt>さんしょうきょうゆう</rt></ruby>・ <ruby>未使用拒否<rt>みしようきょひ</rt></ruby>、root category、schema<ruby>所有者<rt>しょゆうしゃ</rt></ruby>・revision・field<ruby>順<rt>じゅん</rt></ruby>の<ruby>境界<rt>きょうかい</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>む。 <ruby>独立<rt>どくりつ</rt></ruby>レビューで<ruby>不足<rt>ふそく</rt></ruby>を<ruby>指摘<rt>してき</rt></ruby>されたforeign\/root<ruby>試験<rt>しけん</rt></ruby>を<ruby>追加<rt>ついか</rt></ruby>し、<ruby>再<rt>さい</rt></ruby>レビューで<ruby>指摘<rt>してき</rt></ruby>なしを<ruby>確認<rt>かくにん</rt></ruby>した。 ARMv6\-M、wasm32\-unknown\-unknown、wasm32\-wasip2はbuild<ruby>確認<rt>かくにん</rt></ruby>であり、target<ruby>上<rt>じょう</rt></ruby>の<ruby>実行証拠<rt>じっこうしょうこ</rt></ruby>ではない。
+
+<ruby>続<rt>つづ</rt></ruby>いてSentenceValueのNDF codecを<ruby>実装<rt>じっそう</rt></ruby>した。<ruby>実<rt>じつ</rt></ruby>descriptorの<ruby>完全<rt>かんぜん</rt></ruby>identity、<ruby>受信前<rt>じゅしんまえ</rt></ruby>schema<ruby>検査<rt>けんさ</rt></ruby>と <ruby>受信後<rt>じゅしんご</rt></ruby>arena<ruby>検査<rt>けんさ</rt></ruby>、foundationによるforeign<ruby>閉包検査<rt>へいほうけんさ</rt></ruby>を<ruby>行<rt>おこな</rt></ruby>う。<ruby>手組<rt>てぐ</rt></ruby>みwire fixtureと<ruby>実<rt>じつ</rt></ruby>CBOR<ruby>往復<rt>おうふく</rt></ruby>、 <ruby>共有参照<rt>きょうゆうさんしょう</rt></ruby>、Unicode、1<ruby>万段<rt>まんだん</rt></ruby>の<ruby>意味上<rt>いみじょう</rt></ruby>の<ruby>深<rt>ふか</rt></ruby>さ、<ruby>処理途中<rt>しょりとちゅう</rt></ruby>の<ruby>非<rt>ひ</rt></ruby>ゼロ<ruby>予算停止<rt>よさんていし</rt></ruby>、<ruby>不正<rt>ふせい</rt></ruby>owner source\/hashを<ruby>検査<rt>けんさ</rt></ruby>する。 この<ruby>値<rt>あたい</rt></ruby>codecはSentence<ruby>局所<rt>きょくしょ</rt></ruby>syntaxの<ruby>位置情報<rt>いちじょうほう</rt></ruby>・reader payloadを<ruby>完成<rt>かんせい</rt></ruby>させるものではない。 codec<ruby>追加後<rt>ついかご</rt></ruby>のSentence<ruby>全<rt>ぜん</rt></ruby>19<ruby>試験<rt>しけん</rt></ruby>はnativeとWasmtime 44\.0\.1<ruby>上<rt>じょう</rt></ruby>のwasm32\-wasip2で<ruby>成功<rt>せいこう</rt></ruby>した。 ARMv6\-Mとwasm32\-unknown\-unknownは<ruby>引<rt>ひ</rt></ruby>き<ruby>続<rt>つづ</rt></ruby>きbuild<ruby>検査<rt>けんさ</rt></ruby>であり、browser<ruby>実行<rt>じっこう</rt></ruby>は<ruby>未検証<rt>みけんしょう</rt></ruby>である。 これは<ruby>同<rt>おな</rt></ruby>じRust<ruby>実装<rt>じっそう</rt></ruby>のtarget<ruby>別検証<rt>べつけんしょう</rt></ruby>で、<ruby>独立<rt>どくりつ</rt></ruby>した<ruby>第<rt>だい</rt></ruby>2provider<ruby>実装<rt>じっそう</rt></ruby>の<ruby>適合<rt>てきごう</rt></ruby>を<ruby>意味<rt>いみ</rt></ruby>しない。 Source\/Origin<ruby>境界<rt>きょうかい</rt></ruby>の<ruby>準備中<rt>じゅんびちゅう</rt></ruby>に、<ruby>値<rt>あたい</rt></ruby>codecで<ruby>文章<rt>ぶんしょう</rt></ruby>とforeignの<ruby>深<rt>ふか</rt></ruby>さを<ruby>別々<rt>べつべつ</rt></ruby>に<ruby>検査<rt>けんさ</rt></ruby>していた<ruby>欠陥<rt>けっかん</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>した。 <ruby>最深<rt>さいしん</rt></ruby>の<ruby>所有位置<rt>しょゆういち</rt></ruby>に<ruby>親<rt>おや</rt></ruby>Budget<ruby>深<rt>ふか</rt></ruby>さを<ruby>加<rt>くわ</rt></ruby>えてguestを<ruby>検査<rt>けんさ</rt></ruby>するよう<ruby>修正<rt>しゅうせい</rt></ruby>した。<ruby>文章<rt>ぶんしょう</rt></ruby>42<ruby>段<rt>だん</rt></ruby>・guest30<ruby>段<rt>だん</rt></ruby>は <ruby>単独<rt>たんどく</rt></ruby>では<ruby>上限<rt>じょうげん</rt></ruby>60に<ruby>収<rt>おさ</rt></ruby>まるが、<ruby>合成時<rt>ごうせいじ</rt></ruby>は<ruby>送受信<rt>そうじゅしん</rt></ruby>とも<ruby>拒否<rt>きょひ</rt></ruby>する。<ruby>短経路<rt>たんけいろ</rt></ruby>から<ruby>先<rt>さき</rt></ruby>に<ruby>到達<rt>とうたつ</rt></ruby>する<ruby>共有<rt>きょうゆう</rt></ruby>guestでも <ruby>最長経路<rt>さいちょうけいろ</rt></ruby>を<ruby>使<rt>つか</rt></ruby>い、<ruby>呼出元<rt>よびだしもと</rt></ruby>の<ruby>深<rt>ふか</rt></ruby>さを<ruby>戻<rt>もど</rt></ruby>す。<ruby>独立<rt>どくりつ</rt></ruby>レビューと<ruby>回帰試験<rt>かいきしけん</rt></ruby>で<ruby>確認<rt>かくにん</rt></ruby>した。
+
+<ruby>続<rt>つづ</rt></ruby>いてSentenceSyntaxの<ruby>局所<rt>きょくしょ</rt></ruby>Source\/Origin\/View<ruby>境界<rt>きょうかい</rt></ruby>を<ruby>追加<rt>ついか</rt></ruby>した。<ruby>意味<rt>いみ</rt></ruby>arenaと<ruby>同順<rt>どうじゅん</rt></ruby>・<ruby>同長<rt>どうちょう</rt></ruby>の<ruby>位置表<rt>いちひょう</rt></ruby>、 <ruby>必須<rt>ひっす</rt></ruby>Origin、<ruby>任意<rt>にんい</rt></ruby>head\/cover、Viewのowner、payload<ruby>自身<rt>じしん</rt></ruby>のsource\/mapを<ruby>両<rt>りょう</rt></ruby>codec<ruby>方向<rt>ほうこう</rt></ruby>で<ruby>検査<rt>けんさ</rt></ruby>する。 <ruby>架空<rt>かくう</rt></ruby>Spanを<ruby>要求<rt>ようきゅう</rt></ruby>せず、<ruby>生成値<rt>せいせいち</rt></ruby>はSynthetic\/Generated Originを<ruby>使<rt>つか</rt></ruby>う。これは<ruby>位置<rt>いち</rt></ruby>の<ruby>閉包<rt>へいほう</rt></ruby>・<ruby>関連付<rt>かんれんづ</rt></ruby>けの <ruby>検査<rt>けんさ</rt></ruby>であり、まだ<ruby>未実装<rt>みじっそう</rt></ruby>のreaderによる<ruby>原文<rt>げんぶん</rt></ruby>と<ruby>意味値<rt>いみち</rt></ruby>の<ruby>一致<rt>いっち</rt></ruby>を<ruby>証明<rt>しょうめい</rt></ruby>しない。
+
+<ruby>独立<rt>どくりつ</rt></ruby>レビューで、<ruby>明示<rt>めいじ</rt></ruby>SourceMapを<ruby>持<rt>も</rt></ruby>つViewの<ruby>親子<rt>おやこ</rt></ruby>をnativeでは<ruby>受理<rt>じゅり</rt></ruby>しportableでは<ruby>拒否<rt>きょひ</rt></ruby>する<ruby>欠陥<rt>けっかん</rt></ruby>を <ruby>確認<rt>かくにん</rt></ruby>し、foundation codecとSentence\/Doc\/Mathのsyntax<ruby>境界<rt>きょうかい</rt></ruby>を<ruby>一緒<rt>いっしょ</rt></ruby>に<ruby>修正<rt>しゅうせい</rt></ruby>した。mapを<ruby>各<rt>かく</rt></ruby>Viewで <ruby>再検査<rt>さいけんさ</rt></ruby>する<ruby>初版<rt>しょはん</rt></ruby>は<ruby>実<rt>じつ</rt></ruby>14ページ<ruby>文書<rt>ぶんしょ</rt></ruby>でWorkLimitとなった。<ruby>不変<rt>ふへん</rt></ruby>scopeに<ruby>閉<rt>と</rt></ruby>じた<ruby>検査結果<rt>けんさけっか</rt></ruby>を<ruby>再利用<rt>さいりよう</rt></ruby>し、 <ruby>既存上限<rt>きそんじょうげん</rt></ruby>のまま<ruby>生成成功<rt>せいせいせいこう</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>した。<ruby>各<rt>かく</rt></ruby>Viewは<ruby>再検査<rt>さいけんさ</rt></ruby>し、scopeの<ruby>再束縛<rt>さいそくばく</rt></ruby>とSourceAdmissionへの <ruby>可変<rt>かへん</rt></ruby>アクセスでは<ruby>親子双方<rt>おやこそうほう</rt></ruby>のcacheを<ruby>失効<rt>しっこう</rt></ruby>させる。scope<ruby>越<rt>こ</rt></ruby>しのadmission<ruby>置換<rt>ちかん</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>む<ruby>負例<rt>ふれい</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby>する。 SentenceはCIのWASI<ruby>実行<rt>じっこう</rt></ruby>・Wasm\/ARM build<ruby>対象<rt>たいしょう</rt></ruby>にも<ruby>追加<rt>ついか</rt></ruby>した。 <ruby>最終差分<rt>さいしゅうさぶん</rt></ruby>の<ruby>全<rt>ぜん</rt></ruby>workspace<ruby>試験<rt>しけん</rt></ruby>は730<ruby>成功<rt>せいこう</rt></ruby>・<ruby>失敗<rt>しっぱい</rt></ruby>0・<ruby>既定<rt>きてい</rt></ruby>ignore 2（<ruby>所有<rt>しょゆう</rt></ruby>continuation<ruby>性能比較<rt>せいのうひかく</rt></ruby>、 Node\/npm<ruby>依存<rt>いぞん</rt></ruby>KaTeX corpus）。Sentence\/Wire\/Doc\/MathはWasmtime 44\.0\.1で134<ruby>成功<rt>せいこう</rt></ruby>・<ruby>失敗<rt>しっぱい</rt></ruby>0・ ignore 0、ARMv6\-Mとbrowser<ruby>向<rt>む</rt></ruby>けWasmのbuildも<ruby>成功<rt>せいこう</rt></ruby>した。<ruby>独立<rt>どくりつ</rt></ruby>レビューの<ruby>追加指摘<rt>ついかしてき</rt></ruby>を<ruby>修正<rt>しゅうせい</rt></ruby>し、 <ruby>再<rt>さい</rt></ruby>レビューで<ruby>指摘<rt>してき</rt></ruby>なしを<ruby>確認<rt>かくにん</rt></ruby>した。Sentenceのreader\/LanguagePackageと<ruby>注釈<rt>ちゅうしゃく</rt></ruby>・consumer<ruby>移行<rt>いこう</rt></ruby>、 <ruby>旧<rt>きゅう</rt></ruby>コメントの<ruby>撤去<rt>てっきょ</rt></ruby>は<ruby>引<rt>ひ</rt></ruby>き<ruby>続<rt>つづ</rt></ruby>き<ruby>未完了<rt>みかんりょう</rt></ruby>である。
+
+Sentence literalの<ruby>解析本体<rt>かいせきほんたい</rt></ruby>と<ruby>専用印字<rt>せんよういんじ</rt></ruby>を<ruby>独立<rt>どくりつ</rt></ruby>coreへ<ruby>移<rt>うつ</rt></ruby>した。Doc<ruby>型<rt>かた</rt></ruby>へ<ruby>依存<rt>いぞん</rt></ruby>せず、Ruby\/InlineAnno、 escape<ruby>前<rt>まえ</rt></ruby>のView、<ruby>元<rt>もと</rt></ruby>Source\/Originとdense<ruby>位置表<rt>いちひょう</rt></ruby>を<ruby>保<rt>たも</rt></ruby>つ。Unicode escapeの<ruby>途中<rt>とちゅう</rt></ruby>、<ruby>空注釈部<rt>くうちゅうしゃくぶ</rt></ruby>、 <ruby>不正<rt>ふせい</rt></ruby>delimiter、1\,000<ruby>段<rt>だん</rt></ruby>の<ruby>入<rt>い</rt></ruby>れ<ruby>子<rt>こ</rt></ruby>、<ruby>共有<rt>きょうゆう</rt></ruby>DAGの<ruby>出力膨張<rt>しゅつりょくぼうちょう</rt></ruby>、<ruby>明示<rt>めいじ</rt></ruby>windowとCBORの<ruby>往復<rt>おうふく</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>した。 literalで<ruby>表現<rt>ひょうげん</rt></ruby>できないBreak<ruby>等<rt>とう</rt></ruby>はNotLiteralとして<ruby>返<rt>かえ</rt></ruby>し、Textへ<ruby>黙<rt>だま</rt></ruby>って<ruby>変<rt>か</rt></ruby>えない。 この<ruby>追加後<rt>ついかご</rt></ruby>のSentence<ruby>全<rt>ぜん</rt></ruby>33<ruby>試験<rt>しけん</rt></ruby>はnative\/WASIで<ruby>成功<rt>せいこう</rt></ruby>し、<ruby>独立<rt>どくりつ</rt></ruby>レビューで<ruby>指摘<rt>してき</rt></ruby>なしを<ruby>確認<rt>かくにん</rt></ruby>した。 LanguagePackage、reader\/provider<ruby>包絡<rt>ほうらく</rt></ruby>、prefixと<ruby>汎用印字<rt>はんよういんじ</rt></ruby>は<ruby>次<rt>つぎ</rt></ruby>の<ruby>実装<rt>じっそう</rt></ruby>であり、D<ruby>本文<rt>ほんぶん</rt></ruby>への<ruby>接続<rt>せつぞく</rt></ruby>を NEPL3a<ruby>完成<rt>かんせい</rt></ruby>より<ruby>先行<rt>せんこう</rt></ruby>する。\#165はCIと<ruby>独立最終<rt>どくりつさいしゅう</rt></ruby>レビュー<ruby>後<rt>ご</rt></ruby>にmainへ<ruby>統合済<rt>とうごうず</rt></ruby>みである。
+
+<ruby>局所<rt>きょくしょ</rt></ruby>syntaxのSource\/Origin<ruby>境界<rt>きょうかい</rt></ruby>、literal\/prefixと<ruby>独立<rt>どくりつ</rt></ruby>LanguagePackage、annotation adapter、 Doc\/Math consumerおよび<ruby>公式<rt>こうしき</rt></ruby>sourceの<ruby>移行<rt>いこう</rt></ruby>は<ruby>未完了<rt>みかんりょう</rt></ruby>である。<ruby>旧<rt>きゅう</rt></ruby>コメント<ruby>処理<rt>しょり</rt></ruby>だけは<ruby>先<rt>さき</rt></ruby>に<ruby>削除<rt>さくじょ</rt></ruby>せず、 <ruby>移行後<rt>いこうご</rt></ruby>にschema・wire・<ruby>生成器<rt>せいせいき</rt></ruby>まで<ruby>撤去<rt>てっきょ</rt></ruby>する。T07や<ruby>受入状態<rt>うけいれじょうたい</rt></ruby>をこのモデル<ruby>検査<rt>けんさ</rt></ruby>でpassedにしない。
+
+<a name="n-686f73745f6d6967726174696f6e"></a>
+
+<a name="同期host接続と文書移行までの残り"></a>
+
+## <ruby>同期<rt>どうき</rt></ruby>host<ruby>接続<rt>せつぞく</rt></ruby>と<ruby>文書移行<rt>ぶんしょいこう</rt></ruby>までの<ruby>残<rt>のこ</rt></ruby>り
+
+`nepl3_tools::doc::host::NativeHost` は、<ruby>明示<rt>めいじ</rt></ruby>Profileの<ruby>実装<rt>じっそう</rt></ruby>identityと<ruby>操作登録<rt>そうさとうろく</rt></ruby>を <ruby>照合<rt>しょうごう</rt></ruby>してDoc sentence・Name・Number・Trivia providerを<ruby>実行<rt>じっこう</rt></ruby>する。 <ruby>呼出<rt>よびだ</rt></ruby>しに<ruby>宣言<rt>せんげん</rt></ruby>されたsource<ruby>閉包<rt>へいほう</rt></ruby>だけを<ruby>使用<rt>しよう</rt></ruby>し、<ruby>同<rt>おな</rt></ruby>じBudget\/SourceAdmissionを<ruby>保持<rt>ほじ</rt></ruby>する。 <ruby>予約<rt>よやく</rt></ruby>IDは<ruby>操作内<rt>そうさない</rt></ruby>で<ruby>単調<rt>たんちょう</rt></ruby>に<ruby>発行<rt>はっこう</rt></ruby>し、<ruby>停止<rt>ていし</rt></ruby>した<ruby>予約<rt>よやく</rt></ruby>ではIDを<ruby>消費<rt>しょうひ</rt></ruby>しない。 `ParseSession::read_with_host`へ<ruby>接続<rt>せつぞく</rt></ruby>することで、<ruby>各同期<rt>かくどうき</rt></ruby>callで<ruby>成長中<rt>せいちょうちゅう</rt></ruby>のparse arenaを <ruby>外向<rt>そとむ</rt></ruby>けcontinuationへ<ruby>複写<rt>ふくしゃ</rt></ruby>する<ruby>処理<rt>しょり</rt></ruby>を<ruby>避<rt>さ</rt></ruby>ける。providerのreply<ruby>検査<rt>けんさ</rt></ruby>は<ruby>省略<rt>しょうりゃく</rt></ruby>しない。 catalogのVec<ruby>全体<rt>ぜんたい</rt></ruby>とreply Boxは、<ruby>実際<rt>じっさい</rt></ruby>の<ruby>確保<rt>かくほ</rt></ruby>・provider<ruby>実行<rt>じっこう</rt></ruby>より<ruby>先<rt>さき</rt></ruby>に<ruby>予算計上<rt>よさんけいじょう</rt></ruby>する。
+
+\#158に<ruby>基<rt>もと</rt></ruby>づく<ruby>境界是正<rt>きょうかいぜせい</rt></ruby>では、source hostの<ruby>環境<rt>かんきょう</rt></ruby>・reader stateを<ruby>固定<rt>こてい</rt></ruby>4<ruby>言語<rt>げんご</rt></ruby>の<ruby>列挙<rt>れっきょ</rt></ruby>から <ruby>解決済<rt>かいけつず</rt></ruby>みProfileの<ruby>登録<rt>とうろく</rt></ruby>へ<ruby>変更<rt>へんこう</rt></ruby>した。default categoryとreader modeも<ruby>解決済<rt>かいけつず</rt></ruby>みentryを<ruby>使<rt>つか</rt></ruby>う。 portable Await<ruby>経路<rt>けいろ</rt></ruby>も<ruby>同<rt>おな</rt></ruby>じ<ruby>登録実装<rt>とうろくじっそう</rt></ruby>の<ruby>照合<rt>しょうごう</rt></ruby>を<ruby>通<rt>とお</rt></ruby>し、schemaのpackage<ruby>文字列<rt>もじれつ</rt></ruby>によるdispatchを<ruby>除<rt>のぞ</rt></ruby>いた。 <ruby>追加<rt>ついか</rt></ruby>alias・<ruby>登録順変更<rt>とうろくじゅんへんこう</rt></ruby>・<ruby>非<rt>ひ</rt></ruby>root categoryでnative\/portableの<ruby>構文木一致<rt>こうぶんぎいっち</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>し、 <ruby>同<rt>おな</rt></ruby>じ<ruby>操作<rt>そうさ</rt></ruby>schemaでも<ruby>別<rt>べつ</rt></ruby>implementation digestなら<ruby>両経路<rt>りょうけいろ</rt></ruby>で<ruby>拒否<rt>きょひ</rt></ruby>する。 <ruby>開発<rt>かいはつ</rt></ruby>fixtureの<ruby>言語構成<rt>げんごこうせい</rt></ruby>は<ruby>依然<rt>いぜん</rt></ruby>として<ruby>明示選択<rt>めいじせんたく</rt></ruby>であり、<ruby>一般<rt>いっぱん</rt></ruby>suite<ruby>完成<rt>かんせい</rt></ruby>やSentence\/A<ruby>抽出<rt>ちゅうしゅつ</rt></ruby>、 comment\-as\-trivia<ruby>撤去<rt>てっきょ</rt></ruby>の<ruby>完了<rt>かんりょう</rt></ruby>を<ruby>意味<rt>いみ</rt></ruby>しない。
+
+この<ruby>接続<rt>せつぞく</rt></ruby>だけをHTML backendの<ruby>未保存変更<rt>みほぞんへんこう</rt></ruby>から<ruby>分離<rt>ぶんり</rt></ruby>して<ruby>検証<rt>けんしょう</rt></ruby>し、nativeのDoc<ruby>試験<rt>しけん</rt></ruby>32<ruby>件<rt>けん</rt></ruby>、 WASI31<ruby>件<rt>けん</rt></ruby>が<ruby>成功<rt>せいこう</rt></ruby>した。<ruby>差<rt>さ</rt></ruby>はhost processを<ruby>使用<rt>しよう</rt></ruby>するnative<ruby>専用<rt>せんよう</rt></ruby>seed<ruby>検査<rt>けんさ</rt></ruby>である。 <ruby>独立<rt>どくりつ</rt></ruby>レビューでも<ruby>通常経路<rt>つうじょうけいろ</rt></ruby>・<ruby>同期経路<rt>どうきけいろ</rt></ruby>・fallbackの<ruby>構文木一致<rt>こうぶんぎいっち</rt></ruby>、<ruby>登録<rt>とうろく</rt></ruby>\/sourceの<ruby>不正入力<rt>ふせいにゅうりょく</rt></ruby>、 <ruby>予約停止<rt>よやくていし</rt></ruby>とconstructorの<ruby>全<rt>ぜん</rt></ruby>Allocation<ruby>上限<rt>じょうげん</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>した。
+
+`linear-combination.nepld`の<ruby>約<rt>やく</rt></ruby>13KB<ruby>全文<rt>ぜんぶん</rt></ruby>は、<ruby>同期接続後<rt>どうきせつぞくご</rt></ruby>もWork<ruby>上限<rt>じょうげん</rt></ruby>100\,000\,000で <ruby>停止<rt>ていし</rt></ruby>する。これはHTML<ruby>出力<rt>しゅつりょく</rt></ruby>や<ruby>文書移行<rt>ぶんしょいこう</rt></ruby>の<ruby>完成証拠<rt>かんせいしょうこ</rt></ruby>ではない。reader\/tokenizerの <ruby>継続状態<rt>けいぞくじょうたい</rt></ruby>コピーを<ruby>削減<rt>さくげん</rt></ruby>し、<ruby>同<rt>おな</rt></ruby>じ<ruby>入力<rt>にゅうりょく</rt></ruby>・<ruby>予算<rt>よさん</rt></ruby>・<ruby>位置<rt>いち</rt></ruby>・<ruby>診断<rt>しんだん</rt></ruby>を<ruby>用<rt>もち</rt></ruby>いた<ruby>回帰検査<rt>かいきけんさ</rt></ruby>を<ruby>進<rt>すす</rt></ruby>める。 その<ruby>後<rt>ご</rt></ruby>、<ruby>文書間<rt>ぶんしょかん</rt></ruby>リンクとasset<ruby>解決<rt>かいけつ</rt></ruby>、HTML artifact、<ruby>意味同等性<rt>いみどうとうせい</rt></ruby>・<ruby>安定<rt>あんてい</rt></ruby>URLの<ruby>検証<rt>けんしょう</rt></ruby>を <ruby>接続<rt>せつぞく</rt></ruby>して、<ruby>準備<rt>じゅんび</rt></ruby>できたページからnepld<ruby>正本<rt>せいほん</rt></ruby>とPages<ruby>配布<rt>はいふ</rt></ruby>へ<ruby>進<rt>すす</rt></ruby>める。
+
+<a name="n-657865637574696f6e"></a>
+
+<a name="現在の実行経路"></a>
+
+## <ruby>現在<rt>げんざい</rt></ruby>の<ruby>実行経路<rt>じっこうけいろ</rt></ruby>
+
+`nepl3-doc-core` は `no_std` \+ `alloc`、production <ruby>依存<rt>いぞん</rt></ruby>は `nepl3-core` だけ。DocValue は<ruby>型付<rt>かたつ</rt></ruby>き arena であり、<ruby>構造検査<rt>こうぞうけんさ</rt></ruby>・<ruby>正規化<rt>せいきか</rt></ruby>・source\/Origin\/View <ruby>閉包検査<rt>へいほうけんさ</rt></ruby>と<ruby>明示<rt>めいじ</rt></ruby> NDF adapter を<ruby>提供<rt>ていきょう</rt></ruby>する。<ruby>深<rt>ふか</rt></ruby>い<ruby>入力<rt>にゅうりょく</rt></ruby>は<ruby>平坦<rt>へいたん</rt></ruby>な<ruby>参照<rt>さんしょう</rt></ruby>と<ruby>反復処理<rt>はんぷくしょり</rt></ruby>を<ruby>使<rt>つか</rt></ruby>い、<ruby>共有<rt>きょうゆう</rt></ruby> DAG の<ruby>最大経路<rt>さいだいけいろ</rt></ruby>と guest <ruby>内部検査<rt>ないぶけんさ</rt></ruby>の Depth を<ruby>合成<rt>ごうせい</rt></ruby>する。
+
+sentence recognizer は<ruby>元<rt>もと</rt></ruby> SourceSnapshot を<ruby>借用<rt>しゃくよう</rt></ruby>し、Matched \/ NoMatch \/ NeedMore \/ <ruby>位置付<rt>いちつ</rt></ruby>き Failed を<ruby>返<rt>かえ</rt></ruby>す。tools の<ruby>明示<rt>めいじ</rt></ruby> provider がこれを ReadRequest → ReadReply の<ruby>正式包絡<rt>せいしきほうらく</rt></ruby>へ<ruby>接続<rt>せつぞく</rt></ruby>する。<ruby>失敗<rt>しっぱい</rt></ruby>は<ruby>型付<rt>かたつ</rt></ruby>き Diagnostic と Report、<ruby>停止<rt>ていし</rt></ruby>は<ruby>元<rt>もと</rt></ruby> StopReason を<ruby>保持<rt>ほじ</rt></ruby>する。literal の token payload は<ruby>独立<rt>どくりつ</rt></ruby> Sentence の `SentenceLiteralPayload`、<ruby>内部<rt>ないぶ</rt></ruby> View は<ruby>外側<rt>そとがわ</rt></ruby> prefix parser の<ruby>子<rt>こ</rt></ruby> arity にならない。
+
+<ruby>正式<rt>せいしき</rt></ruby>な Doc\/Math\/Circuit\/Grammar の<ruby>文法<rt>ぶんぽう</rt></ruby> source から<ruby>保存<rt>ほぞん</rt></ruby>した seed を<ruby>実<rt>じつ</rt></ruby> compiler へ<ruby>渡<rt>わた</rt></ruby>し、4 alias と<ruby>各<rt>かく</rt></ruby> checked environment を<ruby>明示<rt>めいじ</rt></ruby>した Profile で ParseSession を<ruby>実行<rt>じっこう</rt></ruby>する。runtime provider <ruby>登録<rt>とうろく</rt></ruby>は<ruby>実<rt>じつ</rt></ruby> Name\/Trivia\/Number と<ruby>独立<rt>どくりつ</rt></ruby> Sentence literal のみ。Facts <ruby>拡張<rt>かくちょう</rt></ruby>は compile <ruby>時<rt>じ</rt></ruby>の<ruby>署名登録<rt>しょめいとうろく</rt></ruby>であり、<ruby>未実装<rt>みじっそう</rt></ruby>の Doc Facts callback を runtime <ruby>実装<rt>じっそう</rt></ruby>として<ruby>広告<rt>こうこく</rt></ruby>しない。
+
+`lower::prefix` は host が<ruby>選択<rt>せんたく</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>した SyntaxBundle と<ruby>明示<rt>めいじ</rt></ruby> surface SchemaRef\/category を<ruby>受<rt>う</rt></ruby>け、<ruby>現在<rt>げんざい</rt></ruby>の Budget\/SourceAdmission で<ruby>再検査<rt>さいけんさ</rt></ruby>して Doc arena へ<ruby>変換<rt>へんかん</rt></ruby>する。<ruby>構造<rt>こうぞう</rt></ruby> proof は PreparedArticle や guest の<ruby>意味<rt>いみ</rt></ruby> proof ではない。prefix constructor と sentence recognizer は<ruby>同<rt>おな</rt></ruby>じ<ruby>正規化<rt>せいきか</rt></ruby>を<ruby>使<rt>つか</rt></ruby>う。<ruby>実<rt>じつ</rt></ruby> ParseSession の literal payload と prefix lower の<ruby>正常例<rt>せいじょうれい</rt></ruby>は<ruby>同<rt>おな</rt></ruby>じ<ruby>意味正規形<rt>いみせいきけい</rt></ruby>となる。
+
+suite の `adapters::sentence::literal::lower` は<ruby>独立<rt>どくりつ</rt></ruby> Sentence codec と<ruby>既存<rt>きそん</rt></ruby>の Sentence → Doc adapter を `lower::document_with_decoder` へ<ruby>渡<rt>わた</rt></ruby>し、prefix と<ruby>受理済<rt>じゅりず</rt></ruby>み SentenceLiteral を<ruby>一括<rt>いっかつ</rt></ruby> lower する。callback <ruby>後<rt>ご</rt></ruby>の<ruby>停止検査<rt>ていしけんさ</rt></ruby>と、<ruby>結合前<rt>けつごうまえ</rt></ruby>の payload <ruby>局所閉包検査<rt>きょくしょへいほうけんさ</rt></ruby>を<ruby>行<rt>おこな</rt></ruby>う。payload<ruby>自身<rt>じしん</rt></ruby>のsource<ruby>閉包<rt>へいほう</rt></ruby>、<ruby>外<rt>そと</rt></ruby>tokenのhead\/View<ruby>完全一致<rt>かんぜんいっち</rt></ruby>、<ruby>意味<rt>いみ</rt></ruby>Span\/Originのtoken<ruby>内包含<rt>ないほうがん</rt></ruby>（<ruby>明示<rt>めいじ</rt></ruby>SourceMapを<ruby>含<rt>ふく</rt></ruby>む）を<ruby>検査<rt>けんさ</rt></ruby>する。<ruby>元<rt>もと</rt></ruby>hostのOrigin<ruby>列<rt>れつ</rt></ruby>と<ruby>各<rt>かく</rt></ruby>token\-local Viewを<ruby>維持<rt>いじ</rt></ruby>し、payload Originのみ<ruby>末尾<rt>まつび</rt></ruby>へ<ruby>再配置<rt>さいはいち</rt></ruby>する。<ruby>各<rt>かく</rt></ruby>snapshotのSourceBytesを<ruby>操作内<rt>そうさない</rt></ruby>で<ruby>一度<rt>いちど</rt></ruby>だけ<ruby>計上<rt>けいじょう</rt></ruby>し、<ruby>停止時<rt>ていしじ</rt></ruby>は<ruby>入力構文木<rt>にゅうりょくこうぶんぎ</rt></ruby>を<ruby>変更<rt>へんこう</rt></ruby>しない。<ruby>従来<rt>じゅうらい</rt></ruby>のcodec<ruby>不要<rt>ふよう</rt></ruby>な`lower::prefix`はliteral leafに<ruby>対<rt>たい</rt></ruby>して<ruby>明示<rt>めいじ</rt></ruby>Unsupportedを<ruby>維持<rt>いじ</rt></ruby>する。
+
+<ruby>補助<rt>ほじょ</rt></ruby> constructor は<ruby>独立<rt>どくりつ</rt></ruby> fragment として lower\/codec でき、<ruby>親<rt>おや</rt></ruby> operand では<ruby>型付<rt>かたつ</rt></ruby>き enum\/Option へ<ruby>取<rt>と</rt></ruby>り<ruby>込<rt>こ</rt></ruby>む。<ruby>取<rt>と</rt></ruby>り<ruby>込<rt>こ</rt></ruby>んだ wrapper を<ruby>意味的<rt>いみてき</rt></ruby>な<ruby>子<rt>こ</rt></ruby>に<ruby>残<rt>のこ</rt></ruby>さず、<ruby>元<rt>もと</rt></ruby> View\/Origin\/source <ruby>宣言<rt>せんげん</rt></ruby>を<ruby>保存<rt>ほぞん</rt></ruby>する。Code の DocGuest は `foreign Doc Article` で、<ruby>同<rt>どう</rt></ruby> alias でも<ruby>独立<rt>どくりつ</rt></ruby> bundle\/environment を<ruby>保持<rt>ほじ</rt></ruby>する。<ruby>構文<rt>こうぶん</rt></ruby>は<ruby>正<rt>ただ</rt></ruby>しいが<ruby>注釈<rt>ちゅうしゃく</rt></ruby>が<ruby>意味的<rt>いみてき</rt></ruby>に<ruby>不正<rt>ふせい</rt></ruby>な guest も Code の<ruby>表示準備<rt>ひょうじじゅんび</rt></ruby>のために<ruby>意味<rt>いみ</rt></ruby> lower しない。host への<ruby>復帰<rt>ふっき</rt></ruby>を<ruby>実<rt>じつ</rt></ruby> parse で<ruby>検査<rt>けんさ</rt></ruby>する。
+
+<a name="n-76616c69646174696f6e"></a>
+
+<a name="検証の境界"></a>
+
+## <ruby>検証<rt>けんしょう</rt></ruby>の<ruby>境界<rt>きょうかい</rt></ruby>
+
+`labels::check` はArticle<ruby>内<rt>ない</rt></ruby>のSection\/Anchorを<ruby>先<rt>さき</rt></ruby>に<ruby>収集<rt>しゅうしゅう</rt></ruby>し、<ruby>前方<rt>ぜんぽう</rt></ruby>Referenceを<ruby>同一<rt>どういつ</rt></ruby>DocLabelIdへ<ruby>解決<rt>かいけつ</rt></ruby>する。<ruby>重複名<rt>ちょうふくめい</rt></ruby>・<ruby>未解決名<rt>みかいけつめい</rt></ruby>と<ruby>共有<rt>きょうゆう</rt></ruby>DAG<ruby>上<rt>じょう</rt></ruby>の<ruby>複数表示経路<rt>ふくすうひょうじけいろ</rt></ruby>を<ruby>型付<rt>かたつ</rt></ruby>き<ruby>失敗<rt>しっぱい</rt></ruby>にし、<ruby>名前<rt>なまえ</rt></ruby>selectionと<ruby>定義全体<rt>ていぎぜんたい</rt></ruby>rangeを<ruby>分離<rt>ぶんり</rt></ruby>して<ruby>保持<rt>ほじ</rt></ruby>する。source\-less<ruby>位置<rt>いち</rt></ruby>はNoneのまま、foreign guestのlabelは<ruby>集計<rt>しゅうけい</rt></ruby>しない。`LabelError::diagnostic` は<ruby>意味失敗<rt>いみしっぱい</rt></ruby>を<ruby>通常<rt>つうじょう</rt></ruby>のschema\-validated Diagnosticへ<ruby>変換<rt>へんかん</rt></ruby>し、<ruby>名前<rt>なまえ</rt></ruby>と<ruby>複数経路<rt>ふくすうけいろ</rt></ruby>を<ruby>構造化引数<rt>こうぞうかひきすう</rt></ruby>へ、<ruby>先行定義<rt>せんこうていぎ</rt></ruby>をrelated<ruby>位置<rt>いち</rt></ruby>へ<ruby>保持<rt>ほじ</rt></ruby>する。<ruby>構築自身<rt>こうちくじしん</rt></ruby>の<ruby>停止時<rt>ていしじ</rt></ruby>も<ruby>元<rt>もと</rt></ruby>の<ruby>借用<rt>しゃくよう</rt></ruby>エラーは<ruby>残<rt>のこ</rt></ruby>る。CheckedLabelsはlabel<ruby>検査<rt>けんさ</rt></ruby>だけのproofで、foreign Requirement<ruby>解決<rt>かいけつ</rt></ruby>やPreparedArticleではない。
+
+Doc arena の node\/root、Origin、<ruby>局所<rt>きょくしょ</rt></ruby> View と source map は portable <ruby>往復<rt>おうふく</rt></ruby>で<ruby>保持<rt>ほじ</rt></ruby>する。<ruby>共通<rt>きょうつう</rt></ruby> codec は source <ruby>表<rt>ひょう</rt></ruby>を identity <ruby>順<rt>じゅん</rt></ruby>、guest syntax graph を<ruby>正準<rt>せいじゅん</rt></ruby> NodeRef <ruby>座標<rt>ざひょう</rt></ruby>へ<ruby>整<rt>ととの</rt></ruby>えるため、<ruby>未正準<rt>みせいじゅん</rt></ruby>な native <ruby>表<rt>ひょう</rt></ruby>の<ruby>列順<rt>れつじゅん</rt></ruby>や guest NodeRef <ruby>数値<rt>すうち</rt></ruby>そのものの Rust Eq は wire の<ruby>要件<rt>ようけん</rt></ruby>ではない。source の identity\/URI\/content、owner Origin ID と<ruby>環境<rt>かんきょう</rt></ruby> digest、および<ruby>実<rt>じつ</rt></ruby> CBOR の<ruby>正準再<rt>せいじゅんさい</rt></ruby> encode を<ruby>照合<rt>しょうごう</rt></ruby>する。
+
+<ruby>管理対象<rt>かんりたいしょう</rt></ruby>は Doc core の<ruby>構造<rt>こうぞう</rt></ruby>・literal・<ruby>正規化<rt>せいきか</rt></ruby>・source\/ForeignClosure・<ruby>初回<rt>しょかい</rt></ruby> CBOR と、tools の<ruby>実<rt>じつ</rt></ruby> compiler\/parse\/prefix lower・helper <ruby>範囲<rt>はんい</rt></ruby>・DocGuest・resource <ruby>停止<rt>ていし</rt></ruby>。host seed と<ruby>元<rt>もと</rt></ruby> source\/adapter の<ruby>一致<rt>いっち</rt></ruby>だけは Python process を<ruby>使<rt>つか</rt></ruby>う native <ruby>専用試験<rt>せんようしけん</rt></ruby>で、<ruby>同<rt>おな</rt></ruby>じ<ruby>保存<rt>ほぞん</rt></ruby> seed を<ruby>使<rt>つか</rt></ruby>う<ruby>実処理<rt>じつしょり</rt></ruby>は WASI でも<ruby>実行<rt>じっこう</rt></ruby>する。browser target は compile <ruby>検査<rt>けんさ</rt></ruby>であり<ruby>実描画<rt>じつびょうが</rt></ruby>の<ruby>成功<rt>せいこう</rt></ruby>ではない。
+
+`text::plain_text` は<ruby>正式<rt>せいしき</rt></ruby>PlainTextRequestを<ruby>受<rt>う</rt></ruby>け、document\/guestの<ruby>正準<rt>せいじゅん</rt></ruby>digestへ<ruby>束縛<rt>そくばく</rt></ruby>した<ruby>明示<rt>めいじ</rt></ruby>host textを<ruby>用<rt>もち</rt></ruby>いてSentenceを<ruby>投影<rt>とうえい</rt></ruby>する。BaseOnly \/ WithReadings \/ WithAllNotesの<ruby>固定規則<rt>こていきそく</rt></ruby>と、<ruby>表示<rt>ひょうじ</rt></ruby>しないnote\/readingには<ruby>未提供<rt>みていきょう</rt></ruby>embed textを<ruby>要求<rt>ようきゅう</rt></ruby>しない<ruby>規則<rt>きそく</rt></ruby>を<ruby>実行<rt>じっこう</rt></ruby>する。<ruby>全提供<rt>ぜんていきょう</rt></ruby>entryはpolicyにかかわらず<ruby>検査<rt>けんさ</rt></ruby>する。<ruby>型付<rt>かたつ</rt></ruby>きrequest\/replyの<ruby>初回<rt>しょかい</rt></ruby>CBOR、<ruby>実<rt>じつ</rt></ruby>prefix→lower→<ruby>投影<rt>とうえい</rt></ruby>、<ruby>元<rt>もと</rt></ruby>source<ruby>変更<rt>へんこう</rt></ruby>・guest<ruby>差替<rt>さしか</rt></ruby>え・owner<ruby>環境変更<rt>かんきょうへんこう</rt></ruby>、<ruby>準備中<rt>じゅんびちゅう</rt></ruby>と<ruby>出力中<rt>しゅつりょくちゅう</rt></ruby>の<ruby>停止<rt>ていし</rt></ruby>を<ruby>管理対象<rt>かんりたいしょう</rt></ruby>で<ruby>検査<rt>けんさ</rt></ruby>する。<ruby>公開<rt>こうかい</rt></ruby>prepareはidentity<ruby>取得<rt>しゅとく</rt></ruby>だけで、<ruby>公開実行<rt>こうかいじっこう</rt></ruby>が<ruby>再検査<rt>さいけんさ</rt></ruby>と<ruby>資源計上<rt>しげんけいじょう</rt></ruby>を<ruby>省略<rt>しょうりゃく</rt></ruby>するproofではない。これはguest<ruby>意味<rt>いみ</rt></ruby>checkやPreparedArticleの<ruby>完成<rt>かんせい</rt></ruby>を<ruby>表<rt>あらわ</rt></ruby>さない。
+
+`print::print` はPrintRequest\/Replyの<ruby>正式操作<rt>せいしきそうさ</rt></ruby>としてPrefix\/Compactを<ruby>出力<rt>しゅつりょく</rt></ruby>する。64 form・20 entryは<ruby>元<rt>もと</rt></ruby>の<ruby>表層入力<rt>ひょうそうにゅうりょく</rt></ruby>を<ruby>実<rt>じつ</rt></ruby>parse\/lowerし、<ruby>印字後<rt>いんじご</rt></ruby>に<ruby>同<rt>おな</rt></ruby>じ<ruby>実経路<rt>じつけいろ</rt></ruby>へ<ruby>戻<rt>もど</rt></ruby>す。MathGuest \/ CircuitGuest \/ Guestの<ruby>独立<rt>どくりつ</rt></ruby>rootと4 wrapperを<ruby>保持<rt>ほじ</rt></ruby>する。<ruby>明示<rt>めいじ</rt></ruby>host guest\-printはdocumentとForeignClosureのdigestへ<ruby>束縛<rt>そくばく</rt></ruby>し、<ruby>原文取得<rt>げんぶんしゅとく</rt></ruby>だけを<ruby>意味一致<rt>いみいっち</rt></ruby>proofとして<ruby>扱<rt>あつか</rt></ruby>わない。<ruby>名前<rt>なまえ</rt></ruby>と<ruby>言語<rt>げんご</rt></ruby>は<ruby>共通<rt>きょうつう</rt></ruby>reader<ruby>語彙<rt>ごい</rt></ruby>で<ruby>印字可能性<rt>いんじかのうせい</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>し、source\-less<ruby>不適合<rt>ふてきごう</rt></ruby>は<ruby>元値<rt>もとあたい</rt></ruby>を<ruby>変<rt>か</rt></ruby>えず<ruby>型付<rt>かたつ</rt></ruby>き<ruby>失敗<rt>しっぱい</rt></ruby>にする。Doc coreはguest<ruby>意味処理<rt>いみしょり</rt></ruby>もsnapshot<ruby>発行<rt>はっこう</rt></ruby>も<ruby>行<rt>おこな</rt></ruby>わない。
+
+<a name="n-72656d61696e696e67"></a>
+
+<a name="残り"></a>
+
+## <ruby>残<rt>のこ</rt></ruby>り
+
+`prepare::inspect` はArticleの<ruby>全<rt>ぜん</rt></ruby>variant・labelを<ruby>検査<rt>けんさ</rt></ruby>し、Link\/Assetの<ruby>意味<rt>いみ</rt></ruby>node<ruby>別要求<rt>べつようきゅう</rt></ruby>とForeignClosure<ruby>別要求<rt>べつようきゅう</rt></ruby>を<ruby>列挙<rt>れっきょ</rt></ruby>する。<ruby>正式<rt>せいしき</rt></ruby>DocPreparationPlanはdocument\/guestのcanonical digestへ<ruby>束縛<rt>そくばく</rt></ruby>され、<ruby>独立受信時<rt>どくりつじゅしんじ</rt></ruby>には<ruby>明示<rt>めいじ</rt></ruby>documentから<ruby>全要求<rt>ぜんようきゅう</rt></ruby>を<ruby>再導出<rt>さいどうしゅつ</rt></ruby>する。<ruby>実<rt>じつ</rt></ruby>sourceのCode\/InlineMathは<ruby>構文<rt>こうぶん</rt></ruby>のまま<ruby>保持<rt>ほじ</rt></ruby>し、<ruby>外部資源<rt>がいぶしげん</rt></ruby>を<ruby>読<rt>よ</rt></ruby>まず<ruby>評価<rt>ひょうか</rt></ruby>しない。これは<ruby>準備入力<rt>じゅんびにゅうりょく</rt></ruby>の<ruby>発見<rt>はっけん</rt></ruby>であり、<ruby>下記<rt>かき</rt></ruby>の<ruby>資源解決<rt>しげんかいけつ</rt></ruby>・HTML<ruby>出力<rt>しゅつりょく</rt></ruby>の<ruby>完成<rt>かんせい</rt></ruby>ではない。
+
+- <ruby>公開<rt>こうかい</rt></ruby>suiteでのhost guest\-printの<ruby>供給<rt>きょうきゅう</rt></ruby>と、<ruby>対象<rt>たいしょう</rt></ruby>guest parserによる<ruby>構造正規形<rt>こうぞうせいきけい</rt></ruby>・source<ruby>対応<rt>たいおう</rt></ruby>の<ruby>検査<rt>けんさ</rt></ruby>。<ruby>現在<rt>げんざい</rt></ruby>の<ruby>管理対象<rt>かんりたいしょう</rt></ruby>は<ruby>実<rt>じつ</rt></ruby>generic engine parser\/checked tree\/printerを<ruby>使<rt>つか</rt></ruby>う<ruby>構文往復<rt>こうぶんおうふく</rt></ruby>であり、raw PrintedGuestのtextだけで<ruby>一致<rt>いっち</rt></ruby>proofを<ruby>得<rt>え</rt></ruby>ない。この<ruby>残<rt>のこ</rt></ruby>りは<ruby>全<rt>ぜん</rt></ruby>guestの<ruby>意味<rt>いみ</rt></ruby>lower\/checkを<ruby>要求<rt>ようきゅう</rt></ruby>するものではなく、<ruby>意味不正<rt>いみふせい</rt></ruby>・<ruby>回復構文<rt>かいふくこうぶん</rt></ruby>を<ruby>表示用<rt>ひょうじよう</rt></ruby>Codeとして<ruby>保持<rt>ほじ</rt></ruby>する<ruby>契約<rt>けいやく</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby>する。Math\/Circuit<ruby>等<rt>とう</rt></ruby>の<ruby>意味<rt>いみ</rt></ruby>check・<ruby>評価<rt>ひょうか</rt></ruby>の<ruby>完成<rt>かんせい</rt></ruby>でもない。
+- <ruby>外部<rt>がいぶ</rt></ruby> page・asset <ruby>解決<rt>かいけつ</rt></ruby>、foreign Requirementを<ruby>含<rt>ふく</rt></ruby>む<ruby>完全<rt>かんぜん</rt></ruby>なcheck\/prepare、HTML backend と rendering。schema に<ruby>表<rt>ひょう</rt></ruby>・list・link・code・asset があることだけで、これらの<ruby>実装済<rt>じっそうず</rt></ruby>みを<ruby>主張<rt>しゅちょう</rt></ruby>しない。
+- Doc の<ruby>正式<rt>せいしき</rt></ruby> lower <ruby>操作<rt>そうさ</rt></ruby>の Report\/<ruby>部分結果包絡<rt>ぶぶんけっかほうらく</rt></ruby>と<ruby>全<rt>ぜん</rt></ruby> suite adapter。native helper の Result を、<ruby>別実装<rt>べつじっそう</rt></ruby>の<ruby>操作包絡<rt>そうさほうらく</rt></ruby>の<ruby>完成<rt>かんせい</rt></ruby>として<ruby>扱<rt>あつか</rt></ruby>わない。
+
+<ruby>設計入力<rt>せっけいにゅうりょく</rt></ruby>は main `b5295cef655aa59affffd6644f2902268d071953` の<ruby>文書監査<rt>ぶんしょかんさ</rt></ruby>。inventory SHA\-256 は `daf94085913930f05c1655d2adbef4f56651864f9a97ac4d261400449c98499e`、61 Markdown \/ 231 Rust source owner、52 <ruby>表<rt>ひょう</rt></ruby> \/ 1283 cell、39 list \/ 233 item、1134 inline code、12 code block、249 link、1 image。<ruby>追加<rt>ついか</rt></ruby> element category はない。この<ruby>監査<rt>かんさ</rt></ruby>は<ruby>実装中差分<rt>じっそうちゅうさぶん</rt></ruby>の completeness、rustdoc <ruby>意味監査<rt>いみかんさ</rt></ruby>、T21 の<ruby>移行完了<rt>いこうかんりょう</rt></ruby>とは<ruby>別<rt>べつ</rt></ruby>である。
+
+<a name="n-746f6b656e697a6572"></a>
+
+<a name="tokenizer同期接続の次段階"></a>
+
+## Tokenizer<ruby>同期接続<rt>どうきせつぞく</rt></ruby>の<ruby>次段階<rt>じだんかい</rt></ruby>
+
+prefix engineからtokenizerの<ruby>同期<rt>どうき</rt></ruby>hostを<ruby>使用<rt>しよう</rt></ruby>し、<ruby>成功<rt>せいこう</rt></ruby>callで<ruby>外側<rt>そとがわ</rt></ruby>tokenizer<ruby>継続<rt>けいぞく</rt></ruby>を<ruby>発行<rt>はっこう</rt></ruby>しない <ruby>経路<rt>けいろ</rt></ruby>を<ruby>追加<rt>ついか</rt></ruby>した。<ruby>独立<rt>どくりつ</rt></ruby>レビューで<ruby>見<rt>み</rt></ruby>つかった<ruby>明示<rt>めいじ</rt></ruby>Stoppedエラーと<ruby>入<rt>い</rt></ruby>れ<ruby>子<rt>こ</rt></ruby>の<ruby>停止原因<rt>ていしげんいん</rt></ruby>もBudgetへ <ruby>保持<rt>ほじ</rt></ruby>する。<ruby>既存所有経路<rt>きそんしょゆうけいろ</rt></ruby>との<ruby>構文木<rt>こうぶんぎ</rt></ruby>・<ruby>診断<rt>しんだん</rt></ruby>・source\/map<ruby>比較<rt>ひかく</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby>する。 HTMLの<ruby>全文再現試験<rt>ぜんぶんさいげんしけん</rt></ruby>では<ruby>同<rt>おな</rt></ruby>じWork<ruby>上限<rt>じょうげん</rt></ruby>100\,000\,000のまま<ruby>停止位置<rt>ていしいち</rt></ruby>が1412から1897へ<ruby>進<rt>すす</rt></ruby>んだが、 13KB<ruby>文書<rt>ぶんしょ</rt></ruby>の<ruby>完走<rt>かんそう</rt></ruby>には<ruby>至<rt>いた</rt></ruby>っていない。これは<ruby>部分改善<rt>ぶぶんかいぜん</rt></ruby>であり、<ruby>文書移行<rt>ぶんしょいこう</rt></ruby>やHTML<ruby>全体<rt>ぜんたい</rt></ruby>の<ruby>成功<rt>せいこう</rt></ruby>ではない。 <ruby>次<rt>つぎ</rt></ruby>は<ruby>共有<rt>きょうゆう</rt></ruby>sourceの<ruby>実<rt>じつ</rt></ruby>コピー<ruby>費用<rt>ひよう</rt></ruby>と<ruby>外部<rt>がいぶ</rt></ruby>echo<ruby>比較費用<rt>ひかくひよう</rt></ruby>の<ruby>分離<rt>ぶんり</rt></ruby>を<ruby>検討<rt>けんとう</rt></ruby>し、<ruby>外部入力<rt>がいぶにゅうりょく</rt></ruby>の<ruby>検査<rt>けんさ</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby>して <ruby>本文<rt>ほんぶん</rt></ruby>の<ruby>反復<rt>はんぷく</rt></ruby>コピー<ruby>課金<rt>かきん</rt></ruby>を<ruby>解消<rt>かいしょう</rt></ruby>する。
+
+<ruby>続<rt>つづ</rt></ruby>く<ruby>実装<rt>じっそう</rt></ruby>では、<ruby>実<rt>じつ</rt></ruby>コピーと<ruby>比較前<rt>ひかくまえ</rt></ruby>の<ruby>走査費用<rt>そうさひよう</rt></ruby>を<ruby>分離<rt>ぶんり</rt></ruby>し、source storeの<ruby>重複検索<rt>ちょうふくけんさく</rt></ruby>を <ruby>予算付<rt>よさんつ</rt></ruby>きの<ruby>二分探索<rt>にぶんたんさく</rt></ruby>へ<ruby>変更<rt>へんこう</rt></ruby>した。<ruby>公開<rt>こうかい</rt></ruby>snapshot<ruby>列<rt>れつ</rt></ruby>の<ruby>順序<rt>じゅんじょ</rt></ruby>、<ruby>外部<rt>がいぶ</rt></ruby>echoの<ruby>全文比較上限<rt>ぜんぶんひかくじょうげん</rt></ruby>、 source<ruby>編集<rt>へんしゅう</rt></ruby>の<ruby>原子的<rt>げんしてき</rt></ruby>な<ruby>反映<rt>はんえい</rt></ruby>は<ruby>維持<rt>いじ</rt></ruby>する。<ruby>同期<rt>どうき</rt></ruby>reader callbackは<ruby>外部継続<rt>がいぶけいぞく</rt></ruby>を<ruby>受<rt>う</rt></ruby>け<ruby>取<rt>と</rt></ruby>らず、 <ruby>排他的<rt>はいたてき</rt></ruby>なprivate slotを<ruby>既存<rt>きそん</rt></ruby>の<ruby>返却値検査経路<rt>へんきゃくちけんさけいろ</rt></ruby>へ<ruby>渡<rt>わた</rt></ruby>す。 <ruby>同<rt>おな</rt></ruby>じ<ruby>全文試験<rt>ぜんぶんしけん</rt></ruby>は<ruby>停止位置<rt>ていしいち</rt></ruby>3399まで<ruby>進<rt>すす</rt></ruby>んだが、なおWork<ruby>上限<rt>じょうげん</rt></ruby>で<ruby>停止<rt>ていし</rt></ruby>する。 <ruby>途中<rt>とちゅう</rt></ruby>の<ruby>線形検索版<rt>せんけいけんさくばん</rt></ruby>ではGrammar bootstrapも<ruby>既存上限<rt>きそんじょうげん</rt></ruby>で<ruby>停止<rt>ていし</rt></ruby>したため、その<ruby>版<rt>ばん</rt></ruby>を<ruby>完成扱<rt>かんせいあつか</rt></ruby>いにせず、 <ruby>二分探索版<rt>にぶんたんさくばん</rt></ruby>でbootstrapを<ruby>再実行<rt>さいじっこう</rt></ruby>して<ruby>成功<rt>せいこう</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>した。workspace<ruby>試験<rt>しけん</rt></ruby>とClippyも<ruby>成功<rt>せいこう</rt></ruby>した。 <ruby>当時<rt>とうじ</rt></ruby>の<ruby>残件<rt>ざんけん</rt></ruby>はsource admission・<ruby>診断<rt>しんだん</rt></ruby>source・Origin graphの<ruby>繰<rt>く</rt></ruby>り<ruby>返<rt>かえ</rt></ruby>し<ruby>検索<rt>けんさく</rt></ruby>だった。
+
+2026\-09\-13、`272228c`で<ruby>同<rt>おな</rt></ruby>じ<ruby>約<rt>やく</rt></ruby>13KB<ruby>全文<rt>ぜんぶん</rt></ruby>を`doc-html export`へ<ruby>再入力<rt>さいにゅうりょく</rt></ruby>したところ、 <ruby>既存<rt>きそん</rt></ruby>の<ruby>各操作<rt>かくそうさ</rt></ruby>Work<ruby>上限<rt>じょうげん</rt></ruby>100\,000\,000のままHTMLまで<ruby>成功<rt>せいこう</rt></ruby>した。<ruby>使用<rt>しよう</rt></ruby>Workはparse\/validateが 20\,362\,601、lowerが2\,987\,790、prepare\/render\/serializeが6\,986\,518だった。 これらは<ruby>別々<rt>べつべつ</rt></ruby>の<ruby>予算<rt>よさん</rt></ruby>を<ruby>持<rt>も</rt></ruby>つ<ruby>操作<rt>そうさ</rt></ruby>であり、<ruby>一<rt>ひと</rt></ruby>つのend\-to\-end<ruby>予算<rt>よさん</rt></ruby>の<ruby>値<rt>あたい</rt></ruby>ではない。 <ruby>入力<rt>にゅうりょく</rt></ruby>SHA\-256は`9099bbbe48ed75a0768997789229188f53e43348fe930522b119908dfdb7a889`。 <ruby>上記<rt>じょうき</rt></ruby>3399での<ruby>停止<rt>ていし</rt></ruby>は<ruby>過去<rt>かこ</rt></ruby>の<ruby>途中版<rt>とちゅうばん</rt></ruby>の<ruby>記録<rt>きろく</rt></ruby>で、<ruby>現行<rt>げんこう</rt></ruby>の<ruby>再現結果<rt>さいげんけっか</rt></ruby>ではない。 この<ruby>全文<rt>ぜんぶん</rt></ruby>HTML<ruby>試験<rt>しけん</rt></ruby>はnative\/WASIで<ruby>成功<rt>せいこう</rt></ruby>している。<ruby>多数<rt>たすう</rt></ruby>ページ、<ruby>全<rt>ぜん</rt></ruby>foreign、Pages<ruby>配信<rt>はいしん</rt></ruby>の <ruby>性能<rt>せいのう</rt></ruby>・<ruby>完成<rt>かんせい</rt></ruby>までを<ruby>一例<rt>いちれい</rt></ruby>の<ruby>成功<rt>せいこう</rt></ruby>から<ruby>推定<rt>すいてい</rt></ruby>しない。
+
+<a name="n-6772616d6d61725f627564676574"></a>
+
+<a name="grammar仕様原稿の検査と割当課金"></a>
+
+## Grammar<ruby>仕様原稿<rt>しようげんこう</rt></ruby>の<ruby>検査<rt>けんさ</rt></ruby>と<ruby>割当課金<rt>わりあてかきん</rt></ruby>
+
+<ruby>第<rt>だい</rt></ruby>04<ruby>章<rt>しょう</rt></ruby>の<ruby>未公開<rt>みこうかい</rt></ruby>NEPL3d<ruby>原稿<rt>げんこう</rt></ruby>を、<ruby>既存<rt>きそん</rt></ruby>の<ruby>原稿用<rt>げんこうよう</rt></ruby>parse\/lower\/labels<ruby>試験<rt>しけん</rt></ruby>へ<ruby>追加<rt>ついか</rt></ruby>した。 <ruby>前段<rt>ぜんだん</rt></ruby>の<ruby>修正時点<rt>しゅうせいじてん</rt></ruby>では、<ruby>通常<rt>つうじょう</rt></ruby>ページのAllocation<ruby>上限<rt>じょうげん</rt></ruby>500\,000\,000で<ruby>完成木<rt>かんせいき</rt></ruby>の<ruby>検査中<rt>けんさちゅう</rt></ruby>に<ruby>停止<rt>ていし</rt></ruby>した。 その<ruby>時点<rt>じてん</rt></ruby>ではcanonical registryへ<ruby>登録<rt>とうろく</rt></ruby>せず、Markdown<ruby>正本<rt>せいほん</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby>した。 <ruby>未公開原稿用<rt>みこうかいげんこうよう</rt></ruby>の<ruby>既存<rt>きそん</rt></ruby>の<ruby>有限予算<rt>ゆうげんよさん</rt></ruby>で<ruby>処理<rt>しょり</rt></ruby>できることと、<ruby>正本切替<rt>せいほんきりかえ</rt></ruby>の<ruby>準備完了<rt>じゅんびかんりょう</rt></ruby>は<ruby>区別<rt>くべつ</rt></ruby>する。
+
+<ruby>調査<rt>ちょうさ</rt></ruby>で、SyntaxBundle<ruby>検査<rt>けんさ</rt></ruby>が<ruby>共有<rt>きょうゆう</rt></ruby>SourceSnapshotにも<ruby>本文<rt>ほんぶん</rt></ruby>コピー<ruby>分<rt>ぶん</rt></ruby>を<ruby>課金<rt>かきん</rt></ruby>し、 <ruby>借用<rt>しゃくよう</rt></ruby>するOrigin<ruby>配列<rt>はいれつ</rt></ruby>にも<ruby>所有配列分<rt>しょゆうはいれつぶん</rt></ruby>を<ruby>課金<rt>かきん</rt></ruby>していたことが<ruby>分<rt>わ</rt></ruby>かった。 SourceStoreの<ruby>予算付<rt>よさんつ</rt></ruby>き<ruby>参照挿入<rt>さんしょうそうにゅう</rt></ruby>を<ruby>使<rt>つか</rt></ruby>い、Origin<ruby>検査自身<rt>けんさじしん</rt></ruby>が<ruby>計上<rt>けいじょう</rt></ruby>するscratchだけを<ruby>課金<rt>かきん</rt></ruby>する。 Source<ruby>入場<rt>にゅうじょう</rt></ruby>、<ruby>重複拒否<rt>ちょうふくきょひ</rt></ruby>、<ruby>全<rt>ぜん</rt></ruby>Originの<ruby>参照<rt>さんしょう</rt></ruby>・cycle<ruby>検査<rt>けんさ</rt></ruby>、<ruby>非<rt>ひ</rt></ruby>atomic targetの<ruby>実<rt>じつ</rt></ruby>コピー<ruby>費用<rt>ひよう</rt></ruby>は<ruby>維持<rt>いじ</rt></ruby>する。 <ruby>長短<rt>ちょうたん</rt></ruby>sourceの<ruby>共有費用<rt>きょうゆうひよう</rt></ruby>、source<ruby>挿入時<rt>そうにゅうじ</rt></ruby>の<ruby>停止<rt>ていし</rt></ruby>、<ruby>未使用<rt>みしよう</rt></ruby>Originの<ruby>不正参照<rt>ふせいさんしょう</rt></ruby>を<ruby>回帰試験<rt>かいきしけん</rt></ruby>にした。 この<ruby>課金修正<rt>かきんしゅうせい</rt></ruby>のみでは<ruby>第<rt>だい</rt></ruby>04<ruby>章<rt>しょう</rt></ruby>は<ruby>通常上限<rt>つうじょうじょうげん</rt></ruby>で<ruby>停止<rt>ていし</rt></ruby>し、<ruby>性能課題<rt>せいのうかだい</rt></ruby>は<ruby>未解消<rt>みかいしょう</rt></ruby>だった。
+
+<ruby>続<rt>つづ</rt></ruby>く<ruby>計測<rt>けいそく</rt></ruby>で、schema<ruby>検査<rt>けんさ</rt></ruby>のpending stackがpop<ruby>後<rt>ご</rt></ruby>の<ruby>容量<rt>ようりょう</rt></ruby>を<ruby>再利用<rt>さいりよう</rt></ruby>していても、 <ruby>各<rt>かく</rt></ruby>pushで<ruby>新規<rt>しんき</rt></ruby>slot<ruby>分<rt>ぶん</rt></ruby>を<ruby>課金<rt>かきん</rt></ruby>していたことが<ruby>分<rt>わ</rt></ruby>かった。<ruby>論理的<rt>ろんりてき</rt></ruby>な<ruby>予約<rt>よやく</rt></ruby>slot<ruby>数<rt>すう</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>し、 <ruby>倍増時<rt>ばいぞうじ</rt></ruby>の<ruby>追加容量<rt>ついかようりょう</rt></ruby>を<ruby>確保前<rt>かくほまえ</rt></ruby>に<ruby>課金<rt>かきん</rt></ruby>する。allocatorの<ruby>余剰<rt>よじょう</rt></ruby>capacityは<ruby>課金判定<rt>かきんはんてい</rt></ruby>に<ruby>使<rt>つか</rt></ruby>わない。 <ruby>各子<rt>かくこ</rt></ruby>のWorkはqueue<ruby>投入前<rt>とうにゅうまえ</rt></ruby>に<ruby>課金<rt>かきん</rt></ruby>し、<ruby>広<rt>ひろ</rt></ruby>い<ruby>入力<rt>にゅうりょく</rt></ruby>の<ruby>無制限<rt>むせいげん</rt></ruby>な<ruby>展開<rt>てんかい</rt></ruby>を<ruby>防<rt>ふせ</rt></ruby>ぐ。 <ruby>全値<rt>ぜんち</rt></ruby>の<ruby>型検査<rt>かたけんさ</rt></ruby>・Nodes・<ruby>深<rt>ふか</rt></ruby>さ・<ruby>左<rt>ひだり</rt></ruby>から<ruby>右<rt>みぎ</rt></ruby>の<ruby>検査順<rt>けんさじゅん</rt></ruby>は<ruby>維持<rt>いじ</rt></ruby>する。
+
+この<ruby>修正<rt>しゅうせい</rt></ruby>で<ruby>第<rt>だい</rt></ruby>04<ruby>章<rt>しょう</rt></ruby>は<ruby>通常予算内<rt>つうじょうよさんない</rt></ruby>のparse\/lower\/labelsを<ruby>通過<rt>つうか</rt></ruby>した。 parseのWorkは94\,666\,857、Allocationは341\,191\,768、lowerのWorkは85\,689\,406だった。 SourceMapの<ruby>一意<rt>いちい</rt></ruby>な<ruby>直接対応<rt>ちょくせつたいおう</rt></ruby>を<ruby>範囲<rt>はんい</rt></ruby>として<ruby>検査<rt>けんさ</rt></ruby>する<ruby>改善<rt>かいぜん</rt></ruby>も<ruby>加<rt>くわ</rt></ruby>えたが、 この<ruby>原稿<rt>げんこう</rt></ruby>の<ruby>停止解消<rt>ていしかいしょう</rt></ruby>に<ruby>寄与<rt>きよ</rt></ruby>したのはschema stackの<ruby>課金修正<rt>かきんしゅうせい</rt></ruby>である。 <ruby>一文書<rt>いちぶんしょ</rt></ruby>の<ruby>成功<rt>せいこう</rt></ruby>を<ruby>全仕様移行<rt>ぜんしよういこう</rt></ruby>や<ruby>全受入群<rt>ぜんうけいれぐん</rt></ruby>の<ruby>達成<rt>たっせい</rt></ruby>とは<ruby>扱<rt>あつか</rt></ruby>わない。
+
+<a name="n-646f63756d656e745f627564676574"></a>
+
+<a name="doc仕様原稿の次の性能境界"></a>
+
+## Doc<ruby>仕様原稿<rt>しようげんこう</rt></ruby>の<ruby>次<rt>つぎ</rt></ruby>の<ruby>性能境界<rt>せいのうきょうかい</rt></ruby>
+
+<ruby>第<rt>だい</rt></ruby>05<ruby>章<rt>しょう</rt></ruby>の<ruby>原稿<rt>げんこう</rt></ruby>で<ruby>欠<rt>か</rt></ruby>けていたguest printerの<ruby>深<rt>ふか</rt></ruby>さ<ruby>合成<rt>ごうせい</rt></ruby>とDoc\/Math adapterの<ruby>停止契約<rt>ていしけいやく</rt></ruby>を<ruby>補<rt>おぎな</rt></ruby>い、 <ruby>独立<rt>どくりつ</rt></ruby>Sentence readerから<ruby>現<rt>げん</rt></ruby>Doc consumerへ<ruby>変換<rt>へんかん</rt></ruby>する<ruby>段階<rt>だんかい</rt></ruby>を<ruby>正文<rt>せいぶん</rt></ruby>と<ruby>原稿<rt>げんこう</rt></ruby>に<ruby>明記<rt>めいき</rt></ruby>した。 <ruby>修正後<rt>しゅうせいご</rt></ruby>のCLIによる<ruby>通常<rt>つうじょう</rt></ruby>Work<ruby>上限<rt>じょうげん</rt></ruby>100\,000\,000でのHTML<ruby>出力<rt>しゅつりょく</rt></ruby>はcursor 47\,445でWorkLimitとなり、 <ruby>正本切替<rt>せいほんきりかえ</rt></ruby>は<ruby>行<rt>おこな</rt></ruby>っていない。
+
+Work<ruby>計測<rt>けいそく</rt></ruby>からSourceMapのsnapshot<ruby>検索<rt>けんさく</rt></ruby>を<ruby>調<rt>しら</rt></ruby>べ、<ruby>直前<rt>ちょくぜん</rt></ruby>の<ruby>検索位置<rt>けんさくいち</rt></ruby>に<ruby>隣接<rt>りんせつ</rt></ruby>するidentityを <ruby>二分探索<rt>にぶんたんさく</rt></ruby>の<ruby>前<rt>まえ</rt></ruby>に<ruby>照合<rt>しょうごう</rt></ruby>する<ruby>改善<rt>かいぜん</rt></ruby>を<ruby>加<rt>くわ</rt></ruby>えた。<ruby>完全<rt>かんぜん</rt></ruby>なSnapshotIdの<ruby>比較<rt>ひかく</rt></ruby>、cycle<ruby>検査<rt>けんさ</rt></ruby>、<ruby>重複<rt>じゅうふく</rt></ruby>edge、 <ruby>各比較前<rt>かくひかくまえ</rt></ruby>の<ruby>課金<rt>かきん</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby>する。<ruby>順序付<rt>じゅんじょづ</rt></ruby>きedgeを<ruby>反復<rt>はんぷく</rt></ruby>する257<ruby>頂点<rt>ちょうてん</rt></ruby>のstarでは、<ruby>修正前<rt>しゅうせいまえ</rt></ruby>の WorkLimitに<ruby>対<rt>たい</rt></ruby>し<ruby>修正後<rt>しゅうせいご</rt></ruby>は435\,257 Workで<ruby>検査<rt>けんさ</rt></ruby>できた。<ruby>第<rt>だい</rt></ruby>05<ruby>章<rt>しょう</rt></ruby>は<ruby>通常予算<rt>つうじょうよさん</rt></ruby>で<ruby>停止<rt>ていし</rt></ruby>しており、 この<ruby>小<rt>ちい</rt></ruby>さい<ruby>回帰試験<rt>かいきしけん</rt></ruby>を<ruby>同原稿<rt>どうげんこう</rt></ruby>の<ruby>性能課題<rt>せいのうかだい</rt></ruby>の<ruby>解消<rt>かいしょう</rt></ruby>とは<ruby>扱<rt>あつか</rt></ruby>わない。
+
+<ruby>続<rt>つづ</rt></ruby>いてreaderのprovider<ruby>境界<rt>きょうかい</rt></ruby>で、<ruby>新規<rt>しんき</rt></ruby>mappingがなく<ruby>全包含関係<rt>ぜんほうがんかんけい</rt></ruby>を<ruby>同一<rt>どういつ</rt></ruby>snapshot<ruby>内<rt>ない</rt></ruby>で <ruby>直接確認<rt>ちょくせつかくにん</rt></ruby>できる<ruby>場合<rt>ばあい</rt></ruby>に<ruby>限<rt>かぎ</rt></ruby>り、private checkpointで<ruby>検査済<rt>けんさず</rt></ruby>みのmapping<ruby>集合<rt>しゅうごう</rt></ruby>の<ruby>再検査<rt>さいけんさ</rt></ruby>を<ruby>省<rt>はぶ</rt></ruby>いた。 viewのschema・<ruby>参照<rt>さんしょう</rt></ruby>・cycle、factのmetadataとsource<ruby>位置<rt>いち</rt></ruby>の<ruby>検査<rt>けんさ</rt></ruby>は<ruby>引<rt>ひ</rt></ruby>き<ruby>続<rt>つづ</rt></ruby>き<ruby>実行<rt>じっこう</rt></ruby>する。 <ruby>間接的<rt>かんせつてき</rt></ruby>な<ruby>包含関係<rt>ほうがんかんけい</rt></ruby>または<ruby>新規<rt>しんき</rt></ruby>mappingがある<ruby>場合<rt>ばあい</rt></ruby>は<ruby>従来通<rt>じゅうらいどお</rt></ruby>り<ruby>集合全体<rt>しゅうごうぜんたい</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。 <ruby>不正<rt>ふせい</rt></ruby>KindRef、<ruby>空<rt>くう</rt></ruby>Capture<ruby>名<rt>めい</rt></ruby>、<ruby>未登録<rt>みとうろく</rt></ruby>Presentation\/Relation schema、<ruby>追加<rt>ついか</rt></ruby>mapによるcycle、 <ruby>停止予算<rt>ていしよさん</rt></ruby>を<ruby>負例<rt>ふれい</rt></ruby>として<ruby>検査<rt>けんさ</rt></ruby>した。readerのnative<ruby>試験<rt>しけん</rt></ruby>とWASI runtime<ruby>試験<rt>しけん</rt></ruby>、 <ruby>追加負例<rt>ついかふれい</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>むlibrary<ruby>試験<rt>しけん</rt></ruby>は<ruby>成功<rt>せいこう</rt></ruby>し、<ruby>独立<rt>どくりつ</rt></ruby>レビューの<ruby>指摘<rt>してき</rt></ruby>を<ruby>修正<rt>しゅうせい</rt></ruby>した。
+
+<ruby>同<rt>おな</rt></ruby>じ<ruby>第<rt>だい</rt></ruby>05<ruby>章<rt>しょう</rt></ruby>の<ruby>通常<rt>つうじょう</rt></ruby>HTML<ruby>出力<rt>しゅつりょく</rt></ruby>はcursor 54\,300まで<ruby>進<rt>すす</rt></ruby>んだが、Work<ruby>上限<rt>じょうげん</rt></ruby>100\,000\,000で <ruby>停止<rt>ていし</rt></ruby>した。<ruby>予算<rt>よさん</rt></ruby>を<ruby>変更<rt>へんこう</rt></ruby>しておらず、<ruby>第<rt>だい</rt></ruby>05<ruby>章<rt>しょう</rt></ruby>の<ruby>正本切替<rt>せいほんきりかえ</rt></ruby>および<ruby>性能課題<rt>せいのうかだい</rt></ruby>の<ruby>解消<rt>かいしょう</rt></ruby>は<ruby>未達<rt>みたつ</rt></ruby>である。
+
+<ruby>次<rt>つぎ</rt></ruby>のWork<ruby>計測<rt>けいそく</rt></ruby>ではtokenizerの<ruby>受入済<rt>うけいれず</rt></ruby>みsourceに<ruby>対<rt>たい</rt></ruby>する<ruby>競合検索<rt>きょうごうけんさく</rt></ruby>が<ruby>約<rt>やく</rt></ruby>30\,804\,689を<ruby>占<rt>し</rt></ruby>めた。 <ruby>単発検索<rt>たんぱつけんさく</rt></ruby>のhintとbatch<ruby>検索<rt>けんさく</rt></ruby>は<ruby>実文書<rt>じつぶんしょ</rt></ruby>で<ruby>改善<rt>かいぜん</rt></ruby>せず<ruby>撤回<rt>てっかい</rt></ruby>した。 tokenizer session<ruby>内<rt>ない</rt></ruby>で、<ruby>照合<rt>しょうごう</rt></ruby>した<ruby>宣言集合<rt>せんげんしゅうごう</rt></ruby>と<ruby>受入済<rt>うけいれず</rt></ruby>みprefixのimmutable snapshotを<ruby>保持<rt>ほじ</rt></ruby>し、 <ruby>次回<rt>じかい</rt></ruby>も<ruby>完全一致<rt>かんぜんいっち</rt></ruby>する<ruby>部分<rt>ぶぶん</rt></ruby>の<ruby>競合検索<rt>きょうごうけんさく</rt></ruby>だけを<ruby>再利用<rt>さいりよう</rt></ruby>する。<ruby>宣言集合<rt>せんげんしゅうごう</rt></ruby>の<ruby>変更<rt>へんこう</rt></ruby>・prefix<ruby>変更<rt>へんこう</rt></ruby>は <ruby>再検査<rt>さいけんさ</rt></ruby>し、source admission・report<ruby>検査<rt>けんさ</rt></ruby>・<ruby>継続<rt>けいぞく</rt></ruby>scope<ruby>検査<rt>けんさ</rt></ruby>は<ruby>従来通<rt>じゅうらいどお</rt></ruby>り<ruby>実行<rt>じっこう</rt></ruby>する。 <ruby>保持<rt>ほじ</rt></ruby>するsnapshotは<ruby>所有<rt>しょゆう</rt></ruby>し、allocatorのaddress<ruby>再利用<rt>さいりよう</rt></ruby>を<ruby>同一性<rt>どういつせい</rt></ruby>の<ruby>根拠<rt>こんきょ</rt></ruby>にしない。 <ruby>外部<rt>がいぶ</rt></ruby>decode<ruby>値<rt>あたい</rt></ruby>は<ruby>内容比較<rt>ないようひかく</rt></ruby>を<ruby>省<rt>はぶ</rt></ruby>かず、closeで<ruby>保持情報<rt>ほじじょうほう</rt></ruby>を<ruby>解放<rt>かいほう</rt></ruby>する。 <ruby>検査<rt>けんさ</rt></ruby>の<ruby>順序<rt>じゅんじょ</rt></ruby>・Usageは<ruby>変<rt>か</rt></ruby>わり<ruby>得<rt>え</rt></ruby>るが、<ruby>停止<rt>ていし</rt></ruby>を<ruby>成功<rt>せいこう</rt></ruby>へ<ruby>変換<rt>へんかん</rt></ruby>したり<ruby>新<rt>あたら</rt></ruby>しい<ruby>予算<rt>よさん</rt></ruby>へ<ruby>移<rt>うつ</rt></ruby>したりしない。
+
+この<ruby>変更<rt>へんこう</rt></ruby>の<ruby>通常<rt>つうじょう</rt></ruby>HTML<ruby>出力<rt>しゅつりょく</rt></ruby>はcursor 70\,193でWorkLimitとなった。<ruby>上限<rt>じょうげん</rt></ruby>は<ruby>同<rt>おな</rt></ruby>じ100\,000\,000で、 <ruby>第<rt>だい</rt></ruby>05<ruby>章<rt>しょう</rt></ruby>の<ruby>完走<rt>かんそう</rt></ruby>と<ruby>正本化<rt>せいほんか</rt></ruby>はまだ<ruby>未達<rt>みたつ</rt></ruby>である。<ruby>環境変更<rt>かんきょうへんこう</rt></ruby>、<ruby>変更<rt>へんこう</rt></ruby>されたsuffix、<ruby>同一内容<rt>どういつないよう</rt></ruby>の <ruby>別<rt>べつ</rt></ruby>storage、<ruby>部分的<rt>ぶぶんてき</rt></ruby>なcache<ruby>確保後<rt>かくほご</rt></ruby>の<ruby>停止<rt>ていし</rt></ruby>と<ruby>再検査<rt>さいけんさ</rt></ruby>を<ruby>回帰試験<rt>かいきしけん</rt></ruby>で<ruby>確認<rt>かくにん</rt></ruby>する。
+
+さらに、<ruby>新<rt>あたら</rt></ruby>しいsource\/mapと<ruby>診断<rt>しんだん</rt></ruby>\/eventがなく、<ruby>全<rt>ぜん</rt></ruby>artifactの<ruby>位置<rt>いち</rt></ruby>を<ruby>消費範囲内<rt>しょうひはんいない</rt></ruby>で <ruby>直接確認<rt>ちょくせつかくにん</rt></ruby>できるprovider<ruby>応答<rt>おうとう</rt></ruby>では、そのsnapshotだけで<ruby>通常<rt>つうじょう</rt></ruby>の<ruby>応答検査<rt>おうとうけんさ</rt></ruby>を<ruby>行<rt>おこな</rt></ruby>う。 <ruby>範囲外<rt>はんいがい</rt></ruby>の<ruby>合法<rt>ごうほう</rt></ruby>なPresentation\/Relationは<ruby>従来<rt>じゅうらい</rt></ruby>のresolverへ<ruby>戻<rt>もど</rt></ruby>し、<ruby>不正<rt>ふせい</rt></ruby>なschema・<ruby>参照<rt>さんしょう</rt></ruby>・ report、<ruby>新規<rt>しんき</rt></ruby>sourceの<ruby>競合<rt>きょうごう</rt></ruby>を<ruby>省略<rt>しょうりゃく</rt></ruby>しない。private checkpointの<ruby>無関係<rt>むかんけい</rt></ruby>なsource<ruby>集合<rt>しゅうごう</rt></ruby>を tokenごとに<ruby>再構築<rt>さいこうちく</rt></ruby>していた<ruby>費用<rt>ひよう</rt></ruby>を<ruby>減<rt>へ</rt></ruby>らした。
+
+<ruby>第<rt>だい</rt></ruby>05<ruby>章<rt>しょう</rt></ruby>は<ruby>通常予算<rt>つうじょうよさん</rt></ruby>でparse 88\,653\,715 Work、lower 66\,285\,115 Work、 labels 8\,413\,256 Workに<ruby>収<rt>おさ</rt></ruby>まり、この<ruby>予算<rt>よさん</rt></ruby>を<ruby>原稿<rt>げんこう</rt></ruby>の<ruby>回帰試験<rt>かいきしけん</rt></ruby>にも<ruby>適用<rt>てきよう</rt></ruby>した。 <ruby>単独<rt>たんどく</rt></ruby>HTML<ruby>出力<rt>しゅつりょく</rt></ruby>はWorkLimitではなく17<ruby>章<rt>しょう</rt></ruby>・23<ruby>章<rt>しょう</rt></ruby>への2リンクのNeedsResolutionまで<ruby>進<rt>すす</rt></ruby>む。 これはHTML<ruby>生成<rt>せいせい</rt></ruby>・リンク<ruby>解決<rt>かいけつ</rt></ruby>・<ruby>文書<rt>ぶんしょ</rt></ruby>の<ruby>意味比較<rt>いみひかく</rt></ruby>・<ruby>正本切替<rt>せいほんきりかえ</rt></ruby>の<ruby>完了<rt>かんりょう</rt></ruby>を<ruby>意味<rt>いみ</rt></ruby>しない。
+
+<ruby>第<rt>だい</rt></ruby>05<ruby>章<rt>しょう</rt></ruby>の<ruby>正本移行<rt>せいほんいこう</rt></ruby>では、<ruby>原稿<rt>げんこう</rt></ruby>を `doc/spec/05-document.nepld` へ<ruby>移<rt>うつ</rt></ruby>し、<ruby>旧見出<rt>きゅうみだ</rt></ruby>し16<ruby>件<rt>けん</rt></ruby>を aliasとして<ruby>登録<rt>とうろく</rt></ruby>した。<ruby>第<rt>だい</rt></ruby>23<ruby>章<rt>しょう</rt></ruby>は<ruby>未移行<rt>みいこう</rt></ruby>Markdownの<ruby>原文参照<rt>げんぶんさんしょう</rt></ruby>であり、Doc<ruby>正本<rt>せいほん</rt></ruby>へ<ruby>昇格<rt>しょうかく</rt></ruby>させない。 <ruby>本文<rt>ほんぶん</rt></ruby>の<ruby>独立比較<rt>どくりつひかく</rt></ruby>でinline code92<ruby>個<rt>こ</rt></ruby>、RawCode2<ruby>個<rt>こ</rt></ruby>、15<ruby>節<rt>せつ</rt></ruby>、リンク2<ruby>件<rt>けん</rt></ruby>の<ruby>保存<rt>ほぞん</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>した。 18ページのHTML<ruby>集合<rt>しゅうごう</rt></ruby>は<ruby>通常<rt>つうじょう</rt></ruby>のpage<ruby>予算<rt>よさん</rt></ruby>で<ruby>生成<rt>せいせい</rt></ruby>でき、<ruby>第<rt>だい</rt></ruby>05<ruby>章<rt>しょう</rt></ruby>のparseは87\,582\,341 Work、 lowerは65\,610\,740 Workとなった。JavaScript<ruby>無効<rt>むこう</rt></ruby>のChromium\/Firefox\/WebKitで<ruby>本文<rt>ほんぶん</rt></ruby>と 17<ruby>章<rt>しょう</rt></ruby>HTML・23<ruby>章原文<rt>しょうげんぶん</rt></ruby>へのリンクを<ruby>確認<rt>かくにん</rt></ruby>した。<ruby>混在<rt>こんざい</rt></ruby>siteでは23<ruby>章<rt>しょう</rt></ruby>を<ruby>既生成<rt>きせいせい</rt></ruby>HTMLへ<ruby>接続<rt>せつぞく</rt></ruby>する。
+
+Markdown<ruby>集合<rt>しゅうごう</rt></ruby>の<ruby>旧<rt>きゅう</rt></ruby>Work<ruby>上限<rt>じょうげん</rt></ruby>1\,600\,000\,000では<ruby>停止<rt>ていし</rt></ruby>し、<ruby>途中出力<rt>とちゅうしゅつりょく</rt></ruby>を<ruby>採用<rt>さいよう</rt></ruby>しなかった。 18ページ<ruby>用<rt>よう</rt></ruby>に<ruby>集合<rt>しゅうごう</rt></ruby>Workだけを1\,900\,000\,000へ<ruby>変更<rt>へんこう</rt></ruby>した<ruby>別実行<rt>べつじっこう</rt></ruby>は1\,615\,489\,130 Work、 63\,205\,674 Nodesで<ruby>完了<rt>かんりょう</rt></ruby>した。Nodes<ruby>上限<rt>じょうげん</rt></ruby>64\,000\,000と<ruby>各<rt>かく</rt></ruby>pageの<ruby>通常予算<rt>つうじょうよさん</rt></ruby>は<ruby>維持<rt>いじ</rt></ruby>する。 <ruby>既存<rt>きそん</rt></ruby>17ページの<ruby>本文<rt>ほんぶん</rt></ruby>は<ruby>不変<rt>ふへん</rt></ruby>で、<ruby>集合入力<rt>しゅうごうにゅうりょく</rt></ruby>digestに<ruby>伴<rt>ともな</rt></ruby>うmetadataだけが<ruby>更新<rt>こうしん</rt></ruby>される。 <ruby>停止診断<rt>ていししんだん</rt></ruby>にはpage・<ruby>段階<rt>だんかい</rt></ruby>・Usageを<ruby>加<rt>くわ</rt></ruby>え、<ruby>文書集合<rt>ぶんしょしゅうごう</rt></ruby>の<ruby>停止<rt>ていし</rt></ruby>と<ruby>単体解析<rt>たんたいかいせき</rt></ruby>の<ruby>停止<rt>ていし</rt></ruby>を<ruby>区別<rt>くべつ</rt></ruby>する。 この<ruby>移行<rt>いこう</rt></ruby>はT07\/T21<ruby>全体<rt>ぜんたい</rt></ruby>や<ruby>未移行<rt>みいこう</rt></ruby>の<ruby>残<rt>のこ</rt></ruby>り6<ruby>章<rt>しょう</rt></ruby>の<ruby>完成<rt>かんせい</rt></ruby>を<ruby>意味<rt>いみ</rt></ruby>しない。
+
+<a name="n-68746d6c5f6d617468"></a>
+
+<a name="通常htmlのmath接続native実装中"></a>
+
+## <ruby>通常<rt>つうじょう</rt></ruby>HTMLのMath<ruby>接続<rt>せつぞく</rt></ruby>（native、<ruby>実装中<rt>じっそうちゅう</rt></ruby>）
+
+<ruby>通常<rt>つうじょう</rt></ruby>の `doc-html export`、SVG<ruby>付<rt>つ</rt></ruby>きexport、`doc-html pages` にInlineMath・DisplayMathの<ruby>表示経路<rt>ひょうじけいろ</rt></ruby>を<ruby>追加<rt>ついか</rt></ruby>した。 <ruby>既存<rt>きそん</rt></ruby>のMath lower\/check\/MathMLとSentence annotation hostを<ruby>共用<rt>きょうよう</rt></ruby>し、<ruby>分数等<rt>ぶんすうとう</rt></ruby>の<ruby>構造<rt>こうぞう</rt></ruby>を<ruby>保<rt>たも</rt></ruby>ったままHTMLへ<ruby>合成<rt>ごうせい</rt></ruby>する。MathをSVGへ<ruby>変換<rt>へんかん</rt></ruby>したり、<ruby>式<rt>しき</rt></ruby>を<ruby>暗黙評価<rt>あんもくひょうか</rt></ruby>したりする<ruby>必要<rt>ひつよう</rt></ruby>はない。 Doc\/Math core<ruby>間<rt>かん</rt></ruby>の<ruby>直接依存<rt>ちょくせついぞん</rt></ruby>は<ruby>追加<rt>ついか</rt></ruby>していない。Code<ruby>表示<rt>ひょうじ</rt></ruby>・Ruby\/Anno・Parallel Rows・<ruby>元<rt>もと</rt></ruby>sourceと<ruby>要素対応<rt>ようそたいおう</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>する。
+
+<ruby>既定設定<rt>きていせってい</rt></ruby>は `katex-preferred`。このnative hostではKaTeXの<ruby>完全<rt>かんぜん</rt></ruby>な<ruby>資源<rt>しげん</rt></ruby>・identity・アクセシビリティ<ruby>付<rt>つ</rt></ruby>き<ruby>実行接続<rt>じっこうせつぞく</rt></ruby>がまだないため、`KaTeXHostCapabilityUnavailable` をmanifestへ<ruby>記録<rt>きろく</rt></ruby>して<ruby>独立<rt>どくりつ</rt></ruby>MathMLを<ruby>表示<rt>ひょうじ</rt></ruby>する。 <ruby>忠実<rt>ちゅうじつ</rt></ruby>なTeXへ<ruby>変換<rt>へんかん</rt></ruby>できない<ruby>注釈付<rt>ちゅうしゃくつ</rt></ruby>き<ruby>数式<rt>すうしき</rt></ruby>では `FaithfulTexUnsupported` と<ruby>具体的<rt>ぐたいてき</rt></ruby>なnode\/reasonを<ruby>残<rt>のこ</rt></ruby>す。 `--math-renderer mathml-only` はKaTeXの<ruby>準備<rt>じゅんび</rt></ruby>を<ruby>要求<rt>ようきゅう</rt></ruby>せず、<ruby>明示的<rt>めいじてき</rt></ruby>に<ruby>独立<rt>どくりつ</rt></ruby>MathMLを<ruby>選<rt>えら</rt></ruby>ぶ。<ruby>閲覧<rt>えつらん</rt></ruby>にJavaScriptは<ruby>不要<rt>ふよう</rt></ruby>だが、MathML<ruby>対応<rt>たいおう</rt></ruby>ブラウザは<ruby>必要<rt>ひつよう</rt></ruby>である。 この<ruby>接続<rt>せつぞく</rt></ruby>はT24<ruby>全体<rt>ぜんたい</rt></ruby>、KaTeX<ruby>実行<rt>じっこう</rt></ruby>、Web Worker、<ruby>全<rt>ぜん</rt></ruby>constructorのブラウザ<ruby>受入<rt>うけいれ</rt></ruby>の<ruby>完了<rt>かんりょう</rt></ruby>を<ruby>意味<rt>いみ</rt></ruby>しない。
+
+<ruby>回帰試験<rt>かいきしけん</rt></ruby>は `tools/tests/doc/export/math.rs`、<ruby>通常<rt>つうじょう</rt></ruby>CLI・Code\/PageSet<ruby>試験<rt>しけん</rt></ruby>、<ruby>既存<rt>きそん</rt></ruby>Sentence\/Math<ruby>再帰注釈試験<rt>さいきちゅうしゃくしけん</rt></ruby>に<ruby>置<rt>お</rt></ruby>く。 source snapshotの<ruby>共通<rt>きょうつう</rt></ruby>admission、<ruby>文中<rt>ぶんちゅう</rt></ruby>・<ruby>別行<rt>べつぎょう</rt></ruby>slot、<ruby>出現別局所<rt>しゅつげんべつきょくしょ</rt></ruby>ID、<ruby>表示<rt>ひょうじ</rt></ruby>されない<ruby>外側<rt>そとがわ</rt></ruby>anchorの<ruby>拒否<rt>きょひ</rt></ruby>、<ruby>停止後<rt>ていしご</rt></ruby>の<ruby>成功拒否<rt>せいこうきょひ</rt></ruby>、<ruby>部分<rt>ぶぶん</rt></ruby>ページ<ruby>未公開<rt>みこうかい</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。 <ruby>描画検査<rt>びょうがけんさ</rt></ruby>は<ruby>通常<rt>つうじょう</rt></ruby>export\/pagesの<ruby>既存<rt>きそん</rt></ruby>browser auditへ<ruby>組<rt>く</rt></ruby>み<ruby>込<rt>こ</rt></ruby>み、<ruby>実行結果<rt>じっこうけっか</rt></ruby>と<ruby>未実行<rt>みじっこう</rt></ruby>のtargetを<ruby>区別<rt>くべつ</rt></ruby>する。
+
+<a name="n-68746d6c5f616c6c6f77616e6365"></a>
+
+<a name="canonical-html-corpus-allowance-for-native-math-documentation"></a>
 
 ### Canonical HTML corpus allowance for native Math documentation
 
-The pre-change canonical site consumed 2,299,455,662 allocation units under an explicit 2,300,000,000-unit HTML corpus limit (only 544,338 units of headroom). The added Math composition and renderer-identity documentation increased admitted source bytes from 1,246,201 to 1,247,640 and the next full site stopped during serialization. The registry selects 2,400,000,000 allocation units for this corpus before a new operation starts. Core/default budgets, allocation charging, cancellation and sticky Stop semantics are unchanged; no stopped budget is resumed and no automatic budget-increase fallback is introduced. The full build must record its actual final usage and remain within this finite allowance.
+The pre\-change canonical site consumed 2\,299\,455\,662 allocation units under an explicit 2\,300\,000\,000\-unit HTML corpus limit \(only 544\,338 units of headroom\)\. The added Math composition and renderer\-identity documentation increased admitted source bytes from 1\,246\,201 to 1\,247\,640 and the next full site stopped during serialization\. The registry selects 2\,400\,000\,000 allocation units for this corpus before a new operation starts\. Core\/default budgets\, allocation charging\, cancellation and sticky Stop semantics are unchanged\; no stopped budget is resumed and no automatic budget\-increase fallback is introduced\. The full build must record its actual final usage and remain within this finite allowance\.
