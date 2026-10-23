@@ -1,0 +1,13 @@
+article ja "[文書移行/ぶんしょいこう]の[生成監査/せいせいかんさ]"
+body
+  cons paragraph
+    cons sentence cons code "doc-inventory.json" cons text " は" cons ruby text "過去" text "かこ" cons text "commitから" cons ruby text "生成" text "せいせい" cons text "した" cons ruby text "棚卸" text "たなおろ" cons text "しであり、" cons ruby text "設計正本" text "せっけいせいほん" cons text "でも" cons ruby text "現在" text "げんざい" cons text "の" cons ruby text "実装状態" text "じっそうじょうたい" cons text "でもない。" nil
+    cons "[手編集/てへんしゅう]しない。"
+    cons "ページ・[意味要素/いみようそ]の[監査差分/かんささぶん]を[確認/かくにん]できるよう[保存/ほぞん]しているが、[現在/げんざい]の[網羅性/もうらせい]や[受入合格/うけいれごうかく]には[転用/てんよう]しない。"
+    nil
+  cons paragraph
+    cons sentence cons ruby text "再生成" text "さいせいせい" cons text "と" cons ruby text "照合" text "しょうごう" cons text "は " cons link relative "../../doc-inventory.md" none concat cons ruby text "文書" text "ぶんしょ" cons text "inventory" nil cons text " の" cons ruby text "明示的" text "めいじてき" cons text "なコマンドで" cons ruby text "行" text "おこな" cons text "う。" nil
+    cons "[通常/つうじょう]のrepository checkは[履歴監査/りれきかんさ]を[実行/じっこう]しない。"
+    cons "[移行完了後/いこうかんりょうご]、[現行判断/げんこうはんだん]からの[参照/さんしょう]がなくなればこのbaselineも[歴史資料/れきししりょう]へ[移/うつ]し、[通常/つうじょう]treeから[除去/じょきょ]する。"
+    nil
+  nil

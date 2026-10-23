@@ -400,6 +400,14 @@
       "aliases": "doc/migration/aliases/sentence-core.json",
       "route": "docs/crates/sentence-core.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "migration-generated",
+      "source": "doc/migration/generated/README.nepld",
+      "projection": "doc/migration/generated/README.md",
+      "aliases": "doc/migration/aliases/migration-generated.json",
+      "route": "docs/migration/generated/index.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
