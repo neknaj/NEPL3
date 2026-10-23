@@ -440,6 +440,14 @@
       "aliases": "doc/migration/aliases/doc-runtime.json",
       "route": "docs/progress/doc-runtime.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "math-runtime",
+      "source": "doc/progress/math-runtime.nepld",
+      "projection": "doc/progress/math-runtime.md",
+      "aliases": "doc/migration/aliases/math-runtime.json",
+      "route": "docs/progress/math-runtime.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
@@ -516,7 +524,7 @@
   ],
   "output_limits": {
     "source_bytes": 10000000,
-    "work": 3500000000,
+    "work": 3800000000,
     "depth": 1000,
     "nodes": 72000000,
     "allocation_units": 4000000000,
