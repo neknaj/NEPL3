@@ -139,7 +139,7 @@ body
             cons " [同/おな]じscope[内/ない]で[実際/じっさい]のSourceChecksとSourceAdmissionを[再利用/さいりよう]する。"
             nil
           cons table cons right cons right cons right cons right nil
-            some row cons "[増大入力/ぞうだいにゅうりょく]の[読取/よみと]り[回数/かいすう]" cons "admission[走査回数/そうさかいすう]" cons "[競合検査/きょうごうけんさ]Work" cons "admission Work" nil
+            some row cons "[増大/ぞうだい][入力/にゅうりょく]の[読取/よみと]り[回数/かいすう]" cons "admission[走査/そうさ][回数/かいすう]" cons "[競合/きょうごう][検査/けんさ]Work" cons "admission Work" nil
             cons row cons "128" cons "8,256" cons "32,960" cons "144,462" nil
             cons row cons "256" cons "32,896" cons "82,304" cons "477,190" nil
             cons row cons "512" cons "131,328" cons "230,144" cons "1,714,046" nil

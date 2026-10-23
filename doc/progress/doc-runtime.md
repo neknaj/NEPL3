@@ -1,4 +1,4 @@
-<!-- Generated from doc/progress/doc&#45;runtime.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page doc&#45;runtime; source SHA-256 8f7b42ee2d493d4393924727b4845516592b4b8a220315296b1a17889480eb88; alias input SHA-256 7001cf5c747496ccf5286b26026ac9c14a311f9df708b2dcf0596a4b598d5e62; page input SHA-256 9ec6a7e8982421de18315941ede10c38e457dfbd7da71dc67f1ad852be62c9c5. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/progress/doc&#45;runtime.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page doc&#45;runtime; source SHA-256 7e293719953efb2b600ef93b3e4f928f73339049985fd1434c19a6ae8a1de07e; alias input SHA-256 7001cf5c747496ccf5286b26026ac9c14a311f9df708b2dcf0596a4b598d5e62; page input SHA-256 b6fbcdd6d6fe3a877ac465653829d831817eaa8c76f89795880fe97a896c289e. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="doc-runtime-の段階実装"></a>
 
@@ -86,7 +86,7 @@ SourceStoreのscopeは<ruby>集合<rt>しゅうごう</rt></ruby>を<ruby>構築
 
 `tokenizer::source_checks::tests::source_scope_growth_measurement` は<ruby>明示実行<rt>めいじじっこう</rt></ruby>するignored testである。 <ruby>固定<rt>こてい</rt></ruby>32 sourceと、<ruby>読取<rt>よみと</rt></ruby>りごとに1 source<ruby>増<rt>ふ</rt></ruby>える<ruby>入力<rt>にゅうりょく</rt></ruby>を128\/256\/512<ruby>回処理<rt>かいしょり</rt></ruby>する。 <ruby>測定対象<rt>そくていたいしょう</rt></ruby>のaccepted sourceは<ruby>各<rt>かく</rt></ruby>1 KiB、<ruby>固定<rt>こてい</rt></ruby>environmentの32 sourceは<ruby>各<rt>かく</rt></ruby>4 bytesである。 fixture<ruby>構築<rt>こうちく</rt></ruby>・parser・I\/Oを<ruby>測定<rt>そくてい</rt></ruby>に<ruby>含<rt>ふく</rt></ruby>めない。 <ruby>同<rt>おな</rt></ruby>じscope<ruby>内<rt>ない</rt></ruby>で<ruby>実際<rt>じっさい</rt></ruby>のSourceChecksとSourceAdmissionを<ruby>再利用<rt>さいりよう</rt></ruby>する。
 
-| <ruby>増大入力<rt>ぞうだいにゅうりょく</rt></ruby>の<ruby>読取<rt>よみと</rt></ruby>り<ruby>回数<rt>かいすう</rt></ruby> | admission<ruby>走査回数<rt>そうさかいすう</rt></ruby> | <ruby>競合検査<rt>きょうごうけんさ</rt></ruby>Work | admission Work |
+| <ruby>増大<rt>ぞうだい</rt></ruby><ruby>入力<rt>にゅうりょく</rt></ruby>の<ruby>読取<rt>よみと</rt></ruby>り<ruby>回数<rt>かいすう</rt></ruby> | admission<ruby>走査<rt>そうさ</rt></ruby><ruby>回数<rt>かいすう</rt></ruby> | <ruby>競合<rt>きょうごう</rt></ruby><ruby>検査<rt>けんさ</rt></ruby>Work | admission Work |
 | ---: | ---: | ---: | ---: |
 | 128 | 8\,256 | 32\,960 | 144\,462 |
 | 256 | 32\,896 | 82\,304 | 477\,190 |
