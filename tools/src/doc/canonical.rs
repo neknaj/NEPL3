@@ -135,7 +135,12 @@ fn passive_paths(file: &ReferenceFile, svg: bool) -> bool {
         && file.route.ends_with(".md");
     let json = (file.source.starts_with("design/")
         || file.source == "implementation-status.json"
-        || file.source == "doc/history/web-tea-import.json")
+        || matches!(
+            file.source.as_str(),
+            "doc/history/web-tea-import.json"
+                | "doc/history/source-manifest.json"
+                | "doc/history/design-validation.json"
+        ))
         && file.source.ends_with(".json")
         && file.route.ends_with(".json");
     markdown || json

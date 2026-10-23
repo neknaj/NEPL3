@@ -366,8 +366,8 @@ body
           cons ruby text "限定" text "げんてい"
           cons text "する。"
           nil
-        cons "JSONのsourceはdesign/[以下/いか]の.json、implementation-status.json、またはdoc/history/web-tea-import.jsonだけを[許可/きょか]し、HTML[配布/はいふ]routeはsources/[以下/いか]の.jsonに[限定/げんてい]する。"
-        cons "[履歴/りれき]JSONの[許可範囲/きょかはんい]はこの1ファイルに[限/かぎ]り、doc/history/[以下/いか]のJSON[全体/ぜんたい]や、その[本文/ほんぶん]に[記/しる]された[別/べつ]のファイルへ[広/ひろ]げない。"
+        cons "JSONのsourceはdesign/[以下/いか]の.json、implementation-status.json、またはdoc/history/のweb-tea-import.json・source-manifest.json・design-validation.jsonだけを[許可/きょか]し、HTML[配布/はいふ]routeはsources/[以下/いか]の.jsonに[限定/げんてい]する。"
+        cons "[履歴/りれき]JSONの[許可範囲/きょかはんい]はこの3ファイルに[限/かぎ]り、doc/history/[以下/いか]のJSON[全体/ぜんたい]や、その[本文/ほんぶん]に[記/しる]された[別/べつ]のファイルへ[広/ひろ]げない。"
         cons "sourceとrouteの[拡張子/かくちょうし]を[対応/たいおう]させ、MarkdownとJSONの[種類/しゅるい]を[交差/こうさ]させた[指定/してい]を[拒否/きょひ]する。"
         cons "JSONもUTF-8のpassiveなbyte[列/れつ]として[扱/あつか]い、[構文/こうぶん]・schemaの[検証/けんしょう]、[実行/じっこう]、[正規化/せいきか]は[行/おこな]わない。"
         cons "[生成物/せいせいぶつ]のreceiptは[従来/じゅうらい]どおりapplication/octet-streamを[記録/きろく]するが、[配信/はいしん]serverのHTTP headerを[設定/せってい]・[保証/ほしょう]するものではない。"

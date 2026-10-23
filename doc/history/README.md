@@ -1,12 +1,18 @@
-# 取り込み元の記録
+<!-- Generated from doc/history/README.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page history; source SHA-256 1260246764b430a8f5e9d3c5dc07c0376152975406064a9509b8b1c5200f2712; alias input SHA-256 97c513eeed582dffb25d43a2b1c23ba64a22e9b729ddad743accdbb267d6a45a; page input SHA-256 b3094b87c3a58d0de8b10d8efe656a9b9ecd4b71c04049bf0b23d70837f8cd3b. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
-設計識別子 `nepl3-design-2026-09-06-r1` の説明用資料から、仕様・schema・文法・例・タスクを正式な配置へ取り込みました。ローカルの `.tmp/` は管理対象ではなく、開発・CI・配布から参照しません。
+<a name="取り込み元の記録"></a>
 
-- [source-manifest.json](source-manifest.json) は元の設計パッケージのmanifestです。pathとdigestは**取り込み元**のものです。現在のファイル配置や修正後のdigestを保証しません。
-- [design-validation.json](design-validation.json) は設計作成時に行ったと報告された検査です。由来を保持するため元byte列を保存しています。Rust処理系の試験結果ではなく、このリポジトリで再実行した結果でもありません。
+# <ruby>取<rt>と</rt></ruby>り<ruby>込<rt>こ</rt></ruby>み<ruby>元<rt>もと</rt></ruby>の<ruby>記録<rt>きろく</rt></ruby>
 
-元の独立検査器の実行可能なsourceは設計パッケージに含まれていません。外部の会話・ライブラリ資料も、本文や実行環境をここに完全保存しているわけではありません。このため、報告済みの結果だけを根拠に受入試験をpassedへ変更しません。現行の検査は開発toolsとCIで実行し、runtimeの状態は [implementation-status.json](../../implementation-status.json) で別に管理します。
+[正本（NEPL3d）](<README.nepld>)
 
-正式資料の移設、契約と状態の分離などの訂正理由は [設計判断](../decisions/0001-repository-foundation.md) に記録します。
+<ruby>設計識別子<rt>せっけいしきべつし</rt></ruby> `nepl3-design-2026-09-06-r1` の<ruby>説明用資料<rt>せつめいようしりょう</rt></ruby>から、<ruby>仕様<rt>しよう</rt></ruby>・schema・<ruby>文法<rt>ぶんぽう</rt></ruby>・<ruby>例<rt>れい</rt></ruby>・タスクを<ruby>正式<rt>せいしき</rt></ruby>な<ruby>配置<rt>はいち</rt></ruby>へ<ruby>取<rt>と</rt></ruby>り<ruby>込<rt>こ</rt></ruby>みました。ローカルの `.tmp/` は<ruby>管理対象<rt>かんりたいしょう</rt></ruby>ではなく、<ruby>開発<rt>かいはつ</rt></ruby>・CI・<ruby>配布<rt>はいふ</rt></ruby>から<ruby>参照<rt>さんしょう</rt></ruby>しません。
 
-Web/TEA追補 `nepl3-web-pages-tea-2026-09-06-r1` は、提供された7ファイルの通読と6 payloadのmanifest digest一致を確認しました。[取り込み記録](web-tea-import.json) は元資料の識別情報と照合範囲を保存します。追補のvalidation.jsonにある設計検査の記載を、このrepositoryのruntime/browser試験結果へ転記しません。採否と訂正は [r3の判断](../decisions/0003-web-tea-doc-migration.md) を参照してください。
+- [source\-manifest\.json](<source\-manifest\.json>) は<ruby>元<rt>もと</rt></ruby>の<ruby>設計<rt>せっけい</rt></ruby>パッケージのmanifestです。pathとdigestは<strong><ruby>取<rt>と</rt></ruby>り<ruby>込<rt>こ</rt></ruby>み<ruby>元<rt>もと</rt></ruby></strong>のものです。<ruby>現在<rt>げんざい</rt></ruby>のファイル<ruby>配置<rt>はいち</rt></ruby>や<ruby>修正後<rt>しゅうせいご</rt></ruby>のdigestを<ruby>保証<rt>ほしょう</rt></ruby>しません。
+- [design\-validation\.json](<design\-validation\.json>) は<ruby>設計作成時<rt>せっけいさくせいじ</rt></ruby>に<ruby>行<rt>おこな</rt></ruby>ったと<ruby>報告<rt>ほうこく</rt></ruby>された<ruby>検査<rt>けんさ</rt></ruby>です。<ruby>由来<rt>ゆらい</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>するため<ruby>元<rt>もと</rt></ruby>byte<ruby>列<rt>れつ</rt></ruby>を<ruby>保存<rt>ほぞん</rt></ruby>しています。Rust<ruby>処理系<rt>しょりけい</rt></ruby>の<ruby>試験結果<rt>しけんけっか</rt></ruby>ではなく、このリポジトリで<ruby>再実行<rt>さいじっこう</rt></ruby>した<ruby>結果<rt>けっか</rt></ruby>でもありません。
+
+<ruby>元<rt>もと</rt></ruby>の<ruby>独立検査器<rt>どくりつけんさき</rt></ruby>の<ruby>実行可能<rt>じっこうかのう</rt></ruby>なsourceは<ruby>設計<rt>せっけい</rt></ruby>パッケージに<ruby>含<rt>ふく</rt></ruby>まれていません。<ruby>外部<rt>がいぶ</rt></ruby>の<ruby>会話<rt>かいわ</rt></ruby>・ライブラリ<ruby>資料<rt>しりょう</rt></ruby>も、<ruby>本文<rt>ほんぶん</rt></ruby>や<ruby>実行環境<rt>じっこうかんきょう</rt></ruby>をここに<ruby>完全保存<rt>かんぜんほぞん</rt></ruby>しているわけではありません。このため、<ruby>報告済<rt>ほうこくず</rt></ruby>みの<ruby>結果<rt>けっか</rt></ruby>だけを<ruby>根拠<rt>こんきょ</rt></ruby>に<ruby>受入試験<rt>うけいれしけん</rt></ruby>をpassedへ<ruby>変更<rt>へんこう</rt></ruby>しません。<ruby>現行<rt>げんこう</rt></ruby>の<ruby>検査<rt>けんさ</rt></ruby>は<ruby>開発<rt>かいはつ</rt></ruby>toolsとCIで<ruby>実行<rt>じっこう</rt></ruby>し、runtimeの<ruby>状態<rt>じょうたい</rt></ruby>は [implementation\-status\.json](<\.\.\/\.\.\/implementation\-status\.json>) で<ruby>別<rt>べつ</rt></ruby>に<ruby>管理<rt>かんり</rt></ruby>します。
+
+<ruby>正式資料<rt>せいしきしりょう</rt></ruby>の<ruby>移設<rt>いせつ</rt></ruby>、<ruby>契約<rt>けいやく</rt></ruby>と<ruby>状態<rt>じょうたい</rt></ruby>の<ruby>分離<rt>ぶんり</rt></ruby>などの<ruby>訂正理由<rt>ていせいりゆう</rt></ruby>は [<ruby>設計判断<rt>せっけいはんだん</rt></ruby>](<\.\.\/decisions\/0001\-repository\-foundation\.md>) に<ruby>記録<rt>きろく</rt></ruby>します。
+
+Web\/TEA<ruby>追補<rt>ついほ</rt></ruby> `nepl3-web-pages-tea-2026-09-06-r1` は、<ruby>提供<rt>ていきょう</rt></ruby>された7ファイルの<ruby>通読<rt>つうどく</rt></ruby>と6 payloadのmanifest digest<ruby>一致<rt>いっち</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>しました。[<ruby>取<rt>と</rt></ruby>り<ruby>込<rt>こ</rt></ruby>み<ruby>記録<rt>きろく</rt></ruby>](<web\-tea\-import\.json>) は<ruby>元資料<rt>もとしりょう</rt></ruby>の<ruby>識別情報<rt>しきべつじょうほう</rt></ruby>と<ruby>照合範囲<rt>しょうごうはんい</rt></ruby>を<ruby>保存<rt>ほぞん</rt></ruby>します。<ruby>追補<rt>ついほ</rt></ruby>のvalidation\.jsonにある<ruby>設計検査<rt>せっけいけんさ</rt></ruby>の<ruby>記載<rt>きさい</rt></ruby>を、このrepositoryのruntime\/browser<ruby>試験結果<rt>しけんけっか</rt></ruby>へ<ruby>転記<rt>てんき</rt></ruby>しません。<ruby>採否<rt>さいひ</rt></ruby>と<ruby>訂正<rt>ていせい</rt></ruby>は [r3の<ruby>判断<rt>はんだん</rt></ruby>](<\.\.\/decisions\/0003\-web\-tea\-doc\-migration\.md>) を<ruby>参照<rt>さんしょう</rt></ruby>してください。
