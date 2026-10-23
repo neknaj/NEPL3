@@ -344,6 +344,14 @@
       "aliases": "doc/migration/aliases/33-doc-commitment-profile.json",
       "route": "docs/spec/33-doc-commitment-profile.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "local-source-declaration-validation",
+      "source": "doc/spec/34-local-source-declaration-validation.nepld",
+      "projection": "doc/spec/34-local-source-declaration-validation.md",
+      "aliases": "doc/migration/aliases/34-local-source-declaration-validation.json",
+      "route": "docs/spec/34-local-source-declaration-validation.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [

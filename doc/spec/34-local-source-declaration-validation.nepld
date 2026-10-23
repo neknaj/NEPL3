@@ -1,0 +1,42 @@
+article en "Reusable validation of local source declarations"
+body
+  cons paragraph
+    cons sentence
+      cons code "SourceAdmission::checked_source_set"
+      cons text " returns an immutable borrow of an owned "
+      cons code "SourceStore"
+      cons text " containing exactly the supplied local declarations, never the admission ledger's union."
+      nil
+    cons " The returned lifetime belongs to the admission ledger."
+    nil
+  cons paragraph
+    cons "Admission and duplicate rejection remain mandatory."
+    cons sentence
+      cons text " "
+      cons code "SourceSetError::Duplicate"
+      cons text " denotes a repeated local SourceId/revision; "
+      cons code "SourceSetError::Source"
+      cons text " retains source conflict and budget stop errors."
+      nil
+    cons " Admission precedes duplicate detection on a miss."
+    cons " A cache hit requires budgeted exact equality of every declaration in the same sequence."
+    cons " Independently decoded snapshots are not trusted by digest alone."
+    cons " Empty, reordered or changed local sets remain distinct inputs."
+    nil
+  cons paragraph
+    cons "This is a declaration check, not a portable validation receipt or proof of graph, registry, view, mapping, symbol or rendering correctness."
+    cons " Callers preserve their operation's cumulative Budget and SourceAdmission."
+    cons " Cache replacement completes only after source-set construction succeeds."
+    cons " A later consumer failure may leave this valid local set cached, but all consumer-specific checks still run on retry."
+    nil
+  cons paragraph
+    cons "Math structural validation uses this exact local store after finalized-registry and shape checks."
+    cons " Origins, maps, node locations, views and embedded syntax retain their independent checks."
+    cons " The store borrow ends before embedded guests require mutable admission."
+    cons sentence
+      cons text " Duplicate errors remain "
+      cons code "StructureError::DuplicateSource"
+      cons text "; source errors and sticky stop reasons retain their existing typed conversion."
+      nil
+    nil
+  nil
