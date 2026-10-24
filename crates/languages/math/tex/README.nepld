@@ -1,0 +1,35 @@
+article en "Math → TeX"
+body
+  cons paragraph
+    cons sentence cons code "render" cons text " consumes the existing checked Math expression and prepares TeX for a generation-side host. " nil
+    cons "It does not evaluate Math, execute KaTeX, or certify HTML. "
+    cons sentence cons text "The crate uses only " cons code "no_std + alloc" cons text " and the declared Math/core dependencies." nil
+    nil
+  cons paragraph
+    cons "Fixed commands come from the constructor structure. "
+    cons "Symbol/text/binder strings are escaped literal content, never commands or caller-supplied macros. "
+    cons "Operands use conservative visible grouping; source printers and MathML are not inputs. "
+    cons "Foreign annotations, unsupported delimiters and control characters return typed capability failures; callers must not drop them. "
+    cons sentence cons text "ASCII apostrophe and backtick also return " cons code "LiteralQuote" cons text ": the tested KaTeX text path changes them to curly quotes, including when encoded with " cons code "char" cons text ". " nil
+    cons "Dash ligatures are prevented without splitting Unicode combining sequences. "
+    cons sentence cons text "Identifiers use " cons code "mathord" cons text " with " cons code "textit" cons text " to retain literal names and italic display; this does not certify the accessibility semantics of KaTeX's generated MathML. " nil
+    cons "Numeric and resource failures remain distinct, and a stopped budget cannot be reset to turn fallback into success."
+    nil
+  cons paragraph
+    cons "The result borrows the exact MathValue and records UTF-8 ranges for emitted occurrences, including repeated appearances of a shared node. "
+    cons "These ranges route back to the original node's span/origin; they do not prove global source admission."
+    nil
+  cons paragraph
+    cons "This implements the pure conversion portion of T24. "
+    cons "Fixed-version KaTeX execution, HTML validation, CSS/fonts, Node/Worker comparison and browser tests remain host work. "
+    cons "Successful TeX construction alone is not evidence of faithful browser output. "
+    cons "The native API is not a portable ABI or a completed renderer capability."
+    nil
+  cons paragraph
+    cons sentence cons text "The Doc host's " cons code "MathDisplayHost::prepare_node" cons text " now prepares independent MathML and optional TeX from the same lowered Doc Math input. " nil
+    cons sentence cons code "MathMLOnly" cons text " omits TeX; " cons code "KaTeXPreferred" cons text " retains typed unsupported-node reasons with the MathML result. " nil
+    cons "The shared budget covers both preparations: exhaustion rejects the operation even when MathML was already available. "
+    cons sentence cons code "TexPreparation::Ready" cons text " means renderer input is ready, not that KaTeX or its output validator has run. " nil
+    cons "Annotation documents and origin mappings remain attached to the MathML fallback."
+    nil
+  nil
