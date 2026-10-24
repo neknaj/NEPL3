@@ -1,0 +1,52 @@
+article en "MathML backend"
+body
+  cons paragraph
+    cons sentence cons text "This " cons code "no_std + alloc" cons text " crate implements structural display from a borrowed " cons code "CheckedExpression" cons text ", following specification 06 section 4. " nil
+    cons "It does not evaluate the expression. "
+    cons sentence cons text "For example, " cons code "frac 1 0" cons text " remains a fraction, while multiplication of an addition inserts visible parentheses according to binding power." nil
+    nil
+  cons paragraph
+    cons sentence cons code "render" cons text " returns a typed MathML fragment and " cons code "node_roots" cons text ", indexed by the input Math arena. " nil
+    cons "The latter links rendered roots to the caller's retained source and Origin records. "
+    cons "It does not certify an entire SourceMap, source admission, guest identity, artifact resources or browser layout. "
+    cons "The output is checked with the markup structural validator before return. "
+    cons sentence cons text "The neutral fragment codec is in " cons code "nepl3_markup::portable::mathml" cons text "." nil
+    nil
+  cons paragraph
+    cons "All non-annotation expression constructors are handled, including structural matrix rows. "
+    cons "Inline sums/integrals use scripts; block mode uses under/over. "
+    cons "Numbers use exact canonical finite-decimal printing. "
+    cons "Shared input nodes retain shared output roots, and serialization expands their occurrences in order. "
+    cons "All construction, numeric printing and validation use the caller's sticky Budget."
+    nil
+  cons paragraph
+    cons sentence cons text "Without a host renderer, " cons code "render" cons text " returns the typed " cons code "AnnotationRequiresPreparation" cons text " error rather than removing annotation content. " nil
+    cons sentence cons text "Prepared Doc phrasing passes through MathML " cons code "mtext" cons text ", including Ruby/Anno. " nil
+    cons "Markup provides mixed-namespace depth/identity checks and XHTML serialization. "
+    cons sentence cons code "render_with_annotations" cons text " calls an explicitly supplied host renderer with each exact retained closure. " nil
+    cons "It rechecks phrasing, combines class policies, and checks identity collisions across expanded output occurrences. "
+    cons sentence cons text "Labels use " cons code "munder" cons text " with the Doc fragment inside " cons code "mtext" cons text "; compound bases are parenthesized to preserve their grouping. " nil
+    cons sentence cons code "tools::doc::annotations" cons text " supplies the production local Doc lower/check/render adapter and retains the lowered input alongside its origin map. " nil
+    cons "Unresolved links/assets/guests remain typed failures. "
+    cons "This crate's presence is not completion of T24, Math rendering acceptance, KaTeX, the document artifact pipeline or browser verification."
+    nil
+  cons paragraph
+    cons sentence cons code "tools::doc::math::MathDisplayHost" cons text " validates an explicitly selected Math closure and generates a complete per-expression result. " nil
+    cons sentence cons text "Its " cons code "render_node" cons text " selects inline or block output from the actual Doc node, rejects Code and retains Math syntax plus the annotation provenance needed to interpret rendered roots. " nil
+    cons "It can render with no Doc selection only when the expression needs no annotations. "
+    cons "Each call validates the supplied document structure; callers rendering many nodes should not mistake this convenience entry point for a whole-document preparation cache. "
+    cons "This stage does not insert MathML strings into HTML or declare an Article ready: whole-Article preparation and complete resource delivery remain separate."
+    nil
+  cons paragraph
+    cons sentence cons code "mathml::into_html" cons text " in the markup crate moves validated backend output into the flat mixed HTML arena. " nil
+    cons sentence cons text "Its local " cons code "HtmlProjection" cons text " retains original MathML and HTML-leaf node mappings until the caller consumes the resulting " cons code "HtmlRequest" cons text ". " nil
+    cons sentence cons code "Rendered" cons text " binds each annotation callback to its actual input node and output leaf; " cons code "RenderedMath::into_html" cons text " uses those bindings to remap both Math roots and Doc annotation origins. " nil
+    cons "This avoids identifying repeated annotations by an embed ID alone. "
+    cons "The conversion moves strings, attributes and child buffers; its new allocations hold arena nodes and indices, not duplicate annotation text. "
+    cons "These local mappings are not a portable provenance proof: externally supplied rendering claims still require validation/replay against the selected operation."
+    nil
+  cons paragraph
+    cons sentence cons text "Tests use real NEPL3 parsing/lowering in " cons code "tools/tests/math/mathml.rs" cons text ", fixed specification constructor inputs, manually derived XML, shared-node input and resource stops. " nil
+    cons "No separate review runner or copied source snapshot is needed."
+    nil
+  nil
