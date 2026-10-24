@@ -1,0 +1,18 @@
+article en "Math renderer integration tests"
+body
+  cons paragraph
+    cons "This is test infrastructure. "
+    cons "The Rust integration test parses real NEPL3 Math, lowers/checks it, and sends production TeX to the pinned KaTeX package. "
+    cons "The Node adapter performs no NEPL3 semantics. "
+    cons "It returns renderer output for assertions; it is not the trusted product host, markup validator, or Worker protocol."
+    nil
+  cons rawcode some "sh" "npm ci --prefix tools/audit/math\ncargo test --locked -p nepl3-tools --test math tex::pinned_katex -- --ignored\n"
+  cons paragraph
+    cons "The test requires Node and installed packages and fails if either is absent. "
+    cons "It is explicitly ignored in the ordinary Rust-only suite. "
+    cons "The explicit command is required to claim renderer integration coverage. "
+    cons "Each rendering receives fresh macros, strict errors, disabled trust and finite KaTeX expansion/size limits. "
+    cons "Passing does not certify fonts, CSS, browser layout, accessibility, resource termination or validated document artifacts. "
+    cons "Generated outputs stay out of Git."
+    nil
+  nil
