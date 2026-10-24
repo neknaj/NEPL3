@@ -512,6 +512,14 @@
       "aliases": "doc/migration/aliases/math-tex.json",
       "route": "docs/crates/math-tex.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "math-mathml",
+      "source": "crates/languages/math/mathml/README.nepld",
+      "projection": "crates/languages/math/mathml/README.md",
+      "aliases": "doc/migration/aliases/math-mathml.json",
+      "route": "docs/crates/math-mathml.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [

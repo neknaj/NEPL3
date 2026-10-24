@@ -1309,3 +1309,101 @@ fn math_tex_exports_to_nested_projection_and_links_to_doc_page() -> Result<()> {
     assert!(html.contains("id=\"math-guide\""));
     Ok(())
 }
+
+#[test]
+fn math_mathml_registration_requires_exact_paired_paths() -> Result<()> {
+    let mut value = registry();
+    value["pages"][0]["source"] = json!("crates/languages/math/mathml/README.nepld");
+    value["pages"][0]["projection"] = json!("crates/languages/math/mathml/README.md");
+    parse_registry(&serde_json::to_vec(&value)?)?;
+    for (field, invalid) in [
+        ("source", "crates/languages/math/MathML/README.nepld"),
+        ("source", "crates/languages/math/mathml/readme.nepld"),
+        ("source", "crates/languages/math/mathml/README.nepld.bak"),
+        (
+            "source",
+            "crates/languages/math/mathml/../math/README.nepld",
+        ),
+        ("source", "crates/languages/math/tex/README.nepld"),
+        ("source", "doc/README.nepld"),
+        (
+            "source",
+            "crates/crates/languages/math/MathML/core/README.nepld",
+        ),
+        ("projection", "doc/README.md"),
+        ("projection", "crates/languages/math/MathML/README.md"),
+        ("projection", "crates/languages/math/mathml/readme.md"),
+        ("projection", "crates/languages/math/mathml/README.md.bak"),
+        ("projection", "crates/languages/math/tex/README.md"),
+        (
+            "projection",
+            "crates/crates/languages/math/MathML/core/README.md",
+        ),
+        ("aliases", "crates/languages/math/mathml/aliases.json"),
+    ] {
+        let mut invalid_value = value.clone();
+        invalid_value["pages"][0][field] = json!(invalid);
+        assert!(
+            parse_registry(&serde_json::to_vec(&invalid_value)?).is_err(),
+            "{field}: {invalid}"
+        );
+    }
+    let mut duplicate = value.clone();
+    let mut second = value["pages"][0].clone();
+    second["id"] = json!("other");
+    second["route"] = json!("docs/other.html");
+    duplicate["pages"]
+        .as_array_mut()
+        .ok_or("pages")?
+        .push(second);
+    assert!(parse_registry(&serde_json::to_vec(&duplicate)?).is_err());
+    Ok(())
+}
+
+#[test]
+fn math_mathml_exports_to_nested_projection_and_links_to_doc_page() -> Result<()> {
+    let fixture = Fixture::new()?;
+    let mut value = registry();
+    value["pages"][0]["renderer"] = json!(projection::RENDERER);
+    value["pages"].as_array_mut().ok_or("pages")?.push(json!({
+        "id":"math-mathml",
+        "source":"crates/languages/math/mathml/README.nepld",
+        "projection":"crates/languages/math/mathml/README.md",
+        "aliases":"doc/surface-aliases.json",
+        "route":"docs/crates/math-mathml.html",
+        "renderer":projection::RENDERER
+    }));
+    fixture.json("doc/canonical.json", &value)?;
+    fixture.write("doc/aliases.json", "[]")?;
+    fixture.write(
+        "doc/surface-aliases.json",
+        r#"[{"section":null,"name":"math-guide"}]"#,
+    )?;
+    fixture.write(
+        "doc/sample.nepld",
+        r#"article en "Spec" body cons paragraph cons "Contract." nil nil"#,
+    )?;
+    fixture.write("crates/languages/math/mathml/README.nepld", r#"article en "Math guide" body cons paragraph cons sentence cons link relative "../../../../doc/sample.md" none text "Spec" nil nil nil"#)?;
+    let output = fixture.root().join("generated");
+    markdown(fixture.root(), "doc/canonical.json", &output)?;
+    let projected = fs::read_to_string(output.join("crates/languages/math/mathml/README.md"))?;
+    let links: Vec<_> = pulldown_cmark::Parser::new(&projected)
+        .filter_map(|e| match e {
+            pulldown_cmark::Event::Start(pulldown_cmark::Tag::Link { dest_url, .. }) => {
+                Some(dest_url.into_string())
+            }
+            _ => None,
+        })
+        .collect();
+    assert_eq!(links, ["README.nepld", "../../../../doc/sample.md"]);
+    let rendered = generate_html(fixture.root(), "doc/canonical.json")?;
+    let page = rendered
+        .files
+        .iter()
+        .find(|(path, _)| path.as_str() == "docs/crates/math-mathml.html")
+        .ok_or("surface page")?;
+    let html = std::str::from_utf8(page.1)?;
+    assert!(html.contains("href=\"../sample.html\""));
+    assert!(html.contains("id=\"math-guide\""));
+    Ok(())
+}

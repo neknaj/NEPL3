@@ -311,6 +311,8 @@ pub(crate) fn parse_registry(raw: &[u8]) -> Result<Registry> {
             && page.projection == "examples/document/math/README.md";
         let math_renderer_tests = page.source == "tools/audit/math/README.nepld"
             && page.projection == "tools/audit/math/README.md";
+        let math_mathml = page.source == "crates/languages/math/mathml/README.nepld"
+            && page.projection == "crates/languages/math/mathml/README.md";
         let math_tex = page.source == "crates/languages/math/tex/README.nepld"
             && page.projection == "crates/languages/math/tex/README.md";
         let security = page.source == "SECURITY.nepld" && page.projection == "SECURITY.md";
@@ -327,6 +329,7 @@ pub(crate) fn parse_registry(raw: &[u8]) -> Result<Registry> {
                     && !name.starts_with("doc/")
                     && !((sentence_readme
                         || sentence_surface
+                        || math_mathml
                         || math_tex
                         || math_renderer_tests
                         || math_example

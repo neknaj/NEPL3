@@ -1,58 +1,21 @@
+<!-- Generated from crates/languages/math/mathml/README.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page math&#45;mathml; source SHA-256 7b2a09ff82705d0810e98c39617d8213845344a554f339030b1c3a342d9b3b1b; alias input SHA-256 11ae352f3ab232b6aa919792a7061dcc97c6c0816ecca5a4488b815565ac92f1; page input SHA-256 228475bf211231d96ed3d3b3d6803d9f2f847a2e3c676646319beac3ec2700ee. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+
+<a name="mathml-backend"></a>
+
 # MathML backend
 
-This `no_std + alloc` crate implements structural display from a borrowed
-`CheckedExpression`, following specification 06 section 4. It does not evaluate
-the expression. For example, `frac 1 0` remains a fraction, while multiplication
-of an addition inserts visible parentheses according to binding power.
+[正本（NEPL3d）](<README.nepld>)
 
-`render` returns a typed MathML fragment and `node_roots`, indexed by the input
-Math arena. The latter links rendered roots to the caller's retained source and
-Origin records. It does not certify an entire SourceMap, source admission, guest
-identity, artifact resources or browser layout. The output is checked with the
-markup structural validator before return. The neutral fragment codec is in
-`nepl3_markup::portable::mathml`.
+This `no_std + alloc` crate implements structural display from a borrowed `CheckedExpression`\, following specification 06 section 4\. It does not evaluate the expression\. For example\, `frac 1 0` remains a fraction\, while multiplication of an addition inserts visible parentheses according to binding power\.
 
-All non-annotation expression constructors are handled, including structural
-matrix rows. Inline sums/integrals use scripts; block mode uses under/over.
-Numbers use exact canonical finite-decimal printing. Shared input nodes retain
-shared output roots, and serialization expands their occurrences in order.
-All construction, numeric printing and validation use the caller's sticky Budget.
+`render` returns a typed MathML fragment and `node_roots`\, indexed by the input Math arena\. The latter links rendered roots to the caller\'s retained source and Origin records\. It does not certify an entire SourceMap\, source admission\, guest identity\, artifact resources or browser layout\. The output is checked with the markup structural validator before return\. The neutral fragment codec is in `nepl3_markup::portable::mathml`\.
 
-Without a host renderer, `render` returns the typed
-`AnnotationRequiresPreparation` error rather than removing annotation content.
-Prepared Doc phrasing passes through MathML `mtext`, including Ruby/Anno.
-Markup provides mixed-namespace depth/identity checks and XHTML
-serialization. `render_with_annotations` calls an explicitly supplied host
-renderer with each exact retained closure. It rechecks phrasing, combines class
-policies, and checks identity collisions across expanded output occurrences.
-Labels use `munder` with the Doc fragment inside `mtext`; compound bases are
-parenthesized to preserve their grouping. `tools::doc::annotations` supplies the
-production local Doc lower/check/render adapter and retains the lowered input
-alongside its origin map. Unresolved links/assets/guests remain typed failures.
-This crate's presence is not completion of T24, Math rendering acceptance, KaTeX,
-the document artifact pipeline or browser verification.
+All non\-annotation expression constructors are handled\, including structural matrix rows\. Inline sums\/integrals use scripts\; block mode uses under\/over\. Numbers use exact canonical finite\-decimal printing\. Shared input nodes retain shared output roots\, and serialization expands their occurrences in order\. All construction\, numeric printing and validation use the caller\'s sticky Budget\.
 
-`tools::doc::math::MathDisplayHost` validates an explicitly selected Math closure
-and generates a complete per-expression result. Its `render_node` selects inline
-or block output from the actual Doc node, rejects Code and retains Math syntax
-plus the annotation provenance needed to interpret rendered roots. It can render
-with no Doc selection only when the expression needs no annotations. Each call
-validates the supplied document structure; callers rendering many nodes should
-not mistake this convenience entry point for a whole-document preparation cache.
-This stage does not insert MathML strings into HTML or declare an Article ready:
-whole-Article preparation and complete resource delivery remain separate.
+Without a host renderer\, `render` returns the typed `AnnotationRequiresPreparation` error rather than removing annotation content\. Prepared Doc phrasing passes through MathML `mtext`\, including Ruby\/Anno\. Markup provides mixed\-namespace depth\/identity checks and XHTML serialization\. `render_with_annotations` calls an explicitly supplied host renderer with each exact retained closure\. It rechecks phrasing\, combines class policies\, and checks identity collisions across expanded output occurrences\. Labels use `munder` with the Doc fragment inside `mtext`\; compound bases are parenthesized to preserve their grouping\. `tools::doc::annotations` supplies the production local Doc lower\/check\/render adapter and retains the lowered input alongside its origin map\. Unresolved links\/assets\/guests remain typed failures\. This crate\'s presence is not completion of T24\, Math rendering acceptance\, KaTeX\, the document artifact pipeline or browser verification\.
 
-`mathml::into_html` in the markup crate moves validated backend output into the
-flat mixed HTML arena. Its local `HtmlProjection` retains original MathML and
-HTML-leaf node mappings until the caller consumes the resulting `HtmlRequest`.
-`Rendered` binds each annotation callback to its actual input node and output
-leaf; `RenderedMath::into_html` uses those bindings to remap both Math roots and
-Doc annotation origins. This avoids identifying repeated annotations by an
-embed ID alone. The conversion moves strings, attributes and child buffers; its
-new allocations hold arena nodes and indices, not duplicate annotation text.
-These local mappings are not a portable provenance proof: externally supplied
-rendering claims still require validation/replay against the selected operation.
+`tools::doc::math::MathDisplayHost` validates an explicitly selected Math closure and generates a complete per\-expression result\. Its `render_node` selects inline or block output from the actual Doc node\, rejects Code and retains Math syntax plus the annotation provenance needed to interpret rendered roots\. It can render with no Doc selection only when the expression needs no annotations\. Each call validates the supplied document structure\; callers rendering many nodes should not mistake this convenience entry point for a whole\-document preparation cache\. This stage does not insert MathML strings into HTML or declare an Article ready\: whole\-Article preparation and complete resource delivery remain separate\.
 
-Tests use real NEPL3 parsing/lowering in `tools/tests/math/mathml.rs`, fixed
-specification constructor inputs, manually derived XML, shared-node input and
-resource stops. No separate review runner or copied source snapshot is needed.
+`mathml::into_html` in the markup crate moves validated backend output into the flat mixed HTML arena\. Its local `HtmlProjection` retains original MathML and HTML\-leaf node mappings until the caller consumes the resulting `HtmlRequest`\. `Rendered` binds each annotation callback to its actual input node and output leaf\; `RenderedMath::into_html` uses those bindings to remap both Math roots and Doc annotation origins\. This avoids identifying repeated annotations by an embed ID alone\. The conversion moves strings\, attributes and child buffers\; its new allocations hold arena nodes and indices\, not duplicate annotation text\. These local mappings are not a portable provenance proof\: externally supplied rendering claims still require validation\/replay against the selected operation\.
+
+Tests use real NEPL3 parsing\/lowering in `tools/tests/math/mathml.rs`\, fixed specification constructor inputs\, manually derived XML\, shared\-node input and resource stops\. No separate review runner or copied source snapshot is needed\.
