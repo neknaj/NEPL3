@@ -375,7 +375,9 @@ body
           cons ruby text "限定" text "げんてい"
           cons text "する。"
           nil
-        cons "JSONのsourceはdesign/[以下/いか]の.json、implementation-status.json、またはdoc/history/のweb-tea-import.json・source-manifest.json・design-validation.jsonだけを[許可/きょか]し、HTML[配布/はいふ]routeはsources/[以下/いか]の.jsonに[限定/げんてい]する。"
+        cons "JSONのsourceはdesign/[以下/いか]の.json、implementation-status.json、doc/canonical.json、またはdoc/history/のweb-tea-import.json・source-manifest.json・design-validation.jsonだけを[許可/きょか]し、HTML[配布/はいふ]routeはsources/[以下/いか]の.jsonに[限定/げんてい]する。"
+        cons "doc/canonical.jsonの[参照/さんしょう][配布/はいふ]は[登録/とうろく]された[元/もと]byte[列/れつ]を[保持/ほじ]し、その[内容/ないよう]から[新/あら]たな[入力/にゅうりょく]を[追加/ついか][取得/しゅとく]しない。"
+        cons "[操作/そうさ]の[選択/せんたく]に[使/つか]ったregistry[自体/じたい]を[参照/さんしょう][配布/はいふ]するときは、[取得済/しゅとくず]みのregistryと[配布用/はいふよう]byte[列/れつ]の[一致/いっち]を[確認/かくにん]し、[不一致/ふいっち]なら[停止/ていし]する。[異/こと]なる[時点/じてん]の[選択/せんたく]と[資料/しりょう]を[混在/こんざい]させない。"
         cons "[履歴/りれき]JSONの[許可範囲/きょかはんい]はこの3ファイルに[限/かぎ]り、doc/history/[以下/いか]のJSON[全体/ぜんたい]や、その[本文/ほんぶん]に[記/しる]された[別/べつ]のファイルへ[広/ひろ]げない。"
         cons sentence cons ruby text "執筆指針" text "しっぴつししん" cons text "の" cons ruby text "参照用" text "さんしょうよう" cons text "sourceは " cons code "examples/document/line-break.nepld" cons text "、" cons code "examples/document/linear-combination.nepld" cons text "、" cons code "tools/tests/doc/print.rs" cons text " の3ファイルだけを" cons ruby text "許可" text "きょか" cons text "し、routeはsources/" cons ruby text "以下" text "いか" cons text "でsourceと" cons ruby text "同" text "おな" cons text "じ" cons ruby text "拡張子" text "かくちょうし" cons text "を" cons ruby text "持" text "も" cons text "つ。" nil
         cons "これらのsourceはUTF-8のpassiveなbyte[列/れつ]として[保持/ほじ]し、Docのparse・lowerやRustのcompile・[実行/じっこう]を[暗黙/あんもく]に[行/おこな]わず、[本文/ほんぶん]の[参照先/さんしょうさき]を[追加/ついか][取得/しゅとく]しない。"

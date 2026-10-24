@@ -75,7 +75,7 @@ pub(crate) fn generate(
         inputs,
         references,
         ..
-    } = capture(root, raw)?;
+    } = capture(root, manifest, raw)?;
     let compiled = crate::doc::source::compiled()?;
     let initial_phases = limits.phases();
     let footnotes = inputs.iter().all(|p| is_footnotes(&p.page.renderer));

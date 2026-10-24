@@ -472,6 +472,14 @@
       "aliases": "doc/migration/aliases/0008-evidence-and-publisher-boundaries.json",
       "route": "docs/decisions/0008-evidence-and-publisher-boundaries.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "resume-doc-canonical",
+      "source": "doc/progress/resume-doc-canonical.nepld",
+      "projection": "doc/progress/resume-doc-canonical.md",
+      "aliases": "doc/migration/aliases/resume-doc-canonical.json",
+      "route": "docs/progress/resume-doc-canonical.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
@@ -544,6 +552,11 @@
       "id": "authoring-print-tests",
       "source": "tools/tests/doc/print.rs",
       "route": "sources/tests/doc-print.rs"
+    },
+    {
+      "id": "canonical-registry-source",
+      "source": "doc/canonical.json",
+      "route": "sources/canonical.json"
     }
   ],
   "output_limits": {
