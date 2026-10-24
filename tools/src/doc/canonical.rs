@@ -301,13 +301,15 @@ pub(crate) fn parse_registry(raw: &[u8]) -> Result<Registry> {
             return Err("invalid canonical page identity or renderer".into());
         }
         let footnotes = projection::is_footnotes(&page.renderer);
-        // Exact paired migration exceptions; arbitrary root/crate/language/example files remain rejected.
+        // Exact paired migration exceptions; arbitrary root/crate/language/example/tool files remain rejected.
         let sentence_readme = page.source == "crates/languages/sentence/core/README.nepld"
             && page.projection == "crates/languages/sentence/core/README.md";
         let sentence_surface = page.source == "languages/Sentence/README.nepld"
             && page.projection == "languages/Sentence/README.md";
         let math_example = page.source == "examples/document/math/README.nepld"
             && page.projection == "examples/document/math/README.md";
+        let math_renderer_tests = page.source == "tools/audit/math/README.nepld"
+            && page.projection == "tools/audit/math/README.md";
         let security = page.source == "SECURITY.nepld" && page.projection == "SECURITY.md";
         let conformance_history = page.source == "conformance/history.nepld"
             && page.projection == "conformance/history.md";
@@ -322,6 +324,7 @@ pub(crate) fn parse_registry(raw: &[u8]) -> Result<Registry> {
                     && !name.starts_with("doc/")
                     && !((sentence_readme
                         || sentence_surface
+                        || math_renderer_tests
                         || math_example
                         || security
                         || conformance_history)
