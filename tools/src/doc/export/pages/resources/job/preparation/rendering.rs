@@ -1,6 +1,6 @@
 //! Atomic in-memory render attempts over retained prepared documents.
 //! A retry repeats rendering, never parsing completed pages. This entry supports
-//! document pages and frozen passive files; compatibility aliases are not accepted.
+//! document pages, frozen passive files and explicit native compatibility aliases.
 use super::*;
 use crate::doc::export::{
     MathRenderer,
@@ -15,6 +15,7 @@ struct RenderData<'a> {
     code: Vec<PreparedPageCode>,
     origins: Vec<serde_json::Value>,
     file_origins: Vec<serde_json::Value>,
+    aliases: Vec<pages::aliases::PageAliases>,
     evidence: serde_json::Value,
     preparation: Vec<PageAttempt>,
     renders: Vec<RenderAttempt>,
@@ -200,6 +201,7 @@ fn build<'a>(
         code,
         origins,
         file_origins,
+        aliases: std::mem::take(&mut data.aliases),
         evidence,
         preparation: std::mem::take(&mut data.attempts),
         renders: Vec::new(),
@@ -221,23 +223,27 @@ impl<'a> RenderJob<'a> {
         let requested = data.output.budget().limits();
         let result = account.run(requested, |meter| {
             let effective = meter.limits();
-            let result = render::render(
-                render::Context {
-                    compiled: data.compiled,
-                    request: &data.request,
-                    page_code: &data.code,
-                    profiles: &[],
-                    retained_preparation: Some(&data.evidence),
-                    origins: &data.origins,
-                    file_origins: &data.file_origins,
-                    // Only the retained evidence identity is used for this route.
-                    phases: pages::resources::PhaseLimits::default(),
-                    initial_usage: meter.usage(),
-                    renderer: data.renderer,
-                    aliases: &[],
-                },
-                meter.budget,
-            );
+            let result =
+                pages::aliases::check_set_binding(&data.request.set, &data.aliases, meter.budget)
+                    .and_then(|()| {
+                        render::render(
+                            render::Context {
+                                compiled: data.compiled,
+                                request: &data.request,
+                                page_code: &data.code,
+                                profiles: &[],
+                                retained_preparation: Some(&data.evidence),
+                                origins: &data.origins,
+                                file_origins: &data.file_origins,
+                                // Only the retained evidence identity is used for this route.
+                                phases: pages::resources::PhaseLimits::default(),
+                                initial_usage: meter.usage(),
+                                renderer: data.renderer,
+                                aliases: &data.aliases,
+                            },
+                            meter.budget,
+                        )
+                    });
             data.renders.push(RenderAttempt {
                 requested,
                 effective,
@@ -251,11 +257,17 @@ impl<'a> RenderJob<'a> {
             Attempt::Complete { value, running } => {
                 let usage = running.usage();
                 let limits = running.limits();
-                let generated = value.finish(data.request, &[]);
+                let generated = value.finish(data.request, &data.aliases);
                 match generated {
                     Ok(mut generated) => {
+                        let alias_job = !data.aliases.is_empty();
+                        let contract = if alias_job {
+                            "nepl3.local-doc-pages.retry-alias-job/1"
+                        } else {
+                            "nepl3.local-doc-pages.retry-job/1"
+                        };
                         let receipt = serde_json::json!({
-                            "contract":"nepl3.local-doc-pages.retry-job/1",
+                            "contract":contract,
                             "limits":pages::resources::limits(limits),
                             "usage":pages::resources::usage(usage),
                             "render_attempts":data.renders.iter().map(|a|serde_json::json!({
@@ -267,8 +279,8 @@ impl<'a> RenderJob<'a> {
                         let encoded = (|| -> Result<String, String> {
                             let mut manifest: serde_json::Value =
                                 serde_json::from_str(&generated.manifest).map_err(err)?;
-                            let mut bytes =
-                                Vec::from(b"nepl3.local-doc-pages.retry-job/1\0".as_slice());
+                            let mut bytes = Vec::from(contract.as_bytes());
+                            bytes.push(0);
                             bytes.extend_from_slice(
                                 &serde_json::to_vec(&manifest["execution_identity"])
                                     .map_err(err)?,
@@ -276,6 +288,14 @@ impl<'a> RenderJob<'a> {
                             bytes.extend_from_slice(
                                 &serde_json::to_vec(&manifest["phase_execution"]).map_err(err)?,
                             );
+                            if alias_job {
+                                let compatibility = manifest["compatibility"]["execution_identity"]
+                                    .as_str()
+                                    .ok_or("MissingCompatibilityExecutionIdentity")?;
+                                bytes.extend_from_slice(
+                                    &serde_json::to_vec(compatibility).map_err(err)?,
+                                );
+                            }
                             bytes.extend_from_slice(&serde_json::to_vec(&receipt).map_err(err)?);
                             manifest["job_execution"] = receipt;
                             manifest["job_execution"]["identity"] =
@@ -390,3 +410,6 @@ impl<'a> RejectedRender<'a> {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod aliases;
