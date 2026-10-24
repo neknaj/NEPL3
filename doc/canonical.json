@@ -480,6 +480,14 @@
       "aliases": "doc/migration/aliases/resume-doc-canonical.json",
       "route": "docs/progress/resume-doc-canonical.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "sentence-surface",
+      "source": "languages/Sentence/README.nepld",
+      "projection": "languages/Sentence/README.md",
+      "aliases": "doc/migration/aliases/sentence-surface.json",
+      "route": "docs/languages/sentence.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
