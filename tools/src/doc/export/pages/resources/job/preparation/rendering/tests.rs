@@ -384,3 +384,129 @@ fn typed_sentence_pages_resume_without_reparsing_and_keep_nested_records() -> Re
 }
 
 mod selection;
+
+type DocumentInputs = Vec<(Entry, String)>;
+type PassiveInputs = Vec<(Entry, Vec<u8>)>;
+fn passive_inputs() -> (DocumentInputs, PassiveInputs) {
+    (vec![(Entry { id: "one".into(), source: "one.nepld".into(), route: "one.html".into(), input: None },
+        r#"article en "Files" body cons paragraph cons sentence cons link relative "ref.txt" none text "Reference" nil nil nil"#.into())],
+     vec![(Entry { id: "reference".into(), source: "ref.txt".into(), route: "sources/ref.txt".into(), input: None }, b"frozen reference\n".to_vec())])
+}
+fn prepared_files<'a>(
+    compiled: &'a Compiled,
+    files: Vec<(Entry, Vec<u8>)>,
+) -> Result<PreparedPages<'a>, String> {
+    match Preparation::with_files(
+        compiled,
+        passive_inputs().0,
+        files,
+        budget().limits(),
+        PreparationLimits::default(),
+    )?
+    .run()
+    {
+        Progress::Prepared(value) => Ok(value),
+        _ => Err("file preparation".into()),
+    }
+}
+#[test]
+fn passive_files_survive_output_retry_and_bind_identity() -> Result<(), String> {
+    let compiled = compiled()?;
+    let (input, files) = passive_inputs();
+    let expected = pages::generate_with_resources(
+        &compiled,
+        &input,
+        &files,
+        pages::resources::PhaseLimits::default(),
+        &mut budget(),
+    )?;
+    let RenderProgress::Paused { job, .. } = prepared_files(&compiled, passive_inputs().1)?
+        .into_render(
+            OperationLimits {
+                output_bytes: 1,
+                ..Default::default()
+            },
+            MathRenderer::MathMLOnly,
+        )
+        .map_err(|e| e.error)?
+        .run()
+    else {
+        return Err("output pause".into());
+    };
+    let before = job.usage();
+    assert_eq!(job.preparation().len(), 1);
+    let RenderProgress::Complete(done) = job
+        .resume(budget().limits(), OperationLimits::default())
+        .map_err(|_| "resume")?
+        .run()
+    else {
+        return Err("complete".into());
+    };
+    assert_eq!(done.generated.files, expected.files);
+    assert_eq!(
+        done.generated.files["sources/ref.txt"],
+        b"frozen reference\n"
+    );
+    assert_eq!(done.preparation.len(), 1);
+    assert_eq!(done.renders.len(), 2);
+    assert!(done.usage.work > before.work);
+    assert_eq!(done.usage, total(&done.preparation, &done.renders));
+    let original: serde_json::Value =
+        serde_json::from_str(&done.generated.manifest).map_err(err)?;
+    assert_eq!(
+        original["registered_files"][0]["sha256"],
+        pages::digest_hex(Digest::of(b"frozen reference\n"))
+    );
+    for change_route in [false, true] {
+        let mut changed = passive_inputs().1;
+        if change_route {
+            changed[0].0.route = "changed.txt".into();
+        } else {
+            changed[0].1 = b"changed bytes".to_vec();
+        }
+        let RenderProgress::Complete(other) = prepared_files(&compiled, changed)?
+            .into_render(OperationLimits::default(), MathRenderer::MathMLOnly)
+            .map_err(|e| e.error)?
+            .run()
+        else {
+            return Err("changed completion".into());
+        };
+        let m: serde_json::Value = serde_json::from_str(&other.generated.manifest).map_err(err)?;
+        assert_ne!(original["identity"], m["identity"]);
+    }
+    Ok(())
+}
+#[test]
+fn passive_file_collisions_and_fragments_are_terminal() -> Result<(), String> {
+    let compiled = compiled()?;
+    for case in 0..4 {
+        let (mut input, mut files) = passive_inputs();
+        match case {
+            0 => files.extend(passive_inputs().1),
+            1 => files[0].0.id = "one".into(),
+            2 => files[0].0.route = "one.html".into(),
+            _ => input[0].1 = input[0].1.replace("ref.txt", "ref.txt#missing"),
+        }
+        let Progress::Prepared(ready) = Preparation::with_files(
+            &compiled,
+            input,
+            files,
+            budget().limits(),
+            PreparationLimits::default(),
+        )?
+        .run() else {
+            return Err("prepare before global validation".into());
+        };
+        assert!(
+            matches!(
+                ready
+                    .into_render(OperationLimits::default(), MathRenderer::MathMLOnly)
+                    .map_err(|e| e.error)?
+                    .run(),
+                RenderProgress::Failed(_)
+            ),
+            "case {case}"
+        );
+    }
+    Ok(())
+}

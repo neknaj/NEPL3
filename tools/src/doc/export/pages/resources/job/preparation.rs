@@ -54,6 +54,7 @@ struct Page {
 struct Data<'a> {
     compiled: &'a Compiled,
     inputs: Vec<(Entry, String)>,
+    files: Vec<(Entry, Vec<u8>)>,
     phases: PreparationLimits,
     prepared: Vec<Page>,
     attempts: Vec<PageAttempt>,
@@ -97,6 +98,21 @@ impl<'a> Preparation<'a> {
         limits: Limits,
         phases: PreparationLimits,
     ) -> Result<Self, String> {
+        Self::with_files(compiled, inputs, Vec::new(), limits, phases)
+    }
+    /// Own already loaded passive file bytes together with document inputs.
+    /// Loading, moving host containers and receipt hashing are bounded host setup,
+    /// outside measured parse/lower/render usage; rendering still charges output.
+    pub fn with_files(
+        compiled: &'a Compiled,
+        inputs: Vec<(Entry, String)>,
+        files: Vec<(Entry, Vec<u8>)>,
+        limits: Limits,
+        phases: PreparationLimits,
+    ) -> Result<Self, String> {
+        if files.len() > 128 {
+            return Err("FileCountLimit".into());
+        }
         if inputs.is_empty() || inputs.len() > 128 {
             return Err("PageCountLimit".into());
         }
@@ -104,6 +120,27 @@ impl<'a> Preparation<'a> {
         for (entry, input) in &inputs {
             crate::doc::export::pages::input_path(entry)?;
             bytes = bytes.checked_add(input.len() as u64).ok_or("SourceLimit")?;
+            if bytes > crate::doc::export::MAX_SOURCE_BYTES {
+                return Err("SourceLimit".into());
+            }
+        }
+        let mut metadata_bytes = 0usize;
+        for (entry, content) in &files {
+            for value in [&entry.id, &entry.source, &entry.route]
+                .into_iter()
+                .chain(entry.input.iter())
+            {
+                metadata_bytes = metadata_bytes
+                    .checked_add(value.len())
+                    .ok_or("FileMetadataLimit")?;
+                if metadata_bytes > 65_536 {
+                    return Err("FileMetadataLimit".into());
+                }
+            }
+            crate::doc::export::pages::input_path(entry)?;
+            bytes = bytes
+                .checked_add(content.len() as u64)
+                .ok_or("SourceLimit")?;
             if bytes > crate::doc::export::MAX_SOURCE_BYTES {
                 return Err("SourceLimit".into());
             }
@@ -116,6 +153,7 @@ impl<'a> Preparation<'a> {
             data: Data {
                 compiled,
                 inputs,
+                files,
                 phases,
                 prepared,
                 attempts: Vec::new(),

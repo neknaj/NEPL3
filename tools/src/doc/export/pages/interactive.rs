@@ -1,5 +1,5 @@
 //! Opt-in in-process CLI continuation. Only the allowance file is reread.
-//! Source documents, compiled definitions, output destination, display selection and renderer stay fixed.
+//! Source documents, passive files, compiled definitions, output destination, display selection and renderer stay fixed.
 use super::{
     Entry, GeneratedPages,
     resources::{
@@ -99,13 +99,11 @@ fn write_with_io(
     }
     let selected = RetryLimits::read(limits)?;
     let loaded = super::load(manifest)?;
-    if !loaded.files.is_empty() {
-        return Err("interactive continuation does not support registered files".into());
-    }
     let compiled = crate::doc::source::compiled()?;
     let generated = run(
         &compiled,
         loaded.inputs,
+        loaded.files,
         selected,
         super::DisplayOptions {
             document: loaded.display,
@@ -163,13 +161,15 @@ fn next_limits(
 fn run(
     compiled: &Compiled,
     inputs: Vec<(Entry, String)>,
+    files: Vec<(Entry, Vec<u8>)>,
     mut limits: RetryLimits,
     options: super::DisplayOptions,
     mut choose: impl FnMut(RetryLimits, &str, StopReason, Usage) -> Result<Option<RetryLimits>, String>,
 ) -> Result<GeneratedPages, String> {
-    let mut preparing = Preparation::new(
+    let mut preparing = Preparation::with_files(
         compiled,
         inputs,
+        files,
         limits.job_limits.budget().limits(),
         limits.preparation(),
     )?;
@@ -311,3 +311,7 @@ mod tests {
 #[cfg(all(test, not(target_family = "wasm")))]
 #[path = "interactive/selection.rs"]
 mod selection_tests;
+
+#[cfg(all(test, not(target_family = "wasm")))]
+#[path = "interactive/files.rs"]
+mod file_tests;

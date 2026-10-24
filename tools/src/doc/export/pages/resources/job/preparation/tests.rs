@@ -267,3 +267,60 @@ fn rejected_settlement_retains_typed_invariant_evidence() -> Result<(), String> 
     assert_eq!(records[0].usage.work, 2);
     Ok(())
 }
+
+#[test]
+fn passive_file_setup_bounds_metadata_count_and_combined_bytes() -> Result<(), String> {
+    let compiled = compiled()?;
+    let file = || Entry {
+        id: "file".into(),
+        source: "ref.txt".into(),
+        route: "ref.txt".into(),
+        input: None,
+    };
+    let make = |files| {
+        Preparation::with_files(
+            &compiled,
+            vec![(entry("one"), r#"article en "One" body nil"#.into())],
+            files,
+            budget().limits(),
+            PreparationLimits::default(),
+        )
+        .err()
+        .ok_or("must reject")
+    };
+    let mut huge = file();
+    huge.id = "x".repeat(65_537);
+    assert_eq!(make(vec![(huge, vec![])])?, "FileMetadataLimit");
+    assert_eq!(
+        make((0..129).map(|_| (file(), vec![])).collect())?,
+        "FileCountLimit"
+    );
+    assert_eq!(
+        make(vec![(
+            file(),
+            vec![0; crate::doc::export::MAX_SOURCE_BYTES as usize]
+        )])?,
+        "SourceLimit"
+    );
+    let mut exact = file();
+    exact.id = "x".repeat(65_536 - exact.source.len() - exact.route.len());
+    Preparation::with_files(
+        &compiled,
+        vec![(entry("one"), r#"article en "One" body nil"#.into())],
+        vec![(exact, vec![])],
+        budget().limits(),
+        PreparationLimits::default(),
+    )?;
+    let entries = (0..2)
+        .map(|_| {
+            let mut e = file();
+            e.id = "x".repeat(32_769 - e.source.len() - e.route.len());
+            (e, vec![])
+        })
+        .collect();
+    assert_eq!(make(entries)?, "FileMetadataLimit");
+    let mut invalid = file();
+    invalid.input = Some("../outside.txt".into());
+    assert_eq!(make(vec![(invalid, vec![])])?, "InvalidInputPath");
+    Ok(())
+}
