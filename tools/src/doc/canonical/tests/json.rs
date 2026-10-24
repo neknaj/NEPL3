@@ -6,6 +6,7 @@ fn passive_json_registration_has_narrow_source_and_matching_route_scope() -> Res
         "design/tasks.json",
         "design/nested/contracts.json",
         "implementation-status.json",
+        "doc/canonical.json",
         "doc/history/web-tea-import.json",
         "doc/history/source-manifest.json",
         "doc/history/design-validation.json",
@@ -17,6 +18,13 @@ fn passive_json_registration_has_narrow_source_and_matching_route_scope() -> Res
     }
     for (source, route) in [
         ("other.json", "sources/data.json"),
+        ("doc/Canonical.json", "sources/data.json"),
+        ("doc/canonical.json.bak", "sources/data.json"),
+        ("doc/nested/canonical.json", "sources/data.json"),
+        ("doc/../doc/canonical.json", "sources/data.json"),
+        ("doc/canonical.json", "sources/data.md"),
+        ("doc/canonical.json", "sources/data.html"),
+        ("doc/canonical.json", "doc/data.json"),
         ("doc/history/other.json", "sources/data.json"),
         ("doc/history/Source-manifest.json", "sources/data.json"),
         ("doc/history/source-manifest.json.bak", "sources/data.json"),
@@ -61,6 +69,7 @@ fn passive_json_registration_has_narrow_source_and_matching_route_scope() -> Res
     value["pages"][0]["route"] = value["pages"][0]["projection"].clone();
     for source in [
         "design/tasks.json",
+        "doc/canonical.json",
         "doc/history/web-tea-import.json",
         "doc/history/source-manifest.json",
         "doc/history/design-validation.json",
@@ -825,5 +834,116 @@ fn authoring_passive_source_export_is_inert_and_byte_preserving() -> Result<()> 
             .ok_or("source receipt")?;
         assert_eq!(entry["mime"], "application/octet-stream");
     }
+    Ok(())
+}
+
+#[test]
+fn active_registry_reference_preserves_snapshot_and_rejects_mixed_bytes() -> Result<()> {
+    let fixture = Fixture::new()?;
+    let mut value = registry();
+    value["pages"][0]["renderer"] = json!(projection::RENDERER);
+    value["files"] =
+        json!([{"id":"registry", "source":"doc/canonical.json", "route":"sources/canonical.json"}]);
+    let raw = serde_json::to_vec_pretty(&value)?;
+    fixture.write("doc/canonical.json", &raw)?;
+    fixture.write("doc/aliases.json", "[]")?;
+    fixture.write("doc/sample.nepld", r#"article en "Resume" body cons paragraph cons sentence cons link relative "canonical.json" none text "Registry" nil nil nil"#)?;
+    let generated = generate_html(fixture.root(), "doc/canonical.json")?;
+    assert_eq!(generated.files["sources/canonical.json"], raw);
+    assert!(
+        std::str::from_utf8(&generated.files["docs/sample.html"])?
+            .contains("href=\"../sources/canonical.json\"")
+    );
+    let projected = projection::generate(
+        fixture.root(),
+        "doc/canonical.json",
+        &mut crate::doc::source::budget(),
+    )?;
+    assert!(pulldown_cmark::Parser::new(&projected.files[0].1).any(|event| matches!(event,
+        pulldown_cmark::Event::Start(pulldown_cmark::Tag::Link { dest_url, .. }) if dest_url.as_ref() == "canonical.json")));
+    assert_eq!(projected.files.len(), 1);
+    // Even semantically equivalent JSON bytes cannot replace the admitted
+    // registry snapshot. Simulate mutation between registry and passive reads.
+    let changed = serde_json::to_vec(&value)?;
+    assert_ne!(raw, changed);
+    fixture.write("doc/canonical.json", &changed)?;
+    let error = projection::generate_from_registry(
+        fixture.root(),
+        "doc/canonical.json",
+        raw.clone(),
+        &mut crate::doc::source::budget(),
+    )
+    .err()
+    .ok_or("mixed registry unexpectedly generated output")?;
+    assert!(
+        error
+            .to_string()
+            .contains("active registry reference differs")
+    );
+    let error = projection::prepare_compatibility(
+        fixture.root(),
+        "doc/canonical.json",
+        raw,
+        &mut crate::doc::source::budget(),
+    )
+    .err()
+    .ok_or("mixed registry unexpectedly prepared compatibility output")?;
+    assert!(
+        error
+            .to_string()
+            .contains("active registry reference differs")
+    );
+    for spelling in [
+        "doc//canonical.json",
+        "doc/./canonical.json",
+        "DOC/CANONICAL.JSON",
+    ] {
+        let same = registry_reference_inputs(
+            fixture.root(),
+            parse_registry(&serde_json::to_vec(&value)?)?.files,
+            spelling,
+            &changed,
+        )?;
+        assert_eq!(same[0].1, changed);
+        let error = registry_reference_inputs(
+            fixture.root(),
+            parse_registry(&serde_json::to_vec(&value)?)?.files,
+            spelling,
+            b"old admitted registry",
+        )
+        .err()
+        .ok_or("alias bypassed snapshot guard")?;
+        assert!(
+            error
+                .to_string()
+                .contains("active registry reference differs"),
+            "{spelling}: {error}"
+        );
+    }
+    // The guard is about the active selection, not a special filename.
+    let mut other = value.clone();
+    other["files"] = json!([{"id":"registry", "source":"design/selection.json", "route":"sources/selection.json"}]);
+    fixture.write("design/selection.json", b"changed")?;
+    assert!(
+        registry_reference_inputs(
+            fixture.root(),
+            parse_registry(&serde_json::to_vec(&other)?)?.files,
+            "design/./selection.json",
+            b"admitted"
+        )
+        .is_err()
+    );
+    // With another active manifest, this exact passive source remains opaque
+    // data, rather than becoming a second registry that selects more inputs.
+    fixture.json("doc/selection.json", &value)?;
+    fixture.write(
+        "doc/canonical.json",
+        b"opaque data: missing/private.json\r\n",
+    )?;
+    let independent = generate_html(fixture.root(), "doc/selection.json")?;
+    assert_eq!(
+        independent.files["sources/canonical.json"],
+        b"opaque data: missing/private.json\r\n"
+    );
     Ok(())
 }

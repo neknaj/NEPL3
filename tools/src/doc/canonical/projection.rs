@@ -146,7 +146,7 @@ struct Captured {
     phases: PhaseLimits,
 }
 
-fn capture(root: &Path, raw: Vec<u8>) -> Result<Captured> {
+fn capture(root: &Path, manifest: &str, raw: Vec<u8>) -> Result<Captured> {
     let registry = parse_registry(&raw)?;
     let phases = registry.phases();
     let grouped = registry.pages.iter().any(|p| {
@@ -155,7 +155,7 @@ fn capture(root: &Path, raw: Vec<u8>) -> Result<Captured> {
             RENDERER | FOOTNOTES_RENDERER | COMPACT_RENDERER
         )
     });
-    let references = reference_inputs(root, registry.files)?;
+    let references = registry_reference_inputs(root, registry.files, manifest, &raw)?;
     if registry.pages.len() > 128 {
         return Err("PageCountLimit".into());
     }
@@ -436,7 +436,7 @@ pub(super) fn prepare_compatibility(
     budget: &mut Budget,
 ) -> Result<CompatibilityPrepared> {
     budget.poll().map_err(err)?;
-    compatibility_from_captured(capture(root, raw)?, manifest, budget)
+    compatibility_from_captured(capture(root, manifest, raw)?, manifest, budget)
 }
 
 fn compatibility_from_captured(
@@ -517,7 +517,7 @@ fn prepare_batch(
 ) -> Result<PreparedBatch> {
     budget.poll().map_err(err)?;
     charge(budget, Resource::Work, 1)?;
-    prepare_captured(capture(root, raw)?, manifest, budget)
+    prepare_captured(capture(root, manifest, raw)?, manifest, budget)
 }
 
 fn prepare_captured(
@@ -1037,6 +1037,30 @@ mod retained_tests {
         Ok(())
     }
     #[test]
+    fn active_registry_reference_is_frozen_after_capture() -> Result<()> {
+        let f = crate::testing::Fixture::new()?;
+        let raw = serde_json::to_vec(&serde_json::json!({
+            "version":1,
+            "pages":[{"id":"sample","source":"doc/sample.nepld","projection":"doc/sample.md","aliases":"doc/aliases.json","route":"docs/sample.html","renderer":RENDERER}],
+            "files":[{"id":"registry","source":"doc/canonical.json","route":"sources/canonical.json"}],
+            "compatibility":[{"page":"sample","route":"sources/sample.md"}]
+        }))?;
+        f.write("doc/canonical.json", &raw)?;
+        f.write("doc/sample.nepld", r#"article en "Before" body cons paragraph cons sentence cons link relative "canonical.json" none text "Registry" nil nil nil"#)?;
+        f.write("doc/aliases.json", "[]")?;
+        let captured = capture(f.root(), "doc/canonical.json", raw.clone())?;
+        f.write("doc/canonical.json", "invalid replacement")?;
+        let prepared = compatibility_from_captured(
+            captured,
+            "doc/canonical.json",
+            &mut crate::doc::source::budget(),
+        )?;
+        assert_eq!(prepared.references[0].1, raw);
+        assert!(prepared.markdown.files[0].1.contains("Before"));
+        Ok(())
+    }
+
+    #[test]
     fn compatibility_snapshot_survives_repository_mutation() -> Result<()> {
         let f = crate::testing::Fixture::new()?;
         let raw = serde_json::to_vec(
@@ -1048,7 +1072,7 @@ mod retained_tests {
         )?;
         f.write("doc/aliases.json", "[]")?;
         f.write("doc/guide.md", "Frozen passive")?;
-        let captured = capture(f.root(), raw)?;
+        let captured = capture(f.root(), "doc/canonical.json", raw)?;
         f.write("doc/guide.md", "Changed passive")?;
         f.write("doc/sample.nepld", "invalid replacement")?;
         f.write("doc/aliases.json", "invalid replacement")?;

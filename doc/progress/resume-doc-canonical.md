@@ -1,202 +1,115 @@
-# Doc移行の再開入口と過去のcheckpoint
+<!-- Generated from doc/progress/resume&#45;doc&#45;canonical.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page resume&#45;doc&#45;canonical; source SHA-256 6b9e76fca2e49f6f0a2f46f6f839ef40ba1f55a40ac21fc5657266e244b363bb; alias input SHA-256 b7b37f62acf6cc35a01b05054511e1891d76958f197cdcd7529207dc9e61affa; page input SHA-256 cc149cfdbba16bffb665cc8713dd8c8cb97a3f0438fe8349ad340496a4fbd3ed. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
-現在の編集先は [canonical registry](../canonical.json)、実装・受入状態は [implementation-status.json](../../implementation-status.json)、成果物と依存関係は [タスク定義](../../design/tasks.json) を確認する。今回のユーザー指示と現在のbranch・未統合PRを照合して再開する。以下の過去の次作業を、そのまま現在の指示として実行しない。
+<a name="doc移行の再開入口と過去のcheckpoint"></a>
 
-以下は当時の検証・失敗・再開判断の記録であり、履歴として保持する。数値、予算、PR状態は各記録時点のもの。未解決事項の現在の扱いは上記正本へ戻って確認する。
+# Doc<ruby>移行<rt>いこう</rt></ruby>の<ruby>再開<rt>さいかい</rt></ruby><ruby>入口<rt>いりぐち</rt></ruby>と<ruby>過去<rt>かこ</rt></ruby>のcheckpoint
 
-## 2026年9月12日の静的サイト生成（履歴）
+[正本（NEPL3d）](<resume-doc-canonical.nepld>)
 
-本文中の `conformance/results/` は記録当時のpathである。固定revisionと取得手順は[履歴索引](../../conformance/history.md)を参照する。
+<ruby>現在<rt>げんざい</rt></ruby>の<ruby>編集先<rt>へんしゅうさき</rt></ruby>は [canonical registry](<\.\.\/canonical\.json>)、<ruby>実装<rt>じっそう</rt></ruby>・<ruby>受入状態<rt>うけいれじょうたい</rt></ruby>は [implementation\-status\.json](<\.\.\/\.\.\/implementation\-status\.json>)、<ruby>成果物<rt>せいかぶつ</rt></ruby>と<ruby>依存関係<rt>いぞんかんけい</rt></ruby>は [タスク<ruby>定義<rt>ていぎ</rt></ruby>](<\.\.\/\.\.\/design\/tasks\.json>) を<ruby>確認<rt>かくにん</rt></ruby>する。<ruby>今回<rt>こんかい</rt></ruby>のユーザー<ruby>指示<rt>しじ</rt></ruby>と<ruby>現在<rt>げんざい</rt></ruby>のbranch・<ruby>未統合<rt>みとうごう</rt></ruby>PRを<ruby>照合<rt>しょうごう</rt></ruby>して<ruby>再開<rt>さいかい</rt></ruby>する。<ruby>以下<rt>いか</rt></ruby>の<ruby>過去<rt>かこ</rt></ruby>の<ruby>次作業<rt>つぎさぎょう</rt></ruby>を、そのまま<ruby>現在<rt>げんざい</rt></ruby>の<ruby>指示<rt>しじ</rt></ruby>として<ruby>実行<rt>じっこう</rt></ruby>しない。
 
-第06章はPR #103、第02章はPR #104で、独立レビューと必須CIを確認して統合済み。
-mainは14章をnepld正本として管理する。文単位parallelを維持する文書CSSと、
-登録済みDocから索引付きdocs-onlyサイトを組み立てる実装をPR #105で進めている。
-入力2390e31の生成は22ファイル、1,151,754 bytes。同じ設定の再生成はbyte一致し、
-別baseでは索引とmanifestのみが変わる。最終検査器で両base計192ブラウザcaseが成功。
-workspace試験576成功・既存ignored 1、repository検査・Clippy・formatが成功した。
-独立した実装・表示・CIレビューと修正は `conformance/results/doc-site-build/` に保存。
-WebKitのTab操作と既存の狭幅table overflow、公開HTTPS・復旧は未達範囲として残る。
-T19はin-progressであり、全体完了やPages配信の成功を示すものではない。
-次は最終HEADのCIを確認し、配信経路・未移行文書/例/API文書の統合へ進む。
+<ruby>以下<rt>いか</rt></ruby>は<ruby>当時<rt>とうじ</rt></ruby>の<ruby>検証<rt>けんしょう</rt></ruby>・<ruby>失敗<rt>しっぱい</rt></ruby>・<ruby>再開判断<rt>さいかいはんだん</rt></ruby>の<ruby>記録<rt>きろく</rt></ruby>であり、<ruby>履歴<rt>りれき</rt></ruby>として<ruby>保持<rt>ほじ</rt></ruby>する。<ruby>数値<rt>すうち</rt></ruby>、<ruby>予算<rt>よさん</rt></ruby>、PR<ruby>状態<rt>じょうたい</rt></ruby>は<ruby>各記録時点<rt>かくきろくじてん</rt></ruby>のもの。<ruby>未解決事項<rt>みかいけつじこう</rt></ruby>の<ruby>現在<rt>げんざい</rt></ruby>の<ruby>扱<rt>あつか</rt></ruby>いは<ruby>上記<rt>じょうき</rt></ruby><ruby>正本<rt>せいほん</rt></ruby>へ<ruby>戻<rt>もど</rt></ruby>って<ruby>確認<rt>かくにん</rt></ruby>する。
 
-## 第02章統合前のcheckpoint
+<a name="n-736974655f686973746f7279"></a>
 
-第02章を含む14章集合は選択した予算内で2回生成に成功し、Markdown15・HTML16ファイルが
-すべてbyte一致した。既存13章HTML/CSSとMarkdown本文を保ち、第02章とcontext headerを採用。
-全projection照合、対象canonical14試験、Clippy・repository検査、独立した原稿・表示・archive
-レビューを完了した。証拠は `conformance/results/doc-canonical-foundation/`。HTML16ファイルの
-compiler不要復元とmanifest15件を照合済み。第06章/第02章の最終CI・統合はまだ完了していない。
-以下の失敗は修正前の記録として保持し、成功した後の証拠と区別する。
+<a name="2026年9月12日の静的サイト生成履歴"></a>
 
-第02章のallocation増加後のHTML再実行はWorkLimit（499,999,997 / 500,000,000）で停止。
-Nodes19,497,622、Allocation1,032,057,020、Output480であり、出力dirは生成されていない。
-次の新規操作ではHTML Work600M・Nodes24M・Allocation1.25Bを選択する。Nodesの変更は
-集合拡大に対する有限の余裕であり、NodeLimitが発生したという記録ではない。両停止の
-証拠を残し、Markdown/core/per-pageの予算は維持する。第06章のCIで検出した文書監査testの
-Ruby非対応は独立レビュー・不正例試験で修正し、PR103の必須CIを再実行している。
+## 2026<ruby>年<rt>ねん</rt></ruby>9<ruby>月<rt>がつ</rt></ruby>12<ruby>日<rt>にち</rt></ruby>の<ruby>静的<rt>せいてき</rt></ruby>サイト<ruby>生成<rt>せいせい</rt></ruby>（<ruby>履歴<rt>りれき</rt></ruby>）
 
-第02章を追加した14章集合ではMarkdownの初回生成は成功したが、HTMLは
-AllocationLimit（999,999,997 / 1,000,000,000）で停止した。Work427,925,810、
-Nodes18,233,447、Output384は停止時点の使用量であり、完成HTMLの費用ではない。
-停止runは保存し、HTML集合のallocationだけ1,250,000,000へ変更して新規操作で再検証する。
-Work500M・Nodes20M・Markdownとcore/per-pageの既定値は変更しない。この値は
-14章集合の累積論理allocationに対する有限のhost許容量であり、物理heapの最小値ではない。
+<ruby>本文中<rt>ほんぶんちゅう</rt></ruby>の `conformance/results/` は<ruby>記録当時<rt>きろくとうじ</rt></ruby>のpathである。<ruby>固定<rt>こてい</rt></ruby>revisionと<ruby>取得手順<rt>しゅとくてじゅん</rt></ruby>は[<ruby>履歴索引<rt>りれきさくいん</rt></ruby>](<\.\.\/\.\.\/conformance\/history\.md>)を<ruby>参照<rt>さんしょう</rt></ruby>する。
 
-PR102は必須CI16件の成功と独立レビュー後、`672949b98f66829eb1b5737f6f92c425f2936c71`
-へ統合した。正式Doc正本は12章である。次の第06章はbranchで13章集合を同じ有限予算で
-各2回生成し、Markdown14ファイル・HTML15ファイルのbyte一致、既存12章HTML/CSSの不変、
-生成Markdown照合・独立レビュー・3ブラウザ表示を確認した。証拠は
-`conformance/results/doc-canonical-math/`。第06章の最終CIとmain統合はまだ行っていない。
-第09章は参照先の実装記録とそのJSON資料の準備が必要なため、リンクを省かず保留する。
+<ruby>第<rt>だい</rt></ruby>06<ruby>章<rt>しょう</rt></ruby>はPR \#103、<ruby>第<rt>だい</rt></ruby>02<ruby>章<rt>しょう</rt></ruby>はPR \#104で、<ruby>独立<rt>どくりつ</rt></ruby>レビューと<ruby>必須<rt>ひっす</rt></ruby>CIを<ruby>確認<rt>かくにん</rt></ruby>して<ruby>統合済<rt>とうごうず</rt></ruby>み。mainは14<ruby>章<rt>しょう</rt></ruby>をnepld<ruby>正本<rt>せいほん</rt></ruby>として<ruby>管理<rt>かんり</rt></ruby>する。<ruby>文単位<rt>ぶんたんい</rt></ruby>parallelを<ruby>維持<rt>いじ</rt></ruby>する<ruby>文書<rt>ぶんしょ</rt></ruby>CSSと、<ruby>登録済<rt>とうろくず</rt></ruby>みDocから<ruby>索引付<rt>さくいんつ</rt></ruby>きdocs\-onlyサイトを<ruby>組<rt>く</rt></ruby>み<ruby>立<rt>た</rt></ruby>てる<ruby>実装<rt>じっそう</rt></ruby>をPR \#105で<ruby>進<rt>すす</rt></ruby>めている。<ruby>入力<rt>にゅうりょく</rt></ruby>2390e31の<ruby>生成<rt>せいせい</rt></ruby>は22ファイル、1\,151\,754 bytes。<ruby>同<rt>おな</rt></ruby>じ<ruby>設定<rt>せってい</rt></ruby>の<ruby>再生成<rt>さいせいせい</rt></ruby>はbyte<ruby>一致<rt>いっち</rt></ruby>し、<ruby>別<rt>べつ</rt></ruby>baseでは<ruby>索引<rt>さくいん</rt></ruby>とmanifestのみが<ruby>変<rt>か</rt></ruby>わる。<ruby>最終検査器<rt>さいしゅうけんさき</rt></ruby>で<ruby>両<rt>りょう</rt></ruby>base<ruby>計<rt>けい</rt></ruby>192ブラウザcaseが<ruby>成功<rt>せいこう</rt></ruby>。workspace<ruby>試験<rt>しけん</rt></ruby>576<ruby>成功<rt>せいこう</rt></ruby>・<ruby>既存<rt>きそん</rt></ruby>ignored 1、repository<ruby>検査<rt>けんさ</rt></ruby>・Clippy・formatが<ruby>成功<rt>せいこう</rt></ruby>した。<ruby>独立<rt>どくりつ</rt></ruby>した<ruby>実装<rt>じっそう</rt></ruby>・<ruby>表示<rt>ひょうじ</rt></ruby>・CIレビューと<ruby>修正<rt>しゅうせい</rt></ruby>は `conformance/results/doc-site-build/` に<ruby>保存<rt>ほぞん</rt></ruby>。WebKitのTab<ruby>操作<rt>そうさ</rt></ruby>と<ruby>既存<rt>きそん</rt></ruby>の<ruby>狭幅<rt>きょうふく</rt></ruby>table overflow、<ruby>公開<rt>こうかい</rt></ruby>HTTPS・<ruby>復旧<rt>ふっきゅう</rt></ruby>は<ruby>未達範囲<rt>みたつはんい</rt></ruby>として<ruby>残<rt>のこ</rt></ruby>る。T19はin\-progressであり、<ruby>全体完了<rt>ぜんたいかんりょう</rt></ruby>やPages<ruby>配信<rt>はいしん</rt></ruby>の<ruby>成功<rt>せいこう</rt></ruby>を<ruby>示<rt>しめ</rt></ruby>すものではない。<ruby>次<rt>つぎ</rt></ruby>は<ruby>最終<rt>さいしゅう</rt></ruby>HEADのCIを<ruby>確認<rt>かくにん</rt></ruby>し、<ruby>配信経路<rt>はいしんけいろ</rt></ruby>・<ruby>未移行<rt>みいこう</rt></ruby><ruby>文書<rt>ぶんしょ</rt></ruby>\/<ruby>例<rt>れい</rt></ruby>\/API<ruby>文書<rt>ぶんしょ</rt></ruby>の<ruby>統合<rt>とうごう</rt></ruby>へ<ruby>進<rt>すす</rt></ruby>む。
 
-第11章の正本切替をbranch上で検証した。全12章のMarkdown/HTMLを各2回生成し、
-集合全体のbyte一致と既存11章HTML/CSSの不変を確認した。生成Markdownを読む受入ID
-checkerの修正、非表示HTML継続行の失敗系、13件のtask試験、14件の対象canonical試験、
-全12章のprojection照合、Clippy・repository check、独立レビューを完了した。
-3ブラウザのJS無効表示・旧URLも検査済み。証拠は
-`conformance/results/doc-canonical-conformance/`。最終PRの必須CIと統合はこの記録時点で未完了。
-次は第09章の既存Doc原稿を現行仕様と照合し、準備が整った章から正本へ切り替える。
-完了したworktreeは未保存変更・参照中の資料を保全したうえで撤去し、不要なbuild cacheを残さない。
+<a name="n-666f756e646174696f6e5f636865636b706f696e74"></a>
 
-以下は各停止・訂正時点の経緯であり、現在の未解決状態を表すものではない。
+<a name="第02章統合前のcheckpoint"></a>
 
-PR101は必須CI16件と独立レビュー後にmainへ統合した。正本は第17章を含む11章となった。
-次の第11章を含む12ページ集合は、Markdown生成がNodeLimitで停止し、成果物を公開していない。
-第11章の36,465byteを加える集合生成には、Markdown Work1B/Nodes40M/Allocation2.5B、
-HTML Work500Mの有限予算を新たに選択する。旧NodeLimitの記録は保持し、他資源も含めた
-新規操作の実測と再生成一致を検査する。これは集合の規模に応じたhost側許容量であり、
-core・各ページの既定値や最小予算の変更ではない。全群の必須条件は解除しない。
-独立レビューの指摘により、第11章の小幅の読み2箇所を「こはば」へ訂正した。
-12ページの両形式は2回のbyte一致まで確認したが、採用前レビューでcheckerのraw行依存と
-変更されない見出しの余分なaliasを検出した。受入IDはMarkdownの構造を読み、生成された
-箇条書きのescape済みprefixにも対応させる。引用・code等を定義と誤認しない回帰試験と
-重複拒否を維持し、`properties` は既存の自動見出しURLを使って追加aliasの重複を避ける。
-訂正した入力・コードで改めて生成し、正本切替の検査を継続する。
+## <ruby>第<rt>だい</rt></ruby>02<ruby>章<rt>しょう</rt></ruby><ruby>統合前<rt>とうごうまえ</rt></ruby>のcheckpoint
 
-第17章を先に移行し、第11章から参照できる正本を用意する。
-第17章を加えた11ページ集合の初回HTML生成は、serialize中に
-`AllocationLimit`（使用量749,999,977、上限750,000,000）で停止した。
-出力ディレクトリは作成されず、Markdownの初回生成だけが成功した。
-これはHTML成功・正本切替の証拠ではない。
-拡大した文書集合のHTML生成用allocation上限を1,000,000,000へ変更し、
-別の生成操作として再検証する。Work400M・Nodes20M・その他のHTML資源、
-Markdown予算、core・各ページの既定値は維持する。
-この値は累積する論理allocationの許容量であり、実メモリ量や最小予算を示さない。
-停止の記録は残し、再生成・意味同等性・リンク・表示の検証後にprojectionを採用する。
+<ruby>第<rt>だい</rt></ruby>02<ruby>章<rt>しょう</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>む14<ruby>章集合<rt>しょうしゅうごう</rt></ruby>は<ruby>選択<rt>せんたく</rt></ruby>した<ruby>予算内<rt>よさんない</rt></ruby>で2<ruby>回生成<rt>かいせいせい</rt></ruby>に<ruby>成功<rt>せいこう</rt></ruby>し、Markdown15・HTML16ファイルがすべてbyte<ruby>一致<rt>いっち</rt></ruby>した。<ruby>既存<rt>きそん</rt></ruby>13<ruby>章<rt>しょう</rt></ruby>HTML\/CSSとMarkdown<ruby>本文<rt>ほんぶん</rt></ruby>を<ruby>保<rt>たも</rt></ruby>ち、<ruby>第<rt>だい</rt></ruby>02<ruby>章<rt>しょう</rt></ruby>とcontext headerを<ruby>採用<rt>さいよう</rt></ruby>。<ruby>全<rt>ぜん</rt></ruby>projection<ruby>照合<rt>しょうごう</rt></ruby>、<ruby>対象<rt>たいしょう</rt></ruby>canonical14<ruby>試験<rt>しけん</rt></ruby>、Clippy・repository<ruby>検査<rt>けんさ</rt></ruby>、<ruby>独立<rt>どくりつ</rt></ruby>した<ruby>原稿<rt>げんこう</rt></ruby>・<ruby>表示<rt>ひょうじ</rt></ruby>・archiveレビューを<ruby>完了<rt>かんりょう</rt></ruby>した。<ruby>証拠<rt>しょうこ</rt></ruby>は `conformance/results/doc-canonical-foundation/`。HTML16ファイルのcompiler<ruby>不要復元<rt>ふようふくげん</rt></ruby>とmanifest15<ruby>件<rt>けん</rt></ruby>を<ruby>照合済<rt>しょうごうず</rt></ruby>み。<ruby>第<rt>だい</rt></ruby>06<ruby>章<rt>しょう</rt></ruby>\/<ruby>第<rt>だい</rt></ruby>02<ruby>章<rt>しょう</rt></ruby>の<ruby>最終<rt>さいしゅう</rt></ruby>CI・<ruby>統合<rt>とうごう</rt></ruby>はまだ<ruby>完了<rt>かんりょう</rt></ruby>していない。<ruby>以下<rt>いか</rt></ruby>の<ruby>失敗<rt>しっぱい</rt></ruby>は<ruby>修正前<rt>しゅうせいまえ</rt></ruby>の<ruby>記録<rt>きろく</rt></ruby>として<ruby>保持<rt>ほじ</rt></ruby>し、<ruby>成功<rt>せいこう</rt></ruby>した<ruby>後<rt>あと</rt></ruby>の<ruby>証拠<rt>しょうこ</rt></ruby>と<ruby>区別<rt>くべつ</rt></ruby>する。
 
-新しい選択でMarkdown12ファイル・HTML13ファイルを各2回生成し、全byte一致を確認した。
-HTMLの成功使用量はWork362,735,172・Allocation762,304,126・Nodes13,880,291である。
-第17章と第01/12章のcontext headerを採用し、既存10文書のHTMLとCSSはbyte一致した。
-第17章の21 code値・2表の3行/8行・参照先は独立に原文と照合した。
-生成Markdownの再検査・独立した最終レビュー・必須CIを継続する。
-全体の移行・KaTeX実装・Pages公開が完了したという記録ではない。
+<ruby>第<rt>だい</rt></ruby>02<ruby>章<rt>しょう</rt></ruby>のallocation<ruby>増加後<rt>ぞうかご</rt></ruby>のHTML<ruby>再実行<rt>さいじっこう</rt></ruby>はWorkLimit（499\,999\,997 \/ 500\,000\,000）で<ruby>停止<rt>ていし</rt></ruby>。Nodes19\,497\,622、Allocation1\,032\,057\,020、Output480であり、<ruby>出力<rt>しゅつりょく</rt></ruby>dirは<ruby>生成<rt>せいせい</rt></ruby>されていない。<ruby>次<rt>つぎ</rt></ruby>の<ruby>新規操作<rt>しんきそうさ</rt></ruby>ではHTML Work600M・Nodes24M・Allocation1\.25Bを<ruby>選択<rt>せんたく</rt></ruby>する。Nodesの<ruby>変更<rt>へんこう</rt></ruby>は<ruby>集合拡大<rt>しゅうごうかくだい</rt></ruby>に<ruby>対<rt>たい</rt></ruby>する<ruby>有限<rt>ゆうげん</rt></ruby>の<ruby>余裕<rt>よゆう</rt></ruby>であり、NodeLimitが<ruby>発生<rt>はっせい</rt></ruby>したという<ruby>記録<rt>きろく</rt></ruby>ではない。<ruby>両停止<rt>りょうていし</rt></ruby>の<ruby>証拠<rt>しょうこ</rt></ruby>を<ruby>残<rt>のこ</rt></ruby>し、Markdown\/core\/per\-pageの<ruby>予算<rt>よさん</rt></ruby>は<ruby>維持<rt>いじ</rt></ruby>する。<ruby>第<rt>だい</rt></ruby>06<ruby>章<rt>しょう</rt></ruby>のCIで<ruby>検出<rt>けんしゅつ</rt></ruby>した<ruby>文書監査<rt>ぶんしょかんさ</rt></ruby>testのRuby<ruby>非対応<rt>ひたいおう</rt></ruby>は<ruby>独立<rt>どくりつ</rt></ruby>レビュー・<ruby>不正例試験<rt>ふせいれいしけん</rt></ruby>で<ruby>修正<rt>しゅうせい</rt></ruby>し、PR103の<ruby>必須<rt>ひっす</rt></ruby>CIを<ruby>再実行<rt>さいじっこう</rt></ruby>している。
 
-ユーザーの休止終了・自律続行指示により開発を再開した。
-PR99は必須CI16件の成功後、mainの `994526e04c5d711aca06d6eefe6b11f3f175bcba`
-へmerge済み。以下の休止記録は当時の状態を保存したものである。
-次は第11章等の移行を妨げるMarkdown projectionの隣接List境界を実装し、
-Relative linkの解決と合わせて文書移行を進める。未保存の別worktreeは保全する。
+<ruby>第<rt>だい</rt></ruby>02<ruby>章<rt>しょう</rt></ruby>を<ruby>追加<rt>ついか</rt></ruby>した14<ruby>章集合<rt>しょうしゅうごう</rt></ruby>ではMarkdownの<ruby>初回生成<rt>しょかいせいせい</rt></ruby>は<ruby>成功<rt>せいこう</rt></ruby>したが、HTMLはAllocationLimit（999\,999\,997 \/ 1\,000\,000\,000）で<ruby>停止<rt>ていし</rt></ruby>した。Work427\,925\,810、Nodes18\,233\,447、Output384は<ruby>停止時点<rt>ていしじてん</rt></ruby>の<ruby>使用量<rt>しようりょう</rt></ruby>であり、<ruby>完成<rt>かんせい</rt></ruby>HTMLの<ruby>費用<rt>ひよう</rt></ruby>ではない。<ruby>停止<rt>ていし</rt></ruby>runは<ruby>保存<rt>ほぞん</rt></ruby>し、HTML<ruby>集合<rt>しゅうごう</rt></ruby>のallocationだけ1\,250\,000\,000へ<ruby>変更<rt>へんこう</rt></ruby>して<ruby>新規操作<rt>しんきそうさ</rt></ruby>で<ruby>再検証<rt>さいけんしょう</rt></ruby>する。Work500M・Nodes20M・Markdownとcore\/per\-pageの<ruby>既定値<rt>きていち</rt></ruby>は<ruby>変更<rt>へんこう</rt></ruby>しない。この<ruby>値<rt>あたい</rt></ruby>は14<ruby>章集合<rt>しょうしゅうごう</rt></ruby>の<ruby>累積論理<rt>るいせきろんり</rt></ruby>allocationに<ruby>対<rt>たい</rt></ruby>する<ruby>有限<rt>ゆうげん</rt></ruby>のhost<ruby>許容量<rt>きょようりょう</rt></ruby>であり、<ruby>物理<rt>ぶつり</rt></ruby>heapの<ruby>最小値<rt>さいしょうち</rt></ruby>ではない。
 
-## 2026年9月12日の休止準備（履歴）
+PR102は<ruby>必須<rt>ひっす</rt></ruby>CI16<ruby>件<rt>けん</rt></ruby>の<ruby>成功<rt>せいこう</rt></ruby>と<ruby>独立<rt>どくりつ</rt></ruby>レビュー<ruby>後<rt>ご</rt></ruby>、`672949b98f66829eb1b5737f6f92c425f2936c71`へ<ruby>統合<rt>とうごう</rt></ruby>した。<ruby>正式<rt>せいしき</rt></ruby>Doc<ruby>正本<rt>せいほん</rt></ruby>は12<ruby>章<rt>しょう</rt></ruby>である。<ruby>次<rt>つぎ</rt></ruby>の<ruby>第<rt>だい</rt></ruby>06<ruby>章<rt>しょう</rt></ruby>はbranchで13<ruby>章集合<rt>しょうしゅうごう</rt></ruby>を<ruby>同<rt>おな</rt></ruby>じ<ruby>有限予算<rt>ゆうげんよさん</rt></ruby>で<ruby>各<rt>かく</rt></ruby>2<ruby>回生成<rt>かいせいせい</rt></ruby>し、Markdown14ファイル・HTML15ファイルのbyte<ruby>一致<rt>いっち</rt></ruby>、<ruby>既存<rt>きそん</rt></ruby>12<ruby>章<rt>しょう</rt></ruby>HTML\/CSSの<ruby>不変<rt>ふへん</rt></ruby>、<ruby>生成<rt>せいせい</rt></ruby>Markdown<ruby>照合<rt>しょうごう</rt></ruby>・<ruby>独立<rt>どくりつ</rt></ruby>レビュー・3ブラウザ<ruby>表示<rt>ひょうじ</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>した。<ruby>証拠<rt>しょうこ</rt></ruby>は `conformance/results/doc-canonical-math/`。<ruby>第<rt>だい</rt></ruby>06<ruby>章<rt>しょう</rt></ruby>の<ruby>最終<rt>さいしゅう</rt></ruby>CIとmain<ruby>統合<rt>とうごう</rt></ruby>はまだ<ruby>行<rt>おこな</rt></ruby>っていない。<ruby>第<rt>だい</rt></ruby>09<ruby>章<rt>しょう</rt></ruby>は<ruby>参照先<rt>さんしょうさき</rt></ruby>の<ruby>実装記録<rt>じっそうきろく</rt></ruby>とそのJSON<ruby>資料<rt>しりょう</rt></ruby>の<ruby>準備<rt>じゅんび</rt></ruby>が<ruby>必要<rt>ひつよう</rt></ruby>なため、リンクを<ruby>省<rt>はぶ</rt></ruby>かず<ruby>保留<rt>ほりゅう</rt></ruby>する。
 
-ユーザー指示により、第20章の正本切替を区切りに休止する。
-PR99の対象実装は `f459596e87dfe28b24954cfad82472626033ea91`。
-第20章を含む10章の生成物を採用し、ローカルの14 canonical試験、
-canonical --check、format、Clippy、repository検査は成功した。
-独立した全文・生成物レビュー、JS無効の3ブラウザ表示とGitHubの5 anchor、
-compiler不要の12ファイル復元も確認済み。証拠は
-`conformance/results/doc-canonical-doc-html/` にまとめる。
-exact-headの必須CIと最終監査に合格してからmergeする。
+<ruby>第<rt>だい</rt></ruby>11<ruby>章<rt>しょう</rt></ruby>の<ruby>正本切替<rt>せいほんきりかえ</rt></ruby>をbranch<ruby>上<rt>じょう</rt></ruby>で<ruby>検証<rt>けんしょう</rt></ruby>した。<ruby>全<rt>ぜん</rt></ruby>12<ruby>章<rt>しょう</rt></ruby>のMarkdown\/HTMLを<ruby>各<rt>かく</rt></ruby>2<ruby>回生成<rt>かいせいせい</rt></ruby>し、<ruby>集合全体<rt>しゅうごうぜんたい</rt></ruby>のbyte<ruby>一致<rt>いっち</rt></ruby>と<ruby>既存<rt>きそん</rt></ruby>11<ruby>章<rt>しょう</rt></ruby>HTML\/CSSの<ruby>不変<rt>ふへん</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>した。<ruby>生成<rt>せいせい</rt></ruby>Markdownを<ruby>読<rt>よ</rt></ruby>む<ruby>受入<rt>うけいれ</rt></ruby>ID checkerの<ruby>修正<rt>しゅうせい</rt></ruby>、<ruby>非表示<rt>ひひょうじ</rt></ruby>HTML<ruby>継続行<rt>けいぞくぎょう</rt></ruby>の<ruby>失敗系<rt>しっぱいけい</rt></ruby>、13<ruby>件<rt>けん</rt></ruby>のtask<ruby>試験<rt>しけん</rt></ruby>、14<ruby>件<rt>けん</rt></ruby>の<ruby>対象<rt>たいしょう</rt></ruby>canonical<ruby>試験<rt>しけん</rt></ruby>、<ruby>全<rt>ぜん</rt></ruby>12<ruby>章<rt>しょう</rt></ruby>のprojection<ruby>照合<rt>しょうごう</rt></ruby>、Clippy・repository check、<ruby>独立<rt>どくりつ</rt></ruby>レビューを<ruby>完了<rt>かんりょう</rt></ruby>した。3ブラウザのJS<ruby>無効表示<rt>むこうひょうじ</rt></ruby>・<ruby>旧<rt>きゅう</rt></ruby>URLも<ruby>検査済<rt>けんさず</rt></ruby>み。<ruby>証拠<rt>しょうこ</rt></ruby>は `conformance/results/doc-canonical-conformance/`。<ruby>最終<rt>さいしゅう</rt></ruby>PRの<ruby>必須<rt>ひっす</rt></ruby>CIと<ruby>統合<rt>とうごう</rt></ruby>はこの<ruby>記録時点<rt>きろくじてん</rt></ruby>で<ruby>未完了<rt>みかんりょう</rt></ruby>。<ruby>次<rt>つぎ</rt></ruby>は<ruby>第<rt>だい</rt></ruby>09<ruby>章<rt>しょう</rt></ruby>の<ruby>既存<rt>きそん</rt></ruby>Doc<ruby>原稿<rt>げんこう</rt></ruby>を<ruby>現行仕様<rt>げんこうしよう</rt></ruby>と<ruby>照合<rt>しょうごう</rt></ruby>し、<ruby>準備<rt>じゅんび</rt></ruby>が<ruby>整<rt>ととの</rt></ruby>った<ruby>章<rt>しょう</rt></ruby>から<ruby>正本<rt>せいほん</rt></ruby>へ<ruby>切<rt>き</rt></ruby>り<ruby>替<rt>か</rt></ruby>える。<ruby>完了<rt>かんりょう</rt></ruby>したworktreeは<ruby>未保存変更<rt>みほぞんへんこう</rt></ruby>・<ruby>参照中<rt>さんしょうちゅう</rt></ruby>の<ruby>資料<rt>しりょう</rt></ruby>を<ruby>保全<rt>ほぜん</rt></ruby>したうえで<ruby>撤去<rt>てっきょ</rt></ruby>し、<ruby>不要<rt>ふよう</rt></ruby>なbuild cacheを<ruby>残<rt>のこ</rt></ruby>さない。
 
-以下の9月9日の「未完了・merge禁止」は当時の記録であり、現在の状態への指示ではない。
-当時の停止や誤ったbinary流用を成功記録へ変更しない。
-T21/T16・Playground・Pages公開・処理系全体の完成は宣言しない。
+<ruby>以下<rt>いか</rt></ruby>は<ruby>各停止<rt>かくていし</rt></ruby>・<ruby>訂正時点<rt>ていせいじてん</rt></ruby>の<ruby>経緯<rt>けいい</rt></ruby>であり、<ruby>現在<rt>げんざい</rt></ruby>の<ruby>未解決状態<rt>みかいけつじょうたい</rt></ruby>を<ruby>表<rt>あらわ</rt></ruby>すものではない。
 
-再開時は最新mainと `doc/canonical.json` を確認し、未移行稿を
-`doc/authoring.md` に従って独立レビュー・実生成・リンク検証後にページ単位で切り替える。
-第11章はRelative linkだけでなく隣接Listの表現も確認する必要がある。
-巨大なreview文書のWorkLimitとsource検査費用は未解決であり、単に上限を増やして
-全体成功としない。Pages公開も未完了である。
+PR101は<ruby>必須<rt>ひっす</rt></ruby>CI16<ruby>件<rt>けん</rt></ruby>と<ruby>独立<rt>どくりつ</rt></ruby>レビュー<ruby>後<rt>ご</rt></ruby>にmainへ<ruby>統合<rt>とうごう</rt></ruby>した。<ruby>正本<rt>せいほん</rt></ruby>は<ruby>第<rt>だい</rt></ruby>17<ruby>章<rt>しょう</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>む11<ruby>章<rt>しょう</rt></ruby>となった。<ruby>次<rt>つぎ</rt></ruby>の<ruby>第<rt>だい</rt></ruby>11<ruby>章<rt>しょう</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>む12ページ<ruby>集合<rt>しゅうごう</rt></ruby>は、Markdown<ruby>生成<rt>せいせい</rt></ruby>がNodeLimitで<ruby>停止<rt>ていし</rt></ruby>し、<ruby>成果物<rt>せいかぶつ</rt></ruby>を<ruby>公開<rt>こうかい</rt></ruby>していない。<ruby>第<rt>だい</rt></ruby>11<ruby>章<rt>しょう</rt></ruby>の36\,465byteを<ruby>加<rt>くわ</rt></ruby>える<ruby>集合生成<rt>しゅうごうせいせい</rt></ruby>には、Markdown Work1B\/Nodes40M\/Allocation2\.5B、HTML Work500Mの<ruby>有限予算<rt>ゆうげんよさん</rt></ruby>を<ruby>新<rt>あら</rt></ruby>たに<ruby>選択<rt>せんたく</rt></ruby>する。<ruby>旧<rt>きゅう</rt></ruby>NodeLimitの<ruby>記録<rt>きろく</rt></ruby>は<ruby>保持<rt>ほじ</rt></ruby>し、<ruby>他資源<rt>たしげん</rt></ruby>も<ruby>含<rt>ふく</rt></ruby>めた<ruby>新規操作<rt>しんきそうさ</rt></ruby>の<ruby>実測<rt>じっそく</rt></ruby>と<ruby>再生成一致<rt>さいせいせいいっち</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。これは<ruby>集合<rt>しゅうごう</rt></ruby>の<ruby>規模<rt>きぼ</rt></ruby>に<ruby>応<rt>おう</rt></ruby>じたhost<ruby>側<rt>がわ</rt></ruby><ruby>許容量<rt>きょようりょう</rt></ruby>であり、core・<ruby>各<rt>かく</rt></ruby>ページの<ruby>既定値<rt>きていち</rt></ruby>や<ruby>最小予算<rt>さいしょうよさん</rt></ruby>の<ruby>変更<rt>へんこう</rt></ruby>ではない。<ruby>全群<rt>ぜんぐん</rt></ruby>の<ruby>必須条件<rt>ひっすじょうけん</rt></ruby>は<ruby>解除<rt>かいじょ</rt></ruby>しない。<ruby>独立<rt>どくりつ</rt></ruby>レビューの<ruby>指摘<rt>してき</rt></ruby>により、<ruby>第<rt>だい</rt></ruby>11<ruby>章<rt>しょう</rt></ruby>の<ruby>小幅<rt>こはば</rt></ruby>の<ruby>読<rt>よ</rt></ruby>み2<ruby>箇所<rt>かしょ</rt></ruby>を「こはば」へ<ruby>訂正<rt>ていせい</rt></ruby>した。12ページの<ruby>両形式<rt>りょうけいしき</rt></ruby>は2<ruby>回<rt>かい</rt></ruby>のbyte<ruby>一致<rt>いっち</rt></ruby>まで<ruby>確認<rt>かくにん</rt></ruby>したが、<ruby>採用前<rt>さいようまえ</rt></ruby>レビューでcheckerのraw<ruby>行依存<rt>ぎょういぞん</rt></ruby>と<ruby>変更<rt>へんこう</rt></ruby>されない<ruby>見出<rt>みだ</rt></ruby>しの<ruby>余分<rt>よぶん</rt></ruby>なaliasを<ruby>検出<rt>けんしゅつ</rt></ruby>した。<ruby>受入<rt>うけいれ</rt></ruby>IDはMarkdownの<ruby>構造<rt>こうぞう</rt></ruby>を<ruby>読<rt>よ</rt></ruby>み、<ruby>生成<rt>せいせい</rt></ruby>された<ruby>箇条書<rt>かじょうが</rt></ruby>きのescape<ruby>済<rt>ず</rt></ruby>みprefixにも<ruby>対応<rt>たいおう</rt></ruby>させる。<ruby>引用<rt>いんよう</rt></ruby>・code<ruby>等<rt>とう</rt></ruby>を<ruby>定義<rt>ていぎ</rt></ruby>と<ruby>誤認<rt>ごにん</rt></ruby>しない<ruby>回帰試験<rt>かいきしけん</rt></ruby>と<ruby>重複拒否<rt>ちょうふくきょひ</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby>し、`properties` は<ruby>既存<rt>きそん</rt></ruby>の<ruby>自動見出<rt>じどうみだ</rt></ruby>しURLを<ruby>使<rt>つか</rt></ruby>って<ruby>追加<rt>ついか</rt></ruby>aliasの<ruby>重複<rt>ちょうふく</rt></ruby>を<ruby>避<rt>さ</rt></ruby>ける。<ruby>訂正<rt>ていせい</rt></ruby>した<ruby>入力<rt>にゅうりょく</rt></ruby>・コードで<ruby>改<rt>あらた</rt></ruby>めて<ruby>生成<rt>せいせい</rt></ruby>し、<ruby>正本切替<rt>せいほんきりかえ</rt></ruby>の<ruby>検査<rt>けんさ</rt></ruby>を<ruby>継続<rt>けいぞく</rt></ruby>する。
 
-別worktree `C:/projects/NEPL3-doc-current-reader-work` の
-`crates/foundation/core/src/budget.rs` と `tools/src/doc/source.rs` の未保存変更は
-本PRへ含めず保全する。休止時のclean確認はmainと本作業branchを対象とする。
+<ruby>第<rt>だい</rt></ruby>17<ruby>章<rt>しょう</rt></ruby>を<ruby>先<rt>さき</rt></ruby>に<ruby>移行<rt>いこう</rt></ruby>し、<ruby>第<rt>だい</rt></ruby>11<ruby>章<rt>しょう</rt></ruby>から<ruby>参照<rt>さんしょう</rt></ruby>できる<ruby>正本<rt>せいほん</rt></ruby>を<ruby>用意<rt>ようい</rt></ruby>する。<ruby>第<rt>だい</rt></ruby>17<ruby>章<rt>しょう</rt></ruby>を<ruby>加<rt>くわ</rt></ruby>えた11ページ<ruby>集合<rt>しゅうごう</rt></ruby>の<ruby>初回<rt>しょかい</rt></ruby>HTML<ruby>生成<rt>せいせい</rt></ruby>は、serialize<ruby>中<rt>ちゅう</rt></ruby>に `AllocationLimit`（<ruby>使用量<rt>しようりょう</rt></ruby>749\,999\,977、<ruby>上限<rt>じょうげん</rt></ruby>750\,000\,000）で<ruby>停止<rt>ていし</rt></ruby>した。<ruby>出力<rt>しゅつりょく</rt></ruby>ディレクトリは<ruby>作成<rt>さくせい</rt></ruby>されず、Markdownの<ruby>初回生成<rt>しょかいせいせい</rt></ruby>だけが<ruby>成功<rt>せいこう</rt></ruby>した。これはHTML<ruby>成功<rt>せいこう</rt></ruby>・<ruby>正本切替<rt>せいほんきりかえ</rt></ruby>の<ruby>証拠<rt>しょうこ</rt></ruby>ではない。<ruby>拡大<rt>かくだい</rt></ruby>した<ruby>文書集合<rt>ぶんしょしゅうごう</rt></ruby>のHTML<ruby>生成用<rt>せいせいよう</rt></ruby>allocation<ruby>上限<rt>じょうげん</rt></ruby>を1\,000\,000\,000へ<ruby>変更<rt>へんこう</rt></ruby>し、<ruby>別<rt>べつ</rt></ruby>の<ruby>生成操作<rt>せいせいそうさ</rt></ruby>として<ruby>再検証<rt>さいけんしょう</rt></ruby>する。Work400M・Nodes20M・その<ruby>他<rt>た</rt></ruby>のHTML<ruby>資源<rt>しげん</rt></ruby>、Markdown<ruby>予算<rt>よさん</rt></ruby>、core・<ruby>各<rt>かく</rt></ruby>ページの<ruby>既定値<rt>きていち</rt></ruby>は<ruby>維持<rt>いじ</rt></ruby>する。この<ruby>値<rt>あたい</rt></ruby>は<ruby>累積<rt>るいせき</rt></ruby>する<ruby>論理<rt>ろんり</rt></ruby>allocationの<ruby>許容量<rt>きょようりょう</rt></ruby>であり、<ruby>実<rt>じつ</rt></ruby>メモリ<ruby>量<rt>りょう</rt></ruby>や<ruby>最小予算<rt>さいしょうよさん</rt></ruby>を<ruby>示<rt>しめ</rt></ruby>さない。<ruby>停止<rt>ていし</rt></ruby>の<ruby>記録<rt>きろく</rt></ruby>は<ruby>残<rt>のこ</rt></ruby>し、<ruby>再生成<rt>さいせいせい</rt></ruby>・<ruby>意味同等性<rt>いみどうとうせい</rt></ruby>・リンク・<ruby>表示<rt>ひょうじ</rt></ruby>の<ruby>検証後<rt>けんしょうご</rt></ruby>にprojectionを<ruby>採用<rt>さいよう</rt></ruby>する。
 
-## 2026年9月12日の再開
+<ruby>新<rt>あたら</rt></ruby>しい<ruby>選択<rt>せんたく</rt></ruby>でMarkdown12ファイル・HTML13ファイルを<ruby>各<rt>かく</rt></ruby>2<ruby>回生成<rt>かいせいせい</rt></ruby>し、<ruby>全<rt>ぜん</rt></ruby>byte<ruby>一致<rt>いっち</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>した。HTMLの<ruby>成功使用量<rt>せいこうしようりょう</rt></ruby>はWork362\,735\,172・Allocation762\,304\,126・Nodes13\,880\,291である。<ruby>第<rt>だい</rt></ruby>17<ruby>章<rt>しょう</rt></ruby>と<ruby>第<rt>だい</rt></ruby>01\/12<ruby>章<rt>しょう</rt></ruby>のcontext headerを<ruby>採用<rt>さいよう</rt></ruby>し、<ruby>既存<rt>きそん</rt></ruby>10<ruby>文書<rt>ぶんしょ</rt></ruby>のHTMLとCSSはbyte<ruby>一致<rt>いっち</rt></ruby>した。<ruby>第<rt>だい</rt></ruby>17<ruby>章<rt>しょう</rt></ruby>の21 code<ruby>値<rt>ち</rt></ruby>・2<ruby>表<rt>ひょう</rt></ruby>の3<ruby>行<rt>ぎょう</rt></ruby>\/8<ruby>行<rt>ぎょう</rt></ruby>・<ruby>参照先<rt>さんしょうさき</rt></ruby>は<ruby>独立<rt>どくりつ</rt></ruby>に<ruby>原文<rt>げんぶん</rt></ruby>と<ruby>照合<rt>しょうごう</rt></ruby>した。<ruby>生成<rt>せいせい</rt></ruby>Markdownの<ruby>再検査<rt>さいけんさ</rt></ruby>・<ruby>独立<rt>どくりつ</rt></ruby>した<ruby>最終<rt>さいしゅう</rt></ruby>レビュー・<ruby>必須<rt>ひっす</rt></ruby>CIを<ruby>継続<rt>けいぞく</rt></ruby>する。<ruby>全体<rt>ぜんたい</rt></ruby>の<ruby>移行<rt>いこう</rt></ruby>・KaTeX<ruby>実装<rt>じっそう</rt></ruby>・Pages<ruby>公開<rt>こうかい</rt></ruby>が<ruby>完了<rt>かんりょう</rt></ruby>したという<ruby>記録<rt>きろく</rt></ruby>ではない。
 
-下記は9月9日の休止記録である。再開後にmainを統合し、第20章を含む10章の
-集合生成用予算をMarkdown Work800M/Allocation2B、HTML Work400Mへ調整した。
-Nodes・その他の資源・core/各ページのparse/lower既定値は変更していない。
-同じ入力からMarkdown11ファイル、HTML12ファイルをそれぞれ2回生成し、
-全byte一致を確認した。第20章のprojectionと第01/12章のcontext headerを採用した。
-従来の9文書のHTMLとCSSはbyte一致している。停止の過去記録は成功へ変更しない。
+ユーザーの<ruby>休止終了<rt>きゅうししゅうりょう</rt></ruby>・<ruby>自律続行指示<rt>じりつぞっこうしじ</rt></ruby>により<ruby>開発<rt>かいはつ</rt></ruby>を<ruby>再開<rt>さいかい</rt></ruby>した。PR99は<ruby>必須<rt>ひっす</rt></ruby>CI16<ruby>件<rt>けん</rt></ruby>の<ruby>成功後<rt>せいこうご</rt></ruby>、mainの `994526e04c5d711aca06d6eefe6b11f3f175bcba`へmerge<ruby>済<rt>ず</rt></ruby>み。<ruby>以下<rt>いか</rt></ruby>の<ruby>休止記録<rt>きゅうしきろく</rt></ruby>は<ruby>当時<rt>とうじ</rt></ruby>の<ruby>状態<rt>じょうたい</rt></ruby>を<ruby>保存<rt>ほぞん</rt></ruby>したものである。<ruby>次<rt>つぎ</rt></ruby>は<ruby>第<rt>だい</rt></ruby>11<ruby>章等<rt>しょうとう</rt></ruby>の<ruby>移行<rt>いこう</rt></ruby>を<ruby>妨<rt>さまた</rt></ruby>げるMarkdown projectionの<ruby>隣接<rt>りんせつ</rt></ruby>List<ruby>境界<rt>きょうかい</rt></ruby>を<ruby>実装<rt>じっそう</rt></ruby>し、Relative linkの<ruby>解決<rt>かいけつ</rt></ruby>と<ruby>合<rt>あ</rt></ruby>わせて<ruby>文書移行<rt>ぶんしょいこう</rt></ruby>を<ruby>進<rt>すす</rt></ruby>める。<ruby>未保存<rt>みほぞん</rt></ruby>の<ruby>別<rt>べつ</rt></ruby>worktreeは<ruby>保全<rt>ほぜん</rt></ruby>する。
 
-Markdownの実測はWork607,160,055、Allocation1,633,873,615で旧上限をともに超える。
-これはreceipt serialization前の論理使用量であり、実メモリ使用量や最小予算ではない。
-独立した全文・生成内容レビューに加え、実ブラウザ・GitHub anchor・再生成検査・
-必須CIの最終確認を継続する。以下の「未再生成」は休止時点の状態を示す。
+<a name="n-70617573655f7072657061726174696f6e"></a>
 
-ユーザーの2026年9月9日の休止指示により、以下の区切りで停止する。
-処理系全体、T21/T16、Pages公開の完成を意味しない。
+<a name="2026年9月12日の休止準備履歴"></a>
 
-## 第08章までの完了分
+## 2026<ruby>年<rt>ねん</rt></ruby>9<ruby>月<rt>がつ</rt></ruby>12<ruby>日<rt>にち</rt></ruby>の<ruby>休止準備<rt>きゅうしじゅんび</rt></ruby>（<ruby>履歴<rt>りれき</rt></ruby>）
 
-- PR97（第12章）はmainの `ddd5bee10abac05702ea09490d421cc0e1188672` に取り込み済み。
-- [PR98](https://github.com/neknaj/NEPL3/pull/98) は第08章の正本切替。
-  最終headは `9985a3906ed455c6466ee5fd6daac4f13eca0ce1`。
-  production生成、独立レビュー、browser、compiler不要の復元、archive監査まで完了。
-  追加の休止整理で同headの必須CI16件すべての成功を確認し、
-  mainの `f2cbf4fb95ec1d52c76df299d64bb376b98cb06e` へmerge済み。
-- 第08章を含む正本9章はmain取り込み済み。
-  PR98の証拠は `conformance/results/doc-canonical-editor/`。
+ユーザー<ruby>指示<rt>しじ</rt></ruby>により、<ruby>第<rt>だい</rt></ruby>20<ruby>章<rt>しょう</rt></ruby>の<ruby>正本切替<rt>せいほんきりかえ</rt></ruby>を<ruby>区切<rt>くぎ</rt></ruby>りに<ruby>休止<rt>きゅうし</rt></ruby>する。PR99の<ruby>対象実装<rt>たいしょうじっそう</rt></ruby>は `f459596e87dfe28b24954cfad82472626033ea91`。<ruby>第<rt>だい</rt></ruby>20<ruby>章<rt>しょう</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>む10<ruby>章<rt>しょう</rt></ruby>の<ruby>生成物<rt>せいせいぶつ</rt></ruby>を<ruby>採用<rt>さいよう</rt></ruby>し、ローカルの14 canonical<ruby>試験<rt>しけん</rt></ruby>、canonical \-\-check、format、Clippy、repository<ruby>検査<rt>けんさ</rt></ruby>は<ruby>成功<rt>せいこう</rt></ruby>した。<ruby>独立<rt>どくりつ</rt></ruby>した<ruby>全文<rt>ぜんぶん</rt></ruby>・<ruby>生成物<rt>せいせいぶつ</rt></ruby>レビュー、JS<ruby>無効<rt>むこう</rt></ruby>の3ブラウザ<ruby>表示<rt>ひょうじ</rt></ruby>とGitHubの5 anchor、compiler<ruby>不要<rt>ふよう</rt></ruby>の12ファイル<ruby>復元<rt>ふくげん</rt></ruby>も<ruby>確認済<rt>かくにんず</rt></ruby>み。<ruby>証拠<rt>しょうこ</rt></ruby>は `conformance/results/doc-canonical-doc-html/` にまとめる。exact\-headの<ruby>必須<rt>ひっす</rt></ruby>CIと<ruby>最終監査<rt>さいしゅうかんさ</rt></ruby>に<ruby>合格<rt>ごうかく</rt></ruby>してからmergeする。
 
-## 第20章の途中状態
+<ruby>以下<rt>いか</rt></ruby>の9<ruby>月<rt>がつ</rt></ruby>9<ruby>日<rt>にち</rt></ruby>の「<ruby>未完了<rt>みかんりょう</rt></ruby>・merge<ruby>禁止<rt>きんし</rt></ruby>」は<ruby>当時<rt>とうじ</rt></ruby>の<ruby>記録<rt>きろく</rt></ruby>であり、<ruby>現在<rt>げんざい</rt></ruby>の<ruby>状態<rt>じょうたい</rt></ruby>への<ruby>指示<rt>しじ</rt></ruby>ではない。<ruby>当時<rt>とうじ</rt></ruby>の<ruby>停止<rt>ていし</rt></ruby>や<ruby>誤<rt>あやま</rt></ruby>ったbinary<ruby>流用<rt>りゅうよう</rt></ruby>を<ruby>成功記録<rt>せいこうきろく</rt></ruby>へ<ruby>変更<rt>へんこう</rt></ruby>しない。T21\/T16・Playground・Pages<ruby>公開<rt>こうかい</rt></ruby>・<ruby>処理系全体<rt>しょりけいぜんたい</rt></ruby>の<ruby>完成<rt>かんせい</rt></ruby>は<ruby>宣言<rt>せんげん</rt></ruby>しない。
 
-作業branchは `feat/doc-canonical-doc-html`、worktreeは
-`C:/projects/NEPL3-doc-canonical-doc-html`。
-準備commitは `10255b819296ba3c7eb786784779a67ac15740d7`。
-その後の `426bad439028f5dc99054acf0da92e304a5200d7` はPR98のarchiveを統合したもの。
+<ruby>再開時<rt>さいかいじ</rt></ruby>は<ruby>最新<rt>さいしん</rt></ruby>mainと `doc/canonical.json` を<ruby>確認<rt>かくにん</rt></ruby>し、<ruby>未移行稿<rt>みいこうこう</rt></ruby>を `doc/authoring.md` に<ruby>従<rt>したが</rt></ruby>って<ruby>独立<rt>どくりつ</rt></ruby>レビュー・<ruby>実生成<rt>じつせいせい</rt></ruby>・リンク<ruby>検証後<rt>けんしょうご</rt></ruby>にページ<ruby>単位<rt>たんい</rt></ruby>で<ruby>切<rt>き</rt></ruby>り<ruby>替<rt>か</rt></ruby>える。<ruby>第<rt>だい</rt></ruby>11<ruby>章<rt>しょう</rt></ruby>はRelative linkだけでなく<ruby>隣接<rt>りんせつ</rt></ruby>Listの<ruby>表現<rt>ひょうげん</rt></ruby>も<ruby>確認<rt>かくにん</rt></ruby>する<ruby>必要<rt>ひつよう</rt></ruby>がある。<ruby>巨大<rt>きょだい</rt></ruby>なreview<ruby>文書<rt>ぶんしょ</rt></ruby>のWorkLimitとsource<ruby>検査費用<rt>けんさひよう</rt></ruby>は<ruby>未解決<rt>みかいけつ</rt></ruby>であり、<ruby>単<rt>たん</rt></ruby>に<ruby>上限<rt>じょうげん</rt></ruby>を<ruby>増<rt>ふ</rt></ruby>やして<ruby>全体成功<rt>ぜんたいせいこう</rt></ruby>としない。Pages<ruby>公開<rt>こうかい</rt></ruby>も<ruby>未完了<rt>みかんりょう</rt></ruby>である。
 
-第20章の稿を `doc/spec/20-doc-html.nepld` へ移し、旧URLのalias3件と
-10章目のregistry登録を準備した。冒頭は、pure local fragmentの制約と、
-既に実装された開発hostのshell/CSS書き出しを区別する3文へ訂正した。
-元稿全体はKepler、rootによる冒頭変更は元稿著者と区別してCarsonがレビューした。
-16段落・InlineCode13値・External link4件を保持する。
+<ruby>別<rt>べつ</rt></ruby>worktree `C:/projects/NEPL3-doc-current-reader-work` の `crates/foundation/core/src/budget.rs` と `tools/src/doc/source.rs` の<ruby>未保存変更<rt>みほぞんへんこう</rt></ruby>は<ruby>本<rt>ほん</rt></ruby>PRへ<ruby>含<rt>ふく</rt></ruby>めず<ruby>保全<rt>ほぜん</rt></ruby>する。<ruby>休止時<rt>きゅうしじ</rt></ruby>のclean<ruby>確認<rt>かくにん</rt></ruby>はmainと<ruby>本作業<rt>ほんさぎょう</rt></ruby>branchを<ruby>対象<rt>たいしょう</rt></ruby>とする。
 
-**このbranchは未完了であり、mainへmergeしてはならない。**
-第20章のMarkdownはまだ旧正本のまま。registry更新後の第01/12章の
-context headerも未再生成である。canonical --checkの成功を主張しない。
+<a name="n-72657374617274"></a>
 
-専用worktreeでbuildしたproduction toolによる正しい10章生成は、
-MarkdownがAllocationLimit、HTMLがWorkLimitで停止し、どちらも出力未作成。
-HTMLはSource242,864 / Work299,999,987 / Nodes12,051,403 /
-Allocation639,833,274 / Output352 / Depth14、resolve/render段階の停止。
-この段階で上限は変更していない。
+<a name="2026年9月12日の再開"></a>
 
-休止checkpoint `0e6401097c26d1797d70b106b1d5c03d9637c0d7` の
-CI run `34287360823` も確認した。native3OSの既存canonical corpus testが
-AllocationLimitで失敗し、qualityも失敗している。検査を解除せず、
-第20章branchは未完了のまま保全する。この失敗をPR98/mainのCIと混同しない。
+## 2026<ruby>年<rt>ねん</rt></ruby>9<ruby>月<rt>がつ</rt></ruby>12<ruby>日<rt>にち</rt></ruby>の<ruby>再開<rt>さいかい</rt></ruby>
 
-先行する別worktreeのbinary流用は検証helperの誤りだった。
-toolsのrootはcwdでなくcompile-time CARGO_MANIFEST_DIRに基づくため、
-その2回の成功出力は第08章までの9章を読み、第20章の検証ではない。
-誤った帰属と実際のmanifestを保存し、成功証拠から除外する。
+<ruby>下記<rt>かき</rt></ruby>は9<ruby>月<rt>がつ</rt></ruby>9<ruby>日<rt>にち</rt></ruby>の<ruby>休止記録<rt>きゅうしきろく</rt></ruby>である。<ruby>再開後<rt>さいかいご</rt></ruby>にmainを<ruby>統合<rt>とうごう</rt></ruby>し、<ruby>第<rt>だい</rt></ruby>20<ruby>章<rt>しょう</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>む10<ruby>章<rt>しょう</rt></ruby>の<ruby>集合生成用予算<rt>しゅうごうせいせいようよさん</rt></ruby>をMarkdown Work800M\/Allocation2B、HTML Work400Mへ<ruby>調整<rt>ちょうせい</rt></ruby>した。Nodes・その<ruby>他<rt>た</rt></ruby>の<ruby>資源<rt>しげん</rt></ruby>・core\/<ruby>各<rt>かく</rt></ruby>ページのparse\/lower<ruby>既定値<rt>きていち</rt></ruby>は<ruby>変更<rt>へんこう</rt></ruby>していない。<ruby>同<rt>おな</rt></ruby>じ<ruby>入力<rt>にゅうりょく</rt></ruby>からMarkdown11ファイル、HTML12ファイルをそれぞれ2<ruby>回生成<rt>かいせいせい</rt></ruby>し、<ruby>全<rt>ぜん</rt></ruby>byte<ruby>一致<rt>いっち</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>した。<ruby>第<rt>だい</rt></ruby>20<ruby>章<rt>しょう</rt></ruby>のprojectionと<ruby>第<rt>だい</rt></ruby>01\/12<ruby>章<rt>しょう</rt></ruby>のcontext headerを<ruby>採用<rt>さいよう</rt></ruby>した。<ruby>従来<rt>じゅうらい</rt></ruby>の9<ruby>文書<rt>ぶんしょ</rt></ruby>のHTMLとCSSはbyte<ruby>一致<rt>いっち</rt></ruby>している。<ruby>停止<rt>ていし</rt></ruby>の<ruby>過去記録<rt>かこきろく</rt></ruby>は<ruby>成功<rt>せいこう</rt></ruby>へ<ruby>変更<rt>へんこう</rt></ruby>しない。
 
-## 再開する順序
+Markdownの<ruby>実測<rt>じっそく</rt></ruby>はWork607\,160\,055、Allocation1\,633\,873\,615で<ruby>旧上限<rt>きゅうじょうげん</rt></ruby>をともに<ruby>超<rt>こ</rt></ruby>える。これはreceipt serialization<ruby>前<rt>まえ</rt></ruby>の<ruby>論理使用量<rt>ろんりしようりょう</rt></ruby>であり、<ruby>実<rt>じつ</rt></ruby>メモリ<ruby>使用量<rt>しようりょう</rt></ruby>や<ruby>最小予算<rt>さいしょうよさん</rt></ruby>ではない。<ruby>独立<rt>どくりつ</rt></ruby>した<ruby>全文<rt>ぜんぶん</rt></ruby>・<ruby>生成内容<rt>せいせいないよう</rt></ruby>レビューに<ruby>加<rt>くわ</rt></ruby>え、<ruby>実<rt>じつ</rt></ruby>ブラウザ・GitHub anchor・<ruby>再生成検査<rt>さいせいせいけんさ</rt></ruby>・<ruby>必須<rt>ひっす</rt></ruby>CIの<ruby>最終確認<rt>さいしゅうかくにん</rt></ruby>を<ruby>継続<rt>けいぞく</rt></ruby>する。<ruby>以下<rt>いか</rt></ruby>の「<ruby>未再生成<rt>みさいせいせい</rt></ruby>」は<ruby>休止時点<rt>きゅうしじてん</rt></ruby>の<ruby>状態<rt>じょうたい</rt></ruby>を<ruby>示<rt>しめ</rt></ruby>す。
 
-1. AGENTS/CODEX/authoringと現HEAD・全working treeを再確認する。
-2. PR98のmerge後のmainを取得し、この途中branchへ取り込む。未完了の第20章を
-   先にmainへmergeしない。再開時にGitHubの最新状態も確認する。
-3. 第20章の正しい停止記録を基に、有限の集合出力予算を検討する。
-   stopped Budgetのreset、core/parse/lower既定値の無根拠な変更はしない。
-4. 同じworktreeでbuildしたtoolにより、新規出力へMarkdown/HTMLを2回生成し、
-   10章すべてのsource/manifest・byte一致・以前の出力保持を確認する。
-5. 第20章Markdownと第01/12章のcontext headerを採用し、production検査、
-   独立code/表示レビュー、旧3＋semantic2の実GitHub移動、10文書・CSS・manifestの
-   計12ファイルからなるHTML集合のcompiler不要復元、必須CIを経て正本切替を完了する。
+ユーザーの2026<ruby>年<rt>ねん</rt></ruby>9<ruby>月<rt>がつ</rt></ruby>9<ruby>日<rt>にち</rt></ruby>の<ruby>休止指示<rt>きゅうししじ</rt></ruby>により、<ruby>以下<rt>いか</rt></ruby>の<ruby>区切<rt>くぎ</rt></ruby>りで<ruby>停止<rt>ていし</rt></ruby>する。<ruby>処理系全体<rt>しょりけいぜんたい</rt></ruby>、T21\/T16、Pages<ruby>公開<rt>こうかい</rt></ruby>の<ruby>完成<rt>かんせい</rt></ruby>を<ruby>意味<rt>いみ</rt></ruby>しない。
 
-休止証拠は `conformance/results/doc-canonical-doc-html-checkpoint/`。
-これは途中状態を保全する記録であり、受入passedの証拠ではない。
-`.tmp/` 内のbuild/browser環境と作業資料は再開用に保持する。
-以前から保全している別worktreeの未保存変更は今回の休止整理では変更しない。
+<a name="n-636f6d706c65746564"></a>
+
+<a name="第08章までの完了分"></a>
+
+## <ruby>第<rt>だい</rt></ruby>08<ruby>章<rt>しょう</rt></ruby>までの<ruby>完了分<rt>かんりょうぶん</rt></ruby>
+
+- PR97（<ruby>第<rt>だい</rt></ruby>12<ruby>章<rt>しょう</rt></ruby>）はmainの `ddd5bee10abac05702ea09490d421cc0e1188672` に<ruby>取<rt>と</rt></ruby>り<ruby>込<rt>こ</rt></ruby>み<ruby>済<rt>ず</rt></ruby>み。
+- [PR98](<https\:\/\/github\.com\/neknaj\/NEPL3\/pull\/98>) は<ruby>第<rt>だい</rt></ruby>08<ruby>章<rt>しょう</rt></ruby>の<ruby>正本切替<rt>せいほんきりかえ</rt></ruby>。<ruby>最終<rt>さいしゅう</rt></ruby>headは `9985a3906ed455c6466ee5fd6daac4f13eca0ce1`。production<ruby>生成<rt>せいせい</rt></ruby>、<ruby>独立<rt>どくりつ</rt></ruby>レビュー、browser、compiler<ruby>不要<rt>ふよう</rt></ruby>の<ruby>復元<rt>ふくげん</rt></ruby>、archive<ruby>監査<rt>かんさ</rt></ruby>まで<ruby>完了<rt>かんりょう</rt></ruby>。<ruby>追加<rt>ついか</rt></ruby>の<ruby>休止整理<rt>きゅうしせいり</rt></ruby>で<ruby>同<rt>どう</rt></ruby>headの<ruby>必須<rt>ひっす</rt></ruby>CI16<ruby>件<rt>けん</rt></ruby>すべての<ruby>成功<rt>せいこう</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>し、mainの `f2cbf4fb95ec1d52c76df299d64bb376b98cb06e` へmerge<ruby>済<rt>ず</rt></ruby>み。
+- <ruby>第<rt>だい</rt></ruby>08<ruby>章<rt>しょう</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>む<ruby>正本<rt>せいほん</rt></ruby>9<ruby>章<rt>しょう</rt></ruby>はmain<ruby>取<rt>と</rt></ruby>り<ruby>込<rt>こ</rt></ruby>み<ruby>済<rt>ず</rt></ruby>み。PR98の<ruby>証拠<rt>しょうこ</rt></ruby>は `conformance/results/doc-canonical-editor/`。
+
+<a name="n-696e636f6d706c657465"></a>
+
+<a name="第20章の途中状態"></a>
+
+## <ruby>第<rt>だい</rt></ruby>20<ruby>章<rt>しょう</rt></ruby>の<ruby>途中状態<rt>とちゅうじょうたい</rt></ruby>
+
+<ruby>作業<rt>さぎょう</rt></ruby>branchは `feat/doc-canonical-doc-html`、worktreeは `C:/projects/NEPL3-doc-canonical-doc-html`。<ruby>準備<rt>じゅんび</rt></ruby>commitは `10255b819296ba3c7eb786784779a67ac15740d7`。その<ruby>後<rt>ご</rt></ruby>の `426bad439028f5dc99054acf0da92e304a5200d7` はPR98のarchiveを<ruby>統合<rt>とうごう</rt></ruby>したもの。
+
+<ruby>第<rt>だい</rt></ruby>20<ruby>章<rt>しょう</rt></ruby>の<ruby>稿<rt>こう</rt></ruby>を `doc/spec/20-doc-html.nepld` へ<ruby>移<rt>うつ</rt></ruby>し、<ruby>旧<rt>きゅう</rt></ruby>URLのalias3<ruby>件<rt>けん</rt></ruby>と10<ruby>章目<rt>しょうめ</rt></ruby>のregistry<ruby>登録<rt>とうろく</rt></ruby>を<ruby>準備<rt>じゅんび</rt></ruby>した。<ruby>冒頭<rt>ぼうとう</rt></ruby>は、pure local fragmentの<ruby>制約<rt>せいやく</rt></ruby>と、<ruby>既<rt>すで</rt></ruby>に<ruby>実装<rt>じっそう</rt></ruby>された<ruby>開発<rt>かいはつ</rt></ruby>hostのshell\/CSS<ruby>書<rt>か</rt></ruby>き<ruby>出<rt>だ</rt></ruby>しを<ruby>区別<rt>くべつ</rt></ruby>する3<ruby>文<rt>ぶん</rt></ruby>へ<ruby>訂正<rt>ていせい</rt></ruby>した。<ruby>元稿全体<rt>げんこうぜんたい</rt></ruby>はKepler、rootによる<ruby>冒頭変更<rt>ぼうとうへんこう</rt></ruby>は<ruby>元稿著者<rt>げんこうちょしゃ</rt></ruby>と<ruby>区別<rt>くべつ</rt></ruby>してCarsonがレビューした。16<ruby>段落<rt>だんらく</rt></ruby>・InlineCode13<ruby>値<rt>ち</rt></ruby>・External link4<ruby>件<rt>けん</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>する。
+
+<strong>このbranchは<ruby>未完了<rt>みかんりょう</rt></ruby>であり、mainへmergeしてはならない。</strong><ruby>第<rt>だい</rt></ruby>20<ruby>章<rt>しょう</rt></ruby>のMarkdownはまだ<ruby>旧正本<rt>きゅうせいほん</rt></ruby>のまま。registry<ruby>更新後<rt>こうしんご</rt></ruby>の<ruby>第<rt>だい</rt></ruby>01\/12<ruby>章<rt>しょう</rt></ruby>のcontext headerも<ruby>未再生成<rt>みさいせいせい</rt></ruby>である。canonical \-\-checkの<ruby>成功<rt>せいこう</rt></ruby>を<ruby>主張<rt>しゅちょう</rt></ruby>しない。
+
+<ruby>専用<rt>せんよう</rt></ruby>worktreeでbuildしたproduction toolによる<ruby>正<rt>ただ</rt></ruby>しい10<ruby>章生成<rt>しょうせいせい</rt></ruby>は、MarkdownがAllocationLimit、HTMLがWorkLimitで<ruby>停止<rt>ていし</rt></ruby>し、どちらも<ruby>出力未作成<rt>しゅつりょくみさくせい</rt></ruby>。HTMLはSource242\,864 \/ Work299\,999\,987 \/ Nodes12\,051\,403 \/ Allocation639\,833\,274 \/ Output352 \/ Depth14、resolve\/render<ruby>段階<rt>だんかい</rt></ruby>の<ruby>停止<rt>ていし</rt></ruby>。この<ruby>段階<rt>だんかい</rt></ruby>で<ruby>上限<rt>じょうげん</rt></ruby>は<ruby>変更<rt>へんこう</rt></ruby>していない。
+
+<ruby>休止<rt>きゅうし</rt></ruby>checkpoint `0e6401097c26d1797d70b106b1d5c03d9637c0d7` のCI run `34287360823` も<ruby>確認<rt>かくにん</rt></ruby>した。native3OSの<ruby>既存<rt>きそん</rt></ruby>canonical corpus testがAllocationLimitで<ruby>失敗<rt>しっぱい</rt></ruby>し、qualityも<ruby>失敗<rt>しっぱい</rt></ruby>している。<ruby>検査<rt>けんさ</rt></ruby>を<ruby>解除<rt>かいじょ</rt></ruby>せず、<ruby>第<rt>だい</rt></ruby>20<ruby>章<rt>しょう</rt></ruby>branchは<ruby>未完了<rt>みかんりょう</rt></ruby>のまま<ruby>保全<rt>ほぜん</rt></ruby>する。この<ruby>失敗<rt>しっぱい</rt></ruby>をPR98\/mainのCIと<ruby>混同<rt>こんどう</rt></ruby>しない。
+
+<ruby>先行<rt>せんこう</rt></ruby>する<ruby>別<rt>べつ</rt></ruby>worktreeのbinary<ruby>流用<rt>りゅうよう</rt></ruby>は<ruby>検証<rt>けんしょう</rt></ruby>helperの<ruby>誤<rt>あやま</rt></ruby>りだった。toolsのrootはcwdでなくcompile\-time CARGO\_MANIFEST\_DIRに<ruby>基<rt>もと</rt></ruby>づくため、その2<ruby>回<rt>かい</rt></ruby>の<ruby>成功出力<rt>せいこうしゅつりょく</rt></ruby>は<ruby>第<rt>だい</rt></ruby>08<ruby>章<rt>しょう</rt></ruby>までの9<ruby>章<rt>しょう</rt></ruby>を<ruby>読<rt>よ</rt></ruby>み、<ruby>第<rt>だい</rt></ruby>20<ruby>章<rt>しょう</rt></ruby>の<ruby>検証<rt>けんしょう</rt></ruby>ではない。<ruby>誤<rt>あやま</rt></ruby>った<ruby>帰属<rt>きぞく</rt></ruby>と<ruby>実際<rt>じっさい</rt></ruby>のmanifestを<ruby>保存<rt>ほぞん</rt></ruby>し、<ruby>成功証拠<rt>せいこうしょうこ</rt></ruby>から<ruby>除外<rt>じょがい</rt></ruby>する。
+
+<a name="n-726573746172745f6f72646572"></a>
+
+<a name="再開する順序"></a>
+
+## <ruby>再開<rt>さいかい</rt></ruby>する<ruby>順序<rt>じゅんじょ</rt></ruby>
+
+1. AGENTS\/CODEX\/authoringと<ruby>現<rt>げん</rt></ruby>HEAD・<ruby>全<rt>ぜん</rt></ruby>working treeを<ruby>再確認<rt>さいかくにん</rt></ruby>する。
+1. PR98のmerge<ruby>後<rt>ご</rt></ruby>のmainを<ruby>取得<rt>しゅとく</rt></ruby>し、この<ruby>途中<rt>とちゅう</rt></ruby>branchへ<ruby>取<rt>と</rt></ruby>り<ruby>込<rt>こ</rt></ruby>む。<ruby>未完了<rt>みかんりょう</rt></ruby>の<ruby>第<rt>だい</rt></ruby>20<ruby>章<rt>しょう</rt></ruby>を<ruby>先<rt>さき</rt></ruby>にmainへmergeしない。<ruby>再開時<rt>さいかいじ</rt></ruby>にGitHubの<ruby>最新状態<rt>さいしんじょうたい</rt></ruby>も<ruby>確認<rt>かくにん</rt></ruby>する。
+1. <ruby>第<rt>だい</rt></ruby>20<ruby>章<rt>しょう</rt></ruby>の<ruby>正<rt>ただ</rt></ruby>しい<ruby>停止記録<rt>ていしきろく</rt></ruby>を<ruby>基<rt>もと</rt></ruby>に、<ruby>有限<rt>ゆうげん</rt></ruby>の<ruby>集合出力予算<rt>しゅうごうしゅつりょくよさん</rt></ruby>を<ruby>検討<rt>けんとう</rt></ruby>する。stopped Budgetのreset、core\/parse\/lower<ruby>既定値<rt>きていち</rt></ruby>の<ruby>無根拠<rt>むこんきょ</rt></ruby>な<ruby>変更<rt>へんこう</rt></ruby>はしない。
+1. <ruby>同<rt>おな</rt></ruby>じworktreeでbuildしたtoolにより、<ruby>新規出力<rt>しんきしゅつりょく</rt></ruby>へMarkdown\/HTMLを2<ruby>回生成<rt>かいせいせい</rt></ruby>し、10<ruby>章<rt>しょう</rt></ruby>すべてのsource\/manifest・byte<ruby>一致<rt>いっち</rt></ruby>・<ruby>以前<rt>いぜん</rt></ruby>の<ruby>出力保持<rt>しゅつりょくほじ</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>する。
+1. <ruby>第<rt>だい</rt></ruby>20<ruby>章<rt>しょう</rt></ruby>Markdownと<ruby>第<rt>だい</rt></ruby>01\/12<ruby>章<rt>しょう</rt></ruby>のcontext headerを<ruby>採用<rt>さいよう</rt></ruby>し、production<ruby>検査<rt>けんさ</rt></ruby>、<ruby>独立<rt>どくりつ</rt></ruby>code\/<ruby>表示<rt>ひょうじ</rt></ruby>レビュー、<ruby>旧<rt>きゅう</rt></ruby>3＋semantic2の<ruby>実<rt>じつ</rt></ruby>GitHub<ruby>移動<rt>いどう</rt></ruby>、10<ruby>文書<rt>ぶんしょ</rt></ruby>・CSS・manifestの<ruby>計<rt>けい</rt></ruby>12ファイルからなるHTML<ruby>集合<rt>しゅうごう</rt></ruby>のcompiler<ruby>不要復元<rt>ふようふくげん</rt></ruby>、<ruby>必須<rt>ひっす</rt></ruby>CIを<ruby>経<rt>へ</rt></ruby>て<ruby>正本切替<rt>せいほんきりかえ</rt></ruby>を<ruby>完了<rt>かんりょう</rt></ruby>する。
+
+<ruby>休止証拠<rt>きゅうししょうこ</rt></ruby>は `conformance/results/doc-canonical-doc-html-checkpoint/`。これは<ruby>途中状態<rt>とちゅうじょうたい</rt></ruby>を<ruby>保全<rt>ほぜん</rt></ruby>する<ruby>記録<rt>きろく</rt></ruby>であり、<ruby>受入<rt>うけいれ</rt></ruby>passedの<ruby>証拠<rt>しょうこ</rt></ruby>ではない。`.tmp/` <ruby>内<rt>ない</rt></ruby>のbuild\/browser<ruby>環境<rt>かんきょう</rt></ruby>と<ruby>作業資料<rt>さぎょうしりょう</rt></ruby>は<ruby>再開用<rt>さいかいよう</rt></ruby>に<ruby>保持<rt>ほじ</rt></ruby>する。<ruby>以前<rt>いぜん</rt></ruby>から<ruby>保全<rt>ほぜん</rt></ruby>している<ruby>別<rt>べつ</rt></ruby>worktreeの<ruby>未保存変更<rt>みほぞんへんこう</rt></ruby>は<ruby>今回<rt>こんかい</rt></ruby>の<ruby>休止整理<rt>きゅうしせいり</rt></ruby>では<ruby>変更<rt>へんこう</rt></ruby>しない。

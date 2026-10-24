@@ -1,0 +1,34 @@
+[
+  {
+    "section": null,
+    "name": "doc移行の再開入口と過去のcheckpoint"
+  },
+  {
+    "section": "site_history",
+    "name": "2026年9月12日の静的サイト生成履歴"
+  },
+  {
+    "section": "foundation_checkpoint",
+    "name": "第02章統合前のcheckpoint"
+  },
+  {
+    "section": "pause_preparation",
+    "name": "2026年9月12日の休止準備履歴"
+  },
+  {
+    "section": "restart",
+    "name": "2026年9月12日の再開"
+  },
+  {
+    "section": "completed",
+    "name": "第08章までの完了分"
+  },
+  {
+    "section": "incomplete",
+    "name": "第20章の途中状態"
+  },
+  {
+    "section": "restart_order",
+    "name": "再開する順序"
+  }
+]

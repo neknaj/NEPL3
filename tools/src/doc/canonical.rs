@@ -139,6 +139,7 @@ fn passive_paths(file: &ReferenceFile, svg: bool) -> bool {
         && file.route.ends_with(".md");
     let json = (file.source.starts_with("design/")
         || file.source == "implementation-status.json"
+        || file.source == "doc/canonical.json"
         || matches!(
             file.source.as_str(),
             "doc/history/web-tea-import.json"
@@ -179,6 +180,35 @@ fn reference_inputs(
             },
             bytes,
         ));
+    }
+    Ok(inputs)
+}
+
+/// If the active registry is also an exported reference, its passive bytes
+/// must describe the exact selection already admitted for this operation.
+/// Keep normal path and resource checks, and fail rather than mix snapshots.
+fn registry_reference_inputs(
+    root: &Path,
+    files: Vec<ReferenceFile>,
+    manifest: &str,
+    raw: &[u8],
+) -> Result<Vec<(super::export::pages::Entry, Vec<u8>)>> {
+    let inputs = reference_inputs(root, files)?;
+    let selected = Path::new(manifest);
+    if inputs.iter().any(|(entry, bytes)| {
+        // Path components normalize repeated separators and interior '.'.
+        // Fold ASCII case like registry collision checks so a Windows
+        // spelling cannot evade the snapshot check. Ambiguous spellings
+        // fail closed on case-sensitive hosts as well.
+        Path::new(&entry.source)
+            .components()
+            .map(|part| part.as_os_str().as_encoded_bytes().to_ascii_lowercase())
+            .eq(selected
+                .components()
+                .map(|part| part.as_os_str().as_encoded_bytes().to_ascii_lowercase()))
+            && bytes != raw
+    }) {
+        return Err("active registry reference differs from captured registry".into());
     }
     Ok(inputs)
 }
@@ -375,7 +405,7 @@ pub fn check(root: &Path, manifest: &str) -> Result<()> {
     // Keep the existing per-page operation and memory policy for old-only
     // registries. A page-context profile explicitly opts into the batch limit.
     if registry.pages.iter().all(|p| p.renderer == RENDERER) {
-        reference_inputs(root, registry.files)?;
+        registry_reference_inputs(root, registry.files, manifest, &raw)?;
         let compiled = super::source::compiled()?;
         for page in &registry.pages {
             let source = bounded(root, &page.source, super::export::MAX_SOURCE_BYTES)?;
@@ -671,7 +701,7 @@ pub(crate) fn generate_html_with_projections(
     }
     let mut output_budget = registry.html_output_limits.budget();
     let (inputs, aliases, mut resources, markdown) = if registry.compatibility.is_empty() {
-        let resources = reference_inputs(
+        let resources = registry_reference_inputs(
             root,
             registry
                 .files
@@ -682,6 +712,8 @@ pub(crate) fn generate_html_with_projections(
                     route: f.route.clone(),
                 })
                 .collect(),
+            manifest,
+            &raw,
         )?;
         let mut inputs = Vec::new();
         let mut aliases = Vec::new();

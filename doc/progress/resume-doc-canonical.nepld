@@ -1,0 +1,267 @@
+article ja "Doc[移行/いこう]の[再開/さいかい][入口/いりぐち]と[過去/かこ]のcheckpoint"
+body
+  cons paragraph
+    cons sentence cons ruby text "現在" text "げんざい" cons text "の" cons ruby text "編集先" text "へんしゅうさき" cons text "は " cons link relative "../canonical.json" none text "canonical registry" cons text "、" cons ruby text "実装" text "じっそう" cons text "・" cons ruby text "受入状態" text "うけいれじょうたい" cons text "は " cons link relative "../../implementation-status.json" none text "implementation-status.json" cons text "、" cons ruby text "成果物" text "せいかぶつ" cons text "と" cons ruby text "依存関係" text "いぞんかんけい" cons text "は " cons link relative "../../design/tasks.json" none concat cons text "タスク" cons ruby text "定義" text "ていぎ" nil cons text " を" cons ruby text "確認" text "かくにん" cons text "する。" nil
+    cons "[今回/こんかい]のユーザー[指示/しじ]と[現在/げんざい]のbranch・[未統合/みとうごう]PRを[照合/しょうごう]して[再開/さいかい]する。"
+    cons "[以下/いか]の[過去/かこ]の[次作業/つぎさぎょう]を、そのまま[現在/げんざい]の[指示/しじ]として[実行/じっこう]しない。"
+    nil
+  cons paragraph
+    cons "[以下/いか]は[当時/とうじ]の[検証/けんしょう]・[失敗/しっぱい]・[再開判断/さいかいはんだん]の[記録/きろく]であり、[履歴/りれき]として[保持/ほじ]する。"
+    cons "[数値/すうち]、[予算/よさん]、PR[状態/じょうたい]は[各記録時点/かくきろくじてん]のもの。"
+    cons "[未解決事項/みかいけつじこう]の[現在/げんざい]の[扱/あつか]いは[上記/じょうき][正本/せいほん]へ[戻/もど]って[確認/かくにん]する。"
+    nil
+  cons section site_history "2026[年/ねん]9[月/がつ]12[日/にち]の[静的/せいてき]サイト[生成/せいせい]（[履歴/りれき]）"
+  body
+    cons paragraph
+      cons sentence cons ruby text "本文中" text "ほんぶんちゅう" cons text "の " cons code "conformance/results/" cons text " は" cons ruby text "記録当時" text "きろくとうじ" cons text "のpathである。" nil
+      cons sentence cons ruby text "固定" text "こてい" cons text "revisionと" cons ruby text "取得手順" text "しゅとくてじゅん" cons text "は" cons link relative "../../conformance/history.md" none ruby text "履歴索引" text "りれきさくいん" cons text "を" cons ruby text "参照" text "さんしょう" cons text "する。" nil
+      nil
+    cons paragraph
+      cons "[第/だい]06[章/しょう]はPR #103、[第/だい]02[章/しょう]はPR #104で、[独立/どくりつ]レビューと[必須/ひっす]CIを[確認/かくにん]して[統合済/とうごうず]み。"
+      cons "mainは14[章/しょう]をnepld[正本/せいほん]として[管理/かんり]する。"
+      cons "[文単位/ぶんたんい]parallelを[維持/いじ]する[文書/ぶんしょ]CSSと、[登録済/とうろくず]みDocから[索引付/さくいんつ]きdocs-onlyサイトを[組/く]み[立/た]てる[実装/じっそう]をPR #105で[進/すす]めている。"
+      cons "[入力/にゅうりょく]2390e31の[生成/せいせい]は22ファイル、1,151,754 bytes。"
+      cons "[同/おな]じ[設定/せってい]の[再生成/さいせいせい]はbyte[一致/いっち]し、[別/べつ]baseでは[索引/さくいん]とmanifestのみが[変/か]わる。"
+      cons "[最終検査器/さいしゅうけんさき]で[両/りょう]base[計/けい]192ブラウザcaseが[成功/せいこう]。"
+      cons "workspace[試験/しけん]576[成功/せいこう]・[既存/きそん]ignored 1、repository[検査/けんさ]・Clippy・formatが[成功/せいこう]した。"
+      cons sentence cons ruby text "独立" text "どくりつ" cons text "した" cons ruby text "実装" text "じっそう" cons text "・" cons ruby text "表示" text "ひょうじ" cons text "・CIレビューと" cons ruby text "修正" text "しゅうせい" cons text "は " cons code "conformance/results/doc-site-build/" cons text " に" cons ruby text "保存" text "ほぞん" cons text "。" nil
+      cons "WebKitのTab[操作/そうさ]と[既存/きそん]の[狭幅/きょうふく]table overflow、[公開/こうかい]HTTPS・[復旧/ふっきゅう]は[未達範囲/みたつはんい]として[残/のこ]る。"
+      cons "T19はin-progressであり、[全体完了/ぜんたいかんりょう]やPages[配信/はいしん]の[成功/せいこう]を[示/しめ]すものではない。"
+      cons "[次/つぎ]は[最終/さいしゅう]HEADのCIを[確認/かくにん]し、[配信経路/はいしんけいろ]・[未移行/みいこう][文書/ぶんしょ]/[例/れい]/API[文書/ぶんしょ]の[統合/とうごう]へ[進/すす]む。"
+      nil
+    nil
+  cons section foundation_checkpoint "[第/だい]02[章/しょう][統合前/とうごうまえ]のcheckpoint"
+  body
+    cons paragraph
+      cons "[第/だい]02[章/しょう]を[含/ふく]む14[章集合/しょうしゅうごう]は[選択/せんたく]した[予算内/よさんない]で2[回生成/かいせいせい]に[成功/せいこう]し、Markdown15・HTML16ファイルがすべてbyte[一致/いっち]した。"
+      cons "[既存/きそん]13[章/しょう]HTML/CSSとMarkdown[本文/ほんぶん]を[保/たも]ち、[第/だい]02[章/しょう]とcontext headerを[採用/さいよう]。"
+      cons "[全/ぜん]projection[照合/しょうごう]、[対象/たいしょう]canonical14[試験/しけん]、Clippy・repository[検査/けんさ]、[独立/どくりつ]した[原稿/げんこう]・[表示/ひょうじ]・archiveレビューを[完了/かんりょう]した。"
+      cons sentence cons ruby text "証拠" text "しょうこ" cons text "は " cons code "conformance/results/doc-canonical-foundation/" cons text "。" nil
+      cons "HTML16ファイルのcompiler[不要復元/ふようふくげん]とmanifest15[件/けん]を[照合済/しょうごうず]み。"
+      cons "[第/だい]06[章/しょう]/[第/だい]02[章/しょう]の[最終/さいしゅう]CI・[統合/とうごう]はまだ[完了/かんりょう]していない。"
+      cons "[以下/いか]の[失敗/しっぱい]は[修正前/しゅうせいまえ]の[記録/きろく]として[保持/ほじ]し、[成功/せいこう]した[後/あと]の[証拠/しょうこ]と[区別/くべつ]する。"
+      nil
+    cons paragraph
+      cons "[第/だい]02[章/しょう]のallocation[増加後/ぞうかご]のHTML[再実行/さいじっこう]はWorkLimit（499,999,997 / 500,000,000）で[停止/ていし]。"
+      cons "Nodes19,497,622、Allocation1,032,057,020、Output480であり、[出力/しゅつりょく]dirは[生成/せいせい]されていない。"
+      cons "[次/つぎ]の[新規操作/しんきそうさ]ではHTML Work600M・Nodes24M・Allocation1.25Bを[選択/せんたく]する。"
+      cons "Nodesの[変更/へんこう]は[集合拡大/しゅうごうかくだい]に[対/たい]する[有限/ゆうげん]の[余裕/よゆう]であり、NodeLimitが[発生/はっせい]したという[記録/きろく]ではない。"
+      cons "[両停止/りょうていし]の[証拠/しょうこ]を[残/のこ]し、Markdown/core/per-pageの[予算/よさん]は[維持/いじ]する。"
+      cons "[第/だい]06[章/しょう]のCIで[検出/けんしゅつ]した[文書監査/ぶんしょかんさ]testのRuby[非対応/ひたいおう]は[独立/どくりつ]レビュー・[不正例試験/ふせいれいしけん]で[修正/しゅうせい]し、PR103の[必須/ひっす]CIを[再実行/さいじっこう]している。"
+      nil
+    cons paragraph
+      cons "[第/だい]02[章/しょう]を[追加/ついか]した14[章集合/しょうしゅうごう]ではMarkdownの[初回生成/しょかいせいせい]は[成功/せいこう]したが、HTMLはAllocationLimit（999,999,997 / 1,000,000,000）で[停止/ていし]した。"
+      cons "Work427,925,810、Nodes18,233,447、Output384は[停止時点/ていしじてん]の[使用量/しようりょう]であり、[完成/かんせい]HTMLの[費用/ひよう]ではない。"
+      cons "[停止/ていし]runは[保存/ほぞん]し、HTML[集合/しゅうごう]のallocationだけ1,250,000,000へ[変更/へんこう]して[新規操作/しんきそうさ]で[再検証/さいけんしょう]する。"
+      cons "Work500M・Nodes20M・Markdownとcore/per-pageの[既定値/きていち]は[変更/へんこう]しない。"
+      cons "この[値/あたい]は14[章集合/しょうしゅうごう]の[累積論理/るいせきろんり]allocationに[対/たい]する[有限/ゆうげん]のhost[許容量/きょようりょう]であり、[物理/ぶつり]heapの[最小値/さいしょうち]ではない。"
+      nil
+    cons paragraph
+      cons sentence cons text "PR102は" cons ruby text "必須" text "ひっす" cons text "CI16" cons ruby text "件" text "けん" cons text "の" cons ruby text "成功" text "せいこう" cons text "と" cons ruby text "独立" text "どくりつ" cons text "レビュー" cons ruby text "後" text "ご" cons text "、" cons code "672949b98f66829eb1b5737f6f92c425f2936c71" cons text "へ" cons ruby text "統合" text "とうごう" cons text "した。" nil
+      cons "[正式/せいしき]Doc[正本/せいほん]は12[章/しょう]である。"
+      cons "[次/つぎ]の[第/だい]06[章/しょう]はbranchで13[章集合/しょうしゅうごう]を[同/おな]じ[有限予算/ゆうげんよさん]で[各/かく]2[回生成/かいせいせい]し、Markdown14ファイル・HTML15ファイルのbyte[一致/いっち]、[既存/きそん]12[章/しょう]HTML/CSSの[不変/ふへん]、[生成/せいせい]Markdown[照合/しょうごう]・[独立/どくりつ]レビュー・3ブラウザ[表示/ひょうじ]を[確認/かくにん]した。"
+      cons sentence cons ruby text "証拠" text "しょうこ" cons text "は " cons code "conformance/results/doc-canonical-math/" cons text "。" nil
+      cons "[第/だい]06[章/しょう]の[最終/さいしゅう]CIとmain[統合/とうごう]はまだ[行/おこな]っていない。"
+      cons "[第/だい]09[章/しょう]は[参照先/さんしょうさき]の[実装記録/じっそうきろく]とそのJSON[資料/しりょう]の[準備/じゅんび]が[必要/ひつよう]なため、リンクを[省/はぶ]かず[保留/ほりゅう]する。"
+      nil
+    cons paragraph
+      cons "[第/だい]11[章/しょう]の[正本切替/せいほんきりかえ]をbranch[上/じょう]で[検証/けんしょう]した。"
+      cons "[全/ぜん]12[章/しょう]のMarkdown/HTMLを[各/かく]2[回生成/かいせいせい]し、[集合全体/しゅうごうぜんたい]のbyte[一致/いっち]と[既存/きそん]11[章/しょう]HTML/CSSの[不変/ふへん]を[確認/かくにん]した。"
+      cons "[生成/せいせい]Markdownを[読/よ]む[受入/うけいれ]ID checkerの[修正/しゅうせい]、[非表示/ひひょうじ]HTML[継続行/けいぞくぎょう]の[失敗系/しっぱいけい]、13[件/けん]のtask[試験/しけん]、14[件/けん]の[対象/たいしょう]canonical[試験/しけん]、[全/ぜん]12[章/しょう]のprojection[照合/しょうごう]、Clippy・repository check、[独立/どくりつ]レビューを[完了/かんりょう]した。"
+      cons "3ブラウザのJS[無効表示/むこうひょうじ]・[旧/きゅう]URLも[検査済/けんさず]み。"
+      cons sentence cons ruby text "証拠" text "しょうこ" cons text "は " cons code "conformance/results/doc-canonical-conformance/" cons text "。" nil
+      cons "[最終/さいしゅう]PRの[必須/ひっす]CIと[統合/とうごう]はこの[記録時点/きろくじてん]で[未完了/みかんりょう]。"
+      cons "[次/つぎ]は[第/だい]09[章/しょう]の[既存/きそん]Doc[原稿/げんこう]を[現行仕様/げんこうしよう]と[照合/しょうごう]し、[準備/じゅんび]が[整/ととの]った[章/しょう]から[正本/せいほん]へ[切/き]り[替/か]える。"
+      cons "[完了/かんりょう]したworktreeは[未保存変更/みほぞんへんこう]・[参照中/さんしょうちゅう]の[資料/しりょう]を[保全/ほぜん]したうえで[撤去/てっきょ]し、[不要/ふよう]なbuild cacheを[残/のこ]さない。"
+      nil
+    cons paragraph
+      cons "[以下/いか]は[各停止/かくていし]・[訂正時点/ていせいじてん]の[経緯/けいい]であり、[現在/げんざい]の[未解決状態/みかいけつじょうたい]を[表/あらわ]すものではない。"
+      nil
+    cons paragraph
+      cons "PR101は[必須/ひっす]CI16[件/けん]と[独立/どくりつ]レビュー[後/ご]にmainへ[統合/とうごう]した。"
+      cons "[正本/せいほん]は[第/だい]17[章/しょう]を[含/ふく]む11[章/しょう]となった。"
+      cons "[次/つぎ]の[第/だい]11[章/しょう]を[含/ふく]む12ページ[集合/しゅうごう]は、Markdown[生成/せいせい]がNodeLimitで[停止/ていし]し、[成果物/せいかぶつ]を[公開/こうかい]していない。"
+      cons "[第/だい]11[章/しょう]の36,465byteを[加/くわ]える[集合生成/しゅうごうせいせい]には、Markdown Work1B/Nodes40M/Allocation2.5B、HTML Work500Mの[有限予算/ゆうげんよさん]を[新/あら]たに[選択/せんたく]する。"
+      cons "[旧/きゅう]NodeLimitの[記録/きろく]は[保持/ほじ]し、[他資源/たしげん]も[含/ふく]めた[新規操作/しんきそうさ]の[実測/じっそく]と[再生成一致/さいせいせいいっち]を[検査/けんさ]する。"
+      cons "これは[集合/しゅうごう]の[規模/きぼ]に[応/おう]じたhost[側/がわ][許容量/きょようりょう]であり、core・[各/かく]ページの[既定値/きていち]や[最小予算/さいしょうよさん]の[変更/へんこう]ではない。"
+      cons "[全群/ぜんぐん]の[必須条件/ひっすじょうけん]は[解除/かいじょ]しない。"
+      cons "[独立/どくりつ]レビューの[指摘/してき]により、[第/だい]11[章/しょう]の[小幅/こはば]の[読/よ]み2[箇所/かしょ]を「こはば」へ[訂正/ていせい]した。"
+      cons "12ページの[両形式/りょうけいしき]は2[回/かい]のbyte[一致/いっち]まで[確認/かくにん]したが、[採用前/さいようまえ]レビューでcheckerのraw[行依存/ぎょういぞん]と[変更/へんこう]されない[見出/みだ]しの[余分/よぶん]なaliasを[検出/けんしゅつ]した。"
+      cons "[受入/うけいれ]IDはMarkdownの[構造/こうぞう]を[読/よ]み、[生成/せいせい]された[箇条書/かじょうが]きのescape[済/ず]みprefixにも[対応/たいおう]させる。"
+      cons sentence cons ruby text "引用" text "いんよう" cons text "・code" cons ruby text "等" text "とう" cons text "を" cons ruby text "定義" text "ていぎ" cons text "と" cons ruby text "誤認" text "ごにん" cons text "しない" cons ruby text "回帰試験" text "かいきしけん" cons text "と" cons ruby text "重複拒否" text "ちょうふくきょひ" cons text "を" cons ruby text "維持" text "いじ" cons text "し、" cons code "properties" cons text " は" cons ruby text "既存" text "きそん" cons text "の" cons ruby text "自動見出" text "じどうみだ" cons text "しURLを" cons ruby text "使" text "つか" cons text "って" cons ruby text "追加" text "ついか" cons text "aliasの" cons ruby text "重複" text "ちょうふく" cons text "を" cons ruby text "避" text "さ" cons text "ける。" nil
+      cons "[訂正/ていせい]した[入力/にゅうりょく]・コードで[改/あらた]めて[生成/せいせい]し、[正本切替/せいほんきりかえ]の[検査/けんさ]を[継続/けいぞく]する。"
+      nil
+    cons paragraph
+      cons "[第/だい]17[章/しょう]を[先/さき]に[移行/いこう]し、[第/だい]11[章/しょう]から[参照/さんしょう]できる[正本/せいほん]を[用意/ようい]する。"
+      cons sentence cons ruby text "第" text "だい" cons text "17" cons ruby text "章" text "しょう" cons text "を" cons ruby text "加" text "くわ" cons text "えた11ページ" cons ruby text "集合" text "しゅうごう" cons text "の" cons ruby text "初回" text "しょかい" cons text "HTML" cons ruby text "生成" text "せいせい" cons text "は、serialize" cons ruby text "中" text "ちゅう" cons text "に " cons code "AllocationLimit" cons text "（" cons ruby text "使用量" text "しようりょう" cons text "749,999,977、" cons ruby text "上限" text "じょうげん" cons text "750,000,000）で" cons ruby text "停止" text "ていし" cons text "した。" nil
+      cons "[出力/しゅつりょく]ディレクトリは[作成/さくせい]されず、Markdownの[初回生成/しょかいせいせい]だけが[成功/せいこう]した。"
+      cons "これはHTML[成功/せいこう]・[正本切替/せいほんきりかえ]の[証拠/しょうこ]ではない。"
+      cons "[拡大/かくだい]した[文書集合/ぶんしょしゅうごう]のHTML[生成用/せいせいよう]allocation[上限/じょうげん]を1,000,000,000へ[変更/へんこう]し、[別/べつ]の[生成操作/せいせいそうさ]として[再検証/さいけんしょう]する。"
+      cons "Work400M・Nodes20M・その[他/た]のHTML[資源/しげん]、Markdown[予算/よさん]、core・[各/かく]ページの[既定値/きていち]は[維持/いじ]する。"
+      cons "この[値/あたい]は[累積/るいせき]する[論理/ろんり]allocationの[許容量/きょようりょう]であり、[実/じつ]メモリ[量/りょう]や[最小予算/さいしょうよさん]を[示/しめ]さない。"
+      cons "[停止/ていし]の[記録/きろく]は[残/のこ]し、[再生成/さいせいせい]・[意味同等性/いみどうとうせい]・リンク・[表示/ひょうじ]の[検証後/けんしょうご]にprojectionを[採用/さいよう]する。"
+      nil
+    cons paragraph
+      cons "[新/あたら]しい[選択/せんたく]でMarkdown12ファイル・HTML13ファイルを[各/かく]2[回生成/かいせいせい]し、[全/ぜん]byte[一致/いっち]を[確認/かくにん]した。"
+      cons "HTMLの[成功使用量/せいこうしようりょう]はWork362,735,172・Allocation762,304,126・Nodes13,880,291である。"
+      cons "[第/だい]17[章/しょう]と[第/だい]01/12[章/しょう]のcontext headerを[採用/さいよう]し、[既存/きそん]10[文書/ぶんしょ]のHTMLとCSSはbyte[一致/いっち]した。"
+      cons "[第/だい]17[章/しょう]の21 code[値/ち]・2[表/ひょう]の3[行/ぎょう]/8[行/ぎょう]・[参照先/さんしょうさき]は[独立/どくりつ]に[原文/げんぶん]と[照合/しょうごう]した。"
+      cons "[生成/せいせい]Markdownの[再検査/さいけんさ]・[独立/どくりつ]した[最終/さいしゅう]レビュー・[必須/ひっす]CIを[継続/けいぞく]する。"
+      cons "[全体/ぜんたい]の[移行/いこう]・KaTeX[実装/じっそう]・Pages[公開/こうかい]が[完了/かんりょう]したという[記録/きろく]ではない。"
+      nil
+    cons paragraph
+      cons "ユーザーの[休止終了/きゅうししゅうりょう]・[自律続行指示/じりつぞっこうしじ]により[開発/かいはつ]を[再開/さいかい]した。"
+      cons sentence cons text "PR99は" cons ruby text "必須" text "ひっす" cons text "CI16" cons ruby text "件" text "けん" cons text "の" cons ruby text "成功後" text "せいこうご" cons text "、mainの " cons code "994526e04c5d711aca06d6eefe6b11f3f175bcba" cons text "へmerge" cons ruby text "済" text "ず" cons text "み。" nil
+      cons "[以下/いか]の[休止記録/きゅうしきろく]は[当時/とうじ]の[状態/じょうたい]を[保存/ほぞん]したものである。"
+      cons "[次/つぎ]は[第/だい]11[章等/しょうとう]の[移行/いこう]を[妨/さまた]げるMarkdown projectionの[隣接/りんせつ]List[境界/きょうかい]を[実装/じっそう]し、Relative linkの[解決/かいけつ]と[合/あ]わせて[文書移行/ぶんしょいこう]を[進/すす]める。"
+      cons "[未保存/みほぞん]の[別/べつ]worktreeは[保全/ほぜん]する。"
+      nil
+    nil
+  cons section pause_preparation "2026[年/ねん]9[月/がつ]12[日/にち]の[休止準備/きゅうしじゅんび]（[履歴/りれき]）"
+  body
+    cons paragraph
+      cons "ユーザー[指示/しじ]により、[第/だい]20[章/しょう]の[正本切替/せいほんきりかえ]を[区切/くぎ]りに[休止/きゅうし]する。"
+      cons sentence cons text "PR99の" cons ruby text "対象実装" text "たいしょうじっそう" cons text "は " cons code "f459596e87dfe28b24954cfad82472626033ea91" cons text "。" nil
+      cons "[第/だい]20[章/しょう]を[含/ふく]む10[章/しょう]の[生成物/せいせいぶつ]を[採用/さいよう]し、ローカルの14 canonical[試験/しけん]、canonical --check、format、Clippy、repository[検査/けんさ]は[成功/せいこう]した。"
+      cons "[独立/どくりつ]した[全文/ぜんぶん]・[生成物/せいせいぶつ]レビュー、JS[無効/むこう]の3ブラウザ[表示/ひょうじ]とGitHubの5 anchor、compiler[不要/ふよう]の12ファイル[復元/ふくげん]も[確認済/かくにんず]み。"
+      cons sentence cons ruby text "証拠" text "しょうこ" cons text "は " cons code "conformance/results/doc-canonical-doc-html/" cons text " にまとめる。" nil
+      cons "exact-headの[必須/ひっす]CIと[最終監査/さいしゅうかんさ]に[合格/ごうかく]してからmergeする。"
+      nil
+    cons paragraph
+      cons "[以下/いか]の9[月/がつ]9[日/にち]の「[未完了/みかんりょう]・merge[禁止/きんし]」は[当時/とうじ]の[記録/きろく]であり、[現在/げんざい]の[状態/じょうたい]への[指示/しじ]ではない。"
+      cons "[当時/とうじ]の[停止/ていし]や[誤/あやま]ったbinary[流用/りゅうよう]を[成功記録/せいこうきろく]へ[変更/へんこう]しない。"
+      cons "T21/T16・Playground・Pages[公開/こうかい]・[処理系全体/しょりけいぜんたい]の[完成/かんせい]は[宣言/せんげん]しない。"
+      nil
+    cons paragraph
+      cons sentence cons ruby text "再開時" text "さいかいじ" cons text "は" cons ruby text "最新" text "さいしん" cons text "mainと " cons code "doc/canonical.json" cons text " を" cons ruby text "確認" text "かくにん" cons text "し、" cons ruby text "未移行稿" text "みいこうこう" cons text "を " cons code "doc/authoring.md" cons text " に" cons ruby text "従" text "したが" cons text "って" cons ruby text "独立" text "どくりつ" cons text "レビュー・" cons ruby text "実生成" text "じつせいせい" cons text "・リンク" cons ruby text "検証後" text "けんしょうご" cons text "にページ" cons ruby text "単位" text "たんい" cons text "で" cons ruby text "切" text "き" cons text "り" cons ruby text "替" text "か" cons text "える。" nil
+      cons "[第/だい]11[章/しょう]はRelative linkだけでなく[隣接/りんせつ]Listの[表現/ひょうげん]も[確認/かくにん]する[必要/ひつよう]がある。"
+      cons "[巨大/きょだい]なreview[文書/ぶんしょ]のWorkLimitとsource[検査費用/けんさひよう]は[未解決/みかいけつ]であり、[単/たん]に[上限/じょうげん]を[増/ふ]やして[全体成功/ぜんたいせいこう]としない。"
+      cons "Pages[公開/こうかい]も[未完了/みかんりょう]である。"
+      nil
+    cons paragraph
+      cons sentence cons ruby text "別" text "べつ" cons text "worktree " cons code "C:/projects/NEPL3-doc-current-reader-work" cons text " の " cons code "crates/foundation/core/src/budget.rs" cons text " と " cons code "tools/src/doc/source.rs" cons text " の" cons ruby text "未保存変更" text "みほぞんへんこう" cons text "は" cons ruby text "本" text "ほん" cons text "PRへ" cons ruby text "含" text "ふく" cons text "めず" cons ruby text "保全" text "ほぜん" cons text "する。" nil
+      cons "[休止時/きゅうしじ]のclean[確認/かくにん]はmainと[本作業/ほんさぎょう]branchを[対象/たいしょう]とする。"
+      nil
+    nil
+  cons section restart "2026[年/ねん]9[月/がつ]12[日/にち]の[再開/さいかい]"
+  body
+    cons paragraph
+      cons "[下記/かき]は9[月/がつ]9[日/にち]の[休止記録/きゅうしきろく]である。"
+      cons "[再開後/さいかいご]にmainを[統合/とうごう]し、[第/だい]20[章/しょう]を[含/ふく]む10[章/しょう]の[集合生成用予算/しゅうごうせいせいようよさん]をMarkdown Work800M/Allocation2B、HTML Work400Mへ[調整/ちょうせい]した。"
+      cons "Nodes・その[他/た]の[資源/しげん]・core/[各/かく]ページのparse/lower[既定値/きていち]は[変更/へんこう]していない。"
+      cons "[同/おな]じ[入力/にゅうりょく]からMarkdown11ファイル、HTML12ファイルをそれぞれ2[回生成/かいせいせい]し、[全/ぜん]byte[一致/いっち]を[確認/かくにん]した。"
+      cons "[第/だい]20[章/しょう]のprojectionと[第/だい]01/12[章/しょう]のcontext headerを[採用/さいよう]した。"
+      cons "[従来/じゅうらい]の9[文書/ぶんしょ]のHTMLとCSSはbyte[一致/いっち]している。"
+      cons "[停止/ていし]の[過去記録/かこきろく]は[成功/せいこう]へ[変更/へんこう]しない。"
+      nil
+    cons paragraph
+      cons "Markdownの[実測/じっそく]はWork607,160,055、Allocation1,633,873,615で[旧上限/きゅうじょうげん]をともに[超/こ]える。"
+      cons "これはreceipt serialization[前/まえ]の[論理使用量/ろんりしようりょう]であり、[実/じつ]メモリ[使用量/しようりょう]や[最小予算/さいしょうよさん]ではない。"
+      cons "[独立/どくりつ]した[全文/ぜんぶん]・[生成内容/せいせいないよう]レビューに[加/くわ]え、[実/じつ]ブラウザ・GitHub anchor・[再生成検査/さいせいせいけんさ]・[必須/ひっす]CIの[最終確認/さいしゅうかくにん]を[継続/けいぞく]する。"
+      cons "[以下/いか]の「[未再生成/みさいせいせい]」は[休止時点/きゅうしじてん]の[状態/じょうたい]を[示/しめ]す。"
+      nil
+    cons paragraph
+      cons "ユーザーの2026[年/ねん]9[月/がつ]9[日/にち]の[休止指示/きゅうししじ]により、[以下/いか]の[区切/くぎ]りで[停止/ていし]する。"
+      cons "[処理系全体/しょりけいぜんたい]、T21/T16、Pages[公開/こうかい]の[完成/かんせい]を[意味/いみ]しない。"
+      nil
+    nil
+  cons section completed "[第/だい]08[章/しょう]までの[完了分/かんりょうぶん]"
+  body
+    cons list unordered
+      cons item none body
+        cons paragraph
+          cons sentence cons text "PR97（" cons ruby text "第" text "だい" cons text "12" cons ruby text "章" text "しょう" cons text "）はmainの " cons code "ddd5bee10abac05702ea09490d421cc0e1188672" cons text " に" cons ruby text "取" text "と" cons text "り" cons ruby text "込" text "こ" cons text "み" cons ruby text "済" text "ず" cons text "み。" nil
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons sentence cons link external "https://github.com/neknaj/NEPL3/pull/98" text "PR98" cons text " は" cons ruby text "第" text "だい" cons text "08" cons ruby text "章" text "しょう" cons text "の" cons ruby text "正本切替" text "せいほんきりかえ" cons text "。" nil
+          cons sentence cons ruby text "最終" text "さいしゅう" cons text "headは " cons code "9985a3906ed455c6466ee5fd6daac4f13eca0ce1" cons text "。" nil
+          cons "production[生成/せいせい]、[独立/どくりつ]レビュー、browser、compiler[不要/ふよう]の[復元/ふくげん]、archive[監査/かんさ]まで[完了/かんりょう]。"
+          cons sentence cons ruby text "追加" text "ついか" cons text "の" cons ruby text "休止整理" text "きゅうしせいり" cons text "で" cons ruby text "同" text "どう" cons text "headの" cons ruby text "必須" text "ひっす" cons text "CI16" cons ruby text "件" text "けん" cons text "すべての" cons ruby text "成功" text "せいこう" cons text "を" cons ruby text "確認" text "かくにん" cons text "し、mainの " cons code "f2cbf4fb95ec1d52c76df299d64bb376b98cb06e" cons text " へmerge" cons ruby text "済" text "ず" cons text "み。" nil
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "[第/だい]08[章/しょう]を[含/ふく]む[正本/せいほん]9[章/しょう]はmain[取/と]り[込/こ]み[済/ず]み。"
+          cons sentence cons text "PR98の" cons ruby text "証拠" text "しょうこ" cons text "は " cons code "conformance/results/doc-canonical-editor/" cons text "。" nil
+          nil
+        nil
+      nil
+    nil
+  cons section incomplete "[第/だい]20[章/しょう]の[途中状態/とちゅうじょうたい]"
+  body
+    cons paragraph
+      cons sentence cons ruby text "作業" text "さぎょう" cons text "branchは " cons code "feat/doc-canonical-doc-html" cons text "、worktreeは " cons code "C:/projects/NEPL3-doc-canonical-doc-html" cons text "。" nil
+      cons sentence cons ruby text "準備" text "じゅんび" cons text "commitは " cons code "10255b819296ba3c7eb786784779a67ac15740d7" cons text "。" nil
+      cons sentence cons text "その" cons ruby text "後" text "ご" cons text "の " cons code "426bad439028f5dc99054acf0da92e304a5200d7" cons text " はPR98のarchiveを" cons ruby text "統合" text "とうごう" cons text "したもの。" nil
+      nil
+    cons paragraph
+      cons sentence cons ruby text "第" text "だい" cons text "20" cons ruby text "章" text "しょう" cons text "の" cons ruby text "稿" text "こう" cons text "を " cons code "doc/spec/20-doc-html.nepld" cons text " へ" cons ruby text "移" text "うつ" cons text "し、" cons ruby text "旧" text "きゅう" cons text "URLのalias3" cons ruby text "件" text "けん" cons text "と10" cons ruby text "章目" text "しょうめ" cons text "のregistry" cons ruby text "登録" text "とうろく" cons text "を" cons ruby text "準備" text "じゅんび" cons text "した。" nil
+      cons "[冒頭/ぼうとう]は、pure local fragmentの[制約/せいやく]と、[既/すで]に[実装/じっそう]された[開発/かいはつ]hostのshell/CSS[書/か]き[出/だ]しを[区別/くべつ]する3[文/ぶん]へ[訂正/ていせい]した。"
+      cons "[元稿全体/げんこうぜんたい]はKepler、rootによる[冒頭変更/ぼうとうへんこう]は[元稿著者/げんこうちょしゃ]と[区別/くべつ]してCarsonがレビューした。"
+      cons "16[段落/だんらく]・InlineCode13[値/ち]・External link4[件/けん]を[保持/ほじ]する。"
+      nil
+    cons paragraph
+      cons sentence cons strong concat cons text "このbranchは" cons ruby text "未完了" text "みかんりょう" cons text "であり、mainへmergeしてはならない。" nil nil
+      cons "[第/だい]20[章/しょう]のMarkdownはまだ[旧正本/きゅうせいほん]のまま。"
+      cons "registry[更新後/こうしんご]の[第/だい]01/12[章/しょう]のcontext headerも[未再生成/みさいせいせい]である。"
+      cons "canonical --checkの[成功/せいこう]を[主張/しゅちょう]しない。"
+      nil
+    cons paragraph
+      cons "[専用/せんよう]worktreeでbuildしたproduction toolによる[正/ただ]しい10[章生成/しょうせいせい]は、MarkdownがAllocationLimit、HTMLがWorkLimitで[停止/ていし]し、どちらも[出力未作成/しゅつりょくみさくせい]。"
+      cons "HTMLはSource242,864 / Work299,999,987 / Nodes12,051,403 / Allocation639,833,274 / Output352 / Depth14、resolve/render[段階/だんかい]の[停止/ていし]。"
+      cons "この[段階/だんかい]で[上限/じょうげん]は[変更/へんこう]していない。"
+      nil
+    cons paragraph
+      cons sentence cons ruby text "休止" text "きゅうし" cons text "checkpoint " cons code "0e6401097c26d1797d70b106b1d5c03d9637c0d7" cons text " のCI run " cons code "34287360823" cons text " も" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "native3OSの[既存/きそん]canonical corpus testがAllocationLimitで[失敗/しっぱい]し、qualityも[失敗/しっぱい]している。"
+      cons "[検査/けんさ]を[解除/かいじょ]せず、[第/だい]20[章/しょう]branchは[未完了/みかんりょう]のまま[保全/ほぜん]する。"
+      cons "この[失敗/しっぱい]をPR98/mainのCIと[混同/こんどう]しない。"
+      nil
+    cons paragraph
+      cons "[先行/せんこう]する[別/べつ]worktreeのbinary[流用/りゅうよう]は[検証/けんしょう]helperの[誤/あやま]りだった。"
+      cons "toolsのrootはcwdでなくcompile-time CARGO_MANIFEST_DIRに[基/もと]づくため、その2[回/かい]の[成功出力/せいこうしゅつりょく]は[第/だい]08[章/しょう]までの9[章/しょう]を[読/よ]み、[第/だい]20[章/しょう]の[検証/けんしょう]ではない。"
+      cons "[誤/あやま]った[帰属/きぞく]と[実際/じっさい]のmanifestを[保存/ほぞん]し、[成功証拠/せいこうしょうこ]から[除外/じょがい]する。"
+      nil
+    nil
+  cons section restart_order "[再開/さいかい]する[順序/じゅんじょ]"
+  body
+    cons list ordered 1
+      cons item none body
+        cons paragraph
+          cons "AGENTS/CODEX/authoringと[現/げん]HEAD・[全/ぜん]working treeを[再確認/さいかくにん]する。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "PR98のmerge[後/ご]のmainを[取得/しゅとく]し、この[途中/とちゅう]branchへ[取/と]り[込/こ]む。"
+          cons "[未完了/みかんりょう]の[第/だい]20[章/しょう]を[先/さき]にmainへmergeしない。"
+          cons "[再開時/さいかいじ]にGitHubの[最新状態/さいしんじょうたい]も[確認/かくにん]する。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "[第/だい]20[章/しょう]の[正/ただ]しい[停止記録/ていしきろく]を[基/もと]に、[有限/ゆうげん]の[集合出力予算/しゅうごうしゅつりょくよさん]を[検討/けんとう]する。"
+          cons "stopped Budgetのreset、core/parse/lower[既定値/きていち]の[無根拠/むこんきょ]な[変更/へんこう]はしない。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "[同/おな]じworktreeでbuildしたtoolにより、[新規出力/しんきしゅつりょく]へMarkdown/HTMLを2[回生成/かいせいせい]し、10[章/しょう]すべてのsource/manifest・byte[一致/いっち]・[以前/いぜん]の[出力保持/しゅつりょくほじ]を[確認/かくにん]する。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "[第/だい]20[章/しょう]Markdownと[第/だい]01/12[章/しょう]のcontext headerを[採用/さいよう]し、production[検査/けんさ]、[独立/どくりつ]code/[表示/ひょうじ]レビュー、[旧/きゅう]3＋semantic2の[実/じつ]GitHub[移動/いどう]、10[文書/ぶんしょ]・CSS・manifestの[計/けい]12ファイルからなるHTML[集合/しゅうごう]のcompiler[不要復元/ふようふくげん]、[必須/ひっす]CIを[経/へ]て[正本切替/せいほんきりかえ]を[完了/かんりょう]する。"
+          nil
+        nil
+      nil
+    cons paragraph
+      cons sentence cons ruby text "休止証拠" text "きゅうししょうこ" cons text "は " cons code "conformance/results/doc-canonical-doc-html-checkpoint/" cons text "。" nil
+      cons "これは[途中状態/とちゅうじょうたい]を[保全/ほぜん]する[記録/きろく]であり、[受入/うけいれ]passedの[証拠/しょうこ]ではない。"
+      cons sentence cons code ".tmp/" cons text " " cons ruby text "内" text "ない" cons text "のbuild/browser" cons ruby text "環境" text "かんきょう" cons text "と" cons ruby text "作業資料" text "さぎょうしりょう" cons text "は" cons ruby text "再開用" text "さいかいよう" cons text "に" cons ruby text "保持" text "ほじ" cons text "する。" nil
+      cons "[以前/いぜん]から[保全/ほぜん]している[別/べつ]worktreeの[未保存変更/みほぞんへんこう]は[今回/こんかい]の[休止整理/きゅうしせいり]では[変更/へんこう]しない。"
+      nil
+    nil
+  nil
