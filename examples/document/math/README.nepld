@@ -1,0 +1,14 @@
+article ja "GitHub Markdown[向/む]けMathの[例/れい]"
+body
+  cons paragraph
+    cons sentence cons ruby text "例" text "れい" cons text "の" cons ruby text "正本" text "せいほん" cons text "は " cons code "markdown.nepld" cons text "。" nil
+    cons sentence cons ruby text "閲覧用" text "えつらんよう" cons text "の " cons code "markdown.md" cons text " は" cons ruby text "次" text "つぎ" cons text "の" cons ruby text "操作" text "そうさ" cons text "で" cons ruby text "生成" text "せいせい" cons text "する。" nil
+    nil
+  cons rawcode some "sh" "cargo run --locked -p nepl3-tools -- doc-markdown footnotes-pages examples/document/math/markdown.pages.json /tmp/nepl3-math-example\n"
+  cons paragraph
+    cons "[本文/ほんぶん]・Docの[脚注/きゃくちゅう]・display block・table cellの[数式/すうしき]を[扱/あつか]う。"
+    cons "Math[内部/ないぶ]のSentence[注釈/ちゅうしゃく]など、[構造/こうぞう]TeXで[保持/ほじ]できない[内容/ないよう]は[拒否/きょひ]する。"
+    cons "Mathの[評価/ひょうか]は[行/おこな]わず、GitHub[側/がわ]のMathJaxによる[表示/ひょうじ]を[利用/りよう]する。"
+    cons "[生成物/せいせいぶつ]の[構造検査/こうぞうけんさ]は、GitHubでの[実描画/じつびょうが]・アクセシビリティ[検証/けんしょう]を[代替/だいたい]しない。"
+    nil
+  nil

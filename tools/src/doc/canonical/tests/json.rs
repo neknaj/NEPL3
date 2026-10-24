@@ -1036,3 +1036,92 @@ fn sentence_surface_exports_to_nested_projection_and_links_to_doc_page() -> Resu
     assert!(html.contains("id=\"sentence\""));
     Ok(())
 }
+
+#[test]
+fn math_example_guide_registration_requires_exact_paired_paths() -> Result<()> {
+    let mut value = registry();
+    value["pages"][0]["source"] = json!("examples/document/math/README.nepld");
+    value["pages"][0]["projection"] = json!("examples/document/math/README.md");
+    parse_registry(&serde_json::to_vec(&value)?)?;
+    for (field, invalid) in [
+        ("source", "examples/document/Math/README.nepld"),
+        ("source", "examples/document/math/readme.nepld"),
+        ("source", "examples/document/math/README.nepld.bak"),
+        ("source", "examples/document/math/../math/README.nepld"),
+        ("source", "examples/document/circuit/README.nepld"),
+        ("source", "doc/README.nepld"),
+        ("source", "crates/examples/document/Math/core/README.nepld"),
+        ("projection", "doc/README.md"),
+        ("projection", "examples/document/Math/README.md"),
+        ("projection", "examples/document/math/readme.md"),
+        ("projection", "examples/document/math/README.md.bak"),
+        ("projection", "examples/document/circuit/README.md"),
+        ("projection", "crates/examples/document/Math/core/README.md"),
+        ("aliases", "examples/document/math/aliases.json"),
+    ] {
+        let mut invalid_value = value.clone();
+        invalid_value["pages"][0][field] = json!(invalid);
+        assert!(
+            parse_registry(&serde_json::to_vec(&invalid_value)?).is_err(),
+            "{field}: {invalid}"
+        );
+    }
+    let mut duplicate = value.clone();
+    let mut second = value["pages"][0].clone();
+    second["id"] = json!("other");
+    second["route"] = json!("docs/other.html");
+    duplicate["pages"]
+        .as_array_mut()
+        .ok_or("pages")?
+        .push(second);
+    assert!(parse_registry(&serde_json::to_vec(&duplicate)?).is_err());
+    Ok(())
+}
+
+#[test]
+fn math_example_guide_exports_to_nested_projection_and_links_to_doc_page() -> Result<()> {
+    let fixture = Fixture::new()?;
+    let mut value = registry();
+    value["pages"][0]["renderer"] = json!(projection::RENDERER);
+    value["pages"].as_array_mut().ok_or("pages")?.push(json!({
+        "id":"math-example-guide",
+        "source":"examples/document/math/README.nepld",
+        "projection":"examples/document/math/README.md",
+        "aliases":"doc/surface-aliases.json",
+        "route":"docs/examples/math.html",
+        "renderer":projection::RENDERER
+    }));
+    fixture.json("doc/canonical.json", &value)?;
+    fixture.write("doc/aliases.json", "[]")?;
+    fixture.write(
+        "doc/surface-aliases.json",
+        r#"[{"section":null,"name":"math-guide"}]"#,
+    )?;
+    fixture.write(
+        "doc/sample.nepld",
+        r#"article en "Spec" body cons paragraph cons "Contract." nil nil"#,
+    )?;
+    fixture.write("examples/document/math/README.nepld", r#"article en "Math guide" body cons paragraph cons sentence cons link relative "../../../doc/sample.md" none text "Spec" nil nil nil"#)?;
+    let output = fixture.root().join("generated");
+    markdown(fixture.root(), "doc/canonical.json", &output)?;
+    let projected = fs::read_to_string(output.join("examples/document/math/README.md"))?;
+    let links: Vec<_> = pulldown_cmark::Parser::new(&projected)
+        .filter_map(|e| match e {
+            pulldown_cmark::Event::Start(pulldown_cmark::Tag::Link { dest_url, .. }) => {
+                Some(dest_url.into_string())
+            }
+            _ => None,
+        })
+        .collect();
+    assert_eq!(links, ["README.nepld", "../../../doc/sample.md"]);
+    let rendered = generate_html(fixture.root(), "doc/canonical.json")?;
+    let page = rendered
+        .files
+        .iter()
+        .find(|(path, _)| path.as_str() == "docs/examples/math.html")
+        .ok_or("surface page")?;
+    let html = std::str::from_utf8(page.1)?;
+    assert!(html.contains("href=\"../sample.html\""));
+    assert!(html.contains("id=\"math-guide\""));
+    Ok(())
+}
