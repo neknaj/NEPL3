@@ -1,0 +1,42 @@
+[
+  {
+    "section": null,
+    "name": "証拠保存と文書publisherの責務を戻す"
+  },
+  {
+    "section": "observations",
+    "name": "1-現在起きていること"
+  },
+  {
+    "section": "rationale",
+    "name": "2-合理的な部分"
+  },
+  {
+    "section": "excess",
+    "name": "3-過剰重複一回限りの部分"
+  },
+  {
+    "section": "guarantees",
+    "name": "4-維持する保証とpublisherの分担"
+  },
+  {
+    "section": "consolidation",
+    "name": "5-統合停止する機構"
+  },
+  {
+    "section": "boundaries",
+    "name": "6-新しい責務境界"
+  },
+  {
+    "section": "migration",
+    "name": "7-移行手順と優先度"
+  },
+  {
+    "section": "completion",
+    "name": "8-完了条件"
+  },
+  {
+    "section": "additional",
+    "name": "追加調査-状態正本ci"
+  }
+]
