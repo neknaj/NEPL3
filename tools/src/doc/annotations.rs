@@ -251,18 +251,17 @@ impl<C: FoundationValueCodec> SentenceAnnotationRenderer<'_, C> {
                 Some(reason) => Error::Stopped(reason),
                 None => Error::Foundation(error),
             })?;
-        let selected =
-            document::namespace::collect(&sentence, self.doc_surface, self.registry, self.codec, b)
-                .map_err(|error| document_error(error, b))?;
-        document::namespace::check_content(
+        let (selected, checked) = document::namespace::collect_with_checked(
             &sentence,
-            &selected,
-            self.math_surface,
+            self.doc_surface,
             self.registry,
             self.codec,
             b,
         )
         .map_err(|error| document_error(error, b))?;
+        document::namespace::check_checked_content::<C>(&checked, &selected, self.math_surface, b)
+            .map_err(|error| document_error(error, b))?;
+        drop(checked);
         let members = document::namespace::inspect(&selected, self.registry, self.codec, b)
             .map_err(|error| document_error(error, b))?;
         let member_refs = document::namespace::member_refs(&members, b)?;

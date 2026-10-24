@@ -2,7 +2,10 @@
 use super::*;
 use nepl3_core::value::SchemaRef;
 use nepl3_doc_core::labels::namespace as labels;
-use nepl3_sentence_core::{model::EmbedRef, syntax::SentenceSyntax};
+use nepl3_sentence_core::{
+    model::EmbedRef,
+    syntax::{CheckedSyntax, SentenceSyntax},
+};
 
 pub struct Selected {
     pub embed: EmbedRef,
@@ -27,18 +30,31 @@ pub fn collect<C: FoundationValueCodec>(
     codec: &mut C,
     b: &mut Budget,
 ) -> Result<Vec<Selected>, Error<C::Error>> {
-    let Some(surface) = surface else {
+    if surface.is_none() {
         return Ok(Vec::new());
+    }
+    collect_with_checked(sentence, surface, registry, codec, b).map(|(selected, _)| selected)
+}
+pub(crate) fn collect_with_checked<'a, C: FoundationValueCodec>(
+    sentence: &'a SentenceSyntax,
+    surface: Option<&SchemaRef>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<(Vec<Selected>, CheckedSyntax<'a>), Error<C::Error>> {
+    let Some(surface) = surface else {
+        return Ok((Vec::new(), check_sentence(sentence, registry, codec, b)?));
     };
-    let selection = nepl3_suite::adapters::sentence::document_guests::collect(
-        sentence, surface, registry, codec, b,
-    )
-    .map_err(|error| match error {
-        nepl3_suite::adapters::sentence::document_guests::Error::Stopped(reason) => {
-            Error::Stopped(reason)
-        }
-        error => Error::Guests(error),
-    })?;
+    let (selection, checked) =
+        nepl3_suite::adapters::sentence::document_guests::collect_with_checked(
+            sentence, surface, registry, codec, b,
+        )
+        .map_err(|error| match error {
+            nepl3_suite::adapters::sentence::document_guests::Error::Stopped(reason) => {
+                Error::Stopped(reason)
+            }
+            error => Error::Guests(error),
+        })?;
     let (unique, occurrences) = selection.into_parts();
     let mut documents = Vec::new();
     for document in unique {
@@ -60,7 +76,7 @@ pub fn collect<C: FoundationValueCodec>(
             b,
         )?;
     }
-    Ok(selected)
+    Ok((selected, checked))
 }
 
 pub fn inspect<'a, C: FoundationValueCodec>(
@@ -203,7 +219,16 @@ pub fn check_content<C: FoundationValueCodec>(
     codec: &mut C,
     b: &mut Budget,
 ) -> Result<(), Error<C::Error>> {
-    let shape = sentence
+    let checked = check_sentence(sentence, registry, codec, b)?;
+    check_checked_content::<C>(&checked, selected, math_surface, b)
+}
+fn check_sentence<'a, C: FoundationValueCodec>(
+    sentence: &'a SentenceSyntax,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<CheckedSyntax<'a>, Error<C::Error>> {
+    sentence
         .validate(registry, b, codec.source_admission())
         .map_err(|error| match error {
             nepl3_sentence_core::syntax::Error::Stopped(reason) => Error::Stopped(reason),
@@ -211,7 +236,18 @@ pub fn check_content<C: FoundationValueCodec>(
             error => Error::Guests(
                 nepl3_suite::adapters::sentence::document_guests::Error::Sentence(error),
             ),
-        })?;
+        })
+}
+/// Uses only evidence retained in the current immutable preparation operation.
+/// This is not the later HTML insertion-depth admission.
+pub(crate) fn check_checked_content<C: FoundationValueCodec>(
+    shape: &CheckedSyntax<'_>,
+    selected: &[Selected],
+    math_surface: Option<&SchemaRef>,
+    b: &mut Budget,
+) -> Result<(), Error<C::Error>> {
+    b.poll()?;
+    let sentence = shape.syntax();
     let count = sentence.value.embeds.len();
     b.charge(
         Resource::AllocationUnits,
