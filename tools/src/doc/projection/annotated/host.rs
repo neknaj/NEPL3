@@ -265,8 +265,28 @@ fn generate_receipt_profile(
         .charge(Resource::AllocationUnits, alias_bytes.len() as u64 * 32)
         .map_err(err)?;
     let options: Vec<Alias> = serde_json::from_slice(alias_bytes)?;
-    let mut artifact =
-        from_source_profile(compiled, source, &options, output_budget, mode, phases)?;
+    let artifact = from_source_profile(compiled, source, &options, output_budget, mode, phases)?;
+    finish_projection(
+        path,
+        source,
+        alias_bytes,
+        source_href,
+        output_budget,
+        mode,
+        artifact,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn finish_projection(
+    path: &str,
+    source: &str,
+    alias_bytes: &[u8],
+    source_href: Option<&str>,
+    output_budget: &mut Budget,
+    mode: NotesMode,
+    mut artifact: Artifact,
+) -> crate::Result<(String, Digest)> {
     if let Some(href) = source_href {
         artifact.source_link(href, output_budget).map_err(err)?;
     }
@@ -301,4 +321,114 @@ fn generate_receipt_profile(
         .charge(Resource::OutputBytes, text.len() as u64)
         .map_err(err)?;
     Ok((text, artifact.document_digest))
+}
+
+/// Owned legacy source/AST binding. Fields are private so a caller cannot pair
+/// a document with another source or alias digest. Never contains admission proofs.
+pub(crate) struct PreparedLegacy {
+    document: DocumentSyntax,
+    path: String,
+    source: String,
+    alias_bytes: Vec<u8>,
+}
+impl PreparedLegacy {
+    pub(crate) fn capture(
+        compiled: &Compiled,
+        path: &str,
+        source: &str,
+        alias_bytes: &[u8],
+        phases: PhaseLimits,
+        budget: &mut Budget,
+    ) -> crate::Result<Self> {
+        budget.poll().map_err(err)?;
+        if path.len() > 4096 || path.chars().any(char::is_control) {
+            return Err("input path is not representable in projection metadata".into());
+        }
+        if source.len() as u64 > crate::doc::export::MAX_SOURCE_BYTES
+            || alias_bytes.len() > 1_048_576
+        {
+            return Err("legacy snapshot input exceeds limit".into());
+        }
+        let size = path.len() + source.len() + alias_bytes.len();
+        budget.charge(Resource::Work, size as u64).map_err(err)?;
+        budget
+            .charge(
+                Resource::AllocationUnits,
+                (size + core::mem::size_of::<Self>()) as u64,
+            )
+            .map_err(err)?;
+        let document = with_named_input_limits(
+            true,
+            compiled,
+            source,
+            "doc-input",
+            "Article",
+            phases.parse,
+            |tree, profile, _, _| {
+                let store = SourceStore::default();
+                let mut admission = SourceAdmission::default();
+                let mut codec = FoundationCodec::new(profile.registry(), &store, &mut admission)
+                    .map_err(err)?;
+                nepl3_suite::adapters::sentence::literal::lower(
+                    tree.syntax(),
+                    &compiled.doc.package.schema,
+                    Category::Article,
+                    profile.registry(),
+                    &mut Budget::new(phases.lower),
+                    &mut codec,
+                )
+                .map_err(err)
+            },
+        )?;
+        Ok(Self {
+            document,
+            path: path.to_owned(),
+            source: source.to_owned(),
+            alias_bytes: alias_bytes.to_vec(),
+        })
+    }
+
+    pub(crate) fn render(
+        &self,
+        compiled: &Compiled,
+        source_href: Option<&str>,
+        output_budget: &mut Budget,
+    ) -> crate::Result<(String, Digest)> {
+        output_budget.poll().map_err(err)?;
+        output_budget
+            .charge(
+                Resource::Work,
+                (self.source.len() + self.alias_bytes.len()) as u64,
+            )
+            .map_err(err)?;
+        output_budget
+            .charge(
+                Resource::AllocationUnits,
+                self.alias_bytes.len() as u64 * 32,
+            )
+            .map_err(err)?;
+        let aliases: Vec<Alias> = serde_json::from_slice(&self.alias_bytes)?;
+        let store = SourceStore::default();
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(&compiled.doc.registry, &store, &mut admission).map_err(err)?;
+        let artifact = render_profile(
+            &self.document,
+            &compiled.doc.registry,
+            &mut codec,
+            output_budget,
+            &aliases,
+            NotesMode::Inline,
+        )
+        .map_err(err)?;
+        finish_projection(
+            &self.path,
+            &self.source,
+            &self.alias_bytes,
+            source_href,
+            output_budget,
+            NotesMode::Inline,
+            artifact,
+        )
+    }
 }

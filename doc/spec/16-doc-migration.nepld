@@ -524,10 +524,12 @@ body
         nil
       cons paragraph
         cons sentence cons code "doc-canonical --registry pages.json markdown --interactive-output-limits limits.json new-output" cons text " はMarkdownの" cons ruby text "出力再試行" text "しゅつりょくさいしこう" cons text "を" cons ruby text "明示選択" text "めいじせんたく" cons text "する。" nil
-        cons "このentryはpage-set rendererだけを[受理/じゅり]し、legacy rendererを[含/ふく]む[入力/にゅうりょく]は[明示的/めいじてき]に[拒否/きょひ]する。"
+        cons "このentryはpage-set rendererとlegacy rendererの[混在/こんざい]、およびlegacyだけの[入力/にゅうりょく]を[受理/じゅり]する。"
         cons "[文書/ぶんしょ]・registry・alias・[登録/とうろく]file・SVG・renderer・[出力先/しゅつりょくさき]を[開始時/かいしじ]に[固定/こてい]し、[準備済/じゅんびず]みの[文書/ぶんしょ][構造/こうぞう]を[同一/どういつ]processに[保持/ほじ]する。"
         cons "[出力停止時/しゅつりょくていしじ]は[不完全/ふかんぜん]な[結果/けっか]を[破棄/はき]し、[明示的/めいじてき]なresumeで[全体/ぜんたい]の[意味検査/いみけんさ]と[出力/しゅつりょく]を[再試行/さいしこう]する。"
         cons "CheckedPagesやSourceAdmissionなどの[検証証拠/けんしょうしょうこ]を[別/べつ]のBudgetへ[持/も]ち[越/こ]さない。"
+        cons "legacy[文書/ぶんしょ]はdoc-inputのsource namespaceで[一度/いちど]だけparse・lowerし、[元/もと]のsource・aliasと[結/むす]び[付/つ]けて[保持/ほじ]する。page-set[用/よう]の[文書/ぶんしょ]とは[別/べつ]に[保持/ほじ]し、[従来/じゅうらい]のdocument digest・metadata・[本文/ほんぶん]を[維持/いじ]する。"
+        cons "[混在時/こんざいじ]のlegacy[本文/ほんぶん]とpage-set[解決済/かいけつず]み[本文/ほんぶん]の[一致検査/いっちけんさ]は[各/かく][出力試行/しゅつりょくしこう]で[行/おこな]う。[通常/つうじょう]の[非対話/ひたいわ]entryの[解析/かいせき][順序/じゅんじょ]と[予算/よさん]は[変更/へんこう]しない。"
         cons "この[段階/だんかい]のentryは[準備中/じゅんびちゅう]のparse・lower・[登録/とうろく][処理/しょり]の[停止/ていし]には[対応/たいおう]せず、これらの[停止/ていし]は[通常/つうじょう]の[失敗/しっぱい]として[返/かえ]す。"
         nil
       cons paragraph
@@ -572,7 +574,7 @@ body
         cons "[出力段階/しゅつりょくだんかい]にも[準備/じゅんび]の[累積/るいせき]usageを[引/ひ]き[継/つ]ぎ、[残/のこ]るjob[上限/じょうげん]だけを[許可/きょか]する。"
         cons "[加算資源/かさんしげん]は[全試行/ぜんしこう]の[合計/ごうけい]、depthは[最大値/さいだいち]とする。"
         cons "cancel・EOF・[意味上/いみじょう]の[失敗/しっぱい]・I/O[失敗/しっぱい]では[完了/かんりょう]manifestを[公開/こうかい]しない。"
-        cons "legacy rendererの[拒否/きょひ]と[新規出力先/しんきしゅつりょくさき]だけへの[書込/かきこ]みは[出力再試行/しゅつりょくさいしこう]entryと[同/おな]じである。"
+        cons "この[準備/じゅんび][再開/さいかい]entryはlegacy rendererを[引/ひ]き[続/つづ]き[拒否/きょひ]する。[新規出力先/しんきしゅつりょくさき]だけへの[書込/かきこ]みは[出力再試行/しゅつりょくさいしこう]entryと[同/おな]じである。"
         nil
       cons paragraph
         cons "job_executionのcontractはnepl3.canonical-markdown.retry-job/1とし、[各/かく]ページの[試行番号/しこうばんごう]・stage・[要求上限/ようきゅうじょうげん]・[実効上限/じっこうじょうげん]・profile digest・usage・[停止理由/ていしりゆう]と[出力試行/しゅつりょくしこう]を[記録/きろく]する。"

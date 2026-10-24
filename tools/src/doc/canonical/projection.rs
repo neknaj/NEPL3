@@ -601,6 +601,7 @@ fn prepare_captured(
         inputs,
         phases,
         prepared,
+        legacy: None,
     })
 }
 
@@ -613,8 +614,44 @@ struct PreparedBatch {
     inputs: Vec<Input>,
     phases: PhaseLimits,
     prepared: Option<PreparedGroup>,
+    legacy: Option<Vec<Option<host::PreparedLegacy>>>,
 }
 impl PreparedBatch {
+    /// Output-only retry retains the legacy namespace separately from PageSet
+    /// documents. Ordinary generation keeps its original single-attempt path.
+    fn prepare_legacy(&mut self, budget: &mut Budget) -> Result<()> {
+        if !self
+            .inputs
+            .iter()
+            .any(|input| input.page.renderer == host::RENDERER)
+        {
+            return Ok(());
+        }
+        charge(
+            budget,
+            Resource::AllocationUnits,
+            self.inputs.len() * core::mem::size_of::<Option<host::PreparedLegacy>>(),
+        )?;
+        let mut legacy = Vec::with_capacity(self.inputs.len());
+        for input in &self.inputs {
+            budget.poll().map_err(err)?;
+            charge(budget, Resource::Work, 1)?;
+            legacy.push(if input.page.renderer == host::RENDERER {
+                Some(host::PreparedLegacy::capture(
+                    &self.compiled,
+                    &input.page.source,
+                    &input.source,
+                    &input.aliases,
+                    self.phases,
+                    budget,
+                )?)
+            } else {
+                None
+            });
+        }
+        self.legacy = Some(legacy);
+        Ok(())
+    }
     fn render(
         &self,
         initial_usage: nepl3_core::budget::Usage,
@@ -715,15 +752,23 @@ impl PreparedBatch {
             let (text, document_digest) = if page.renderer == host::RENDERER {
                 let href = annotated::pages::relative(&page.projection, &page.source, None, budget)
                     .map_err(err)?;
-                let (legacy, document_digest) = host::generate_with_phase_limits(
-                    compiled,
-                    &page.source,
-                    &input.source,
-                    &input.aliases,
-                    Some(&href),
-                    budget,
-                    phases,
-                )?;
+                let (legacy, document_digest) = if let Some(retained) = &self.legacy {
+                    retained
+                        .get(index)
+                        .and_then(Option::as_ref)
+                        .ok_or("missing retained legacy source")?
+                        .render(compiled, Some(&href), budget)?
+                } else {
+                    host::generate_with_phase_limits(
+                        compiled,
+                        &page.source,
+                        &input.source,
+                        &input.aliases,
+                        Some(&href),
+                        budget,
+                        phases,
+                    )?
+                };
                 if let Some(group) = &group {
                     charge(
                         budget,

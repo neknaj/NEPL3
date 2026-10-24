@@ -228,3 +228,52 @@ fn full_retry_terminal_source_and_cross_page_errors_never_prompt_or_publish() ->
     }
     Ok(())
 }
+
+#[test]
+fn legacy_output_cli_cancels_eof_and_semantic_failure_without_publication() -> Result<()> {
+    for semantic in [false, true] {
+        for command in ["cancel\n", ""] {
+            let f = fixture()?;
+            f.write(
+                "doc/page.nepld",
+                r#"article en "Page" body cons paragraph cons "Text" nil nil"#,
+            )?;
+            f.write("doc/aliases.json", "[]")?;
+            f.json(
+                "pages.json",
+                &json!({"version":1,"pages":[{
+                    "id":"legacy","source":"doc/page.nepld","projection":"doc/page.md","route":"page.html",
+                    "aliases":"doc/aliases.json","renderer":host::RENDERER
+                }]}),
+            )?;
+            if semantic {
+                f.write(
+                    "doc/aliases.json",
+                    r#"[{"section":"absent","name":"bad-anchor"}]"#,
+                )?;
+            }
+            let output = f.root().join("legacy-output");
+            let mut messages = Vec::new();
+            let error = markdown_interactive_output_with_io(
+                f.root(),
+                "pages.json",
+                &f.root()
+                    .join(if semantic { "large.json" } else { "small.json" }),
+                &output,
+                &mut Cursor::new(command),
+                &mut messages,
+            )
+            .err()
+            .ok_or("unexpected completion")?;
+            assert!(!output.exists());
+            if semantic {
+                assert!(messages.is_empty());
+                assert!(!error.to_string().contains("Cancelled"));
+            } else {
+                assert!(error.to_string().contains("Cancelled"), "{error}");
+                assert!(String::from_utf8(messages)?.contains("Paused Markdown output"));
+            }
+        }
+    }
+    Ok(())
+}
