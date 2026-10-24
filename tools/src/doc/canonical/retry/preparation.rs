@@ -199,6 +199,7 @@ pub(crate) fn generate(
         raw,
         inputs,
         phases: initial_phases,
+        legacy: None,
         prepared: Some(PreparedGroup {
             set: PageSet { pages, files },
             aliases,
