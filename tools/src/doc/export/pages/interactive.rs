@@ -46,7 +46,7 @@ impl RetryLimits {
             code_limits: self.code_limits,
         }
     }
-    fn covers(self, old: Self) -> bool {
+    pub(crate) fn covers(self, old: Self) -> bool {
         [
             self.job_limits,
             self.parse_limits,
@@ -104,6 +104,7 @@ fn write_with_io(
         &compiled,
         loaded.inputs,
         loaded.files,
+        Vec::new(),
         selected,
         super::DisplayOptions {
             document: loaded.display,
@@ -158,18 +159,20 @@ fn next_limits(
         }
     }
 }
-fn run(
+pub(crate) fn run(
     compiled: &Compiled,
     inputs: Vec<(Entry, String)>,
     files: Vec<(Entry, Vec<u8>)>,
+    aliases: Vec<(String, Vec<u8>)>,
     mut limits: RetryLimits,
     options: super::DisplayOptions,
     mut choose: impl FnMut(RetryLimits, &str, StopReason, Usage) -> Result<Option<RetryLimits>, String>,
 ) -> Result<GeneratedPages, String> {
-    let mut preparing = Preparation::with_files(
+    let mut preparing = Preparation::with_aliases(
         compiled,
         inputs,
         files,
+        aliases,
         limits.job_limits.budget().limits(),
         limits.preparation(),
     )?;

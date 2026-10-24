@@ -54,6 +54,33 @@ fn run() -> nepl3_tools::Result<()> {
         ["site", "build", config, output] => {
             nepl3_tools::site::build(&root, config, std::path::Path::new(output))
         }
+        ["doc-canonical", "html-retry-limits"] => nepl3_tools::doc::canonical::html_retry_limits(),
+        [
+            "doc-canonical",
+            "--registry",
+            registry,
+            "html",
+            "--interactive-limits",
+            limits,
+            output,
+        ] => nepl3_tools::doc::canonical::html_interactive(
+            &root,
+            registry,
+            std::path::Path::new(limits),
+            std::path::Path::new(output),
+        ),
+        [
+            "doc-canonical",
+            "html",
+            "--interactive-limits",
+            limits,
+            output,
+        ] => nepl3_tools::doc::canonical::html_interactive(
+            &root,
+            "doc/canonical.json",
+            std::path::Path::new(limits),
+            std::path::Path::new(output),
+        ),
         ["doc-canonical", "retry-limits"] => nepl3_tools::doc::canonical::retry_limits(),
         [
             "doc-canonical",
@@ -291,6 +318,10 @@ fn run() -> nepl3_tools::Result<()> {
                 "nepl3-tools doc-html pages --interactive-limits <limits.json> [--math-renderer katex-preferred|mathml-only] <manifest.json> <new-output-directory>"
             );
             println!("nepl3-tools doc-canonical retry-limits");
+            println!("nepl3-tools doc-canonical html-retry-limits");
+            println!(
+                "nepl3-tools doc-canonical [--registry <repository-relative.json>] html --interactive-limits <limits.json> <new-output-directory>"
+            );
             println!(
                 "nepl3-tools doc-canonical --registry <repository-relative.json> markdown --interactive-limits <limits.json> <new-output-directory>"
             );
