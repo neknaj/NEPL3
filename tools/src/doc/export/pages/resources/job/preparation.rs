@@ -55,6 +55,7 @@ struct Data<'a> {
     compiled: &'a Compiled,
     inputs: Vec<(Entry, String)>,
     files: Vec<(Entry, Vec<u8>)>,
+    aliases: Vec<crate::doc::export::pages::aliases::PageAliases>,
     phases: PreparationLimits,
     prepared: Vec<Page>,
     attempts: Vec<PageAttempt>,
@@ -110,6 +111,37 @@ impl<'a> Preparation<'a> {
         limits: Limits,
         phases: PreparationLimits,
     ) -> Result<Self, String> {
+        Self::with_aliases(compiled, inputs, files, Vec::new(), limits, phases)
+    }
+    /// Native compatibility preparation; ordinary manifest syntax is unchanged.
+    /// Raw alias bytes and ordering are frozen; bounded JSON parsing is host setup.
+    pub(crate) fn with_aliases(
+        compiled: &'a Compiled,
+        inputs: Vec<(Entry, String)>,
+        files: Vec<(Entry, Vec<u8>)>,
+        alias_inputs: Vec<(String, Vec<u8>)>,
+        limits: Limits,
+        phases: PreparationLimits,
+    ) -> Result<Self, String> {
+        if alias_inputs.len() > 128 {
+            return Err("AliasPageLimit".into());
+        }
+        let mut alias_bytes = 0usize;
+        let mut aliases = Vec::new();
+        aliases
+            .try_reserve_exact(alias_inputs.len())
+            .map_err(|_| "HostAllocationFailure")?;
+        for (page, raw) in alias_inputs {
+            alias_bytes = alias_bytes
+                .checked_add(raw.len())
+                .ok_or("AliasInputLimit")?;
+            if alias_bytes > 10_000_000 || page.len() > 4096 {
+                return Err("AliasInputLimit".into());
+            }
+            aliases.push(crate::doc::export::pages::aliases::PageAliases::parse(
+                page, raw,
+            )?);
+        }
         if files.len() > 128 {
             return Err("FileCountLimit".into());
         }
@@ -154,6 +186,7 @@ impl<'a> Preparation<'a> {
                 compiled,
                 inputs,
                 files,
+                aliases,
                 phases,
                 prepared,
                 attempts: Vec::new(),

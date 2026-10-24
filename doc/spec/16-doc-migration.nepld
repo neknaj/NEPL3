@@ -498,7 +498,10 @@ body
         cons "passive fileは128[件/けん]までとし、[文書/ぶんしょ]sourceとの[合計/ごうけい]byte[数/すう]は[既存/きそん]のMAX_SOURCE_BYTESを[超/こ]えない。native entryでもfileのid・source・route・[明示/めいじ]inputのUTF-8 byte[長/ちょう]の[総和/そうわ]を65536までに[制限/せいげん]する。"
         cons "fileの[読込/よみこ]み・[所有/しょゆう]containerの[移動/いどう]・receipt[用/よう]hashは[有限/ゆうげん]のhost[準備/じゅんび]であり、[計測/けいそく]されたparse・lower・render usageには[含/ふく]めない。[描画/びょうが]のfile[出力/しゅつりょく]・identity[計算/けいさん]は[既存/きそん]の[出力/しゅつりょく]Budgetに[従/したが]う。"
         cons "[登録/とうろく]の[衝突/しょうとつ]・[不正/ふせい]path・fileへのfragment[参照/さんしょう]は[全体検証/ぜんたいけんしょう]で[拒否/きょひ]し、fileの[内容/ないよう]とrouteはPageSet identityおよび[保持/ほじ]されたprovenanceへ[結/むす]び[付/つ]ける。"
-        cons "[互換/ごかん]alias・canonical[互換/ごかん]projection・[任意/にんい]assetの[再開/さいかい]はこのentryの[対象外/たいしょうがい]とする。process[終了後/しゅうりょうご]の[永続復旧/えいぞくふっきゅう]・[書込/かきこ]み[途中/とちゅう]の[再開/さいかい]は[未対応/みたいおう]である。"
+        cons "native[準備/じゅんび]entryは、[明示/めいじ]された[互換/ごかん]aliasのpage[束縛/そくばく]・[順序/じゅんじょ]・JSON[原文/げんぶん]byte[列/れつ]も[所有/しょゆう]できる。[通常/つうじょう]のpages manifestとCLIにはalias[指定/してい]を[追加/ついか]しない。"
+        cons "aliasは128ページ、page IDは4096byte、JSONは1ページ1048576byte・4096[件/けん]、[全/ぜん]ページ[合計/ごうけい]10000000byteまでとし、[解析/かいせき]とreceiptは[有限/ゆうげん]のhost[準備/じゅんび]として[計測外/けいそくがい]に[区別/くべつ]する。[重複/ちょうふく]・[未知/みち]のpage[束縛/そくばく]は[各/かく][描画試行/びょうがしこう]の[出力/しゅつりょく]Budgetで[検査/けんさ]する。"
+        cons "aliasは[意味/いみ]labelではなく、[既存/きそん]rendererの[互換/ごかん][装飾/そうしょく]である。[隠/かく]れた[対象/たいしょう]・[不正/ふせい]な[対象/たいしょう]・anchor[衝突/しょうとつ]を[拒否/きょひ]し、[未解決/みかいけつ]の[本文/ほんぶん][参照/さんしょう]を[後/あと]から[有効/ゆうこう]にしない。[停止後/ていしご]は[保持/ほじ]した[意味文書/いみぶんしょ]を[変更/へんこう]せず、[新/あたら]しい[描画/びょうが]arenaへ[再/さい][装飾/そうしょく]する。"
+        cons "canonical[互換/ごかん]projection・[任意/にんい]asset・canonical HTML CLIの[対話再開/たいわさいかい]はこのnative entryの[完成/かんせい]から[推定/すいてい]しない。process[終了後/しゅうりょうご]の[永続復旧/えいぞくふっきゅう]・[書込/かきこ]み[途中/とちゅう]の[再開/さいかい]は[未対応/みたいおう]である。"
         cons "[失敗/しっぱい]・cancelも[試行/しこう]の[要求上限/ようきゅうじょうげん]・[実効上限/じっこうじょうげん]・usage・[停止理由/ていしりゆう]を[残/のこ]す。hostの[保持/ほじ]container・receipt JSON・KaTeX[内部/ないぶ]・I/Oは[論理/ろんり]ledgerの[計測外/けいそくがい]として[区別/くべつ]する。"
         nil
       cons paragraph
@@ -514,6 +517,8 @@ body
       cons paragraph
         cons "[再開/さいかい]receiptのJ(x)はUTF-8のcompact JSONとし、object keyを[辞書順/じしょじゅん]、arrayを[記録順/きろくじゅん]で[直列化/ちょくれつか]する。[整数/せいすう]は10[進数/しんすう]、[文字列/もじれつ]はJSON escapeを[用/もち]い、[余分/よぶん]な[空白/くうはく]を[加/くわ]えない。[現在/げんざい]のserde_json::to_vecの[出力/しゅつりょく]を[規範/きはん]とする。"
         cons "retained-preparation/1 identityは、ASCII domain nepl3.local-doc-pages.retained-preparation/1、1byteのNUL、output execution digestの32byte、J(evidence)を[順/じゅん]に[連結/れんけつ]したSHA-256とする。evidenceは[準備/じゅんび]の[全試行/ぜんしこう]と[累積/るいせき]usageを[含/ふく]む。"
+        cons "alias[入力/にゅうりょく]のあるjobは、ASCII domain nepl3.local-doc-pages.retry-alias-job/1、NUL、J(execution_identity)、J(phase_execution)、J(compatibility.execution_identity)、identity fieldを[除/のぞ]くJ(job_execution)を[順/じゅん]に[連結/れんけつ]したSHA-256をjob identityとする。[互換/ごかん]identityは[元/もと]のJSON byte[列/れつ]・page[束縛/そくばく]・[順序/じゅんじょ]を[含/ふく]み、[意味/いみ]PageSet identityは[変更/へんこう]しない。"
+        cons "alias[入力/にゅうりょく]の[空/から]リストでは[旧/きゅう]retry-job/1のdomain・receipt・[課金/かきん]を[維持/いじ]する。aliasが0[件/けん]のJSONを[持/も]つpage[入力/にゅうりょく]は[空/から]リストではなく、その[原文/げんぶん]を[識別/しきべつ]する。"
         cons "retry-job/1 identityは、ASCII domain nepl3.local-doc-pages.retry-job/1、1byteのNUL、J(execution_identity)、J(phase_execution)、J(job_executionからidentityを[除/のぞ]いたobject)の[連結/れんけつ]をSHA-256とする。execution_identityはhex[文字列/もじれつ]としてJSON[引用/いんよう]を[含/ふく]める。"
         cons "job_executionはjob[上限/じょうげん]・[累積/るいせき]usage・[描画/びょうが]の[全試行/ぜんしこう]・[計測範囲/けいそくはんい]を[記録/きろく]する。[通常/つうじょう]の[非再開/ひさいかい]entryは[既存/きそん]のphases/1 receiptを[維持/いじ]する。[保存/ほぞん]receiptから[実行権限/じっこうけんげん]を[復元/ふくげん]するAPIは[提供/ていきょう]しない。"
         nil

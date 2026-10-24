@@ -33,6 +33,28 @@ pub(crate) fn check_binding(
     aliases: &[PageAliases],
     budget: &mut Budget,
 ) -> Result<(), String> {
+    check_ids(
+        inputs.iter().map(|(entry, _)| entry.id.as_str()),
+        aliases,
+        budget,
+    )
+}
+pub(crate) fn check_set_binding(
+    set: &nepl3_doc_core::pages::PageSet,
+    aliases: &[PageAliases],
+    budget: &mut Budget,
+) -> Result<(), String> {
+    check_ids(
+        set.pages.iter().map(|page| page.registration.id.as_str()),
+        aliases,
+        budget,
+    )
+}
+fn check_ids<'a>(
+    inputs: impl Iterator<Item = &'a str> + Clone,
+    aliases: &[PageAliases],
+    budget: &mut Budget,
+) -> Result<(), String> {
     if aliases.len() > 128 {
         return Err("AliasPageLimit".into());
     }
@@ -56,13 +78,9 @@ pub(crate) fn check_binding(
             }
         }
         let mut matches = 0usize;
-        for (entry, _) in inputs {
-            charge(
-                budget,
-                Resource::Work,
-                entry.id.len() + alias.page.len() + 1,
-            )?;
-            if entry.id == alias.page {
+        for id in inputs.clone() {
+            charge(budget, Resource::Work, id.len() + alias.page.len() + 1)?;
+            if id == alias.page {
                 matches += 1;
             }
         }
