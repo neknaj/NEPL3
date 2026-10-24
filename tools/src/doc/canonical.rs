@@ -10,6 +10,7 @@ use std::{
 };
 
 mod compatibility;
+mod continuation;
 mod projection;
 pub(crate) mod references;
 #[cfg(test)]
@@ -576,9 +577,22 @@ fn markdown_interactive_output_with_io(
 }
 
 fn resume_grant<T: serde::de::DeserializeOwned>(
+    input: &mut impl std::io::BufRead,
+    messages: &mut impl std::io::Write,
+    accepts: impl Fn(&T) -> bool,
+) -> Result<Option<T>> {
+    resume_grant_with_message(
+        input,
+        messages,
+        accepts,
+        "Rejected: all selected limits must be nondecreasing.",
+    )
+}
+fn resume_grant_with_message<T: serde::de::DeserializeOwned>(
     mut input: &mut impl std::io::BufRead,
     messages: &mut impl std::io::Write,
     accepts: impl Fn(&T) -> bool,
+    rejection: &str,
 ) -> Result<Option<T>> {
     use std::io::BufRead;
     loop {
@@ -602,10 +616,7 @@ fn resume_grant<T: serde::de::DeserializeOwned>(
         };
         match super::export::pages::resources::read_configuration::<T>(Path::new(path.trim())) {
             Ok(next) if accepts(&next) => return Ok(Some(next)),
-            Ok(_) => writeln!(
-                messages,
-                "Rejected: all selected limits must be nondecreasing."
-            )?,
+            Ok(_) => writeln!(messages, "{rejection}")?,
             Err(error) => writeln!(messages, "Cannot read limits: {error}")?,
         }
     }
@@ -677,6 +688,13 @@ pub fn retry_limits() -> Result<()> {
         serde_json::to_string_pretty(&projection::retry::preparation::RetryLimits::default())?
     );
     Ok(())
+}
+
+pub fn html_retry_limits() -> Result<()> {
+    continuation::defaults()
+}
+pub fn html_interactive(root: &Path, manifest: &str, limits: &Path, output: &Path) -> Result<()> {
+    continuation::write(root, manifest, limits, output)
 }
 
 /// Export the registered Doc sources through the same prepared page-set backend.

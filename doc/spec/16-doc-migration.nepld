@@ -539,6 +539,19 @@ body
         cons "[通常/つうじょう]のMarkdown[生成/せいせい]とcheckは[従来/じゅうらい]どおり[一試行/いちしこう]であり、[自動増額/じどうぞうがく]や[対話待機/たいわたいき]を[追加/ついか]しない。"
         nil
       cons paragraph
+        cons sentence cons code "doc-canonical html-retry-limits" cons text " はcanonical HTML" cons ruby text "対話再開" text "たいわさいかい" cons text "の" cons ruby text "設定" text "せってい" cons text "JSONをstdoutへ" cons ruby text "出力" text "しゅつりょく" cons text "する。" nil
+        cons sentence cons code "doc-canonical --registry doc/canonical.json html --interactive-limits limits.json new-output" cons text " は、" cons ruby text "固定" text "こてい" cons text "した" cons ruby text "入力" text "にゅうりょく" cons text "からHTMLの" cons ruby text "準備" text "じゅんび" cons text "・" cons ruby text "描画" text "びょうが" cons text "を" cons ruby text "再開" text "さいかい" cons text "する。" nil
+        cons "registry[省略時/しょうりゃくじ]はdoc/canonical.jsonとし、math rendererはKaTeXPreferredを[使/つか]う。[通常/つうじょう]の[非対話/ひたいわ]entryの[挙動/きょどう]は[変更/へんこう]しない。"
+        cons "[設定/せってい]はcompatibilityとhtmlの[二/ふた]つに[分/わ]ける。compatibilityはparse_limits・lower_limits・output_limits、htmlはRetryLimitsのjob・parse・lower・code・output[上限/じょうげん]を[持/も]ち、[省略/しょうりゃく]した[組/くみ]には[有限/ゆうげん]の[一般/いっぱん]host[既定値/きていち]を[使/つか]う。registry[内/ない]のCI[向/む]け[上限/じょうげん]へ[暗黙/あんもく]に[切/き]り[替/か]えない。"
+        cons "[開始時/かいしじ]にregistry・[全/ぜん]source・alias・passive fileを[固定/こてい]し、[同/おな]じsnapshotから[互換/ごかん]Markdownを[生成/せいせい]してからHTMLへ[進/すす]む。[古/ふる]い[生成済/せいせいず]みMarkdownを[入力/にゅうりょく]にしない。"
+        cons "snapshotは128ページ・128 passive file、source[合計/ごうけい]10000000byte、alias[合計/ごうけい]1048576byte、passive[合計/ごうけい]2097152byteまでとする。aliasのsnapshot[上限/じょうげん]は[互換/ごかん]Markdownが[不要/ふよう]でも[適用/てきよう]し、[通常/つうじょう]HTMLの[別/べつ]の[上限/じょうげん]とは[区別/くべつ]する。HTMLへ[渡/わた]すsourceとpassiveの[合計/ごうけい]には[既存/きそん]MAX_SOURCE_BYTESも[適用/てきよう]する。"
+        cons "[互換/ごかん]Markdown[準備/じゅんび]はlegacyとpage-contextの[混在/こんざい]を[扱/あつか]う[有限/ゆうげん]の[一試行/いちしこう]であり、この[段階/だんかい]の[停止/ていし]は[終端失敗/しゅうたんしっぱい]として[報告/ほうこく]する。[互換/ごかん]copyがないregistryではMarkdown[生成/せいせい]を[省略/しょうりゃく]する。"
+        cons "HTMLの[停止/ていし]では[準備済/じゅんびず]みMarkdownと[固定入力/こていにゅうりょく]を[保持/ほじ]し、resumeで[再生成/さいせいせい]・[再読込/さいよみこ]みしない。[再開用/さいかいよう]fileも[同/おな]じ[設定/せってい]schemaを[使/つか]い、compatibility[上限/じょうげん]は[完全一致/かんぜんいっち]、htmlの[全/ぜん][上限/じょうげん]は[非減少/ひげんしょう]を[要求/ようきゅう]する。cancelとEOFは[出力/しゅつりょく]を[保存/ほぞん]せず[終了/しゅうりょう]する。"
+        cons "canonical_html_retryはregistry[原文/げんぶん]のSHA-256、[初期設定/しょきせってい]、[互換/ごかん][準備状態/じゅんびじょうたい]と[出力/しゅつりょく]usageを[記録/きろく]する。HTML jobの[累積/るいせき]usageを[互換/ごかん][準備/じゅんび]・snapshot・receipt・I/Oを[含/ふく]む[全工程/ぜんこうてい]の[計測/けいそく]へ[読/よ]み[替/か]えない。"
+        cons "identityはASCII domain nepl3.canonical-html.retry/1、NUL、identityを[除/のぞ]くJ(canonical_html_retry)、J(job_execution)、J(compatibility_markdown)を[順/じゅん]に[連結/れんけつ]したSHA-256とする。[互換/ごかん]Markdownがない[場合/ばあい]の[最後/さいご]の[値/あたい]はJSON nullである。"
+        cons "HTML・[互換/ごかん]copy・receiptの[検査/けんさ]がすべて[成功/せいこう]してから[新規/しんき][出力先/しゅつりょくさき]へ[保存/ほぞん]する。[全段階/ぜんだんかい]の[再開/さいかい]やprocess[終了後/しゅうりょうご]の[復旧/ふっきゅう]が[完成/かんせい]したとはしない。"
+        nil
+      cons paragraph
         cons "[成功/せいこう]receiptのrender_jobはnepl3.canonical-markdown.output-retry/1として[各/かく][出力/しゅつりょく][試行/しこう]の[実効/じっこう][上限/じょうげん]・usage・[停止/ていし][理由/りゆう]と[累積/るいせき]usageを[追加/ついか][記録/きろく]する。"
         cons "[累積/るいせき][値/ち]は[出力/しゅつりょく][試行/しこう]だけを[対象/たいしょう]とし、[準備/じゅんび]・host[管理/かんり]・[追加/ついか]job receipt[直列化/ちょくれつか]・I/Oを[含/ふく]まない。"
         cons "[既存/きそん]output_budgetは[成功/せいこう]した[一試行/いちしこう]の[記録/きろく]を[維持/いじ]し、[累積/るいせき][値/ち]で[置/お]き[換/か]えない。"

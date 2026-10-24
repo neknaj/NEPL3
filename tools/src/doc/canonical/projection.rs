@@ -420,6 +420,58 @@ fn generate_batch(
     batch.render(initial_usage, budget)
 }
 
+pub(super) struct HtmlRetryPrepared {
+    pub inputs: Vec<(super::super::export::pages::Entry, String)>,
+    pub aliases: Vec<(String, Vec<u8>)>,
+    pub references: ReferenceInputs,
+    pub markdown: Option<Generated>,
+}
+
+/// Capture once for both output families. Only compatibility Markdown uses the
+/// supplied finite phase settings; HTML has its separate retained job settings.
+pub(super) fn prepare_html_retry(
+    root: &Path,
+    manifest: &str,
+    raw: Vec<u8>,
+    phases: PhaseLimits,
+    compatibility: bool,
+    budget: &mut Budget,
+) -> Result<HtmlRetryPrepared> {
+    let mut captured =
+        capture(root, manifest, raw).map_err(|error| format!("SnapshotPreparation: {error}"))?;
+    captured.phases = phases;
+    if compatibility {
+        let ready = compatibility_from_captured(captured, manifest, budget)
+            .map_err(|error| format!("CompatibilityPreparation: {error}"))?;
+        return Ok(HtmlRetryPrepared {
+            inputs: ready.inputs,
+            aliases: ready.aliases.into_iter().map(|a| (a.page, a.raw)).collect(),
+            references: ready.references,
+            markdown: Some(ready.markdown),
+        });
+    }
+    let mut inputs = Vec::new();
+    let mut aliases = Vec::new();
+    for input in captured.inputs {
+        aliases.push((input.page.id.clone(), input.aliases));
+        inputs.push((
+            super::super::export::pages::Entry {
+                id: input.page.id,
+                source: input.page.projection,
+                input: Some(input.page.source),
+                route: input.page.route,
+            },
+            input.source,
+        ));
+    }
+    Ok(HtmlRetryPrepared {
+        inputs,
+        aliases,
+        references: captured.references,
+        markdown: None,
+    })
+}
+
 pub(super) struct CompatibilityPrepared {
     pub inputs: Vec<(super::super::export::pages::Entry, String)>,
     pub aliases: Vec<super::super::export::pages::aliases::PageAliases>,
