@@ -1,12 +1,12 @@
 //! Atomic in-memory render attempts over retained prepared documents.
 //! A retry repeats rendering, never parsing completed pages. This entry supports
-//! document pages only; no registered file or compatibility-alias input is accepted.
+//! document pages and frozen passive files; compatibility aliases are not accepted.
 use super::*;
 use crate::doc::export::{
     MathRenderer,
     pages::{self, render},
 };
-use nepl3_doc_core::pages::{PageDocument, PageRegistration, PageSet};
+use nepl3_doc_core::pages::{FileBytes, PageDocument, PageFile, PageRegistration, PageSet};
 use nepl3_doc_html::pages::PagesHtmlRequest;
 
 struct RenderData<'a> {
@@ -14,6 +14,7 @@ struct RenderData<'a> {
     request: PagesHtmlRequest,
     code: Vec<PreparedPageCode>,
     origins: Vec<serde_json::Value>,
+    file_origins: Vec<serde_json::Value>,
     evidence: serde_json::Value,
     preparation: Vec<PageAttempt>,
     renders: Vec<RenderAttempt>,
@@ -156,6 +157,29 @@ fn build<'a>(
         });
         code.push(page._code);
     }
+    let mut files = Vec::new();
+    let mut file_origins = Vec::new();
+    files
+        .try_reserve_exact(data.files.len())
+        .map_err(|_| "HostAllocationFailure")?;
+    file_origins
+        .try_reserve_exact(data.files.len())
+        .map_err(|_| "HostAllocationFailure")?;
+    for (entry, bytes) in std::mem::take(&mut data.files) {
+        let physical = pages::input_path(&entry)?;
+        file_origins.push(serde_json::json!({
+            "id":entry.id,"source":entry.source,"route":entry.route,"input":physical,
+            "sha256":pages::digest_hex(Digest::of(&bytes)),"bytes":bytes.len()
+        }));
+        files.push(PageFile {
+            registration: PageRegistration {
+                id: entry.id,
+                source: entry.source,
+                route: entry.route,
+            },
+            content: FileBytes(bytes),
+        });
+    }
     let evidence = serde_json::json!({
         "attempts":data.attempts.iter().map(|a|serde_json::json!({
             "page_index":a.page_index,"stages":a.stages.iter().map(observation).collect::<Vec<_>>()
@@ -169,12 +193,13 @@ fn build<'a>(
         request: PagesHtmlRequest {
             set: PageSet {
                 pages: documents,
-                files: Vec::new(),
+                files,
             },
             options: options.document,
         },
         code,
         origins,
+        file_origins,
         evidence,
         preparation: std::mem::take(&mut data.attempts),
         renders: Vec::new(),
@@ -204,7 +229,7 @@ impl<'a> RenderJob<'a> {
                     profiles: &[],
                     retained_preparation: Some(&data.evidence),
                     origins: &data.origins,
-                    file_origins: &[],
+                    file_origins: &data.file_origins,
                     // Only the retained evidence identity is used for this route.
                     phases: pages::resources::PhaseLimits::default(),
                     initial_usage: meter.usage(),
