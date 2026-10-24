@@ -263,6 +263,11 @@ body
       cons "cancel・[資源停止/しげんていし]・[内部不変条件違反/ないぶふへんじょうけんいはん]は、[操作/そうさ]のErrとして[返/かえ]す。"
       cons "providerの[通信失敗/つうしんしっぱい]や[要求/ようきゅう]identityの[照合/しょうごう]は、この[数値評価/すうちひょうか]の[結果型/けっかがた]とは[別/べつ]の[境界契約/きょうかいけいやく]である。" nil
     cons paragraph
+      cons "evaluateの[具体的/ぐたいてき]な[要求型/ようきゅうがた]はMathEvaluationRequestであり、source[閉包/へいほう]を[持/も]つMathSyntaxとBindingEnvironmentを[保持/ほじ]する。"
+      cons "[受信側/じゅしんがわ]は[現在/げんざい]のschema・source[入場/にゅうじょう]・[深/ふか]さの[条件/じょうけん]で[構造/こうぞう]を[再検査/さいけんさ]し、Expr rootの[束縛/そくばく]と[環境/かんきょう]を[検査/けんさ]して[既存/きそん]のevaluateを[実行/じっこう]する。"
+      cons "[要求/ようきゅう]の[所有/しょゆう]やdecode[成功/せいこう]をCheckedExpressionの[代用/だいよう]にしない。Limits・Usage・[取消/とりけし]は[呼出元/よびだしもと]の[共通/きょうつう]Budgetで[管理/かんり]し、[要求/ようきゅう]には[支払済/しはらいず]み[作業量/さぎょうりょう]を[持/も]たせない。"
+      cons "[結果/けっか]はMathEvaluationResultで[返/かえ]し、[意味上/いみじょう]の[失敗/しっぱい]と[資源停止/しげんていし]を[区別/くべつ]する。providerの[要求/ようきゅう]ID・transport・remote Usageの[認証/にんしょう]は、この[操作/そうさ]の[外側/そとがわ]で[検査/けんさ]する。" nil
+    cons paragraph
       cons "printの[具体的/ぐたいてき]な[要求型/ようきゅうがた]はMathPrintRequest、[結果型/けっかがた]はMathPrintResultである。"
       cons "[要求/ようきゅう]は[閉包/へいほう]を[含/ふく]むMathSyntax、sentenceSchemaに[明示選択/めいじせんたく]したSentence schema、MathPrintedGuest[列/れつ]を[持/も]つ。"
       cons "guest[応答/おうとう]は[全体/ぜんたい]syntaxのdigest、guest[閉包/へいほう]のdigest、EmbedRef、textを[含/ふく]む。"

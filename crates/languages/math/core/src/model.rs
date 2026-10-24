@@ -350,3 +350,11 @@ pub enum MathPrintResult {
         reason: nepl3_core::budget::StopReason,
     },
 }
+
+/// Explicit evaluation input. Neither native ownership nor decoded data is a
+/// checked-expression proof; execution validates it at the receiving boundary.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathEvaluationRequest {
+    pub syntax: MathSyntax,
+    pub environment: BindingEnvironment,
+}
