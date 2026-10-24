@@ -1,11 +1,7 @@
-//! One frozen canonical snapshot; finite compatibility preparation precedes
-//! retained HTML preparation/render retries. Not durable or all-stage recovery.
+//! One frozen canonical snapshot feeds independent compatibility and HTML
+//! retry ledgers. Completed stages are retained; not durable recovery.
 use super::*;
-use crate::doc::export::pages::{
-    self,
-    interactive::RetryLimits,
-    resources::{self, ExecutionLimits},
-};
+use crate::doc::export::pages::{self, interactive::RetryLimits, resources};
 use crate::doc::source::err;
 use serde::{Deserialize, Serialize};
 use std::io::{BufRead, Write};
@@ -14,13 +10,14 @@ use std::io::{BufRead, Write};
 #[serde(deny_unknown_fields)]
 struct HtmlRetryLimits {
     #[serde(default)]
-    compatibility: ExecutionLimits,
+    compatibility: projection::retry::preparation::RetryLimits,
     #[serde(default)]
     html: RetryLimits,
 }
 impl HtmlRetryLimits {
     fn same_compatibility(self, other: Self) -> bool {
-        self.compatibility.parse_limits == other.compatibility.parse_limits
+        self.compatibility.job_limits == other.compatibility.job_limits
+            && self.compatibility.parse_limits == other.compatibility.parse_limits
             && self.compatibility.lower_limits == other.compatibility.lower_limits
             && self.compatibility.output_limits == other.compatibility.output_limits
     }
@@ -53,7 +50,8 @@ fn write_with_io(
     if output.exists() {
         return Err("output directory already exists".into());
     }
-    let selected: HtmlRetryLimits = resources::read_configuration(limits)?;
+    let mut selected: HtmlRetryLimits = resources::read_configuration(limits)?;
+    let initial_compatibility = selected.compatibility;
     let raw = bounded(root, manifest, MAX_REGISTRY)?;
     let registry = parse_registry(&raw)?;
     if registry
@@ -64,9 +62,31 @@ fn write_with_io(
         return Err("footnote-only registry requires Markdown export".into());
     }
     let registry_digest = references::hash(&raw);
-    let mut compatibility_budget = selected.compatibility.output_limits.budget();
-    let prepared=projection::prepare_html_retry(root,manifest,raw,selected.compatibility.phases(),!registry.compatibility.is_empty(),&mut compatibility_budget)
-        .map_err(|error|format!("CanonicalPreparationNonResumable: {error}; output usage={:?}; selected compatibility limits={:?}",compatibility_budget.usage(),selected.compatibility))?;
+    let prepared = projection::prepare_html_retry(
+        root,
+        manifest,
+        raw,
+        selected.compatibility,
+        !registry.compatibility.is_empty(),
+        |previous, stage, reason, usage| {
+            writeln!(
+                messages,
+                "Paused canonical compatibility {stage:?}: {reason:?}; cumulative compatibility usage={usage:?}"
+            )?;
+            let next = resume_grant_with_message(
+                input,
+                messages,
+                |next: &HtmlRetryLimits| {
+                    next.compatibility.covers(previous) && next.html.covers(selected.html)
+                },
+                "Rejected: compatibility and HTML limits must be nondecreasing.",
+            )?;
+            Ok(next.map(|next| {
+                selected = next;
+                next.compatibility
+            }))
+        },
+    )?;
     let compiled = crate::doc::source::compiled()?;
     let mut generated = pages::interactive::run(
         &compiled,
@@ -93,14 +113,14 @@ fn write_with_io(
     }
     let mut receipt: serde_json::Value = serde_json::from_str(&generated.manifest)?;
     let snapshot = serde_json::json!({
-        "contract":"nepl3.canonical-html.retry/1","registry":manifest,"registry_sha256":registry_digest,
-        "compatibility_stage":if had_compatibility{"completed-single-attempt"}else{"not-required"},
-        "compatibility_limits":selected.compatibility,"compatibility_output_usage":resources::usage(compatibility_budget.usage()),
+        "contract":"nepl3.canonical-html.retry/2","registry":manifest,"registry_sha256":registry_digest,
+        "compatibility_stage":if had_compatibility{"completed-retry-job"}else{"not-required"},
+        "initial_compatibility_limits":initial_compatibility,"compatibility_limits":selected.compatibility,
         "initial_html_limits":selected.html,
         "snapshot_limits":{"pages":128,"passive_files":128,"source_bytes":10_000_000,"alias_bytes":1_048_576,"passive_bytes":2_097_152,"combined_html_source_bytes":crate::doc::export::MAX_SOURCE_BYTES,"file_metadata_bytes":65_536},
-        "scope":"Frozen registry, sources, aliases and passive files. HTML preparation/render retries only; compatibility Markdown is a finite single-attempt prerequisite. HTML job usage excludes compatibility preparation, bounded snapshot/receipt work and I/O. No cross-process recovery."
+        "scope":"Frozen registry, sources, aliases and passive files. Compatibility Markdown and HTML have independent cumulative retry ledgers, not a single whole-export cap. Completed compatibility is retained across HTML pauses. Bounded snapshot/receipt work and I/O are excluded. No cross-process recovery."
     });
-    let mut identity = b"nepl3.canonical-html.retry/1\0".to_vec();
+    let mut identity = b"nepl3.canonical-html.retry/2\0".to_vec();
     for value in [
         &snapshot,
         &receipt["job_execution"],

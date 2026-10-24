@@ -74,6 +74,15 @@ pub(crate) fn generate(
     root: &Path,
     manifest: &str,
     raw: Vec<u8>,
+    limits: RetryLimits,
+    choose: impl FnMut(RetryLimits, Phase, StopReason, Usage) -> Result<Option<RetryLimits>>,
+) -> Result<Generated> {
+    generate_captured(manifest, capture(root, manifest, raw)?, limits, choose)
+}
+
+pub(in crate::doc::canonical::projection) fn generate_captured(
+    manifest: &str,
+    captured: Captured,
     mut limits: RetryLimits,
     mut choose: impl FnMut(RetryLimits, Phase, StopReason, Usage) -> Result<Option<RetryLimits>>,
 ) -> Result<Generated> {
@@ -82,7 +91,7 @@ pub(crate) fn generate(
         inputs,
         references,
         ..
-    } = capture(root, manifest, raw)?;
+    } = captured;
     let compiled = crate::doc::source::compiled()?;
     let initial_phases = limits.phases();
     let footnotes = inputs.iter().all(|p| is_footnotes(&p.page.renderer));
