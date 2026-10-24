@@ -488,6 +488,14 @@
       "aliases": "doc/migration/aliases/sentence-surface.json",
       "route": "docs/languages/sentence.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "math-example-guide",
+      "source": "examples/document/math/README.nepld",
+      "projection": "examples/document/math/README.md",
+      "aliases": "doc/migration/aliases/math-example-guide.json",
+      "route": "docs/examples/math.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [

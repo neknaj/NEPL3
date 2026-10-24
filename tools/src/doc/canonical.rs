@@ -301,11 +301,13 @@ pub(crate) fn parse_registry(raw: &[u8]) -> Result<Registry> {
             return Err("invalid canonical page identity or renderer".into());
         }
         let footnotes = projection::is_footnotes(&page.renderer);
-        // Exact paired migration exceptions; arbitrary root/crate/language files remain rejected.
+        // Exact paired migration exceptions; arbitrary root/crate/language/example files remain rejected.
         let sentence_readme = page.source == "crates/languages/sentence/core/README.nepld"
             && page.projection == "crates/languages/sentence/core/README.md";
         let sentence_surface = page.source == "languages/Sentence/README.nepld"
             && page.projection == "languages/Sentence/README.md";
+        let math_example = page.source == "examples/document/math/README.nepld"
+            && page.projection == "examples/document/math/README.md";
         let security = page.source == "SECURITY.nepld" && page.projection == "SECURITY.md";
         let conformance_history = page.source == "conformance/history.nepld"
             && page.projection == "conformance/history.md";
@@ -318,7 +320,11 @@ pub(crate) fn parse_registry(raw: &[u8]) -> Result<Registry> {
             if !portable_path(name)
                 || (!footnotes
                     && !name.starts_with("doc/")
-                    && !((sentence_readme || sentence_surface || security || conformance_history)
+                    && !((sentence_readme
+                        || sentence_surface
+                        || math_example
+                        || security
+                        || conformance_history)
                         && suffix != ".json"))
                 || !name.ends_with(suffix)
                 || (!reused_alias && !paths.insert(name.to_ascii_lowercase()))
