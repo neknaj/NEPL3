@@ -520,6 +520,14 @@
       "aliases": "doc/migration/aliases/math-mathml.json",
       "route": "docs/crates/math-mathml.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "browser-source-position",
+      "source": "conformance/targets/browser/README.nepld",
+      "projection": "conformance/targets/browser/README.md",
+      "aliases": "doc/migration/aliases/browser-source-position.json",
+      "route": "docs/conformance/browser-source-position.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [

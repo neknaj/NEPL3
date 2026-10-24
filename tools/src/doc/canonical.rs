@@ -316,6 +316,8 @@ pub(crate) fn parse_registry(raw: &[u8]) -> Result<Registry> {
         let math_tex = page.source == "crates/languages/math/tex/README.nepld"
             && page.projection == "crates/languages/math/tex/README.md";
         let security = page.source == "SECURITY.nepld" && page.projection == "SECURITY.md";
+        let browser_source = page.source == "conformance/targets/browser/README.nepld"
+            && page.projection == "conformance/targets/browser/README.md";
         let conformance_history = page.source == "conformance/history.nepld"
             && page.projection == "conformance/history.md";
         for (name, suffix) in [
@@ -334,7 +336,8 @@ pub(crate) fn parse_registry(raw: &[u8]) -> Result<Registry> {
                         || math_renderer_tests
                         || math_example
                         || security
-                        || conformance_history)
+                        || conformance_history
+                        || browser_source)
                         && suffix != ".json"))
                 || !name.ends_with(suffix)
                 || (!reused_alias && !paths.insert(name.to_ascii_lowercase()))
