@@ -2,9 +2,7 @@
 //! Input capture and retained host bookkeeping are outside logical phase usage.
 use super::*;
 use crate::doc::export::pages::resources::job::covers;
-use crate::doc::export::pages::resources::job::preparation::{
-    Observation, PageAttempt, with_prepared_document,
-};
+use crate::doc::export::pages::resources::job::preparation::{Observation, with_prepared_document};
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -44,8 +42,24 @@ impl RetryLimits {
 }
 #[derive(Clone, Copy, Debug)]
 pub(crate) enum Phase {
-    Preparation { page: usize },
+    Preparation { page: usize, role: Representation },
     Output,
+}
+/// A page may require two distinct source namespaces in a mixed registry.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
+pub(crate) enum Representation {
+    PageSet,
+    Legacy,
+}
+#[derive(Debug)]
+struct PreparationAttempt {
+    page_index: usize,
+    role: Representation,
+    stages: Vec<Observation>,
+}
+enum PreparedRepresentation {
+    PageSet(nepl3_doc_core::model::DocumentSyntax),
+    Legacy(host::PreparedLegacy),
 }
 fn observation(o: &Observation) -> serde_json::Value {
     serde_json::json!({
@@ -63,13 +77,6 @@ pub(crate) fn generate(
     mut limits: RetryLimits,
     mut choose: impl FnMut(RetryLimits, Phase, StopReason, Usage) -> Result<Option<RetryLimits>>,
 ) -> Result<Generated> {
-    if parse_registry(&raw)?
-        .pages
-        .iter()
-        .any(|p| p.renderer == host::RENDERER)
-    {
-        return Err("interactive Markdown retry requires page-set renderers; legacy renderer is unsupported".into());
-    }
     let Captured {
         raw,
         inputs,
@@ -95,12 +102,27 @@ pub(crate) fn generate(
             content: FileBytes(bytes),
         })
         .collect();
+    let needs_group = inputs.iter().any(|p| p.page.renderer != host::RENDERER);
+    let mut checkpoints = Vec::new();
+    checkpoints.try_reserve_exact(inputs.len() * 2)?;
+    let mut legacy = Vec::new();
+    legacy.try_reserve_exact(inputs.len())?;
+    for (index, input) in inputs.iter().enumerate() {
+        legacy.push(None);
+        if needs_group {
+            checkpoints.push((index, Representation::PageSet));
+        }
+        if input.page.renderer == host::RENDERER {
+            checkpoints.push((index, Representation::Legacy));
+        }
+    }
+    let mut completed = 0;
     let mut pages = Vec::new();
     pages.try_reserve_exact(inputs.len())?;
     let mut records = Vec::new();
     let mut account = Running::new(limits.job_limits.budget().limits());
-    while pages.len() < inputs.len() {
-        let index = pages.len();
+    while completed < checkpoints.len() {
+        let (index, role) = checkpoints[completed];
         let input = &inputs[index];
         let mut stages = Vec::new();
         stages.try_reserve_exact(2).map_err(|error| {
@@ -115,32 +137,47 @@ pub(crate) fn generate(
                 account.usage()
             )
         })?;
-        let result = account.run(limits.job_limits.budget().limits(), |meter| {
-            with_prepared_document(
+        let result = account.run(limits.job_limits.budget().limits(), |meter| match role {
+            Representation::PageSet => with_prepared_document(
                 meter,
                 &compiled,
                 &input.page.id,
                 &input.source,
                 limits.phases(),
                 &mut stages,
-                |document, _, _, _, _| Ok(document),
+                |document, _, _, _, _| Ok(PreparedRepresentation::PageSet(document)),
+            ),
+            Representation::Legacy => host::PreparedLegacy::capture_measured(
+                &compiled,
+                &input.page.source,
+                &input.source,
+                &input.aliases,
+                limits.phases(),
+                meter,
+                &mut stages,
             )
+            .map(PreparedRepresentation::Legacy),
         });
         let accounting_rejected = stages.iter().any(|s| s.accounting_rejected);
-        records.push(PageAttempt {
+        records.push(PreparationAttempt {
             page_index: index,
+            role,
             stages,
         });
         match result {
             Attempt::Complete { value, running } => {
-                pages.push(PageDocument {
-                    registration: PageRegistration {
-                        id: input.page.id.clone(),
-                        source: input.page.projection.clone(),
-                        route: input.page.projection.clone(),
-                    },
-                    document: value,
-                });
+                match value {
+                    PreparedRepresentation::PageSet(document) => pages.push(PageDocument {
+                        registration: PageRegistration {
+                            id: input.page.id.clone(),
+                            source: input.page.projection.clone(),
+                            route: input.page.projection.clone(),
+                        },
+                        document,
+                    }),
+                    PreparedRepresentation::Legacy(document) => legacy[index] = Some(document),
+                }
+                completed += 1;
                 account = running;
             }
             Attempt::Paused { mut paused, error } => {
@@ -154,7 +191,7 @@ pub(crate) fn generate(
                 loop {
                     let selected = choose(
                         limits,
-                        Phase::Preparation { page: index },
+                        Phase::Preparation { page: index, role },
                         paused.reason(),
                         paused.usage(),
                     )
@@ -199,8 +236,8 @@ pub(crate) fn generate(
         raw,
         inputs,
         phases: initial_phases,
-        legacy: None,
-        prepared: Some(PreparedGroup {
+        legacy: Some(legacy),
+        prepared: needs_group.then_some(PreparedGroup {
             set: PageSet { pages, files },
             aliases,
             footnotes,
@@ -238,10 +275,10 @@ pub(crate) fn generate(
     object.remove("parse_limits");
     object.remove("lower_limits");
     receipt["job_execution"] = serde_json::json!({
-        "contract":"nepl3.canonical-markdown.retry-job/1",
+        "contract":"nepl3.canonical-markdown.retry-job/2",
         "limits":resources::limits(done.limits),"usage":resources::usage(done.usage),
         "prepared_usage":resources::usage(prepared_usage),
-        "preparation_attempts":records.iter().enumerate().map(|(attempt_index,a)|serde_json::json!({"attempt_index":attempt_index,"page_index":a.page_index,"stages":a.stages.iter().map(observation).collect::<Vec<_>>()})).collect::<Vec<_>>(),
+        "preparation_attempts":records.iter().enumerate().map(|(attempt_index,a)|serde_json::json!({"attempt_index":attempt_index,"page_index":a.page_index,"representation":a.role,"stages":a.stages.iter().map(observation).collect::<Vec<_>>()})).collect::<Vec<_>>(),
         "render_attempts":done.attempts.iter().map(|(l,u,s)|serde_json::json!({"limits":resources::limits(*l),"usage":resources::usage(*u),"stop":s.map(|v|format!("{v:?}"))})).collect::<Vec<_>>(),
         "scope":"Cumulative measured parse, lower and output attempts. Compiled package/profile setup, input capture, retained host metadata, job receipt serialization and I/O excluded."
     });
@@ -253,6 +290,268 @@ pub(crate) fn generate(
 mod tests {
     use super::*;
     use crate::testing::Fixture;
+    fn legacy_fixture(mixed: bool) -> Result<(Fixture, Vec<u8>)> {
+        let f = Fixture::new()?;
+        f.write(
+            "doc/legacy.nepld",
+            r#"article en "Legacy" body cons paragraph cons "{word/note}" nil nil"#,
+        )?;
+        f.write(
+            "doc/new.nepld",
+            r#"article en "New" body cons paragraph cons "new" nil nil"#,
+        )?;
+        f.write("doc/aliases.json", "[]")?;
+        f.write("doc/new-aliases.json", "[]")?;
+        let mut pages = vec![
+            serde_json::json!({"id":"legacy-owner","source":"doc/legacy.nepld","projection":"doc/legacy.md","route":"legacy.html","aliases":"doc/aliases.json","renderer":host::RENDERER}),
+        ];
+        if mixed {
+            pages.push(serde_json::json!({"id":"new-owner","source":"doc/new.nepld","projection":"doc/new.md","route":"new.html","aliases":"doc/new-aliases.json","renderer":RENDERER}));
+        }
+        let raw = serde_json::to_vec(&serde_json::json!({"version":1,"pages":pages}))?;
+        f.write("pages.json", &raw)?;
+        Ok((f, raw))
+    }
+    #[test]
+    fn legacy_preparation_retries_measured_parse_and_lower_from_frozen_inputs() -> Result<()> {
+        for lower in [false, true] {
+            let (f, raw) = legacy_fixture(false)?;
+            let baseline = generate_from_registry(
+                f.root(),
+                "pages.json",
+                raw.clone(),
+                &mut crate::doc::source::budget(),
+            )?;
+            let measured = generate(
+                f.root(),
+                "pages.json",
+                raw.clone(),
+                RetryLimits::default(),
+                |_, _, _, _| Err("unexpected baseline stop".into()),
+            )?;
+            let measured: serde_json::Value = serde_json::from_str(&measured.manifest)?;
+            let used = measured["job_execution"]["preparation_attempts"][0]["stages"]
+                [usize::from(lower)]["usage"]["work"]
+                .as_u64()
+                .ok_or("measured work")?;
+            let short = used.checked_sub(1).ok_or("empty measured work")?;
+            let mut initial = RetryLimits::default();
+            if lower {
+                initial.lower_limits.work = short;
+            } else {
+                initial.parse_limits.work = short;
+            }
+            let mut prompts = 0;
+            let result = generate(
+                f.root(),
+                "pages.json",
+                raw,
+                initial,
+                |_, phase, reason, usage| {
+                    assert!(matches!(
+                        phase,
+                        Phase::Preparation {
+                            page: 0,
+                            role: Representation::Legacy
+                        }
+                    ));
+                    assert_eq!(reason, StopReason::WorkLimit);
+                    assert!(usage.work > 0);
+                    prompts += 1;
+                    for name in [
+                        "doc/legacy.nepld",
+                        "doc/new.nepld",
+                        "doc/aliases.json",
+                        "doc/new-aliases.json",
+                        "pages.json",
+                    ] {
+                        std::fs::remove_file(f.root().join(name))?;
+                    }
+                    Ok(Some(RetryLimits::default()))
+                },
+            )?;
+            assert_eq!(prompts, 1);
+            assert_eq!(result.files, baseline.files);
+            let receipt: serde_json::Value = serde_json::from_str(&result.manifest)?;
+            let original: serde_json::Value = serde_json::from_str(&baseline.manifest)?;
+            for key in [
+                "files",
+                "input_pageset",
+                "input_context",
+                "page_dependencies",
+            ] {
+                assert_eq!(receipt[key], original[key], "{key}");
+            }
+            let attempts = receipt["job_execution"]["preparation_attempts"]
+                .as_array()
+                .ok_or("attempts")?;
+            assert_eq!(attempts.len(), 2);
+            assert_eq!(attempts[0]["representation"], "Legacy");
+            let mut max_depth = 0u64;
+            for attempt in attempts {
+                for stage in attempt["stages"].as_array().ok_or("stages")? {
+                    max_depth = max_depth.max(stage["usage"]["depth"].as_u64().ok_or("depth")?);
+                }
+            }
+            assert_eq!(
+                receipt["job_execution"]["prepared_usage"]["depth"].as_u64(),
+                Some(max_depth)
+            );
+            for key in [
+                "work",
+                "allocation_units",
+                "nodes",
+                "source_bytes",
+                "output_bytes",
+                "events",
+                "diagnostics",
+                "depth",
+            ] {
+                let mut total = receipt["job_execution"]["prepared_usage"][key]
+                    .as_u64()
+                    .ok_or("prepared counter")?;
+                for render in receipt["job_execution"]["render_attempts"]
+                    .as_array()
+                    .ok_or("renders")?
+                {
+                    let value = render["usage"][key].as_u64().ok_or("render counter")?;
+                    total = if key == "depth" {
+                        total.max(value)
+                    } else {
+                        total + value
+                    };
+                }
+                assert_eq!(
+                    receipt["job_execution"]["usage"][key].as_u64(),
+                    Some(total),
+                    "total {key}"
+                );
+            }
+
+            let failed = attempts[0]["stages"]
+                .as_array()
+                .ok_or("stages")?
+                .last()
+                .ok_or("failed stage")?;
+            assert_eq!(failed["stage"], if lower { "Lower" } else { "Parse" });
+            assert_eq!(failed["failed"], true);
+            assert_eq!(failed["stop"], "WorkLimit");
+            for key in [
+                "work",
+                "allocation_units",
+                "nodes",
+                "source_bytes",
+                "output_bytes",
+                "events",
+                "diagnostics",
+            ] {
+                let mut sum = 0u64;
+                for a in attempts {
+                    for stage in a["stages"].as_array().ok_or("stages")? {
+                        sum += stage["usage"][key].as_u64().ok_or("counter")?;
+                    }
+                }
+                assert_eq!(
+                    receipt["job_execution"]["prepared_usage"][key].as_u64(),
+                    Some(sum),
+                    "{key}"
+                );
+            }
+        }
+        Ok(())
+    }
+    #[test]
+    fn mixed_completed_pageset_checkpoint_survives_legacy_pause() -> Result<()> {
+        let (f, raw) = legacy_fixture(true)?;
+        let baseline = generate(
+            f.root(),
+            "pages.json",
+            raw.clone(),
+            RetryLimits::default(),
+            |_, _, _, _| Err("unexpected stop".into()),
+        )?;
+        let receipt: serde_json::Value = serde_json::from_str(&baseline.manifest)?;
+        let stages = receipt["job_execution"]["preparation_attempts"][0]["stages"]
+            .as_array()
+            .ok_or("stages")?;
+        let first_work = stages.iter().try_fold(0u64, |sum, s| {
+            s["usage"]["work"].as_u64().map(|v| sum + v).ok_or("work")
+        })?;
+        let mut initial = RetryLimits::default();
+        initial.job_limits.work = first_work + 1;
+        let mut prompts = 0;
+        let result = generate(f.root(), "pages.json", raw, initial, |_, phase, _, _| {
+            assert!(matches!(
+                phase,
+                Phase::Preparation {
+                    page: 0,
+                    role: Representation::Legacy
+                }
+            ));
+            prompts += 1;
+            Ok(Some(RetryLimits::default()))
+        })?;
+        assert_eq!(prompts, 1);
+        assert_eq!(result.files, baseline.files);
+        let receipt: serde_json::Value = serde_json::from_str(&result.manifest)?;
+        let attempts = receipt["job_execution"]["preparation_attempts"]
+            .as_array()
+            .ok_or("attempts")?;
+        assert_eq!(attempts.len(), 4);
+        assert_eq!(
+            attempts
+                .iter()
+                .filter(|a| a["page_index"] == 0 && a["representation"] == "PageSet")
+                .count(),
+            1
+        );
+        assert_eq!(attempts[1]["representation"], "Legacy");
+        assert_eq!(attempts[2]["representation"], "Legacy");
+        Ok(())
+    }
+    #[test]
+    fn legacy_preparation_cancel_and_semantic_failures_do_not_resume() -> Result<()> {
+        let (f, raw) = legacy_fixture(false)?;
+        let mut initial = RetryLimits::default();
+        initial.parse_limits.work = 0;
+        let error = generate(
+            f.root(),
+            "pages.json",
+            raw.clone(),
+            initial,
+            |_, phase, _, _| {
+                assert!(matches!(
+                    phase,
+                    Phase::Preparation {
+                        role: Representation::Legacy,
+                        ..
+                    }
+                ));
+                Ok(None)
+            },
+        )
+        .err()
+        .ok_or("cancelled job completed")?;
+        assert!(error.to_string().contains("Cancelled"));
+        f.write(
+            "doc/aliases.json",
+            r#"[{"section":null,"name":"bad alias"}]"#,
+        )?;
+        let error = generate(
+            f.root(),
+            "pages.json",
+            raw,
+            RetryLimits::default(),
+            |_, _, _, _| Err("semantic failure prompted".into()),
+        )
+        .err()
+        .ok_or("invalid alias accepted")?;
+        assert!(
+            !error.to_string().contains("semantic failure prompted"),
+            "{error}"
+        );
+        Ok(())
+    }
     fn fixture() -> Result<(Fixture, Vec<u8>)> {
         let f = Fixture::new()?;
         f.write(
@@ -300,7 +599,13 @@ mod tests {
         let mut initial = RetryLimits::default();
         initial.parse_limits.work = first + 100;
         let output = generate(f.root(), "pages.json", raw, initial, |_, phase, _, _| {
-            assert!(matches!(phase, Phase::Preparation { page: 1 }));
+            assert!(matches!(
+                phase,
+                Phase::Preparation {
+                    page: 1,
+                    role: Representation::PageSet
+                }
+            ));
             Ok(Some(RetryLimits::default()))
         })?;
         assert!(
@@ -375,7 +680,13 @@ mod tests {
         let mut initial = RetryLimits::default();
         initial.parse_limits.work = first + 100;
         let output = generate(f.root(), "pages.json", raw, initial, |_, phase, _, _| {
-            assert!(matches!(phase, Phase::Preparation { page: 1 }));
+            assert!(matches!(
+                phase,
+                Phase::Preparation {
+                    page: 1,
+                    role: Representation::PageSet
+                }
+            ));
             Ok(Some(RetryLimits::default()))
         })?;
         assert!(
@@ -450,7 +761,13 @@ mod tests {
             raw.clone(),
             limits,
             |_, phase, _, _| {
-                assert!(matches!(phase, Phase::Preparation { page: 0 }));
+                assert!(matches!(
+                    phase,
+                    Phase::Preparation {
+                        page: 0,
+                        role: Representation::PageSet
+                    }
+                ));
                 f.write("doc/guide.md", "# Changed\n")?;
                 f.write("design/tasks.json", "{\"version\":2}")?;
                 Ok(Some(RetryLimits::default()))
@@ -504,7 +821,13 @@ mod tests {
         let mut limits = RetryLimits::default();
         limits.parse_limits.work = 0;
         let done = generate(f.root(), "pages.json", raw, limits, |_, phase, _, _| {
-            assert!(matches!(phase, Phase::Preparation { page: 0 }));
+            assert!(matches!(
+                phase,
+                Phase::Preparation {
+                    page: 0,
+                    role: Representation::PageSet
+                }
+            ));
             for name in ["page.nepld", "aliases.json", "image.svg"] {
                 f.write(name, "invalid replacement")?;
             }
@@ -640,7 +963,13 @@ mod tests {
             raw,
             initial,
             |_, phase, reason, usage| {
-                assert!(matches!(phase, Phase::Preparation { page: 1 }));
+                assert!(matches!(
+                    phase,
+                    Phase::Preparation {
+                        page: 1,
+                        role: Representation::PageSet
+                    }
+                ));
                 assert_eq!(reason, StopReason::WorkLimit);
                 assert!(usage.work > first);
                 prompts += 1;
@@ -699,7 +1028,13 @@ mod tests {
             raw,
             initial,
             |_, phase, reason, _| {
-                assert!(matches!(phase, Phase::Preparation { page: 0 }));
+                assert!(matches!(
+                    phase,
+                    Phase::Preparation {
+                        page: 0,
+                        role: Representation::PageSet
+                    }
+                ));
                 assert_eq!(reason, StopReason::WorkLimit);
                 prompts += 1;
                 Ok(Some(RetryLimits::default()))

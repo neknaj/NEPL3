@@ -277,3 +277,106 @@ fn legacy_output_cli_cancels_eof_and_semantic_failure_without_publication() -> R
     }
     Ok(())
 }
+
+#[test]
+fn legacy_preparation_cli_cancels_eof_and_semantic_failure_without_publication() -> Result<()> {
+    for semantic in [false, true] {
+        for command in ["cancel\n", ""] {
+            let f = fixture()?;
+            f.write(
+                "doc/page.nepld",
+                r#"article en "Page" body cons paragraph cons "Text" nil nil"#,
+            )?;
+            f.write("doc/aliases.json", "[]")?;
+            f.json(
+                "pages.json",
+                &json!({"version":1,"pages":[{
+                    "id":"legacy","source":"doc/page.nepld","projection":"doc/page.md","route":"page.html",
+                    "aliases":"doc/aliases.json","renderer":host::RENDERER
+                }]}),
+            )?;
+            if semantic {
+                f.write(
+                    "doc/aliases.json",
+                    r#"[{"section":"absent","name":"bad-anchor"}]"#,
+                )?;
+            }
+            let mut limits = projection::retry::preparation::RetryLimits::default();
+            if !semantic {
+                limits.parse_limits.work = 0;
+            }
+            f.json("legacy-limits.json", &serde_json::to_value(limits)?)?;
+            let output = f.root().join("legacy-preparation");
+            let mut messages = Vec::new();
+            let error = markdown_interactive_with_io(
+                f.root(),
+                "pages.json",
+                &f.root().join("legacy-limits.json"),
+                &output,
+                &mut Cursor::new(command),
+                &mut messages,
+            )
+            .err()
+            .ok_or("unexpected completion")?;
+            assert!(!output.exists());
+            if semantic {
+                assert!(messages.is_empty());
+                assert!(!error.to_string().contains("Cancelled"));
+            } else {
+                assert!(error.to_string().contains("Cancelled"), "{error}");
+                assert!(String::from_utf8(messages)?.contains("representation Legacy"));
+            }
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn legacy_preparation_cli_rejects_shrinking_grant_then_resumes() -> Result<()> {
+    let f = fixture()?;
+    f.write(
+        "doc/page.nepld",
+        r#"article en "Page" body cons paragraph cons "Text" nil nil"#,
+    )?;
+    f.write("doc/aliases.json", "[]")?;
+    f.json(
+        "pages.json",
+        &json!({"version":1,"pages":[{
+            "id":"legacy","source":"doc/page.nepld","projection":"doc/page.md","route":"page.html",
+            "aliases":"doc/aliases.json","renderer":host::RENDERER
+        }]}),
+    )?;
+    let mut initial = projection::retry::preparation::RetryLimits::default();
+    initial.parse_limits.work = 0;
+    f.json("initial.json", &serde_json::to_value(initial)?)?;
+    let mut shrink = projection::retry::preparation::RetryLimits::default();
+    shrink.output_limits.work = 0;
+    f.json("shrink.json", &serde_json::to_value(shrink)?)?;
+    f.json(
+        "full.json",
+        &serde_json::to_value(projection::retry::preparation::RetryLimits::default())?,
+    )?;
+    let commands = format!(
+        "resume {}\nresume {}\n",
+        f.root().join("shrink.json").display(),
+        f.root().join("full.json").display()
+    );
+    let output = f.root().join("resumed");
+    let mut messages = Vec::new();
+    markdown_interactive_with_io(
+        f.root(),
+        "pages.json",
+        &f.root().join("initial.json"),
+        &output,
+        &mut Cursor::new(commands),
+        &mut messages,
+    )?;
+    assert!(output.join("doc/page.md").is_file());
+    let messages = String::from_utf8(messages)?;
+    assert!(messages.contains("representation Legacy"));
+    assert!(
+        messages.contains("Rejected: all selected limits must be nondecreasing."),
+        "{messages}"
+    );
+    Ok(())
+}

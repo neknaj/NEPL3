@@ -659,7 +659,9 @@ fn markdown_interactive_with_io(
         selected,
         |previous, phase, reason, usage| {
             let stage = match phase {
-                preparation::Phase::Preparation { page } => format!("preparation page {page}"),
+                preparation::Phase::Preparation { page, role } => {
+                    format!("preparation page {page} representation {role:?}")
+                }
                 preparation::Phase::Output => "output".to_owned(),
             };
             writeln!(

@@ -388,6 +388,44 @@ impl PreparedLegacy {
         })
     }
 
+    /// Measured parse/lower preparation for explicit full-job retry. The owned
+    /// binding is constructed here, never from a caller-supplied document.
+    /// Bounded retained host metadata is outside the logical phase ledger.
+    pub(crate) fn capture_measured(
+        compiled: &Compiled,
+        path: &str,
+        source: &str,
+        alias_bytes: &[u8],
+        phases: PhaseLimits,
+        meter: &mut crate::doc::export::pages::resources::job::Meter<'_>,
+        records: &mut Vec<crate::doc::export::pages::resources::job::preparation::Observation>,
+    ) -> Result<Self, String> {
+        if path.len() > 4096 || path.chars().any(char::is_control) {
+            return Err("input path is not representable in projection metadata".into());
+        }
+        if source.len() as u64 > crate::doc::export::MAX_SOURCE_BYTES
+            || alias_bytes.len() > 1_048_576
+        {
+            return Err("legacy snapshot input exceeds limit".into());
+        }
+        crate::doc::export::pages::resources::job::preparation::with_prepared_document(
+            meter,
+            compiled,
+            "doc-input",
+            source,
+            phases,
+            records,
+            |document, _, _, _, _| {
+                Ok(Self {
+                    document,
+                    path: path.to_owned(),
+                    source: source.to_owned(),
+                    alias_bytes: alias_bytes.to_vec(),
+                })
+            },
+        )
+    }
+
     pub(crate) fn render(
         &self,
         compiled: &Compiled,

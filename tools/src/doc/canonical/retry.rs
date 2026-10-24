@@ -290,29 +290,6 @@ mod tests {
     }
 
     #[test]
-    fn full_retry_still_rejects_legacy_profile_before_preparation() -> Result<()> {
-        let f = Fixture::new()?;
-        let raw = serde_json::to_vec(&serde_json::json!({"version":1,"pages":[{
-            "id":"page", "source":"doc/missing.nepld", "projection":"doc/page.md", "route":"page.html",
-            "aliases":"doc/missing.json", "renderer":host::RENDERER
-        }]}))?;
-        let error = preparation::generate(
-            f.root(),
-            "pages.json",
-            raw,
-            preparation::RetryLimits::default(),
-            |_, _, _, _| Err("unexpected prompt".into()),
-        )
-        .err()
-        .ok_or("legacy accepted")?;
-        assert!(
-            error.to_string().contains("legacy renderer is unsupported"),
-            "{error}"
-        );
-        Ok(())
-    }
-
-    #[test]
     fn output_retry_retains_failed_work_and_frozen_source() -> Result<()> {
         let f = Fixture::new()?;
         f.write(
@@ -490,6 +467,36 @@ mod tests {
                 &mut crate::doc::source::budget(),
             )?;
             let baseline: serde_json::Value = serde_json::from_str(&expected.manifest)?;
+            let full = preparation::generate(
+                f.root(),
+                "pages.json",
+                raw.clone(),
+                preparation::RetryLimits::default(),
+                |_, _, _, _| Err("unexpected full preparation stop".into()),
+            )?;
+            assert_eq!(full.files, expected.files);
+            let full_receipt: serde_json::Value = serde_json::from_str(&full.manifest)?;
+            for key in [
+                "files",
+                "input_pageset",
+                "input_context",
+                "page_dependencies",
+            ] {
+                assert_eq!(full_receipt[key], baseline[key], "full preparation {key}");
+            }
+            assert_eq!(
+                full_receipt["job_execution"]["contract"],
+                "nepl3.canonical-markdown.retry-job/2"
+            );
+            let roles = full_receipt["job_execution"]["preparation_attempts"]
+                .as_array()
+                .ok_or("attempts")?;
+            assert_eq!(roles.len(), if mixed.is_some() { 3 } else { 1 });
+            assert_eq!(
+                roles[usize::from(mixed.is_some())]["representation"],
+                "Legacy"
+            );
+
             let mut batch = prepare_batch(
                 f.root(),
                 "pages.json",
