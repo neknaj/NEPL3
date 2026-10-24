@@ -25,13 +25,13 @@ body
       some row cons "[主責務/しゅせきむ]" cons "[件数/けんすう]" cons "[今後/こんご]の[扱/あつか]い" nil
       cons row cons "[既存/きそん]toolのコピー・[旧版/きゅうはん]" cons "17" cons "Git revisionと[既存/きそん]toolを[参照/さんしょう]" nil
       cons row cons "ブラウザ[表示/ひょうじ]・ナビゲーション[観測/かんそく]" cons "23" cons "[既存/きそん]browser/site auditへ[必要/ひつよう]な[回帰/かいき]だけ[追加/ついか]" nil
-      cons row cons "[文書内容/ぶんしょないよう]・[構造/こうぞう]・[生成結果/せいせいけっか]の[比較/ひかく]" cons "12" cons "[通常/つうじょう]の[意味/いみ]・projection[試験/しけん]へ" nil
-      cons row cons "hash[一覧作成/いちらんさくせい]" cons "3" cons "[共通収集器/きょうつうしゅうしゅうき]へ" nil
+      cons row cons "[文書/ぶんしょ][内容/ないよう]・[構造/こうぞう]・[生成結果/せいせいけっか]の[比較/ひかく]" cons "12" cons "[通常/つうじょう]の[意味/いみ]・projection[試験/しけん]へ" nil
+      cons row cons "hash[一覧作成/いちらんさくせい]" cons "3" cons "[共通/きょうつう][収集器/しゅうしゅうき]へ" nil
       cons row cons "[固定/こてい]review[文章/ぶんしょう]の[書出/かきだ]し" cons "3" cons "review[文章/ぶんしょう]を[直接保存/ちょくせつほぞん]" nil
       cons row cons "[境界/きょうかい]・[失敗/しっぱい]の[直接再現/ちょくせつさいげん]" cons "7" cons "[必要/ひつよう]な[反例/はんれい]を[通常/つうじょう]testへ" nil
       cons row cons "workerの[偽応答/にせおうとう]・sleep" cons "4" cons "[管理/かんり]されたtest fixtureへ" nil
-      cons row cons "[試験用/しけんよう]コピー・Rust[試験注入/しけんちゅうにゅう]・[修正/しゅうせい]" cons "24" cons "source[注入/ちゅうにゅう]の[共通/きょうつう]frameworkは[作/つく]らず[通常/つうじょう]Rust testへ" nil
-      cons row cons "[独立期待値生成/どくりつきたいちせいせい]" cons "2" cons "production[実装/じっそう]と[統合/とうごう]せず[独立性/どくりつせい]を[維持/いじ]" nil
+      cons row cons "[試験用/しけんよう]コピー・Rust[試験/しけん][注入/ちゅうにゅう]・[修正/しゅうせい]" cons "24" cons "source[注入/ちゅうにゅう]の[共通/きょうつう]frameworkは[作/つく]らず[通常/つうじょう]Rust testへ" nil
+      cons row cons "[独立/どくりつ][期待値/きたいち][生成/せいせい]" cons "2" cons "production[実装/じっそう]と[統合/とうごう]せず[独立性/どくりつせい]を[維持/いじ]" nil
       nil
     cons paragraph
       cons sentence cons ruby text "直近" text "ちょっきん" cons text "の " cons link external "https://github.com/neknaj/NEPL3/blob/d87ca8c4ba18e74bc71efb0e2958af87ac971e1b/conformance/results/doc-pages-acquire/review/seal.py.fixture" text "acquireのseal" cons text " はレビュー" cons ruby text "本文" text "ほんぶん" cons text "の" cons ruby text "作成" text "さくせい" cons text "、sourceのコピー、" cons ruby text "全" text "ぜん" cons text "ファイルのhash" cons ruby text "列挙" text "れっきょ" cons text "を" cons ruby text "兼" text "か" cons text "ねる。" nil
@@ -107,10 +107,10 @@ body
       cons row cons "tar・asset identity" cons "artifact IDとZIP digestだけでは[内部/ないぶ]HTMLやsourceを[検査/けんさ]できない" cons "repositoryのpayload/[内容/ないよう]validatorを[維持/いじ]" nil
       cons row cons "upload/downloadと[資格情報/しかくじょうほう]" cons "Actions[公式/こうしき]の[固定版/こていばん]actionがHTTP/[認証/にんしょう]/[転送/てんそう]を[提供/ていきょう]する" cons "[公式/こうしき]actionで[実現/じつげん]できる[入口/いりぐち]では[独自/どくじ]HTTP/IPCを[重/かさ]ねない" nil
       cons row cons "[公開/こうかい]の[排他/はいた]" cons "Actions concurrencyは[同一/どういつ]repository/groupのjob/workflowを[直列化/ちょくれつか]するが、Pages[側/がわ]の[原子的/げんしてき]CASではない" cons "[単一/たんいつ]publisher workflow。[異/こと]なるwriterを[禁止/きんし]し、[不明状態/ふめいじょうたい]は[停止/ていし]" nil
-      cons row cons "[不明/ふめい]なPOST・[再試行防止/さいしこうぼうし]" cons "timeout[後/ご]のremote[結果/けっか]をActions[成功/せいこう]/[失敗/しっぱい]だけでは[確定/かくてい]できない" cons "mutation[境界/きょうかい]のintent/receiptと[次回照合/じかいしょうごう]を[維持/いじ]" nil
+      cons row cons "[不明/ふめい]なPOST・[再試行/さいしこう][防止/ぼうし]" cons "timeout[後/ご]のremote[結果/けっか]をActions[成功/せいこう]/[失敗/しっぱい]だけでは[確定/かくてい]できない" cons "mutation[境界/きょうかい]のintent/receiptと[次回照合/じかいしょうごう]を[維持/いじ]" nil
       cons row cons "public smoke" cons "deploy API[成功/せいこう]は[配信/はいしん]byte・[全/ぜん]assetの[成功/せいこう]ではない" cons "repositoryのHTTP/[内容検査/ないようけんさ]を[維持/いじ]" nil
-      cons row cons "LKGと[復旧/ふっきゅう]" cons "artifact retentionは[永続保存/えいぞくほぞん]でもLKGでもない" cons "T20/S06の[保存/ほぞん]・[対象照合/たいしょうしょうごう]・[有限復旧/ゆうげんふっきゅう]は[維持/いじ]。[未実装/みじっそう]を[合格/ごうかく]にしない" nil
-      cons row cons "review evidence" cons "action logは[独立/どくりつ]レビューやscopeを[定義/ていぎ]しない" cons "[小/ちい]さな[共通収集/きょうつうしゅうしゅう]/[照合/しょうごう]ツールと[宣言/せんげん]データ" nil
+      cons row cons "LKGと[復旧/ふっきゅう]" cons "artifact retentionは[永続保存/えいぞくほぞん]でもLKGでもない" cons "T20/S06の[保存/ほぞん]・[対象/たいしょう][照合/しょうごう]・[有限/ゆうげん][復旧/ふっきゅう]は[維持/いじ]。[未実装/みじっそう]を[合格/ごうかく]にしない" nil
+      cons row cons "review evidence" cons "action logは[独立/どくりつ]レビューやscopeを[定義/ていぎ]しない" cons "[小/ちい]さな[共通/きょうつう][収集/しゅうしゅう]/[照合/しょうごう]ツールと[宣言/せんげん]データ" nil
       nil
     cons paragraph
       cons "[独自/どくじ]transportを[即削除/そくさくじょ]するのではなく、[必要/ひつよう]な[失敗試験/しっぱいしけん]を[公式/こうしき]actionとの[接続/せつぞく]に[引/ひ]き[継/つ]げた[経路/けいろ]から[廃止/はいし]する。"
