@@ -1,5 +1,7 @@
 //! Record the compiler actually used for this host tool, not a later PATH lookup.
-use std::{env, error::Error, process::Command};
+use std::{env, error::Error, fs, path::PathBuf, process::Command};
+#[path = "build_support/host_identity.rs"]
+mod host_identity;
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("cargo:rerun-if-changed=build.rs");
@@ -15,5 +17,18 @@ fn main() -> Result<(), Box<dyn Error>> {
         return Err("invalid build compiler identity".into());
     }
     println!("cargo:rustc-env=NEPL3_BUILD_RUSTC={version}");
+    let manifest =
+        PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").ok_or("missing manifest directory")?);
+    let root = manifest.parent().ok_or("missing workspace root")?;
+    for input in host_identity::ROOTS.iter().chain(host_identity::FILES) {
+        // Directory watches also invalidate additions, removals and renames.
+        println!("cargo:rerun-if-changed={}", root.join(input).display());
+    }
+    let digest = host_identity::fingerprint(root)?;
+    let output = PathBuf::from(env::var_os("OUT_DIR").ok_or("missing build output directory")?);
+    fs::write(
+        output.join("doc_host_source_digest.rs"),
+        format!("{digest:?}"),
+    )?;
     Ok(())
 }
