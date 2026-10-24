@@ -433,16 +433,22 @@ pub(super) fn prepare_html_retry(
     root: &Path,
     manifest: &str,
     raw: Vec<u8>,
-    phases: PhaseLimits,
+    limits: retry::preparation::RetryLimits,
     compatibility: bool,
-    budget: &mut Budget,
+    choose: impl FnMut(
+        retry::preparation::RetryLimits,
+        retry::preparation::Phase,
+        nepl3_core::budget::StopReason,
+        nepl3_core::budget::Usage,
+    ) -> Result<Option<retry::preparation::RetryLimits>>,
 ) -> Result<HtmlRetryPrepared> {
-    let mut captured =
+    let captured =
         capture(root, manifest, raw).map_err(|error| format!("SnapshotPreparation: {error}"))?;
-    captured.phases = phases;
     if compatibility {
-        let ready = compatibility_from_captured(captured, manifest, budget)
-            .map_err(|error| format!("CompatibilityPreparation: {error}"))?;
+        let ready = compatibility_with_producer(captured, |captured| {
+            retry::preparation::generate_captured(manifest, captured, limits, choose)
+        })
+        .map_err(|error| format!("CompatibilityPreparation: {error}"))?;
         return Ok(HtmlRetryPrepared {
             inputs: ready.inputs,
             aliases: ready.aliases.into_iter().map(|a| (a.page, a.raw)).collect(),
@@ -496,6 +502,16 @@ fn compatibility_from_captured(
     manifest: &str,
     budget: &mut Budget,
 ) -> Result<CompatibilityPrepared> {
+    let initial = budget.usage();
+    compatibility_with_producer(captured, |captured| {
+        prepare_captured(captured, manifest, budget)?.render(initial, budget)
+    })
+}
+
+fn compatibility_with_producer(
+    captured: Captured,
+    produce: impl FnOnce(Captured) -> Result<Generated>,
+) -> Result<CompatibilityPrepared> {
     let snapshot: Vec<_> = captured
         .inputs
         .iter()
@@ -542,8 +558,7 @@ fn compatibility_from_captured(
             )
         })
         .collect();
-    let initial = budget.usage();
-    let mut markdown = prepare_captured(captured, manifest, budget)?.render(initial, budget)?;
+    let mut markdown = produce(captured)?;
     if markdown.manifest.len() > 8 * 1024 * 1024 {
         return Err("CompatibilityReceiptLimit".into());
     }
