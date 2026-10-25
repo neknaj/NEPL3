@@ -1183,7 +1183,22 @@ body
         cons "供給textはデータであり、guestの意味を認証するportable証拠ではない。"
         cons "altはHTML callbackやnamespaceへ採用せず、captionの描画とは分離する。"
         cons "既存SVG入口はresolutionなしのwrapperとして保持する。"
-        cons "このnative接続はSentenceとassetを組み合わせた単体CLI・PageSet export、画像関連のnamespace表示選択、portable proof、プロセス終了後の復元を完成させない。"
+        cons "このnative接続だけでSentenceとassetを組み合わせた一般の単体CLI・PageSet export、画像関連のnamespace表示選択、portable proof、プロセス終了後の復元を完成させない。alt限定の単体CLI接続は後述する。"
+        nil
+      nil
+    cons section svgAltExport "alt[限定/げんてい]Sentenceの[単体/たんたい]SVG[出力/しゅつりょく]"
+    body
+      cons paragraph
+        cons "単体doc-html svgは、独立Sentenceの全出現がImageまたはInlineImageのaltに限られる場合に、前述のnative投影を出力へ接続する。"
+        cons "Rowsの構造表示inventoryで全variantの非alt出現を検査し、title・本文・captionなどにも現れる所有元は同じEmbedRefがaltにある場合でも拒否する。"
+        cons "この検査をnamespaceやguest意味の証拠とせず、実際のalt所有元を同じoutput Budgetで入場・lower・投影し、準備と描画の間はSentenceSyntaxとidentity付きtextを保持する。"
+        cons "altからHTML callbackは発生せず、既存のCode・Math描画とasset検査を保つ。"
+        nil
+      cons paragraph
+        cons "externalとembeddedのSVG、externalとinlineのCSSで同じBaseOnly本文を使い、HTML属性としてescapeする。"
+        cons "未解決の選択foreign text、非alt Sentence、不正asset、resource stopでは成功成果物を作らない。"
+        cons "独立Sentenceがない既存SVG経路、runtime既定値、CI設定を変更しない。"
+        cons "一般のSentenceとassetの組合せ、PageSet asset、画像関連namespaceの表示選択、portable proofは引き続き未完了である。"
         nil
       nil
     cons section visibility "HTML[挿入対象/そうにゅうたいしょう]Sentence[出現/しゅつげん]の[構造/こうぞう]inventory"

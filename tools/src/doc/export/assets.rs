@@ -1,5 +1,6 @@
 //! Single-document SVG export prototype. Asset IDs never imply filesystem access.
 use super::*;
+pub(super) mod sentence;
 use nepl3_doc_html::assets::{SvgInput, SvgMode};
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -110,9 +111,11 @@ pub fn write(
         }
     }
     let mut report: serde_json::Value = serde_json::from_str(&generated.manifest)?;
-    report["scope"] = serde_json::json!(
-        "single-document static SVG, retained Code and Math display, and validated external URLs; svg/g/path and bounded local path-glyph profile; page/relative links and unselected foreign requirements need explicit resolution"
-    );
+    if generated.sentence_alt_sources.is_none() {
+        report["scope"] = serde_json::json!(
+            "single-document static SVG, retained Code and Math display, and validated external URLs; svg/g/path and bounded local path-glyph profile; page/relative links and unselected foreign requirements need explicit resolution"
+        );
+    }
     report["options"]["svg"] = serde_json::json!(mode_name(mode));
     report["resources"] = serde_json::json!(resources);
     if let Some(list) = report["files"].as_array_mut() {
