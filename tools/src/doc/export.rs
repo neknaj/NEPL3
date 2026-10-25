@@ -4,13 +4,14 @@ mod code;
 mod katex;
 pub mod math;
 pub mod pages;
+pub use pages::{DisplayOptions, DisplaySelection};
 mod stylesheet;
 pub use super::math::display::Preference as MathRenderer;
 use super::source::{Compiled, budget, compiled, err, with_named_input_limits};
 use nepl3_core::source::{Digest, SourceAdmission, SourceStore};
 use nepl3_core::value_codec::FoundationValueCodec;
 use nepl3_doc_core::check::Category;
-use nepl3_doc_html::{ParallelMode, RenderOptions};
+use nepl3_doc_html::ParallelMode;
 use nepl3_wire::foundation::FoundationCodec;
 use pages::resources::ExecutionLimits;
 use std::time::{Duration, Instant};
@@ -93,7 +94,7 @@ pub fn generate_observed_with_css(
         input,
         css,
         None,
-        MathRenderer::KaTeXPreferred,
+        DisplayOptions::default(),
         ExecutionLimits::default(),
         observe,
     )
@@ -113,7 +114,28 @@ pub fn generate_with_limits(
     renderer: MathRenderer,
     limits: ExecutionLimits,
 ) -> Result<LocalDocument, String> {
-    generate_impl(compiled, input, css, None, renderer, limits, &mut |_| {})
+    generate_with_display(
+        compiled,
+        input,
+        css,
+        DisplayOptions {
+            math_renderer: renderer,
+            ..DisplayOptions::default()
+        },
+        limits,
+    )
+}
+
+/// Asset-free Article export with explicit native display selection.
+/// Existing wrappers retain Rows; selection is never inferred from locale.
+pub fn generate_with_display(
+    compiled: &Compiled,
+    input: &str,
+    css: CssMode,
+    display: DisplayOptions,
+    limits: ExecutionLimits,
+) -> Result<LocalDocument, String> {
+    generate_impl(compiled, input, css, None, display, limits, &mut |_| {})
 }
 fn generate_impl(
     compiled: &Compiled,
@@ -123,13 +145,17 @@ fn generate_impl(
         &[nepl3_doc_html::assets::SvgInput<'_>],
         nepl3_doc_html::assets::SvgMode,
     )>,
-    renderer: MathRenderer,
+    display: DisplayOptions,
     limits: ExecutionLimits,
     observe: &mut impl FnMut(StageMeasurement),
 ) -> Result<LocalDocument, String> {
     if input.len() as u64 > MAX_SOURCE_BYTES {
         return Err("SourceLimit".into());
     }
+    let DisplayOptions {
+        document: options,
+        math_renderer: renderer,
+    } = display;
     let parse_start = Instant::now();
     with_named_input_limits(
         true,
@@ -196,9 +222,6 @@ fn generate_impl(
                 }
             }
             let prepare_start = Instant::now();
-            let options = RenderOptions {
-                parallel: ParallelMode::Rows,
-            };
             enum Prepared<'a> {
                 Local(nepl3_doc_html::display::PreparedDisplayArticle<'a>),
                 Svg(nepl3_doc_html::assets::PreparedSvgDisplayArticle<'a>),
@@ -311,12 +334,49 @@ fn generate_impl(
                 &mut output_budget,
             )?;
             let rendered = rendered.fragment;
-            let identity = format!(
+            let mut identity = format!(
                 "{}:{}:{}",
                 digest_hex(Digest::of(input.as_bytes())),
                 digest_hex(profile.digest()),
                 renderer.as_str()
             );
+            let display_scope = if !matches!(options.parallel, ParallelMode::Rows) {
+                // This additional seed hash and scope suffix are generation
+                // work, unlike the later manifest serialization.
+                output_budget
+                    .charge(nepl3_core::budget::Resource::Work, identity.len() as u64)
+                    .map_err(err)?;
+                let selected = pages::display::bind_identity(
+                    b"nepl3.local-doc-export.display-scope/1\0",
+                    Digest::of(identity.as_bytes()),
+                    &options.parallel,
+                    &mut output_budget,
+                )?;
+                let extended = (identity.len() as u64).checked_add(65).ok_or_else(|| {
+                    err(output_budget.stop(nepl3_core::budget::StopReason::AllocationLimit))
+                })?;
+                let allocation = extended.checked_mul(2).ok_or_else(|| {
+                    err(output_budget.stop(nepl3_core::budget::StopReason::AllocationLimit))
+                })?;
+                output_budget
+                    .charge(nepl3_core::budget::Resource::Work, extended)
+                    .map_err(err)?;
+                output_budget
+                    .charge(nepl3_core::budget::Resource::AllocationUnits, allocation)
+                    .map_err(err)?;
+                identity.try_reserve_exact(65).map_err(|_| {
+                    err(output_budget.stop(nepl3_core::budget::StopReason::AllocationLimit))
+                })?;
+                identity.push(':');
+                let digits = b"0123456789abcdef";
+                for byte in selected.0 {
+                    identity.push(digits[(byte >> 4) as usize] as char);
+                    identity.push(digits[(byte & 15) as usize] as char);
+                }
+                Some(selected)
+            } else {
+                None
+            };
             let mut generation =
                 math::generation::collect(&math, &sentences, renderer, &mut output_budget)?;
             let katex = katex::generate(&mut generation, &identity, &mut output_budget)?;
@@ -356,26 +416,45 @@ fn generate_impl(
             if css == CssMode::External {
                 files.push(serde_json::json!({"path":"assets/doc.css","mime":"text/css; charset=utf-8","license":"MIT","sha256":digest(document_css.as_bytes())}));
             }
-            let manifest = serde_json::to_string_pretty(&serde_json::json!({
-            "format":"nepl3.local-doc-export/1",
-            "scope":"Doc with retained Code, direct/nested Math, and asset-free typed Sentence display in Rows mode; validated external URLs; page/relative links, typed Sentence PageSet routing, and Sentence assets remain unsupported",
-            "source_sha256":digest(input.as_bytes()),
-            "profile_sha256":digest_hex(profile.digest()),
-            "doc_schema_sha256":digest_hex(compiled.doc.package.schema.digest),
-            "renderer":"nepl3-doc-html local/1",
-            "options":{"parallel":"Rows","css":css.as_str(),"math_renderer":renderer.as_str()},
-            "math_diagnostics":math::diagnostics(&generation),
-            "katex":katex.as_ref().map(|k| serde_json::json!({"version":"0.18.7","generation":"native pinned worker","identity":k.identity(),"viewer_scripts":false,"fonts":"all fixed fonts embedded in CSS","license":"complete original license embedded in CSS","host_internal_work":"unobserved","host_internal_allocation":"unobserved","visuals":k.visuals.iter().map(|v| serde_json::json!({"math_arena_root":v.root,"scope":v.scope})).collect::<Vec<_>>(),"resources":k.files.iter().map(|f|serde_json::json!({"path":f.path,"mime":f.mime,"sha256":digest(&f.bytes),"bytes":f.bytes.len(),"placement":"embedded stylesheet"})).collect::<Vec<_>>()})),
-            "stylesheet":{"sha256":digest(document_css.as_bytes()),"license":"MIT"},
-            "font":{"family":"Klee One","weights":[400,600],"stylesheet":stylesheet::FONT_STYLESHEET,"bundled":false,"offline":"system fallback"},
-            "files":files,
-            "operations":{"parse_and_validate":usage(parse_usage),"lower":usage(lower_budget.usage()),
-                "prepare_render_serialize":usage(output_budget.usage())},
-            "limits":limits,
-            "budget_scope":"Separate bounded operations; not a single end-to-end budget",
-            "packages":"compiled checked bootstrap fixtures",
-            "viewer_scripts":false
-        })).map_err(err)? + "\n";
+            let mut display_options = serde_json::json!({
+                "parallel": match &options.parallel { ParallelMode::Rows => "Rows", ParallelMode::Columns => "Columns", ParallelMode::Single { .. } => "Single" },
+                "css": css.as_str(), "math_renderer": renderer.as_str()
+            });
+            if let ParallelMode::Single {
+                language,
+                fallbacks,
+            } = &options.parallel
+            {
+                display_options["language"] = serde_json::json!(language);
+                display_options["fallbacks"] = serde_json::json!(fallbacks);
+            }
+            let mut manifest_value = serde_json::json!({
+                "format":"nepl3.local-doc-export/1",
+                "scope":if matches!(options.parallel, ParallelMode::Rows) { "Doc with retained Code, direct/nested Math, and asset-free typed Sentence display in Rows mode; validated external URLs; page/relative links, typed Sentence PageSet routing, and Sentence assets remain unsupported" } else { "Doc with retained Code, direct/nested Math, and asset-free typed Sentence display using explicitly selected native options; validated external URLs; page/relative links, typed Sentence PageSet routing, and Sentence assets remain unsupported" },
+                "source_sha256":digest(input.as_bytes()),
+                "profile_sha256":digest_hex(profile.digest()),
+                "doc_schema_sha256":digest_hex(compiled.doc.package.schema.digest),
+                "renderer":"nepl3-doc-html local/1",
+                "options":display_options,
+                "math_diagnostics":math::diagnostics(&generation),
+                "katex":katex.as_ref().map(|k| serde_json::json!({"version":"0.18.7","generation":"native pinned worker","identity":k.identity(),"viewer_scripts":false,"fonts":"all fixed fonts embedded in CSS","license":"complete original license embedded in CSS","host_internal_work":"unobserved","host_internal_allocation":"unobserved","visuals":k.visuals.iter().map(|v| serde_json::json!({"math_arena_root":v.root,"scope":v.scope})).collect::<Vec<_>>(),"resources":k.files.iter().map(|f|serde_json::json!({"path":f.path,"mime":f.mime,"sha256":digest(&f.bytes),"bytes":f.bytes.len(),"placement":"embedded stylesheet"})).collect::<Vec<_>>()})),
+                "stylesheet":{"sha256":digest(document_css.as_bytes()),"license":"MIT"},
+                "font":{"family":"Klee One","weights":[400,600],"stylesheet":stylesheet::FONT_STYLESHEET,"bundled":false,"offline":"system fallback"},
+                "files":files,
+                "operations":{"parse_and_validate":usage(parse_usage),"lower":usage(lower_budget.usage()),
+                    "prepare_render_serialize":usage(output_budget.usage())},
+                "limits":limits,
+                "budget_scope":"Separate bounded operations; not a single end-to-end budget",
+                "packages":"compiled checked bootstrap fixtures",
+                "viewer_scripts":false
+            });
+            if let Some(scope) = display_scope {
+                manifest_value["display_scope"] = serde_json::json!({
+                    "contract":"nepl3.local-doc-export.display-scope/1",
+                    "identity":digest_hex(scope)
+                });
+            }
+            let manifest = serde_json::to_string_pretty(&manifest_value).map_err(err)? + "\n";
             let sentence_sources = match prepared {
                 Prepared::Sentence(input) => Some(input.into_parts()),
                 _ => None,
@@ -488,11 +567,31 @@ pub fn write_with_limits(
     renderer: MathRenderer,
     limits: ExecutionLimits,
 ) -> crate::Result<()> {
+    write_with_display(
+        input,
+        output,
+        css,
+        DisplayOptions {
+            math_renderer: renderer,
+            ..DisplayOptions::default()
+        },
+        limits,
+    )
+}
+
+/// Explicit asset-free display export; preserve the completion-marker contract.
+pub fn write_with_display(
+    input: &Path,
+    output: &Path,
+    css: CssMode,
+    display: DisplayOptions,
+    limits: ExecutionLimits,
+) -> crate::Result<()> {
     if output.exists() {
         return Err("output directory already exists".into());
     }
     let source = read_source(input)?;
-    let generated = generate_with_limits(&compiled()?, &source, css, renderer, limits)?;
+    let generated = generate_with_display(&compiled()?, &source, css, display, limits)?;
     fs::create_dir(output)?;
     if css == CssMode::External {
         fs::create_dir(output.join("assets"))?;

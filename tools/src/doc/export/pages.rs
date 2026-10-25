@@ -2,10 +2,11 @@
 //! page set renders; the final manifest is the completion marker, not a deploy.
 use super::*;
 use nepl3_doc_core::pages::{FileBytes, PageDocument, PageFile, PageRegistration, PageSet};
+use nepl3_doc_html::RenderOptions;
 use nepl3_doc_html::pages::{PagesHtmlRequest, render_pages_with_display};
 pub(crate) mod aliases;
 mod code;
-mod display;
+pub(crate) mod display;
 pub use display::{Options as DisplayOptions, input::Selection as DisplaySelection};
 pub mod interactive;
 mod render;

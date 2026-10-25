@@ -12,6 +12,12 @@ pub enum Selection {
         fallbacks: Vec<String>,
     },
 }
+impl Selection {
+    /// Bounded strict host configuration, not a portable display proof.
+    pub fn read(path: &std::path::Path) -> crate::Result<Self> {
+        super::super::resources::read_configuration(path)
+    }
+}
 impl Default for Selection {
     fn default() -> Self {
         Self::Rows {}

@@ -20,7 +20,7 @@ impl Default for Options {
 }
 
 /// Exact requested options, not normalization by equivalent rendered output.
-pub(super) fn bind_identity(
+pub(crate) fn bind_identity(
     domain: &[u8],
     base: Digest,
     mode: &ParallelMode,

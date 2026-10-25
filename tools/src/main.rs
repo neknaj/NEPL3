@@ -1,6 +1,10 @@
 use std::{env, path::PathBuf, process::ExitCode};
 
-fn configured_html(config: &str, args: &[&str]) -> nepl3_tools::Result<()> {
+fn configured_html(
+    config: Option<&str>,
+    display: Option<&str>,
+    args: &[&str],
+) -> nepl3_tools::Result<()> {
     use nepl3_tools::doc::export::{
         self, CssMode, MathRenderer, pages::resources::ExecutionLimits,
     };
@@ -27,12 +31,26 @@ fn configured_html(config: &str, args: &[&str]) -> nepl3_tools::Result<()> {
             );
         }
     };
-    export::write_with_limits(
+    if display.is_some() && (input.starts_with("--") || output.starts_with("--")) {
+        return Err("expected input and output paths after display options; use ./ for paths beginning with --".into());
+    }
+    let mut selected = export::DisplayOptions {
+        math_renderer: renderer,
+        ..export::DisplayOptions::default()
+    };
+    if let Some(path) = display {
+        selected.document = export::DisplaySelection::read(std::path::Path::new(path))?.into();
+    }
+    let limits = match config {
+        Some(path) => ExecutionLimits::read(std::path::Path::new(path))?,
+        None => ExecutionLimits::default(),
+    };
+    export::write_with_display(
         std::path::Path::new(input),
         std::path::Path::new(output),
         css,
-        renderer,
-        ExecutionLimits::read(std::path::Path::new(config))?,
+        selected,
+        limits,
     )
 }
 
@@ -142,11 +160,34 @@ fn run() -> nepl3_tools::Result<()> {
         ["sentence", "--write"] => nepl3_tools::sentence(&root),
         ["markup", "--write"] => nepl3_tools::markup(&root),
         ["doc-html", "--write"] => nepl3_tools::doc_html(&root),
+        [
+            "doc-html",
+            "export",
+            "--limits",
+            limits,
+            "--display",
+            display,
+            tail @ ..,
+        ]
+        | [
+            "doc-html",
+            "export",
+            "--display",
+            display,
+            "--limits",
+            limits,
+            tail @ ..,
+        ] => configured_html(Some(limits), Some(display), tail),
+        ["doc-html", "export", "--display", display, tail @ ..] => {
+            configured_html(None, Some(display), tail)
+        }
         ["doc-html", "export", input, output] => nepl3_tools::doc::export::write(
             std::path::Path::new(input),
             std::path::Path::new(output),
         ),
-        ["doc-html", "export", "--limits", config, tail @ ..] => configured_html(config, tail),
+        ["doc-html", "export", "--limits", config, tail @ ..] => {
+            configured_html(Some(config), None, tail)
+        }
         ["doc-html", "export", "--css", mode, input, output] => {
             let css = mode.parse::<nepl3_tools::doc::export::CssMode>()?;
             nepl3_tools::doc::export::write_with_css(
@@ -328,6 +369,12 @@ fn run() -> nepl3_tools::Result<()> {
             println!("nepl3-tools doc-canonical --check");
             println!(
                 "nepl3-tools doc-html export --limits <limits.json> [--css <external|inline>] [--math-renderer <katex-preferred|mathml-only>] <input.nepld> <new-output-directory>"
+            );
+            println!(
+                "nepl3-tools doc-html export --display <display.json> [--limits <limits.json>] [--css <external|inline>] [--math-renderer <katex-preferred|mathml-only>] <input.nepld> <new-output-directory>"
+            );
+            println!(
+                "--display and --limits may appear in either leading order; display uses rows, columns, or single with language and ordered fallbacks."
             );
             println!(
                 "nepl3-tools doc-markdown <annotated|footnotes> --limits <limits.json> <input.nepld> <aliases.json> <new-output.md>"
