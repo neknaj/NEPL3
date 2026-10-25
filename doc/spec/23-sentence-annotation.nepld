@@ -1515,6 +1515,35 @@ body
         nil
       cons rawcode some "sh" "npm ci --prefix tools/audit/math --ignore-scripts\nNEPL3_KATEX_NODE_MODULES=tools/audit/math/node_modules nepl3-tools doc-html pages-svg examples/document/pages-svg/manifest.json out-svg-pages-preferred\n"
       nil
+    cons section svgPreparation "SVG[入力/にゅうりょく]の[保持/ほじ]と[準備/じゅんび] / Retained SVG source preparation"
+      body
+      cons paragraph
+        cons parallel
+          cons variant ja "nativeのsvg::preparation::Preparation::captureはDoc・[登録/とうろく]file・SVGのraw bytes・binding[順序/じゅんじょ]・[表示/ひょうじ][設定/せってい]・rendererを[有限/ゆうげん]の[上限/じょうげん]で[一度/いちど]だけ[捕捉/ほそく]し、[再開/さいかい]で[元/もと]fileを[読/よ]み[直/なお]さない。"
+          cons variant en "The native svg::preparation::Preparation::capture captures Doc, registered files, raw SVG bytes, binding order, display options and renderer once under finite limits, without rereading original files on resume."
+          nil
+        cons parallel
+          cons variant ja "manifest[由来/ゆらい]のparse・lower[上限/じょうげん]と[呼出元/よびだしもと]が[明示/めいじ]するCode[上限/じょうげん]を[既存/きそん]Preparationへ[渡/わた]し、[完了/かんりょう]pageのDocumentSyntaxと[正確/せいかく]なCode[証拠/しょうこ]を[分離/ぶんり]せず[保持/ほじ]する。"
+          cons variant en "Manifest parse and lower ceilings and an explicit caller-selected Code ceiling enter the existing Preparation state machine, retaining each completed page's DocumentSyntax inseparably from its exact Code evidence."
+          nil
+        cons parallel
+          cons variant ja "[未完了/みかんりょう]pageの[試行/しこう]は[再実行/さいじっこう]して[同/おな]じ[累積/るいせき]ledgerへ[計上/けいじょう]し、[各/かく][試行/しこう]の[実際/じっさい]のprofile・[使用量/しようりょう]・[停止/ていし]を[保存/ほぞん]する。"
+          cons variant en "Incomplete-page attempts are repeated and charged to the same cumulative ledger, preserving each attempt's actual profile, usage and stop."
+          nil
+        cons parallel
+          cons variant ja "[再開/さいかい]は[縮小/しゅくしょう]しないjob・phase[上限/じょうげん]だけを[受/う]け[取/と]り、[拒否/きょひ]は[停止/ていし][状態/じょうたい]を[返/かえ]し、cancelと[通常/つうじょう]の[失敗/しっぱい]は[終端/しゅうたん]とする。"
+          cons variant en "Resume accepts only non-shrinking job and phase ceilings, rejection returns the paused authority, and cancellation or ordinary failure is terminal."
+          nil
+        cons parallel
+          cons variant ja "manifestのoutput[上限/じょうげん]は[不変/ふへん]に[残/のこ]すが[準備/じゅんび]を[制限/せいげん]せず、[捕捉/ほそく]I/Oとhost containerは[測定/そくてい]するphase[使用量/しようりょう]の[外/そと]とする。"
+          cons variant en "The manifest output ceiling remains frozen but does not bound preparation; capture I/O and host containers remain outside measured phase usage."
+          nil
+        cons parallel
+          cons variant ja "PreparedはSVGの[入場/にゅうじょう]・PageSet[妥当性/だとうせい]・[描画/びょうが][完了/かんりょう]を[証明/しょうめい]せず、render[再試行/さいしこう]・CLI[対話/たいわ][再開/さいかい]・[永続的/えいぞくてき]な[復元/ふくげん]は[別/べつ]の[未対応/みたいおう][段階/だんかい]とする。"
+          cons variant en "Prepared proves neither SVG admission, PageSet validity nor completed rendering; render retry, interactive CLI resume and durable restoration remain separate unimplemented stages."
+          nil
+        nil
+      nil
     cons section visibility "HTML[挿入対象/そうにゅうたいしょう]Sentence[出現/しゅつげん]の[構造/こうぞう]inventory"
     body
       cons paragraph
