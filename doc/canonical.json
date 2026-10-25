@@ -619,7 +619,7 @@
   },
   "html_output_limits": {
     "source_bytes": 10000000,
-    "work": 3600000000,
+    "work": 3700000000,
     "depth": 1000,
     "nodes": 56000000,
     "allocation_units": 3400000000,
