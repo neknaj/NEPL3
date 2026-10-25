@@ -1407,6 +1407,60 @@ body
           nil
         nil
       nil
+    cons section svgPagesCli "[明示/めいじ]MathMLOnlyのSVG PageSet CLI / Explicit MathMLOnly SVG PageSet CLI"
+      body
+      cons paragraph
+        cons parallel
+          cons variant ja "doc-html pages-svgは、--math-renderer mathml-onlyを[明示/めいじ]した[通常/つうじょう]のfile[書出/かきだ]しだけを[受/う]け[付/つ]ける[限定/げんてい]CLIであり、[省略/しょうりゃく]・KaTeXPreferred・interactive[指定/してい]は[数式/すうしき]がなくても[拒否/きょひ]する。"
+          cons variant en "doc-html pages-svg is a limited CLI accepting ordinary file export only with explicit --math-renderer mathml-only; omitted selection, KaTeXPreferred and interactive options are rejected even without formulas."
+          nil
+        cons parallel
+          cons variant ja "version 1 manifestはpages・assetsを[必須/ひっす]とし、pageのid・source・routeと[省略可能/しょうりゃくかのう]な[物理/ぶつり]input、SVG bindingのpage IDとassetsのid・source・mimeを[明示/めいじ]する。"
+          cons variant en "A version 1 manifest requires pages and assets, specifying each page's id, source, route and optional physical input, plus each SVG binding's page ID and asset id, source and mime."
+          nil
+        cons parallel
+          cons variant ja "files・display・[各/かく]limitsは[既存/きそん]の[有限/ゆうげん]defaultを[使/つか]えるが、[重複/じゅうふく]JSON key・[未知/みち]field・[明示/めいじ]null・[未登録/みとうろく]page・[重複/じゅうふく]bindingやasset IDを[拒否/きょひ]する。"
+          cons variant en "Files, display and limit fields may use existing finite defaults, but duplicate JSON keys, unknown fields, explicit null, unknown pages, duplicate bindings and duplicate asset IDs are rejected."
+          nil
+        cons parallel
+          cons variant ja "manifestは65,536 bytes、pagesは1〜128、filesとpage bindingsは[各/かく]128[以下/いか]、SVGは[全体/ぜんたい]32[個/こ]・[各/かく]1,048,576 bytes・[合計/ごうけい]4,194,304 bytes[以下/いか]とし、Docと[登録/とうろく]fileの[合計/ごうけい]10,000,000 bytes[上限/じょうげん]も[保/たも]つ。"
+          cons variant en "Limits are 65,536 manifest bytes, 1–128 pages, at most 128 files and page bindings each, and 32 SVG assets overall with 1,048,576 bytes per asset and 4,194,304 bytes total; Doc plus registered-file input retains its 10,000,000-byte cap."
+          nil
+        cons parallel
+          cons variant ja "[物理/ぶつり]pathは4,096 bytes[以下/いか]の[相対/そうたい]pathに[限/かぎ]り、[制御文字/せいぎょもじ]・[空/から]segment・dot segment・[予約/よやく][区切/くぎ]りを[拒否/きょひ]し、manifest rootの[外/そと]へ[出/で]るsymlinkも[拒否/きょひ]する。"
+          cons variant en "Physical paths are relative and at most 4,096 bytes; control characters, empty or dot segments and reserved delimiters are rejected, as are symlinks resolving outside the manifest root."
+          nil
+        cons parallel
+          cons variant ja "[解決済/かいけつず]みpathを[一度/いちど]だけ[有限長/ゆうげんちょう]で[読/よ]み、[所有/しょゆう]したDoc・file・raw SVGを[以後/いご]の[処理/しょり]で[再読込/さいよみこ]みしないが、[競合/きょうごう]するfilesystem[変更/へんこう]に[対/たい]するrace-free[権限/けんげん][証明/しょうめい]ではない。"
+          cons variant en "Resolved paths are read once under finite byte caps, and the owned Doc, file and raw SVG inputs are not reread; this is not a race-free capability proof against concurrent filesystem changes."
+          nil
+        cons parallel
+          cons variant ja "[元/もと]のtreeとprofileが[生存/せいぞん]する[間/あいだ]にCodeを[準備/じゅんび]し、pageごとに[独立/どくりつ]したparse・lower[予算/よさん]を[使/つか]い、[既存/きそん]PageSet[経路/けいろ]の[処理順/しょりじゅん]・[課金順/かきんじゅん]・[出力/しゅつりょく]を[変/か]えない。"
+          cons variant en "Code is prepared while the original tree and profile remain alive, parse and lower budgets stay independent per page, and existing PageSet processing order, charges and output remain unchanged."
+          nil
+        cons parallel
+          cons variant ja "receiptのsource_inputはcaptureの[上限/じょうげん]・source hash・phase[記録/きろく]を[保持/ほじ]し、capture I/Oがparse/output Budgetの[外側/そとがわ]であることと、output initial_usageがsource[準備前/じゅんびまえ]の[観測/かんそく]であることを[区別/くべつ]する。"
+          cons variant en "The receipt's source_input retains capture caps, source hashes and phase records, distinguishing capture I/O outside parse/output Budgets from output initial_usage observed before source preparation."
+          nil
+        cons parallel
+          cons variant ja "[直接/ちょくせつ]Mathのplacementを[合成/ごうせい]してから[入/い]れ[子/こ]Mathと[統合/とうごう]し、pageごとのowner path・MathML[表示/ひょうじ]・ExplicitMathMLOnly[選択理由/せんたくりゆう]・fallback[不在/ふざい]をhost[記録/きろく]と[課金済/かきんず]みreceiptの[双方/そうほう]へ[残/のこ]す。"
+          cons variant en "Direct Math placements are composed before collecting nested Math, and per-page owner paths, MathML display, the ExplicitMathMLOnly selection reason and absence of fallback are retained in both host records and the budgeted receipt."
+          nil
+        cons parallel
+          cons variant ja "[全/ぜん][意味検査/いみけんさ]と[生成/せいせい]の[成功後/せいこうご]にだけ[新/あたら]しいoutput directoryを[作/つく]り、[完了/かんりょう]manifestを[最後/さいご]に[書/か]くが、I/O[失敗時/しっぱいじ]には[不完全/ふかんぜん]なdirectoryが[残/のこ]り[得/う]る。"
+          cons variant en "A new output directory is created only after all semantic checks and generation succeed, and the completion manifest is written last; an I/O failure may still leave an incomplete directory."
+          nil
+        cons parallel
+          cons variant ja "これは[既定/きてい]のKaTeX[優先/ゆうせん][変換器/へんかんき]の[完成/かんせい]ではなく、[外部/がいぶ]SVG・[保持/ほじ]jobのretry・[永続/えいぞく][復元/ふくげん]は[未実装/みじっそう]であり、[全体/ぜんたい][受入/うけいれ]も[未実施/みじっし]である。"
+          cons variant en "This does not complete the default KaTeX-preferred converter; external SVG, retained-job retry and durable restoration remain unimplemented, and overall acceptance has not been run."
+          nil
+        cons parallel
+          cons variant ja "[実行例/じっこうれい]はexamples/document/pages-svgに[同梱/どうこん]し、[同/おな]じmanifestが[二/ふた]つの[多言語/たげんご]pageとSVGを[明示/めいじ]して[相互/そうご]linkを[解決/かいけつ]する。"
+          cons variant en "A runnable example is included in examples/document/pages-svg; its manifest explicitly binds two multilingual pages and their SVG inputs and resolves their cross-page links."
+          nil
+        nil
+      cons rawcode some "sh" "nepl3-tools doc-html pages-svg --math-renderer mathml-only examples/document/pages-svg/manifest.json out-svg-pages\n"
+      nil
     cons section visibility "HTML[挿入対象/そうにゅうたいしょう]Sentence[出現/しゅつげん]の[構造/こうぞう]inventory"
     body
       cons paragraph

@@ -182,6 +182,57 @@ fn generate_selected(
 ) -> Result<GeneratedPages, String> {
     output_budget.poll().map_err(err)?;
     let initial_usage = output_budget.usage();
+    let PreparedInputs {
+        request,
+        page_code,
+        profiles,
+        origins,
+        file_origins,
+    } = prepare_inputs(
+        compiled,
+        inputs,
+        resources,
+        phases,
+        output_budget,
+        aliases,
+        options.document,
+    )?;
+    render::render(
+        render::Context {
+            compiled,
+            request: &request,
+            page_code: &page_code,
+            profiles: &profiles,
+            retained_preparation: None,
+            origins: &origins,
+            file_origins: &file_origins,
+            phases,
+            initial_usage,
+            renderer: options.math_renderer,
+            aliases,
+        },
+        output_budget,
+    )?
+    .finish(request, aliases)
+}
+
+/// Owned preparation shared without changing the legacy ordering or charges.
+struct PreparedInputs {
+    request: PagesHtmlRequest,
+    page_code: Vec<code::PreparedPageCode>,
+    profiles: Vec<Digest>,
+    origins: Vec<serde_json::Value>,
+    file_origins: Vec<serde_json::Value>,
+}
+fn prepare_inputs(
+    compiled: &Compiled,
+    inputs: &[(Entry, String)],
+    resources: &[(Entry, Vec<u8>)],
+    phases: resources::PhaseLimits,
+    output_budget: &mut Budget,
+    aliases: &[aliases::PageAliases],
+    options: RenderOptions,
+) -> Result<PreparedInputs, String> {
     if inputs.is_empty() || inputs.len() > 128 {
         return Err("PageCountLimit".into());
     }
@@ -288,25 +339,15 @@ fn generate_selected(
             pages,
             files: registered_files,
         },
-        options: options.document,
+        options,
     };
-    render::render(
-        render::Context {
-            compiled,
-            request: &request,
-            page_code: &page_code,
-            profiles: &profiles,
-            retained_preparation: None,
-            origins: &origins,
-            file_origins: &file_origins,
-            phases,
-            initial_usage,
-            renderer: options.math_renderer,
-            aliases,
-        },
-        output_budget,
-    )?
-    .finish(request, aliases)
+    Ok(PreparedInputs {
+        request,
+        page_code,
+        profiles,
+        origins,
+        file_origins,
+    })
 }
 
 fn conflict(a: &str, b: &str) -> bool {
@@ -450,8 +491,16 @@ fn load(manifest: &Path) -> crate::Result<LoadedManifest> {
 
 // Only call with the complete output of this module's checked generator.
 pub(crate) fn write_generated(generated: GeneratedPages, output: &Path) -> crate::Result<()> {
+    write_checked_files(generated.files, generated.manifest, output)
+}
+// Call only after complete generation and checked portable output paths.
+fn write_checked_files(
+    files: BTreeMap<String, Vec<u8>>,
+    manifest: String,
+    output: &Path,
+) -> crate::Result<()> {
     fs::create_dir(output)?;
-    for (path, bytes) in generated.files {
+    for (path, bytes) in files {
         let path = output.join(path);
         fs::create_dir_all(path.parent().ok_or("output parent")?)?;
         fs::OpenOptions::new()
@@ -464,6 +513,6 @@ pub(crate) fn write_generated(generated: GeneratedPages, output: &Path) -> crate
         .write(true)
         .create_new(true)
         .open(output.join("manifest.json"))?
-        .write_all(generated.manifest.as_bytes())?;
+        .write_all(manifest.as_bytes())?;
     Ok(())
 }

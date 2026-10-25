@@ -1,0 +1,13 @@
+article en "Wide diagram / [横長/よこなが]の[図/ず]"
+body
+  cons section target "Target / [参照先/さんしょうさき]"
+    body
+      cons image asset "wide" none "Wide diagram / [横長/よこなが]の[図/ず]" none
+      cons paragraph
+        cons parallel
+          cons variant en sentence cons link page "one" none text "Return to the first page." nil
+          cons variant ja sentence cons link page "one" none text "最初のページへ戻る。" nil
+          nil
+        nil
+      nil
+  nil

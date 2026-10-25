@@ -94,5 +94,9 @@
   {
     "section": "packagedPagesSvg",
     "name": "embedded-svg-pages-html-packaging"
+  },
+  {
+    "section": "svgPagesCli",
+    "name": "explicit-mathml-svg-pages-cli"
   }
 ]

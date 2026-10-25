@@ -813,3 +813,7 @@ mod standalone_display;
 
 #[path = "doc/pages/svg_native.rs"]
 mod pages_svg_native;
+
+#[cfg(not(target_family = "wasm"))]
+#[path = "doc/pages/svg_cli.rs"]
+mod pages_svg_cli;
