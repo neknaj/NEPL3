@@ -171,6 +171,26 @@ fn prepare_svg_impl<'a, C: FoundationValueCodec>(
 ) -> Result<crate::prepare::PreparedRendering<'a>, AssetError<'a, C::Error>> {
     let plan = prepare::inspect(document, registry, codec, budget)
         .map_err(|e| AssetError::Preparation(LocalPreparationError::Input(e)))?;
+    prepare_svg_plan(
+        document, options, inputs, mode, registry, codec, budget, display, resolved, plan,
+    )
+}
+
+// Only internal callers that freshly inspect the exact immutable document may
+// supply a plan. Namespace preparation validates all selected members together.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn prepare_svg_plan<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    options: &'a RenderOptions,
+    inputs: &[SvgInput<'_>],
+    mode: SvgMode,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+    display: Option<bool>,
+    resolved: &[text::ResolvedInlineText],
+    plan: prepare::DocPreparationPlan,
+) -> Result<crate::prepare::PreparedRendering<'a>, AssetError<'a, C::Error>> {
     for (i, input) in inputs.iter().enumerate() {
         budget.charge(Resource::SourceBytes, input.svg.len() as u64)?;
         for prior in &inputs[..i] {

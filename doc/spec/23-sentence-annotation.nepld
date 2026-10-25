@@ -1201,6 +1201,24 @@ body
         cons "一般のSentenceとassetの組合せ、PageSet asset、画像関連namespaceの表示選択、portable proofは引き続き未完了である。"
         nil
       nil
+    cons section namespaceSvg "Native static SVG in resolved Doc namespaces"
+    body
+      cons paragraph
+        cons "The native doc-html namespace assets entry prepares static SVG for an explicitly resolved CheckedNamespace."
+        cons " Each registration selects an exact MemberId occurrence and carries raw SVG inputs plus identity-bound BaseOnly alt text."
+        cons " Identical documents and equal asset names in different members retain independent registrations."
+        cons " The operation reinspects all member sources with one codec, SourceAdmission and cumulative Budget before preparing any output."
+        cons " Duplicate or unknown member selectors, missing or unused SVG registrations, unsafe SVG and digest mismatches fail without returning a partial namespace."
+        nil
+      cons paragraph
+        cons "Hosts project actual selected guest text under that same cumulative Budget and SourceAdmission and retain the owning syntax through rendering."
+        cons " Supplied alt text is data, not a portable proof of guest meaning, and is never adopted as namespace HTML or sent to a display callback."
+        cons " Safe external links and existing display guests retain their explicit admission rules; Page and Relative links remain unresolved."
+        cons " Pending parts preserve cross-member references, while complete Article rendering still rejects omitted targets and duplicate identifiers."
+        cons " This native prerequisite does not add Sentence selection, alt-excluding automatic adoption, PageSet assets, general Sentence-plus-image CLI export, portable proof or durable recovery."
+        cons " Existing asset-free namespace entries and the alt-only standalone CLI guard remain unchanged."
+        nil
+      nil
     cons section visibility "HTML[挿入対象/そうにゅうたいしょう]Sentence[出現/しゅつげん]の[構造/こうぞう]inventory"
     body
       cons paragraph

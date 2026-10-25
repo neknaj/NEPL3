@@ -11,6 +11,7 @@ use nepl3_core::{
 use nepl3_doc_core::labels::namespace::{CheckedNamespace, MemberId};
 use nepl3_markup::html::*;
 
+pub mod assets;
 pub mod display;
 pub mod pages;
 
