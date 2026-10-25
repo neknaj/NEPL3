@@ -6,7 +6,6 @@ use crate::doc::export::{
     MathRenderer,
     pages::{self, render},
 };
-use nepl3_doc_core::pages::{FileBytes, PageDocument, PageFile, PageRegistration, PageSet};
 use nepl3_doc_html::pages::PagesHtmlRequest;
 
 struct RenderData<'a> {
@@ -69,17 +68,6 @@ pub enum RenderProgress<'a> {
     Failed(RenderFailure),
     Cancelled(CancelledRender),
 }
-fn observation(value: &Observation) -> serde_json::Value {
-    serde_json::json!({
-        "stage":format!("{:?}", value.stage),
-        "requested":pages::resources::limits(value.requested),
-        "effective":pages::resources::limits(value.effective),
-        "usage":pages::resources::usage(value.usage),
-        "stop":value.stop.map(|s|format!("{s:?}")),
-        "failed":value.failed,"accounting_rejected":value.accounting_rejected,
-        "profile":value.profile.map(pages::digest_hex),
-    })
-}
 impl<'a> PreparedPages<'a> {
     /// Freeze the renderer and own all retained document/Code evidence. Host
     /// bookkeeping remains outside the logical operation resource ledger.
@@ -121,89 +109,16 @@ fn build<'a>(
     output: OperationLimits,
     options: pages::DisplayOptions,
 ) -> Result<RenderData<'a>, String> {
-    let mut documents = Vec::new();
-    let mut code = Vec::new();
-    let mut origins = Vec::new();
-    documents
-        .try_reserve_exact(data.prepared.len())
-        .map_err(|_| "HostAllocationFailure")?;
-    code.try_reserve_exact(data.prepared.len())
-        .map_err(|_| "HostAllocationFailure")?;
-    origins
-        .try_reserve_exact(data.prepared.len())
-        .map_err(|_| "HostAllocationFailure")?;
-    for (index, ((entry, source), page)) in std::mem::take(&mut data.inputs)
-        .into_iter()
-        .zip(std::mem::take(&mut data.prepared))
-        .enumerate()
-    {
-        let successful = data
-            .attempts
-            .iter()
-            .rev()
-            .find(|a| a.page_index == index)
-            .ok_or("PreparedEvidenceMissing")?;
-        origins.push(serde_json::json!({
-                "id":entry.id,"source":entry.source,"route":entry.route,"input":pages::input_path(&entry)?,
-                "source_sha256":pages::digest_hex(Digest::of(source.as_bytes())),
-                "operations":successful.stages.iter().map(observation).collect::<Vec<_>>(),
-            }));
-        documents.push(PageDocument {
-            registration: PageRegistration {
-                id: entry.id,
-                source: entry.source,
-                route: entry.route,
-            },
-            document: page.document,
-        });
-        code.push(page._code);
-    }
-    let mut files = Vec::new();
-    let mut file_origins = Vec::new();
-    files
-        .try_reserve_exact(data.files.len())
-        .map_err(|_| "HostAllocationFailure")?;
-    file_origins
-        .try_reserve_exact(data.files.len())
-        .map_err(|_| "HostAllocationFailure")?;
-    for (entry, bytes) in std::mem::take(&mut data.files) {
-        let physical = pages::input_path(&entry)?;
-        file_origins.push(serde_json::json!({
-            "id":entry.id,"source":entry.source,"route":entry.route,"input":physical,
-            "sha256":pages::digest_hex(Digest::of(&bytes)),"bytes":bytes.len()
-        }));
-        files.push(PageFile {
-            registration: PageRegistration {
-                id: entry.id,
-                source: entry.source,
-                route: entry.route,
-            },
-            content: FileBytes(bytes),
-        });
-    }
-    let evidence = serde_json::json!({
-        "attempts":data.attempts.iter().map(|a|serde_json::json!({
-            "page_index":a.page_index,"stages":a.stages.iter().map(observation).collect::<Vec<_>>()
-        })).collect::<Vec<_>>(),
-
-        "cumulative_usage":pages::resources::usage(usage),
-        "scope":"Immutable owned documents and page-bound Code evidence; not whole-PageSet validity.",
-    });
+    let owned = super::owned::build(data, usage, options.document)?;
     Ok(RenderData {
-        compiled: data.compiled,
-        request: PagesHtmlRequest {
-            set: PageSet {
-                pages: documents,
-                files,
-            },
-            options: options.document,
-        },
-        code,
-        origins,
-        file_origins,
-        aliases: std::mem::take(&mut data.aliases),
-        evidence,
-        preparation: std::mem::take(&mut data.attempts),
+        compiled: owned.compiled,
+        request: owned.request,
+        code: owned.code,
+        origins: owned.origins,
+        file_origins: owned.file_origins,
+        aliases: owned.aliases,
+        evidence: owned.evidence,
+        preparation: owned.preparation,
         renders: Vec::new(),
         renderer: options.math_renderer,
         output,

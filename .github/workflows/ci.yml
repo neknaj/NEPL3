@@ -118,6 +118,7 @@ jobs:
         run: |
           cargo test --locked -p nepl3-tools --test doc katex_cli::pinned_native -- --ignored --nocapture
           cargo test --locked -p nepl3-tools --test doc pages_svg_cli::pinned_native_katex_doc_and_pages_svg_cli -- --ignored --nocapture
+          NEPL3_KATEX_NODE_MODULES="$(node -p "require('node:path').resolve('tools/audit/math/node_modules')")" cargo test --locked -p nepl3-tools --lib doc::export::pages::svg::preparation::rendering::tests::retained_svg_render_pinned_native_survives_package_receipt_stop -- --ignored --exact --nocapture
       - name: Record native source-position oracle execution
         run: python tools/evidence/runner.py run tools/evidence/specs/source-position-native.json dist/source-position-native
       - name: Preserve native source-position evidence
@@ -295,6 +296,7 @@ jobs:
         run: |
           cargo test --locked -p nepl3-tools --test doc katex_cli::pinned_native -- --ignored --nocapture
           cargo test --locked -p nepl3-tools --test doc pages_svg_cli::pinned_native_katex_doc_and_pages_svg_cli -- --ignored --nocapture
+          NEPL3_KATEX_NODE_MODULES="$(node -p "require('node:path').resolve('tools/audit/math/node_modules')")" cargo test --locked -p nepl3-tools --lib doc::export::pages::svg::preparation::rendering::tests::retained_svg_render_pinned_native_survives_package_receipt_stop -- --ignored --exact --nocapture
       - name: Check production TeX against KaTeX
         run: |
           mkdir -p dist/math-visual

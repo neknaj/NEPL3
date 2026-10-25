@@ -1,6 +1,7 @@
 //! In-memory page preparation checkpoints. Prepared is not cross-page
 //! validation, rendering, publication, or persistence across process exit.
 //! Setup, retained host containers and I/O are outside measured phase usage.
+pub(in crate::doc::export::pages) mod owned;
 pub mod rendering;
 use super::{
     Attempt, Cancelled, Limits, Meter, Paused, Running, StopReason, Usage, covers, remaining,

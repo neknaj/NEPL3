@@ -1,6 +1,5 @@
 //! Immutable-source SVG PageSet export with explicit renderer provenance.
-mod generate;
-use super::input;
+use super::{generation as generate, input};
 use crate::doc::export::MathRenderer;
 use std::path::Path;
 
