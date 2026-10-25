@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 e179117accd4a5c83c68ad603d81de289f1840dd3630eec0601bdb757d6f308d; alias input SHA-256 dc92f1c090739f5433b38688fe16cf33bf565057f506c92256914ff22ba5fd3c; page input SHA-256 3674afa98f3caf4b032878a1ce4a045850d6d632124302cc825bb5eaed7e0d4b. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 1371cfc0e8f9dc29b2052241b45176641d402b8dc19521888b891f5979d2815b; alias input SHA-256 b4af781eb102174d52224b0435525c52cfd899c170a7ab72d867d64343abf5d8; page input SHA-256 8940f834ebf7e55021d6a405633b5b468e4e41b939034b17e0004f7cd6d032a3. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="23-構造化文章と対象付き注釈への是正"></a>
 
@@ -1064,7 +1064,7 @@ A new output directory is created only after all semantic checks and generation 
 
 **ja**
 
-このMathMLOnly<ruby>経路<rt>けいろ</rt></ruby>は<ruby>生成時<rt>せいせいじ</rt></ruby>KaTeXを<ruby>実行<rt>じっこう</rt></ruby>せず、<ruby>外部<rt>がいぶ</rt></ruby>SVG・<ruby>保持<rt>ほじ</rt></ruby>jobのretry・<ruby>永続<rt>えいぞく</rt></ruby><ruby>復元<rt>ふくげん</rt></ruby>は<ruby>対象外<rt>たいしょうがい</rt></ruby>であり、<ruby>全体<rt>ぜんたい</rt></ruby><ruby>受入<rt>うけいれ</rt></ruby>も<ruby>未実施<rt>みじっし</rt></ruby>である。
+この<ruby>既存<rt>きそん</rt></ruby>CLIのMathMLOnly<ruby>経路<rt>けいろ</rt></ruby>は<ruby>生成時<rt>せいせいじ</rt></ruby>KaTeXを<ruby>実行<rt>じっこう</rt></ruby>せず、<ruby>外部<rt>がいぶ</rt></ruby>SVG・<ruby>保持<rt>ほじ</rt></ruby>jobのretry・<ruby>永続<rt>えいぞく</rt></ruby><ruby>復元<rt>ふくげん</rt></ruby>は<ruby>対象外<rt>たいしょうがい</rt></ruby>であり、<ruby>全体<rt>ぜんたい</rt></ruby><ruby>受入<rt>うけいれ</rt></ruby>も<ruby>未実施<rt>みじっし</rt></ruby>である。
 
 </div>
 
@@ -1072,7 +1072,7 @@ A new output directory is created only after all semantic checks and generation 
 
 **en**
 
-This MathMLOnly path does not execute generation\-time KaTeX\; external SVG\, retained\-job retry and durable restoration are outside scope\, and overall acceptance has not been run\.
+This legacy CLI MathMLOnly path does not execute generation\-time KaTeX\; external SVG\, retained\-job retry and durable restoration are outside scope\, and overall acceptance has not been run\.
 
 </div>
 
@@ -1473,7 +1473,7 @@ The manifest output ceiling remains frozen but does not bound preparation\; capt
 
 **ja**
 
-PreparedはSVGの<ruby>入場<rt>にゅうじょう</rt></ruby>・PageSet<ruby>妥当性<rt>だとうせい</rt></ruby>・<ruby>描画<rt>びょうが</rt></ruby><ruby>完了<rt>かんりょう</rt></ruby>を<ruby>証明<rt>しょうめい</rt></ruby>せず、render<ruby>再試行<rt>さいしこう</rt></ruby>・CLI<ruby>対話<rt>たいわ</rt></ruby><ruby>再開<rt>さいかい</rt></ruby>・<ruby>永続的<rt>えいぞくてき</rt></ruby>な<ruby>復元<rt>ふくげん</rt></ruby>は<ruby>別<rt>べつ</rt></ruby>の<ruby>未対応<rt>みたいおう</rt></ruby><ruby>段階<rt>だんかい</rt></ruby>とする。
+PreparedはSVGの<ruby>入場<rt>にゅうじょう</rt></ruby>・PageSet<ruby>妥当性<rt>だとうせい</rt></ruby>・<ruby>描画<rt>びょうが</rt></ruby><ruby>完了<rt>かんりょう</rt></ruby>を<ruby>証明<rt>しょうめい</rt></ruby>せず、CLI<ruby>対話<rt>たいわ</rt></ruby><ruby>再開<rt>さいかい</rt></ruby>と<ruby>永続的<rt>えいぞくてき</rt></ruby>な<ruby>復元<rt>ふくげん</rt></ruby>は<ruby>別<rt>べつ</rt></ruby>の<ruby>未対応<rt>みたいおう</rt></ruby><ruby>段階<rt>だんかい</rt></ruby>とする。
 
 </div>
 
@@ -1481,7 +1481,197 @@ PreparedはSVGの<ruby>入場<rt>にゅうじょう</rt></ruby>・PageSet<ruby>�
 
 **en**
 
-Prepared proves neither SVG admission\, PageSet validity nor completed rendering\; render retry\, interactive CLI resume and durable restoration remain separate unimplemented stages\.
+Prepared proves neither SVG admission\, PageSet validity nor completed rendering\; interactive CLI resume and durable restoration remain separate unimplemented stages\.
+
+</div>
+
+</div>
+
+</div>
+
+<a name="n-73766752656e6465725265747279"></a>
+
+<a name="retained-svg-render-retry"></a>
+
+### <ruby>保持<rt>ほじ</rt></ruby><ruby>状態<rt>じょうたい</rt></ruby>からのSVG<ruby>描画<rt>びょうが</rt></ruby><ruby>再試行<rt>さいしこう</rt></ruby> \/ Retained SVG render retry
+
+<div class="nepl-paragraph">
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+nativeのPrepared\:\:into\_renderは<ruby>準備済<rt>じゅんびず</rt></ruby>みDoc・<ruby>正確<rt>せいかく</rt></ruby>なCode<ruby>証拠<rt>しょうこ</rt></ruby>・<ruby>捕捉済<rt>ほそくず</rt></ruby>みSVG・<ruby>表示<rt>ひょうじ</rt></ruby><ruby>設定<rt>せってい</rt></ruby>・rendererを<ruby>一体<rt>いったい</rt></ruby>で<ruby>消費<rt>しょうひ</rt></ruby>し、<ruby>同<rt>おな</rt></ruby>じ<ruby>累積<rt>るいせき</rt></ruby>ledgerを<ruby>引<rt>ひ</rt></ruby>き<ruby>継<rt>つ</rt></ruby>ぐRenderJobを<ruby>返<rt>かえ</rt></ruby>す。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The native Prepared\:\:into\_render consumes prepared Doc\, exact Code evidence\, captured SVG\, display options and renderer together\, returning a RenderJob with the same cumulative ledger\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>完了<rt>かんりょう</rt></ruby>pageを<ruby>再<rt>さい</rt></ruby>parseせずCodeを<ruby>再構築<rt>さいこうちく</rt></ruby>せず、<ruby>描画<rt>びょうが</rt></ruby><ruby>試行<rt>しこう</rt></ruby>の<ruby>処理<rt>しょり</rt></ruby>が<ruby>到達<rt>とうたつ</rt></ruby>した<ruby>範囲<rt>はんい</rt></ruby>のcodec・Selection・Plan・native<ruby>生成<rt>せいせい</rt></ruby><ruby>状態<rt>じょうたい</rt></ruby>を<ruby>新<rt>あら</rt></ruby>たに<ruby>構成<rt>こうせい</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Completed pages are not reparsed and Code is not rebuilt\; codec\, Selection\, Plan and native\-generation state are created afresh only as each render attempt reaches their corresponding stages\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>停止<rt>ていし</rt></ruby>した<ruby>試行<rt>しこう</rt></ruby>の<ruby>出力<rt>しゅつりょく</rt></ruby>は<ruby>破棄<rt>はき</rt></ruby>して<ruby>消費量<rt>しょうひりょう</rt></ruby>を<ruby>残<rt>のこ</rt></ruby>し、<ruby>再開<rt>さいかい</rt></ruby>では<ruby>縮小<rt>しゅくしょう</rt></ruby>しないjob・output<ruby>上限<rt>じょうげん</rt></ruby>だけを<ruby>受<rt>う</rt></ruby>け<ruby>取<rt>と</rt></ruby>り、cancelと<ruby>通常<rt>つうじょう</rt></ruby>の<ruby>失敗<rt>しっぱい</rt></ruby>は<ruby>終端<rt>しゅうたん</rt></ruby>にする。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Stopped attempts discard output but retain consumed resources\, resume accepts only non\-shrinking job and output ceilings\, and cancellation or ordinary failure is terminal\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>成功<rt>せいこう</rt></ruby><ruby>結果<rt>けっか</rt></ruby>のnepl3\.local\-doc\-pages\.svg\-render\-job\/1は<ruby>元<rt>もと</rt></ruby>のpackageとjob\_executionを<ruby>包<rt>つつ</rt></ruby>み、<ruby>各<rt>かく</rt></ruby>pageの<ruby>実際<rt>じっさい</rt></ruby>の<ruby>準備<rt>じゅんび</rt></ruby><ruby>記録<rt>きろく</rt></ruby>と<ruby>全<rt>ぜん</rt></ruby><ruby>描画<rt>びょうが</rt></ruby><ruby>試行<rt>しこう</rt></ruby>を<ruby>保存<rt>ほぞん</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Successful nepl3\.local\-doc\-pages\.svg\-render\-job\/1 output wraps the original package and job\_execution\, retaining each page\'s actual preparation observations and every render attempt\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>新<rt>あたら</rt></ruby>しいidentityは<ruby>同<rt>おな</rt></ruby>じdomainとNUL、package・job\_executionの2<ruby>要素<rt>ようそ</rt></ruby><ruby>配列<rt>はいれつ</rt></ruby>をcompact serde\_jsonでUTF\-8<ruby>符号化<rt>ふごうか</rt></ruby>したbyte<ruby>数<rt>すう</rt></ruby>のbig\-endian u64、そのbytesを<ruby>順<rt>じゅん</rt></ruby>に<ruby>束縛<rt>そくばく</rt></ruby>したSHA\-256であり、<ruby>元<rt>もと</rt></ruby>のinput\_identityとは<ruby>区別<rt>くべつ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The new identity is SHA\-256 over the same domain and NUL\, the big\-endian u64 byte length of compact serde\_json UTF\-8 encoding of the two\-element package and job\_execution array\, then those bytes\; it is separate from the original input\_identity\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>元<rt>もと</rt></ruby>のpackage receipt<ruby>直列化<rt>ちょくれつか</rt></ruby>は<ruby>試行<rt>しこう</rt></ruby>Budgetへ<ruby>計上<rt>けいじょう</rt></ruby>し、<ruby>外側<rt>そとがわ</rt></ruby>のjob receipt<ruby>符号化<rt>ふごうか</rt></ruby>とidentity・<ruby>捕捉<rt>ほそく</rt></ruby>I\/O・host container・KaTeX host<ruby>内部<rt>ないぶ</rt></ruby>WorkとAllocationは<ruby>測定<rt>そくてい</rt></ruby><ruby>範囲外<rt>はんいがい</rt></ruby>と<ruby>明記<rt>めいき</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Original package receipt serialization is charged to the attempt Budget\; outer job receipt encoding and identity\, capture I\/O\, host containers and KaTeX host\-internal Work and Allocation are explicitly outside measurement\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>要求<rt>ようきゅう</rt></ruby>rendererと<ruby>文書<rt>ぶんしょ</rt></ruby><ruby>入力<rt>にゅうりょく</rt></ruby>を<ruby>固定<rt>こてい</rt></ruby>し、KaTeX<ruby>生成<rt>せいせい</rt></ruby>へ<ruby>到達<rt>とうたつ</rt></ruby>した<ruby>試行<rt>しこう</rt></ruby>で<ruby>現在<rt>げんざい</rt></ruby>の<ruby>信頼<rt>しんらい</rt></ruby>するhost<ruby>設定<rt>せってい</rt></ruby>を<ruby>参照<rt>さんしょう</rt></ruby>して<ruby>得<rt>え</rt></ruby>られた<ruby>出力<rt>しゅつりょく</rt></ruby>を<ruby>検証<rt>けんしょう</rt></ruby>し、<ruby>失敗<rt>しっぱい</rt></ruby><ruby>試行<rt>しこう</rt></ruby>のvisualやfont cacheを<ruby>流用<rt>りゅうよう</rt></ruby>しない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Requested renderer and document inputs stay fixed\; attempts that reach KaTeX generation consult current trusted host configuration and validate any actual outputs\, without reusing visuals or font caches from failed attempts\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+packageのnative<ruby>証拠<rt>しょうこ</rt></ruby>は<ruby>最後<rt>さいご</rt></ruby>の<ruby>成功<rt>せいこう</rt></ruby><ruby>試行<rt>しこう</rt></ruby>だけを<ruby>表<rt>あらわ</rt></ruby>し、<ruby>以前<rt>いぜん</rt></ruby>の<ruby>中断<rt>ちゅうだん</rt></ruby><ruby>試行<rt>しこう</rt></ruby>のnative<ruby>結果<rt>けっか</rt></ruby>は<ruby>未保持<rt>みほじ</rt></ruby>とし、Noneやvisual<ruby>数<rt>すう</rt></ruby>0からhost<ruby>未実行<rt>みじっこう</rt></ruby>を<ruby>推論<rt>すいろん</rt></ruby>しない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Package native evidence describes only the final successful attempt\, native outcomes of earlier interrupted attempts are not retained\, and neither None nor zero visuals implies no host invocation\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+filesとmanifestは<ruby>成功後<rt>せいこうご</rt></ruby>にmemory<ruby>内<rt>ない</rt></ruby>へ<ruby>返<rt>かえ</rt></ruby>し、<ruby>公開<rt>こうかい</rt></ruby>・CLI<ruby>対話<rt>たいわ</rt></ruby><ruby>再開<rt>さいかい</rt></ruby>・<ruby>永続的<rt>えいぞくてき</rt></ruby>な<ruby>復元<rt>ふくげん</rt></ruby>・<ruby>外部<rt>がいぶ</rt></ruby>SVG<ruby>包装<rt>ほうそう</rt></ruby>はこのAPIに<ruby>含<rt>ふく</rt></ruby>めず、portable proofとも<ruby>扱<rt>あつか</rt></ruby>わない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Files and manifest are returned in memory only after success\; publication\, interactive CLI resume\, durable restoration and external SVG packaging are outside this API\, and it is not a portable proof\.
 
 </div>
 

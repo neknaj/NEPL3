@@ -106,5 +106,9 @@
   {
     "section": "svgPreparation",
     "name": "retained-svg-source-preparation"
+  },
+  {
+    "section": "svgRenderRetry",
+    "name": "retained-svg-render-retry"
   }
 ]

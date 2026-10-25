@@ -1,6 +1,7 @@
 //! Native in-memory SVG source preparation. This owns captured inputs, not
 //! admitted SVG, a validated PageSet, rendered files or a durable continuation.
 //! Capture I/O and retained host containers are outside measured phase usage.
+pub mod rendering;
 use super::input::{self, OwnedBinding};
 use crate::doc::{
     export::{

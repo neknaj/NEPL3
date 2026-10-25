@@ -1451,8 +1451,8 @@ body
           cons variant en "A new output directory is created only after all semantic checks and generation succeed, and the completion manifest is written last; an I/O failure may still leave an incomplete directory."
           nil
         cons parallel
-          cons variant ja "このMathMLOnly[経路/けいろ]は[生成時/せいせいじ]KaTeXを[実行/じっこう]せず、[外部/がいぶ]SVG・[保持/ほじ]jobのretry・[永続/えいぞく][復元/ふくげん]は[対象外/たいしょうがい]であり、[全体/ぜんたい][受入/うけいれ]も[未実施/みじっし]である。"
-          cons variant en "This MathMLOnly path does not execute generation-time KaTeX; external SVG, retained-job retry and durable restoration are outside scope, and overall acceptance has not been run."
+          cons variant ja "この[既存/きそん]CLIのMathMLOnly[経路/けいろ]は[生成時/せいせいじ]KaTeXを[実行/じっこう]せず、[外部/がいぶ]SVG・[保持/ほじ]jobのretry・[永続/えいぞく][復元/ふくげん]は[対象外/たいしょうがい]であり、[全体/ぜんたい][受入/うけいれ]も[未実施/みじっし]である。"
+          cons variant en "This legacy CLI MathMLOnly path does not execute generation-time KaTeX; external SVG, retained-job retry and durable restoration are outside scope, and overall acceptance has not been run."
           nil
         cons parallel
           cons variant ja "[実行例/じっこうれい]はexamples/document/pages-svgに[同梱/どうこん]し、[同/おな]じmanifestが[二/ふた]つの[多言語/たげんご]pageとSVGを[明示/めいじ]して[相互/そうご]linkを[解決/かいけつ]する。"
@@ -1539,8 +1539,49 @@ body
           cons variant en "The manifest output ceiling remains frozen but does not bound preparation; capture I/O and host containers remain outside measured phase usage."
           nil
         cons parallel
-          cons variant ja "PreparedはSVGの[入場/にゅうじょう]・PageSet[妥当性/だとうせい]・[描画/びょうが][完了/かんりょう]を[証明/しょうめい]せず、render[再試行/さいしこう]・CLI[対話/たいわ][再開/さいかい]・[永続的/えいぞくてき]な[復元/ふくげん]は[別/べつ]の[未対応/みたいおう][段階/だんかい]とする。"
-          cons variant en "Prepared proves neither SVG admission, PageSet validity nor completed rendering; render retry, interactive CLI resume and durable restoration remain separate unimplemented stages."
+          cons variant ja "PreparedはSVGの[入場/にゅうじょう]・PageSet[妥当性/だとうせい]・[描画/びょうが][完了/かんりょう]を[証明/しょうめい]せず、CLI[対話/たいわ][再開/さいかい]と[永続的/えいぞくてき]な[復元/ふくげん]は[別/べつ]の[未対応/みたいおう][段階/だんかい]とする。"
+          cons variant en "Prepared proves neither SVG admission, PageSet validity nor completed rendering; interactive CLI resume and durable restoration remain separate unimplemented stages."
+          nil
+        nil
+      nil
+    cons section svgRenderRetry "[保持/ほじ][状態/じょうたい]からのSVG[描画/びょうが][再試行/さいしこう] / Retained SVG render retry"
+      body
+      cons paragraph
+        cons parallel
+          cons variant ja "nativeのPrepared::into_renderは[準備済/じゅんびず]みDoc・[正確/せいかく]なCode[証拠/しょうこ]・[捕捉済/ほそくず]みSVG・[表示/ひょうじ][設定/せってい]・rendererを[一体/いったい]で[消費/しょうひ]し、[同/おな]じ[累積/るいせき]ledgerを[引/ひ]き[継/つ]ぐRenderJobを[返/かえ]す。"
+          cons variant en "The native Prepared::into_render consumes prepared Doc, exact Code evidence, captured SVG, display options and renderer together, returning a RenderJob with the same cumulative ledger."
+          nil
+        cons parallel
+          cons variant ja "[完了/かんりょう]pageを[再/さい]parseせずCodeを[再構築/さいこうちく]せず、[描画/びょうが][試行/しこう]の[処理/しょり]が[到達/とうたつ]した[範囲/はんい]のcodec・Selection・Plan・native[生成/せいせい][状態/じょうたい]を[新/あら]たに[構成/こうせい]する。"
+          cons variant en "Completed pages are not reparsed and Code is not rebuilt; codec, Selection, Plan and native-generation state are created afresh only as each render attempt reaches their corresponding stages."
+          nil
+        cons parallel
+          cons variant ja "[停止/ていし]した[試行/しこう]の[出力/しゅつりょく]は[破棄/はき]して[消費量/しょうひりょう]を[残/のこ]し、[再開/さいかい]では[縮小/しゅくしょう]しないjob・output[上限/じょうげん]だけを[受/う]け[取/と]り、cancelと[通常/つうじょう]の[失敗/しっぱい]は[終端/しゅうたん]にする。"
+          cons variant en "Stopped attempts discard output but retain consumed resources, resume accepts only non-shrinking job and output ceilings, and cancellation or ordinary failure is terminal."
+          nil
+        cons parallel
+          cons variant ja "[成功/せいこう][結果/けっか]のnepl3.local-doc-pages.svg-render-job/1は[元/もと]のpackageとjob_executionを[包/つつ]み、[各/かく]pageの[実際/じっさい]の[準備/じゅんび][記録/きろく]と[全/ぜん][描画/びょうが][試行/しこう]を[保存/ほぞん]する。"
+          cons variant en "Successful nepl3.local-doc-pages.svg-render-job/1 output wraps the original package and job_execution, retaining each page's actual preparation observations and every render attempt."
+          nil
+        cons parallel
+          cons variant ja "[新/あたら]しいidentityは[同/おな]じdomainとNUL、package・job_executionの2[要素/ようそ][配列/はいれつ]をcompact serde_jsonでUTF-8[符号化/ふごうか]したbyte[数/すう]のbig-endian u64、そのbytesを[順/じゅん]に[束縛/そくばく]したSHA-256であり、[元/もと]のinput_identityとは[区別/くべつ]する。"
+          cons variant en "The new identity is SHA-256 over the same domain and NUL, the big-endian u64 byte length of compact serde_json UTF-8 encoding of the two-element package and job_execution array, then those bytes; it is separate from the original input_identity."
+          nil
+        cons parallel
+          cons variant ja "[元/もと]のpackage receipt[直列化/ちょくれつか]は[試行/しこう]Budgetへ[計上/けいじょう]し、[外側/そとがわ]のjob receipt[符号化/ふごうか]とidentity・[捕捉/ほそく]I/O・host container・KaTeX host[内部/ないぶ]WorkとAllocationは[測定/そくてい][範囲外/はんいがい]と[明記/めいき]する。"
+          cons variant en "Original package receipt serialization is charged to the attempt Budget; outer job receipt encoding and identity, capture I/O, host containers and KaTeX host-internal Work and Allocation are explicitly outside measurement."
+          nil
+        cons parallel
+          cons variant ja "[要求/ようきゅう]rendererと[文書/ぶんしょ][入力/にゅうりょく]を[固定/こてい]し、KaTeX[生成/せいせい]へ[到達/とうたつ]した[試行/しこう]で[現在/げんざい]の[信頼/しんらい]するhost[設定/せってい]を[参照/さんしょう]して[得/え]られた[出力/しゅつりょく]を[検証/けんしょう]し、[失敗/しっぱい][試行/しこう]のvisualやfont cacheを[流用/りゅうよう]しない。"
+          cons variant en "Requested renderer and document inputs stay fixed; attempts that reach KaTeX generation consult current trusted host configuration and validate any actual outputs, without reusing visuals or font caches from failed attempts."
+          nil
+        cons parallel
+          cons variant ja "packageのnative[証拠/しょうこ]は[最後/さいご]の[成功/せいこう][試行/しこう]だけを[表/あらわ]し、[以前/いぜん]の[中断/ちゅうだん][試行/しこう]のnative[結果/けっか]は[未保持/みほじ]とし、Noneやvisual[数/すう]0からhost[未実行/みじっこう]を[推論/すいろん]しない。"
+          cons variant en "Package native evidence describes only the final successful attempt, native outcomes of earlier interrupted attempts are not retained, and neither None nor zero visuals implies no host invocation."
+          nil
+        cons parallel
+          cons variant ja "filesとmanifestは[成功後/せいこうご]にmemory[内/ない]へ[返/かえ]し、[公開/こうかい]・CLI[対話/たいわ][再開/さいかい]・[永続的/えいぞくてき]な[復元/ふくげん]・[外部/がいぶ]SVG[包装/ほうそう]はこのAPIに[含/ふく]めず、portable proofとも[扱/あつか]わない。"
+          cons variant en "Files and manifest are returned in memory only after success; publication, interactive CLI resume, durable restoration and external SVG packaging are outside this API, and it is not a portable proof."
           nil
         nil
       nil

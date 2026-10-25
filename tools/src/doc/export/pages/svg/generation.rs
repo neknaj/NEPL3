@@ -1,5 +1,5 @@
 mod native;
-use super::super::input::{Captured, SVG_BYTES, SVG_COUNT};
+use super::input::{Captured, OwnedBinding, SVG_BYTES, SVG_COUNT};
 use crate::doc::{
     annotations::article,
     export::{self, MathRenderer, pages},
@@ -100,7 +100,45 @@ fn run_inner(
         &[],
         captured.options.clone(),
     )?;
-    let request = &prepared.request;
+    render_prepared(
+        Context {
+            compiled: c,
+            request: &prepared.request,
+            page_code: &prepared.page_code,
+            origins: &prepared.origins,
+            file_origins: &prepared.file_origins,
+            assets: &captured.assets,
+            preference,
+            initial,
+            scope: "Inputs captured once under finite count/byte limits before parsing; capture I/O is outside parse/output Budgets. Output initial_usage precedes source preparation; each parse/lower has separate limits. Resolved paths are containment-checked, not race-free filesystem capabilities. No persistent retry/capture restoration.",
+        },
+        b,
+    )
+}
+
+pub(super) struct Context<'a> {
+    pub compiled: &'a Compiled,
+    pub request: &'a nepl3_doc_html::pages::PagesHtmlRequest,
+    pub page_code: &'a [pages::code::PreparedPageCode],
+    pub origins: &'a [serde_json::Value],
+    pub file_origins: &'a [serde_json::Value],
+    pub assets: &'a [OwnedBinding],
+    pub preference: MathRenderer,
+    pub initial: nepl3_core::budget::Usage,
+    pub scope: &'static str,
+}
+pub(super) fn render_prepared(context: Context<'_>, b: &mut Budget) -> Result<Generated, String> {
+    let Context {
+        compiled: c,
+        request,
+        page_code,
+        origins,
+        file_origins,
+        assets,
+        preference,
+        initial,
+        scope,
+    } = context;
     let store = SourceStore::default();
     let mut admission = SourceAdmission::default();
     let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
@@ -118,7 +156,7 @@ fn run_inner(
         push(&mut plans, plan, b)?;
     }
     let mut borrowed = Vec::new();
-    for binding in &captured.assets {
+    for binding in assets {
         let mut assets = Vec::new();
         for asset in &binding.assets {
             push(
@@ -133,7 +171,7 @@ fn run_inner(
         push(&mut borrowed, assets, b)?;
     }
     let mut bindings = Vec::new();
-    for (binding, inputs) in captured.assets.iter().zip(&borrowed) {
+    for (binding, inputs) in assets.iter().zip(&borrowed) {
         push(
             &mut bindings,
             RootAssets {
@@ -152,8 +190,7 @@ fn run_inner(
         &mut |page, view, index, codec, b| {
             let page = usize::try_from(page).map_err(err)?;
             if view.kind == EmbedKind::Code {
-                prepared
-                    .page_code
+                page_code
                     .get(page)
                     .ok_or("CodePageMissing")?
                     .render_with_codec(view, index, codec, b)
@@ -270,12 +307,13 @@ fn run_inner(
         push(&mut formula_pages, formulas, b)?;
     }
     let mut svg_capture = Vec::new();
-    for binding in &captured.assets {
-        let page = &captured
-            .inputs
+    for binding in assets {
+        let page = &request
+            .set
+            .pages
             .get(binding.page)
             .ok_or("SvgPageMissing")?
-            .0
+            .registration
             .id;
         for asset in &binding.assets {
             metadata_charge(asset.svg.len() + 64, 64, b)?;
@@ -293,14 +331,14 @@ fn run_inner(
         }
     }
     let evidence = output::SourceEvidence {
-        scope: "Inputs captured once under finite count/byte limits before parsing; capture I/O is outside parse/output Budgets. Output initial_usage precedes source preparation; each parse/lower has separate limits. Resolved paths are containment-checked, not race-free filesystem capabilities. No persistent retry/capture restoration.",
+        scope,
         math_renderer: if preference == MathRenderer::MathMLOnly {
             "mathml-only-explicit"
         } else {
             "katex-preferred"
         },
-        sources: &prepared.origins,
-        registered_files: &prepared.file_origins,
+        sources: origins,
+        registered_files: file_origins,
         svg_capture,
         svg_total_byte_limit: SVG_BYTES,
         svg_total_count_limit: SVG_COUNT,
