@@ -1060,9 +1060,9 @@ body
           nil
         cons " 単体Doc HTML exportはSentence guestを含むasset-free Articleに型付きArticle hostを使用し、既定Rows表示で本文・Doc断片の参照と外部URLを検査する。"
         cons "Sentenceの所有元・構造出現・描画記録をLocalDocumentへ保持し、原文Docと共に返す。"
-        cons "Sentenceを含まない既存SVG経路は維持するが、SentenceとAssetの組合せを黙って別経路へ落とさず未対応として返す。"
+        cons "Sentenceを[含/ふく]まない[既存/きそん]SVG[経路/けいろ]とalt[限定/げんてい]のSentence[経路/けいろ]を[維持/いじ]し、root Articleの[画像/がぞう]と[本文/ほんぶん]・captionのSentenceは[後述/こうじゅつ]するplanned hostへ[明示的/めいじてき]に[接続/せつぞく]する。"
         cons " CLIでの単体Article対応からPageSetのSentence対応を推定しない。"
-        cons "PageSetは後述の専用namespace経路で接続する。単体Article CLIのasset-free Single選択と画像alt選択は区別し、後者のexport接続は未完了であり、native text投影だけを後述する。"
+        cons "PageSetは[後述/こうじゅつ]の[専用/せんよう]namespace[経路/けいろ]で[接続/せつぞく]する。SVG CLIはRows[固定/こてい]であり、asset-freeのSingle[選択/せんたく]やPageSetの[画像/がぞう][対応/たいおう]とは[区別/くべつ]する。"
         cons "既存Math注釈内の入れ子数式の生成はPageSetでも共通の数式収集経路を使う。"
         nil
       cons paragraph
@@ -1190,15 +1190,15 @@ body
     body
       cons paragraph
         cons "単体doc-html svgは、独立Sentenceの全出現がImageまたはInlineImageのaltに限られる場合に、前述のnative投影を出力へ接続する。"
-        cons "Rowsの構造表示inventoryで全variantの非alt出現を検査し、title・本文・captionなどにも現れる所有元は同じEmbedRefがaltにある場合でも拒否する。"
+        cons "Rowsの[構造/こうぞう][表示/ひょうじ]inventoryで[全/ぜん]variantの[非/ひ]alt[出現/しゅつげん]を[分類/ぶんるい]し、title・[本文/ほんぶん]・captionにも[現/あらわ]れる[所有元/しょゆうもと]は[同/おな]じEmbedRefがaltにある[場合/ばあい]でも[後述/こうじゅつ]の[混在/こんざい][経路/けいろ]へ[分/わ]ける。"
         cons "この検査をnamespaceやguest意味の証拠とせず、実際のalt所有元を同じoutput Budgetで入場・lower・投影し、準備と描画の間はSentenceSyntaxとidentity付きtextを保持する。"
         cons "altからHTML callbackは発生せず、既存のCode・Math描画とasset検査を保つ。"
         nil
       cons paragraph
         cons "externalとembeddedのSVG、externalとinlineのCSSで同じBaseOnly本文を使い、HTML属性としてescapeする。"
-        cons "未解決の選択foreign text、非alt Sentence、不正asset、resource stopでは成功成果物を作らない。"
+        cons "[未解決/みかいけつ]の[選択/せんたく]foreign text、[不正/ふせい]asset、resource stopでは[成功/せいこう][成果物/せいかぶつ]を[作/つく]らない。"
         cons "独立Sentenceがない既存SVG経路、runtime既定値、CI設定を変更しない。"
-        cons "一般のSentenceとassetの組合せ、PageSet asset、画像関連namespaceの表示選択、portable proofは引き続き未完了である。"
+        cons "root ArticleのSentenceとSVGの[混在/こんざい]は[後述/こうじゅつ]の[限定/げんてい]CLI[経路/けいろ]で[扱/あつか]う。PageSet asset、guest[所有/しょゆう]asset、SVG CLIの[表示/ひょうじ][選択/せんたく]、portable proofは[未完了/みかんりょう]である。"
         nil
       nil
     cons section namespaceSvg "Native static SVG in resolved Doc namespaces"
@@ -1216,7 +1216,7 @@ body
         cons " Safe external links and existing display guests retain their explicit admission rules; Page and Relative links remain unresolved."
         cons " Pending parts preserve cross-member references, while complete Article rendering still rejects omitted targets and duplicate identifiers."
         cons " This native prerequisite does not add Sentence selection, alt-excluding automatic adoption, PageSet assets, general Sentence-plus-image CLI export, portable proof or durable recovery."
-        cons " Existing asset-free namespace entries and the alt-only standalone CLI guard remain unchanged."
+        cons " Existing asset-free namespace entries retain their contracts; standalone CLI dispatch is specified separately below."
         nil
       nil
     cons section sentenceRolePlan "Native Sentence occurrence-role plan"
@@ -1265,7 +1265,26 @@ body
         cons " Root, guest and collection locations remain distinct; duplicate, unused, missing, invalid SVG, digest, alt and unsupported failures remain distinguishable."
         cons " A stopped Budget takes precedence over projection, adapter, conversion and diagnostic allocation failures, and no partial rendered value is returned."
         cons " Embedded mode returns validated SVG content, while External mode returns content-addressed references without proving that files were written."
-        cons " Existing asset-free entries, standalone CLI alt-only admission, PageSet asset guards and portable contracts are unchanged; arbitrary-member assets and general CLI integration remain unfinished."
+        cons " This native entry retains existing asset-free and PageSet contracts; the bounded standalone CLI integration is specified below, while arbitrary-member assets and portable proof remain separate work."
+        nil
+      nil
+    cons section mixedSvgCli "Mixed Sentence standalone root SVG export"
+    body
+      cons paragraph
+        cons "Standalone SVG generation classifies independent Sentence by the existing bounded Rows occurrence-role scan."
+        cons " Inputs without Sentence and inputs whose Sentence occurrences are confined to alt keep their original paths, accounting and output identities."
+        cons " Non-alt occurrences select the explicit planned root SVG host, including owners shared by alt and title, body or caption and occurrences in all language variants."
+        cons " The new path retains the exact structural Selection through scoped planning and rendering, then stores both SelectionParts and the returned alt Projection, including an empty projection."
+        cons " Original occurrence IDs and foreign placements feed the existing Code renderer, direct and nested Math composition, generation-side KaTeX or MathML fallback, stylesheet and shell serializer."
+        nil
+      cons paragraph
+        cons "The output Budget and SourceAdmission are shared throughout the new path; external SVG deduplication and byte charges remain before preparation."
+        cons " Mixed Prepare observations end after structural collection, while planning, projection, namespace preparation and insertion occur within the measured RenderAndSerialize stage."
+        cons " Failed stages produce no success observation and no partial LocalDocument."
+        cons " Mixed-only metadata identifies planned root SVG and separate BaseOnly alt owners; the writer preserves it even when independent alt ownership is empty."
+        cons " The SVG CLI retains Rows and its existing default renderer and limits, with no new display flags or identity format."
+        cons " Semantic or admission failures precede output-directory creation; filesystem failures after creation retain the existing incomplete-directory behavior."
+        cons " Guest-owned assets, PageSet SVG, page and relative links, arbitrary-member asset registration and portable proof remain outside this export scope."
         nil
       nil
     cons section visibility "HTML[挿入対象/そうにゅうたいしょう]Sentence[出現/しゅつげん]の[構造/こうぞう]inventory"
