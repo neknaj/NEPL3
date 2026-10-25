@@ -546,14 +546,18 @@ jobs:
       - name: Compare generated Math visual styles in three browsers
         run: python tools/audit/math/browser.py --corpus dist/math-visual-input/dist/math-visual/corpus.log --package dist/math-visual-input/tools/audit/math/node_modules/katex > dist/doc-browser/math-visual-results.json
       - name: Build canonical Doc site at both project paths
+        env:
+          # Match optimized canonical projection without disabling runtime checks.
+          CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS: 'true'
+          CARGO_PROFILE_RELEASE_OVERFLOW_CHECKS: 'true'
         run: |
-          cargo run --locked -p nepl3-tools -- site build site/config.json dist/doc-browser/site
-          cargo run --locked -p nepl3-tools -- site build conformance/inputs/site/alternate.json dist/doc-browser/site-alternate
+          cargo run --release --locked -p nepl3-tools -- site build site/config.json dist/doc-browser/site
+          cargo run --release --locked -p nepl3-tools -- site build conformance/inputs/site/alternate.json dist/doc-browser/site-alternate
       - name: Verify site identities, links and scriptless pages in three browsers
         run: |
           python -m unittest discover -s tools/audit/site -p 'test_*.py'
-          python tools/audit/site/check.py dist/doc-browser/site dist/doc-browser/site-results.json --renderer target/debug/nepl3-tools
-          python tools/audit/site/check.py dist/doc-browser/site-alternate dist/doc-browser/site-alternate-results.json --config conformance/inputs/site/alternate.json --renderer target/debug/nepl3-tools
+          python tools/audit/site/check.py dist/doc-browser/site dist/doc-browser/site-results.json --renderer target/release/nepl3-tools
+          python tools/audit/site/check.py dist/doc-browser/site-alternate dist/doc-browser/site-alternate-results.json --config conformance/inputs/site/alternate.json --renderer target/release/nepl3-tools
       - name: Freeze the checked site as a deterministic Pages payload
         run: |
           SITE_MANIFEST=$(python -c 'import json; print(json.load(open("dist/doc-browser/site-results.json"))["manifest_sha256"])')
