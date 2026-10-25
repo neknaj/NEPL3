@@ -4,6 +4,6 @@
   "private": true,
   "type": "module",
   "engines": { "node": "24.14.1" },
-  "dependencies": { "rp2040js": "1.4.0" },
+  "dependencies": { "rp2040js": "1.4.1" },
   "scripts": { "test": "node --test test.mjs", "run": "node run.mjs" }
 }
