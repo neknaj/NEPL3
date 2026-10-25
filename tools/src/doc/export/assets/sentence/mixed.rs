@@ -86,58 +86,70 @@ fn mixed_svg_output_limits_are_exact_and_failed_stages_are_not_reported() -> Res
         id: "logo",
         svg: SVG,
     }];
-    for mode in [SvgMode::Embedded, SvgMode::External] {
-        let run = |limits, stages: &mut Vec<_>| {
-            export::generate_impl(
-                &compiled,
-                SOURCE,
-                CssMode::Inline,
-                Some((&inputs, mode)),
-                DisplayOptions {
-                    math_renderer: MathRenderer::MathMLOnly,
-                    ..Default::default()
-                },
-                limits,
-                &mut |s| stages.push(s),
-            )
-        };
-        let mut stages = Vec::new();
-        let baseline = run(ExecutionLimits::default(), &mut stages)?;
-        assert_eq!(
-            stages.iter().map(|s| s.stage).collect::<Vec<_>>(),
-            vec![
-                Stage::ParseAndValidate,
-                Stage::Lower,
-                Stage::Prepare,
-                Stage::RenderAndSerialize
-            ]
-        );
-        let prepare = stages[2].usage;
-        let end = stages[3].usage;
-        assert!(end.work > prepare.work && end.allocation_units > prepare.allocation_units);
-        for dimension in 0..6 {
-            for short in [false, true] {
-                let less = u64::from(short);
-                let mut limits = ExecutionLimits::default();
-                match dimension {
-                    0 => limits.output_limits.work = end.work - less,
-                    1 => limits.output_limits.allocation_units = end.allocation_units - less,
-                    2 => limits.output_limits.source_bytes = end.source_bytes - less,
-                    3 => limits.output_limits.nodes = end.nodes - less,
-                    4 => limits.output_limits.depth = end.depth - less,
-                    _ => limits.output_limits.output_bytes = end.output_bytes - less,
-                }
-                let mut observed = Vec::new();
-                let result = run(limits, &mut observed);
-                if short {
-                    assert!(result.is_err(), "dimension {dimension}");
-                    assert!(
-                        !observed
-                            .iter()
-                            .any(|s| s.stage == Stage::RenderAndSerialize)
-                    );
-                } else {
-                    assert_eq!(result?.html, baseline.html);
+    let selected = SOURCE.replace("cons code Doc", "cons parallel cons variant en Sentence \"English\" cons variant ja Sentence \"Japanese\" nil cons code Doc");
+    for parallel in [
+        nepl3_doc_html::ParallelMode::Rows,
+        nepl3_doc_html::ParallelMode::Columns,
+        nepl3_doc_html::ParallelMode::Single {
+            language: "en".into(),
+            fallbacks: Vec::new(),
+        },
+    ] {
+        for mode in [SvgMode::Embedded, SvgMode::External] {
+            let run = |limits, stages: &mut Vec<_>| {
+                export::generate_impl(
+                    &compiled,
+                    &selected,
+                    CssMode::Inline,
+                    Some((&inputs, mode)),
+                    DisplayOptions {
+                        document: nepl3_doc_html::RenderOptions {
+                            parallel: parallel.clone(),
+                        },
+                        math_renderer: MathRenderer::MathMLOnly,
+                    },
+                    limits,
+                    &mut |s| stages.push(s),
+                )
+            };
+            let mut stages = Vec::new();
+            let baseline = run(ExecutionLimits::default(), &mut stages)?;
+            assert_eq!(
+                stages.iter().map(|s| s.stage).collect::<Vec<_>>(),
+                vec![
+                    Stage::ParseAndValidate,
+                    Stage::Lower,
+                    Stage::Prepare,
+                    Stage::RenderAndSerialize
+                ]
+            );
+            let prepare = stages[2].usage;
+            let end = stages[3].usage;
+            assert!(end.work > prepare.work && end.allocation_units > prepare.allocation_units);
+            for dimension in 0..6 {
+                for short in [false, true] {
+                    let less = u64::from(short);
+                    let mut limits = ExecutionLimits::default();
+                    match dimension {
+                        0 => limits.output_limits.work = end.work - less,
+                        1 => limits.output_limits.allocation_units = end.allocation_units - less,
+                        2 => limits.output_limits.source_bytes = end.source_bytes - less,
+                        3 => limits.output_limits.nodes = end.nodes - less,
+                        4 => limits.output_limits.depth = end.depth - less,
+                        _ => limits.output_limits.output_bytes = end.output_bytes - less,
+                    }
+                    let mut observed = Vec::new();
+                    let result = run(limits, &mut observed);
+                    if short {
+                        assert!(result.is_err(), "dimension {dimension}");
+                        assert!(
+                            !observed
+                                .iter()
+                                .any(|s| s.stage == Stage::RenderAndSerialize)
+                        );
+                    } else {
+                        assert_eq!(result?.html, baseline.html);
+                    }
                 }
             }
         }

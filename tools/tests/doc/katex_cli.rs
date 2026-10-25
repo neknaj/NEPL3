@@ -440,6 +440,69 @@ fn pinned_native_katex_doc_and_pages() -> Result<(), Box<dyn std::error::Error>>
             );
         }
     }
+    // Explicit non-Rows selection must also use the actual pinned worker,
+    // retaining nested/direct math and composing only the selected variant.
+    let selected_source = fs::read_to_string(&mixed_source)?.replace(
+        "cons code Doc", "cons parallel cons variant en Sentence sentence cons text \"English\" cons math frac 9 10 nil cons variant ja Sentence sentence cons text \"Japanese\" cons math frac 11 12 nil nil cons code Doc");
+    fs::write(&mixed_source, selected_source)?;
+    let display = root.join("svg-display.json");
+    for (name, config, count) in [
+        ("columns", r#"{"mode":"columns"}"#, 6),
+        (
+            "single",
+            r#"{"mode":"single","language":"FR","fallbacks":["ja"]}"#,
+            5,
+        ),
+    ] {
+        fs::write(&display, config)?;
+        for css in ["inline", "external"] {
+            for svg in ["embedded", "external"] {
+                let out = root.join(format!("selected-mixed-{name}-{css}-{svg}"));
+                let result = Command::new(binary)
+                    .env("NEPL3_KATEX_NODE_MODULES", &packages)
+                    .args(["doc-html", "svg", "--display"])
+                    .arg(&display)
+                    .args(["--css", css, "--svg", svg])
+                    .arg(&mixed_source)
+                    .arg(&mixed_assets)
+                    .arg(&out)
+                    .output()?;
+                assert!(
+                    result.status.success(),
+                    "{}",
+                    String::from_utf8_lossy(&result.stderr)
+                );
+                let html = fs::read_to_string(out.join("document.html"))?;
+                assert_eq!(html.matches("<math").count(), count);
+                assert_eq!(html.contains("English"), name == "columns");
+                assert!(html.contains("Japanese"));
+                let manifest: serde_json::Value =
+                    serde_json::from_slice(&fs::read(out.join("manifest.json"))?)?;
+                assert_eq!(
+                    manifest["katex"]["visuals"]
+                        .as_array()
+                        .ok_or("selected visuals")?
+                        .len(),
+                    count
+                );
+                assert!(
+                    manifest["math_diagnostics"]
+                        .as_array()
+                        .ok_or("diagnostics")?
+                        .is_empty()
+                );
+                let css_text = if css == "inline" {
+                    html
+                } else {
+                    fs::read_to_string(out.join("assets/doc.css"))?
+                };
+                assert!(
+                    css_text.contains("data:font/woff2;base64,")
+                        && css_text.contains("Permission is hereby granted")
+                );
+            }
+        }
+    }
     fs::remove_dir_all(root)?;
     Ok(())
 }

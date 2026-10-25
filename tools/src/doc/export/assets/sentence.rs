@@ -9,8 +9,8 @@ pub(crate) fn requires_planned_display(
     budget: &mut Budget,
 ) -> Result<bool, String> {
     let shape = document.value.validate_shape(budget).map_err(err)?;
-    // Rows checks every variant. Display selection must never hide an unsupported
-    // role, and this inventory is not guest validation or namespace authority.
+    // Rows checks every variant. Display selection must never hide a non-alt
+    // occurrence, and this inventory is not guest validation or namespace authority.
     let occurrences = visibility::sentence_occurrences(
         &shape,
         &RenderOptions {

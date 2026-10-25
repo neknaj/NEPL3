@@ -34,6 +34,25 @@ pub fn write(
     css: CssMode,
     mode: &str,
 ) -> crate::Result<()> {
+    write_with_display(
+        input,
+        manifest,
+        output,
+        css,
+        mode,
+        super::DisplaySelection::default(),
+    )
+}
+
+/// Explicit display selection; legacy writers keep Rows and existing limits.
+pub fn write_with_display(
+    input: &Path,
+    manifest: &Path,
+    output: &Path,
+    css: CssMode,
+    mode: &str,
+    selection: super::DisplaySelection,
+) -> crate::Result<()> {
     let mode = match mode {
         "external" => SvgMode::External,
         "embedded" => SvgMode::Embedded,
@@ -92,7 +111,10 @@ pub fn write(
         &source,
         css,
         Some((&inputs, mode)),
-        super::DisplayOptions::default(),
+        super::DisplayOptions {
+            document: selection.into(),
+            ..super::DisplayOptions::default()
+        },
         ExecutionLimits::default(),
         &mut |_| {},
     )?;
