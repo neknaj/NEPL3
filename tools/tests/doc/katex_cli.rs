@@ -101,6 +101,68 @@ fn pinned_native_katex_doc_and_pages() -> Result<(), Box<dyn std::error::Error>>
                 .is_some_and(|path| path.len() > 1)
         );
     }
+    // Explicit standalone selection reaches the real pinned host. Equivalent
+    // visible choices keep distinct requested-display scopes; hidden Math is
+    // absent rather than prepared as an extra visual.
+    let selected_source = root.join("selected.nepld");
+    fs::write(
+        &selected_source,
+        r#"article en Sentence "Selected" body cons paragraph cons parallel cons variant en Sentence sentence cons math frac 1 2 nil cons variant ja Sentence sentence cons math frac 3 4 nil nil nil nil"#,
+    )?;
+    let selection_file = root.join("display.json");
+    let mut selected_scopes = std::collections::BTreeSet::new();
+    for (index, language, fallbacks, visible, hidden) in [
+        (0, "fr", vec!["en", "ja"], "1", "3"),
+        (1, "FR", vec!["en", "ja"], "1", "3"),
+        (2, "ja", vec![], "3", "1"),
+    ] {
+        fs::write(
+            &selection_file,
+            serde_json::to_vec(
+                &serde_json::json!({"mode":"single","language":language,"fallbacks":fallbacks}),
+            )?,
+        )?;
+        let out = root.join(format!("selected-{index}"));
+        let result = Command::new(binary)
+            .env("NEPL3_KATEX_NODE_MODULES", &packages)
+            .args(["doc-html", "export", "--display"])
+            .arg(&selection_file)
+            .args(["--css", "inline"])
+            .arg(&selected_source)
+            .arg(&out)
+            .output()?;
+        assert!(
+            result.status.success(),
+            "{}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+        let html = fs::read_to_string(out.join("document.html"))?;
+        assert!(html.contains(&format!("<mn>{visible}</mn>")));
+        assert!(!html.contains(&format!("<mn>{hidden}</mn>")));
+        assert!(!html.contains("<script"));
+        let manifest: serde_json::Value =
+            serde_json::from_slice(&fs::read(out.join("manifest.json"))?)?;
+        assert_eq!(manifest["options"]["language"], language);
+        let visuals = manifest["katex"]["visuals"]
+            .as_array()
+            .ok_or("selected real visuals")?;
+        assert_eq!(visuals.len(), 1);
+        assert!(
+            selected_scopes.insert(
+                visuals[0]["scope"]
+                    .as_str()
+                    .ok_or("selected scope")?
+                    .to_owned()
+            )
+        );
+        assert_eq!(
+            manifest["math_diagnostics"]
+                .as_array()
+                .ok_or("diagnostics")?
+                .len(),
+            0
+        );
+    }
     let parse_source = root.join("nested-parse.nepld");
     fs::write(
         &parse_source,

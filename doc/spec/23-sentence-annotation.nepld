@@ -1036,7 +1036,7 @@ body
         cons "既存prepareの返却型・選択規則は変えない。"
         cons " このhostはHTML出力基盤への段階接続であり、単体CLIと入れ子MathのKaTeX優先変換への接続は後述のexport層が担当する。"
         cons "PageSetへのnative組込みは後述のexport層が担当する。"
-        cons "単体Article CLIのSingle選択、画像altを含む表示選択、portable成果物の認証、旧Doc Inlineの撤去は未完了である。"
+        cons "単体Article CLIのasset-free表示選択は後述のexport層で接続する。画像altを含む表示選択、portable成果物の認証、旧Doc Inlineの撤去は未完了である。"
         nil
       nil
     cons section cli "Doc CLIのSentence[選択/せんたく]"
@@ -1062,8 +1062,28 @@ body
         cons "Sentenceの所有元・構造出現・描画記録をLocalDocumentへ保持し、原文Docと共に返す。"
         cons "Sentenceを含まない既存SVG経路は維持するが、SentenceとAssetの組合せを黙って別経路へ落とさず未対応として返す。"
         cons " CLIでの単体Article対応からPageSetのSentence対応を推定しない。"
-        cons "PageSetは後述の専用namespace経路で接続し、単体Article CLIのSingle選択とalt選択は未完了である。"
+        cons "PageSetは後述の専用namespace経路で接続する。単体Article CLIのasset-free Single選択と画像alt選択は区別し、後者は未完了である。"
         cons "既存Math注釈内の入れ子数式の生成はPageSetでも共通の数式収集経路を使う。"
+        nil
+      cons paragraph
+        cons sentence cons code "doc-html export --display display.json [--limits limits.json] [--css inline|external] [--math-renderer katex-preferred|mathml-only] input.nepld new-output" cons text " はasset-freeの" cons ruby text "単体" text "たんたい" cons text "Articleへ" cons ruby text "表示選択" text "ひょうじせんたく" cons text "を" cons ruby text "明示" text "めいじ" cons text "する。" nil
+        cons "--displayと--limitsは[先頭/せんとう]で[順序/じゅんじょ]を[入/い]れ[替/か]えられる。その[後/あと]に[既存/きそん]のCSS・Math renderer[指定/してい]と[入力/にゅうりょく]・[新規出力先/しんきしゅつりょくさき]を[置/お]く。"
+        cons "[指定/してい]を[省略/しょうりゃく]した[既存/きそん]entryとSVG entryはRowsを[維持/いじ]し、localeから[選択/せんたく]を[推測/すいそく]しない。"
+        cons sentence cons code "generate_with_display" cons text " と " cons code "write_with_display" cons text " は" cons ruby text "同" text "おな" cons text "じnative " cons code "DisplayOptions" cons text " と " cons code "ExecutionLimits" cons text " を" cons ruby text "受" text "う" cons text "け" cons ruby text "取" text "と" cons text "る。" nil
+        cons sentence cons text "display.jsonは " cons code "{\"mode\":\"rows\"}" cons text "、" cons code "{\"mode\":\"columns\"}" cons text "、または " cons code "{\"mode\":\"single\",\"language\":\"ja\",\"fallbacks\":[\"en\"]}" cons text " とする。" nil
+        cons "[設定/せってい]は65536byte[以内/いない]のstrict JSONとし、[未知/みち]field・mode・null・[重複/ちょうふく]keyを[拒否/きょひ]する。escape[表記/ひょうき]だけが[異/こと]なる[同名/どうめい]keyも[重複/ちょうふく]である。"
+        cons "Singleのlanguageは[必須/ひっす]、fallbacksは[省略時/しょうりゃくじ]だけ[空/から]リストとし、[言語名/げんごめい]と[候補/こうほ]の[意味検査/いみけんさ]は[共通描画器/きょうつうびょうがき]で[行/おこな]う。"
+        cons "[全構造出現/ぜんこうぞうしゅつげん]の[所有元/しょゆうもと]を[保持/ほじ]してから[表示/ひょうじ]を[選/えら]び、[非表示/ひひょうじ]targetへの[参照/さんしょう]を[黙/だま]って[成功/せいこう]させない。"
+        cons "[設定/せってい]・parse・lower・[生成/せいせい]の[失敗/しっぱい]では[出力先/しゅつりょくさき]を[作/つく]らない。[最終/さいしゅう]manifestは[完了/かんりょう]markerであり、[書込/かきこ]みI/Oの[途中失敗/とちゅうしっぱい]をtransactionや[永続復旧/えいぞくふっきゅう]で[保護/ほご]する[契約/けいやく]ではない。"
+        nil
+      cons paragraph
+        cons "Rowsの[生成/せいせい]scopeと[既存/きそん]manifestの[値/あたい]は[維持/いじ]する。Columns・Singleではoptionsに[要求/ようきゅう]modeを[記録/きろく]し、Singleだけlanguageと[順序/じゅんじょ]を[保/たも]ったfallbacksを[追加/ついか]する。"
+        cons sentence cons code "display_scope" cons text " のcontractは " cons code "nepl3.local-doc-export.display-scope/1" cons text " とする。" nil
+        cons "[基底/きてい]はsource SHA-256・parse-profile SHA-256の[小文字/こもじ]hexとMath renderer[名/めい]をcolonで[連結/れんけつ]した[文字列/もじれつ]のSHA-256である。"
+        cons "identityはcontractのASCII・NUL・[基底/きてい]32byte・mode[符号/ふごう]を[連結/れんけつ]してSHA-256とする。Columnsは1、Singleは2を1byteで[表/あらわ]す。"
+        cons "Singleでは[続/つづ]けてlanguageのUTF-8 byte[長/ちょう]と[原文/げんぶん]、fallback[数/すう]、[各/かく]fallbackのbyte[長/ちょう]と[原文/げんぶん]を[順/じゅん]に[加/くわ]える。[長/なが]さと[数/かず]はu64 little-endianとし、[同/おな]じ[表示結果/ひょうじけっか]でも[大文字小文字/おおもじこもじ]・[順序/じゅんじょ]・[未使用候補/みしようこうほ]を[正規化/せいきか]しない。"
+        cons "このidentityのhexをcolonで[旧/きゅう]scope[文字列/もじれつ]へ[付加/ふか]し、[生成側/せいせいがわ]KaTeXにも[同/おな]じ[選択/せんたく]を[束縛/そくばく]する。[追加/ついか]hash・buffer・suffix[構築/こうちく]は[共通/きょうつう]output Budgetで[計測/けいそく]する。"
+        cons "この[局所/きょくしょ]scopeはCSSの[梱包方式/こんぽうほうしき]や[全工程/ぜんこうてい]の[認証/にんしょう]ではなく、portable provenanceや[実行権限/じっこうけんげん]を[与/あた]えない。[既存/きそん]のmanifest[直列化/ちょくれつか]・file hash[生成/せいせい]の[計測除外/けいそくじょがい]は[変/か]えない。"
         nil
       nil
     cons section pages_resolution "PageSetへ[明示採用/めいじさいよう]したnamespaceのnativeリンク[解決/かいけつ]"
@@ -1243,7 +1263,7 @@ body
         cons "選択の意味検査は共通描画器に委ね、失敗時は出力directoryを作らない。"
         cons "対話的再開ではmanifestを再読せず、準備開始前に所有した選択を全再試行へ引き継ぐ。"
         cons "変更できるのは既存の明示allowanceだけである。"
-        cons "単体Article CLIやcanonical専用設定の選択追加とは区別する。"
+        cons "単体Article CLIは前述の--display設定で接続し、このPageSet manifestとは入力形式を区別する。canonical専用設定の選択追加は別範囲である。"
         nil
       nil
     nil

@@ -799,3 +799,7 @@ mod pages_single;
 #[cfg(not(target_family = "wasm"))]
 #[path = "doc/pages/display.rs"]
 mod pages_display;
+
+#[cfg(not(target_family = "wasm"))]
+#[path = "doc/export/display.rs"]
+mod standalone_display;

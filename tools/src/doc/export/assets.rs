@@ -91,7 +91,7 @@ pub fn write(
         &source,
         css,
         Some((&inputs, mode)),
-        super::MathRenderer::KaTeXPreferred,
+        super::DisplayOptions::default(),
         ExecutionLimits::default(),
         &mut |_| {},
     )?;
