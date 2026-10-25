@@ -1,5 +1,5 @@
 mod native;
-use super::input::{Captured, SVG_BYTES, SVG_COUNT};
+use super::super::input::{Captured, SVG_BYTES, SVG_COUNT};
 use crate::doc::{
     annotations::article,
     export::{self, MathRenderer, pages},

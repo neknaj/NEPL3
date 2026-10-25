@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 277910bc7bb2fc5752b7a147397765e0d22312a5fd0cc2d0edc9a37b2f50fb52; alias input SHA-256 b2296119feba00739a633b7b891a10da6aee9b1dc242fe31649e32b2c5770431; page input SHA-256 aea891844570a8629a23c70d05a2a0fdd589bcff4447a426fa9f3ae43cc34cfb. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 e179117accd4a5c83c68ad603d81de289f1840dd3630eec0601bdb757d6f308d; alias input SHA-256 dc92f1c090739f5433b38688fe16cf33bf565057f506c92256914ff22ba5fd3c; page input SHA-256 3674afa98f3caf4b032878a1ce4a045850d6d632124302cc825bb5eaed7e0d4b. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="23-構造化文章と対象付き注釈への是正"></a>
 
@@ -1358,6 +1358,136 @@ Explicit MathMLOnly and the existing native entry do not call the KaTeX host and
 npm ci --prefix tools/audit/math --ignore-scripts
 NEPL3_KATEX_NODE_MODULES=tools/audit/math/node_modules nepl3-tools doc-html pages-svg examples/document/pages-svg/manifest.json out-svg-pages-preferred
 ```
+
+<a name="n-7376675072657061726174696f6e"></a>
+
+<a name="retained-svg-source-preparation"></a>
+
+### SVG<ruby>入力<rt>にゅうりょく</rt></ruby>の<ruby>保持<rt>ほじ</rt></ruby>と<ruby>準備<rt>じゅんび</rt></ruby> \/ Retained SVG source preparation
+
+<div class="nepl-paragraph">
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+nativeのsvg\:\:preparation\:\:Preparation\:\:captureはDoc・<ruby>登録<rt>とうろく</rt></ruby>file・SVGのraw bytes・binding<ruby>順序<rt>じゅんじょ</rt></ruby>・<ruby>表示<rt>ひょうじ</rt></ruby><ruby>設定<rt>せってい</rt></ruby>・rendererを<ruby>有限<rt>ゆうげん</rt></ruby>の<ruby>上限<rt>じょうげん</rt></ruby>で<ruby>一度<rt>いちど</rt></ruby>だけ<ruby>捕捉<rt>ほそく</rt></ruby>し、<ruby>再開<rt>さいかい</rt></ruby>で<ruby>元<rt>もと</rt></ruby>fileを<ruby>読<rt>よ</rt></ruby>み<ruby>直<rt>なお</rt></ruby>さない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The native svg\:\:preparation\:\:Preparation\:\:capture captures Doc\, registered files\, raw SVG bytes\, binding order\, display options and renderer once under finite limits\, without rereading original files on resume\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+manifest<ruby>由来<rt>ゆらい</rt></ruby>のparse・lower<ruby>上限<rt>じょうげん</rt></ruby>と<ruby>呼出元<rt>よびだしもと</rt></ruby>が<ruby>明示<rt>めいじ</rt></ruby>するCode<ruby>上限<rt>じょうげん</rt></ruby>を<ruby>既存<rt>きそん</rt></ruby>Preparationへ<ruby>渡<rt>わた</rt></ruby>し、<ruby>完了<rt>かんりょう</rt></ruby>pageのDocumentSyntaxと<ruby>正確<rt>せいかく</rt></ruby>なCode<ruby>証拠<rt>しょうこ</rt></ruby>を<ruby>分離<rt>ぶんり</rt></ruby>せず<ruby>保持<rt>ほじ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Manifest parse and lower ceilings and an explicit caller\-selected Code ceiling enter the existing Preparation state machine\, retaining each completed page\'s DocumentSyntax inseparably from its exact Code evidence\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>未完了<rt>みかんりょう</rt></ruby>pageの<ruby>試行<rt>しこう</rt></ruby>は<ruby>再実行<rt>さいじっこう</rt></ruby>して<ruby>同<rt>おな</rt></ruby>じ<ruby>累積<rt>るいせき</rt></ruby>ledgerへ<ruby>計上<rt>けいじょう</rt></ruby>し、<ruby>各<rt>かく</rt></ruby><ruby>試行<rt>しこう</rt></ruby>の<ruby>実際<rt>じっさい</rt></ruby>のprofile・<ruby>使用量<rt>しようりょう</rt></ruby>・<ruby>停止<rt>ていし</rt></ruby>を<ruby>保存<rt>ほぞん</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Incomplete\-page attempts are repeated and charged to the same cumulative ledger\, preserving each attempt\'s actual profile\, usage and stop\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>再開<rt>さいかい</rt></ruby>は<ruby>縮小<rt>しゅくしょう</rt></ruby>しないjob・phase<ruby>上限<rt>じょうげん</rt></ruby>だけを<ruby>受<rt>う</rt></ruby>け<ruby>取<rt>と</rt></ruby>り、<ruby>拒否<rt>きょひ</rt></ruby>は<ruby>停止<rt>ていし</rt></ruby><ruby>状態<rt>じょうたい</rt></ruby>を<ruby>返<rt>かえ</rt></ruby>し、cancelと<ruby>通常<rt>つうじょう</rt></ruby>の<ruby>失敗<rt>しっぱい</rt></ruby>は<ruby>終端<rt>しゅうたん</rt></ruby>とする。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Resume accepts only non\-shrinking job and phase ceilings\, rejection returns the paused authority\, and cancellation or ordinary failure is terminal\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+manifestのoutput<ruby>上限<rt>じょうげん</rt></ruby>は<ruby>不変<rt>ふへん</rt></ruby>に<ruby>残<rt>のこ</rt></ruby>すが<ruby>準備<rt>じゅんび</rt></ruby>を<ruby>制限<rt>せいげん</rt></ruby>せず、<ruby>捕捉<rt>ほそく</rt></ruby>I\/Oとhost containerは<ruby>測定<rt>そくてい</rt></ruby>するphase<ruby>使用量<rt>しようりょう</rt></ruby>の<ruby>外<rt>そと</rt></ruby>とする。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The manifest output ceiling remains frozen but does not bound preparation\; capture I\/O and host containers remain outside measured phase usage\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+PreparedはSVGの<ruby>入場<rt>にゅうじょう</rt></ruby>・PageSet<ruby>妥当性<rt>だとうせい</rt></ruby>・<ruby>描画<rt>びょうが</rt></ruby><ruby>完了<rt>かんりょう</rt></ruby>を<ruby>証明<rt>しょうめい</rt></ruby>せず、render<ruby>再試行<rt>さいしこう</rt></ruby>・CLI<ruby>対話<rt>たいわ</rt></ruby><ruby>再開<rt>さいかい</rt></ruby>・<ruby>永続的<rt>えいぞくてき</rt></ruby>な<ruby>復元<rt>ふくげん</rt></ruby>は<ruby>別<rt>べつ</rt></ruby>の<ruby>未対応<rt>みたいおう</rt></ruby><ruby>段階<rt>だんかい</rt></ruby>とする。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Prepared proves neither SVG admission\, PageSet validity nor completed rendering\; render retry\, interactive CLI resume and durable restoration remain separate unimplemented stages\.
+
+</div>
+
+</div>
+
+</div>
 
 <a name="n-7669736962696c697479"></a>
 

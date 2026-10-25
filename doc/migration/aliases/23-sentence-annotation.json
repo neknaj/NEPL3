@@ -102,5 +102,9 @@
   {
     "section": "svgPagesKaTeX",
     "name": "katex-preferred-svg-pages"
+  },
+  {
+    "section": "svgPreparation",
+    "name": "retained-svg-source-preparation"
   }
 ]

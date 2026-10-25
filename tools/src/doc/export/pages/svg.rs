@@ -1,8 +1,11 @@
-//! Native root-only embedded-SVG HTML packaging over externally retained plans.
-//! No parsing, CLI, KaTeX generation, retained retry or portable proof is added.
+//! Root-only embedded-SVG packaging, immutable-source CLI export and native
+//! retained source preparation. The plan-based renderer itself does not parse
+//! or generate KaTeX. Render/CLI retry and durable restoration remain separate.
 pub mod cli;
 pub mod identity;
+mod input;
 mod output;
+pub mod preparation;
 use crate::doc::annotations::article::render::svg::pages as planned;
 use crate::doc::annotations::{SentenceAnnotationRenderer, article::display::Plan};
 use nepl3_core::{
