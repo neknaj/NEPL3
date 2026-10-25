@@ -810,3 +810,6 @@ mod pages_display;
 #[cfg(not(target_family = "wasm"))]
 #[path = "doc/export/display.rs"]
 mod standalone_display;
+
+#[path = "doc/pages/svg_native.rs"]
+mod pages_svg_native;

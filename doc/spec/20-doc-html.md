@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/20&#45;doc&#45;html.nepld; renderer nepl3-tools.markdown-annotated/4; source SHA-256 401a8acc9b5b914a7a14d3656e40f25bedd4d1d528789171cb86146fac16cb59; alias input SHA-256 a89d4b749408c5f6e9ccc8ed5749c8203bf1a66d788d81725b0d44b7af3c82d5. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/20&#45;doc&#45;html.nepld; renderer nepl3-tools.markdown-annotated/4; source SHA-256 b9ec3c6950f8b7018337ea80f1194a636c4f03bce068978f294b4b94f9eeabe6; alias input SHA-256 a89d4b749408c5f6e9ccc8ed5749c8203bf1a66d788d81725b0d44b7af3c82d5. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="20-docのhtml変換"></a>
 
@@ -74,6 +74,154 @@ SVG出力のstylesheetは固定CSSと検証済み有限数値・node番号から
 
 prepare\_localの未解決要求の拒否は維持する。試作用のnative helperは入力ごとに検証する。公開portable準備操作の完了やT22・T23・T24の全面受入を示さない。参照形式のCSPは同一originの画像、埋め込み形式はdata画像だけを許可する。フォントは既存の外部参照が残る。
 
+<a name="n-70616765735f7376675f6e6174697665"></a>
+
+## <ruby>明示<rt>めいじ</rt></ruby>namespaceのPageSet SVG<ruby>準備<rt>じゅんび</rt></ruby> \/ PageSet SVG preparation for explicit namespaces
+
+<div class="nepl-paragraph">
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+namespace\:\:pages\:\:assets\:\:prepare\_embeddedは、<ruby>明示的<rt>めいじてき</rt></ruby>に<ruby>採用<rt>さいよう</rt></ruby>したPageSet namespaceへ<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みSVGを<ruby>準備<rt>じゅんび</rt></ruby>する<ruby>限定<rt>げんてい</rt></ruby>native APIである。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The bounded native namespace\:\:pages\:\:assets\:\:prepare\_embedded API prepares embedded SVG for explicitly adopted PageSet namespaces\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+SVGとBaseOnlyのalt<ruby>投影<rt>とうえい</rt></ruby>は、<ruby>正確<rt>せいかく</rt></ruby>なpage<ruby>番号<rt>ばんごう</rt></ruby>とMemberIdへ<ruby>対応<rt>たいおう</rt></ruby>させる。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+SVG inputs and BaseOnly alt projections are bound to exact page indices and MemberIds\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>同<rt>おな</rt></ruby>じasset IDやdocument digestを<ruby>持<rt>も</rt></ruby>つ<ruby>別<rt>べつ</rt></ruby>page・memberは、そのbyte<ruby>列<rt>れつ</rt></ruby>への<ruby>権限<rt>けんげん</rt></ruby>を<ruby>得<rt>え</rt></ruby>ない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Equal asset IDs or document digests in another page or member grant no access to those bytes\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>不変<rt>ふへん</rt></ruby>の<ruby>全<rt>ぜん</rt></ruby>namespaceとPage・Relative linkを<ruby>再検査<rt>さいけんさ</rt></ruby>し、<ruby>共有<rt>きょうゆう</rt></ruby>codec・SourceAdmission・Budgetの<ruby>下<rt>もと</rt></ruby>でSVGとaltを<ruby>検証<rt>けんしょう</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Every immutable namespace and Page or Relative link is revalidated with the shared codec\, SourceAdmission and cumulative Budget before SVG and alt preparation\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+pages\:\:renderは<ruby>従来<rt>じゅうらい</rt></ruby>どおり<ruby>実際<rt>じっさい</rt></ruby>に<ruby>出力<rt>しゅつりょく</rt></ruby>された<ruby>参照先<rt>さんしょうさき</rt></ruby>anchorを<ruby>検査<rt>けんさ</rt></ruby>し、guest<ruby>内部<rt>ないぶ</rt></ruby>のCodeを<ruby>新<rt>あら</rt></ruby>たに<ruby>許可<rt>きょか</rt></ruby>しない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The existing pages\:\:render still checks actually emitted target anchors\, and guest\-owned Code gains no new permission\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>既存<rt>きそん</rt></ruby>のasset\-free<ruby>経路<rt>けいろ</rt></ruby>とCLIは<ruby>変更<rt>へんこう</rt></ruby>しない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Existing asset\-free entries and CLIs remain unchanged\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>外部<rt>がいぶ</rt></ruby>SVGのartifact route・<ruby>梱包<rt>こんぽう</rt></ruby>、<ruby>型付<rt>かたつ</rt></ruby>きSentenceのPageSet hostへの<ruby>接続<rt>せつぞく</rt></ruby>、portable proofはこのAPIの<ruby>対象外<rt>たいしょうがい</rt></ruby>である。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+External SVG artifact routing and packaging\, typed Sentence PageSet host integration and portable proof remain outside this API\.
+
+</div>
+
+</div>
+
+</div>
+
 <a name="n-636f64655f686967686c69676874"></a>
 
 ## 埋め込みコードの共有highlight
@@ -96,7 +244,7 @@ Code装飾のDOM IdはDocの意味anchorではない。言語選択で非表示�
 
 本文、Code、参照、markup検査、書出しが完了するまで出力を公開しない。adapterが停止後に別のエラーを返してもBudgetのStoppedを優先する。source欠落・別ページのguest・不正markup・表示されない参照先は成功や部分成果物にしない。
 
-native APIはページごとのforeign placementを返す。hostのexportは文書の元情報をmanifestに保持するが、この合成を公開portable Code操作、reader\-fact対応、runtime受入の完了へ読み替えない。PagesのImage・SVG描画と、明示選択していないforeignは未対応である。通常hostのMath表示は次の合成経路で扱う。
+native APIはページごとのforeign placementを返す。hostのexportは文書の元情報をmanifestに保持するが、この合成を公開portable Code操作、reader\-fact対応、runtime受入の完了へ読み替えない。既存CLIのPagesのImage・SVG描画と、明示選択していないforeignは未対応である。通常hostのMath表示は次の合成経路で扱う。
 
 <a name="n-6d6174685f636f6d706f736974696f6e"></a>
 

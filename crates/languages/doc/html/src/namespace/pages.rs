@@ -1,6 +1,7 @@
 //! Display preparation for explicitly adopted namespaces in a whole PageSet.
 //! The caller owns Sentence selection; this module adds no language dependency.
 use super::*;
+pub mod assets;
 use crate::namespace::display::PreparedDisplayNamespace;
 use nepl3_doc_core::pages::{PageDestination, PageSet, namespace as routing};
 use nepl3_doc_core::prepare::DocRequirement;
@@ -67,38 +68,7 @@ pub fn prepare<'a, C: FoundationValueCodec>(
             let plan = checked
                 .member_plan(page as u64, member)
                 .ok_or(PreparationError::InternalShape)?;
-            let mut links = Vec::new();
-            while let Some((link, rest)) = pending_links.split_first() {
-                budget.charge(Resource::Work, 1)?;
-                if link.site.page != page as u64 || link.site.member != member {
-                    break;
-                }
-                let target = match link.target {
-                    PageDestination::Page { index } => {
-                        &set.pages[index as usize].registration.route
-                    }
-                    PageDestination::File { index } => {
-                        &set.files[index as usize].registration.route
-                    }
-                };
-                build::push(
-                    &mut links,
-                    (
-                        link.site.node,
-                        HtmlHref::BetweenArtifacts {
-                            source: build::copy(&set.pages[page].registration.route, budget)?,
-                            target: build::copy(target, budget)?,
-                            fragment: link
-                                .fragment
-                                .as_ref()
-                                .map(|name| build::hex_id(name, budget))
-                                .transpose()?,
-                        },
-                    ),
-                    budget,
-                )?;
-                pending_links = rest;
-            }
+            let mut links = member_links(set, page, member, &mut pending_links, budget)?;
             for (index, requirement) in plan.requirements.iter().enumerate() {
                 budget.charge(Resource::Work, 1)?;
                 match requirement {
@@ -162,6 +132,45 @@ pub fn prepare<'a, C: FoundationValueCodec>(
     }
     budget.poll()?;
     Ok(PreparedPages { set, pages })
+}
+
+// Shared exact-route materialization: callers must freshly resolve this set.
+fn member_links(
+    set: &PageSet,
+    page: usize,
+    member: MemberId,
+    pending_links: &mut &[routing::Link],
+    budget: &mut Budget,
+) -> Result<Vec<(u64, HtmlHref)>, StopReason> {
+    let mut links = Vec::new();
+    while let Some((link, rest)) = (*pending_links).split_first() {
+        budget.charge(Resource::Work, 1)?;
+        if link.site.page != page as u64 || link.site.member != member {
+            break;
+        }
+        let target = match link.target {
+            PageDestination::Page { index } => &set.pages[index as usize].registration.route,
+            PageDestination::File { index } => &set.files[index as usize].registration.route,
+        };
+        build::push(
+            &mut links,
+            (
+                link.site.node,
+                HtmlHref::BetweenArtifacts {
+                    source: build::copy(&set.pages[page].registration.route, budget)?,
+                    target: build::copy(target, budget)?,
+                    fragment: link
+                        .fragment
+                        .as_ref()
+                        .map(|name| build::hex_id(name, budget))
+                        .transpose()?,
+                },
+            ),
+            budget,
+        )?;
+        *pending_links = rest;
+    }
+    Ok(links)
 }
 
 #[derive(Debug)]
