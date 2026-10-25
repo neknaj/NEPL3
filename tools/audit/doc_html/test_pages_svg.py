@@ -48,8 +48,8 @@ class CorpusTests(unittest.TestCase):
         ):
             with self.subTest(bad=bad[:90]), tempfile.TemporaryDirectory() as temporary:
                 with self.assertRaises(ValueError):
-                    materialize(bad, Path(temporary) / "packages")
+                    _ = materialize(bad, Path(temporary) / "packages")
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

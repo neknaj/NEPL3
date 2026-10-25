@@ -4,13 +4,8 @@ import hashlib
 import json
 import re
 import sys
-from playwright.sync_api import Route, expect, sync_playwright
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from tools.serialization.json import decode, object_value, array, string, integer
-
-
-def block_network(route: Route) -> None:
-    route.abort()
 
 
 def materialize(corpus: bytes, root: Path) -> list[tuple[str, Path]]:
@@ -64,6 +59,11 @@ def materialize(corpus: bytes, root: Path) -> list[tuple[str, Path]]:
 
 
 def main() -> None:
+    from playwright.sync_api import Route, expect, sync_playwright
+
+    def block_network(route: Route) -> None:
+        route.abort()
+
     if len(sys.argv) != 3:
         raise ValueError("pages_svg.py CORPUS_LOG NEW_OUTPUT_DIRECTORY")
     packages = materialize(Path(sys.argv[1]).read_bytes(), Path(sys.argv[2]).resolve())
@@ -83,7 +83,8 @@ def main() -> None:
                                 for name, intrinsic_width, height, groups in (("a", 100, 50, 1), ("b", 400, 80, 1)):
                                     expect(page.locator(".nepl-image-group")).to_have_count(groups)
                                     expect(page.locator("script")).to_have_count(0)
-                                    measurements: object = page.evaluate("""([width, height]) => {
+                                    measurements: object = page.evaluate(  # pyright: ignore[reportAny]
+                                        """([width, height]) => {
                                       const csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]').content;
                                       if (!csp.includes('img-src data:;')) throw Error('Missing embedded-image CSP');
                                       for (const group of document.querySelectorAll('.nepl-image-group')) {
@@ -105,7 +106,7 @@ def main() -> None:
                                       if (!document.querySelector('math')) throw Error('Missing MathML');
                                       if (document.documentElement.scrollWidth > innerWidth + 1) throw Error('Horizontal overflow');
                                       return 'passed';
-                                    }""", [intrinsic_width, height])  # pyright: ignore[reportAny]
+                                    }""", [intrinsic_width, height])
                                     if measurements != "passed":
                                         raise AssertionError("Unexpected measurements")
                                     results.append({"engine": implementation.name, "mode": mode, "theme": theme,
