@@ -1182,7 +1182,49 @@ body
       cons sentence cons ruby text "規則" text "きそく" cons text "は " cons link external "https://github.github.com/gfm/#tables-extension-" concat cons text "GFMの" cons ruby text "表" text "ひょう" nil cons text " とlist/task listの" cons ruby text "契約" text "けいやく" cons text "に" cons ruby text "従" text "したが" cons text "い、" cons ruby text "別" text "べつ" cons text "parserで" cons ruby text "構造" text "こうぞう" cons text "・" cons ruby text "文字列" text "もじれつ" cons text "・checkbox・" cons ruby text "開始値" text "かいしち" cons text "を" cons ruby text "検査" text "けんさ" cons text "する。" nil
       nil
     cons paragraph
-      cons "このprofileはParallel、[画像/がぞう]、[参照/さんしょう]、inline Anchorを[扱/あつか]わない。"
+      cons parallel
+        cons variant ja "[注釈付/ちゅうしゃくつ]き・[脚注/きゃくちゅう]Markdownは、Article・Sectionのbodyに[置/お]かれたParagraphのParallelを[全/ぜん]variant[表示/ひょうじ]として[投影/とうえい]する。"
+        cons variant en "Annotated and footnotes Markdown project Parallel in Paragraphs directly within Article or Section bodies as an all-variant view."
+        nil
+      cons parallel
+        cons variant ja "[元/もと]の[段落/だんらく]と[各/かく]Parallel groupを[固定/こてい]divで[保持/ほじ]し、variantごとに[元/もと]のlang[値/ち]と[可視/かし]の[言語/げんご]labelを[出力/しゅつりょく]する。"
+        cons variant en "Fixed div containers retain the authored paragraph and each Parallel group, with the original lang value and a visible language label for every variant."
+        nil
+      cons parallel
+        cons variant ja "[宣言順/せんげんじゅん]と[大文字/おおもじ]・[小文字/こもじ]を[保持/ほじ]し、localeによる[選択/せんたく]、Columns・Singleへの[切替/きりかえ]、[翻訳/ほんやく]の[省略/しょうりゃく]を[行/おこな]わない。"
+        cons variant en "Declaration order and language-tag casing are preserved; this profile neither selects by locale nor switches to Columns or Single nor omits translations."
+        nil
+      cons parallel
+        cons variant ja "langはHTMLと[同/おな]じ[有限/ゆうげん]のRFC 5646[構文検査/こうぶんけんさ]を[通/とお]すが、registryでの[有効性/ゆうこうせい]を[保証/ほしょう]しない。"
+        cons variant en "Language tags pass the same bounded RFC 5646 syntax check as HTML; registry validity is not guaranteed."
+        nil
+      cons parallel
+        cons variant ja "[連続/れんぞく]する[通常/つうじょう]Sentenceの[文字列/もじれつ]は[従来/じゅうらい]どおり[連結/れんけつ]し、Parallelとの[境界/きょうかい]を[越/こ]えて[文/ぶん]を[平坦化/へいたんか]したり[外端/がいたん]の[空白/くうはく]を[削/けず]ったりしない。"
+        cons variant en "Consecutive ordinary Sentences retain their existing exact concatenation; sentences are not flattened across Parallel boundaries and outer whitespace is not trimmed."
+        nil
+      cons parallel
+        cons variant ja "[空/から]のinlinesを[持/も]つ[明示的/めいじてき]な[空/から]Sentence variantも、[言語/げんご]labelとcontainerを[残/のこ]す。"
+        cons variant en "An explicitly empty variant Sentence with no inlines retains its language label and container."
+        nil
+      cons parallel
+        cons variant ja "Ruby・Anno・Code・Link・Mathは[既存/きそん]のinline[処理/しょり]と[共有/きょうゆう]Budgetを[使/つか]い、[不正/ふせい]variantや[停止/ていし]を[部分成果物/ぶぶんせいかぶつ]で[覆/おお]わない。"
+        cons variant en "Ruby, Anno, Code, Link and Math reuse the existing inline processing and shared Budget; invalid variants or stops produce no partial artifact."
+        nil
+      cons parallel
+        cons variant ja "list[内/ない]のParallelは[引/ひ]き[続/つづ]きUnsupportedであり、[空/から]の[通常/つうじょう][段落/だんらく]や[空白/くうはく]の[黙殺/もくさつ]を[許/ゆる]す[変更/へんこう]ではない。"
+        cons variant en "Parallel inside lists remains Unsupported; this does not permit empty ordinary paragraphs or silently discarded whitespace."
+        nil
+      cons parallel
+        cons variant ja "[生成/せいせい]されたMarkdownとCommonMark HTMLのgroup[境界/きょうかい]を[検証/けんしょう]するが、[任意/にんい]platformでのclass[保持/ほじ]・[表示/ひょうじ]・accessibilityやDoc roundtripの[証明/しょうめい]ではない。"
+        cons variant en "Group boundaries are verified in generated Markdown and CommonMark HTML, not as proof of class preservation, presentation, accessibility or Doc roundtrip on arbitrary platforms."
+        nil
+      cons parallel
+        cons variant ja "[既存/きそん]のplain Markdown[制限/せいげん]と、Parallelを[含/ふく]まない[成功/せいこう][経路/けいろ]のbyte[列/れつ]・[予算計上/よさんけいじょう]は[維持/いじ]する。"
+        cons variant en "The restricted plain Markdown profile and successful non-Parallel output bytes and accounting remain unchanged."
+        nil
+      nil
+    cons paragraph
+      cons "このprofileは[画像/がぞう]、[参照/さんしょう]、inline Anchorを[扱/あつか]わない。"
       cons "Relative/Page link、asset、foreignの[要求/ようきゅう]を[含/ふく]む[入力/にゅうりょく]はNeedsResolutionとし、[周辺/しゅうへん]fileの[探索/たんさく]や[仮/かり]のPageSet[登録/とうろく]で[成功/せいこう]させない。"
       cons "Doc/HTML[側/がわ]の[対応範囲/たいおうはんい]を[狭/せば]めるものではない。"
       nil

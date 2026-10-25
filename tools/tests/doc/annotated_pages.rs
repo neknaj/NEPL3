@@ -620,7 +620,7 @@ fn annotated_page_set_rejects_partial_render_and_ambiguous_registration() -> Res
         "b",
         "b.md",
         "b.md",
-        r#"article en "B" body cons paragraph cons parallel cons variant en "B" cons variant ja "B" nil nil nil"#,
+        r#"article en "B" body cons table cons default nil none cons row cons "body" nil nil nil"#,
     )?;
     let mut set = PageSet {
         pages: vec![a, b],
@@ -656,6 +656,53 @@ fn annotated_page_set_rejects_partial_render_and_ambiguous_registration() -> Res
     assert!(
         matches!(failure, Error::Invalid(ref s) if s.contains("Collision")),
         "{failure:?}"
+    );
+    Ok(())
+}
+
+#[test]
+fn annotated_parallel_pages_retain_both_variants_and_resolved_links() -> Result<(), String> {
+    let c = compiled()?;
+    let a = page(
+        &c,
+        "a",
+        "a.nepld",
+        "nested/a.md",
+        r#"article en "A" body cons paragraph cons parallel cons variant en sentence cons link page "b" some "target" text "English link" nil cons variant ja sentence cons link page "b" some "target" text "日本語リンク" nil nil nil nil"#,
+    )?;
+    let b = page(
+        &c,
+        "b",
+        "b.nepld",
+        "b.md",
+        r#"article en "B" body cons section target "Target" body nil nil"#,
+    )?;
+    let set = PageSet {
+        pages: vec![a, b],
+        files: vec![],
+    };
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let artifact = render(
+        &set,
+        &c.doc.registry,
+        &mut codec,
+        &mut budget(),
+        &[&[], &[]],
+    )
+    .map_err(err)?;
+    let md = &artifact.pages[0].markdown;
+    assert!(md.contains("lang=\"en\"") && md.contains("lang=\"ja\""));
+    let links = Parser::new(md)
+        .filter_map(|event| match event {
+            Event::Start(Tag::Link { dest_url, .. }) => Some(dest_url.into_string()),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        links,
+        vec!["../b.md#n-746172676574", "../b.md#n-746172676574"]
     );
     Ok(())
 }
