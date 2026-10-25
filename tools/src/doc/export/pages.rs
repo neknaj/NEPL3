@@ -11,6 +11,7 @@ pub use display::{Options as DisplayOptions, input::Selection as DisplaySelectio
 pub mod interactive;
 mod render;
 mod sentence;
+pub mod svg;
 use serde::Deserialize;
 use std::{collections::BTreeMap, io::Write};
 pub mod resources;

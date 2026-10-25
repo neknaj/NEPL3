@@ -498,3 +498,12 @@ fn planned_pages_svg_accepts_asset_free_pages_without_root_bindings() -> Result<
     );
     Ok(())
 }
+
+#[path = "svg_host/packaging.rs"]
+mod packaging;
+
+#[path = "svg_host/packaging_limits.rs"]
+mod packaging_limits;
+
+#[path = "svg_host/packaging_failures.rs"]
+mod packaging_failures;

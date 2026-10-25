@@ -609,7 +609,7 @@
   ],
   "output_limits": {
     "source_bytes": 10000000,
-    "work": 3900000000,
+    "work": 4000000000,
     "depth": 1000,
     "nodes": 72000000,
     "allocation_units": 4000000000,

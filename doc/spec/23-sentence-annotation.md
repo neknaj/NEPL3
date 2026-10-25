@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 cc2b4b8048ca7e354811efe77a6272f03628729f24b4e19aa08dd1042fec2a7b; alias input SHA-256 800c58010fe3ca5fb3c10997a3b7908fefb312ba31edec1c0c8cb409f1bb0b29; page input SHA-256 4905a1a362fe9fd6144fa277d3a0012f6a8b6c562fad8423d524e3d6255431d0. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 b218a5bf9d4436d65746e9507a8d4914449438c7ce7e789b581465b03474d67a; alias input SHA-256 d47b4895187bb9aa1fedc57c365f3f52b22320b1a4ad5d859b06403b7520713e; page input SHA-256 25df4900d0524bf09e21394ea49a564f01abf2ae3fc62742269280255ab60637. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="23-構造化文章と対象付き注釈への是正"></a>
 
@@ -633,6 +633,216 @@ CLI・file capture・CSS\/CSPを<ruby>含<rt>ふく</rt></ruby>むshell・<ruby>
 **en**
 
 CLI inputs\, file capture\, CSS\/CSP shells\, external SVG packaging\, retained\-job resume and portable proof integration remain separate work\.
+
+</div>
+
+</div>
+
+</div>
+
+<a name="n-7061636b616765645061676573537667"></a>
+
+<a name="embedded-svg-pages-html-packaging"></a>
+
+### <ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みSVGのPageSet HTML<ruby>包装<rt>ほうそう</rt></ruby> \/ Embedded\-SVG PageSet HTML packaging
+
+<div class="nepl-paragraph">
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+pages\:\:svg\:\:render\_embeddedは、<ruby>外部<rt>がいぶ</rt></ruby>で<ruby>保持<rt>ほじ</rt></ruby>したPageSet・RenderOptions・role Plansから、root\-only SVG fragment hostを<ruby>呼<rt>よ</rt></ruby>び<ruby>出<rt>だ</rt></ruby>してHTMLとCSSを<ruby>構成<rt>こうせい</rt></ruby>するnative<ruby>入口<rt>いりぐち</rt></ruby>である。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+pages\:\:svg\:\:render\_embedded is a native entry that invokes the root\-only SVG fragment host using externally retained PageSet\, RenderOptions and role Plans\, then constructs HTML and CSS\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>結果<rt>けっか</rt></ruby>はfragment hostのResolutions・SentenceRecord・alt Projectionsをそのまま<ruby>保持<rt>ほじ</rt></ruby>するが、<ruby>呼出側<rt>よびだしがわ</rt></ruby>のPageSetとSelectionsの<ruby>借用寿命<rt>しゃくようじゅみょう</rt></ruby>に<ruby>依存<rt>いぞん</rt></ruby>し、<ruby>自己完結<rt>じこかんけつ</rt></ruby>した<ruby>復元可能<rt>ふくげんかのう</rt></ruby>なcaptureではない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The result retains the fragment host\'s Resolutions\, SentenceRecords and alt Projections unchanged\, but depends on the caller\'s PageSet and Selection lifetimes and is not a self\-contained restorable capture\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+SVGはdata URLへ<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>み、<ruby>既存<rt>きそん</rt></ruby>shellにimg\-src data\:のCSPを<ruby>設定<rt>せってい</rt></ruby>し、root<ruby>画像<rt>がぞう</rt></ruby>の<ruby>寸法<rt>すんぽう</rt></ruby>からCSSを<ruby>生成<rt>せいせい</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+SVG is embedded in data URLs\, the existing shell receives an img\-src data\: CSP\, and CSS is generated from root image dimensions\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+CSS<ruby>名<rt>めい</rt></ruby>は<ruby>常<rt>つね</rt></ruby>にpage routeのSHA\-256を<ruby>含<rt>ふく</rt></ruby>み、<ruby>同<rt>おな</rt></ruby>じdirectoryの<ruby>異<rt>こと</rt></ruby>なる<ruby>寸法<rt>すんぽう</rt></ruby>のpageも<ruby>区別<rt>くべつ</rt></ruby>し、HTML・CSS・<ruby>登録<rt>とうろく</rt></ruby>file・manifest\.jsonの<ruby>衝突<rt>しょうとつ</rt></ruby>を<ruby>拒否<rt>きょひ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+CSS names always include the SHA\-256 of the page route\, separating different image dimensions in one directory\; collisions among HTML\, CSS\, registered files and manifest\.json are rejected\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+input identityはsvg\-source\/1 domainのcanonical PageSet digestと、root\-svg\-embedded\/1 domain・<ruby>順序付<rt>じゅんじょつ</rt></ruby>きpage bindings・asset ID・raw SVGのbyte<ruby>長<rt>ちょう</rt></ruby>とSHA\-256を<ruby>束縛<rt>そくばく</rt></ruby>し、<ruby>件数<rt>けんすう</rt></ruby>・<ruby>長<rt>なが</rt></ruby>さ・page<ruby>番号<rt>ばんごう</rt></ruby>はlittle\-endian u64で<ruby>区切<rt>くぎ</rt></ruby>る。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The input identity binds the canonical PageSet digest in the svg\-source\/1 domain\, the root\-svg\-embedded\/1 domain\, ordered page bindings\, asset IDs\, and raw SVG byte lengths and SHA\-256 digests\; counts\, lengths and page numbers use little\-endian u64 delimiters\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+これらのdomainはnepl3\.local\-doc\-pages\.を<ruby>接頭辞<rt>せっとうじ</rt></ruby>としNULで<ruby>終端<rt>しゅうたん</rt></ruby>し、さらにroot\-svg\-display\/1 domainでRows・Columns・Singleと<ruby>要求言語<rt>ようきゅうげんご</rt></ruby>・<ruby>順序付<rt>じゅんじょつ</rt></ruby>きfallbackを<ruby>束縛<rt>そくばく</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+These domains have the nepl3\.local\-doc\-pages\. prefix and a terminating NUL\; the root\-svg\-display\/1 domain additionally binds Rows\, Columns or Single and its requested language and ordered fallbacks\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>空<rt>から</rt></ruby>bindingや<ruby>登録順<rt>とうろくじゅん</rt></ruby>もidentityに<ruby>影響<rt>えいきょう</rt></ruby>し、<ruby>非表示<rt>ひひょうじ</rt></ruby>の<ruby>入力<rt>にゅうりょく</rt></ruby>を<ruby>省<rt>はぶ</rt></ruby>かず、<ruby>未使用<rt>みしよう</rt></ruby>assetの<ruby>拒否<rt>きょひ</rt></ruby>は<ruby>描画器<rt>びょうがき</rt></ruby>が<ruby>別<rt>べつ</rt></ruby>に<ruby>行<rt>おこな</rt></ruby>う。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Empty bindings and registration order affect identity\, hidden inputs are not omitted\, and the renderer separately rejects unused assets\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+このidentityはcallbackの<ruby>実装<rt>じっそう</rt></ruby>や<ruby>出力<rt>しゅつりょく</rt></ruby>を<ruby>証明<rt>しょうめい</rt></ruby>せず、nepl3\.local\-doc\-pages\.root\-svg\-package\/1<ruby>形式<rt>けいしき</rt></ruby>のreceiptが<ruby>自身<rt>じしん</rt></ruby>を<ruby>除<rt>のぞ</rt></ruby>く<ruby>全<rt>ぜん</rt></ruby>payload fileのbyte<ruby>長<rt>ちょう</rt></ruby>とdigestを<ruby>記録<rt>きろく</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+This identity proves neither callback implementation nor output\; the nepl3\.local\-doc\-pages\.root\-svg\-package\/1 receipt records the byte length and digest of every payload file except the receipt itself\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>同<rt>おな</rt></ruby>じ<ruby>累積<rt>るいせき</rt></ruby>Budgetでshell・CSS・<ruby>識別情報<rt>しきべつじょうほう</rt></ruby>・receiptを<ruby>処理<rt>しょり</rt></ruby>し、receipt<ruby>内<rt>ない</rt></ruby>のpre\_receipt\_usageはreceipt<ruby>自身<rt>じしん</rt></ruby>の<ruby>直列化<rt>ちょくれつか</rt></ruby>より<ruby>前<rt>まえ</rt></ruby>の<ruby>観測値<rt>かんそくち</rt></ruby>であり、<ruby>成功直前<rt>せいこうちょくぜん</rt></ruby>にも<ruby>停止<rt>ていし</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+One cumulative Budget covers shells\, CSS\, identity data and the receipt\; pre\_receipt\_usage is observed before serializing the receipt itself\, and a final stop check precedes success\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>包装器<rt>ほうそうき</rt></ruby>はKaTeX<ruby>変換<rt>へんかん</rt></ruby>を<ruby>実行<rt>じっこう</rt></ruby>せず、<ruby>渡<rt>わた</rt></ruby>された<ruby>表示<rt>ひょうじ</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>するだけであり、parse・CLI・<ruby>外部<rt>がいぶ</rt></ruby>SVG<ruby>梱包<rt>こんぽう</rt></ruby>・<ruby>保持<rt>ほじ</rt></ruby>jobのretry・portable proofは<ruby>追加<rt>ついか</rt></ruby>しない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The packager does not execute KaTeX conversion and only preserves the supplied display\; it adds no parsing\, CLI\, external SVG packaging\, retained\-job retry or portable proof\.
 
 </div>
 
