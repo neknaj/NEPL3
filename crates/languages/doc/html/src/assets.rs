@@ -49,7 +49,15 @@ pub fn prepare_svg<'a, C: FoundationValueCodec>(
     budget: &mut Budget,
 ) -> Result<PreparedSvgArticle<'a>, AssetError<'a, C::Error>> {
     prepare_svg_impl(
-        document, options, inputs, mode, registry, codec, budget, None,
+        document,
+        options,
+        inputs,
+        mode,
+        registry,
+        codec,
+        budget,
+        None,
+        &[],
     )
     .map(PreparedSvgArticle)
 }
@@ -76,6 +84,7 @@ pub fn prepare_svg_code<'a, C: FoundationValueCodec>(
         codec,
         budget,
         Some(false),
+        &[],
     )
     .map(PreparedSvgCodeArticle)
 }
@@ -100,9 +109,40 @@ pub fn prepare_svg_display<'a, C: FoundationValueCodec>(
         codec,
         budget,
         Some(true),
+        &[],
     )
     .map(PreparedSvgDisplayArticle)
 }
+/// Explicit host-supplied BaseOnly alt projections. Each resolution is checked
+/// against this document and its guest identity by Doc plain-text projection.
+/// Text is data, not a portable semantic proof. The host must project the actual
+/// selected guest under the same cumulative Budget and SourceAdmission. Alt is
+/// never passed to the HTML display callback or adopted into its namespace.
+#[allow(clippy::too_many_arguments)]
+pub fn prepare_svg_display_with_text<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    options: &'a RenderOptions,
+    inputs: &[SvgInput<'_>],
+    mode: SvgMode,
+    resolved: &[text::ResolvedInlineText],
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<PreparedSvgDisplayArticle<'a>, AssetError<'a, C::Error>> {
+    prepare_svg_impl(
+        document,
+        options,
+        inputs,
+        mode,
+        registry,
+        codec,
+        budget,
+        Some(true),
+        resolved,
+    )
+    .map(PreparedSvgDisplayArticle)
+}
+
 pub fn render_svg_display<E>(
     prepared: &PreparedSvgDisplayArticle<'_>,
     adapter: &mut impl FnMut(&DocEmbedView<'_>, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
@@ -127,6 +167,7 @@ fn prepare_svg_impl<'a, C: FoundationValueCodec>(
     codec: &mut C,
     budget: &mut Budget,
     display: Option<bool>,
+    resolved: &[text::ResolvedInlineText],
 ) -> Result<crate::prepare::PreparedRendering<'a>, AssetError<'a, C::Error>> {
     let plan = prepare::inspect(document, registry, codec, budget)
         .map_err(|e| AssetError::Preparation(LocalPreparationError::Input(e)))?;
@@ -150,6 +191,17 @@ fn prepare_svg_impl<'a, C: FoundationValueCodec>(
         }
         if !used {
             return Err(AssetError::Unused);
+        }
+    }
+    // No supplied text may be silently accepted when there is no alt to check.
+    if !resolved.is_empty() {
+        let mut has_asset = false;
+        for requirement in &plan.requirements {
+            budget.charge(Resource::Work, 1)?;
+            has_asset |= matches!(requirement, prepare::DocRequirement::Asset { .. });
+        }
+        if !has_asset {
+            return Err(AssetError::Alt);
         }
     }
     let mut images = Vec::new();
@@ -191,7 +243,7 @@ fn prepare_svg_impl<'a, C: FoundationValueCodec>(
             document,
             alt,
             text::AnnotationPolicy::BaseOnly,
-            &[],
+            resolved,
             registry,
             codec,
             budget,

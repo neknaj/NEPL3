@@ -1036,7 +1036,7 @@ body
         cons "既存prepareの返却型・選択規則は変えない。"
         cons " このhostはHTML出力基盤への段階接続であり、単体CLIと入れ子MathのKaTeX優先変換への接続は後述のexport層が担当する。"
         cons "PageSetへのnative組込みは後述のexport層が担当する。"
-        cons "単体Article CLIのasset-free表示選択は後述のexport層で接続する。画像altを含む表示選択、portable成果物の認証、旧Doc Inlineの撤去は未完了である。"
+        cons "単体Article CLIのasset-free表示選択は後述のexport層で接続する。画像altのnative text投影は後述の限定入口で接続する。画像altを含むexport全体の表示選択、portable成果物の認証、旧Doc Inlineの撤去は未完了である。"
         nil
       nil
     cons section cli "Doc CLIのSentence[選択/せんたく]"
@@ -1062,7 +1062,7 @@ body
         cons "Sentenceの所有元・構造出現・描画記録をLocalDocumentへ保持し、原文Docと共に返す。"
         cons "Sentenceを含まない既存SVG経路は維持するが、SentenceとAssetの組合せを黙って別経路へ落とさず未対応として返す。"
         cons " CLIでの単体Article対応からPageSetのSentence対応を推定しない。"
-        cons "PageSetは後述の専用namespace経路で接続する。単体Article CLIのasset-free Single選択と画像alt選択は区別し、後者は未完了である。"
+        cons "PageSetは後述の専用namespace経路で接続する。単体Article CLIのasset-free Single選択と画像alt選択は区別し、後者のexport接続は未完了であり、native text投影だけを後述する。"
         cons "既存Math注釈内の入れ子数式の生成はPageSetでも共通の数式収集経路を使う。"
         nil
       cons paragraph
@@ -1166,6 +1166,24 @@ body
         cons "停止後のretained再開は準備済み文書を保全し、描画だけを再試行する。"
         cons "名前エラーには所有ページのindexと登録IDを付す。"
         cons "全ページが生成・検証・serializeされるまで部分出力を公開しない。"
+        nil
+      nil
+    cons section svgAlt "native SVGのSentence[代替文/だいたいぶん][投影/とうえい]"
+    body
+      cons paragraph
+        cons "開発hostのannotations::alt::prepareはImageとInlineImageのalt slotにある独立Sentenceだけを選択し、実際のforeign closureをlowerしてBaseOnlyのplain textを作る。"
+        cons "全variantのassetを準備する既存SVG契約に従い、表示optionsでalt所有元を省略しない。"
+        cons "RubyのreadingとAnnoのnotesは出力せず、選択されたforeign textが未解決ならエラーを返し、空文字やHTMLで代替しない。"
+        cons "元のDocと各SentenceSyntaxのSource・Origin所有を保ち、文書入場・identity・lower・検査・投影を同じBudgetとSourceAdmissionで行う。"
+        cons "共有guestは一度だけ投影するが、呼出元depthに最深の構造所有depthを加えて検査する。"
+        nil
+      cons paragraph
+        cons "native prepare_svg_display_with_textは明示的なResolvedInlineTextを受け取り、Doc plain textでdocument digest・guest digest・EmbedRef・重複を検査する。"
+        cons "assetがない場合の非空resolutionも拒否する。"
+        cons "供給textはデータであり、guestの意味を認証するportable証拠ではない。"
+        cons "altはHTML callbackやnamespaceへ採用せず、captionの描画とは分離する。"
+        cons "既存SVG入口はresolutionなしのwrapperとして保持する。"
+        cons "このnative接続はSentenceとassetを組み合わせた単体CLI・PageSet export、画像関連のnamespace表示選択、portable proof、プロセス終了後の復元を完成させない。"
         nil
       nil
     cons section visibility "HTML[挿入対象/そうにゅうたいしょう]Sentence[出現/しゅつげん]の[構造/こうぞう]inventory"
