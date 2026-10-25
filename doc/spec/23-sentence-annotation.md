@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 a39ac8bca9e270950c308589cff8795c0174d2c7c56d660579e5b08c1232f131; alias input SHA-256 800c58010fe3ca5fb3c10997a3b7908fefb312ba31edec1c0c8cb409f1bb0b29; page input SHA-256 6a86b33c982276bb7be29790d3e1410758dc205046f3ea95887bcc56f625eaf9. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 3895c7e01e6e1a4e6c8b86bea84d0a2fa134545df8037f4188ffd1358acb1b2e; alias input SHA-256 800c58010fe3ca5fb3c10997a3b7908fefb312ba31edec1c0c8cb409f1bb0b29; page input SHA-256 1758c6c0aa64690372aa395180032b9faa08b99a581ffd8efe36876a74cde8fd. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="23-構造化文章と対象付き注釈への是正"></a>
 
@@ -324,7 +324,15 @@ Hosts project actual selected guest text under that same cumulative Budget and S
 
 The additive article display planner borrows the exact immutable structural Selection and requested RenderOptions\. Its adoption list contains every non\-alt Sentence occurrence across all variants\; its insertion list contains only occurrences selected for insertion by the requested Rows\, Columns or Single display\. Both lists preserve original SentenceOccurrenceIds and match structural index\, node\, depth and owner EmbedRef against the retained Selection\. An owner shared by alt and title\, body or caption remains selected at each non\-alt occurrence\; repeated owners are not collapsed into one namespace occurrence\. Alt\-only and hidden owners remain retained and validated by structural collection\, even when neither list inserts them\.
 
-The planner charges one cumulative Budget\, observes caller depth\, preserves sticky stops and returns no partial plan on failure\. It neither lowers owners again nor certifies guest meaning\, source admission for a new operation\, resolved labels\, asset availability or complete HTML\. Consumers must resolve adoption with the same Selection and enforce exact insertion and member consumption before validating final output\. This prerequisite does not change existing render Sessions\, automatic adoption\, PageSet behavior\, output identities or CLI asset guards\; role\-aware host integration remains unfinished\.
+The planner charges one cumulative Budget\, observes caller depth\, preserves sticky stops and returns no partial plan on failure\. It neither lowers owners again nor certifies guest meaning\, source admission for a new operation\, resolved labels\, asset availability or complete HTML\. Consumers must resolve adoption with the same Selection and enforce exact insertion and member consumption before validating final output\. This prerequisite does not change existing render Sessions\, automatic adoption\, PageSet behavior\, output identities or CLI asset guards\; general asset\-aware host integration remains unfinished\.
+
+<a name="n-706c616e6e656453657373696f6e"></a>
+
+### Native planned Sentence insertion session
+
+The additive render\_planned entry resolves the exact role plan and constructs its insertion Session from that same Selection and RenderOptions\. It retains the existing asset\-free display preparation and final Article validation\; SVG and PageSet asset export remain separate work\. Each callback consumes the next original SentenceOccurrenceId while Code and Math placements remain separate from the Sentence sequence\. Rows and Columns require complete consumption of every adopted Doc member even though the selected occurrence list contains gaps\. Single may skip hidden members\, but leftover members of each visible Sentence and missing visible callbacks still fail\.
+
+Owned diagnostics and final Sentence\, Doc and Math placement mappings survive the operation\-local namespace lifetime\. Structural collection\, planning\, resolution and insertion share the caller Budget and SourceAdmission with sticky failures and no partial result\. A private native SVG composition test checks Image and InlineImage alt exclusion\, caption callbacks and foreign placement order\; it does not publish a general SVG host API\. Existing render and PageSet callers retain their previous paths and CLI guards\; accepting a role plan does not establish completed asset\-aware host integration or portable proof\.
 
 <a name="n-7669736962696c697479"></a>
 

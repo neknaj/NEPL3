@@ -399,3 +399,78 @@ fn single_article_trailing_hidden_members_and_shared_budget_remain_checked() -> 
         Ok(())
     })
 }
+
+#[test]
+fn planned_role_session_matches_legacy_asset_free_markup_and_placement() -> Result<(), String> {
+    let compiled = compiled()?;
+    let source = r#"article en Sentence sentence cons document anchor title text "Title" nil body cons paragraph cons parallel cons variant en Sentence sentence cons document anchor english text "English" nil cons variant ja Sentence sentence cons document anchor japanese text "Japanese" nil nil cons code Math frac 1 2 cons Sentence "Tail" nil nil"#;
+    for parallel in [
+        ParallelMode::Rows,
+        ParallelMode::Columns,
+        ParallelMode::Single {
+            language: "en".into(),
+            fallbacks: vec![],
+        },
+        ParallelMode::Single {
+            language: "fr".into(),
+            fallbacks: vec!["ja".into()],
+        },
+    ] {
+        let options = RenderOptions { parallel };
+        with_input_route(true, &compiled, source, "Article", |tree, profile, b, _| {
+            let store = SourceStore::default();
+            let mut admission = SourceAdmission::default();
+            let mut codec =
+                FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
+            let root = nepl3_suite::adapters::sentence::literal::lower(
+                tree.syntax(),
+                &compiled.doc.package.schema,
+                Category::Article,
+                profile.registry(),
+                b,
+                &mut codec,
+            )
+            .map_err(err)?;
+            let mut host = SentenceAnnotationRenderer {
+                registry: profile.registry(),
+                surface: &compiled.others.get(3).ok_or("Sentence")?.schema,
+                math_surface: Some(&compiled.others.first().ok_or("Math")?.schema),
+                doc_surface: Some(&compiled.doc.package.schema),
+                codec: &mut codec,
+            };
+            let selection = article::collect_structural(&root, &mut host, b).map_err(err)?;
+            let mut other =
+                |_: &DocEmbedView<'_>, _: EmbedRef, _: &mut FoundationCodec<'_>, _: &mut Budget| {
+                    Ok::<_, String>(HtmlRequest {
+                        slot: HtmlSlot::Phrasing,
+                        policy: HtmlPolicy { classes: vec![] },
+                        fragment: HtmlFragment {
+                            root: 0,
+                            nodes: vec![HtmlNode::Text {
+                                text: "CODE".into(),
+                            }],
+                        },
+                    })
+                };
+            let legacy =
+                render::render(&selection, &options, &mut host, &mut other, b).map_err(err)?;
+            let plan = article::display::plan(&selection, &options, b).map_err(err)?;
+            let planned = render::render_planned(&plan, &mut host, &mut other, b).map_err(err)?;
+            assert_eq!(
+                legacy.article.fragment.markup,
+                planned.article.fragment.markup
+            );
+            assert_eq!(legacy.article.foreign, planned.article.foreign);
+            assert_eq!(legacy.sentences.len(), planned.sentences.len());
+            for (old, new) in legacy.sentences.iter().zip(&planned.sentences) {
+                assert_eq!(
+                    (old.occurrence, old.owner, old.placement),
+                    (new.occurrence, new.owner, new.placement)
+                );
+                assert_eq!(old.origins, new.origins);
+            }
+            Ok(())
+        })?;
+    }
+    Ok(())
+}

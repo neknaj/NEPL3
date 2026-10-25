@@ -85,7 +85,7 @@ pub fn render<'s, 'a, C: FoundationValueCodec, F>(
         push(&mut adopted, SentenceOccurrenceId(index), b)?;
     }
     let result = namespace::resolve_with(input, &adopted, host, b, |checked, members, host, b| {
-        render_resolved(input, options, checked, members, host, other, b)
+        render_resolved(input, options, checked, members, host, other, b, None)
     });
     b.poll()?;
     let (resolution, (article, sentences)) = match result {
@@ -101,14 +101,58 @@ pub fn render<'s, 'a, C: FoundationValueCodec, F>(
         sentences,
     })
 }
-fn render_resolved<C: FoundationValueCodec, F>(
-    input: &Selection<'_>,
+/// Resolve and consume an explicit occurrence-role plan. This entry still uses
+/// asset-free display preparation; it does not enable general SVG export.
+/// Existing render and PageSet callers retain their historical behavior.
+pub fn render_planned<'s, 'a, C: FoundationValueCodec, F>(
+    plan: &super::display::Plan<'s, 'a>,
+    host: &mut SentenceAnnotationRenderer<'_, C>,
+    other: &mut impl FnMut(&DocEmbedView<'_>, EmbedRef, &mut C, &mut Budget) -> Result<HtmlRequest, F>,
+    b: &mut Budget,
+) -> Result<Rendered<'s, 'a>, Error<C::Error, F>> {
+    b.poll()?;
+    let result = namespace::resolve_with(
+        plan.selection(),
+        plan.adoption(),
+        host,
+        b,
+        |checked, members, host, b| {
+            render_resolved(
+                plan.selection(),
+                plan.options(),
+                checked,
+                members,
+                host,
+                other,
+                b,
+                Some(plan),
+            )
+        },
+    );
+    b.poll()?;
+    let (resolution, (article, sentences)) = match result {
+        Ok(result) => result,
+        Err(namespace::OperationError::Resolve(error)) => {
+            return Err(Error::Resolve(boxed(error, b)?));
+        }
+        Err(namespace::OperationError::Operation(error)) => return Err(error),
+    };
+    Ok(Rendered {
+        resolution,
+        article,
+        sentences,
+    })
+}
+#[allow(clippy::too_many_arguments)]
+fn render_resolved<'s, 'a, C: FoundationValueCodec, F>(
+    input: &'s Selection<'a>,
     options: &RenderOptions,
     checked: &CheckedNamespace<'_, '_>,
     members: namespace::Members<'_>,
     host: &mut SentenceAnnotationRenderer<'_, C>,
     other: &mut impl FnMut(&DocEmbedView<'_>, EmbedRef, &mut C, &mut Budget) -> Result<HtmlRequest, F>,
     b: &mut Budget,
+    plan: Option<&super::display::Plan<'s, 'a>>,
 ) -> Result<
     (
         nepl3_doc_html::RenderedInlineWithForeign,
@@ -141,7 +185,10 @@ fn render_resolved<C: FoundationValueCodec, F>(
                 Err(reason) => Error::Stopped(reason),
             }
         })?;
-    let mut session = Session::for_display(input, options, b)?;
+    let mut session = match plan {
+        Some(plan) => Session::for_plan(plan, b)?,
+        None => Session::for_display(input, options, b)?,
+    };
     let mut adapter = |view: &DocEmbedView<'_>, embed: EmbedRef, b: &mut Budget| {
         session.render_guest(&prepared, members, host, other, view, embed, b)
     };
@@ -168,6 +215,7 @@ pub(crate) struct Session<'s, 'a> {
     next_sentence: usize,
     selected: Option<Vec<SentenceOccurrenceId>>,
     next_member: u64,
+    allow_hidden_members: bool,
     placement: usize,
     records: Vec<SentenceRecord>,
 }
@@ -178,6 +226,7 @@ impl<'s, 'a> Session<'s, 'a> {
             next_sentence: 0,
             selected: None,
             next_member: 1,
+            allow_hidden_members: false,
             placement: 0,
             records: Vec::new(),
         }
@@ -234,6 +283,22 @@ impl<'s, 'a> Session<'s, 'a> {
             return Err(Error::Selection);
         }
         session.selected = Some(selected);
+        session.allow_hidden_members = true;
+        Ok(session)
+    }
+    fn for_plan<E, F>(
+        plan: &super::display::Plan<'s, 'a>,
+        b: &mut Budget,
+    ) -> Result<Self, Error<E, F>> {
+        b.poll()?;
+        let mut session = Self::new(plan.selection());
+        let mut selected = Vec::new();
+        for occurrence in plan.insertion() {
+            push(&mut selected, *occurrence, b)?;
+        }
+        session.selected = Some(selected);
+        session.allow_hidden_members =
+            matches!(plan.options().parallel, ParallelMode::Single { .. });
         Ok(session)
     }
     #[allow(clippy::too_many_arguments)]
@@ -274,7 +339,7 @@ impl<'s, 'a> Session<'s, 'a> {
         if owner.embed() != embed {
             return Err(Error::Selection);
         }
-        if self.selected.is_some() {
+        if self.allow_hidden_members {
             while let Some((origin, _)) = members.guest(MemberId(self.next_member)) {
                 b.charge(Resource::Work, 1)?;
                 if matches!(origin,MemberOrigin::SentenceInline{sentence,..} if sentence.0<occurrence.0)
@@ -379,7 +444,7 @@ impl<'s, 'a> Session<'s, 'a> {
                 .selected
                 .as_ref()
                 .map_or(self.input.sentences().len(), Vec::len)
-            || (self.selected.is_none() && members.guest(MemberId(self.next_member)).is_some())
+            || (!self.allow_hidden_members && members.guest(MemberId(self.next_member)).is_some())
             || self.placement != rendered.foreign.len()
         {
             return Err(Error::Selection);
@@ -421,3 +486,6 @@ impl<'s, 'a> Session<'s, 'a> {
         Ok((rendered, self.records))
     }
 }
+
+#[cfg(test)]
+mod tests;
