@@ -284,3 +284,6 @@ fn unsafe_later_external_link_is_rejected_during_preparation() -> Result<(), Str
     assert!(!called);
     Ok(())
 }
+
+#[path = "pages_namespace/assets.rs"]
+mod assets;

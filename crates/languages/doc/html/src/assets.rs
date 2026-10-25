@@ -191,6 +191,37 @@ pub(crate) fn prepare_svg_plan<'a, C: FoundationValueCodec>(
     resolved: &[text::ResolvedInlineText],
     plan: prepare::DocPreparationPlan,
 ) -> Result<crate::prepare::PreparedRendering<'a>, AssetError<'a, C::Error>> {
+    prepare_svg_routed_plan(
+        document,
+        options,
+        inputs,
+        mode,
+        registry,
+        codec,
+        budget,
+        display,
+        resolved,
+        &plan,
+        Vec::new(),
+    )
+}
+
+// The only routed caller freshly resolves the exact PageSet namespaces. Raw
+// href strings are never accepted by the public preparation entry points.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn prepare_svg_routed_plan<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    options: &'a RenderOptions,
+    inputs: &[SvgInput<'_>],
+    mode: SvgMode,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+    display: Option<bool>,
+    resolved: &[text::ResolvedInlineText],
+    plan: &prepare::DocPreparationPlan,
+    mut links: Vec<(u64, nepl3_markup::html::HtmlHref)>,
+) -> Result<crate::prepare::PreparedRendering<'a>, AssetError<'a, C::Error>> {
     for (i, input) in inputs.iter().enumerate() {
         budget.charge(Resource::SourceBytes, input.svg.len() as u64)?;
         for prior in &inputs[..i] {
@@ -225,12 +256,25 @@ pub(crate) fn prepare_svg_plan<'a, C: FoundationValueCodec>(
         }
     }
     let mut images = Vec::new();
-    let mut links = Vec::new();
     for req in &plan.requirements {
         budget.charge(Resource::Work, 1)?;
         if matches!(req, prepare::DocRequirement::Foreign { kind, .. } if display.is_some_and(|math| crate::display::selected(*kind, math)))
         {
             continue;
+        }
+        if let prepare::DocRequirement::Link {
+            node,
+            target: LinkTarget::Page { .. } | LinkTarget::Relative { .. },
+        } = req
+        {
+            let mut routed = false;
+            for (site, _) in &links {
+                budget.charge(Resource::Work, 1)?;
+                routed |= site == node;
+            }
+            if routed {
+                continue;
+            }
         }
         if display == Some(true)
             && crate::display::admit_external(req, &mut links, budget)

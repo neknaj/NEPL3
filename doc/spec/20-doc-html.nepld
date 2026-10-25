@@ -310,6 +310,39 @@ body
     cons paragraph cons "SVG出力のstylesheetは固定CSSと検証済み有限数値・node番号から生成する規則を連結したものである。作者の任意CSSは受理しない。外部CSS・埋め込みCSS・CSP・manifestは同一の最終byte列を使用する。画像groupはinline-size containerとなり、table等のintrinsic幅配分への影響は別途表示検証する。" nil
     cons paragraph cons "prepare_localの未解決要求の拒否は維持する。試作用のnative helperは入力ごとに検証する。公開portable準備操作の完了やT22・T23・T24の全面受入を示さない。参照形式のCSPは同一originの画像、埋め込み形式はdata画像だけを許可する。フォントは既存の外部参照が残る。" nil
     nil
+  cons section pages_svg_native "[明示/めいじ]namespaceのPageSet SVG[準備/じゅんび] / PageSet SVG preparation for explicit namespaces"
+    body
+    cons paragraph
+      cons parallel
+        cons variant ja "namespace::pages::assets::prepare_embeddedは、[明示的/めいじてき]に[採用/さいよう]したPageSet namespaceへ[埋/う]め[込/こ]みSVGを[準備/じゅんび]する[限定/げんてい]native APIである。"
+        cons variant en "The bounded native namespace::pages::assets::prepare_embedded API prepares embedded SVG for explicitly adopted PageSet namespaces."
+        nil
+      cons parallel
+        cons variant ja "SVGとBaseOnlyのalt[投影/とうえい]は、[正確/せいかく]なpage[番号/ばんごう]とMemberIdへ[対応/たいおう]させる。"
+        cons variant en "SVG inputs and BaseOnly alt projections are bound to exact page indices and MemberIds."
+        nil
+      cons parallel
+        cons variant ja "[同/おな]じasset IDやdocument digestを[持/も]つ[別/べつ]page・memberは、そのbyte[列/れつ]への[権限/けんげん]を[得/え]ない。"
+        cons variant en "Equal asset IDs or document digests in another page or member grant no access to those bytes."
+        nil
+      cons parallel
+        cons variant ja "[不変/ふへん]の[全/ぜん]namespaceとPage・Relative linkを[再検査/さいけんさ]し、[共有/きょうゆう]codec・SourceAdmission・Budgetの[下/もと]でSVGとaltを[検証/けんしょう]する。"
+        cons variant en "Every immutable namespace and Page or Relative link is revalidated with the shared codec, SourceAdmission and cumulative Budget before SVG and alt preparation."
+        nil
+      cons parallel
+        cons variant ja "pages::renderは[従来/じゅうらい]どおり[実際/じっさい]に[出力/しゅつりょく]された[参照先/さんしょうさき]anchorを[検査/けんさ]し、guest[内部/ないぶ]のCodeを[新/あら]たに[許可/きょか]しない。"
+        cons variant en "The existing pages::render still checks actually emitted target anchors, and guest-owned Code gains no new permission."
+        nil
+      cons parallel
+        cons variant ja "[既存/きそん]のasset-free[経路/けいろ]とCLIは[変更/へんこう]しない。"
+        cons variant en "Existing asset-free entries and CLIs remain unchanged."
+        nil
+      cons parallel
+        cons variant ja "[外部/がいぶ]SVGのartifact route・[梱包/こんぽう]、[型付/かたつ]きSentenceのPageSet hostへの[接続/せつぞく]、portable proofはこのAPIの[対象外/たいしょうがい]である。"
+        cons variant en "External SVG artifact routing and packaging, typed Sentence PageSet host integration and portable proof remain outside this API."
+        nil
+      nil
+    nil
   cons section code_highlight "埋め込みコードの共有highlight"
     body
     cons paragraph cons "Codeのnative host合成は、保持したguest closureをadapterへ渡し、検査済みphrasingをfigure・pre・code内へ挿入する。prepare_localは従来どおり未解決要求を拒否する。これは公開portable準備操作の完了を意味しない。" nil
@@ -321,7 +354,7 @@ body
     cons paragraph cons "Code装飾のDOM IdはDocの意味anchorではない。言語選択で非表示になったanchorをCodeのIdで代用できないよう、このPages profileではCode出力内のId属性を拒否する。表示分類の完全なidentityはDataIdで保持できる。ページ間linkと同一文書内Referenceの双方に適用する。" nil
     cons paragraph cons "開発hostのdoc-html pagesは、元のParseTreeとprofileが有効なparse・lower処理内でCodeの共有highlightを準備する。入力ページ・EmbedRef・guestのcanonical digestを照合して出力へ渡し、guestを再parse・意味lower・評価しない。共有embedの各出現を保持し、複製のWorkとAllocationUnitsを累積output Budgetへ計上する。" nil
     cons paragraph cons "本文、Code、参照、markup検査、書出しが完了するまで出力を公開しない。adapterが停止後に別のエラーを返してもBudgetのStoppedを優先する。source欠落・別ページのguest・不正markup・表示されない参照先は成功や部分成果物にしない。" nil
-    cons paragraph cons "native APIはページごとのforeign placementを返す。hostのexportは文書の元情報をmanifestに保持するが、この合成を公開portable Code操作、reader-fact対応、runtime受入の完了へ読み替えない。PagesのImage・SVG描画と、明示選択していないforeignは未対応である。通常hostのMath表示は次の合成経路で扱う。" nil
+    cons paragraph cons "native APIはページごとのforeign placementを返す。hostのexportは文書の元情報をmanifestに保持するが、この合成を公開portable Code操作、reader-fact対応、runtime受入の完了へ読み替えない。既存CLIのPagesのImage・SVG描画と、明示選択していないforeignは未対応である。通常hostのMath表示は次の合成経路で扱う。" nil
     nil
   cons section math_composition "埋め込み数式の通常HTML合成"
     body
