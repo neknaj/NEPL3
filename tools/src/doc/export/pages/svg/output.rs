@@ -50,6 +50,34 @@ struct Display<'a> {
     fallbacks: &'a [String],
 }
 #[derive(Serialize)]
+pub(super) struct Formula<'a> {
+    pub root: u64,
+    pub display: &'static str,
+    pub owner_path: &'a [crate::doc::export::math::generation::OwnerStep],
+    pub renderer: &'static str,
+    pub selection_reason: &'static str,
+    pub fallback_reason: Option<&'static str>,
+}
+#[derive(Serialize)]
+pub(super) struct CapturedSvg<'a> {
+    pub page: &'a str,
+    pub id: &'a str,
+    pub source: &'a str,
+    pub bytes: usize,
+    pub sha256: String,
+}
+#[derive(Serialize)]
+pub(super) struct SourceEvidence<'a> {
+    pub scope: &'static str,
+    pub math_renderer: &'static str,
+    pub sources: &'a [serde_json::Value],
+    pub registered_files: &'a [serde_json::Value],
+    pub svg_capture: Vec<CapturedSvg<'a>>,
+    pub svg_total_byte_limit: usize,
+    pub svg_total_count_limit: usize,
+    pub math: Vec<Vec<Formula<'a>>>,
+}
+#[derive(Serialize)]
 struct Receipt<'a> {
     format: &'static str,
     input_identity: String,
@@ -63,6 +91,8 @@ struct Receipt<'a> {
     initial_usage: serde_json::Value,
     pre_receipt_usage: serde_json::Value,
     scope: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    source_input: Option<&'a SourceEvidence<'a>>,
 }
 struct Writer<'a> {
     bytes: Vec<u8>,
@@ -99,6 +129,7 @@ pub(super) fn package(
     rendered: &planned::Rendered<'_, '_>,
     identity: Digest,
     initial: Usage,
+    source_input: Option<&SourceEvidence<'_>>,
     b: &mut Budget,
 ) -> Result<(BTreeMap<String, Vec<u8>>, String), String> {
     if rendered.pages.fragments.len() != set.pages.len() {
@@ -213,6 +244,7 @@ pub(super) fn package(
     // Fixed-shape limits/usage records: no input-sized JSON allocation here.
     charge(b, 8192, 8192)?;
     let receipt = Receipt {
+        source_input,
         format: "nepl3.local-doc-pages.root-svg-package/1",
         input_identity,
         identity_scope: "canonical PageSet, exact display and ordered raw root SVG bindings; not callback identity or portable proof",

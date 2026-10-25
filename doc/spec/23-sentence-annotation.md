@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 b218a5bf9d4436d65746e9507a8d4914449438c7ce7e789b581465b03474d67a; alias input SHA-256 d47b4895187bb9aa1fedc57c365f3f52b22320b1a4ad5d859b06403b7520713e; page input SHA-256 25df4900d0524bf09e21394ea49a564f01abf2ae3fc62742269280255ab60637. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 8033b2a84bdb8ee57db6641918077d5232adc6b33d69c624959f36aaf7ca3cbe; alias input SHA-256 7e501a36bb75abc1bcfcb0a71d469bc2c4387186c4f3d1b9fd321d45875f6e17; page input SHA-256 b261d2494d25fe491c8663019dda3d8d0bf6f3084f5104c5bc8519a53b36db24. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="23-構造化文章と対象付き注釈への是正"></a>
 
@@ -849,6 +849,260 @@ The packager does not execute KaTeX conversion and only preserves the supplied d
 </div>
 
 </div>
+
+<a name="n-7376675061676573436c69"></a>
+
+<a name="explicit-mathml-svg-pages-cli"></a>
+
+### <ruby>明示<rt>めいじ</rt></ruby>MathMLOnlyのSVG PageSet CLI \/ Explicit MathMLOnly SVG PageSet CLI
+
+<div class="nepl-paragraph">
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+doc\-html pages\-svgは、\-\-math\-renderer mathml\-onlyを<ruby>明示<rt>めいじ</rt></ruby>した<ruby>通常<rt>つうじょう</rt></ruby>のfile<ruby>書出<rt>かきだ</rt></ruby>しだけを<ruby>受<rt>う</rt></ruby>け<ruby>付<rt>つ</rt></ruby>ける<ruby>限定<rt>げんてい</rt></ruby>CLIであり、<ruby>省略<rt>しょうりゃく</rt></ruby>・KaTeXPreferred・interactive<ruby>指定<rt>してい</rt></ruby>は<ruby>数式<rt>すうしき</rt></ruby>がなくても<ruby>拒否<rt>きょひ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+doc\-html pages\-svg is a limited CLI accepting ordinary file export only with explicit \-\-math\-renderer mathml\-only\; omitted selection\, KaTeXPreferred and interactive options are rejected even without formulas\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+version 1 manifestはpages・assetsを<ruby>必須<rt>ひっす</rt></ruby>とし、pageのid・source・routeと<ruby>省略可能<rt>しょうりゃくかのう</rt></ruby>な<ruby>物理<rt>ぶつり</rt></ruby>input、SVG bindingのpage IDとassetsのid・source・mimeを<ruby>明示<rt>めいじ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+A version 1 manifest requires pages and assets\, specifying each page\'s id\, source\, route and optional physical input\, plus each SVG binding\'s page ID and asset id\, source and mime\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+files・display・<ruby>各<rt>かく</rt></ruby>limitsは<ruby>既存<rt>きそん</rt></ruby>の<ruby>有限<rt>ゆうげん</rt></ruby>defaultを<ruby>使<rt>つか</rt></ruby>えるが、<ruby>重複<rt>じゅうふく</rt></ruby>JSON key・<ruby>未知<rt>みち</rt></ruby>field・<ruby>明示<rt>めいじ</rt></ruby>null・<ruby>未登録<rt>みとうろく</rt></ruby>page・<ruby>重複<rt>じゅうふく</rt></ruby>bindingやasset IDを<ruby>拒否<rt>きょひ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Files\, display and limit fields may use existing finite defaults\, but duplicate JSON keys\, unknown fields\, explicit null\, unknown pages\, duplicate bindings and duplicate asset IDs are rejected\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+manifestは65\,536 bytes、pagesは1〜128、filesとpage bindingsは<ruby>各<rt>かく</rt></ruby>128<ruby>以下<rt>いか</rt></ruby>、SVGは<ruby>全体<rt>ぜんたい</rt></ruby>32<ruby>個<rt>こ</rt></ruby>・<ruby>各<rt>かく</rt></ruby>1\,048\,576 bytes・<ruby>合計<rt>ごうけい</rt></ruby>4\,194\,304 bytes<ruby>以下<rt>いか</rt></ruby>とし、Docと<ruby>登録<rt>とうろく</rt></ruby>fileの<ruby>合計<rt>ごうけい</rt></ruby>10\,000\,000 bytes<ruby>上限<rt>じょうげん</rt></ruby>も<ruby>保<rt>たも</rt></ruby>つ。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Limits are 65\,536 manifest bytes\, 1–128 pages\, at most 128 files and page bindings each\, and 32 SVG assets overall with 1\,048\,576 bytes per asset and 4\,194\,304 bytes total\; Doc plus registered\-file input retains its 10\,000\,000\-byte cap\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>物理<rt>ぶつり</rt></ruby>pathは4\,096 bytes<ruby>以下<rt>いか</rt></ruby>の<ruby>相対<rt>そうたい</rt></ruby>pathに<ruby>限<rt>かぎ</rt></ruby>り、<ruby>制御文字<rt>せいぎょもじ</rt></ruby>・<ruby>空<rt>から</rt></ruby>segment・dot segment・<ruby>予約<rt>よやく</rt></ruby><ruby>区切<rt>くぎ</rt></ruby>りを<ruby>拒否<rt>きょひ</rt></ruby>し、manifest rootの<ruby>外<rt>そと</rt></ruby>へ<ruby>出<rt>で</rt></ruby>るsymlinkも<ruby>拒否<rt>きょひ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Physical paths are relative and at most 4\,096 bytes\; control characters\, empty or dot segments and reserved delimiters are rejected\, as are symlinks resolving outside the manifest root\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>解決済<rt>かいけつず</rt></ruby>みpathを<ruby>一度<rt>いちど</rt></ruby>だけ<ruby>有限長<rt>ゆうげんちょう</rt></ruby>で<ruby>読<rt>よ</rt></ruby>み、<ruby>所有<rt>しょゆう</rt></ruby>したDoc・file・raw SVGを<ruby>以後<rt>いご</rt></ruby>の<ruby>処理<rt>しょり</rt></ruby>で<ruby>再読込<rt>さいよみこ</rt></ruby>みしないが、<ruby>競合<rt>きょうごう</rt></ruby>するfilesystem<ruby>変更<rt>へんこう</rt></ruby>に<ruby>対<rt>たい</rt></ruby>するrace\-free<ruby>権限<rt>けんげん</rt></ruby><ruby>証明<rt>しょうめい</rt></ruby>ではない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Resolved paths are read once under finite byte caps\, and the owned Doc\, file and raw SVG inputs are not reread\; this is not a race\-free capability proof against concurrent filesystem changes\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>元<rt>もと</rt></ruby>のtreeとprofileが<ruby>生存<rt>せいぞん</rt></ruby>する<ruby>間<rt>あいだ</rt></ruby>にCodeを<ruby>準備<rt>じゅんび</rt></ruby>し、pageごとに<ruby>独立<rt>どくりつ</rt></ruby>したparse・lower<ruby>予算<rt>よさん</rt></ruby>を<ruby>使<rt>つか</rt></ruby>い、<ruby>既存<rt>きそん</rt></ruby>PageSet<ruby>経路<rt>けいろ</rt></ruby>の<ruby>処理順<rt>しょりじゅん</rt></ruby>・<ruby>課金順<rt>かきんじゅん</rt></ruby>・<ruby>出力<rt>しゅつりょく</rt></ruby>を<ruby>変<rt>か</rt></ruby>えない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Code is prepared while the original tree and profile remain alive\, parse and lower budgets stay independent per page\, and existing PageSet processing order\, charges and output remain unchanged\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+receiptのsource\_inputはcaptureの<ruby>上限<rt>じょうげん</rt></ruby>・source hash・phase<ruby>記録<rt>きろく</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>し、capture I\/Oがparse\/output Budgetの<ruby>外側<rt>そとがわ</rt></ruby>であることと、output initial\_usageがsource<ruby>準備前<rt>じゅんびまえ</rt></ruby>の<ruby>観測<rt>かんそく</rt></ruby>であることを<ruby>区別<rt>くべつ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The receipt\'s source\_input retains capture caps\, source hashes and phase records\, distinguishing capture I\/O outside parse\/output Budgets from output initial\_usage observed before source preparation\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>直接<rt>ちょくせつ</rt></ruby>Mathのplacementを<ruby>合成<rt>ごうせい</rt></ruby>してから<ruby>入<rt>い</rt></ruby>れ<ruby>子<rt>こ</rt></ruby>Mathと<ruby>統合<rt>とうごう</rt></ruby>し、pageごとのowner path・MathML<ruby>表示<rt>ひょうじ</rt></ruby>・ExplicitMathMLOnly<ruby>選択理由<rt>せんたくりゆう</rt></ruby>・fallback<ruby>不在<rt>ふざい</rt></ruby>をhost<ruby>記録<rt>きろく</rt></ruby>と<ruby>課金済<rt>かきんず</rt></ruby>みreceiptの<ruby>双方<rt>そうほう</rt></ruby>へ<ruby>残<rt>のこ</rt></ruby>す。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Direct Math placements are composed before collecting nested Math\, and per\-page owner paths\, MathML display\, the ExplicitMathMLOnly selection reason and absence of fallback are retained in both host records and the budgeted receipt\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>全<rt>ぜん</rt></ruby><ruby>意味検査<rt>いみけんさ</rt></ruby>と<ruby>生成<rt>せいせい</rt></ruby>の<ruby>成功後<rt>せいこうご</rt></ruby>にだけ<ruby>新<rt>あたら</rt></ruby>しいoutput directoryを<ruby>作<rt>つく</rt></ruby>り、<ruby>完了<rt>かんりょう</rt></ruby>manifestを<ruby>最後<rt>さいご</rt></ruby>に<ruby>書<rt>か</rt></ruby>くが、I\/O<ruby>失敗時<rt>しっぱいじ</rt></ruby>には<ruby>不完全<rt>ふかんぜん</rt></ruby>なdirectoryが<ruby>残<rt>のこ</rt></ruby>り<ruby>得<rt>う</rt></ruby>る。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+A new output directory is created only after all semantic checks and generation succeed\, and the completion manifest is written last\; an I\/O failure may still leave an incomplete directory\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+これは<ruby>既定<rt>きてい</rt></ruby>のKaTeX<ruby>優先<rt>ゆうせん</rt></ruby><ruby>変換器<rt>へんかんき</rt></ruby>の<ruby>完成<rt>かんせい</rt></ruby>ではなく、<ruby>外部<rt>がいぶ</rt></ruby>SVG・<ruby>保持<rt>ほじ</rt></ruby>jobのretry・<ruby>永続<rt>えいぞく</rt></ruby><ruby>復元<rt>ふくげん</rt></ruby>は<ruby>未実装<rt>みじっそう</rt></ruby>であり、<ruby>全体<rt>ぜんたい</rt></ruby><ruby>受入<rt>うけいれ</rt></ruby>も<ruby>未実施<rt>みじっし</rt></ruby>である。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+This does not complete the default KaTeX\-preferred converter\; external SVG\, retained\-job retry and durable restoration remain unimplemented\, and overall acceptance has not been run\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>実行例<rt>じっこうれい</rt></ruby>はexamples\/document\/pages\-svgに<ruby>同梱<rt>どうこん</rt></ruby>し、<ruby>同<rt>おな</rt></ruby>じmanifestが<ruby>二<rt>ふた</rt></ruby>つの<ruby>多言語<rt>たげんご</rt></ruby>pageとSVGを<ruby>明示<rt>めいじ</rt></ruby>して<ruby>相互<rt>そうご</rt></ruby>linkを<ruby>解決<rt>かいけつ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+A runnable example is included in examples\/document\/pages\-svg\; its manifest explicitly binds two multilingual pages and their SVG inputs and resolves their cross\-page links\.
+
+</div>
+
+</div>
+
+</div>
+
+```sh
+nepl3-tools doc-html pages-svg --math-renderer mathml-only examples/document/pages-svg/manifest.json out-svg-pages
+```
 
 <a name="n-7669736962696c697479"></a>
 

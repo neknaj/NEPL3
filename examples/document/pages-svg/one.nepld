@@ -1,0 +1,14 @@
+article en "SVG pages / SVGページ"
+body
+  cons image asset "small" none "Small diagram / [小/ちい]さい[図/ず]" none
+  cons paragraph
+    cons parallel
+      cons variant en sentence cons text "The fraction is " cons math Math frac 1 2 cons text "." nil
+      cons variant ja sentence cons ruby text "分数" text "ぶんすう" cons text "は" cons math Math frac 1 2 cons text "である。" nil
+      nil
+    cons parallel
+      cons variant en sentence cons link page "two" some "target" text "Open the wide diagram." nil
+      cons variant ja sentence cons link page "two" some "target" text "横長の図を開く。" nil
+      nil
+    nil
+  nil

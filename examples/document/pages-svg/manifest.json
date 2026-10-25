@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "display": { "mode": "rows" },
+  "pages": [
+    { "id": "one", "source": "one.nepld", "route": "one/index.html" },
+    { "id": "two", "source": "two.nepld", "route": "two/index.html" }
+  ],
+  "assets": [
+    { "page": "one", "assets": [{ "id": "small", "source": "small.svg", "mime": "image/svg+xml" }] },
+    { "page": "two", "assets": [{ "id": "wide", "source": "wide.svg", "mime": "image/svg+xml" }] }
+  ]
+}

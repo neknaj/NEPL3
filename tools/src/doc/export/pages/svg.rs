@@ -1,5 +1,6 @@
 //! Native root-only embedded-SVG HTML packaging over externally retained plans.
 //! No parsing, CLI, KaTeX generation, retained retry or portable proof is added.
+pub mod cli;
 pub mod identity;
 mod output;
 use crate::doc::annotations::article::render::svg::pages as planned;
@@ -82,6 +83,7 @@ where
             &rendered,
             input_identity,
             initial,
+            None,
             budget,
         )
         .map_err(Error::Packaging)?;
