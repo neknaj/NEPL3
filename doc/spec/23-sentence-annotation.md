@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 a7c91fe0af388a7c5bd93afaab0ab68f4dcd9730379fab0205c2f9a5a60f1eb4; alias input SHA-256 800c58010fe3ca5fb3c10997a3b7908fefb312ba31edec1c0c8cb409f1bb0b29; page input SHA-256 f18f3273c5e14001eca7965e4b1407c1c8640187a102f95eb6a7da37645487b6. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 cc2b4b8048ca7e354811efe77a6272f03628729f24b4e19aa08dd1042fec2a7b; alias input SHA-256 800c58010fe3ca5fb3c10997a3b7908fefb312ba31edec1c0c8cb409f1bb0b29; page input SHA-256 4905a1a362fe9fd6144fa277d3a0012f6a8b6c562fad8423d524e3d6255431d0. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="23-構造化文章と対象付き注釈への是正"></a>
 
@@ -351,6 +351,294 @@ SVG CLIの<ruby>先頭<rt>せんとう</rt></ruby>に\-\-display display\.json�
 Standalone SVG generation classifies independent Sentence by the existing bounded Rows occurrence\-role scan\. Inputs without Sentence and inputs whose Sentence occurrences are confined to alt keep their original paths\; default Rows also preserves their accounting and output identities\. Non\-alt occurrences select the explicit planned root SVG host\, including owners shared by alt and title\, body or caption and occurrences in all language variants\. The new path retains the exact structural Selection through scoped planning and rendering\, then stores both SelectionParts and the returned alt Projection\, including an empty projection\. Original occurrence IDs and foreign placements feed the existing Code renderer\, direct and nested Math composition\, generation\-side KaTeX or MathML fallback\, stylesheet and shell serializer\.
 
 The output Budget and SourceAdmission are shared throughout the new path\; external SVG deduplication and byte charges remain before preparation\. Mixed Prepare observations end after structural collection\, while planning\, projection\, namespace preparation and insertion occur within the measured RenderAndSerialize stage\. Failed stages produce no success observation and no partial LocalDocument\. Mixed\-only metadata identifies planned root SVG and separate BaseOnly alt owners\; the writer preserves it even when independent alt ownership is empty\. The SVG CLI defaults to Rows and retains its existing default renderer\, limits and identity format\; an explicit leading \-\-display option selects Rows\, Columns or Single\. The exact syntax is doc\-html svg \-\-display display\.json \-\-css inline\|external \-\-svg embedded\|external input\.nepld assets\.json new\-output\. The shared strict display reader rejects unknown fields\, duplicate keys including escaped aliases\, null and files exceeding 65536 bytes before output creation\. The bounded Rows role inventory still examines every variant to choose the rendering path\. Independently\, all\-variant asset and guest validation remain in force\, and references to omitted targets are rejected\. Display selection preserves the exact requested language and fallback ordering in the existing identity\, while old calls and explicit default Rows produce identical files\. Semantic or admission failures precede output\-directory creation\; filesystem failures after creation retain the existing incomplete\-directory behavior\. Guest\-owned assets\, PageSet SVG\, page and relative links\, arbitrary\-member asset registration and portable proof remain outside this export scope\.
+
+<a name="n-706c616e6e65645061676573537667"></a>
+
+### <ruby>型付<rt>かたつ</rt></ruby>きPageSet SVG fragment host \/ Typed PageSet SVG fragment host
+
+<div class="nepl-paragraph">
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+article\:\:render\:\:svg\:\:pages\:\:renderは、PageSetの<ruby>各<rt>かく</rt></ruby>Articleに<ruby>対応<rt>たいおう</rt></ruby>するrole Planを<ruby>受<rt>う</rt></ruby>け<ruby>取<rt>と</rt></ruby>るnative fragment hostである。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+article\:\:render\:\:svg\:\:pages\:\:render is a native fragment host receiving a role Plan for each PageSet Article\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+Planは<ruby>対応<rt>たいおう</rt></ruby>する<ruby>元<rt>もと</rt></ruby>のrootと<ruby>全<rt>ぜん</rt></ruby>Plan<ruby>共通<rt>きょうつう</rt></ruby>のRenderOptions objectを<ruby>借用<rt>しゃくよう</rt></ruby>し、<ruby>値<rt>あたい</rt></ruby>が<ruby>等<rt>ひと</rt></ruby>しい<ruby>別<rt>べつ</rt></ruby>objectや<ruby>順序<rt>じゅんじょ</rt></ruby>の<ruby>取<rt>と</rt></ruby>り<ruby>違<rt>ちが</rt></ruby>えはcallback<ruby>前<rt>まえ</rt></ruby>に<ruby>拒否<rt>きょひ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Plans must borrow the corresponding original root and the exact same RenderOptions object\; equal replacement objects or reordered plans are rejected before callbacks\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>全<rt>ぜん</rt></ruby>variantのnon\-alt<ruby>出現<rt>しゅつげん</rt></ruby>を<ruby>名前空間<rt>なまえくうかん</rt></ruby>へ<ruby>採用<rt>さいよう</rt></ruby>し、Rows・Columns・Singleで<ruby>実際<rt>じっさい</rt></ruby>に<ruby>表示<rt>ひょうじ</rt></ruby>する<ruby>出現<rt>しゅつげん</rt></ruby>だけを<ruby>挿入<rt>そうにゅう</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Namespace adoption includes non\-alt occurrences in every variant\, while insertion consumes only the occurrences actually displayed by Rows\, Columns or Single\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>元<rt>もと</rt></ruby>のSentenceOccurrenceIdとmember・ownerの<ruby>対応<rt>たいおう</rt></ruby>はpageごとに<ruby>保持<rt>ほじ</rt></ruby>し、<ruby>共通<rt>きょうつう</rt></ruby>のownerをalt・title・bodyの<ruby>出現<rt>しゅつげん</rt></ruby>ごとに<ruby>区別<rt>くべつ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Original SentenceOccurrenceIds and member\/owner correspondence remain page\-local\, distinguishing alt\, title and body occurrences of a shared owner\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+root altのBaseOnly<ruby>投影<rt>とうえい</rt></ruby>を<ruby>実際<rt>じっさい</rt></ruby>の<ruby>内容<rt>ないよう</rt></ruby>から<ruby>求<rt>もと</rt></ruby>め、<ruby>全<rt>ぜん</rt></ruby>pageの<ruby>所有元<rt>しょゆうもと</rt></ruby>とProjectionを<ruby>空<rt>から</rt></ruby>のentryも<ruby>含<rt>ふく</rt></ruby>めて<ruby>保持<rt>ほじ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+BaseOnly root\-alt projections are computed from actual content\; every page retains its owners and Projection entry\, including empty entries\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+altはHTML callbackや<ruby>名前空間<rt>なまえくうかん</rt></ruby>memberを<ruby>消費<rt>しょうひ</rt></ruby>せず、SVG<ruby>入力<rt>にゅうりょく</rt></ruby>は<ruby>明示<rt>めいじ</rt></ruby>したpageのrootだけに<ruby>対応<rt>たいおう</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Alt consumes neither an HTML callback nor a namespace member\; explicit SVG inputs belong only to the selected page root\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>同<rt>おな</rt></ruby>じasset IDやdigestでもguestへの<ruby>権限<rt>けんげん</rt></ruby>を<ruby>与<rt>あた</rt></ruby>えず、<ruby>非表示<rt>ひひょうじ</rt></ruby>guestのassetもcallback<ruby>前<rt>まえ</rt></ruby>に<ruby>拒否<rt>きょひ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Equal asset IDs or digests grant no guest access\, and even hidden guest assets are rejected before callbacks\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+root Codeと<ruby>直接<rt>ちょくせつ</rt></ruby>のDoc Mathはpageを<ruby>識別<rt>しきべつ</rt></ruby>するcallbackへ<ruby>渡<rt>わた</rt></ruby>し、Sentenceと<ruby>入<rt>い</rt></ruby>れ<ruby>子<rt>こ</rt></ruby>Doc Mathは<ruby>保持<rt>ほじ</rt></ruby>されたSentence hostで<ruby>扱<rt>あつか</rt></ruby>う。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Root Code and direct Doc Math use page\-aware callbacks\; Sentence and nested Doc Math use the retained Sentence host\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>実際<rt>じっさい</rt></ruby>に<ruby>出力<rt>しゅつりょく</rt></ruby>されたpage<ruby>間<rt>かん</rt></ruby>のanchorを<ruby>最終検査<rt>さいしゅうけんさ</rt></ruby>し、<ruby>非表示<rt>ひひょうじ</rt></ruby>の<ruby>参照先<rt>さんしょうさき</rt></ruby>を<ruby>成功<rt>せいこう</rt></ruby>へ<ruby>読<rt>よ</rt></ruby>み<ruby>替<rt>か</rt></ruby>えない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Final checks require cross\-page target anchors to be actually emitted\; omitted targets are never treated as successful references\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>呼出側<rt>よびだしがわ</rt></ruby>がSelectionsを<ruby>保持<rt>ほじ</rt></ruby>し、<ruby>返却<rt>へんきゃく</rt></ruby>するResolutions・SentenceRecord・alt Projectionが<ruby>採用<rt>さいよう</rt></ruby>したDocとSentenceの<ruby>所有元<rt>しょゆうもと</rt></ruby>を<ruby>保<rt>たも</rt></ruby>つ。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The caller retains the Selections\; returned Resolutions\, SentenceRecords and alt Projections preserve the adopted Doc and Sentence owners\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>渡<rt>わた</rt></ruby>された<ruby>累積<rt>るいせき</rt></ruby>Budgetと<ruby>共有<rt>きょうゆう</rt></ruby>SourceAdmissionを<ruby>使<rt>つか</rt></ruby>い、page・callback・<ruby>診断変換<rt>しんだんへんかん</rt></ruby>ごとに<ruby>予算<rt>よさん</rt></ruby>を<ruby>初期化<rt>しょきか</rt></ruby>しない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The supplied cumulative Budget and shared SourceAdmission span pages\, callbacks and diagnostic conversion without budget resets\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+errorは<ruby>一時的<rt>いちじてき</rt></ruby>なnamespaceの<ruby>借用<rt>しゃくよう</rt></ruby>を<ruby>残<rt>のこ</rt></ruby>さず、<ruby>利用可能<rt>りようかのう</rt></ruby>なpage・member originを<ruby>保持<rt>ほじ</rt></ruby>し、<ruby>停止<rt>ていし</rt></ruby>はcallback errorや<ruby>診断<rt>しんだん</rt></ruby>copyより<ruby>優先<rt>ゆうせん</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Errors retain available page\/member context without borrowing temporary namespaces\, and sticky stops take precedence over callback errors or diagnostic copying\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>既存<rt>きそん</rt></ruby>のPageSet exportとidentityは<ruby>変更<rt>へんこう</rt></ruby>せず、このfragment<ruby>結果<rt>けっか</rt></ruby>にasset<ruby>非依存<rt>ひいぞん</rt></ruby>のlegacy<ruby>集約<rt>しゅうやく</rt></ruby>identityを<ruby>再利用<rt>さいりよう</rt></ruby>しない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Existing PageSet exports and identities remain unchanged\; this fragment result does not reuse an asset\-insensitive legacy aggregate identity\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+CLI・file capture・CSS\/CSPを<ruby>含<rt>ふく</rt></ruby>むshell・<ruby>外部<rt>がいぶ</rt></ruby>SVG<ruby>梱包<rt>こんぽう</rt></ruby>・<ruby>保持<rt>ほじ</rt></ruby>jobのresume・portable proofへの<ruby>接続<rt>せつぞく</rt></ruby>は<ruby>別<rt>べつ</rt></ruby>の<ruby>作業<rt>さぎょう</rt></ruby>である。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+CLI inputs\, file capture\, CSS\/CSP shells\, external SVG packaging\, retained\-job resume and portable proof integration remain separate work\.
+
+</div>
+
+</div>
+
+</div>
 
 <a name="n-7669736962696c697479"></a>
 

@@ -156,6 +156,39 @@ impl<'s, 'a> Resolution<'s, 'a> {
         }
         Ok(members)
     }
+    /// Recheck the exact freshly inspected members, preserving owned label
+    /// diagnostics. This does not turn a retained summary into a proof.
+    pub(crate) fn recheck_members<'m, 'd, C: FoundationValueCodec>(
+        &self,
+        refs: &'m [&'m labels::Member<'d>],
+        host: &mut SentenceAnnotationRenderer<'_, C>,
+        b: &mut Budget,
+    ) -> Result<labels::CheckedNamespace<'m, 'd>, Error<C::Error>> {
+        b.poll()?;
+        if refs.len()
+            != self
+                .guests
+                .len()
+                .checked_add(1)
+                .ok_or(Error::InternalShape)?
+        {
+            return Err(Error::InternalShape);
+        }
+        for (index, member) in refs.iter().enumerate() {
+            b.charge(Resource::Work, 1)?;
+            if !self
+                .document(labels::MemberId(index as u64))
+                .is_some_and(|document| core::ptr::eq(document, member.document()))
+            {
+                return Err(Error::InternalShape);
+            }
+        }
+        let result =
+            labels::resolve_interleaved(refs, &self.definition_order, &self.reference_order, b)
+                .map_err(|error| label_failure(error, refs, &self.guests, host, b));
+        b.poll()?;
+        result
+    }
     pub fn input(&self) -> &'s Selection<'a> {
         self.input
     }
@@ -434,64 +467,8 @@ fn resolve_inner<'s, 'a, C: FoundationValueCodec, R, F>(
         references,
     } = schedule::build::<C::Error>(input, &members, &ranges, b)?;
     let refs = document::namespace::member_refs(&members, b)?;
-    let resolved =
-        labels::resolve_interleaved(&refs, &definitions, &references, b).map_err(|error| {
-            match error {
-                labels::Error::Stopped(reason) => Error::Stopped(reason),
-                labels::Error::Order(error) => Error::Order(error),
-                error @ (labels::Error::Duplicate { .. } | labels::Error::Unresolved { .. }) => {
-                    let (primary, related) = match &error {
-                        labels::Error::Duplicate {
-                            definition,
-                            previous,
-                        } => (*definition, Some(*previous)),
-                        labels::Error::Unresolved { reference } => (*reference, None),
-                        _ => return Error::InternalShape,
-                    };
-                    let owner = |site: labels::NamespaceSite<'_>| -> Option<FailureSite> {
-                        let origin = if site.member.0 == 0 {
-                            MemberOrigin::Article
-                        } else {
-                            guests
-                                .get(usize::try_from(site.member.0.checked_sub(1)?).ok()?)?
-                                .origin
-                        };
-                        Some(FailureSite {
-                            site: Site {
-                                member: site.member,
-                                node: site.site.node,
-                            },
-                            origin,
-                        })
-                    };
-                    let Some(primary) = owner(primary) else {
-                        return Error::InternalShape;
-                    };
-                    let related = match related {
-                        Some(site) => match owner(site) {
-                            Some(site) => Some(site),
-                            None => return Error::InternalShape,
-                        },
-                        None => None,
-                    };
-                    match error.diagnostic(&refs, host.registry, host.codec, b) {
-                        Ok(diagnostic) => match b.charge(
-                            Resource::AllocationUnits,
-                            core::mem::size_of::<LabelFailure>() as u64,
-                        ) {
-                            Ok(()) => Error::Label(Box::new(LabelFailure {
-                                diagnostic,
-                                primary,
-                                related,
-                            })),
-                            Err(reason) => Error::Stopped(reason),
-                        },
-                        Err(error) => Error::LabelDiagnostic(error),
-                    }
-                }
-                _ => Error::InternalShape,
-            }
-        })?;
+    let resolved = labels::resolve_interleaved(&refs, &definitions, &references, b)
+        .map_err(|error| label_failure(error, &refs, &guests, host, b))?;
     let mut definition_sites = Vec::new();
     for site in resolved.definitions() {
         push(
@@ -530,4 +507,68 @@ fn resolve_inner<'s, 'a, C: FoundationValueCodec, R, F>(
         },
         output,
     ))
+}
+
+fn label_failure<C: FoundationValueCodec>(
+    error: labels::Error<'_>,
+    refs: &[&labels::Member<'_>],
+    guests: &[Guest],
+    host: &mut SentenceAnnotationRenderer<'_, C>,
+    b: &mut Budget,
+) -> Error<C::Error> {
+    match error {
+        labels::Error::Stopped(reason) => Error::Stopped(reason),
+        labels::Error::Order(error) => Error::Order(error),
+        error @ (labels::Error::Duplicate { .. } | labels::Error::Unresolved { .. }) => {
+            let (primary, related) = match &error {
+                labels::Error::Duplicate {
+                    definition,
+                    previous,
+                } => (*definition, Some(*previous)),
+                labels::Error::Unresolved { reference } => (*reference, None),
+                _ => return Error::InternalShape,
+            };
+            let owner = |site: labels::NamespaceSite<'_>| -> Option<FailureSite> {
+                let origin = if site.member.0 == 0 {
+                    MemberOrigin::Article
+                } else {
+                    guests
+                        .get(usize::try_from(site.member.0.checked_sub(1)?).ok()?)?
+                        .origin
+                };
+                Some(FailureSite {
+                    site: Site {
+                        member: site.member,
+                        node: site.site.node,
+                    },
+                    origin,
+                })
+            };
+            let Some(primary) = owner(primary) else {
+                return Error::InternalShape;
+            };
+            let related = match related {
+                Some(site) => match owner(site) {
+                    Some(site) => Some(site),
+                    None => return Error::InternalShape,
+                },
+                None => None,
+            };
+            match error.diagnostic(refs, host.registry, host.codec, b) {
+                Ok(diagnostic) => match b.charge(
+                    Resource::AllocationUnits,
+                    core::mem::size_of::<LabelFailure>() as u64,
+                ) {
+                    Ok(()) => Error::Label(Box::new(LabelFailure {
+                        diagnostic,
+                        primary,
+                        related,
+                    })),
+                    Err(reason) => Error::Stopped(reason),
+                },
+                Err(error) => Error::LabelDiagnostic(error),
+            }
+        }
+        _ => Error::InternalShape,
+    }
 }

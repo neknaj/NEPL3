@@ -1,5 +1,7 @@
 //! Native planned SVG composition, with raw assets admitted for the root only.
 //! This neither writes external files nor broadens CLI or PageSet admission.
+pub mod pages;
+
 use super::{MemberOrigin, Rendered as RenderedArticle, Session, boxed, namespace};
 use crate::doc::annotations::{SentenceAnnotationRenderer, alt, document};
 use nepl3_core::{

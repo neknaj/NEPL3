@@ -288,3 +288,7 @@ mod tests {
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "sentence/svg_host.rs"]
+mod svg_host;

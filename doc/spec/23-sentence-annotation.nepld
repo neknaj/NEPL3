@@ -1301,6 +1301,67 @@ body
         cons " Guest-owned assets, PageSet SVG, page and relative links, arbitrary-member asset registration and portable proof remain outside this export scope."
         nil
       nil
+    cons section plannedPagesSvg "[型付/かたつ]きPageSet SVG fragment host / Typed PageSet SVG fragment host"
+      body
+      cons paragraph
+        cons parallel
+          cons variant ja "article::render::svg::pages::renderは、PageSetの[各/かく]Articleに[対応/たいおう]するrole Planを[受/う]け[取/と]るnative fragment hostである。"
+          cons variant en "article::render::svg::pages::render is a native fragment host receiving a role Plan for each PageSet Article."
+          nil
+        cons parallel
+          cons variant ja "Planは[対応/たいおう]する[元/もと]のrootと[全/ぜん]Plan[共通/きょうつう]のRenderOptions objectを[借用/しゃくよう]し、[値/あたい]が[等/ひと]しい[別/べつ]objectや[順序/じゅんじょ]の[取/と]り[違/ちが]えはcallback[前/まえ]に[拒否/きょひ]する。"
+          cons variant en "Plans must borrow the corresponding original root and the exact same RenderOptions object; equal replacement objects or reordered plans are rejected before callbacks."
+          nil
+        cons parallel
+          cons variant ja "[全/ぜん]variantのnon-alt[出現/しゅつげん]を[名前空間/なまえくうかん]へ[採用/さいよう]し、Rows・Columns・Singleで[実際/じっさい]に[表示/ひょうじ]する[出現/しゅつげん]だけを[挿入/そうにゅう]する。"
+          cons variant en "Namespace adoption includes non-alt occurrences in every variant, while insertion consumes only the occurrences actually displayed by Rows, Columns or Single."
+          nil
+        cons parallel
+          cons variant ja "[元/もと]のSentenceOccurrenceIdとmember・ownerの[対応/たいおう]はpageごとに[保持/ほじ]し、[共通/きょうつう]のownerをalt・title・bodyの[出現/しゅつげん]ごとに[区別/くべつ]する。"
+          cons variant en "Original SentenceOccurrenceIds and member/owner correspondence remain page-local, distinguishing alt, title and body occurrences of a shared owner."
+          nil
+        cons parallel
+          cons variant ja "root altのBaseOnly[投影/とうえい]を[実際/じっさい]の[内容/ないよう]から[求/もと]め、[全/ぜん]pageの[所有元/しょゆうもと]とProjectionを[空/から]のentryも[含/ふく]めて[保持/ほじ]する。"
+          cons variant en "BaseOnly root-alt projections are computed from actual content; every page retains its owners and Projection entry, including empty entries."
+          nil
+        cons parallel
+          cons variant ja "altはHTML callbackや[名前空間/なまえくうかん]memberを[消費/しょうひ]せず、SVG[入力/にゅうりょく]は[明示/めいじ]したpageのrootだけに[対応/たいおう]する。"
+          cons variant en "Alt consumes neither an HTML callback nor a namespace member; explicit SVG inputs belong only to the selected page root."
+          nil
+        cons parallel
+          cons variant ja "[同/おな]じasset IDやdigestでもguestへの[権限/けんげん]を[与/あた]えず、[非表示/ひひょうじ]guestのassetもcallback[前/まえ]に[拒否/きょひ]する。"
+          cons variant en "Equal asset IDs or digests grant no guest access, and even hidden guest assets are rejected before callbacks."
+          nil
+        cons parallel
+          cons variant ja "root Codeと[直接/ちょくせつ]のDoc Mathはpageを[識別/しきべつ]するcallbackへ[渡/わた]し、Sentenceと[入/い]れ[子/こ]Doc Mathは[保持/ほじ]されたSentence hostで[扱/あつか]う。"
+          cons variant en "Root Code and direct Doc Math use page-aware callbacks; Sentence and nested Doc Math use the retained Sentence host."
+          nil
+        cons parallel
+          cons variant ja "[実際/じっさい]に[出力/しゅつりょく]されたpage[間/かん]のanchorを[最終検査/さいしゅうけんさ]し、[非表示/ひひょうじ]の[参照先/さんしょうさき]を[成功/せいこう]へ[読/よ]み[替/か]えない。"
+          cons variant en "Final checks require cross-page target anchors to be actually emitted; omitted targets are never treated as successful references."
+          nil
+        cons parallel
+          cons variant ja "[呼出側/よびだしがわ]がSelectionsを[保持/ほじ]し、[返却/へんきゃく]するResolutions・SentenceRecord・alt Projectionが[採用/さいよう]したDocとSentenceの[所有元/しょゆうもと]を[保/たも]つ。"
+          cons variant en "The caller retains the Selections; returned Resolutions, SentenceRecords and alt Projections preserve the adopted Doc and Sentence owners."
+          nil
+        cons parallel
+          cons variant ja "[渡/わた]された[累積/るいせき]Budgetと[共有/きょうゆう]SourceAdmissionを[使/つか]い、page・callback・[診断変換/しんだんへんかん]ごとに[予算/よさん]を[初期化/しょきか]しない。"
+          cons variant en "The supplied cumulative Budget and shared SourceAdmission span pages, callbacks and diagnostic conversion without budget resets."
+          nil
+        cons parallel
+          cons variant ja "errorは[一時的/いちじてき]なnamespaceの[借用/しゃくよう]を[残/のこ]さず、[利用可能/りようかのう]なpage・member originを[保持/ほじ]し、[停止/ていし]はcallback errorや[診断/しんだん]copyより[優先/ゆうせん]する。"
+          cons variant en "Errors retain available page/member context without borrowing temporary namespaces, and sticky stops take precedence over callback errors or diagnostic copying."
+          nil
+        cons parallel
+          cons variant ja "[既存/きそん]のPageSet exportとidentityは[変更/へんこう]せず、このfragment[結果/けっか]にasset[非依存/ひいぞん]のlegacy[集約/しゅうやく]identityを[再利用/さいりよう]しない。"
+          cons variant en "Existing PageSet exports and identities remain unchanged; this fragment result does not reuse an asset-insensitive legacy aggregate identity."
+          nil
+        cons parallel
+          cons variant ja "CLI・file capture・CSS/CSPを[含/ふく]むshell・[外部/がいぶ]SVG[梱包/こんぽう]・[保持/ほじ]jobのresume・portable proofへの[接続/せつぞく]は[別/べつ]の[作業/さぎょう]である。"
+          cons variant en "CLI inputs, file capture, CSS/CSP shells, external SVG packaging, retained-job resume and portable proof integration remain separate work."
+          nil
+        nil
+      nil
     cons section visibility "HTML[挿入対象/そうにゅうたいしょう]Sentence[出現/しゅつげん]の[構造/こうぞう]inventory"
     body
       cons paragraph
