@@ -1232,7 +1232,23 @@ body
         cons "The planner charges one cumulative Budget, observes caller depth, preserves sticky stops and returns no partial plan on failure."
         cons " It neither lowers owners again nor certifies guest meaning, source admission for a new operation, resolved labels, asset availability or complete HTML."
         cons " Consumers must resolve adoption with the same Selection and enforce exact insertion and member consumption before validating final output."
-        cons " This prerequisite does not change existing render Sessions, automatic adoption, PageSet behavior, output identities or CLI asset guards; role-aware host integration remains unfinished."
+        cons " This prerequisite does not change existing render Sessions, automatic adoption, PageSet behavior, output identities or CLI asset guards; general asset-aware host integration remains unfinished."
+        nil
+      nil
+    cons section plannedSession "Native planned Sentence insertion session"
+    body
+      cons paragraph
+        cons "The additive render_planned entry resolves the exact role plan and constructs its insertion Session from that same Selection and RenderOptions."
+        cons " It retains the existing asset-free display preparation and final Article validation; SVG and PageSet asset export remain separate work."
+        cons " Each callback consumes the next original SentenceOccurrenceId while Code and Math placements remain separate from the Sentence sequence."
+        cons " Rows and Columns require complete consumption of every adopted Doc member even though the selected occurrence list contains gaps."
+        cons " Single may skip hidden members, but leftover members of each visible Sentence and missing visible callbacks still fail."
+        nil
+      cons paragraph
+        cons "Owned diagnostics and final Sentence, Doc and Math placement mappings survive the operation-local namespace lifetime."
+        cons " Structural collection, planning, resolution and insertion share the caller Budget and SourceAdmission with sticky failures and no partial result."
+        cons " A private native SVG composition test checks Image and InlineImage alt exclusion, caption callbacks and foreign placement order; it does not publish a general SVG host API."
+        cons " Existing render and PageSet callers retain their previous paths and CLI guards; accepting a role plan does not establish completed asset-aware host integration or portable proof."
         nil
       nil
     cons section visibility "HTML[挿入対象/そうにゅうたいしょう]Sentence[出現/しゅつげん]の[構造/こうぞう]inventory"
