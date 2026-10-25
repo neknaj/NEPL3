@@ -1411,8 +1411,8 @@ body
       body
       cons paragraph
         cons parallel
-          cons variant ja "doc-html pages-svgはroot SVG PageSetを[書/か]き[出/だ]す[通常/つうじょう]CLIであり、[明示/めいじ]--math-renderer mathml-onlyは[既存/きそん]の[限定/げんてい][経路/けいろ]とreceipt/1を[保/たも]つ。"
-          cons variant en "doc-html pages-svg exports root-SVG PageSets; explicit --math-renderer mathml-only preserves the established limited path and receipt /1."
+          cons variant ja "[非対話/ひたいわ]のdoc-html pages-svgはroot SVG PageSetを[書/か]き[出/だ]す[通常/つうじょう]CLIであり、[明示/めいじ]--math-renderer mathml-onlyは[既存/きそん]の[限定/げんてい][経路/けいろ]とreceipt/1を[保/たも]つ。"
+          cons variant en "Noninteractive doc-html pages-svg exports root-SVG PageSets; explicit --math-renderer mathml-only preserves the established limited path and receipt /1."
           nil
         cons parallel
           cons variant ja "version 1 manifestはpages・assetsを[必須/ひっす]とし、pageのid・source・routeと[省略可能/しょうりゃくかのう]な[物理/ぶつり]input、SVG bindingのpage IDとassetsのid・source・mimeを[明示/めいじ]する。"
@@ -1451,8 +1451,8 @@ body
           cons variant en "A new output directory is created only after all semantic checks and generation succeed, and the completion manifest is written last; an I/O failure may still leave an incomplete directory."
           nil
         cons parallel
-          cons variant ja "この[既存/きそん]CLIのMathMLOnly[経路/けいろ]は[生成時/せいせいじ]KaTeXを[実行/じっこう]せず、[外部/がいぶ]SVG・[保持/ほじ]jobのretry・[永続/えいぞく][復元/ふくげん]は[対象外/たいしょうがい]であり、[全体/ぜんたい][受入/うけいれ]も[未実施/みじっし]である。"
-          cons variant en "This legacy CLI MathMLOnly path does not execute generation-time KaTeX; external SVG, retained-job retry and durable restoration are outside scope, and overall acceptance has not been run."
+          cons variant ja "この[非対話/ひたいわ]CLIのMathMLOnly[経路/けいろ]は[生成時/せいせいじ]KaTeXを[実行/じっこう]せず、[外部/がいぶ]SVG・[保持/ほじ]jobのretry・[永続/えいぞく][復元/ふくげん]は[対象外/たいしょうがい]であり、[全体/ぜんたい][受入/うけいれ]も[未実施/みじっし]である。"
+          cons variant en "This noninteractive CLI MathMLOnly path does not execute generation-time KaTeX; external SVG, retained-job retry and durable restoration are outside scope, and overall acceptance has not been run."
           nil
         cons parallel
           cons variant ja "[実行例/じっこうれい]はexamples/document/pages-svgに[同梱/どうこん]し、[同/おな]じmanifestが[二/ふた]つの[多言語/たげんご]pageとSVGを[明示/めいじ]して[相互/そうご]linkを[解決/かいけつ]する。"
@@ -1509,8 +1509,8 @@ body
           cons variant en "host_invocation_recorded=false and unobserved host-internal Work and Allocation are explicit; neither None nor zero visuals implies that the host was not invoked."
           nil
         cons parallel
-          cons variant ja "[明示/めいじ]MathMLOnlyと[従来/じゅうらい]native[入口/いりぐち]はKaTeX hostを[呼/よ]ばず、nepl3.local-doc-pages.root-svg-package/1・katex_generation=false・[従来/じゅうらい]bytesと[課金/かきん]を[保持/ほじ]し、[外部/がいぶ]SVG・interactive retry・[永続復元/えいぞくふくげん]は[依然/いぜん]として[対象外/たいしょうがい]である。"
-          cons variant en "Explicit MathMLOnly and the existing native entry do not call the KaTeX host and preserve nepl3.local-doc-pages.root-svg-package/1, katex_generation=false, prior bytes and charges; external SVG, interactive retry and durable restoration remain outside scope."
+          cons variant ja "[非対話/ひたいわ]の[明示/めいじ]MathMLOnlyと[従来/じゅうらい]plan-based native[入口/いりぐち]はKaTeX hostを[呼/よ]ばず、nepl3.local-doc-pages.root-svg-package/1・katex_generation=false・[従来/じゅうらい]bytesと[課金/かきん]を[保持/ほじ]し、[外部/がいぶ]SVG・interactive retry・[永続復元/えいぞくふくげん]は[依然/いぜん]として[対象外/たいしょうがい]である。"
+          cons variant en "Noninteractive explicit MathMLOnly and the existing plan-based native entry do not call the KaTeX host and preserve nepl3.local-doc-pages.root-svg-package/1, katex_generation=false, prior bytes and charges; external SVG, interactive retry and durable restoration remain outside scope."
           nil
         nil
       cons rawcode some "sh" "npm ci --prefix tools/audit/math --ignore-scripts\nNEPL3_KATEX_NODE_MODULES=tools/audit/math/node_modules nepl3-tools doc-html pages-svg examples/document/pages-svg/manifest.json out-svg-pages-preferred\n"
@@ -1539,8 +1539,8 @@ body
           cons variant en "The manifest output ceiling remains frozen but does not bound preparation; capture I/O and host containers remain outside measured phase usage."
           nil
         cons parallel
-          cons variant ja "PreparedはSVGの[入場/にゅうじょう]・PageSet[妥当性/だとうせい]・[描画/びょうが][完了/かんりょう]を[証明/しょうめい]せず、CLI[対話/たいわ][再開/さいかい]と[永続的/えいぞくてき]な[復元/ふくげん]は[別/べつ]の[未対応/みたいおう][段階/だんかい]とする。"
-          cons variant en "Prepared proves neither SVG admission, PageSet validity nor completed rendering; interactive CLI resume and durable restoration remain separate unimplemented stages."
+          cons variant ja "PreparedはSVGの[入場/にゅうじょう]・PageSet[妥当性/だとうせい]・[描画/びょうが][完了/かんりょう]を[証明/しょうめい]せず、[永続的/えいぞくてき]な[復元/ふくげん]は[別/べつ]の[未対応/みたいおう][段階/だんかい]とする。"
+          cons variant en "Prepared proves neither SVG admission, PageSet validity nor completed rendering; durable restoration remains a separate unimplemented stage."
           nil
         nil
       nil
@@ -1584,6 +1584,48 @@ body
           cons variant en "Files and manifest are returned in memory only after success; publication, interactive CLI resume, durable restoration and external SVG packaging are outside this API, and it is not a portable proof."
           nil
         nil
+      nil
+    cons section svgInteractiveCli "SVG CLIの[対話的/たいわてき][再開/さいかい] / Interactive SVG CLI continuation"
+      body
+      cons paragraph
+        cons parallel
+          cons variant ja "doc-html pages-svg --interactive-limitsは[明示/めいじ][指定/してい]の[場合/ばあい]だけ[保持/ほじ]jobを[使/つか]い、doc-html retry-limitsが[出力/しゅつりょく]するRetryLimits[設定/せってい]を[受/う]け[取/と]る。"
+          cons variant en "doc-html pages-svg --interactive-limits uses a retained job only when explicitly selected and accepts the RetryLimits configuration emitted by doc-html retry-limits."
+          nil
+        cons parallel
+          cons variant ja "manifestの[予算/よさん][欄/らん]はschema[検査/けんさ]だけを[行/おこな]い、[初回/しょかい]からRetryLimitsのjob・parse・lower・Code・outputの5[群/ぐん]を[選択/せんたく]する。"
+          cons variant en "Manifest allowance fields are schema-validated but not selected; the five RetryLimits groups for job, parse, lower, Code and output govern from the first attempt."
+          nil
+        cons parallel
+          cons variant ja "[全/ぜん]5[群/ぐん]の[各/かく][資源/しげん]を[非減少/ひげんしょう]に[保/たも]ち、native[再開/さいかい]が[受理/じゅり]した[設定/せってい]だけへ[更新/こうしん]して、[準備中/じゅんびちゅう]に[増/ふ]えたoutput[上限/じょうげん]も[最初/さいしょ]の[描画/びょうが]へ[引/ひ]き[継/つ]ぐ。"
+          cons variant en "Every resource in all five groups remains nondecreasing, only natively accepted configurations become current, and output increases granted during preparation reach the first render."
+          nil
+        cons parallel
+          cons variant ja "compileと[捕捉/ほそく]を[一度/いちど]だけ[行/おこな]い、Doc・SVG・[登録/とうろく]file・[表示/ひょうじ][設定/せってい]・[要求/ようきゅう]renderer・[出力先/しゅつりょくさき]の[指定/してい]を[保/たも]ち、grantでは[上限/じょうげん][設定/せってい]fileだけを[再読/さいどく]する。"
+          cons variant en "Compilation and capture occur once; Doc, SVG, registered files, display settings, requested renderer and output-path selection remain fixed, while grants reread only allowance files."
+          nil
+        cons parallel
+          cons variant ja "[停止後/ていしご]はresumeと[上限/じょうげん]fileのpathで[再開/さいかい]し、cancelまたはEOFで[取消/とりけし]とし、[改行/かいぎょう]を[含/ふく]むcommand[行/ぎょう]を4096 bytes、[設定/せってい]fileを65536 bytesに[制限/せいげん]する。"
+          cons variant en "After a pause, resume followed by an allowance-file path requests continuation, cancel or EOF cancels, command lines including line endings are bounded to 4096 bytes and configuration files to 65536 bytes."
+          nil
+        cons parallel
+          cons variant ja "[再開/さいかい][要求/ようきゅう]の[不正/ふせい]JSON・[未知/みち]または[重複/じゅうふく]field・[縮小/しゅくしょう]grantは[停止/ていし][状態/じょうたい]を[保/たも]ち、[同額/どうがく]grantは[受理/じゅり]しても[再/ふたた]び[停止/ていし]し[実際/じっさい]の[消費/しょうひ]を[累積/るいせき]し[得/う]る。"
+          cons variant en "Invalid JSON, unknown or duplicate fields and shrinking grants in resume requests leave the job paused; an accepted equal grant may stop again and add its actual consumption cumulatively."
+          nil
+        cons parallel
+          cons variant ja "[停止中/ていしちゅう]のprompt・read[失敗/しっぱい]と[取消/とりけし]には[使用量/しようりょう]と[試行/しこう][履歴/りれき]を[添/そ]え、[成功/せいこう]manifestはnativeのsvg-render-job/1を[保/たも]って[未観測/みかんそく]のhost[情報/じょうほう]を[成功/せいこう][扱/あつか]いしない。"
+          cons variant en "Prompt/read failures and cancellation while paused retain usage and attempt history; successful manifests preserve the native svg-render-job/1 contract without treating unobserved host information as success."
+          nil
+        cons parallel
+          cons variant ja "Complete[後/ご]だけ[新/あたら]しい[出力/しゅつりょく]directoryへfilesと[最後/さいご]のreceiptを[書/か]き、[書込/かきこ]みI/O[失敗/しっぱい]では[不完全/ふかんぜん]なdirectoryが[残/のこ]り[得/う]るためrollbackを[保証/ほしょう]しない。"
+          cons variant en "Only after Complete are files written to a new output directory with the receipt last; write-I/O failure may leave an incomplete directory, so rollback is not guaranteed."
+          nil
+        cons parallel
+          cons variant ja "[非対話/ひたいわ][経路/けいろ]の[既存/きそん]bytesと[課金/かきん]を[保/たも]ち、--で[始/はじ]まるpathは./などで[明示/めいじ]し、[外部/がいぶ]SVGと[永続的/えいぞくてき]な[復元/ふくげん]は[依然/いぜん]として[未対応/みたいおう]とする。"
+          cons variant en "Existing noninteractive bytes and charges remain unchanged, paths beginning with -- require an explicit prefix such as ./, and external SVG and durable restoration remain unsupported."
+          nil
+        nil
+      cons rawcode some "sh" "nepl3-tools doc-html retry-limits > limits.json\nnepl3-tools doc-html pages-svg --interactive-limits limits.json --math-renderer mathml-only examples/document/pages-svg/manifest.json out-svg-interactive\n"
       nil
     cons section visibility "HTML[挿入対象/そうにゅうたいしょう]Sentence[出現/しゅつげん]の[構造/こうぞう]inventory"
     body

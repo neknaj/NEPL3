@@ -110,5 +110,9 @@
   {
     "section": "svgRenderRetry",
     "name": "retained-svg-render-retry"
+  },
+  {
+    "section": "svgInteractiveCli",
+    "name": "interactive-svg-pages-cli"
   }
 ]

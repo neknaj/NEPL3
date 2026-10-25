@@ -39,7 +39,7 @@ impl RetryLimits {
     pub fn read(path: &Path) -> crate::Result<Self> {
         resources::read_configuration(path)
     }
-    fn preparation(self) -> PreparationLimits {
+    pub(super) fn preparation(self) -> PreparationLimits {
         PreparationLimits {
             parse_limits: self.parse_limits,
             lower_limits: self.lower_limits,
@@ -121,7 +121,7 @@ fn write_with_io(
     )?;
     super::write_generated(generated, output)
 }
-fn next_limits(
+pub(super) fn next_limits(
     previous: RetryLimits,
     input: &mut impl BufRead,
     messages: &mut impl Write,

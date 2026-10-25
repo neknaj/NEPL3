@@ -1,10 +1,12 @@
 //! Immutable-source SVG PageSet export with explicit renderer provenance.
+pub mod interactive;
 use super::{generation as generate, input};
 use crate::doc::export::MathRenderer;
 use std::path::Path;
 
 /// Captures inputs once, completes all generation, then writes the receipt last.
-/// No interactive retry, external SVG or implicit renderer downgrade is supported.
+/// This noninteractive entry never prompts; external SVG and implicit renderer
+/// downgrade are unsupported.
 pub fn write(manifest: &Path, output: &Path, renderer: MathRenderer) -> crate::Result<()> {
     if output.exists() {
         return Err("output directory already exists".into());
