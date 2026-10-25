@@ -1,3 +1,4 @@
+mod native;
 use super::input::{Captured, SVG_BYTES, SVG_COUNT};
 use crate::doc::{
     annotations::article,
@@ -19,6 +20,7 @@ pub(super) struct Generated {
     pub files: BTreeMap<String, Vec<u8>>,
     pub manifest: String,
     pub math_generation: Vec<Vec<export::math::generation::Occurrence>>,
+    pub native_generation: Option<native::Prepared>,
 }
 fn push<T>(v: &mut Vec<T>, value: T, b: &mut Budget) -> Result<(), String> {
     b.charge(Resource::Work, 1).map_err(err)?;
@@ -37,12 +39,26 @@ fn metadata_charge(bytes: usize, allocation: usize, b: &mut Budget) -> Result<()
     b.charge(Resource::AllocationUnits, allocation as u64)
         .map_err(err)
 }
+#[cfg(test)]
 pub(super) fn run(c: &Compiled, captured: &Captured, b: &mut Budget) -> Result<Generated, String> {
-    let result = run_inner(c, captured, b);
+    run_selected(c, captured, MathRenderer::MathMLOnly, b)
+}
+pub(super) fn run_selected(
+    c: &Compiled,
+    captured: &Captured,
+    preference: MathRenderer,
+    b: &mut Budget,
+) -> Result<Generated, String> {
+    let result = run_inner(c, captured, preference, b);
     b.poll().map_err(err)?;
     result
 }
-fn run_inner(c: &Compiled, captured: &Captured, b: &mut Budget) -> Result<Generated, String> {
+fn run_inner(
+    c: &Compiled,
+    captured: &Captured,
+    preference: MathRenderer,
+    b: &mut Budget,
+) -> Result<Generated, String> {
     b.poll().map_err(err)?;
     let initial = b.usage();
     // New source-host provenance is explicitly charged before shared preparation.
@@ -146,7 +162,7 @@ fn run_inner(c: &Compiled, captured: &Captured, b: &mut Budget) -> Result<Genera
                     compiled: c,
                     registry: &c.doc.registry,
                     codec,
-                    preference: MathRenderer::MathMLOnly,
+                    preference,
                 }
                 .render(
                     view,
@@ -183,22 +199,40 @@ fn run_inner(c: &Compiled, captured: &Captured, b: &mut Budget) -> Result<Genera
         let generation = export::math::generation::collect(
             records,
             rendered.sentences.get(page).ok_or("SentencePageMissing")?,
-            MathRenderer::MathMLOnly,
+            preference,
             b,
         )?;
         push(&mut generated, generation, b)?;
     }
+    let native_generation = if preference == MathRenderer::KaTeXPreferred {
+        Some(native::prepare(
+            &mut generated,
+            &mut math,
+            &request.set,
+            input_identity,
+            b,
+        )?)
+    } else {
+        None
+    };
     let mut formula_pages = Vec::new();
     for records in &generated {
         let mut formulas = Vec::new();
         for record in records {
-            if !matches!(
+            if preference == MathRenderer::MathMLOnly {
+                if !matches!(
+                    record.tex.as_ref(),
+                    crate::doc::math::display::TexPreparation::MathMLOnly
+                ) || record.fallback.is_some()
+                    || record.fallback_detail.is_some()
+                {
+                    return Err("ExplicitMathMLSelectionMismatch".into());
+                }
+            } else if matches!(
                 record.tex.as_ref(),
                 crate::doc::math::display::TexPreparation::MathMLOnly
-            ) || record.fallback.is_some()
-                || record.fallback_detail.is_some()
-            {
-                return Err("ExplicitMathMLSelectionMismatch".into());
+            ) {
+                return Err("PreferredMathSelectionMismatch".into());
             }
             push(
                 &mut formulas,
@@ -209,9 +243,26 @@ fn run_inner(c: &Compiled, captured: &Captured, b: &mut Budget) -> Result<Genera
                         nepl3_markup::mathml::Display::Block => "block",
                     },
                     owner_path: &record.owner,
-                    renderer: "MathML",
-                    selection_reason: "ExplicitMathMLOnly",
-                    fallback_reason: None,
+                    renderer: if preference == MathRenderer::KaTeXPreferred
+                        && record.fallback.is_none()
+                    {
+                        "KaTeX+MathML"
+                    } else {
+                        "MathML"
+                    },
+                    selection_reason: if preference == MathRenderer::MathMLOnly {
+                        "ExplicitMathMLOnly"
+                    } else {
+                        "KaTeXPreferred"
+                    },
+                    fallback_reason: record.fallback.map(|reason| match reason {
+                        export::math::Fallback::HostCapabilityUnavailable => {
+                            "KaTeXHostCapabilityUnavailable"
+                        }
+                        export::math::Fallback::ResourceUnavailable => "KaTeXResourceUnavailable",
+                        export::math::Fallback::RendererParseError => "KaTeXRendererParseError",
+                        export::math::Fallback::UnsupportedTex { .. } => "FaithfulTexUnsupported",
+                    }),
                 },
                 b,
             )?;
@@ -243,13 +294,21 @@ fn run_inner(c: &Compiled, captured: &Captured, b: &mut Budget) -> Result<Genera
     }
     let evidence = output::SourceEvidence {
         scope: "Inputs captured once under finite count/byte limits before parsing; capture I/O is outside parse/output Budgets. Output initial_usage precedes source preparation; each parse/lower has separate limits. Resolved paths are containment-checked, not race-free filesystem capabilities. No persistent retry/capture restoration.",
-        math_renderer: "mathml-only-explicit",
+        math_renderer: if preference == MathRenderer::MathMLOnly {
+            "mathml-only-explicit"
+        } else {
+            "katex-preferred"
+        },
         sources: &prepared.origins,
         registered_files: &prepared.file_origins,
         svg_capture,
         svg_total_byte_limit: SVG_BYTES,
         svg_total_count_limit: SVG_COUNT,
         math: formula_pages,
+        native_generation: native_generation
+            .as_ref()
+            .map(|n| n.evidence(&generated, &request.set, b))
+            .transpose()?,
     };
     let (files, manifest) = output::package(
         &request.set,
@@ -259,11 +318,13 @@ fn run_inner(c: &Compiled, captured: &Captured, b: &mut Budget) -> Result<Genera
         input_identity,
         initial,
         Some(&evidence),
+        native_generation.as_ref().map(|n| n.pages.as_slice()),
         b,
     )?;
     Ok(Generated {
         files,
         manifest,
         math_generation: generated,
+        native_generation,
     })
 }

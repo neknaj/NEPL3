@@ -1411,8 +1411,8 @@ body
       body
       cons paragraph
         cons parallel
-          cons variant ja "doc-html pages-svgは、--math-renderer mathml-onlyを[明示/めいじ]した[通常/つうじょう]のfile[書出/かきだ]しだけを[受/う]け[付/つ]ける[限定/げんてい]CLIであり、[省略/しょうりゃく]・KaTeXPreferred・interactive[指定/してい]は[数式/すうしき]がなくても[拒否/きょひ]する。"
-          cons variant en "doc-html pages-svg is a limited CLI accepting ordinary file export only with explicit --math-renderer mathml-only; omitted selection, KaTeXPreferred and interactive options are rejected even without formulas."
+          cons variant ja "doc-html pages-svgはroot SVG PageSetを[書/か]き[出/だ]す[通常/つうじょう]CLIであり、[明示/めいじ]--math-renderer mathml-onlyは[既存/きそん]の[限定/げんてい][経路/けいろ]とreceipt/1を[保/たも]つ。"
+          cons variant en "doc-html pages-svg exports root-SVG PageSets; explicit --math-renderer mathml-only preserves the established limited path and receipt /1."
           nil
         cons parallel
           cons variant ja "version 1 manifestはpages・assetsを[必須/ひっす]とし、pageのid・source・routeと[省略可能/しょうりゃくかのう]な[物理/ぶつり]input、SVG bindingのpage IDとassetsのid・source・mimeを[明示/めいじ]する。"
@@ -1451,8 +1451,8 @@ body
           cons variant en "A new output directory is created only after all semantic checks and generation succeed, and the completion manifest is written last; an I/O failure may still leave an incomplete directory."
           nil
         cons parallel
-          cons variant ja "これは[既定/きてい]のKaTeX[優先/ゆうせん][変換器/へんかんき]の[完成/かんせい]ではなく、[外部/がいぶ]SVG・[保持/ほじ]jobのretry・[永続/えいぞく][復元/ふくげん]は[未実装/みじっそう]であり、[全体/ぜんたい][受入/うけいれ]も[未実施/みじっし]である。"
-          cons variant en "This does not complete the default KaTeX-preferred converter; external SVG, retained-job retry and durable restoration remain unimplemented, and overall acceptance has not been run."
+          cons variant ja "このMathMLOnly[経路/けいろ]は[生成時/せいせいじ]KaTeXを[実行/じっこう]せず、[外部/がいぶ]SVG・[保持/ほじ]jobのretry・[永続/えいぞく][復元/ふくげん]は[対象外/たいしょうがい]であり、[全体/ぜんたい][受入/うけいれ]も[未実施/みじっし]である。"
+          cons variant en "This MathMLOnly path does not execute generation-time KaTeX; external SVG, retained-job retry and durable restoration are outside scope, and overall acceptance has not been run."
           nil
         cons parallel
           cons variant ja "[実行例/じっこうれい]はexamples/document/pages-svgに[同梱/どうこん]し、[同/おな]じmanifestが[二/ふた]つの[多言語/たげんご]pageとSVGを[明示/めいじ]して[相互/そうご]linkを[解決/かいけつ]する。"
@@ -1460,6 +1460,60 @@ body
           nil
         nil
       cons rawcode some "sh" "nepl3-tools doc-html pages-svg --math-renderer mathml-only examples/document/pages-svg/manifest.json out-svg-pages\n"
+      nil
+    cons section svgPagesKaTeX "KaTeX[優先/ゆうせん]のSVG PageSet[生成/せいせい] / KaTeX-preferred SVG PageSet generation"
+      body
+      cons paragraph
+        cons parallel
+          cons variant ja "doc-html pages-svgの[既定/きてい]と[明示/めいじ]katex-preferredは[生成時/せいせいじ]KaTeXを[要求/ようきゅう]し、[成功/せいこう]したvisualだけを[独立/どくりつ]MathMLとともに[包装/ほうそう]する。"
+          cons variant en "The default and explicit katex-preferred modes of doc-html pages-svg request generation-time KaTeX and package only successful visuals alongside independent MathML."
+          nil
+        cons parallel
+          cons variant ja "[信頼/しんらい]するhost[設定/せってい]NEPL3_KATEX_NODE_MODULESは[固定/こてい]npm[依存/いぞん]のdirectoryを[指/さ]し、Node 24[以降/いこう]を[使/つか]うが、この[設定/せってい]をDocやmanifestから[受/う]け[取/と]らない。"
+          cons variant en "Trusted host configuration NEPL3_KATEX_NODE_MODULES points to the locked npm dependency directory and uses Node 24 or later; neither Doc input nor its manifest supplies this configuration."
+          nil
+        cons parallel
+          cons variant ja "[直接/ちょくせつ]と[入/い]れ[子/こ]の[全/ぜん]Mathへ[同/おな]じPreferenceを[渡/わた]し、compose・collect・generate_cached・settle・page[別/べつ]shellの[順/じゅん]を[保/たも]つ。"
+          cons variant en "Direct and nested Math receive the same Preference, preserving the sequence compose, collect, generate_cached, settle and per-page shell construction."
+          nil
+        cons parallel
+          cons variant ja "[能力不在/のうりょくふざい]・[資源不在/しげんふざい]・renderer parse error・[忠実/ちゅうじつ]なTeX[変換/へんかん]の[未対応/みたいおう]は[区別/くべつ]して[理由/りゆう]・detail・[未対応/みたいおう]nodeを[残/のこ]し、provider violationやsticky stopをfallbackへ[変換/へんかん]しない。"
+          cons variant en "Capability absence, resource absence, renderer parse error and unsupported faithful TeX conversion retain distinct reasons, details and unsupported nodes; provider violations and sticky stops are not converted into fallback."
+          nil
+        cons parallel
+          cons variant ja "ReadyなMathの[祖先/そせん]と[子/こ]が[重/かさ]なるNestedKaTeXAncestorConflictは[既存/きそん]どおり[拒否/きょひ]し、[最終/さいしゅう]arena rootとpage[別/べつ]owner pathを[失/うしな]わない。"
+          cons variant en "NestedKaTeXAncestorConflict still rejects overlapping Ready ancestors and descendants, while final arena roots and page-local owner paths are preserved."
+          nil
+        cons parallel
+          cons variant ja "nepl3.local-doc-pages.svg-katex-context/1とNUL、32-byte input digest、little-endian u64のpage indexとID[長/ちょう]、ID bytes、preferred tag 1を[順/じゅん]に[束縛/そくばく]したSHA-256をrequest contextとする。"
+          cons variant en "The request context is SHA-256 over nepl3.local-doc-pages.svg-katex-context/1 and NUL, the 32-byte input digest, little-endian u64 page index and ID length, ID bytes and preferred tag 1, in that order."
+          nil
+        cons parallel
+          cons variant ja "[従来/じゅうらい]input_identityは[入力/にゅうりょく]の[同定/どうてい]のままとし、[実際/じっさい]のTeX・[変換器/へんかんき]・[固定/こてい]host[情報/じょうほう]を[束縛/そくばく]する[既存/きそん]visual scopeと、[全/ぜん]payload digestを[別/べつ]に[記録/きろく]する。"
+          cons variant en "The existing input_identity remains input identification; existing visual scopes binding actual TeX, converter and pinned host information, plus every payload digest, are recorded separately."
+          nil
+        cons parallel
+          cons variant ja "[再利用/さいりよう]するのは[直前/ちょくぜん]までの[成功/せいこう]から[得/え]た[不変/ふへん]filesとclassesだけであり、visual・scope・CSSはpageごとに[構成/こうせい]し、[途中/とちゅう]のNoneへ[別/べつ]pageのfontやvisualを[流用/りゅうよう]しない。"
+          cons variant en "Only immutable files and classes from the most recent success are reused; visuals, scopes and CSS are built per page, and an intermediate None does not inherit another page's fonts or visuals."
+          nil
+        cons parallel
+          cons variant ja "native visualがあるpageのroute[別/べつ]CSSへ[画像/がぞう][寸法/すんぽう]CSS・KaTeX visual CSS・[全/ぜん][固定/こてい]font・[完全/かんぜん]licenseを[含/ふく]め、[実際/じっさい]にnative visualがあるpageだけに[対応/たいおう]するfont CSPを[付/つ]ける。"
+          cons variant en "For pages with native visuals, route-specific CSS contains image dimensions, KaTeX visual rules, every fixed font and the complete license; only pages with actual native visuals receive the corresponding font CSP."
+          nil
+        cons parallel
+          cons variant ja "preferred[出力/しゅつりょく]はnepl3.local-doc-pages.root-svg-package/2[形式/けいしき]を[使/つか]い、katex_generationは[成功/せいこう]visualのpage[数/すう]と[件数/けんすう]を[表/あらわ]すobjectであり、[要求/ようきゅう]を[成功/せいこう]とするbooleanではない。"
+          cons variant en "Preferred output uses the nepl3.local-doc-pages.root-svg-package/2 format, where katex_generation is an object counting successful visual pages and visuals, not a boolean equating a request with success."
+          nil
+        cons parallel
+          cons variant ja "host_invocation_recorded=falseとhost[内部/ないぶ]Work・Allocationのunobservedを[明記/めいき]し、Noneやvisual[数/すう]0からhost[未実行/みじっこう]を[推論/すいろん]しない。"
+          cons variant en "host_invocation_recorded=false and unobserved host-internal Work and Allocation are explicit; neither None nor zero visuals implies that the host was not invoked."
+          nil
+        cons parallel
+          cons variant ja "[明示/めいじ]MathMLOnlyと[従来/じゅうらい]native[入口/いりぐち]はKaTeX hostを[呼/よ]ばず、nepl3.local-doc-pages.root-svg-package/1・katex_generation=false・[従来/じゅうらい]bytesと[課金/かきん]を[保持/ほじ]し、[外部/がいぶ]SVG・interactive retry・[永続復元/えいぞくふくげん]は[依然/いぜん]として[対象外/たいしょうがい]である。"
+          cons variant en "Explicit MathMLOnly and the existing native entry do not call the KaTeX host and preserve nepl3.local-doc-pages.root-svg-package/1, katex_generation=false, prior bytes and charges; external SVG, interactive retry and durable restoration remain outside scope."
+          nil
+        nil
+      cons rawcode some "sh" "npm ci --prefix tools/audit/math --ignore-scripts\nNEPL3_KATEX_NODE_MODULES=tools/audit/math/node_modules nepl3-tools doc-html pages-svg examples/document/pages-svg/manifest.json out-svg-pages-preferred\n"
       nil
     cons section visibility "HTML[挿入対象/そうにゅうたいしょう]Sentence[出現/しゅつげん]の[構造/こうぞう]inventory"
     body

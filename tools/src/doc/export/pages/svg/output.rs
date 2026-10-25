@@ -67,6 +67,61 @@ pub(super) struct CapturedSvg<'a> {
     pub sha256: String,
 }
 #[derive(Serialize)]
+pub(super) struct NativeVisual<'a> {
+    pub root: u64,
+    pub scope: &'a str,
+}
+#[derive(Serialize)]
+pub(super) struct NativeFile<'a> {
+    pub path: &'a str,
+    pub mime: &'a str,
+    pub bytes: usize,
+    pub sha256: String,
+}
+#[derive(Serialize)]
+pub(super) struct UnsupportedEvidence {
+    pub node: u64,
+    pub reason: String,
+}
+#[derive(Serialize)]
+pub(super) struct NativeFormula<'a> {
+    pub root: u64,
+    pub owner_path: &'a [crate::doc::export::math::generation::OwnerStep],
+    pub fallback_detail: Option<&'a str>,
+    pub unsupported: Option<UnsupportedEvidence>,
+}
+#[derive(Serialize)]
+pub(super) struct NativePage<'a> {
+    pub page: &'a str,
+    pub request_context: &'a str,
+    pub node_version: Option<&'a str>,
+    pub visuals: Vec<NativeVisual<'a>>,
+    pub files: Vec<NativeFile<'a>>,
+    pub formulas: Vec<NativeFormula<'a>>,
+}
+#[derive(Serialize)]
+pub(super) struct NativeEvidence<'a> {
+    pub contract: &'static str,
+    pub requested_renderer: &'static str,
+    pub pinned_version: &'static str,
+    pub host_invocation_recorded: bool,
+    pub host_internal_work: &'static str,
+    pub host_internal_allocation: &'static str,
+    pub pages: Vec<NativePage<'a>>,
+}
+#[derive(Serialize)]
+#[serde(untagged)]
+enum GenerationEvidence {
+    Disabled(bool),
+    Visuals {
+        successful_visual_pages: usize,
+        successful_visuals: usize,
+        host_invocation_recorded: bool,
+        host_internal_work: &'static str,
+        host_internal_allocation: &'static str,
+    },
+}
+#[derive(Serialize)]
 pub(super) struct SourceEvidence<'a> {
     pub scope: &'static str,
     pub math_renderer: &'static str,
@@ -76,6 +131,8 @@ pub(super) struct SourceEvidence<'a> {
     pub svg_total_byte_limit: usize,
     pub svg_total_count_limit: usize,
     pub math: Vec<Vec<Formula<'a>>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub native_generation: Option<NativeEvidence<'a>>,
 }
 #[derive(Serialize)]
 struct Receipt<'a> {
@@ -86,7 +143,7 @@ struct Receipt<'a> {
     display: Display<'a>,
     svg: &'static str,
     css: &'static str,
-    katex_generation: bool,
+    katex_generation: GenerationEvidence,
     limits: serde_json::Value,
     initial_usage: serde_json::Value,
     pre_receipt_usage: serde_json::Value,
@@ -130,11 +187,39 @@ pub(super) fn package(
     identity: Digest,
     initial: Usage,
     source_input: Option<&SourceEvidence<'_>>,
+    natives: Option<&[Option<export::katex::Generated>]>,
     b: &mut Budget,
 ) -> Result<(BTreeMap<String, Vec<u8>>, String), String> {
     if rendered.pages.fragments.len() != set.pages.len() {
         return Err("PageCountMismatch".into());
     }
+    let generation = if let Some(pages) = natives {
+        charge(b, 1, 0)?;
+        if pages.len() != set.pages.len() {
+            return Err("NativePageCountMismatch".into());
+        }
+        let mut successful_visual_pages = 0;
+        let mut successful_visuals = 0;
+        for native in pages {
+            charge(b, 1, 0)?;
+            if let Some(native) = native {
+                if native.visuals.is_empty() {
+                    return Err("EmptyNativeVisualResult".into());
+                }
+                successful_visual_pages += 1;
+                successful_visuals += native.visuals.len();
+            }
+        }
+        GenerationEvidence::Visuals {
+            successful_visual_pages,
+            successful_visuals,
+            host_invocation_recorded: false,
+            host_internal_work: "unobserved",
+            host_internal_allocation: "unobserved",
+        }
+    } else {
+        GenerationEvidence::Disabled(false)
+    };
     let mut files = BTreeMap::new();
     for file in &set.files {
         charge(
@@ -171,7 +256,9 @@ pub(super) fn package(
             CssMode::External,
             Some(SvgMode::Embedded),
             &mut css,
-            None,
+            natives
+                .and_then(|pages| pages.get(index))
+                .and_then(Option::as_ref),
             b,
         )?;
         charge(b, route.len() + 72, 72)?;
@@ -245,18 +332,26 @@ pub(super) fn package(
     charge(b, 8192, 8192)?;
     let receipt = Receipt {
         source_input,
-        format: "nepl3.local-doc-pages.root-svg-package/1",
+        format: if natives.is_some() {
+            "nepl3.local-doc-pages.root-svg-package/2"
+        } else {
+            "nepl3.local-doc-pages.root-svg-package/1"
+        },
         input_identity,
         identity_scope: "canonical PageSet, exact display and ordered raw root SVG bindings; not callback identity or portable proof",
         files: records,
         display,
         svg: "embedded",
         css: "external-page-specific",
-        katex_generation: false,
+        katex_generation: generation,
         limits: super::super::resources::limits(b.limits()),
         initial_usage: super::super::resources::usage(initial),
         pre_receipt_usage: super::super::resources::usage(b.usage()),
-        scope: "Externally retained plans and owners. Validated native fragments, root-only embedded SVG, page links, per-page CSS and CSP. Caller foreign display is not evaluated or mathematically proved. No CLI, captured retry state, external SVG packaging, KaTeX generation, deployment or portable-provider acceptance.",
+        scope: if natives.is_some() {
+            "Preferred native source export with independently retained MathML and optional checked generation-time KaTeX visuals. Successful visual counts do not record whether a host invocation was attempted when no visuals result. Host-internal Work/Allocation are unobserved. Root SVG, page-specific CSS/CSP and checked payload hashes; no external SVG, persistent retry, durable restoration, deployment or portable-provider acceptance."
+        } else {
+            "Externally retained plans and owners. Validated native fragments, root-only embedded SVG, page links, per-page CSS and CSP. Caller foreign display is not evaluated or mathematically proved. No CLI, captured retry state, external SVG packaging, KaTeX generation, deployment or portable-provider acceptance."
+        },
     };
     let mut writer = Writer {
         bytes: Vec::new(),

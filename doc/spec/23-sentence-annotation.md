@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 8033b2a84bdb8ee57db6641918077d5232adc6b33d69c624959f36aaf7ca3cbe; alias input SHA-256 7e501a36bb75abc1bcfcb0a71d469bc2c4387186c4f3d1b9fd321d45875f6e17; page input SHA-256 b261d2494d25fe491c8663019dda3d8d0bf6f3084f5104c5bc8519a53b36db24. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 277910bc7bb2fc5752b7a147397765e0d22312a5fd0cc2d0edc9a37b2f50fb52; alias input SHA-256 b2296119feba00739a633b7b891a10da6aee9b1dc242fe31649e32b2c5770431; page input SHA-256 aea891844570a8629a23c70d05a2a0fdd589bcff4447a426fa9f3ae43cc34cfb. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="23-構造化文章と対象付き注釈への是正"></a>
 
@@ -864,7 +864,7 @@ The packager does not execute KaTeX conversion and only preserves the supplied d
 
 **ja**
 
-doc\-html pages\-svgは、\-\-math\-renderer mathml\-onlyを<ruby>明示<rt>めいじ</rt></ruby>した<ruby>通常<rt>つうじょう</rt></ruby>のfile<ruby>書出<rt>かきだ</rt></ruby>しだけを<ruby>受<rt>う</rt></ruby>け<ruby>付<rt>つ</rt></ruby>ける<ruby>限定<rt>げんてい</rt></ruby>CLIであり、<ruby>省略<rt>しょうりゃく</rt></ruby>・KaTeXPreferred・interactive<ruby>指定<rt>してい</rt></ruby>は<ruby>数式<rt>すうしき</rt></ruby>がなくても<ruby>拒否<rt>きょひ</rt></ruby>する。
+doc\-html pages\-svgはroot SVG PageSetを<ruby>書<rt>か</rt></ruby>き<ruby>出<rt>だ</rt></ruby>す<ruby>通常<rt>つうじょう</rt></ruby>CLIであり、<ruby>明示<rt>めいじ</rt></ruby>\-\-math\-renderer mathml\-onlyは<ruby>既存<rt>きそん</rt></ruby>の<ruby>限定<rt>げんてい</rt></ruby><ruby>経路<rt>けいろ</rt></ruby>とreceipt\/1を<ruby>保<rt>たも</rt></ruby>つ。
 
 </div>
 
@@ -872,7 +872,7 @@ doc\-html pages\-svgは、\-\-math\-renderer mathml\-onlyを<ruby>明示<rt>め�
 
 **en**
 
-doc\-html pages\-svg is a limited CLI accepting ordinary file export only with explicit \-\-math\-renderer mathml\-only\; omitted selection\, KaTeXPreferred and interactive options are rejected even without formulas\.
+doc\-html pages\-svg exports root\-SVG PageSets\; explicit \-\-math\-renderer mathml\-only preserves the established limited path and receipt \/1\.
 
 </div>
 
@@ -1064,7 +1064,7 @@ A new output directory is created only after all semantic checks and generation 
 
 **ja**
 
-これは<ruby>既定<rt>きてい</rt></ruby>のKaTeX<ruby>優先<rt>ゆうせん</rt></ruby><ruby>変換器<rt>へんかんき</rt></ruby>の<ruby>完成<rt>かんせい</rt></ruby>ではなく、<ruby>外部<rt>がいぶ</rt></ruby>SVG・<ruby>保持<rt>ほじ</rt></ruby>jobのretry・<ruby>永続<rt>えいぞく</rt></ruby><ruby>復元<rt>ふくげん</rt></ruby>は<ruby>未実装<rt>みじっそう</rt></ruby>であり、<ruby>全体<rt>ぜんたい</rt></ruby><ruby>受入<rt>うけいれ</rt></ruby>も<ruby>未実施<rt>みじっし</rt></ruby>である。
+このMathMLOnly<ruby>経路<rt>けいろ</rt></ruby>は<ruby>生成時<rt>せいせいじ</rt></ruby>KaTeXを<ruby>実行<rt>じっこう</rt></ruby>せず、<ruby>外部<rt>がいぶ</rt></ruby>SVG・<ruby>保持<rt>ほじ</rt></ruby>jobのretry・<ruby>永続<rt>えいぞく</rt></ruby><ruby>復元<rt>ふくげん</rt></ruby>は<ruby>対象外<rt>たいしょうがい</rt></ruby>であり、<ruby>全体<rt>ぜんたい</rt></ruby><ruby>受入<rt>うけいれ</rt></ruby>も<ruby>未実施<rt>みじっし</rt></ruby>である。
 
 </div>
 
@@ -1072,7 +1072,7 @@ A new output directory is created only after all semantic checks and generation 
 
 **en**
 
-This does not complete the default KaTeX\-preferred converter\; external SVG\, retained\-job retry and durable restoration remain unimplemented\, and overall acceptance has not been run\.
+This MathMLOnly path does not execute generation\-time KaTeX\; external SVG\, retained\-job retry and durable restoration are outside scope\, and overall acceptance has not been run\.
 
 </div>
 
@@ -1102,6 +1102,261 @@ A runnable example is included in examples\/document\/pages\-svg\; its manifest 
 
 ```sh
 nepl3-tools doc-html pages-svg --math-renderer mathml-only examples/document/pages-svg/manifest.json out-svg-pages
+```
+
+<a name="n-73766750616765734b61546558"></a>
+
+<a name="katex-preferred-svg-pages"></a>
+
+### KaTeX<ruby>優先<rt>ゆうせん</rt></ruby>のSVG PageSet<ruby>生成<rt>せいせい</rt></ruby> \/ KaTeX\-preferred SVG PageSet generation
+
+<div class="nepl-paragraph">
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+doc\-html pages\-svgの<ruby>既定<rt>きてい</rt></ruby>と<ruby>明示<rt>めいじ</rt></ruby>katex\-preferredは<ruby>生成時<rt>せいせいじ</rt></ruby>KaTeXを<ruby>要求<rt>ようきゅう</rt></ruby>し、<ruby>成功<rt>せいこう</rt></ruby>したvisualだけを<ruby>独立<rt>どくりつ</rt></ruby>MathMLとともに<ruby>包装<rt>ほうそう</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The default and explicit katex\-preferred modes of doc\-html pages\-svg request generation\-time KaTeX and package only successful visuals alongside independent MathML\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>信頼<rt>しんらい</rt></ruby>するhost<ruby>設定<rt>せってい</rt></ruby>NEPL3\_KATEX\_NODE\_MODULESは<ruby>固定<rt>こてい</rt></ruby>npm<ruby>依存<rt>いぞん</rt></ruby>のdirectoryを<ruby>指<rt>さ</rt></ruby>し、Node 24<ruby>以降<rt>いこう</rt></ruby>を<ruby>使<rt>つか</rt></ruby>うが、この<ruby>設定<rt>せってい</rt></ruby>をDocやmanifestから<ruby>受<rt>う</rt></ruby>け<ruby>取<rt>と</rt></ruby>らない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Trusted host configuration NEPL3\_KATEX\_NODE\_MODULES points to the locked npm dependency directory and uses Node 24 or later\; neither Doc input nor its manifest supplies this configuration\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>直接<rt>ちょくせつ</rt></ruby>と<ruby>入<rt>い</rt></ruby>れ<ruby>子<rt>こ</rt></ruby>の<ruby>全<rt>ぜん</rt></ruby>Mathへ<ruby>同<rt>おな</rt></ruby>じPreferenceを<ruby>渡<rt>わた</rt></ruby>し、compose・collect・generate\_cached・settle・page<ruby>別<rt>べつ</rt></ruby>shellの<ruby>順<rt>じゅん</rt></ruby>を<ruby>保<rt>たも</rt></ruby>つ。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Direct and nested Math receive the same Preference\, preserving the sequence compose\, collect\, generate\_cached\, settle and per\-page shell construction\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>能力不在<rt>のうりょくふざい</rt></ruby>・<ruby>資源不在<rt>しげんふざい</rt></ruby>・renderer parse error・<ruby>忠実<rt>ちゅうじつ</rt></ruby>なTeX<ruby>変換<rt>へんかん</rt></ruby>の<ruby>未対応<rt>みたいおう</rt></ruby>は<ruby>区別<rt>くべつ</rt></ruby>して<ruby>理由<rt>りゆう</rt></ruby>・detail・<ruby>未対応<rt>みたいおう</rt></ruby>nodeを<ruby>残<rt>のこ</rt></ruby>し、provider violationやsticky stopをfallbackへ<ruby>変換<rt>へんかん</rt></ruby>しない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Capability absence\, resource absence\, renderer parse error and unsupported faithful TeX conversion retain distinct reasons\, details and unsupported nodes\; provider violations and sticky stops are not converted into fallback\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+ReadyなMathの<ruby>祖先<rt>そせん</rt></ruby>と<ruby>子<rt>こ</rt></ruby>が<ruby>重<rt>かさ</rt></ruby>なるNestedKaTeXAncestorConflictは<ruby>既存<rt>きそん</rt></ruby>どおり<ruby>拒否<rt>きょひ</rt></ruby>し、<ruby>最終<rt>さいしゅう</rt></ruby>arena rootとpage<ruby>別<rt>べつ</rt></ruby>owner pathを<ruby>失<rt>うしな</rt></ruby>わない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+NestedKaTeXAncestorConflict still rejects overlapping Ready ancestors and descendants\, while final arena roots and page\-local owner paths are preserved\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+nepl3\.local\-doc\-pages\.svg\-katex\-context\/1とNUL、32\-byte input digest、little\-endian u64のpage indexとID<ruby>長<rt>ちょう</rt></ruby>、ID bytes、preferred tag 1を<ruby>順<rt>じゅん</rt></ruby>に<ruby>束縛<rt>そくばく</rt></ruby>したSHA\-256をrequest contextとする。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The request context is SHA\-256 over nepl3\.local\-doc\-pages\.svg\-katex\-context\/1 and NUL\, the 32\-byte input digest\, little\-endian u64 page index and ID length\, ID bytes and preferred tag 1\, in that order\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>従来<rt>じゅうらい</rt></ruby>input\_identityは<ruby>入力<rt>にゅうりょく</rt></ruby>の<ruby>同定<rt>どうてい</rt></ruby>のままとし、<ruby>実際<rt>じっさい</rt></ruby>のTeX・<ruby>変換器<rt>へんかんき</rt></ruby>・<ruby>固定<rt>こてい</rt></ruby>host<ruby>情報<rt>じょうほう</rt></ruby>を<ruby>束縛<rt>そくばく</rt></ruby>する<ruby>既存<rt>きそん</rt></ruby>visual scopeと、<ruby>全<rt>ぜん</rt></ruby>payload digestを<ruby>別<rt>べつ</rt></ruby>に<ruby>記録<rt>きろく</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The existing input\_identity remains input identification\; existing visual scopes binding actual TeX\, converter and pinned host information\, plus every payload digest\, are recorded separately\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>再利用<rt>さいりよう</rt></ruby>するのは<ruby>直前<rt>ちょくぜん</rt></ruby>までの<ruby>成功<rt>せいこう</rt></ruby>から<ruby>得<rt>え</rt></ruby>た<ruby>不変<rt>ふへん</rt></ruby>filesとclassesだけであり、visual・scope・CSSはpageごとに<ruby>構成<rt>こうせい</rt></ruby>し、<ruby>途中<rt>とちゅう</rt></ruby>のNoneへ<ruby>別<rt>べつ</rt></ruby>pageのfontやvisualを<ruby>流用<rt>りゅうよう</rt></ruby>しない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Only immutable files and classes from the most recent success are reused\; visuals\, scopes and CSS are built per page\, and an intermediate None does not inherit another page\'s fonts or visuals\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+native visualがあるpageのroute<ruby>別<rt>べつ</rt></ruby>CSSへ<ruby>画像<rt>がぞう</rt></ruby><ruby>寸法<rt>すんぽう</rt></ruby>CSS・KaTeX visual CSS・<ruby>全<rt>ぜん</rt></ruby><ruby>固定<rt>こてい</rt></ruby>font・<ruby>完全<rt>かんぜん</rt></ruby>licenseを<ruby>含<rt>ふく</rt></ruby>め、<ruby>実際<rt>じっさい</rt></ruby>にnative visualがあるpageだけに<ruby>対応<rt>たいおう</rt></ruby>するfont CSPを<ruby>付<rt>つ</rt></ruby>ける。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+For pages with native visuals\, route\-specific CSS contains image dimensions\, KaTeX visual rules\, every fixed font and the complete license\; only pages with actual native visuals receive the corresponding font CSP\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+preferred<ruby>出力<rt>しゅつりょく</rt></ruby>はnepl3\.local\-doc\-pages\.root\-svg\-package\/2<ruby>形式<rt>けいしき</rt></ruby>を<ruby>使<rt>つか</rt></ruby>い、katex\_generationは<ruby>成功<rt>せいこう</rt></ruby>visualのpage<ruby>数<rt>すう</rt></ruby>と<ruby>件数<rt>けんすう</rt></ruby>を<ruby>表<rt>あらわ</rt></ruby>すobjectであり、<ruby>要求<rt>ようきゅう</rt></ruby>を<ruby>成功<rt>せいこう</rt></ruby>とするbooleanではない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Preferred output uses the nepl3\.local\-doc\-pages\.root\-svg\-package\/2 format\, where katex\_generation is an object counting successful visual pages and visuals\, not a boolean equating a request with success\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+host\_invocation\_recorded\=falseとhost<ruby>内部<rt>ないぶ</rt></ruby>Work・Allocationのunobservedを<ruby>明記<rt>めいき</rt></ruby>し、Noneやvisual<ruby>数<rt>すう</rt></ruby>0からhost<ruby>未実行<rt>みじっこう</rt></ruby>を<ruby>推論<rt>すいろん</rt></ruby>しない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+host\_invocation\_recorded\=false and unobserved host\-internal Work and Allocation are explicit\; neither None nor zero visuals implies that the host was not invoked\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>明示<rt>めいじ</rt></ruby>MathMLOnlyと<ruby>従来<rt>じゅうらい</rt></ruby>native<ruby>入口<rt>いりぐち</rt></ruby>はKaTeX hostを<ruby>呼<rt>よ</rt></ruby>ばず、nepl3\.local\-doc\-pages\.root\-svg\-package\/1・katex\_generation\=false・<ruby>従来<rt>じゅうらい</rt></ruby>bytesと<ruby>課金<rt>かきん</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>し、<ruby>外部<rt>がいぶ</rt></ruby>SVG・interactive retry・<ruby>永続復元<rt>えいぞくふくげん</rt></ruby>は<ruby>依然<rt>いぜん</rt></ruby>として<ruby>対象外<rt>たいしょうがい</rt></ruby>である。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Explicit MathMLOnly and the existing native entry do not call the KaTeX host and preserve nepl3\.local\-doc\-pages\.root\-svg\-package\/1\, katex\_generation\=false\, prior bytes and charges\; external SVG\, interactive retry and durable restoration remain outside scope\.
+
+</div>
+
+</div>
+
+</div>
+
+```sh
+npm ci --prefix tools/audit/math --ignore-scripts
+NEPL3_KATEX_NODE_MODULES=tools/audit/math/node_modules nepl3-tools doc-html pages-svg examples/document/pages-svg/manifest.json out-svg-pages-preferred
 ```
 
 <a name="n-7669736962696c697479"></a>

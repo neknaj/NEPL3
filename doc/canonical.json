@@ -631,7 +631,7 @@
     "source_bytes": 10000000,
     "work": 600000000,
     "depth": 1000,
-    "nodes": 10000000,
+    "nodes": 11000000,
     "allocation_units": 500000000,
     "output_bytes": 10000000,
     "diagnostics": 1000,

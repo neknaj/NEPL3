@@ -98,5 +98,9 @@
   {
     "section": "svgPagesCli",
     "name": "explicit-mathml-svg-pages-cli"
+  },
+  {
+    "section": "svgPagesKaTeX",
+    "name": "katex-preferred-svg-pages"
   }
 ]

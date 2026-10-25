@@ -197,15 +197,6 @@ fn svg_pages_cli_capture_rejects_symlink_escape() -> crate::Result<()> {
 fn svg_pages_cli_failure_does_not_create_output_or_hide_stop() -> crate::Result<()> {
     let f = fixture()?;
     let output = f.root().join("output");
-    assert!(
-        write(
-            &f.root().join("manifest.json"),
-            &output,
-            MathRenderer::KaTeXPreferred
-        )
-        .is_err()
-    );
-    assert!(!output.exists());
     let mut v = manifest();
     v["assets"][0]["assets"][0]["id"] = json!("unused");
     f.json("manifest.json", &v)?;
@@ -296,6 +287,90 @@ fn svg_pages_cli_source_generation_preserves_exact_limits_and_preconsumption() -
         let before = b.usage();
         assert_eq!(b.charge(Resource::Work, 1), Err(expected));
         assert_eq!(before, b.usage());
+    }
+    Ok(())
+}
+
+#[test]
+fn svg_pages_preferred_metadata_keeps_seven_resource_boundaries() -> crate::Result<()> {
+    use nepl3_core::budget::{Budget, Limits, Resource, StopReason, Usage};
+    let f = fixture()?;
+    let unsupported = r#"article en "Unsupported" body cons image asset "logo" none "diagram" none cons display Math label add x y Sentence "[字/じ]" nil"#;
+    f.write("one.nepld", unsupported)?;
+    f.write("two.nepld", unsupported)?;
+    let captured = input::capture(&f.root().join("manifest.json"))?;
+    let c = crate::doc::source::compiled()?;
+    // No Ready TeX is present, so even a configured host is not invoked.
+    let execute = |limits| {
+        let mut b = Budget::new(limits);
+        let result = (|| -> Result<_, String> {
+            b.charge(Resource::Work, 23)
+                .map_err(crate::doc::source::err)?;
+            b.with_depth(|b| {
+                Ok::<_, StopReason>(
+                    generate::run_selected(&c, &captured, MathRenderer::KaTeXPreferred, b)
+                        .map(|g| g.files),
+                )
+            })
+            .map_err(crate::doc::source::err)?
+        })();
+        (result, b)
+    };
+    let (baseline, full) = execute(crate::doc::source::budget().limits());
+    let baseline = baseline?;
+    for dimension in 0..7 {
+        let amount = |u: Usage| match dimension {
+            0 => u.work,
+            1 => u.allocation_units,
+            2 => u.nodes,
+            3 => u.depth,
+            4 => u.output_bytes,
+            5 => u.source_bytes,
+            _ => u.diagnostics,
+        };
+        let select = |l: &mut Limits, n| match dimension {
+            0 => l.work = n,
+            1 => l.allocation_units = n,
+            2 => l.nodes = n,
+            3 => l.depth = n,
+            4 => l.output_bytes = n,
+            5 => l.source_bytes = n,
+            _ => l.diagnostics = n,
+        };
+        let mut cap = amount(full.usage());
+        assert!(cap > 0);
+        let mut settled = false;
+        for _ in 0..32 {
+            let mut limits = full.limits();
+            select(&mut limits, cap);
+            let (result, used) = execute(limits);
+            assert_eq!(result?, baseline);
+            let next = amount(used.usage());
+            assert!(next <= cap);
+            if next == cap {
+                settled = true;
+                break;
+            }
+            cap = next;
+        }
+        assert!(settled);
+        let expected = match dimension {
+            0 => StopReason::WorkLimit,
+            1 => StopReason::AllocationLimit,
+            2 => StopReason::NodeLimit,
+            3 => StopReason::DepthLimit,
+            4 => StopReason::OutputLimit,
+            5 => StopReason::SourceLimit,
+            _ => StopReason::DiagnosticLimit,
+        };
+        let mut limits = full.limits();
+        select(&mut limits, cap - 1);
+        let (result, mut b) = execute(limits);
+        assert!(result.is_err());
+        assert_eq!(b.poll(), Err(expected));
+        let before = b.usage();
+        assert_eq!(b.charge(Resource::Work, 1), Err(expected));
+        assert_eq!(b.usage(), before);
     }
     Ok(())
 }

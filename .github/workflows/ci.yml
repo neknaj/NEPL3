@@ -115,7 +115,9 @@ jobs:
         run: cargo test --workspace --locked
       - name: Native Doc KaTeX host portability
         if: matrix.os != 'ubuntu-latest'
-        run: cargo test --locked -p nepl3-tools --test doc katex_cli::pinned_native -- --ignored --nocapture
+        run: |
+          cargo test --locked -p nepl3-tools --test doc katex_cli::pinned_native -- --ignored --nocapture
+          cargo test --locked -p nepl3-tools --test doc pages_svg_cli::pinned_native_katex_doc_and_pages_svg_cli -- --ignored --nocapture
       - name: Record native source-position oracle execution
         run: python tools/evidence/runner.py run tools/evidence/specs/source-position-native.json dist/source-position-native
       - name: Preserve native source-position evidence
@@ -290,7 +292,9 @@ jobs:
           node tools/generate/katex-host.mjs
           node --test tools/audit/math/assets.test.mjs
       - name: Check native Doc KaTeX integration
-        run: cargo test --locked -p nepl3-tools --test doc katex_cli::pinned_native -- --ignored --nocapture
+        run: |
+          cargo test --locked -p nepl3-tools --test doc katex_cli::pinned_native -- --ignored --nocapture
+          cargo test --locked -p nepl3-tools --test doc pages_svg_cli::pinned_native_katex_doc_and_pages_svg_cli -- --ignored --nocapture
       - name: Check production TeX against KaTeX
         run: |
           mkdir -p dist/math-visual
@@ -538,6 +542,8 @@ jobs:
           python tools/audit/doc_html/pages_svg.py dist/doc-browser/pages-svg-corpus.log dist/doc-browser/pages-svg > dist/doc-browser/pages-svg.json
       - name: Check explicit SVG PageSet CLI in three browsers
         run: python tools/audit/doc_html/pages_svg_cli.py target/debug/nepl3-tools dist/doc-browser/pages-svg-cli > dist/doc-browser/pages-svg-cli.json
+      - name: Check KaTeX-preferred SVG PageSet CLI in three browsers
+        run: python tools/audit/doc_html/pages_svg_katex.py target/debug/nepl3-tools dist/doc-browser/pages-svg-katex tools/audit/math/node_modules > dist/doc-browser/pages-svg-katex.json
       - name: Shared code highlighting and themes
         run: python tools/audit/doc_html/code.py target/debug/nepl3-tools dist/doc-browser/code > dist/doc-browser/code.json
       - name: Check shared Code in linked HTML pages
