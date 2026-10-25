@@ -296,3 +296,95 @@ fn local_path_glyphs_export_in_every_asset_mode() -> Result<(), Box<dyn std::err
     fs::remove_dir_all(root)?;
     Ok(())
 }
+
+#[test]
+fn independent_sentence_alt_exports_but_display_sentence_stays_guarded()
+-> Result<(), Box<dyn std::error::Error>> {
+    let root = std::env::temp_dir().join(format!(
+        "nepl3-svg-alt-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)?
+            .as_nanos()
+    ));
+    fs::create_dir(&root)?;
+    fs::write(root.join("figure.svg"), SVG)?;
+    fs::write(
+        root.join("assets.json"),
+        r#"{"version":1,"assets":[{"id":"triangle","source":"figure.svg","mime":"image/svg+xml"}]}"#,
+    )?;
+    let source = r#"article ja "SVG" body cons image asset "triangle" none Sentence "{[漢/かん]/note}" some "caption" cons paragraph cons sentence cons image asset "triangle" none Sentence "inline & <alt>" nil cons code Doc article en "guest" body nil cons sentence cons math Math frac 1 2 nil nil nil"#;
+    fs::write(root.join("input.nepld"), source)?;
+    for css in ["external", "inline"] {
+        for mode in ["external", "embedded"] {
+            let out = format!("{css}-{mode}");
+            let result = run(&root, css, mode, &out)?;
+            assert!(
+                result.status.success(),
+                "{}",
+                String::from_utf8_lossy(&result.stderr)
+            );
+            let html = fs::read_to_string(root.join(&out).join("document.html"))?;
+            assert!(html.contains("alt=\"漢\""));
+            assert!(html.contains("alt=\"inline &amp; &lt;alt&gt;\""));
+            assert!(!html.contains("かん") && !html.contains("alt=\"note\""));
+            assert!(html.contains("<figcaption") && html.contains("caption"));
+            assert!(html.contains("nepl-code-marker") && html.contains("<mfrac>"));
+            assert!(!html.contains("<script"));
+            assert!(root.join(&out).join("manifest.json").is_file());
+            let manifest: serde_json::Value =
+                serde_json::from_str(&fs::read_to_string(root.join(&out).join("manifest.json"))?)?;
+            assert_eq!(manifest["sentence_alt"]["policy"], "BaseOnly");
+            assert_eq!(manifest["sentence_alt"]["owners"], 2);
+            assert!(
+                manifest["scope"]
+                    .as_str()
+                    .ok_or("scope")?
+                    .contains("restricted to image alt")
+            );
+            assert_eq!(manifest["options"]["svg"], mode);
+
+            assert!(!run(&root, css, mode, &out)?.status.success());
+        }
+    }
+    for (index, bad) in [
+        source.replace("article ja \"SVG\"", "article ja Sentence \"SVG\""),
+        source.replace("some \"caption\"", "some Sentence \"caption\""),
+        source.replace("cons paragraph", "cons paragraph cons parallel cons variant en Sentence \"body\" cons variant ja \"旧文\" nil nil cons paragraph"),
+        source.replace(
+            "cons paragraph",
+            "cons paragraph cons Sentence \"body\" nil cons paragraph",
+        ),
+    ]
+    .iter()
+    .enumerate()
+    {
+        fs::write(root.join("input.nepld"), bad)?;
+        let out = format!("unsupported-{index}");
+        let result = run(&root, "inline", "embedded", &out)?;
+        assert!(!result.status.success());
+        assert!(
+            String::from_utf8_lossy(&result.stderr).contains("SentenceAssetSelectionUnsupported")
+        );
+        assert!(!root.join(&out).exists());
+    }
+    let unresolved = source.replace(
+        "Sentence \"{[漢/かん]/note}\"",
+        "Sentence sentence cons math frac 1 2 nil",
+    );
+    fs::write(root.join("input.nepld"), unresolved)?;
+    let result = run(&root, "inline", "embedded", "unresolved")?;
+    assert!(!result.status.success());
+    assert!(String::from_utf8_lossy(&result.stderr).contains("Unresolved"));
+    assert!(!root.join("unresolved").exists());
+    fs::write(root.join("input.nepld"), source)?;
+    fs::write(root.join("figure.svg"), "<svg><script/></svg>")?;
+    assert!(
+        !run(&root, "inline", "embedded", "invalid-svg")?
+            .status
+            .success()
+    );
+    assert!(!root.join("invalid-svg").exists());
+    fs::remove_dir_all(root)?;
+    Ok(())
+}

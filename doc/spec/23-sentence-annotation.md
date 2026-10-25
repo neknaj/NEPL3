@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 b74d6d4efece258a70884cb70054975cff1eb3517ab79b57cd93fb8ca160b2fb; alias input SHA-256 800c58010fe3ca5fb3c10997a3b7908fefb312ba31edec1c0c8cb409f1bb0b29; page input SHA-256 cad8756a033470a5bed111b37dffa9f2f146f1bf7e511e6219f8672f12b26814. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 729495bf461cf68405595ac33863cd1f4d0a9f486068daea25da8d0898af0e16; alias input SHA-256 800c58010fe3ca5fb3c10997a3b7908fefb312ba31edec1c0c8cb409f1bb0b29; page input SHA-256 c725aa423271e1e25f2bcc7ecdf2dc557bb5cbc9a88c24051ec42787290b66e3. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="23-構造化文章と対象付き注釈への是正"></a>
 
@@ -300,7 +300,15 @@ typed host identityのRows／Columnsは、`nepl3.local-doc-pages.sentence-input/
 
 開発hostのannotations\:\:alt\:\:prepareはImageとInlineImageのalt slotにある独立Sentenceだけを選択し、実際のforeign closureをlowerしてBaseOnlyのplain textを作る。全variantのassetを準備する既存SVG契約に従い、表示optionsでalt所有元を省略しない。RubyのreadingとAnnoのnotesは出力せず、選択されたforeign textが未解決ならエラーを返し、空文字やHTMLで代替しない。元のDocと各SentenceSyntaxのSource・Origin所有を保ち、文書入場・identity・lower・検査・投影を同じBudgetとSourceAdmissionで行う。共有guestは一度だけ投影するが、呼出元depthに最深の構造所有depthを加えて検査する。
 
-native prepare\_svg\_display\_with\_textは明示的なResolvedInlineTextを受け取り、Doc plain textでdocument digest・guest digest・EmbedRef・重複を検査する。assetがない場合の非空resolutionも拒否する。供給textはデータであり、guestの意味を認証するportable証拠ではない。altはHTML callbackやnamespaceへ採用せず、captionの描画とは分離する。既存SVG入口はresolutionなしのwrapperとして保持する。このnative接続はSentenceとassetを組み合わせた単体CLI・PageSet export、画像関連のnamespace表示選択、portable proof、プロセス終了後の復元を完成させない。
+native prepare\_svg\_display\_with\_textは明示的なResolvedInlineTextを受け取り、Doc plain textでdocument digest・guest digest・EmbedRef・重複を検査する。assetがない場合の非空resolutionも拒否する。供給textはデータであり、guestの意味を認証するportable証拠ではない。altはHTML callbackやnamespaceへ採用せず、captionの描画とは分離する。既存SVG入口はresolutionなしのwrapperとして保持する。このnative接続だけでSentenceとassetを組み合わせた一般の単体CLI・PageSet export、画像関連のnamespace表示選択、portable proof、プロセス終了後の復元を完成させない。alt限定の単体CLI接続は後述する。
+
+<a name="n-737667416c744578706f7274"></a>
+
+### alt<ruby>限定<rt>げんてい</rt></ruby>Sentenceの<ruby>単体<rt>たんたい</rt></ruby>SVG<ruby>出力<rt>しゅつりょく</rt></ruby>
+
+単体doc\-html svgは、独立Sentenceの全出現がImageまたはInlineImageのaltに限られる場合に、前述のnative投影を出力へ接続する。Rowsの構造表示inventoryで全variantの非alt出現を検査し、title・本文・captionなどにも現れる所有元は同じEmbedRefがaltにある場合でも拒否する。この検査をnamespaceやguest意味の証拠とせず、実際のalt所有元を同じoutput Budgetで入場・lower・投影し、準備と描画の間はSentenceSyntaxとidentity付きtextを保持する。altからHTML callbackは発生せず、既存のCode・Math描画とasset検査を保つ。
+
+externalとembeddedのSVG、externalとinlineのCSSで同じBaseOnly本文を使い、HTML属性としてescapeする。未解決の選択foreign text、非alt Sentence、不正asset、resource stopでは成功成果物を作らない。独立Sentenceがない既存SVG経路、runtime既定値、CI設定を変更しない。一般のSentenceとassetの組合せ、PageSet asset、画像関連namespaceの表示選択、portable proofは引き続き未完了である。
 
 <a name="n-7669736962696c697479"></a>
 

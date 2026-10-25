@@ -52,6 +52,7 @@ pub struct LocalDocument {
     pub math: Vec<math::Occurrence>,
     pub math_generation: Vec<math::generation::Occurrence>,
     pub sentence_sources: Option<super::annotations::article::SelectionParts>,
+    pub sentence_alt_sources: Option<super::annotations::alt::Projection>,
     pub sentences: Vec<super::annotations::article::render::SentenceRecord>,
     pub rendered: nepl3_doc_html::RenderedFragment,
 }
@@ -226,6 +227,10 @@ fn generate_impl(
                 Local(nepl3_doc_html::display::PreparedDisplayArticle<'a>),
                 Svg(nepl3_doc_html::assets::PreparedSvgDisplayArticle<'a>),
                 Sentence(super::annotations::article::Selection<'a>),
+                SvgSentence {
+                    prepared: nepl3_doc_html::assets::PreparedSvgDisplayArticle<'a>,
+                    projection: super::annotations::alt::Projection,
+                },
             }
             output_budget
                 .charge(
@@ -239,18 +244,38 @@ fn generate_impl(
                 .kinds
                 .contains(&nepl3_doc_core::model::EmbedKind::Sentence);
             let prepared = if has_sentence {
-                if assets.is_some() {
-                    return Err("SentenceAssetSelectionUnsupported".into());
-                }
-                let mut host = sentence_host(compiled, profile.registry(), &mut codec)?;
-                Prepared::Sentence(
-                    super::annotations::article::collect_structural(
+                if let Some((inputs, mode)) = assets {
+                    assets::sentence::check_alt_only(&doc, &mut output_budget)?;
+                    let mut host = sentence_host(compiled, profile.registry(), &mut codec)?;
+                    let projection =
+                        super::annotations::alt::prepare(&doc, &mut host, &mut output_budget)
+                            .map_err(err)?;
+                    let prepared = nepl3_doc_html::assets::prepare_svg_display_with_text(
                         &doc,
-                        &mut host,
+                        &options,
+                        inputs,
+                        mode,
+                        &projection.resolved,
+                        profile.registry(),
+                        &mut codec,
                         &mut output_budget,
                     )
-                    .map_err(err)?,
-                )
+                    .map_err(err)?;
+                    Prepared::SvgSentence {
+                        prepared,
+                        projection,
+                    }
+                } else {
+                    let mut host = sentence_host(compiled, profile.registry(), &mut codec)?;
+                    Prepared::Sentence(
+                        super::annotations::article::collect_structural(
+                            &doc,
+                            &mut host,
+                            &mut output_budget,
+                        )
+                        .map_err(err)?,
+                    )
+                }
             } else if let Some((inputs, mode)) = assets {
                 Prepared::Svg(
                     nepl3_doc_html::assets::prepare_svg_display(
@@ -307,12 +332,14 @@ fn generate_impl(
                     &mut output_budget,
                 )
                 .map_err(err)?,
-                Prepared::Svg(p) => nepl3_doc_html::assets::render_svg_display(
-                    p,
-                    &mut |guest, index, b| adapter(guest, index, &mut codec, b),
-                    &mut output_budget,
-                )
-                .map_err(err)?,
+                Prepared::Svg(p) | Prepared::SvgSentence { prepared: p, .. } => {
+                    nepl3_doc_html::assets::render_svg_display(
+                        p,
+                        &mut |guest, index, b| adapter(guest, index, &mut codec, b),
+                        &mut output_budget,
+                    )
+                    .map_err(err)?
+                }
                 Prepared::Sentence(input) => {
                     let mut host = sentence_host(compiled, profile.registry(), &mut codec)?;
                     let output = super::annotations::article::render::render(
@@ -454,14 +481,25 @@ fn generate_impl(
                     "identity":digest_hex(scope)
                 });
             }
+            if let Prepared::SvgSentence { projection, .. } = &prepared {
+                manifest_value["scope"] = serde_json::json!(
+                    "Doc SVG with independent Sentence restricted to image alt; BaseOnly native text projection, retained Code and Math; non-alt Sentence assets, PageSet assets and namespace composition remain unsupported"
+                );
+                manifest_value["sentence_alt"] = serde_json::json!({
+                    "policy": "BaseOnly", "owners": projection.sentences.len(),
+                    "scope": "native text projection; no HTML namespace adoption or portable proof"
+                });
+            }
             let manifest = serde_json::to_string_pretty(&manifest_value).map_err(err)? + "\n";
-            let sentence_sources = match prepared {
-                Prepared::Sentence(input) => Some(input.into_parts()),
-                _ => None,
+            let (sentence_sources, sentence_alt_sources) = match prepared {
+                Prepared::Sentence(input) => (Some(input.into_parts()), None),
+                Prepared::SvgSentence { projection, .. } => (None, Some(projection)),
+                _ => (None, None),
             };
             Ok(LocalDocument {
                 math_generation: generation,
                 sentence_sources,
+                sentence_alt_sources,
                 sentences,
                 html,
                 manifest,
