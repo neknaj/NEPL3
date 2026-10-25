@@ -90,5 +90,9 @@
   {
     "section": "visibility",
     "name": "html挿入対象sentence出現の構造inventory"
+  },
+  {
+    "section": "packagedPagesSvg",
+    "name": "embedded-svg-pages-html-packaging"
   }
 ]

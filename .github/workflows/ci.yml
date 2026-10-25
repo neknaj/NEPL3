@@ -45,6 +45,7 @@ jobs:
           tools.extensions.test_cargo tools.extensions.test_execution
           tools.audit.allocation.test_run
           tools.audit.math.test_visual tools.audit.math.test_annotations
+          tools.audit.doc_html.test_pages_svg
 
   native:
     name: native (${{ matrix.os }})
@@ -531,6 +532,10 @@ jobs:
           python tools/audit/doc_html/katex.py target/debug/nepl3-tools dist/doc-browser/native-katex tools/audit/math/node_modules > dist/doc-browser/native-katex.json
       - name: Check SVG sizing and disclosures in three browsers
         run: python tools/audit/doc_html/svg.py target/debug/nepl3-tools dist/doc-browser/svg > dist/doc-browser/svg.json
+      - name: Check native embedded SVG PageSet packaging in three browsers
+        run: |
+          cargo test --locked -p nepl3-tools --lib doc::export::pages::sentence::svg_host::packaging::packaged_svg_pages_keep_owners_csp_css_and_manifest -- --exact --nocapture --test-threads=1 > dist/doc-browser/pages-svg-corpus.log
+          python tools/audit/doc_html/pages_svg.py dist/doc-browser/pages-svg-corpus.log dist/doc-browser/pages-svg > dist/doc-browser/pages-svg.json
       - name: Shared code highlighting and themes
         run: python tools/audit/doc_html/code.py target/debug/nepl3-tools dist/doc-browser/code > dist/doc-browser/code.json
       - name: Check shared Code in linked HTML pages

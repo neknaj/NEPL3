@@ -1362,6 +1362,51 @@ body
           nil
         nil
       nil
+    cons section packagedPagesSvg "[埋/う]め[込/こ]みSVGのPageSet HTML[包装/ほうそう] / Embedded-SVG PageSet HTML packaging"
+      body
+      cons paragraph
+        cons parallel
+          cons variant ja "pages::svg::render_embeddedは、[外部/がいぶ]で[保持/ほじ]したPageSet・RenderOptions・role Plansから、root-only SVG fragment hostを[呼/よ]び[出/だ]してHTMLとCSSを[構成/こうせい]するnative[入口/いりぐち]である。"
+          cons variant en "pages::svg::render_embedded is a native entry that invokes the root-only SVG fragment host using externally retained PageSet, RenderOptions and role Plans, then constructs HTML and CSS."
+          nil
+        cons parallel
+          cons variant ja "[結果/けっか]はfragment hostのResolutions・SentenceRecord・alt Projectionsをそのまま[保持/ほじ]するが、[呼出側/よびだしがわ]のPageSetとSelectionsの[借用寿命/しゃくようじゅみょう]に[依存/いぞん]し、[自己完結/じこかんけつ]した[復元可能/ふくげんかのう]なcaptureではない。"
+          cons variant en "The result retains the fragment host's Resolutions, SentenceRecords and alt Projections unchanged, but depends on the caller's PageSet and Selection lifetimes and is not a self-contained restorable capture."
+          nil
+        cons parallel
+          cons variant ja "SVGはdata URLへ[埋/う]め[込/こ]み、[既存/きそん]shellにimg-src data:のCSPを[設定/せってい]し、root[画像/がぞう]の[寸法/すんぽう]からCSSを[生成/せいせい]する。"
+          cons variant en "SVG is embedded in data URLs, the existing shell receives an img-src data: CSP, and CSS is generated from root image dimensions."
+          nil
+        cons parallel
+          cons variant ja "CSS[名/めい]は[常/つね]にpage routeのSHA-256を[含/ふく]み、[同/おな]じdirectoryの[異/こと]なる[寸法/すんぽう]のpageも[区別/くべつ]し、HTML・CSS・[登録/とうろく]file・manifest.jsonの[衝突/しょうとつ]を[拒否/きょひ]する。"
+          cons variant en "CSS names always include the SHA-256 of the page route, separating different image dimensions in one directory; collisions among HTML, CSS, registered files and manifest.json are rejected."
+          nil
+        cons parallel
+          cons variant ja "input identityはsvg-source/1 domainのcanonical PageSet digestと、root-svg-embedded/1 domain・[順序付/じゅんじょつ]きpage bindings・asset ID・raw SVGのbyte[長/ちょう]とSHA-256を[束縛/そくばく]し、[件数/けんすう]・[長/なが]さ・page[番号/ばんごう]はlittle-endian u64で[区切/くぎ]る。"
+          cons variant en "The input identity binds the canonical PageSet digest in the svg-source/1 domain, the root-svg-embedded/1 domain, ordered page bindings, asset IDs, and raw SVG byte lengths and SHA-256 digests; counts, lengths and page numbers use little-endian u64 delimiters."
+          nil
+        cons parallel
+          cons variant ja "これらのdomainはnepl3.local-doc-pages.を[接頭辞/せっとうじ]としNULで[終端/しゅうたん]し、さらにroot-svg-display/1 domainでRows・Columns・Singleと[要求言語/ようきゅうげんご]・[順序付/じゅんじょつ]きfallbackを[束縛/そくばく]する。"
+          cons variant en "These domains have the nepl3.local-doc-pages. prefix and a terminating NUL; the root-svg-display/1 domain additionally binds Rows, Columns or Single and its requested language and ordered fallbacks."
+          nil
+        cons parallel
+          cons variant ja "[空/から]bindingや[登録順/とうろくじゅん]もidentityに[影響/えいきょう]し、[非表示/ひひょうじ]の[入力/にゅうりょく]を[省/はぶ]かず、[未使用/みしよう]assetの[拒否/きょひ]は[描画器/びょうがき]が[別/べつ]に[行/おこな]う。"
+          cons variant en "Empty bindings and registration order affect identity, hidden inputs are not omitted, and the renderer separately rejects unused assets."
+          nil
+        cons parallel
+          cons variant ja "このidentityはcallbackの[実装/じっそう]や[出力/しゅつりょく]を[証明/しょうめい]せず、nepl3.local-doc-pages.root-svg-package/1[形式/けいしき]のreceiptが[自身/じしん]を[除/のぞ]く[全/ぜん]payload fileのbyte[長/ちょう]とdigestを[記録/きろく]する。"
+          cons variant en "This identity proves neither callback implementation nor output; the nepl3.local-doc-pages.root-svg-package/1 receipt records the byte length and digest of every payload file except the receipt itself."
+          nil
+        cons parallel
+          cons variant ja "[同/おな]じ[累積/るいせき]Budgetでshell・CSS・[識別情報/しきべつじょうほう]・receiptを[処理/しょり]し、receipt[内/ない]のpre_receipt_usageはreceipt[自身/じしん]の[直列化/ちょくれつか]より[前/まえ]の[観測値/かんそくち]であり、[成功直前/せいこうちょくぜん]にも[停止/ていし]を[検査/けんさ]する。"
+          cons variant en "One cumulative Budget covers shells, CSS, identity data and the receipt; pre_receipt_usage is observed before serializing the receipt itself, and a final stop check precedes success."
+          nil
+        cons parallel
+          cons variant ja "[包装器/ほうそうき]はKaTeX[変換/へんかん]を[実行/じっこう]せず、[渡/わた]された[表示/ひょうじ]を[保持/ほじ]するだけであり、parse・CLI・[外部/がいぶ]SVG[梱包/こんぽう]・[保持/ほじ]jobのretry・portable proofは[追加/ついか]しない。"
+          cons variant en "The packager does not execute KaTeX conversion and only preserves the supplied display; it adds no parsing, CLI, external SVG packaging, retained-job retry or portable proof."
+          nil
+        nil
+      nil
     cons section visibility "HTML[挿入対象/そうにゅうたいしょう]Sentence[出現/しゅつげん]の[構造/こうぞう]inventory"
     body
       cons paragraph
