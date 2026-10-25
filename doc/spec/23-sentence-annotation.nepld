@@ -1251,6 +1251,23 @@ body
         cons " Existing render and PageSet callers retain their previous paths and CLI guards; accepting a role plan does not establish completed asset-aware host integration or portable proof."
         nil
       nil
+    cons section nativeRootSvg "Native root-only planned SVG host"
+    body
+      cons paragraph
+        cons "The additive article render svg entry combines an exact role Plan with explicit SVG inputs for its root Article."
+        cons " It projects actual root alt owners with BaseOnly, resolves the plan adoption, prepares the namespace and consumes the planned insertion Session under one caller Budget and SourceAdmission."
+        cons " Raw asset inputs and projected alt text are supplied only to MemberId zero."
+        cons " Adopted guest assets receive no root bytes, even when their names match or their Single variant is hidden, and fail before display callbacks."
+        cons " The returned value retains both the ordinary rendered resolution and the independently lowered alt Projection owners and source evidence."
+        nil
+      cons paragraph
+        cons "Preparation failures are converted to owned typed errors while the checked namespace and exact member document are alive."
+        cons " Root, guest and collection locations remain distinct; duplicate, unused, missing, invalid SVG, digest, alt and unsupported failures remain distinguishable."
+        cons " A stopped Budget takes precedence over projection, adapter, conversion and diagnostic allocation failures, and no partial rendered value is returned."
+        cons " Embedded mode returns validated SVG content, while External mode returns content-addressed references without proving that files were written."
+        cons " Existing asset-free entries, standalone CLI alt-only admission, PageSet asset guards and portable contracts are unchanged; arbitrary-member assets and general CLI integration remain unfinished."
+        nil
+      nil
     cons section visibility "HTML[挿入対象/そうにゅうたいしょう]Sentence[出現/しゅつげん]の[構造/こうぞう]inventory"
     body
       cons paragraph

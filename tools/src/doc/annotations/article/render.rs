@@ -1,5 +1,8 @@
-//! Typed Sentence insertion for asset-free Article display. Namespace adoption
-//! remains all-occurrence; Single filters actual insertion, never image-alt projection.
+//! Typed Sentence insertion with retained source owners. The legacy asset-free
+//! entry adopts all occurrences; planned insertion separates non-alt roles.
+//! Root SVG admission is an explicit operation in the svg module.
+pub mod svg;
+
 use super::{
     Selection,
     namespace::{self, MemberOrigin, SentenceOccurrenceId},
