@@ -227,6 +227,7 @@ fn generate_impl(
                 Local(nepl3_doc_html::display::PreparedDisplayArticle<'a>),
                 Svg(nepl3_doc_html::assets::PreparedSvgDisplayArticle<'a>),
                 Sentence(super::annotations::article::Selection<'a>),
+                SvgMixed(super::annotations::article::Selection<'a>),
                 SvgSentence {
                     prepared: nepl3_doc_html::assets::PreparedSvgDisplayArticle<'a>,
                     projection: super::annotations::alt::Projection,
@@ -245,25 +246,37 @@ fn generate_impl(
                 .contains(&nepl3_doc_core::model::EmbedKind::Sentence);
             let prepared = if has_sentence {
                 if let Some((inputs, mode)) = assets {
-                    assets::sentence::check_alt_only(&doc, &mut output_budget)?;
+                    let mixed =
+                        assets::sentence::requires_planned_display(&doc, &mut output_budget)?;
                     let mut host = sentence_host(compiled, profile.registry(), &mut codec)?;
-                    let projection =
-                        super::annotations::alt::prepare(&doc, &mut host, &mut output_budget)
-                            .map_err(err)?;
-                    let prepared = nepl3_doc_html::assets::prepare_svg_display_with_text(
-                        &doc,
-                        &options,
-                        inputs,
-                        mode,
-                        &projection.resolved,
-                        profile.registry(),
-                        &mut codec,
-                        &mut output_budget,
-                    )
-                    .map_err(err)?;
-                    Prepared::SvgSentence {
-                        prepared,
-                        projection,
+                    if mixed {
+                        Prepared::SvgMixed(
+                            super::annotations::article::collect_structural(
+                                &doc,
+                                &mut host,
+                                &mut output_budget,
+                            )
+                            .map_err(err)?,
+                        )
+                    } else {
+                        let projection =
+                            super::annotations::alt::prepare(&doc, &mut host, &mut output_budget)
+                                .map_err(err)?;
+                        let prepared = nepl3_doc_html::assets::prepare_svg_display_with_text(
+                            &doc,
+                            &options,
+                            inputs,
+                            mode,
+                            &projection.resolved,
+                            profile.registry(),
+                            &mut codec,
+                            &mut output_budget,
+                        )
+                        .map_err(err)?;
+                        Prepared::SvgSentence {
+                            prepared,
+                            projection,
+                        }
                     }
                 } else {
                     let mut host = sentence_host(compiled, profile.registry(), &mut codec)?;
@@ -309,6 +322,7 @@ fn generate_impl(
             let render_start = Instant::now();
             let mut math = Vec::new();
             let mut sentences = Vec::new();
+            let mut mixed_alt = None;
             let mut adapter = |embed: &nepl3_doc_core::model::DocEmbedView<'_>,
                                index,
                                codec: &mut nepl3_wire::foundation::FoundationCodec<'_>,
@@ -352,6 +366,28 @@ fn generate_impl(
                     .map_err(err)?;
                     sentences = output.sentences;
                     output.article
+                }
+                Prepared::SvgMixed(input) => {
+                    let (inputs, mode) = assets.ok_or("MissingPlannedSvgInputs")?;
+                    let plan = super::annotations::article::display::plan(
+                        input,
+                        &options,
+                        &mut output_budget,
+                    )
+                    .map_err(err)?;
+                    let mut host = sentence_host(compiled, profile.registry(), &mut codec)?;
+                    let output = super::annotations::article::render::svg::render(
+                        &plan,
+                        inputs,
+                        mode,
+                        &mut host,
+                        &mut adapter,
+                        &mut output_budget,
+                    )
+                    .map_err(err)?;
+                    sentences = output.output.sentences;
+                    mixed_alt = Some(output.alt_projection);
+                    output.output.article
                 }
             };
             math::compose(
@@ -490,10 +526,28 @@ fn generate_impl(
                     "scope": "native text projection; no HTML namespace adoption or portable proof"
                 });
             }
+            if let Prepared::SvgMixed(input) = &prepared {
+                let projection = mixed_alt.as_ref().ok_or("MissingPlannedSvgAltOwners")?;
+                manifest_value["scope"] = serde_json::json!(
+                    "native planned typed Sentence display with root SVG and BaseOnly alt projection; guest assets, PageSet SVG, page/relative links and portable proof remain unsupported"
+                );
+                manifest_value["sentence_svg"] = serde_json::json!({
+                    "contract": "nepl3.local-doc-svg.sentence/1",
+                    "owners": input.owners().len(),
+                    "structural_occurrences": input.sentences().len(),
+                    "display_occurrences": sentences.len(),
+                    "assets": "root Article only"
+                });
+                manifest_value["sentence_alt"] = serde_json::json!({
+                    "policy": "BaseOnly", "owners": projection.sentences.len(),
+                    "scope": "native text projection retained separately from planned display owners"
+                });
+            }
             let manifest = serde_json::to_string_pretty(&manifest_value).map_err(err)? + "\n";
             let (sentence_sources, sentence_alt_sources) = match prepared {
                 Prepared::Sentence(input) => (Some(input.into_parts()), None),
                 Prepared::SvgSentence { projection, .. } => (None, Some(projection)),
+                Prepared::SvgMixed(input) => (Some(input.into_parts()), mixed_alt),
                 _ => (None, None),
             };
             Ok(LocalDocument {

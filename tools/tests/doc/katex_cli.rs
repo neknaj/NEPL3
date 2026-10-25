@@ -372,6 +372,74 @@ fn pinned_native_katex_doc_and_pages() -> Result<(), Box<dyn std::error::Error>>
             assert_eq!(out.exists(), success, "partial publication: {name}");
         }
     }
+    // Mixed typed Sentence + root SVG uses this real pinned worker too, including
+    // direct Math, Sentence Math, nested Doc Math and repeated formula owners.
+    let mixed_source = root.join("mixed-svg.nepld");
+    fs::write(
+        &mixed_source,
+        r#"article en Sentence "Title" body cons image asset "logo" none Sentence "{[漢/かん]/note}" some Sentence "Caption" cons paragraph cons sentence cons image asset "logo" none Sentence "inline & <alt>" nil cons code Doc article en "guest" body nil cons sentence cons math Math frac 1 2 nil cons Sentence sentence cons text "Body " cons math frac 3 4 nil cons Sentence sentence cons document math Math frac 5 6 nil cons Sentence sentence cons math frac 3 4 nil nil nil"#,
+    )?;
+    fs::write(
+        root.join("mixed.svg"),
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><path d='M0 0L1 1'/></svg>",
+    )?;
+    let mixed_assets = root.join("mixed-assets.json");
+    fs::write(
+        &mixed_assets,
+        r#"{"version":1,"assets":[{"id":"logo","source":"mixed.svg","mime":"image/svg+xml"}]}"#,
+    )?;
+    for css in ["inline", "external"] {
+        for svg in ["embedded", "external"] {
+            let out = root.join(format!("mixed-{css}-{svg}"));
+            let result = Command::new(binary)
+                .env("NEPL3_KATEX_NODE_MODULES", &packages)
+                .args(["doc-html", "svg", "--css", css, "--svg", svg])
+                .arg(&mixed_source)
+                .arg(&mixed_assets)
+                .arg(&out)
+                .output()?;
+            assert!(
+                result.status.success(),
+                "{}",
+                String::from_utf8_lossy(&result.stderr)
+            );
+            let html = fs::read_to_string(out.join("document.html"))?;
+            assert_eq!(html.matches("<math").count(), 4);
+            assert_eq!(html.matches("<mfrac>").count(), 4);
+            assert!(html.contains("nepl-code-marker") && html.contains("aria-hidden=\"true\""));
+            assert!(html.contains("alt=\"漢\"") && !html.contains("<script"));
+            let manifest: serde_json::Value =
+                serde_json::from_slice(&fs::read(out.join("manifest.json"))?)?;
+            let visuals = manifest["katex"]["visuals"]
+                .as_array()
+                .ok_or("mixed visuals")?;
+            assert_eq!(visuals.len(), 4);
+            let roots: std::collections::BTreeSet<_> = visuals
+                .iter()
+                .map(|v| v["math_arena_root"].as_u64().ok_or("root"))
+                .collect::<Result<_, _>>()?;
+            assert_eq!(roots.len(), 4);
+            assert!(
+                manifest["math_diagnostics"]
+                    .as_array()
+                    .ok_or("diagnostics")?
+                    .is_empty()
+            );
+            assert_eq!(
+                manifest["sentence_svg"]["contract"],
+                "nepl3.local-doc-svg.sentence/1"
+            );
+            let css_text = if css == "inline" {
+                html
+            } else {
+                fs::read_to_string(out.join("assets/doc.css"))?
+            };
+            assert!(
+                css_text.contains("data:font/woff2;base64,")
+                    && css_text.contains("Permission is hereby granted")
+            );
+        }
+    }
     fs::remove_dir_all(root)?;
     Ok(())
 }

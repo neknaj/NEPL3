@@ -111,7 +111,7 @@ pub fn write(
         }
     }
     let mut report: serde_json::Value = serde_json::from_str(&generated.manifest)?;
-    if generated.sentence_alt_sources.is_none() {
+    if generated.sentence_sources.is_none() && generated.sentence_alt_sources.is_none() {
         report["scope"] = serde_json::json!(
             "single-document static SVG, retained Code and Math display, and validated external URLs; svg/g/path and bounded local path-glyph profile; page/relative links and unselected foreign requirements need explicit resolution"
         );

@@ -298,7 +298,7 @@ fn local_path_glyphs_export_in_every_asset_mode() -> Result<(), Box<dyn std::err
 }
 
 #[test]
-fn independent_sentence_alt_exports_but_display_sentence_stays_guarded()
+fn sentence_alt_and_new_mixed_cases_export_with_explicit_scope()
 -> Result<(), Box<dyn std::error::Error>> {
     let root = std::env::temp_dir().join(format!(
         "nepl3-svg-alt-{}-{}",
@@ -347,7 +347,7 @@ fn independent_sentence_alt_exports_but_display_sentence_stays_guarded()
             assert!(!run(&root, css, mode, &out)?.status.success());
         }
     }
-    for (index, bad) in [
+    for (index, mixed) in [
         source.replace("article ja \"SVG\"", "article ja Sentence \"SVG\""),
         source.replace("some \"caption\"", "some Sentence \"caption\""),
         source.replace("cons paragraph", "cons paragraph cons parallel cons variant en Sentence \"body\" cons variant ja \"旧文\" nil nil cons paragraph"),
@@ -359,14 +359,13 @@ fn independent_sentence_alt_exports_but_display_sentence_stays_guarded()
     .iter()
     .enumerate()
     {
-        fs::write(root.join("input.nepld"), bad)?;
-        let out = format!("unsupported-{index}");
+        fs::write(root.join("input.nepld"), mixed)?;
+        let out = format!("mixed-{index}");
         let result = run(&root, "inline", "embedded", &out)?;
-        assert!(!result.status.success());
-        assert!(
-            String::from_utf8_lossy(&result.stderr).contains("SentenceAssetSelectionUnsupported")
-        );
-        assert!(!root.join(&out).exists());
+        assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
+        let manifest: serde_json::Value = serde_json::from_slice(&fs::read(root.join(&out).join("manifest.json"))?)?;
+        assert_eq!(manifest["sentence_svg"]["contract"], "nepl3.local-doc-svg.sentence/1");
+        assert!(manifest["sentence_svg"]["display_occurrences"].as_u64().ok_or("display occurrences")? > 0);
     }
     let unresolved = source.replace(
         "Sentence \"{[漢/かん]/note}\"",
@@ -385,6 +384,214 @@ fn independent_sentence_alt_exports_but_display_sentence_stays_guarded()
             .success()
     );
     assert!(!root.join("invalid-svg").exists());
+    fs::remove_dir_all(root)?;
+    Ok(())
+}
+
+#[test]
+fn mixed_sentence_svg_cli_uses_real_math_and_code_in_all_file_modes()
+-> Result<(), Box<dyn std::error::Error>> {
+    let root = std::env::temp_dir().join(format!(
+        "nepl3-mixed-svg-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)?
+            .as_nanos()
+    ));
+    fs::create_dir(&root)?;
+    fs::write(root.join("figure.svg"), SVG)?;
+    fs::write(
+        root.join("assets.json"),
+        r#"{"version":1,"assets":[{"id":"triangle","source":"figure.svg","mime":"image/svg+xml"}]}"#,
+    )?;
+    let source = r#"article en Sentence "Title" body cons image asset "triangle" none Sentence "{[漢/かん]/note}" some Sentence "Caption" cons paragraph cons sentence cons image asset "triangle" none Sentence "inline & <alt>" nil cons code Doc article en "guest" body nil cons sentence cons math Math frac 1 2 nil cons Sentence sentence cons text "Body " cons math frac 3 4 nil cons Sentence sentence cons document math Math frac 5 6 nil cons Sentence sentence cons math frac 3 4 nil nil nil"#;
+    fs::write(root.join("input.nepld"), source)?;
+    for css in ["external", "inline"] {
+        for mode in ["external", "embedded"] {
+            let out = format!("{css}-{mode}");
+            let result = run(&root, css, mode, &out)?;
+            assert!(
+                result.status.success(),
+                "{}",
+                String::from_utf8_lossy(&result.stderr)
+            );
+            let html = fs::read_to_string(root.join(&out).join("document.html"))?;
+            assert!(html.contains("Title") && html.contains("Caption") && html.contains("Body"));
+            assert!(
+                html.contains("alt=\"漢\"") && html.contains("alt=\"inline &amp; &lt;alt&gt;\"")
+            );
+            assert!(html.contains("nepl-code-marker") && html.contains("<mfrac>"));
+            assert_eq!(html.matches("<math").count(), 4);
+            assert_eq!(html.matches("<mfrac>").count(), 4);
+            assert!(!html.contains("<script") && !html.contains("かん"));
+            let m: serde_json::Value =
+                serde_json::from_slice(&fs::read(root.join(&out).join("manifest.json"))?)?;
+            assert_eq!(
+                m["sentence_svg"]["contract"],
+                "nepl3.local-doc-svg.sentence/1"
+            );
+            assert_eq!(m["sentence_svg"]["assets"], "root Article only");
+            assert_eq!(m["sentence_alt"]["owners"], 2);
+            assert!(
+                m["scope"]
+                    .as_str()
+                    .ok_or("scope")?
+                    .contains("planned typed Sentence")
+            );
+            assert_eq!(m["options"]["parallel"], "Rows");
+            assert_eq!(m["options"]["svg"], mode);
+            assert!(m.get("display_scope").is_none());
+            assert!(!run(&root, css, mode, &out)?.status.success());
+        }
+    }
+    // A mixed document with only legacy alt text still has explicit mixed scope.
+    fs::write(
+        root.join("input.nepld"),
+        source
+            .replace("Sentence \"{[漢/かん]/note}\"", "\"Alt\"")
+            .replace("Sentence \"inline & <alt>\"", "\"inline\""),
+    )?;
+    let result = run(&root, "inline", "embedded", "legacy-alt")?;
+    assert!(
+        result.status.success(),
+        "{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    let m: serde_json::Value =
+        serde_json::from_slice(&fs::read(root.join("legacy-alt/manifest.json"))?)?;
+    assert_eq!(m["sentence_alt"]["owners"], 0);
+    assert!(
+        m["scope"]
+            .as_str()
+            .ok_or("scope")?
+            .contains("planned typed Sentence")
+    );
+    fs::remove_dir_all(root)?;
+    Ok(())
+}
+
+#[test]
+fn mixed_sentence_svg_failures_never_publish_an_output_directory()
+-> Result<(), Box<dyn std::error::Error>> {
+    let root = std::env::temp_dir().join(format!(
+        "nepl3-mixed-svg-failures-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)?
+            .as_nanos()
+    ));
+    fs::create_dir(&root)?;
+    let base = r#"article en Sentence "Title" body cons image asset "triangle" none Sentence "Alt" none nil"#;
+    let spec = r#"{"version":1,"assets":[{"id":"triangle","source":"figure.svg","mime":"image/svg+xml"}]}"#;
+    let append = |tail: &str| -> Result<String, Box<dyn std::error::Error>> {
+        Ok(format!(
+            "{}{}",
+            base.strip_suffix("nil").ok_or("body")?,
+            tail
+        ))
+    };
+    let duplicate_spec = r#"{"version":1,"assets":[{"id":"triangle","source":"figure.svg","mime":"image/svg+xml"},{"id":"triangle","source":"figure.svg","mime":"image/svg+xml"}]}"#;
+    let cases: Vec<(String, String, String, &str)> = vec![
+        (
+            base.into(),
+            r#"{"version":1,"assets":[]}"#.into(),
+            SVG.into(),
+            "Missing",
+        ),
+        (base.into(), duplicate_spec.into(), SVG.into(), "Duplicate"),
+        (
+            base.into(),
+            spec.replace("triangle", "unused"),
+            SVG.into(),
+            "Unused",
+        ),
+        (
+            base.into(),
+            spec.into(),
+            "<svg><script/></svg>".into(),
+            "InvalidSvg",
+        ),
+        (
+            base.replace(
+                "asset \"triangle\" none",
+                &format!("asset \"triangle\" some \"{}\"", "0".repeat(64)),
+            ),
+            spec.into(),
+            SVG.into(),
+            "Digest",
+        ),
+        (
+            base.replace(
+                "Sentence \"Alt\"",
+                "Sentence sentence cons math frac 1 2 nil",
+            ),
+            spec.into(),
+            SVG.into(),
+            "Unresolved",
+        ),
+        (
+            append(
+                r#"cons paragraph cons Sentence sentence cons document image asset "triangle" none "guest" nil nil nil"#,
+            )?,
+            spec.into(),
+            SVG.into(),
+            "Missing",
+        ),
+        (
+            append(
+                r#"cons paragraph cons sentence cons link external "javascript:alert(1)" text "bad" nil nil nil"#,
+            )?,
+            spec.into(),
+            SVG.into(),
+            "InvalidExternalUri",
+        ),
+        (
+            append(
+                r#"cons paragraph cons sentence cons link page "other" none text "bad" nil nil nil"#,
+            )?,
+            spec.into(),
+            SVG.into(),
+            "Unsupported",
+        ),
+        (
+            append(
+                r#"cons paragraph cons sentence cons link relative "other.nepld" none text "bad" nil nil nil"#,
+            )?,
+            spec.into(),
+            SVG.into(),
+            "Unsupported",
+        ),
+        (
+            append(
+                r#"cons paragraph cons Sentence sentence cons document ref absent text "bad" nil nil nil"#,
+            )?,
+            spec.into(),
+            SVG.into(),
+            "UnresolvedLabel",
+        ),
+        (
+            append(
+                r#"cons paragraph cons Sentence sentence cons document anchor dup text "first" nil cons Sentence sentence cons document anchor dup text "second" nil nil nil"#,
+            )?,
+            spec.into(),
+            SVG.into(),
+            "DuplicateLabel",
+        ),
+    ];
+    for (index, (source, manifest, svg, expected)) in cases.into_iter().enumerate() {
+        fs::write(root.join("input.nepld"), source)?;
+        fs::write(root.join("assets.json"), manifest)?;
+        fs::write(root.join("figure.svg"), svg)?;
+        let out = format!("failure-{index}");
+        let result = run(&root, "inline", "embedded", &out)?;
+        assert!(!result.status.success(), "{index}");
+        let message = String::from_utf8_lossy(&result.stderr);
+        assert!(
+            message.contains(expected),
+            "{index}: expected {expected}, got {message}"
+        );
+        assert!(!root.join(&out).exists(), "{index}: partial output");
+    }
     fs::remove_dir_all(root)?;
     Ok(())
 }

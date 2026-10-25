@@ -1,11 +1,13 @@
-//! Narrow SVG composition admission: independent Sentence may occur only in alt.
-//! An owner shared with body/caption/title remains unsupported, regardless of
-//! whether that same owner also has a projected alt resolution.
+//! Bounded SVG dispatch by occurrence role. Preserve the legacy alt-only scan's
+//! accounting; mixed owners use explicit planned display rather than fallback.
 use crate::doc::source::err;
 use nepl3_core::budget::Budget;
 use nepl3_doc_core::model::DocumentSyntax;
 use nepl3_doc_html::{ParallelMode, RenderOptions, visibility};
-pub(crate) fn check_alt_only(document: &DocumentSyntax, budget: &mut Budget) -> Result<(), String> {
+pub(crate) fn requires_planned_display(
+    document: &DocumentSyntax,
+    budget: &mut Budget,
+) -> Result<bool, String> {
     let shape = document.value.validate_shape(budget).map_err(err)?;
     // Rows checks every variant. Display selection must never hide an unsupported
     // role, and this inventory is not guest validation or namespace authority.
@@ -17,10 +19,7 @@ pub(crate) fn check_alt_only(document: &DocumentSyntax, budget: &mut Budget) -> 
         budget,
     )
     .map_err(err)?;
-    if !occurrences.is_empty() {
-        return Err("SentenceAssetSelectionUnsupported".into());
-    }
-    Ok(())
+    Ok(!occurrences.is_empty())
 }
 
 #[cfg(test)]
@@ -31,7 +30,7 @@ mod tests {
     use nepl3_doc_core::{check::Category, model::*};
     use nepl3_wire::foundation::FoundationCodec;
     #[test]
-    fn shared_alt_owner_in_body_is_rejected_by_occurrence_role() -> Result<(), String> {
+    fn shared_alt_owner_in_body_requires_planned_display() -> Result<(), String> {
         let compiled = compiled()?;
         let mut doc = with_input_route(
             true,
@@ -54,7 +53,7 @@ mod tests {
                 .map_err(err)
             },
         )?;
-        check_alt_only(&doc, &mut budget())?;
+        assert!(!requires_planned_display(&doc, &mut budget())?);
         let alt = doc
             .value
             .nodes
@@ -83,13 +82,10 @@ mod tests {
             return Err("body".into());
         };
         blocks.push(BlockRef(index));
-        assert_eq!(
-            check_alt_only(&doc, &mut budget()),
-            Err("SentenceAssetSelectionUnsupported".into())
-        );
+        assert_eq!(requires_planned_display(&doc, &mut budget()), Ok(true));
         let mut stopped = budget();
         stopped.cancel();
-        assert!(check_alt_only(&doc, &mut stopped).is_err());
+        assert!(requires_planned_display(&doc, &mut stopped).is_err());
         Ok(())
     }
 }
@@ -154,3 +150,6 @@ mod composition_tests {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod mixed;
