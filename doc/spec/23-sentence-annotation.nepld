@@ -1062,7 +1062,7 @@ body
         cons "Sentenceの所有元・構造出現・描画記録をLocalDocumentへ保持し、原文Docと共に返す。"
         cons "Sentenceを[含/ふく]まない[既存/きそん]SVG[経路/けいろ]とalt[限定/げんてい]のSentence[経路/けいろ]を[維持/いじ]し、root Articleの[画像/がぞう]と[本文/ほんぶん]・captionのSentenceは[後述/こうじゅつ]するplanned hostへ[明示的/めいじてき]に[接続/せつぞく]する。"
         cons " CLIでの単体Article対応からPageSetのSentence対応を推定しない。"
-        cons "PageSetは[後述/こうじゅつ]の[専用/せんよう]namespace[経路/けいろ]で[接続/せつぞく]する。SVG CLIはRows[固定/こてい]であり、asset-freeのSingle[選択/せんたく]やPageSetの[画像/がぞう][対応/たいおう]とは[区別/くべつ]する。"
+        cons "PageSetは[後述/こうじゅつ]の[専用/せんよう]namespace[経路/けいろ]で[接続/せつぞく]する。SVG CLIは[既定/きてい]Rowsと[明示的/めいじてき]な[表示/ひょうじ][選択/せんたく]を[扱/あつか]うが、PageSetの[画像/がぞう][対応/たいおう]とは[区別/くべつ]する。"
         cons "既存Math注釈内の入れ子数式の生成はPageSetでも共通の数式収集経路を使う。"
         nil
       cons paragraph
@@ -1198,7 +1198,7 @@ body
         cons "externalとembeddedのSVG、externalとinlineのCSSで同じBaseOnly本文を使い、HTML属性としてescapeする。"
         cons "[未解決/みかいけつ]の[選択/せんたく]foreign text、[不正/ふせい]asset、resource stopでは[成功/せいこう][成果物/せいかぶつ]を[作/つく]らない。"
         cons "独立Sentenceがない既存SVG経路、runtime既定値、CI設定を変更しない。"
-        cons "root ArticleのSentenceとSVGの[混在/こんざい]は[後述/こうじゅつ]の[限定/げんてい]CLI[経路/けいろ]で[扱/あつか]う。PageSet asset、guest[所有/しょゆう]asset、SVG CLIの[表示/ひょうじ][選択/せんたく]、portable proofは[未完了/みかんりょう]である。"
+        cons "root ArticleのSentenceとSVGの[混在/こんざい]は[後述/こうじゅつ]の[限定/げんてい]CLI[経路/けいろ]で[扱/あつか]う。PageSet asset、guest[所有/しょゆう]asset、portable proofは[未完了/みかんりょう]である。"
         nil
       nil
     cons section namespaceSvg "Native static SVG in resolved Doc namespaces"
@@ -1271,8 +1271,17 @@ body
     cons section mixedSvgCli "Mixed Sentence standalone root SVG export"
     body
       cons paragraph
+        cons "SVG CLIの[先頭/せんとう]に--display display.jsonを[置/お]くと、Rows・Columns・Singleを[明示的/めいじてき]に[選/えら]べる。"
+        cons "[続/つづ]けて--css inline|external、--svg embedded|external、[入力/にゅうりょく]Doc、asset manifest、[新規/しんき][出力先/しゅつりょくさき]をこの[順/じゅん]に[指定/してい]する。"
+        cons "[共通/きょうつう]の65536byte[上限/じょうげん]のstrict[設定/せってい][読取/よみと]りを[再利用/さいりよう]し、[未知/みち]field・escape[表記/ひょうき]だけが[異/こと]なる[同名/どうめい]keyを[含/ふく]む[重複/ちょうふく]key・nullを[出力先/しゅつりょくさき]の[作成前/さくせいまえ]に[拒否/きょひ]する。"
+        cons "[分岐/ぶんき]の[判定/はんてい]には[全/ぜん]variantのRows role inventoryを[維持/いじ]する。"
+        cons "[別途/べっと]、[全/ぜん]variantのasset・guest[検査/けんさ]を[維持/いじ]し、[非表示/ひひょうじ]targetへの[参照/さんしょう]を[拒否/きょひ]する。"
+        cons "[要求/ようきゅう]されたlanguageとfallbackの[順序/じゅんじょ]は[既存/きそん]identityへ[保持/ほじ]し、[省略時/しょうりゃくじ]と[明示的/めいじてき]なRowsは[同/おな]じ[出力/しゅつりょく]を[保/たも]つ。"
+        cons "rendererとlimitsの[既定値/きていち]は[変更/へんこう]せず、PageSetやguest[所有/しょゆう]assetへの[拡張/かくちょう]ではない。"
+        nil
+      cons paragraph
         cons "Standalone SVG generation classifies independent Sentence by the existing bounded Rows occurrence-role scan."
-        cons " Inputs without Sentence and inputs whose Sentence occurrences are confined to alt keep their original paths, accounting and output identities."
+        cons " Inputs without Sentence and inputs whose Sentence occurrences are confined to alt keep their original paths; default Rows also preserves their accounting and output identities."
         cons " Non-alt occurrences select the explicit planned root SVG host, including owners shared by alt and title, body or caption and occurrences in all language variants."
         cons " The new path retains the exact structural Selection through scoped planning and rendering, then stores both SelectionParts and the returned alt Projection, including an empty projection."
         cons " Original occurrence IDs and foreign placements feed the existing Code renderer, direct and nested Math composition, generation-side KaTeX or MathML fallback, stylesheet and shell serializer."
@@ -1282,7 +1291,12 @@ body
         cons " Mixed Prepare observations end after structural collection, while planning, projection, namespace preparation and insertion occur within the measured RenderAndSerialize stage."
         cons " Failed stages produce no success observation and no partial LocalDocument."
         cons " Mixed-only metadata identifies planned root SVG and separate BaseOnly alt owners; the writer preserves it even when independent alt ownership is empty."
-        cons " The SVG CLI retains Rows and its existing default renderer and limits, with no new display flags or identity format."
+        cons " The SVG CLI defaults to Rows and retains its existing default renderer, limits and identity format; an explicit leading --display option selects Rows, Columns or Single."
+        cons " The exact syntax is doc-html svg --display display.json --css inline|external --svg embedded|external input.nepld assets.json new-output."
+        cons " The shared strict display reader rejects unknown fields, duplicate keys including escaped aliases, null and files exceeding 65536 bytes before output creation."
+        cons " The bounded Rows role inventory still examines every variant to choose the rendering path."
+        cons " Independently, all-variant asset and guest validation remain in force, and references to omitted targets are rejected."
+        cons " Display selection preserves the exact requested language and fallback ordering in the existing identity, while old calls and explicit default Rows produce identical files."
         cons " Semantic or admission failures precede output-directory creation; filesystem failures after creation retain the existing incomplete-directory behavior."
         cons " Guest-owned assets, PageSet SVG, page and relative links, arbitrary-member asset registration and portable proof remain outside this export scope."
         nil

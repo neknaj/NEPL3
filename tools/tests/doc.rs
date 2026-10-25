@@ -794,6 +794,9 @@ mod export_cli;
 #[cfg(not(target_family = "wasm"))]
 #[path = "doc/svg.rs"]
 mod svg;
+#[cfg(not(target_family = "wasm"))]
+#[path = "doc/svg_display.rs"]
+mod svg_display;
 
 #[path = "doc/pages/single.rs"]
 mod pages_single;

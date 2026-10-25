@@ -54,6 +54,31 @@ fn configured_html(
     )
 }
 
+fn configured_svg(display: &str, args: &[&str]) -> nepl3_tools::Result<()> {
+    let ["--css", css, "--svg", mode, input, assets, output] = args else {
+        return Err("expected --css and --svg followed by input, assets and output".into());
+    };
+    if [display, *input, *assets, *output]
+        .iter()
+        .any(|path| path.starts_with("--"))
+    {
+        return Err(
+            "expected display, input, assets and output paths; use ./ for paths beginning with --"
+                .into(),
+        );
+    }
+    let selection =
+        nepl3_tools::doc::export::DisplaySelection::read(std::path::Path::new(display))?;
+    nepl3_tools::doc::export::assets::write_with_display(
+        std::path::Path::new(input),
+        std::path::Path::new(assets),
+        std::path::Path::new(output),
+        css.parse()?,
+        mode,
+        selection,
+    )
+}
+
 fn run() -> nepl3_tools::Result<()> {
     let arguments: Vec<String> = env::args().skip(1).collect();
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -234,6 +259,7 @@ fn run() -> nepl3_tools::Result<()> {
             css.parse()?,
             renderer.parse()?,
         ),
+        ["doc-html", "svg", "--display", display, tail @ ..] => configured_svg(display, tail),
         [
             "doc-html",
             "svg",
@@ -375,6 +401,9 @@ fn run() -> nepl3_tools::Result<()> {
             );
             println!(
                 "--display and --limits may appear in either leading order; display uses rows, columns, or single with language and ordered fallbacks."
+            );
+            println!(
+                "nepl3-tools doc-html svg --display <display.json> --css <external|inline> --svg <external|embedded> <input.nepld> <assets.json> <new-output-directory>"
             );
             println!(
                 "nepl3-tools doc-markdown <annotated|footnotes> --limits <limits.json> <input.nepld> <aliases.json> <new-output.md>"
