@@ -300,3 +300,6 @@ fn annotated_host_rejects_invalid_aliases_before_creating_output()
     fs::remove_dir_all(&root)?;
     result
 }
+
+#[path = "annotated/parallel.rs"]
+mod parallel;

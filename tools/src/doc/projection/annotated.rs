@@ -7,6 +7,7 @@ mod blocks;
 mod footnotes;
 mod images;
 mod math;
+mod parallel;
 use crate::doc::math::markdown::Placement;
 use footnotes::PendingFootnote;
 
@@ -762,17 +763,7 @@ impl<'a> Annotated<'a, '_> {
                     self.body(body.0, level + 1)?;
                 }
                 _ if section_seen => return Err(Error::Unsupported { node: child.0 }),
-                DocKind::Paragraph { items } => {
-                    let mut sentences = Vec::new();
-                    for item in items {
-                        if !matches!(self.plain.kind(item.0), DocKind::Sentence { .. }) {
-                            return Err(Error::Unsupported { node: item.0 });
-                        }
-                        push(&mut sentences, item.0, self.plain.budget)?;
-                    }
-                    self.sentences(&sentences, Some(""))?;
-                    self.plain.emit("\n\n")?;
-                }
+                DocKind::Paragraph { items } => self.paragraph(items)?,
                 DocKind::RawCode {
                     language_hint,
                     text,

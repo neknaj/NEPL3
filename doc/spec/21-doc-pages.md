@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/21&#45;doc&#45;pages.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page doc&#45;pages; source SHA-256 a0e2048456beae22ceb0f8accd37840a9d587468d58cd226ec1159b7f34998e0; alias input SHA-256 d4a053ac2c1d67ece725bf2f6868717047048053ecda2f14be4c71e7e873e1eb; page input SHA-256 6f3236ace54f55478e098ea3b9c9548cbd09eccb4d3d81ebd05a58812e7cbcd3. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/21&#45;doc&#45;pages.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page doc&#45;pages; source SHA-256 f1d5fb6adaa46ead231fea621c1749ea5bd02862adfea48da97893c89892089e; alias input SHA-256 d4a053ac2c1d67ece725bf2f6868717047048053ecda2f14be4c71e7e873e1eb; page input SHA-256 57074541329a2a6863107e5a4e47533d17b8be2432d84c7fc94b14d404140d9b. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="docページ集合とリンク解決"></a>
 
@@ -137,7 +137,211 @@ Bodyには<ruby>導入<rt>どうにゅう</rt></ruby>のParagraph\/RawCode\/List
 
 Tableは<ruby>非空<rt>ひくう</rt></ruby>のcolumnsと<ruby>明示<rt>めいじ</rt></ruby>headerを<ruby>持<rt>も</rt></ruby>つ<ruby>場合<rt>ばあい</rt></ruby>を<ruby>扱<rt>あつか</rt></ruby>う。headerなしの<ruby>先頭<rt>せんとう</rt></ruby>rowを<ruby>昇格<rt>しょうかく</rt></ruby>したり、<ruby>架空<rt>かくう</rt></ruby>のheaderを<ruby>追加<rt>ついか</rt></ruby>したりしない。headerだけでrowsが<ruby>空<rt>から</rt></ruby>の<ruby>場合<rt>ばあい</rt></ruby>は<ruby>許<rt>ゆる</rt></ruby>す。<ruby>元<rt>もと</rt></ruby>のrow\/cell<ruby>順<rt>じゅん</rt></ruby>、cell<ruby>数<rt>すう</rt></ruby>とDefault\/Left\/Center\/RightをGFM tableへ<ruby>写<rt>うつ</rt></ruby>す。<ruby>空<rt>から</rt></ruby>のSentence cellは<ruby>空<rt>から</rt></ruby>cellとして<ruby>保持<rt>ほじ</rt></ruby>するが、<ruby>空<rt>から</rt></ruby>の<ruby>見出<rt>みだ</rt></ruby>し・<ruby>段落<rt>だんらく</rt></ruby>・InlineCodeを<ruby>許<rt>ゆる</rt></ruby>す<ruby>規則<rt>きそく</rt></ruby>には<ruby>拡張<rt>かくちょう</rt></ruby>しない。cell<ruby>内<rt>ない</rt></ruby>の<ruby>注釈<rt>ちゅうしゃく</rt></ruby>・<ruby>装飾<rt>そうしょく</rt></ruby>・<ruby>外部<rt>がいぶ</rt></ruby>Link・InlineCodeは<ruby>共通<rt>きょうつう</rt></ruby>のinline<ruby>処理<rt>しょり</rt></ruby>を<ruby>使<rt>つか</rt></ruby>う。Textとcodeにあるpipeをtable<ruby>区切<rt>くぎ</rt></ruby>りにせず、codeではpipeごとに<ruby>追加<rt>ついか</rt></ruby>する<ruby>一<rt>ひと</rt></ruby>つのescapeだけがGFM<ruby>処理<rt>しょり</rt></ruby>で<ruby>消費<rt>しょうひ</rt></ruby>されるようにする。<ruby>既存<rt>きそん</rt></ruby>backslashやbacktickを<ruby>含<rt>ふく</rt></ruby>むcode<ruby>内容<rt>ないよう</rt></ruby>も<ruby>保持<rt>ほじ</rt></ruby>する。cell<ruby>内<rt>ない</rt></ruby>のBreak、<ruby>外端<rt>がいたん</rt></ruby>のText<ruby>空白<rt>くうはく</rt></ruby>、<ruby>複数<rt>ふくすう</rt></ruby>blockはこのprofileでは<ruby>扱<rt>あつか</rt></ruby>わず、<ruby>空白除去<rt>くうはくじょきょ</rt></ruby>や<ruby>改行<rt>かいぎょう</rt></ruby>の<ruby>黙殺<rt>もくさつ</rt></ruby>で<ruby>成功<rt>せいこう</rt></ruby>させない。<ruby>規則<rt>きそく</rt></ruby>は [GFMの<ruby>表<rt>ひょう</rt></ruby>](<https\:\/\/github\.github\.com\/gfm\/\#tables\-extension\->) とlist\/task listの<ruby>契約<rt>けいやく</rt></ruby>に<ruby>従<rt>したが</rt></ruby>い、<ruby>別<rt>べつ</rt></ruby>parserで<ruby>構造<rt>こうぞう</rt></ruby>・<ruby>文字列<rt>もじれつ</rt></ruby>・checkbox・<ruby>開始値<rt>かいしち</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。
 
-このprofileはParallel、<ruby>画像<rt>がぞう</rt></ruby>、<ruby>参照<rt>さんしょう</rt></ruby>、inline Anchorを<ruby>扱<rt>あつか</rt></ruby>わない。Relative\/Page link、asset、foreignの<ruby>要求<rt>ようきゅう</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>む<ruby>入力<rt>にゅうりょく</rt></ruby>はNeedsResolutionとし、<ruby>周辺<rt>しゅうへん</rt></ruby>fileの<ruby>探索<rt>たんさく</rt></ruby>や<ruby>仮<rt>かり</rt></ruby>のPageSet<ruby>登録<rt>とうろく</rt></ruby>で<ruby>成功<rt>せいこう</rt></ruby>させない。Doc\/HTML<ruby>側<rt>がわ</rt></ruby>の<ruby>対応範囲<rt>たいおうはんい</rt></ruby>を<ruby>狭<rt>せば</rt></ruby>めるものではない。
+<div class="nepl-paragraph">
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>注釈付<rt>ちゅうしゃくつ</rt></ruby>き・<ruby>脚注<rt>きゃくちゅう</rt></ruby>Markdownは、Article・Sectionのbodyに<ruby>置<rt>お</rt></ruby>かれたParagraphのParallelを<ruby>全<rt>ぜん</rt></ruby>variant<ruby>表示<rt>ひょうじ</rt></ruby>として<ruby>投影<rt>とうえい</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Annotated and footnotes Markdown project Parallel in Paragraphs directly within Article or Section bodies as an all\-variant view\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>元<rt>もと</rt></ruby>の<ruby>段落<rt>だんらく</rt></ruby>と<ruby>各<rt>かく</rt></ruby>Parallel groupを<ruby>固定<rt>こてい</rt></ruby>divで<ruby>保持<rt>ほじ</rt></ruby>し、variantごとに<ruby>元<rt>もと</rt></ruby>のlang<ruby>値<rt>ち</rt></ruby>と<ruby>可視<rt>かし</rt></ruby>の<ruby>言語<rt>げんご</rt></ruby>labelを<ruby>出力<rt>しゅつりょく</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Fixed div containers retain the authored paragraph and each Parallel group\, with the original lang value and a visible language label for every variant\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>宣言順<rt>せんげんじゅん</rt></ruby>と<ruby>大文字<rt>おおもじ</rt></ruby>・<ruby>小文字<rt>こもじ</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>し、localeによる<ruby>選択<rt>せんたく</rt></ruby>、Columns・Singleへの<ruby>切替<rt>きりかえ</rt></ruby>、<ruby>翻訳<rt>ほんやく</rt></ruby>の<ruby>省略<rt>しょうりゃく</rt></ruby>を<ruby>行<rt>おこな</rt></ruby>わない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Declaration order and language\-tag casing are preserved\; this profile neither selects by locale nor switches to Columns or Single nor omits translations\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+langはHTMLと<ruby>同<rt>おな</rt></ruby>じ<ruby>有限<rt>ゆうげん</rt></ruby>のRFC 5646<ruby>構文検査<rt>こうぶんけんさ</rt></ruby>を<ruby>通<rt>とお</rt></ruby>すが、registryでの<ruby>有効性<rt>ゆうこうせい</rt></ruby>を<ruby>保証<rt>ほしょう</rt></ruby>しない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Language tags pass the same bounded RFC 5646 syntax check as HTML\; registry validity is not guaranteed\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>連続<rt>れんぞく</rt></ruby>する<ruby>通常<rt>つうじょう</rt></ruby>Sentenceの<ruby>文字列<rt>もじれつ</rt></ruby>は<ruby>従来<rt>じゅうらい</rt></ruby>どおり<ruby>連結<rt>れんけつ</rt></ruby>し、Parallelとの<ruby>境界<rt>きょうかい</rt></ruby>を<ruby>越<rt>こ</rt></ruby>えて<ruby>文<rt>ぶん</rt></ruby>を<ruby>平坦化<rt>へいたんか</rt></ruby>したり<ruby>外端<rt>がいたん</rt></ruby>の<ruby>空白<rt>くうはく</rt></ruby>を<ruby>削<rt>けず</rt></ruby>ったりしない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Consecutive ordinary Sentences retain their existing exact concatenation\; sentences are not flattened across Parallel boundaries and outer whitespace is not trimmed\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>空<rt>から</rt></ruby>のinlinesを<ruby>持<rt>も</rt></ruby>つ<ruby>明示的<rt>めいじてき</rt></ruby>な<ruby>空<rt>から</rt></ruby>Sentence variantも、<ruby>言語<rt>げんご</rt></ruby>labelとcontainerを<ruby>残<rt>のこ</rt></ruby>す。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+An explicitly empty variant Sentence with no inlines retains its language label and container\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+Ruby・Anno・Code・Link・Mathは<ruby>既存<rt>きそん</rt></ruby>のinline<ruby>処理<rt>しょり</rt></ruby>と<ruby>共有<rt>きょうゆう</rt></ruby>Budgetを<ruby>使<rt>つか</rt></ruby>い、<ruby>不正<rt>ふせい</rt></ruby>variantや<ruby>停止<rt>ていし</rt></ruby>を<ruby>部分成果物<rt>ぶぶんせいかぶつ</rt></ruby>で<ruby>覆<rt>おお</rt></ruby>わない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Ruby\, Anno\, Code\, Link and Math reuse the existing inline processing and shared Budget\; invalid variants or stops produce no partial artifact\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+list<ruby>内<rt>ない</rt></ruby>のParallelは<ruby>引<rt>ひ</rt></ruby>き<ruby>続<rt>つづ</rt></ruby>きUnsupportedであり、<ruby>空<rt>から</rt></ruby>の<ruby>通常<rt>つうじょう</rt></ruby><ruby>段落<rt>だんらく</rt></ruby>や<ruby>空白<rt>くうはく</rt></ruby>の<ruby>黙殺<rt>もくさつ</rt></ruby>を<ruby>許<rt>ゆる</rt></ruby>す<ruby>変更<rt>へんこう</rt></ruby>ではない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Parallel inside lists remains Unsupported\; this does not permit empty ordinary paragraphs or silently discarded whitespace\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>生成<rt>せいせい</rt></ruby>されたMarkdownとCommonMark HTMLのgroup<ruby>境界<rt>きょうかい</rt></ruby>を<ruby>検証<rt>けんしょう</rt></ruby>するが、<ruby>任意<rt>にんい</rt></ruby>platformでのclass<ruby>保持<rt>ほじ</rt></ruby>・<ruby>表示<rt>ひょうじ</rt></ruby>・accessibilityやDoc roundtripの<ruby>証明<rt>しょうめい</rt></ruby>ではない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Group boundaries are verified in generated Markdown and CommonMark HTML\, not as proof of class preservation\, presentation\, accessibility or Doc roundtrip on arbitrary platforms\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>既存<rt>きそん</rt></ruby>のplain Markdown<ruby>制限<rt>せいげん</rt></ruby>と、Parallelを<ruby>含<rt>ふく</rt></ruby>まない<ruby>成功<rt>せいこう</rt></ruby><ruby>経路<rt>けいろ</rt></ruby>のbyte<ruby>列<rt>れつ</rt></ruby>・<ruby>予算計上<rt>よさんけいじょう</rt></ruby>は<ruby>維持<rt>いじ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The restricted plain Markdown profile and successful non\-Parallel output bytes and accounting remain unchanged\.
+
+</div>
+
+</div>
+
+</div>
+
+このprofileは<ruby>画像<rt>がぞう</rt></ruby>、<ruby>参照<rt>さんしょう</rt></ruby>、inline Anchorを<ruby>扱<rt>あつか</rt></ruby>わない。Relative\/Page link、asset、foreignの<ruby>要求<rt>ようきゅう</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>む<ruby>入力<rt>にゅうりょく</rt></ruby>はNeedsResolutionとし、<ruby>周辺<rt>しゅうへん</rt></ruby>fileの<ruby>探索<rt>たんさく</rt></ruby>や<ruby>仮<rt>かり</rt></ruby>のPageSet<ruby>登録<rt>とうろく</rt></ruby>で<ruby>成功<rt>せいこう</rt></ruby>させない。Doc\/HTML<ruby>側<rt>がわ</rt></ruby>の<ruby>対応範囲<rt>たいおうはんい</rt></ruby>を<ruby>狭<rt>せば</rt></ruby>めるものではない。
 
 aliasesはJSONのrecord<ruby>配列<rt>はいれつ</rt></ruby>で、<ruby>各<rt>かく</rt></ruby>recordの `name` は<ruby>必須<rt>ひっす</rt></ruby>、`section` はSectionの<ruby>意味<rt>いみ</rt></ruby>ID、nullまたは<ruby>省略<rt>しょうりゃく</rt></ruby>ならArticleを<ruby>指<rt>さ</rt></ruby>す。<ruby>未知<rt>みち</rt></ruby>field・<ruby>重複<rt>じゅうふく</rt></ruby>fieldは<ruby>拒否<rt>きょひ</rt></ruby>する。nameは<ruby>非空<rt>ひくう</rt></ruby>でUnicode<ruby>英数字<rt>えいすうじ</rt></ruby>とASCIIの `-` \/ `_` のみを<ruby>許<rt>ゆる</rt></ruby>す。nameの<ruby>重複<rt>じゅうふく</rt></ruby>、<ruby>存在<rt>そんざい</rt></ruby>しないSection、<ruby>生成時<rt>せいせいじ</rt></ruby>に<ruby>到達<rt>とうたつ</rt></ruby>しないSectionを<ruby>拒否<rt>きょひ</rt></ruby>する。SectionにはHTML backendと<ruby>同<rt>おな</rt></ruby>じ `n-` とIDのUTF\-8 byte<ruby>列<rt>れつ</rt></ruby>の<ruby>小文字<rt>こもじ</rt></ruby>hexからなるanchorを<ruby>付<rt>つ</rt></ruby>ける。<ruby>追加<rt>ついか</rt></ruby>aliasとこれらのanchorの<ruby>衝突<rt>しょうとつ</rt></ruby>も<ruby>拒否<rt>きょひ</rt></ruby>する。<ruby>固定<rt>こてい</rt></ruby>の `<a name="...">` を<ruby>見出<rt>みだ</rt></ruby>し<ruby>前<rt>まえ</rt></ruby>に<ruby>生成<rt>せいせい</rt></ruby>する。
 
