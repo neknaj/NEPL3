@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 729495bf461cf68405595ac33863cd1f4d0a9f486068daea25da8d0898af0e16; alias input SHA-256 800c58010fe3ca5fb3c10997a3b7908fefb312ba31edec1c0c8cb409f1bb0b29; page input SHA-256 c725aa423271e1e25f2bcc7ecdf2dc557bb5cbc9a88c24051ec42787290b66e3. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 ef3dcc64c624e57ecddda38a2599335b869b26fe315741f7f991ecd787a6ea06; alias input SHA-256 800c58010fe3ca5fb3c10997a3b7908fefb312ba31edec1c0c8cb409f1bb0b29; page input SHA-256 99d3119005d8cbb43d157f9cb20ab410a48582b337ca03b37ac79709c0f477ec. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="23-構造化文章と対象付き注釈への是正"></a>
 
@@ -309,6 +309,14 @@ native prepare\_svg\_display\_with\_textは明示的なResolvedInlineTextを受�
 単体doc\-html svgは、独立Sentenceの全出現がImageまたはInlineImageのaltに限られる場合に、前述のnative投影を出力へ接続する。Rowsの構造表示inventoryで全variantの非alt出現を検査し、title・本文・captionなどにも現れる所有元は同じEmbedRefがaltにある場合でも拒否する。この検査をnamespaceやguest意味の証拠とせず、実際のalt所有元を同じoutput Budgetで入場・lower・投影し、準備と描画の間はSentenceSyntaxとidentity付きtextを保持する。altからHTML callbackは発生せず、既存のCode・Math描画とasset検査を保つ。
 
 externalとembeddedのSVG、externalとinlineのCSSで同じBaseOnly本文を使い、HTML属性としてescapeする。未解決の選択foreign text、非alt Sentence、不正asset、resource stopでは成功成果物を作らない。独立Sentenceがない既存SVG経路、runtime既定値、CI設定を変更しない。一般のSentenceとassetの組合せ、PageSet asset、画像関連namespaceの表示選択、portable proofは引き続き未完了である。
+
+<a name="n-6e616d657370616365537667"></a>
+
+### Native static SVG in resolved Doc namespaces
+
+The native doc\-html namespace assets entry prepares static SVG for an explicitly resolved CheckedNamespace\. Each registration selects an exact MemberId occurrence and carries raw SVG inputs plus identity\-bound BaseOnly alt text\. Identical documents and equal asset names in different members retain independent registrations\. The operation reinspects all member sources with one codec\, SourceAdmission and cumulative Budget before preparing any output\. Duplicate or unknown member selectors\, missing or unused SVG registrations\, unsafe SVG and digest mismatches fail without returning a partial namespace\.
+
+Hosts project actual selected guest text under that same cumulative Budget and SourceAdmission and retain the owning syntax through rendering\. Supplied alt text is data\, not a portable proof of guest meaning\, and is never adopted as namespace HTML or sent to a display callback\. Safe external links and existing display guests retain their explicit admission rules\; Page and Relative links remain unresolved\. Pending parts preserve cross\-member references\, while complete Article rendering still rejects omitted targets and duplicate identifiers\. This native prerequisite does not add Sentence selection\, alt\-excluding automatic adoption\, PageSet assets\, general Sentence\-plus\-image CLI export\, portable proof or durable recovery\. Existing asset\-free namespace entries and the alt\-only standalone CLI guard remain unchanged\.
 
 <a name="n-7669736962696c697479"></a>
 

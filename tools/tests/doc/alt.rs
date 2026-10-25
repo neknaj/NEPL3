@@ -266,3 +266,108 @@ fn sentence_alt_budget_is_cumulative_and_foreign_text_is_not_invented() -> Resul
     );
     Ok(())
 }
+
+#[test]
+fn namespace_svg_sentence_alt_keeps_actual_owners_and_identity_checks() -> Result<(), String> {
+    use nepl3_doc_core::labels::namespace as labels;
+    use nepl3_doc_html::namespace::{assets as namespace_assets, display};
+    let compiled = compiled()?;
+    let doc = lower(&compiled, SOURCE)?;
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec =
+        FoundationCodec::new(&compiled.doc.registry, &store, &mut admission).map_err(err)?;
+    let mut b = budget();
+    let projection = alt::prepare(
+        &doc,
+        &mut SentenceAnnotationRenderer {
+            registry: &compiled.doc.registry,
+            surface: &compiled.others.get(3).ok_or("Sentence")?.schema,
+            math_surface: Some(&compiled.others.first().ok_or("Math")?.schema),
+            doc_surface: Some(&compiled.doc.package.schema),
+            codec: &mut codec,
+        },
+        &mut b,
+    )
+    .map_err(err)?;
+    let member = labels::inspect(
+        &doc,
+        &compiled.doc.registry,
+        &mut b,
+        codec.source_admission(),
+    )
+    .map_err(err)?;
+    let members = [&member];
+    let namespace = labels::resolve(&members, &mut b).map_err(err)?;
+    let options = RenderOptions {
+        parallel: ParallelMode::Rows,
+    };
+    let svg = [SvgInput {
+        id: "logo",
+        svg: SVG,
+    }];
+    for mode in [SvgMode::Embedded, SvgMode::External] {
+        let inputs = [namespace_assets::MemberAssets {
+            member: labels::MemberId(0),
+            inputs: &svg,
+            resolved_alt: &projection.resolved,
+        }];
+        let prepared = namespace_assets::prepare(
+            &namespace,
+            &options,
+            &inputs,
+            mode,
+            &compiled.doc.registry,
+            &mut codec,
+            &mut b,
+        )
+        .map_err(err)?;
+        let output = display::render_article(
+            &prepared,
+            labels::MemberId(0),
+            &mut |_, _, _| Err::<_, String>("alt must not call HTML".into()),
+            &mut b,
+        )
+        .map_err(err)?;
+        let markup = &output.fragment.markup;
+        let checked =
+            nepl3_markup::html::validate(&markup.fragment, markup.slot, &markup.policy, &mut b)
+                .map_err(err)?;
+        let html = nepl3_markup::html::serialize(&checked, &mut b).map_err(err)?;
+        assert!(html.contains("alt=\"漢\""));
+        assert!(html.contains("alt=\"Inline &amp; &lt;alt&gt;\""));
+        assert!(!html.contains("かん") && !html.contains("note"));
+        assert!(output.foreign.is_empty());
+    }
+    for mismatch in 0..5 {
+        let mut wrong = projection.resolved.clone();
+        match mismatch {
+            0 => wrong[0].document_digest = Digest::of(b"wrong"),
+            1 => wrong[0].guest_digest = Digest::of(b"wrong"),
+            2 => wrong[0].embed = EmbedRef(u64::MAX),
+            3 => wrong.push(wrong[0].clone()),
+            _ => wrong.clear(),
+        }
+        let inputs = [namespace_assets::MemberAssets {
+            member: labels::MemberId(0),
+            inputs: &svg,
+            resolved_alt: &wrong,
+        }];
+        assert!(matches!(
+            namespace_assets::prepare(
+                &namespace,
+                &options,
+                &inputs,
+                SvgMode::Embedded,
+                &compiled.doc.registry,
+                &mut codec,
+                &mut b
+            ),
+            Err(namespace_assets::PreparationError::Member {
+                member: labels::MemberId(0),
+                error: AssetError::Alt
+            })
+        ));
+    }
+    Ok(())
+}
