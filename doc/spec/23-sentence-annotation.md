@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 ef3dcc64c624e57ecddda38a2599335b869b26fe315741f7f991ecd787a6ea06; alias input SHA-256 800c58010fe3ca5fb3c10997a3b7908fefb312ba31edec1c0c8cb409f1bb0b29; page input SHA-256 99d3119005d8cbb43d157f9cb20ab410a48582b337ca03b37ac79709c0f477ec. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 a39ac8bca9e270950c308589cff8795c0174d2c7c56d660579e5b08c1232f131; alias input SHA-256 800c58010fe3ca5fb3c10997a3b7908fefb312ba31edec1c0c8cb409f1bb0b29; page input SHA-256 6a86b33c982276bb7be29790d3e1410758dc205046f3ea95887bcc56f625eaf9. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="23-構造化文章と対象付き注釈への是正"></a>
 
@@ -317,6 +317,14 @@ externalとembeddedのSVG、externalとinlineのCSSで同じBaseOnly本文を使
 The native doc\-html namespace assets entry prepares static SVG for an explicitly resolved CheckedNamespace\. Each registration selects an exact MemberId occurrence and carries raw SVG inputs plus identity\-bound BaseOnly alt text\. Identical documents and equal asset names in different members retain independent registrations\. The operation reinspects all member sources with one codec\, SourceAdmission and cumulative Budget before preparing any output\. Duplicate or unknown member selectors\, missing or unused SVG registrations\, unsafe SVG and digest mismatches fail without returning a partial namespace\.
 
 Hosts project actual selected guest text under that same cumulative Budget and SourceAdmission and retain the owning syntax through rendering\. Supplied alt text is data\, not a portable proof of guest meaning\, and is never adopted as namespace HTML or sent to a display callback\. Safe external links and existing display guests retain their explicit admission rules\; Page and Relative links remain unresolved\. Pending parts preserve cross\-member references\, while complete Article rendering still rejects omitted targets and duplicate identifiers\. This native prerequisite does not add Sentence selection\, alt\-excluding automatic adoption\, PageSet assets\, general Sentence\-plus\-image CLI export\, portable proof or durable recovery\. Existing asset\-free namespace entries and the alt\-only standalone CLI guard remain unchanged\.
+
+<a name="n-73656e74656e6365526f6c65506c616e"></a>
+
+### Native Sentence occurrence\-role plan
+
+The additive article display planner borrows the exact immutable structural Selection and requested RenderOptions\. Its adoption list contains every non\-alt Sentence occurrence across all variants\; its insertion list contains only occurrences selected for insertion by the requested Rows\, Columns or Single display\. Both lists preserve original SentenceOccurrenceIds and match structural index\, node\, depth and owner EmbedRef against the retained Selection\. An owner shared by alt and title\, body or caption remains selected at each non\-alt occurrence\; repeated owners are not collapsed into one namespace occurrence\. Alt\-only and hidden owners remain retained and validated by structural collection\, even when neither list inserts them\.
+
+The planner charges one cumulative Budget\, observes caller depth\, preserves sticky stops and returns no partial plan on failure\. It neither lowers owners again nor certifies guest meaning\, source admission for a new operation\, resolved labels\, asset availability or complete HTML\. Consumers must resolve adoption with the same Selection and enforce exact insertion and member consumption before validating final output\. This prerequisite does not change existing render Sessions\, automatic adoption\, PageSet behavior\, output identities or CLI asset guards\; role\-aware host integration remains unfinished\.
 
 <a name="n-7669736962696c697479"></a>
 
