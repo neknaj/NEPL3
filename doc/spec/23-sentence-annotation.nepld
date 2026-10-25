@@ -1219,6 +1219,22 @@ body
         cons " Existing asset-free namespace entries and the alt-only standalone CLI guard remain unchanged."
         nil
       nil
+    cons section sentenceRolePlan "Native Sentence occurrence-role plan"
+    body
+      cons paragraph
+        cons "The additive article display planner borrows the exact immutable structural Selection and requested RenderOptions."
+        cons " Its adoption list contains every non-alt Sentence occurrence across all variants; its insertion list contains only occurrences selected for insertion by the requested Rows, Columns or Single display."
+        cons " Both lists preserve original SentenceOccurrenceIds and match structural index, node, depth and owner EmbedRef against the retained Selection."
+        cons " An owner shared by alt and title, body or caption remains selected at each non-alt occurrence; repeated owners are not collapsed into one namespace occurrence."
+        cons " Alt-only and hidden owners remain retained and validated by structural collection, even when neither list inserts them."
+        nil
+      cons paragraph
+        cons "The planner charges one cumulative Budget, observes caller depth, preserves sticky stops and returns no partial plan on failure."
+        cons " It neither lowers owners again nor certifies guest meaning, source admission for a new operation, resolved labels, asset availability or complete HTML."
+        cons " Consumers must resolve adoption with the same Selection and enforce exact insertion and member consumption before validating final output."
+        cons " This prerequisite does not change existing render Sessions, automatic adoption, PageSet behavior, output identities or CLI asset guards; role-aware host integration remains unfinished."
+        nil
+      nil
     cons section visibility "HTML[挿入対象/そうにゅうたいしょう]Sentence[出現/しゅつげん]の[構造/こうぞう]inventory"
     body
       cons paragraph
