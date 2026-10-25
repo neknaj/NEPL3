@@ -1,5 +1,7 @@
 //! Actual standard Doc source compilation, native export and prefix parsing.
 //! Facts signatures are compile-time declarations; reader calls use a parse host.
+#[path = "doc/alt.rs"]
+mod alt;
 #[path = "doc/annotated.rs"]
 mod annotated;
 #[path = "doc/annotated_blocks.rs"]

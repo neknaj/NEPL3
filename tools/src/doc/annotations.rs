@@ -10,6 +10,7 @@ use nepl3_core::{
 };
 use nepl3_sentence_core::{lower, portable, syntax::SentenceSyntax};
 use nepl3_suite::adapters::sentence::html;
+pub mod alt;
 pub mod article;
 pub mod document;
 mod foreign;
