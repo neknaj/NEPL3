@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 3895c7e01e6e1a4e6c8b86bea84d0a2fa134545df8037f4188ffd1358acb1b2e; alias input SHA-256 800c58010fe3ca5fb3c10997a3b7908fefb312ba31edec1c0c8cb409f1bb0b29; page input SHA-256 1758c6c0aa64690372aa395180032b9faa08b99a581ffd8efe36876a74cde8fd. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 7144ba59af7ac1d182a66dbcd868abf3e587c28c8143f0280c439dcf447c65d0; alias input SHA-256 800c58010fe3ca5fb3c10997a3b7908fefb312ba31edec1c0c8cb409f1bb0b29; page input SHA-256 50212365dbe8fe94bfd8cb0b3ebecad34caa81c9de74550cca57ad9ddba6919f. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="23-構造化文章と対象付き注釈への是正"></a>
 
@@ -333,6 +333,14 @@ The planner charges one cumulative Budget\, observes caller depth\, preserves st
 The additive render\_planned entry resolves the exact role plan and constructs its insertion Session from that same Selection and RenderOptions\. It retains the existing asset\-free display preparation and final Article validation\; SVG and PageSet asset export remain separate work\. Each callback consumes the next original SentenceOccurrenceId while Code and Math placements remain separate from the Sentence sequence\. Rows and Columns require complete consumption of every adopted Doc member even though the selected occurrence list contains gaps\. Single may skip hidden members\, but leftover members of each visible Sentence and missing visible callbacks still fail\.
 
 Owned diagnostics and final Sentence\, Doc and Math placement mappings survive the operation\-local namespace lifetime\. Structural collection\, planning\, resolution and insertion share the caller Budget and SourceAdmission with sticky failures and no partial result\. A private native SVG composition test checks Image and InlineImage alt exclusion\, caption callbacks and foreign placement order\; it does not publish a general SVG host API\. Existing render and PageSet callers retain their previous paths and CLI guards\; accepting a role plan does not establish completed asset\-aware host integration or portable proof\.
+
+<a name="n-6e6174697665526f6f74537667"></a>
+
+### Native root\-only planned SVG host
+
+The additive article render svg entry combines an exact role Plan with explicit SVG inputs for its root Article\. It projects actual root alt owners with BaseOnly\, resolves the plan adoption\, prepares the namespace and consumes the planned insertion Session under one caller Budget and SourceAdmission\. Raw asset inputs and projected alt text are supplied only to MemberId zero\. Adopted guest assets receive no root bytes\, even when their names match or their Single variant is hidden\, and fail before display callbacks\. The returned value retains both the ordinary rendered resolution and the independently lowered alt Projection owners and source evidence\.
+
+Preparation failures are converted to owned typed errors while the checked namespace and exact member document are alive\. Root\, guest and collection locations remain distinct\; duplicate\, unused\, missing\, invalid SVG\, digest\, alt and unsupported failures remain distinguishable\. A stopped Budget takes precedence over projection\, adapter\, conversion and diagnostic allocation failures\, and no partial rendered value is returned\. Embedded mode returns validated SVG content\, while External mode returns content\-addressed references without proving that files were written\. Existing asset\-free entries\, standalone CLI alt\-only admission\, PageSet asset guards and portable contracts are unchanged\; arbitrary\-member assets and general CLI integration remain unfinished\.
 
 <a name="n-7669736962696c697479"></a>
 

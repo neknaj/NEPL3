@@ -16,6 +16,8 @@ mod article_host;
 mod article_namespace;
 #[path = "doc/article/single.rs"]
 mod article_single;
+#[path = "doc/article/svg.rs"]
+mod article_svg;
 #[path = "doc/article/visibility.rs"]
 mod article_visibility;
 #[path = "doc/code_pages.rs"]
