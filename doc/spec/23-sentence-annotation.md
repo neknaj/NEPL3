@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 1371cfc0e8f9dc29b2052241b45176641d402b8dc19521888b891f5979d2815b; alias input SHA-256 b4af781eb102174d52224b0435525c52cfd899c170a7ab72d867d64343abf5d8; page input SHA-256 8940f834ebf7e55021d6a405633b5b468e4e41b939034b17e0004f7cd6d032a3. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 e2260873cc1f7a947f58177f517fa55e0c6888145cf22a4cd77f59c11522fee1; alias input SHA-256 cbc6c57d2b56601d43af8a069701ba64fa95ed6194468a06dbde77863455b5bb; page input SHA-256 f1ad19b966b8052e77c463fb4480521af120b7af84693685a3cfbc1fb55ed7dd. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="23-構造化文章と対象付き注釈への是正"></a>
 
@@ -864,7 +864,7 @@ The packager does not execute KaTeX conversion and only preserves the supplied d
 
 **ja**
 
-doc\-html pages\-svgはroot SVG PageSetを<ruby>書<rt>か</rt></ruby>き<ruby>出<rt>だ</rt></ruby>す<ruby>通常<rt>つうじょう</rt></ruby>CLIであり、<ruby>明示<rt>めいじ</rt></ruby>\-\-math\-renderer mathml\-onlyは<ruby>既存<rt>きそん</rt></ruby>の<ruby>限定<rt>げんてい</rt></ruby><ruby>経路<rt>けいろ</rt></ruby>とreceipt\/1を<ruby>保<rt>たも</rt></ruby>つ。
+<ruby>非対話<rt>ひたいわ</rt></ruby>のdoc\-html pages\-svgはroot SVG PageSetを<ruby>書<rt>か</rt></ruby>き<ruby>出<rt>だ</rt></ruby>す<ruby>通常<rt>つうじょう</rt></ruby>CLIであり、<ruby>明示<rt>めいじ</rt></ruby>\-\-math\-renderer mathml\-onlyは<ruby>既存<rt>きそん</rt></ruby>の<ruby>限定<rt>げんてい</rt></ruby><ruby>経路<rt>けいろ</rt></ruby>とreceipt\/1を<ruby>保<rt>たも</rt></ruby>つ。
 
 </div>
 
@@ -872,7 +872,7 @@ doc\-html pages\-svgはroot SVG PageSetを<ruby>書<rt>か</rt></ruby>き<ruby>�
 
 **en**
 
-doc\-html pages\-svg exports root\-SVG PageSets\; explicit \-\-math\-renderer mathml\-only preserves the established limited path and receipt \/1\.
+Noninteractive doc\-html pages\-svg exports root\-SVG PageSets\; explicit \-\-math\-renderer mathml\-only preserves the established limited path and receipt \/1\.
 
 </div>
 
@@ -1064,7 +1064,7 @@ A new output directory is created only after all semantic checks and generation 
 
 **ja**
 
-この<ruby>既存<rt>きそん</rt></ruby>CLIのMathMLOnly<ruby>経路<rt>けいろ</rt></ruby>は<ruby>生成時<rt>せいせいじ</rt></ruby>KaTeXを<ruby>実行<rt>じっこう</rt></ruby>せず、<ruby>外部<rt>がいぶ</rt></ruby>SVG・<ruby>保持<rt>ほじ</rt></ruby>jobのretry・<ruby>永続<rt>えいぞく</rt></ruby><ruby>復元<rt>ふくげん</rt></ruby>は<ruby>対象外<rt>たいしょうがい</rt></ruby>であり、<ruby>全体<rt>ぜんたい</rt></ruby><ruby>受入<rt>うけいれ</rt></ruby>も<ruby>未実施<rt>みじっし</rt></ruby>である。
+この<ruby>非対話<rt>ひたいわ</rt></ruby>CLIのMathMLOnly<ruby>経路<rt>けいろ</rt></ruby>は<ruby>生成時<rt>せいせいじ</rt></ruby>KaTeXを<ruby>実行<rt>じっこう</rt></ruby>せず、<ruby>外部<rt>がいぶ</rt></ruby>SVG・<ruby>保持<rt>ほじ</rt></ruby>jobのretry・<ruby>永続<rt>えいぞく</rt></ruby><ruby>復元<rt>ふくげん</rt></ruby>は<ruby>対象外<rt>たいしょうがい</rt></ruby>であり、<ruby>全体<rt>ぜんたい</rt></ruby><ruby>受入<rt>うけいれ</rt></ruby>も<ruby>未実施<rt>みじっし</rt></ruby>である。
 
 </div>
 
@@ -1072,7 +1072,7 @@ A new output directory is created only after all semantic checks and generation 
 
 **en**
 
-This legacy CLI MathMLOnly path does not execute generation\-time KaTeX\; external SVG\, retained\-job retry and durable restoration are outside scope\, and overall acceptance has not been run\.
+This noninteractive CLI MathMLOnly path does not execute generation\-time KaTeX\; external SVG\, retained\-job retry and durable restoration are outside scope\, and overall acceptance has not been run\.
 
 </div>
 
@@ -1338,7 +1338,7 @@ host\_invocation\_recorded\=false and unobserved host\-internal Work and Allocat
 
 **ja**
 
-<ruby>明示<rt>めいじ</rt></ruby>MathMLOnlyと<ruby>従来<rt>じゅうらい</rt></ruby>native<ruby>入口<rt>いりぐち</rt></ruby>はKaTeX hostを<ruby>呼<rt>よ</rt></ruby>ばず、nepl3\.local\-doc\-pages\.root\-svg\-package\/1・katex\_generation\=false・<ruby>従来<rt>じゅうらい</rt></ruby>bytesと<ruby>課金<rt>かきん</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>し、<ruby>外部<rt>がいぶ</rt></ruby>SVG・interactive retry・<ruby>永続復元<rt>えいぞくふくげん</rt></ruby>は<ruby>依然<rt>いぜん</rt></ruby>として<ruby>対象外<rt>たいしょうがい</rt></ruby>である。
+<ruby>非対話<rt>ひたいわ</rt></ruby>の<ruby>明示<rt>めいじ</rt></ruby>MathMLOnlyと<ruby>従来<rt>じゅうらい</rt></ruby>plan\-based native<ruby>入口<rt>いりぐち</rt></ruby>はKaTeX hostを<ruby>呼<rt>よ</rt></ruby>ばず、nepl3\.local\-doc\-pages\.root\-svg\-package\/1・katex\_generation\=false・<ruby>従来<rt>じゅうらい</rt></ruby>bytesと<ruby>課金<rt>かきん</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>し、<ruby>外部<rt>がいぶ</rt></ruby>SVG・interactive retry・<ruby>永続復元<rt>えいぞくふくげん</rt></ruby>は<ruby>依然<rt>いぜん</rt></ruby>として<ruby>対象外<rt>たいしょうがい</rt></ruby>である。
 
 </div>
 
@@ -1346,7 +1346,7 @@ host\_invocation\_recorded\=false and unobserved host\-internal Work and Allocat
 
 **en**
 
-Explicit MathMLOnly and the existing native entry do not call the KaTeX host and preserve nepl3\.local\-doc\-pages\.root\-svg\-package\/1\, katex\_generation\=false\, prior bytes and charges\; external SVG\, interactive retry and durable restoration remain outside scope\.
+Noninteractive explicit MathMLOnly and the existing plan\-based native entry do not call the KaTeX host and preserve nepl3\.local\-doc\-pages\.root\-svg\-package\/1\, katex\_generation\=false\, prior bytes and charges\; external SVG\, interactive retry and durable restoration remain outside scope\.
 
 </div>
 
@@ -1473,7 +1473,7 @@ The manifest output ceiling remains frozen but does not bound preparation\; capt
 
 **ja**
 
-PreparedはSVGの<ruby>入場<rt>にゅうじょう</rt></ruby>・PageSet<ruby>妥当性<rt>だとうせい</rt></ruby>・<ruby>描画<rt>びょうが</rt></ruby><ruby>完了<rt>かんりょう</rt></ruby>を<ruby>証明<rt>しょうめい</rt></ruby>せず、CLI<ruby>対話<rt>たいわ</rt></ruby><ruby>再開<rt>さいかい</rt></ruby>と<ruby>永続的<rt>えいぞくてき</rt></ruby>な<ruby>復元<rt>ふくげん</rt></ruby>は<ruby>別<rt>べつ</rt></ruby>の<ruby>未対応<rt>みたいおう</rt></ruby><ruby>段階<rt>だんかい</rt></ruby>とする。
+PreparedはSVGの<ruby>入場<rt>にゅうじょう</rt></ruby>・PageSet<ruby>妥当性<rt>だとうせい</rt></ruby>・<ruby>描画<rt>びょうが</rt></ruby><ruby>完了<rt>かんりょう</rt></ruby>を<ruby>証明<rt>しょうめい</rt></ruby>せず、<ruby>永続的<rt>えいぞくてき</rt></ruby>な<ruby>復元<rt>ふくげん</rt></ruby>は<ruby>別<rt>べつ</rt></ruby>の<ruby>未対応<rt>みたいおう</rt></ruby><ruby>段階<rt>だんかい</rt></ruby>とする。
 
 </div>
 
@@ -1481,7 +1481,7 @@ PreparedはSVGの<ruby>入場<rt>にゅうじょう</rt></ruby>・PageSet<ruby>�
 
 **en**
 
-Prepared proves neither SVG admission\, PageSet validity nor completed rendering\; interactive CLI resume and durable restoration remain separate unimplemented stages\.
+Prepared proves neither SVG admission\, PageSet validity nor completed rendering\; durable restoration remains a separate unimplemented stage\.
 
 </div>
 
@@ -1678,6 +1678,201 @@ Files and manifest are returned in memory only after success\; publication\, int
 </div>
 
 </div>
+
+<a name="n-737667496e746572616374697665436c69"></a>
+
+<a name="interactive-svg-pages-cli"></a>
+
+### SVG CLIの<ruby>対話的<rt>たいわてき</rt></ruby><ruby>再開<rt>さいかい</rt></ruby> \/ Interactive SVG CLI continuation
+
+<div class="nepl-paragraph">
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+doc\-html pages\-svg \-\-interactive\-limitsは<ruby>明示<rt>めいじ</rt></ruby><ruby>指定<rt>してい</rt></ruby>の<ruby>場合<rt>ばあい</rt></ruby>だけ<ruby>保持<rt>ほじ</rt></ruby>jobを<ruby>使<rt>つか</rt></ruby>い、doc\-html retry\-limitsが<ruby>出力<rt>しゅつりょく</rt></ruby>するRetryLimits<ruby>設定<rt>せってい</rt></ruby>を<ruby>受<rt>う</rt></ruby>け<ruby>取<rt>と</rt></ruby>る。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+doc\-html pages\-svg \-\-interactive\-limits uses a retained job only when explicitly selected and accepts the RetryLimits configuration emitted by doc\-html retry\-limits\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+manifestの<ruby>予算<rt>よさん</rt></ruby><ruby>欄<rt>らん</rt></ruby>はschema<ruby>検査<rt>けんさ</rt></ruby>だけを<ruby>行<rt>おこな</rt></ruby>い、<ruby>初回<rt>しょかい</rt></ruby>からRetryLimitsのjob・parse・lower・Code・outputの5<ruby>群<rt>ぐん</rt></ruby>を<ruby>選択<rt>せんたく</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Manifest allowance fields are schema\-validated but not selected\; the five RetryLimits groups for job\, parse\, lower\, Code and output govern from the first attempt\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>全<rt>ぜん</rt></ruby>5<ruby>群<rt>ぐん</rt></ruby>の<ruby>各<rt>かく</rt></ruby><ruby>資源<rt>しげん</rt></ruby>を<ruby>非減少<rt>ひげんしょう</rt></ruby>に<ruby>保<rt>たも</rt></ruby>ち、native<ruby>再開<rt>さいかい</rt></ruby>が<ruby>受理<rt>じゅり</rt></ruby>した<ruby>設定<rt>せってい</rt></ruby>だけへ<ruby>更新<rt>こうしん</rt></ruby>して、<ruby>準備中<rt>じゅんびちゅう</rt></ruby>に<ruby>増<rt>ふ</rt></ruby>えたoutput<ruby>上限<rt>じょうげん</rt></ruby>も<ruby>最初<rt>さいしょ</rt></ruby>の<ruby>描画<rt>びょうが</rt></ruby>へ<ruby>引<rt>ひ</rt></ruby>き<ruby>継<rt>つ</rt></ruby>ぐ。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Every resource in all five groups remains nondecreasing\, only natively accepted configurations become current\, and output increases granted during preparation reach the first render\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+compileと<ruby>捕捉<rt>ほそく</rt></ruby>を<ruby>一度<rt>いちど</rt></ruby>だけ<ruby>行<rt>おこな</rt></ruby>い、Doc・SVG・<ruby>登録<rt>とうろく</rt></ruby>file・<ruby>表示<rt>ひょうじ</rt></ruby><ruby>設定<rt>せってい</rt></ruby>・<ruby>要求<rt>ようきゅう</rt></ruby>renderer・<ruby>出力先<rt>しゅつりょくさき</rt></ruby>の<ruby>指定<rt>してい</rt></ruby>を<ruby>保<rt>たも</rt></ruby>ち、grantでは<ruby>上限<rt>じょうげん</rt></ruby><ruby>設定<rt>せってい</rt></ruby>fileだけを<ruby>再読<rt>さいどく</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Compilation and capture occur once\; Doc\, SVG\, registered files\, display settings\, requested renderer and output\-path selection remain fixed\, while grants reread only allowance files\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>停止後<rt>ていしご</rt></ruby>はresumeと<ruby>上限<rt>じょうげん</rt></ruby>fileのpathで<ruby>再開<rt>さいかい</rt></ruby>し、cancelまたはEOFで<ruby>取消<rt>とりけし</rt></ruby>とし、<ruby>改行<rt>かいぎょう</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>むcommand<ruby>行<rt>ぎょう</rt></ruby>を4096 bytes、<ruby>設定<rt>せってい</rt></ruby>fileを65536 bytesに<ruby>制限<rt>せいげん</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+After a pause\, resume followed by an allowance\-file path requests continuation\, cancel or EOF cancels\, command lines including line endings are bounded to 4096 bytes and configuration files to 65536 bytes\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>再開<rt>さいかい</rt></ruby><ruby>要求<rt>ようきゅう</rt></ruby>の<ruby>不正<rt>ふせい</rt></ruby>JSON・<ruby>未知<rt>みち</rt></ruby>または<ruby>重複<rt>じゅうふく</rt></ruby>field・<ruby>縮小<rt>しゅくしょう</rt></ruby>grantは<ruby>停止<rt>ていし</rt></ruby><ruby>状態<rt>じょうたい</rt></ruby>を<ruby>保<rt>たも</rt></ruby>ち、<ruby>同額<rt>どうがく</rt></ruby>grantは<ruby>受理<rt>じゅり</rt></ruby>しても<ruby>再<rt>ふたた</rt></ruby>び<ruby>停止<rt>ていし</rt></ruby>し<ruby>実際<rt>じっさい</rt></ruby>の<ruby>消費<rt>しょうひ</rt></ruby>を<ruby>累積<rt>るいせき</rt></ruby>し<ruby>得<rt>う</rt></ruby>る。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Invalid JSON\, unknown or duplicate fields and shrinking grants in resume requests leave the job paused\; an accepted equal grant may stop again and add its actual consumption cumulatively\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>停止中<rt>ていしちゅう</rt></ruby>のprompt・read<ruby>失敗<rt>しっぱい</rt></ruby>と<ruby>取消<rt>とりけし</rt></ruby>には<ruby>使用量<rt>しようりょう</rt></ruby>と<ruby>試行<rt>しこう</rt></ruby><ruby>履歴<rt>りれき</rt></ruby>を<ruby>添<rt>そ</rt></ruby>え、<ruby>成功<rt>せいこう</rt></ruby>manifestはnativeのsvg\-render\-job\/1を<ruby>保<rt>たも</rt></ruby>って<ruby>未観測<rt>みかんそく</rt></ruby>のhost<ruby>情報<rt>じょうほう</rt></ruby>を<ruby>成功<rt>せいこう</rt></ruby><ruby>扱<rt>あつか</rt></ruby>いしない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Prompt\/read failures and cancellation while paused retain usage and attempt history\; successful manifests preserve the native svg\-render\-job\/1 contract without treating unobserved host information as success\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+Complete<ruby>後<rt>ご</rt></ruby>だけ<ruby>新<rt>あたら</rt></ruby>しい<ruby>出力<rt>しゅつりょく</rt></ruby>directoryへfilesと<ruby>最後<rt>さいご</rt></ruby>のreceiptを<ruby>書<rt>か</rt></ruby>き、<ruby>書込<rt>かきこ</rt></ruby>みI\/O<ruby>失敗<rt>しっぱい</rt></ruby>では<ruby>不完全<rt>ふかんぜん</rt></ruby>なdirectoryが<ruby>残<rt>のこ</rt></ruby>り<ruby>得<rt>う</rt></ruby>るためrollbackを<ruby>保証<rt>ほしょう</rt></ruby>しない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Only after Complete are files written to a new output directory with the receipt last\; write\-I\/O failure may leave an incomplete directory\, so rollback is not guaranteed\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>非対話<rt>ひたいわ</rt></ruby><ruby>経路<rt>けいろ</rt></ruby>の<ruby>既存<rt>きそん</rt></ruby>bytesと<ruby>課金<rt>かきん</rt></ruby>を<ruby>保<rt>たも</rt></ruby>ち、\-\-で<ruby>始<rt>はじ</rt></ruby>まるpathは\.\/などで<ruby>明示<rt>めいじ</rt></ruby>し、<ruby>外部<rt>がいぶ</rt></ruby>SVGと<ruby>永続的<rt>えいぞくてき</rt></ruby>な<ruby>復元<rt>ふくげん</rt></ruby>は<ruby>依然<rt>いぜん</rt></ruby>として<ruby>未対応<rt>みたいおう</rt></ruby>とする。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Existing noninteractive bytes and charges remain unchanged\, paths beginning with \-\- require an explicit prefix such as \.\/\, and external SVG and durable restoration remain unsupported\.
+
+</div>
+
+</div>
+
+</div>
+
+```sh
+nepl3-tools doc-html retry-limits > limits.json
+nepl3-tools doc-html pages-svg --interactive-limits limits.json --math-renderer mathml-only examples/document/pages-svg/manifest.json out-svg-interactive
+```
 
 <a name="n-7669736962696c697479"></a>
 

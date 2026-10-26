@@ -89,8 +89,8 @@ fn svg_pages_cli_exports_actual_sources_with_explicit_selection()
     Ok(())
 }
 #[test]
-fn svg_pages_cli_rejects_unimplemented_retry_and_external_svg()
--> Result<(), Box<dyn std::error::Error>> {
+fn svg_pages_cli_rejects_external_svg_and_durable_restore() -> Result<(), Box<dyn std::error::Error>>
+{
     let root = root("flags")?;
     fs::write(root.join("one.nepld"), "article en \"No math\" body nil")?;
     let manifest = root.join("pages.json");
@@ -101,12 +101,7 @@ fn svg_pages_cli_rejects_unimplemented_retry_and_external_svg()
         )?,
     )?;
     for (n, args) in [
-        vec![
-            "doc-html",
-            "pages-svg",
-            "--interactive-limits",
-            "limits.json",
-        ],
+        vec!["doc-html", "pages-svg", "--restore", "snapshot.json"],
         vec!["doc-html", "pages-svg", "--svg", "external"],
     ]
     .into_iter()
@@ -671,6 +666,88 @@ fn pinned_native_katex_doc_and_pages_svg_cli() -> Result<(), Box<dyn std::error:
             String::from_utf8_lossy(&result.stderr)
         );
     }
+    // Exercise the new real interactive CLI with pinned generation. A grant
+    // during preparation also raises output allowance before its first render.
+    {
+        use std::io::Write;
+        use std::process::Stdio;
+        let defaults = Command::new(binary)
+            .args(["doc-html", "retry-limits"])
+            .output()?;
+        assert!(defaults.status.success());
+        let full: serde_json::Value = serde_json::from_slice(&defaults.stdout)?;
+        let mut initial = full.clone();
+        initial["parse_limits"]["work"] = serde_json::json!(0);
+        initial["output_limits"]["work"] = serde_json::json!(0);
+        fs::write(
+            root.join("interactive-initial.json"),
+            serde_json::to_vec(&initial)?,
+        )?;
+        fs::write(
+            root.join("interactive-full.json"),
+            serde_json::to_vec(&full)?,
+        )?;
+        fs::write(&path, serde_json::to_vec(&base)?)?;
+        let out = root.join("interactive-native");
+        let mut child = Command::new(binary)
+            .env("NEPL3_KATEX_NODE_MODULES", &packages)
+            .args(["doc-html", "pages-svg", "--interactive-limits"])
+            .arg(root.join("interactive-initial.json"))
+            .arg(&path)
+            .arg(&out)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()?;
+        let mut input = child.stdin.take().ok_or("interactive stdin")?;
+        writeln!(
+            input,
+            "resume {}",
+            root.join("interactive-full.json").display()
+        )?;
+        drop(input);
+        let result = child.wait_with_output()?;
+        assert!(
+            result.status.success(),
+            "{}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+        let messages = String::from_utf8_lossy(&result.stderr);
+        assert!(messages.contains("Paused preparation"));
+        assert!(!messages.contains("Paused render"));
+        let receipt: serde_json::Value =
+            serde_json::from_slice(&fs::read(out.join("manifest.json"))?)?;
+        assert_eq!(receipt["format"], "nepl3.local-doc-pages.svg-render-job/1");
+        assert_eq!(
+            receipt["package"]["source_input"]["math_renderer"],
+            "katex-preferred"
+        );
+        assert_eq!(
+            receipt["package"]["katex_generation"]["successful_visual_pages"],
+            1
+        );
+        assert_eq!(
+            receipt["package"]["katex_generation"]["successful_visuals"],
+            1
+        );
+        assert_eq!(
+            receipt["job_execution"]["preparation"]["attempts"]
+                .as_array()
+                .ok_or("preparation")?
+                .len(),
+            2
+        );
+        assert_eq!(
+            receipt["job_execution"]["render_attempts"]
+                .as_array()
+                .ok_or("renders")?
+                .len(),
+            1
+        );
+    }
     fs::remove_dir_all(root)?;
     Ok(())
 }
+
+#[path = "svg_cli/interactive.rs"]
+mod interactive;

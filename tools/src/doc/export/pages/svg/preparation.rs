@@ -113,16 +113,47 @@ impl<'c> Preparation<'c> {
         code_limits: OperationLimits,
     ) -> Result<Self, String> {
         let captured = input::capture(manifest)?;
+        let phases = base::PreparationLimits {
+            parse_limits: operation(captured.phases.parse),
+            lower_limits: operation(captured.phases.lower),
+            code_limits,
+        };
+        let output = captured.output;
+        Self::from_captured(compiled, captured, renderer, limits, phases, output)
+    }
+    /// Explicit host selection for the interactive driver. Manifest allowance
+    /// fields are still schema-validated, but selected phase/output caps win.
+    pub(in crate::doc::export::pages::svg) fn capture_selected(
+        compiled: &'c Compiled,
+        manifest: &Path,
+        renderer: MathRenderer,
+        limits: Limits,
+        phases: base::PreparationLimits,
+        output: OperationLimits,
+    ) -> Result<Self, String> {
+        Self::from_captured(
+            compiled,
+            input::capture(manifest)?,
+            renderer,
+            limits,
+            phases,
+            output,
+        )
+    }
+    fn from_captured(
+        compiled: &'c Compiled,
+        captured: input::Captured,
+        renderer: MathRenderer,
+        limits: Limits,
+        phases: base::PreparationLimits,
+        output: OperationLimits,
+    ) -> Result<Self, String> {
         let inner = base::Preparation::with_files(
             compiled,
             captured.inputs,
             captured.files,
             limits,
-            base::PreparationLimits {
-                parse_limits: operation(captured.phases.parse),
-                lower_limits: operation(captured.phases.lower),
-                code_limits,
-            },
+            phases,
         )?;
         Ok(Self {
             inner,
@@ -130,7 +161,7 @@ impl<'c> Preparation<'c> {
                 assets: captured.assets,
                 options: captured.options,
                 renderer,
-                output: captured.output,
+                output,
             },
         })
     }

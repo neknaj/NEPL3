@@ -69,6 +69,15 @@ impl<'c> Prepared<'c> {
     /// Consume the exact source/Code checkpoint together with every frozen SVG
     /// binding. The manifest output cap is the initial render-attempt allowance.
     pub fn into_render(self) -> Result<RenderJob<'c>, Box<RenderFailure>> {
+        let output = self.frozen.output;
+        self.into_render_selected(output)
+    }
+    /// The interactive driver carries its latest accepted output grant through
+    /// preparation. Existing callers retain the original frozen allowance.
+    pub(in crate::doc::export::pages::svg) fn into_render_selected(
+        self,
+        selected: OperationLimits,
+    ) -> Result<RenderJob<'c>, Box<RenderFailure>> {
         let Self { inner, frozen } = self;
         let Frozen {
             assets,
@@ -84,6 +93,15 @@ impl<'c> Prepared<'c> {
                 renders: Vec::new(),
             })
         })?;
+        if !job::covers(selected.budget().limits(), output.budget().limits()) {
+            return Err(Box::new(RenderFailure {
+                error: "ShrinkingInitialSvgRenderAllowance".into(),
+                usage: account.usage(),
+                preparation: owned.preparation,
+                renders: Vec::new(),
+            }));
+        }
+        let output = selected;
         if !owned.aliases.is_empty() {
             return Err(Box::new(RenderFailure {
                 error: "SvgAliasPreparationUnsupported".into(),
