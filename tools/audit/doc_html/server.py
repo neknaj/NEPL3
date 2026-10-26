@@ -1,5 +1,5 @@
 """Loopback-only, non-root mounted server for generated browser QA fixtures."""
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -11,7 +11,7 @@ import threading
 
 
 @contextmanager
-def serve(root: Path, mount: str) -> Iterator[str]:
+def serve(root: Path, mount: str) -> Generator[str, None, None]:
     if not mount.startswith("/") or not mount.endswith("/") or "//" in mount or any(p in (".", "..") for p in mount.split("/")):
         raise ValueError("Expected a non-traversing absolute mount")
     if mount == "/":
