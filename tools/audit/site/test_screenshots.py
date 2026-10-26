@@ -49,7 +49,7 @@ class ScreenshotTests(unittest.TestCase):
                         shots.record(engine, 'fixture-version', width, theme, 'docs/a.html', target, data)
                         with self.assertRaises(ValueError):
                             shots.record(engine, 'fixture-version', width, theme, 'docs/a.html', target, data)
-                        with self.assertRaises(ValueError): shots.path(engine, width, theme, 'docs/a.html')
+                        with self.assertRaises(ValueError): _ = shots.path(engine, width, theme, 'docs/a.html')
             original = manifest.read_bytes(); _ = manifest.write_bytes(b'changed')
             with self.assertRaises(ValueError): shots.finish()
             _ = manifest.write_bytes(original)
@@ -78,7 +78,7 @@ class ScreenshotTests(unittest.TestCase):
             for engine, width, theme, route in [('other', 375, 'light', 'a.html'),
                     ('chromium', 320, 'light', 'a.html'), ('chromium', 375, 'other', 'a.html'),
                     ('chromium', 375, 'light', 'missing.html')]:
-                with self.assertRaises(ValueError): shots.path(engine, width, theme, route)
+                with self.assertRaises(ValueError): _ = shots.path(engine, width, theme, route)
             target = shots.path('chromium', 375, 'light', 'a.html')
             for data in (b'not png', png(1280)):
                 _ = target.write_bytes(data)
