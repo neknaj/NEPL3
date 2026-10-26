@@ -4,6 +4,8 @@ use nepl3_doc_core::model::{DocKind, DocumentSyntax, SentenceRef};
 use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
 #[path = "migration/agents.rs"]
 mod agents;
+#[path = "migration/development.rs"]
+mod development;
 #[path = "migration/index.rs"]
 mod index;
 

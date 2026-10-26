@@ -9,6 +9,8 @@
 
 原稿の作成・内容レビューと、実処理系によるHTML生成・リンク/旧anchor互換・正式な正本切替えは別の工程です。[移行条件](../spec/16-doc-migration.md)が満たされるまではMarkdownを削除しません。切替え後はDocを単一の正本とし、必要なMarkdown入口は生成projectionとして維持します。
 
+開発ガイド候補の既存コードブロック9件とWASI試験コマンドは、現行の `doc/development.md` と一致するよう修正し、型付きDocモデルとMarkdownのコード内容を照合します。これは原稿全体の同等性ではありません。残るコードブロック4件、branch/PR手順を含む本文・見出し、参照先の登録と旧fragmentの互換性は未整備であり、正本切替えを行いません。現行MarkdownとAGENTSの権限・指示は維持します。
+
 ## 構文表の生成候補
 
 `generated/*-signatures.nepld` は `design/forms.json` から生成する4言語の構文表です。
