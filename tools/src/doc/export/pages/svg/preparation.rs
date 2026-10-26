@@ -181,6 +181,26 @@ impl<'c> Preparation<'c> {
             output,
         )
     }
+    /// External representation with explicit interactive phase/output ceilings.
+    /// Resume still accepts allowances only, never a replacement representation.
+    pub(in crate::doc::export::pages::svg) fn capture_external_selected(
+        compiled: &'c Compiled,
+        manifest: &Path,
+        renderer: MathRenderer,
+        limits: Limits,
+        phases: base::PreparationLimits,
+        output: OperationLimits,
+    ) -> Result<Self, String> {
+        Self::from_captured(
+            compiled,
+            input::capture(manifest)?,
+            renderer,
+            SvgMode::External,
+            limits,
+            phases,
+            output,
+        )
+    }
     fn from_captured(
         compiled: &'c Compiled,
         captured: input::Captured,

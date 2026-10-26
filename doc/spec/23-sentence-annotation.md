@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 66b7806d31336c5bb09659841cf81bf469366a4fdcfd5b79d9f5d84b3045ed50; alias input SHA-256 cc4a36e6b25ea785bd3d5b9438d0abbd52863bd5264f639714a1531f5c479631; page input SHA-256 141bec687601ae3dfb57149dca1f2da7bbd3560d610d1f33d57ddab90806251c. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 6d6b343a075e50eb3e469901c0859b8bb5aee0203354f848633d787d2c792e8a; alias input SHA-256 cc4a36e6b25ea785bd3d5b9438d0abbd52863bd5264f639714a1531f5c479631; page input SHA-256 99bdd7aabf58a6fad89a7d9123642b4c6e12ef8478c589346ce0173131537b80. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="23-構造化文章と対象付き注釈への是正"></a>
 
@@ -1703,7 +1703,7 @@ With valid options\, an existing destination is rejected before capture\; files 
 
 **ja**
 
-\-\-interactive\-limitsの<ruby>経路<rt>けいろ</rt></ruby>は\-\-svgを<ruby>受理<rt>じゅり</rt></ruby>せず<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みのままであり、<ruby>外部<rt>がいぶ</rt></ruby>SVGの<ruby>保持<rt>ほじ</rt></ruby>retryは<ruby>別<rt>べつ</rt></ruby>のnative APIであり、<ruby>永続復元<rt>えいぞくふくげん</rt></ruby>や<ruby>全体<rt>ぜんたい</rt></ruby><ruby>受入<rt>うけいれ</rt></ruby>はこの<ruby>接続<rt>せつぞく</rt></ruby>の<ruby>完成<rt>かんせい</rt></ruby>から<ruby>推定<rt>すいてい</rt></ruby>しない。
+\-\-interactive\-limitsによる<ruby>対話<rt>たいわ</rt></ruby><ruby>経路<rt>けいろ</rt></ruby>も\-\-svg externalを<ruby>明示<rt>めいじ</rt></ruby>してnativeの<ruby>保持<rt>ほじ</rt></ruby>retryへ<ruby>接続<rt>せつぞく</rt></ruby>するが、<ruby>永続復元<rt>えいぞくふくげん</rt></ruby>や<ruby>全体<rt>ぜんたい</rt></ruby><ruby>受入<rt>うけいれ</rt></ruby>は<ruby>別<rt>べつ</rt></ruby>の<ruby>未完了<rt>みかんりょう</rt></ruby><ruby>範囲<rt>はんい</rt></ruby>とする。
 
 </div>
 
@@ -1711,7 +1711,7 @@ With valid options\, an existing destination is rejected before capture\; files 
 
 **en**
 
-The \-\-interactive\-limits path does not accept \-\-svg and remains embedded\-only\; retained external retry is a separate native API\, and durable restoration or overall acceptance does not follow from this source CLI connection\.
+The \-\-interactive\-limits path also connects to native retained retry with explicit \-\-svg external\, while durable restoration and overall acceptance remain separate unfinished scopes\.
 
 </div>
 
@@ -2056,7 +2056,7 @@ Files and manifest are returned in memory only after success\; publication\, int
 
 **ja**
 
-nativeのPreparation\:\:capture\_externalは<ruby>外部<rt>がいぶ</rt></ruby>SVG<ruby>方式<rt>ほうしき</rt></ruby>を<ruby>捕捉時<rt>ほそくじ</rt></ruby>に<ruby>固定<rt>こてい</rt></ruby>し、<ruby>既存<rt>きそん</rt></ruby>のcaptureと<ruby>対話<rt>たいわ</rt></ruby>CLIは<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みを<ruby>保<rt>たも</rt></ruby>つ。
+nativeのPreparation\:\:capture\_externalは<ruby>外部<rt>がいぶ</rt></ruby>SVG<ruby>方式<rt>ほうしき</rt></ruby>を<ruby>捕捉時<rt>ほそくじ</rt></ruby>に<ruby>固定<rt>こてい</rt></ruby>し、<ruby>既存<rt>きそん</rt></ruby>のcaptureと\-\-svgを<ruby>省略<rt>しょうりゃく</rt></ruby>した<ruby>対話<rt>たいわ</rt></ruby>CLIは<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みを<ruby>保<rt>たも</rt></ruby>つ。
 
 </div>
 
@@ -2064,7 +2064,7 @@ nativeのPreparation\:\:capture\_externalは<ruby>外部<rt>がいぶ</rt></ruby
 
 **en**
 
-Native Preparation\:\:capture\_external fixes external SVG representation at capture\, while existing capture and the interactive CLI retain embedded output\.
+Native Preparation\:\:capture\_external fixes external SVG representation at capture\, while existing capture and the interactive CLI without \-\-svg retain embedded output\.
 
 </div>
 
@@ -2156,7 +2156,7 @@ The outer svg\-render\-job\/1 format is unchanged and binds its complete payload
 
 **ja**
 
-modeを<ruby>保持<rt>ほじ</rt></ruby>するhost containerは<ruby>従来<rt>じゅうらい</rt></ruby>どおり<ruby>測定外<rt>そくていがい</rt></ruby>であり、<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みのbytes・receipt・<ruby>課金<rt>かきん</rt></ruby>を<ruby>保<rt>たも</rt></ruby>ち、<ruby>外部<rt>がいぶ</rt></ruby>SVGの<ruby>対話<rt>たいわ</rt></ruby>CLI・<ruby>永続復元<rt>えいぞくふくげん</rt></ruby>・<ruby>全体<rt>ぜんたい</rt></ruby><ruby>受入<rt>うけいれ</rt></ruby>はこのAPIの<ruby>範囲外<rt>はんいがい</rt></ruby>とする。
+modeを<ruby>保持<rt>ほじ</rt></ruby>するhost containerは<ruby>従来<rt>じゅうらい</rt></ruby>どおり<ruby>測定外<rt>そくていがい</rt></ruby>であり、<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みのbytes・receipt・<ruby>課金<rt>かきん</rt></ruby>を<ruby>保<rt>たも</rt></ruby>ち、<ruby>対話<rt>たいわ</rt></ruby>CLIは<ruby>別<rt>べつ</rt></ruby>のhost<ruby>入口<rt>いりぐち</rt></ruby>であり、<ruby>永続復元<rt>えいぞくふくげん</rt></ruby>と<ruby>全体<rt>ぜんたい</rt></ruby><ruby>受入<rt>うけいれ</rt></ruby>はこのAPIの<ruby>範囲外<rt>はんいがい</rt></ruby>とする。
 
 </div>
 
@@ -2164,7 +2164,7 @@ modeを<ruby>保持<rt>ほじ</rt></ruby>するhost containerは<ruby>従来<rt>
 
 **en**
 
-Mode\-retaining host containers remain outside measurement\; embedded bytes\, receipts and charges are preserved\, while external SVG interactive CLI\, durable restoration and overall acceptance remain outside this API\.
+Mode\-retaining host containers remain outside measurement\; embedded bytes\, receipts and charges are preserved\, the interactive CLI is a separate host entry\, and durable restoration and overall acceptance remain outside this API\.
 
 </div>
 
@@ -2346,7 +2346,7 @@ Only after Complete are files written to a new output directory with the receipt
 
 **ja**
 
-<ruby>非対話<rt>ひたいわ</rt></ruby><ruby>経路<rt>けいろ</rt></ruby>の<ruby>既存<rt>きそん</rt></ruby>bytesと<ruby>課金<rt>かきん</rt></ruby>を<ruby>保<rt>たも</rt></ruby>ち、\-\-で<ruby>始<rt>はじ</rt></ruby>まるpathは\.\/などで<ruby>明示<rt>めいじ</rt></ruby>し、この<ruby>対話<rt>たいわ</rt></ruby><ruby>入口<rt>いりぐち</rt></ruby>での<ruby>外部<rt>がいぶ</rt></ruby>SVGと<ruby>永続的<rt>えいぞくてき</rt></ruby>な<ruby>復元<rt>ふくげん</rt></ruby>は<ruby>依然<rt>いぜん</rt></ruby>として<ruby>未対応<rt>みたいおう</rt></ruby>とする。
+<ruby>非対話<rt>ひたいわ</rt></ruby><ruby>経路<rt>けいろ</rt></ruby>の<ruby>既存<rt>きそん</rt></ruby>bytesと<ruby>課金<rt>かきん</rt></ruby>を<ruby>保<rt>たも</rt></ruby>ち、\-\-で<ruby>始<rt>はじ</rt></ruby>まるpathは\.\/などで<ruby>明示<rt>めいじ</rt></ruby>し、<ruby>外部<rt>がいぶ</rt></ruby>SVGは\-\-svg externalで<ruby>明示<rt>めいじ</rt></ruby>するが、<ruby>永続的<rt>えいぞくてき</rt></ruby>な<ruby>復元<rt>ふくげん</rt></ruby>は<ruby>未対応<rt>みたいおう</rt></ruby>とする。
 
 </div>
 
@@ -2354,7 +2354,7 @@ Only after Complete are files written to a new output directory with the receipt
 
 **en**
 
-Existing noninteractive bytes and charges remain unchanged\, paths beginning with \-\- require an explicit prefix such as \.\/\, and external SVG in this interactive entry and durable restoration remain unsupported\.
+Existing noninteractive bytes and charges remain unchanged\, paths beginning with \-\- require an explicit prefix such as \.\/\, and external SVG is explicitly selected with \-\-svg external\; durable restoration remains unsupported\.
 
 </div>
 
@@ -2365,6 +2365,140 @@ Existing noninteractive bytes and charges remain unchanged\, paths beginning wit
 ```sh
 nepl3-tools doc-html retry-limits > limits.json
 nepl3-tools doc-html pages-svg --interactive-limits limits.json --math-renderer mathml-only examples/document/pages-svg/manifest.json out-svg-interactive
+```
+
+<a name="n-73766745787465726e616c496e746572616374697665"></a>
+
+### <ruby>外部<rt>がいぶ</rt></ruby>SVG CLIの<ruby>対話的<rt>たいわてき</rt></ruby><ruby>再開<rt>さいかい</rt></ruby> \/ Interactive external SVG continuation
+
+<div class="nepl-paragraph">
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+doc\-html pages\-svg \-\-interactive\-limitsの<ruby>後<rt>あと</rt></ruby>に\-\-svg externalを<ruby>指定<rt>してい</rt></ruby>すると、<ruby>外部<rt>がいぶ</rt></ruby>SVGの<ruby>保持<rt>ほじ</rt></ruby><ruby>準備<rt>じゅんび</rt></ruby>・<ruby>描画<rt>びょうが</rt></ruby><ruby>再試行<rt>さいしこう</rt></ruby>を<ruby>対話<rt>たいわ</rt></ruby>driverへ<ruby>接続<rt>せつぞく</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Selecting \-\-svg external after doc\-html pages\-svg \-\-interactive\-limits connects retained external SVG preparation and render retry to the interactive driver\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+\-\-interactive\-limitsとそのfileを<ruby>先<rt>さき</rt></ruby>に<ruby>置<rt>お</rt></ruby>き、その<ruby>後<rt>あと</rt></ruby>の\-\-svgと\-\-math\-rendererはどちらの<ruby>順序<rt>じゅんじょ</rt></ruby>でもよく、<ruby>省略<rt>しょうりゃく</rt></ruby>と\-\-svg embeddedは<ruby>従来<rt>じゅうらい</rt></ruby>の<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みbytes・receipt・<ruby>課金<rt>かきん</rt></ruby>を<ruby>保<rt>たも</rt></ruby>つ。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The \-\-interactive\-limits option and its file come first\; subsequent \-\-svg and \-\-math\-renderer options may appear in either order\, and omission or \-\-svg embedded preserves legacy embedded bytes\, receipts and charges\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+SVG<ruby>方式<rt>ほうしき</rt></ruby>・renderer・<ruby>表示<rt>ひょうじ</rt></ruby><ruby>選択<rt>せんたく</rt></ruby>・<ruby>入力<rt>にゅうりょく</rt></ruby>bytes・<ruby>出力先<rt>しゅつりょくさき</rt></ruby>を<ruby>固定<rt>こてい</rt></ruby>し、resumeはRetryLimitsの<ruby>上限<rt>じょうげん</rt></ruby>fileだけを<ruby>再読<rt>さいどく</rt></ruby>して、<ruby>元<rt>もと</rt></ruby>のDoc・SVG・passive fileを<ruby>差<rt>さ</rt></ruby>し<ruby>替<rt>か</rt></ruby>えない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+SVG representation\, renderer\, display selection\, input bytes and output destination stay fixed\; resume rereads only the RetryLimits allowance file and never replaces original Doc\, SVG or passive files\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>未知<rt>みち</rt></ruby>mode・<ruby>重複<rt>じゅうふく</rt></ruby>option・<ruby>不正<rt>ふせい</rt></ruby><ruby>順序<rt>じゅんじょ</rt></ruby>を<ruby>捕捉前<rt>ほそくまえ</rt></ruby>に<ruby>拒否<rt>きょひ</rt></ruby>し、rendererとmodeの<ruby>両方<rt>りょうほう</rt></ruby>が<ruby>不正<rt>ふせい</rt></ruby>ならrendererのerrorを<ruby>先<rt>さき</rt></ruby>に<ruby>返<rt>かえ</rt></ruby>し、<ruby>有効<rt>ゆうこう</rt></ruby>なoptionでは<ruby>既存<rt>きそん</rt></ruby>の<ruby>出力先<rt>しゅつりょくさき</rt></ruby>をlimits<ruby>読込前<rt>よみこみまえ</rt></ruby>に<ruby>拒否<rt>きょひ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Unknown modes\, duplicate options and invalid order are rejected before capture\; when both renderer and mode are invalid the renderer error comes first\, and valid options reject an existing destination before reading limits\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>成功<rt>せいこう</rt></ruby>したsvg\-render\-job\/1は<ruby>外部<rt>がいぶ</rt></ruby>package\/1またはpackage\/2と<ruby>実際<rt>じっさい</rt></ruby>の<ruby>累積<rt>るいせき</rt></ruby><ruby>試行<rt>しこう</rt></ruby>を<ruby>束縛<rt>そくばく</rt></ruby>し、<ruby>同一<rt>どういつ</rt></ruby><ruby>入力<rt>にゅうりょく</rt></ruby>の<ruby>非対話<rt>ひたいわ</rt></ruby><ruby>出力<rt>しゅつりょく</rt></ruby>とfile bytes・mode<ruby>束縛<rt>そくばく</rt></ruby>identityを<ruby>共有<rt>きょうゆう</rt></ruby>しても、job<ruby>履歴<rt>りれき</rt></ruby>を<ruby>同一視<rt>どういつし</rt></ruby>しない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Successful svg\-render\-job\/1 binds external package\/1 or package\/2 and actual cumulative attempts\; matching file bytes and mode\-bound identity with noninteractive output for the same inputs do not equate job histories\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>最終<rt>さいしゅう</rt></ruby><ruby>成功<rt>せいこう</rt></ruby><ruby>試行<rt>しこう</rt></ruby>だけのnative<ruby>証拠<rt>しょうこ</rt></ruby>、<ruby>失敗<rt>しっぱい</rt></ruby><ruby>試行<rt>しこう</rt></ruby>の<ruby>消費<rt>しょうひ</rt></ruby><ruby>保持<rt>ほじ</rt></ruby>、<ruby>成功前<rt>せいこうまえ</rt></ruby>の<ruby>公開<rt>こうかい</rt></ruby><ruby>抑止<rt>よくし</rt></ruby>を<ruby>保<rt>たも</rt></ruby>ち、filesystem<ruby>失敗<rt>しっぱい</rt></ruby>のrollback・<ruby>永続復元<rt>えいぞくふくげん</rt></ruby>・<ruby>全体<rt>ぜんたい</rt></ruby><ruby>受入<rt>うけいれ</rt></ruby>を<ruby>保証<rt>ほしょう</rt></ruby>しない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Final\-success\-only native evidence\, retained failed\-attempt consumption and publication suppression before success remain intact\; filesystem rollback\, durable restoration and overall acceptance are not guaranteed\.
+
+</div>
+
+</div>
+
+</div>
+
+```sh
+nepl3-tools doc-html retry-limits > limits.json
+nepl3-tools doc-html pages-svg --interactive-limits limits.json --svg external examples/document/pages-svg/manifest.json out-external-interactive
+nepl3-tools doc-html pages-svg --interactive-limits limits.json --math-renderer mathml-only --svg external examples/document/pages-svg/manifest.json out-external-interactive-mathml
 ```
 
 <a name="n-7669736962696c697479"></a>

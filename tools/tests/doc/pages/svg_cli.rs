@@ -89,7 +89,7 @@ fn svg_pages_cli_exports_actual_sources_with_explicit_selection()
     Ok(())
 }
 #[test]
-fn svg_pages_cli_rejects_external_interactive_and_durable_restore()
+fn svg_pages_cli_rejects_invalid_order_and_durable_restore()
 -> Result<(), Box<dyn std::error::Error>> {
     let root = root("flags")?;
     fs::write(root.join("one.nepld"), "article en \"No math\" body nil")?;
@@ -105,10 +105,10 @@ fn svg_pages_cli_rejects_external_interactive_and_durable_restore()
         vec![
             "doc-html",
             "pages-svg",
-            "--interactive-limits",
-            "limits.json",
             "--svg",
             "external",
+            "--interactive-limits",
+            "limits.json",
         ],
     ]
     .into_iter()
@@ -753,6 +753,7 @@ fn pinned_native_katex_doc_and_pages_svg_cli() -> Result<(), Box<dyn std::error:
         );
     }
     external::pinned_external_cases(binary, &packages)?;
+    interactive::pinned_external_interactive_cases(binary, &packages)?;
     fs::remove_dir_all(root)?;
     Ok(())
 }

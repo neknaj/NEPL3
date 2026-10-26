@@ -106,7 +106,7 @@ fn external_svg_cli_exports_actual_sources() -> Result<(), Box<dyn std::error::E
 fn hex(value: nepl3_core::source::Digest) -> String {
     value.0.iter().map(|byte| format!("{byte:02x}")).collect()
 }
-fn tree(
+pub(super) fn tree(
     root: &std::path::Path,
 ) -> Result<std::collections::BTreeMap<String, Vec<u8>>, Box<dyn std::error::Error>> {
     fn visit(
@@ -192,8 +192,8 @@ fn external_svg_cli_aliases_rejections_and_precedence() -> Result<(), Box<dyn st
         ),
         (vec!["--svg", "external", "--svg", "embedded"], "usage:"),
         (
-            vec!["--interactive-limits", "missing.json", "--svg", "external"],
-            "embedded-only",
+            vec!["--svg", "external", "--interactive-limits", "missing.json"],
+            "--interactive-limits must precede",
         ),
     ]
     .into_iter()
