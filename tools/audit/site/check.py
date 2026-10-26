@@ -116,7 +116,8 @@ class Report:
 
 
 def verify(root: Path, source_root: Path | None = None, config_path: str = 'site/config.json',
-           renderer: Path | None = None) -> Report:
+           renderer: Path | None = None, *, screenshot_root: Path | None = None,
+           screenshot_pages: Sequence[str] = ()) -> Report:
     root = root.resolve()
     paths = list(root.rglob('*'))
     assert not any((p.is_symlink() for p in paths)), 'symlink in artifact'
@@ -204,7 +205,11 @@ def verify(root: Path, source_root: Path | None = None, config_path: str = 'site
                 assert record.size == files[record.path].stat().st_size, 'nested size mismatch'
 
     expected_sources = [files[entry.path].read_bytes().decode('utf-8').replace('\r\n', '\n').replace('\r', '\n') for entry in examples.examples]
-    rows = observe(root, base, tuple(docs), expected_sources)
+    if screenshot_root is None and not screenshot_pages:
+        rows = observe(root, base, tuple(docs), expected_sources)
+    else:
+        rows = observe(root, base, tuple(docs), expected_sources,
+                       screenshot_root=screenshot_root, screenshot_pages=screenshot_pages)
     return Report(base, build.source_commit, hashlib.sha256((root / 'manifest.json').read_bytes()).hexdigest(), len(files), rows)
 
 
@@ -213,6 +218,8 @@ class Arguments(argparse.Namespace):
     output: Path = Path()
     config: str = 'site/config.json'
     renderer: Path = Path()
+    screenshots_dir: Path | None = None
+    screenshot_page: list[str] | None = None
 
 
 def main() -> None:
@@ -221,8 +228,11 @@ def main() -> None:
     _ = parser.add_argument('output', type=Path)
     _ = parser.add_argument('--config', default='site/config.json')
     _ = parser.add_argument('--renderer', type=Path, required=True)
+    _ = parser.add_argument('--screenshots-dir', type=Path, help='new evidence directory outside the immutable site')
+    _ = parser.add_argument('--screenshot-page', action='append', help='audited HTML route to capture; repeat for at most sixteen routes')
     a = parser.parse_args(namespace=Arguments())
-    result = verify(a.root, config_path=a.config, renderer=a.renderer)
+    result = verify(a.root, config_path=a.config, renderer=a.renderer, screenshot_root=a.screenshots_dir,
+                    screenshot_pages=() if a.screenshot_page is None else a.screenshot_page)
     _ = a.output.write_text(json.dumps(result.representation(), indent=2) + '\n', encoding='utf-8')
     print(len(result.cases), 'browser cases passed')
 

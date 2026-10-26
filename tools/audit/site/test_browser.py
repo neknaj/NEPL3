@@ -1,11 +1,12 @@
 """Exercise typed browser observations with the pinned real engines."""
 import json
+import hashlib
 from pathlib import Path
 import tempfile
 import unittest
 
 from browser import Case, Measurement, measurement, observe
-from tools.serialization.json import JsonValue
+from tools.serialization.json import JsonValue, array, decode, object_value, string
 
 
 def site(root: Path, *, content: str = '', stylesheet: bool = True) -> None:
@@ -50,6 +51,27 @@ class BrowserTests(unittest.TestCase):
         self.assertTrue(all(row.version and row.state.scripts == 0 and row.state.styles == 1
                             and not row.state.overflow for row in cases))
         self.assertEqual([row.state.title for row in cases], ['Overview', 'Examples'] * 6)
+
+    def test_selected_screenshots_preserve_cases_and_capture_each_theme(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / 'site'
+            root.mkdir()
+            site(root)
+            manifest = b'{"fixture":true}'
+            _ = (root / 'manifest.json').write_bytes(manifest)
+            output = Path(directory) / 'screenshots'
+            pages = ('index.html', 'examples/index.html')
+            cases = observe(root, '/NEPL3/', pages, ('hello 世界\n',),
+                            screenshot_root=output, screenshot_pages=pages)
+            self.assertEqual(len(cases), 12)
+            self.assertTrue(all(row.state.scripts == 0 and not row.state.overflow for row in cases))
+            result = object_value(decode((output / 'manifest.json').read_text(encoding='utf-8')))
+            self.assertEqual(result['site_manifest_sha256'], hashlib.sha256(manifest).hexdigest())
+            images = array(result['images'])
+            self.assertEqual(len(images), 24)
+            self.assertEqual({string(object_value(row)['theme']) for row in images}, {'light', 'dark'})
+            self.assertEqual({string(object_value(row)['page']) for row in images}, set(pages))
+            self.assertEqual((root / 'manifest.json').read_bytes(), manifest)
 
     def test_japanese_and_nested_fragment_navigation(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
