@@ -112,6 +112,11 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                     "\n## 実装と独立レビュー",
                 ),
                 ("distribution", "## CIと配布", "\n## branchとPRの統合手順"),
+                (
+                    "review",
+                    "## 実装と独立レビュー",
+                    "\n# 正本と観測記録の境界",
+                ),
             ] {
                 let node = document.value.nodes.iter().position(|node| {
                     matches!(&node.kind, DocKind::Section { id: actual, .. } if actual == id)
@@ -122,6 +127,41 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 let mut actual_section = Vec::new();
                 blocks(&document, node as u64, &mut project, &mut actual_section)?;
                 assert_eq!(actual_section, expected_section, "section {id}");
+            }
+            for (source_prefix, plain_prefix) in [
+                ("Doc inventoryの明示的なbaseline監査", "Docinventoryの"),
+                (
+                    "`doc/canonical.json` に登録された仕様",
+                    "doc/canonical.jsonに",
+                ),
+            ] {
+                let source_paragraph = original
+                    .split("\n\n")
+                    .find(|paragraph| paragraph.starts_with(source_prefix))
+                    .ok_or("source paragraph")?;
+                let expected_paragraph = markdown_blocks(source_paragraph);
+                let mut matches = 0;
+                for (node_index, node) in document.value.nodes.iter().enumerate() {
+                    let DocKind::Paragraph { items } = &node.kind else {
+                        continue;
+                    };
+                    let Some(first) = items.first() else { continue };
+                    if !matches!(
+                        document.value.nodes.get(first.0 as usize).map(|n| &n.kind),
+                        Some(DocKind::Sentence { .. })
+                    ) {
+                        continue;
+                    }
+                    if super::normalized(&project(nepl3_doc_core::model::SentenceRef(first.0))?)
+                        .starts_with(plain_prefix)
+                    {
+                        let mut actual = Vec::new();
+                        blocks(&document, node_index as u64, &mut project, &mut actual)?;
+                        assert_eq!(actual, expected_paragraph, "paragraph {source_prefix}");
+                        matches += 1;
+                    }
+                }
+                assert_eq!(matches, 1, "paragraph {source_prefix}");
             }
             Ok(())
         },
