@@ -15,6 +15,7 @@ use crate::doc::{
     source::{Compiled, err},
 };
 use nepl3_core::budget::{StopReason, Usage};
+use nepl3_doc_html::assets::SvgMode;
 use std::{
     io::{BufRead, Write},
     path::Path,
@@ -37,6 +38,25 @@ pub fn write(
         &mut messages,
     )
 }
+/// Interactive external-SVG source export; representation is captured once.
+pub fn write_external(
+    manifest: &Path,
+    limits: &Path,
+    output: &Path,
+    renderer: MathRenderer,
+) -> crate::Result<()> {
+    let mut input = std::io::stdin().lock();
+    let mut messages = std::io::stderr().lock();
+    write_with_io_mode(
+        manifest,
+        limits,
+        output,
+        renderer,
+        SvgMode::External,
+        &mut input,
+        &mut messages,
+    )
+}
 fn write_with_io(
     manifest: &Path,
     limits: &Path,
@@ -45,16 +65,36 @@ fn write_with_io(
     input: &mut impl BufRead,
     messages: &mut impl Write,
 ) -> crate::Result<()> {
+    write_with_io_mode(
+        manifest,
+        limits,
+        output,
+        renderer,
+        SvgMode::Embedded,
+        input,
+        messages,
+    )
+}
+fn write_with_io_mode(
+    manifest: &Path,
+    limits: &Path,
+    output: &Path,
+    renderer: MathRenderer,
+    mode: SvgMode,
+    input: &mut impl BufRead,
+    messages: &mut impl Write,
+) -> crate::Result<()> {
     if output.exists() {
         return Err("output directory already exists".into());
     }
     let selected = RetryLimits::read(limits)?;
     let compiled = crate::doc::source::compiled()?;
-    let done = run(
+    let done = run_mode(
         &compiled,
         manifest,
         selected,
         renderer,
+        mode,
         |previous, stage, reason, usage| {
             writeln!(
                 messages,
@@ -68,14 +108,19 @@ fn write_with_io(
     // failure after Complete may leave an incomplete directory; no rollback claim.
     pages::write_checked_files(done.files, done.manifest, output)
 }
-fn run(
+fn run_mode(
     compiled: &Compiled,
     manifest: &Path,
     mut limits: RetryLimits,
     renderer: MathRenderer,
+    mode: SvgMode,
     mut choose: impl FnMut(RetryLimits, &str, StopReason, Usage) -> Result<Option<RetryLimits>, String>,
 ) -> Result<Rendered, String> {
-    let mut preparing = Preparation::capture_selected(
+    let capture = match mode {
+        SvgMode::Embedded => Preparation::capture_selected,
+        SvgMode::External => Preparation::capture_external_selected,
+    };
+    let mut preparing = capture(
         compiled,
         manifest,
         renderer,

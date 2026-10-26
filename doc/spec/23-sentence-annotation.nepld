@@ -1588,8 +1588,8 @@ body
           cons variant en "With valid options, an existing destination is rejected before capture; files are written only after complete generation and the receipt is written last, but filesystem I/O failure does not guarantee rollback."
           nil
         cons parallel
-          cons variant ja "--interactive-limitsの[経路/けいろ]は--svgを[受理/じゅり]せず[埋/う]め[込/こ]みのままであり、[外部/がいぶ]SVGの[保持/ほじ]retryは[別/べつ]のnative APIであり、[永続復元/えいぞくふくげん]や[全体/ぜんたい][受入/うけいれ]はこの[接続/せつぞく]の[完成/かんせい]から[推定/すいてい]しない。"
-          cons variant en "The --interactive-limits path does not accept --svg and remains embedded-only; retained external retry is a separate native API, and durable restoration or overall acceptance does not follow from this source CLI connection."
+          cons variant ja "--interactive-limitsによる[対話/たいわ][経路/けいろ]も--svg externalを[明示/めいじ]してnativeの[保持/ほじ]retryへ[接続/せつぞく]するが、[永続復元/えいぞくふくげん]や[全体/ぜんたい][受入/うけいれ]は[別/べつ]の[未完了/みかんりょう][範囲/はんい]とする。"
+          cons variant en "The --interactive-limits path also connects to native retained retry with explicit --svg external, while durable restoration and overall acceptance remain separate unfinished scopes."
           nil
         nil
       cons rawcode some "sh" "nepl3-tools doc-html pages-svg --svg external examples/document/pages-svg/manifest.json out-external-svg\nnepl3-tools doc-html pages-svg --svg external --math-renderer mathml-only examples/document/pages-svg/manifest.json out-external-mathml\n"
@@ -1668,8 +1668,8 @@ body
       body
       cons paragraph
         cons parallel
-          cons variant ja "nativeのPreparation::capture_externalは[外部/がいぶ]SVG[方式/ほうしき]を[捕捉時/ほそくじ]に[固定/こてい]し、[既存/きそん]のcaptureと[対話/たいわ]CLIは[埋/う]め[込/こ]みを[保/たも]つ。"
-          cons variant en "Native Preparation::capture_external fixes external SVG representation at capture, while existing capture and the interactive CLI retain embedded output."
+          cons variant ja "nativeのPreparation::capture_externalは[外部/がいぶ]SVG[方式/ほうしき]を[捕捉時/ほそくじ]に[固定/こてい]し、[既存/きそん]のcaptureと--svgを[省略/しょうりゃく]した[対話/たいわ]CLIは[埋/う]め[込/こ]みを[保/たも]つ。"
+          cons variant en "Native Preparation::capture_external fixes external SVG representation at capture, while existing capture and the interactive CLI without --svg retain embedded output."
           nil
         cons parallel
           cons variant ja "Frozen::svg_modeは[読取/よみと]り[専用/せんよう]の[選択/せんたく]を[返/かえ]し、[準備/じゅんび]・[描画/びょうが]の[中断/ちゅうだん]と[再開拒否/さいかいきょひ]でもmodeを[保持/ほじ]して、[再開/さいかい][上限/じょうげん]から[差/さ]し[替/か]えない。"
@@ -1688,8 +1688,8 @@ body
           cons variant en "The outer svg-render-job/1 format is unchanged and binds its complete payload, including the nested external package, into its identity; resource consumption from failed attempts remains cumulative without refunds."
           nil
         cons parallel
-          cons variant ja "modeを[保持/ほじ]するhost containerは[従来/じゅうらい]どおり[測定外/そくていがい]であり、[埋/う]め[込/こ]みのbytes・receipt・[課金/かきん]を[保/たも]ち、[外部/がいぶ]SVGの[対話/たいわ]CLI・[永続復元/えいぞくふくげん]・[全体/ぜんたい][受入/うけいれ]はこのAPIの[範囲外/はんいがい]とする。"
-          cons variant en "Mode-retaining host containers remain outside measurement; embedded bytes, receipts and charges are preserved, while external SVG interactive CLI, durable restoration and overall acceptance remain outside this API."
+          cons variant ja "modeを[保持/ほじ]するhost containerは[従来/じゅうらい]どおり[測定外/そくていがい]であり、[埋/う]め[込/こ]みのbytes・receipt・[課金/かきん]を[保/たも]ち、[対話/たいわ]CLIは[別/べつ]のhost[入口/いりぐち]であり、[永続復元/えいぞくふくげん]と[全体/ぜんたい][受入/うけいれ]はこのAPIの[範囲外/はんいがい]とする。"
+          cons variant en "Mode-retaining host containers remain outside measurement; embedded bytes, receipts and charges are preserved, the interactive CLI is a separate host entry, and durable restoration and overall acceptance remain outside this API."
           nil
         nil
       nil
@@ -1729,11 +1729,41 @@ body
           cons variant en "Only after Complete are files written to a new output directory with the receipt last; write-I/O failure may leave an incomplete directory, so rollback is not guaranteed."
           nil
         cons parallel
-          cons variant ja "[非対話/ひたいわ][経路/けいろ]の[既存/きそん]bytesと[課金/かきん]を[保/たも]ち、--で[始/はじ]まるpathは./などで[明示/めいじ]し、この[対話/たいわ][入口/いりぐち]での[外部/がいぶ]SVGと[永続的/えいぞくてき]な[復元/ふくげん]は[依然/いぜん]として[未対応/みたいおう]とする。"
-          cons variant en "Existing noninteractive bytes and charges remain unchanged, paths beginning with -- require an explicit prefix such as ./, and external SVG in this interactive entry and durable restoration remain unsupported."
+          cons variant ja "[非対話/ひたいわ][経路/けいろ]の[既存/きそん]bytesと[課金/かきん]を[保/たも]ち、--で[始/はじ]まるpathは./などで[明示/めいじ]し、[外部/がいぶ]SVGは--svg externalで[明示/めいじ]するが、[永続的/えいぞくてき]な[復元/ふくげん]は[未対応/みたいおう]とする。"
+          cons variant en "Existing noninteractive bytes and charges remain unchanged, paths beginning with -- require an explicit prefix such as ./, and external SVG is explicitly selected with --svg external; durable restoration remains unsupported."
           nil
         nil
       cons rawcode some "sh" "nepl3-tools doc-html retry-limits > limits.json\nnepl3-tools doc-html pages-svg --interactive-limits limits.json --math-renderer mathml-only examples/document/pages-svg/manifest.json out-svg-interactive\n"
+      nil
+    cons section svgExternalInteractive "[外部/がいぶ]SVG CLIの[対話的/たいわてき][再開/さいかい] / Interactive external SVG continuation"
+      body
+      cons paragraph
+        cons parallel
+          cons variant ja "doc-html pages-svg --interactive-limitsの[後/あと]に--svg externalを[指定/してい]すると、[外部/がいぶ]SVGの[保持/ほじ][準備/じゅんび]・[描画/びょうが][再試行/さいしこう]を[対話/たいわ]driverへ[接続/せつぞく]する。"
+          cons variant en "Selecting --svg external after doc-html pages-svg --interactive-limits connects retained external SVG preparation and render retry to the interactive driver."
+          nil
+        cons parallel
+          cons variant ja "--interactive-limitsとそのfileを[先/さき]に[置/お]き、その[後/あと]の--svgと--math-rendererはどちらの[順序/じゅんじょ]でもよく、[省略/しょうりゃく]と--svg embeddedは[従来/じゅうらい]の[埋/う]め[込/こ]みbytes・receipt・[課金/かきん]を[保/たも]つ。"
+          cons variant en "The --interactive-limits option and its file come first; subsequent --svg and --math-renderer options may appear in either order, and omission or --svg embedded preserves legacy embedded bytes, receipts and charges."
+          nil
+        cons parallel
+          cons variant ja "SVG[方式/ほうしき]・renderer・[表示/ひょうじ][選択/せんたく]・[入力/にゅうりょく]bytes・[出力先/しゅつりょくさき]を[固定/こてい]し、resumeはRetryLimitsの[上限/じょうげん]fileだけを[再読/さいどく]して、[元/もと]のDoc・SVG・passive fileを[差/さ]し[替/か]えない。"
+          cons variant en "SVG representation, renderer, display selection, input bytes and output destination stay fixed; resume rereads only the RetryLimits allowance file and never replaces original Doc, SVG or passive files."
+          nil
+        cons parallel
+          cons variant ja "[未知/みち]mode・[重複/じゅうふく]option・[不正/ふせい][順序/じゅんじょ]を[捕捉前/ほそくまえ]に[拒否/きょひ]し、rendererとmodeの[両方/りょうほう]が[不正/ふせい]ならrendererのerrorを[先/さき]に[返/かえ]し、[有効/ゆうこう]なoptionでは[既存/きそん]の[出力先/しゅつりょくさき]をlimits[読込前/よみこみまえ]に[拒否/きょひ]する。"
+          cons variant en "Unknown modes, duplicate options and invalid order are rejected before capture; when both renderer and mode are invalid the renderer error comes first, and valid options reject an existing destination before reading limits."
+          nil
+        cons parallel
+          cons variant ja "[成功/せいこう]したsvg-render-job/1は[外部/がいぶ]package/1またはpackage/2と[実際/じっさい]の[累積/るいせき][試行/しこう]を[束縛/そくばく]し、[同一/どういつ][入力/にゅうりょく]の[非対話/ひたいわ][出力/しゅつりょく]とfile bytes・mode[束縛/そくばく]identityを[共有/きょうゆう]しても、job[履歴/りれき]を[同一視/どういつし]しない。"
+          cons variant en "Successful svg-render-job/1 binds external package/1 or package/2 and actual cumulative attempts; matching file bytes and mode-bound identity with noninteractive output for the same inputs do not equate job histories."
+          nil
+        cons parallel
+          cons variant ja "[最終/さいしゅう][成功/せいこう][試行/しこう]だけのnative[証拠/しょうこ]、[失敗/しっぱい][試行/しこう]の[消費/しょうひ][保持/ほじ]、[成功前/せいこうまえ]の[公開/こうかい][抑止/よくし]を[保/たも]ち、filesystem[失敗/しっぱい]のrollback・[永続復元/えいぞくふくげん]・[全体/ぜんたい][受入/うけいれ]を[保証/ほしょう]しない。"
+          cons variant en "Final-success-only native evidence, retained failed-attempt consumption and publication suppression before success remain intact; filesystem rollback, durable restoration and overall acceptance are not guaranteed."
+          nil
+        nil
+      cons rawcode some "sh" "nepl3-tools doc-html retry-limits > limits.json\nnepl3-tools doc-html pages-svg --interactive-limits limits.json --svg external examples/document/pages-svg/manifest.json out-external-interactive\nnepl3-tools doc-html pages-svg --interactive-limits limits.json --math-renderer mathml-only --svg external examples/document/pages-svg/manifest.json out-external-interactive-mathml\n"
       nil
     cons section visibility "HTML[挿入対象/そうにゅうたいしょう]Sentence[出現/しゅつげん]の[構造/こうぞう]inventory"
     body
