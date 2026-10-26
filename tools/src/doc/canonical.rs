@@ -156,7 +156,12 @@ fn passive_paths(file: &ReferenceFile, svg: bool) -> bool {
         "examples/document/line-break.nepld" | "examples/document/linear-combination.nepld"
     ) && file.route.ends_with(".nepld");
     let rust_test = file.source == "tools/tests/doc/print.rs" && file.route.ends_with(".rs");
-    markdown || json || example || rust_test
+    // Exact inert project references for migrated root entry documents.
+    let project = matches!(
+        (file.source.as_str(), file.route.as_str()),
+        ("AGENTS.md", "sources/agents.md") | ("LICENSE", "sources/license.txt")
+    );
+    markdown || json || example || rust_test || project
 }
 
 fn reference_inputs(
@@ -316,6 +321,13 @@ pub(crate) fn parse_registry(raw: &[u8]) -> Result<Registry> {
         let math_tex = page.source == "crates/languages/math/tex/README.nepld"
             && page.projection == "crates/languages/math/tex/README.md";
         let security = page.source == "SECURITY.nepld" && page.projection == "SECURITY.md";
+        let development_entry = matches!(
+            (page.source.as_str(), page.projection.as_str()),
+            (
+                "doc/migration/authored/project/CONTRIBUTING.nepld",
+                "CONTRIBUTING.md"
+            ) | ("doc/migration/authored/project/CODEX.nepld", "CODEX.md")
+        );
         let browser_source = page.source == "conformance/targets/browser/README.nepld"
             && page.projection == "conformance/targets/browser/README.md";
         let conformance_history = page.source == "conformance/history.nepld"
@@ -336,6 +348,7 @@ pub(crate) fn parse_registry(raw: &[u8]) -> Result<Registry> {
                         || math_renderer_tests
                         || math_example
                         || security
+                        || development_entry
                         || conformance_history
                         || browser_source)
                         && suffix != ".json"))

@@ -1,3 +1,5 @@
+#[path = "tests/project.rs"]
+mod project;
 #[path = "tests/retry.rs"]
 mod retry;
 use super::*;
