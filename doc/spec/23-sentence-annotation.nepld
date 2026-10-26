@@ -1488,8 +1488,8 @@ body
           cons variant en "A new output directory is created only after all semantic checks and generation succeed, and the completion manifest is written last; an I/O failure may still leave an incomplete directory."
           nil
         cons parallel
-          cons variant ja "この[非対話/ひたいわ]CLIのMathMLOnly[経路/けいろ]は[生成時/せいせいじ]KaTeXを[実行/じっこう]せず、[外部/がいぶ]SVG・[保持/ほじ]jobのretry・[永続/えいぞく][復元/ふくげん]は[対象外/たいしょうがい]であり、[全体/ぜんたい][受入/うけいれ]も[未実施/みじっし]である。"
-          cons variant en "This noninteractive CLI MathMLOnly path does not execute generation-time KaTeX; external SVG, retained-job retry and durable restoration are outside scope, and overall acceptance has not been run."
+          cons variant ja "この[既定/きてい][埋/う]め[込/こ]みSVGを[選/えら]ぶ[非対話/ひたいわ]CLIのMathMLOnly[経路/けいろ]は[生成時/せいせいじ]KaTeXを[実行/じっこう]せず、[外部/がいぶ]SVG・[保持/ほじ]jobのretry・[永続/えいぞく][復元/ふくげん]は[対象外/たいしょうがい]であり、[全体/ぜんたい][受入/うけいれ]も[未実施/みじっし]である。"
+          cons variant en "This noninteractive MathMLOnly CLI path with default embedded SVG does not execute generation-time KaTeX; external SVG, retained-job retry and durable restoration are outside scope, and overall acceptance has not been run."
           nil
         cons parallel
           cons variant ja "[実行例/じっこうれい]はexamples/document/pages-svgに[同梱/どうこん]し、[同/おな]じmanifestが[二/ふた]つの[多言語/たげんご]pageとSVGを[明示/めいじ]して[相互/そうご]linkを[解決/かいけつ]する。"
@@ -1546,11 +1546,53 @@ body
           cons variant en "host_invocation_recorded=false and unobserved host-internal Work and Allocation are explicit; neither None nor zero visuals implies that the host was not invoked."
           nil
         cons parallel
-          cons variant ja "[非対話/ひたいわ]の[明示/めいじ]MathMLOnlyと[従来/じゅうらい]plan-based native[入口/いりぐち]はKaTeX hostを[呼/よ]ばず、nepl3.local-doc-pages.root-svg-package/1・katex_generation=false・[従来/じゅうらい]bytesと[課金/かきん]を[保持/ほじ]し、[外部/がいぶ]SVG・interactive retry・[永続復元/えいぞくふくげん]は[依然/いぜん]として[対象外/たいしょうがい]である。"
-          cons variant en "Noninteractive explicit MathMLOnly and the existing plan-based native entry do not call the KaTeX host and preserve nepl3.local-doc-pages.root-svg-package/1, katex_generation=false, prior bytes and charges; external SVG, interactive retry and durable restoration remain outside scope."
+          cons variant ja "[埋/う]め[込/こ]みSVGの[非対話/ひたいわ][明示/めいじ]MathMLOnlyと[従来/じゅうらい]の[埋/う]め[込/こ]みplan-based native[入口/いりぐち]はKaTeX hostを[呼/よ]ばず、nepl3.local-doc-pages.root-svg-package/1・katex_generation=false・[従来/じゅうらい]bytesと[課金/かきん]を[保持/ほじ]し、[外部/がいぶ]SVG・interactive retry・[永続復元/えいぞくふくげん]は[依然/いぜん]として[対象外/たいしょうがい]である。"
+          cons variant en "Embedded-SVG noninteractive explicit MathMLOnly and the legacy embedded plan-based native entry do not call the KaTeX host and preserve nepl3.local-doc-pages.root-svg-package/1, katex_generation=false, prior bytes and charges; external SVG, interactive retry and durable restoration remain outside scope."
           nil
         nil
       cons rawcode some "sh" "npm ci --prefix tools/audit/math --ignore-scripts\nNEPL3_KATEX_NODE_MODULES=tools/audit/math/node_modules nepl3-tools doc-html pages-svg examples/document/pages-svg/manifest.json out-svg-pages-preferred\n"
+      nil
+    cons section svgExternalCli "[外部/がいぶ]SVGのsource CLI / External SVG source CLI"
+      body
+      cons paragraph
+        cons parallel
+          cons variant ja "doc-html pages-svg --svg externalは、[非対話/ひたいわ]のsource CLIで[外部/がいぶ]SVGを[明示/めいじ]し、[省略時/しょうりゃくじ]と--svg embeddedは[既存/きそん]の[埋/う]め[込/こ]みbytes・receipt・[課金/かきん]を[保/たも]つ。"
+          cons variant en "The noninteractive source CLI explicitly selects external SVG with doc-html pages-svg --svg external, while omission or --svg embedded preserves existing embedded bytes, receipts and charges."
+          nil
+        cons parallel
+          cons variant ja "version 1 manifestの[構造/こうぞう]と[有限/ゆうげん]の[捕捉/ほそく][上限/じょうげん]は[変/か]えず、Doc・SVG・passive fileを[一度/いちど]だけ[所有/しょゆう]し、[以後/いご]の[生成/せいせい]では[元/もと]fileを[再読/さいどく]しない。"
+          cons variant en "The version 1 manifest and finite capture bounds are unchanged: Doc, SVG and passive files are owned once and subsequent generation does not reread the original files."
+          nil
+        cons parallel
+          cons variant ja "[外部/がいぶ]modeのidentityをnative request contextより[先/さき]に[束縛/そくばく]し、[検証済/けんしょうず]みの[外部/がいぶ]file[証拠/しょうこ]をMathの[合成/ごうせい]と[包装/ほうそう]まで[保持/ほじ]する。"
+          cons variant en "The external-mode identity is bound before native request contexts, and checked external-file evidence is retained through Math composition and packaging."
+          nil
+        cons parallel
+          cons variant ja "[明示/めいじ]mathml-onlyはKaTeX hostを[呼/よ]ばず、[設定/せってい]されたhostに[依存/いぞん]しないnepl3.local-doc-pages.root-svg-external-package/1とkatex_generation=falseを[返/かえ]す。"
+          cons variant en "Explicit mathml-only never invokes the KaTeX host and returns host-configuration-independent nepl3.local-doc-pages.root-svg-external-package/1 with katex_generation=false."
+          nil
+        cons parallel
+          cons variant ja "[既定/きてい]と[明示/めいじ]katex-preferredは[外部/がいぶ]package/2で[要求/ようきゅう]renderer・[成功/せいこう]visual・[独立/どくりつ]MathML・fallbackを[区別/くべつ]し、visualの[不在/ふざい]からhost[呼出/よびだ]しの[有無/うむ]を[推定/すいてい]しない。"
+          cons variant en "Default and explicit katex-preferred use external package/2 to distinguish requested rendering, successful visuals, independent MathML and fallback; absent visuals do not establish whether a host invocation occurred."
+          nil
+        cons parallel
+          cons variant ja "source_inputは[捕捉/ほそく]した[入力/にゅうりょく]と[各/かく][段階/だんかい]の[記録/きろく]を[保/たも]ち、[外部/がいぶ]SVGの[配置/はいち]・[重複排除/じゅうふくはいじょ]・[衝突拒否/しょうとつきょひ]・[物理/ぶつり][出力/しゅつりょく]の[課金/かきん]はnative[包装/ほうそう]と[同/おな]じ[規則/きそく]に[従/したが]う。"
+          cons variant en "source_input retains captured inputs and phase records, while external SVG placement, deduplication, collision rejection and physical-output charging follow the native packaging rules."
+          nil
+        cons parallel
+          cons variant ja "--svgと--math-rendererはどちらを[先/さき]に[書/か]いてもよく、[未知/みち]mode・[重複/じゅうふく]option・[不正/ふせい]な[組合/くみあわ]せは[入力/にゅうりょく][捕捉前/ほそくまえ]に[拒否/きょひ]し、[両方/りょうほう]の[値/あたい]が[不正/ふせい]ならrendererの[解析/かいせき]errorを[先/さき]に[返/かえ]す。"
+          cons variant en "The --svg and --math-renderer options may appear in either order; unknown modes, duplicate options and invalid combinations are rejected before capture, and invalid values for both produce the renderer parse error first."
+          nil
+        cons parallel
+          cons variant ja "[有効/ゆうこう]なoptionでは[既存/きそん]の[出力先/しゅつりょくさき]を[捕捉前/ほそくまえ]に[拒否/きょひ]し、[全/ぜん][生成/せいせい][成功後/せいこうご]にfilesを[書/か]いてreceiptを[最後/さいご]に[置/お]くが、filesystem I/O[失敗/しっぱい]のrollbackは[保証/ほしょう]しない。"
+          cons variant en "With valid options, an existing destination is rejected before capture; files are written only after complete generation and the receipt is written last, but filesystem I/O failure does not guarantee rollback."
+          nil
+        cons parallel
+          cons variant ja "--interactive-limitsの[経路/けいろ]は--svgを[受理/じゅり]せず[埋/う]め[込/こ]みのままであり、[外部/がいぶ]SVGの[保持/ほじ]retry・[永続復元/えいぞくふくげん]・[全体/ぜんたい][受入/うけいれ]はこの[接続/せつぞく]の[完成/かんせい]から[推定/すいてい]しない。"
+          cons variant en "The --interactive-limits path does not accept --svg and remains embedded-only; retained external retry, durable restoration and overall acceptance do not follow from this source CLI connection."
+          nil
+        nil
+      cons rawcode some "sh" "nepl3-tools doc-html pages-svg --svg external examples/document/pages-svg/manifest.json out-external-svg\nnepl3-tools doc-html pages-svg --svg external --math-renderer mathml-only examples/document/pages-svg/manifest.json out-external-mathml\n"
       nil
     cons section svgPreparation "SVG[入力/にゅうりょく]の[保持/ほじ]と[準備/じゅんび] / Retained SVG source preparation"
       body
@@ -1658,8 +1700,8 @@ body
           cons variant en "Only after Complete are files written to a new output directory with the receipt last; write-I/O failure may leave an incomplete directory, so rollback is not guaranteed."
           nil
         cons parallel
-          cons variant ja "[非対話/ひたいわ][経路/けいろ]の[既存/きそん]bytesと[課金/かきん]を[保/たも]ち、--で[始/はじ]まるpathは./などで[明示/めいじ]し、[外部/がいぶ]SVGと[永続的/えいぞくてき]な[復元/ふくげん]は[依然/いぜん]として[未対応/みたいおう]とする。"
-          cons variant en "Existing noninteractive bytes and charges remain unchanged, paths beginning with -- require an explicit prefix such as ./, and external SVG and durable restoration remain unsupported."
+          cons variant ja "[非対話/ひたいわ][経路/けいろ]の[既存/きそん]bytesと[課金/かきん]を[保/たも]ち、--で[始/はじ]まるpathは./などで[明示/めいじ]し、この[対話/たいわ][入口/いりぐち]での[外部/がいぶ]SVGと[永続的/えいぞくてき]な[復元/ふくげん]は[依然/いぜん]として[未対応/みたいおう]とする。"
+          cons variant en "Existing noninteractive bytes and charges remain unchanged, paths beginning with -- require an explicit prefix such as ./, and external SVG in this interactive entry and durable restoration remain unsupported."
           nil
         nil
       cons rawcode some "sh" "nepl3-tools doc-html retry-limits > limits.json\nnepl3-tools doc-html pages-svg --interactive-limits limits.json --math-renderer mathml-only examples/document/pages-svg/manifest.json out-svg-interactive\n"

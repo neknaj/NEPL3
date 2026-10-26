@@ -54,6 +54,23 @@ fn configured_html(
     )
 }
 
+fn configured_pages_svg(
+    mode: &str,
+    renderer: nepl3_tools::doc::export::MathRenderer,
+    manifest: &str,
+    output: &str,
+) -> nepl3_tools::Result<()> {
+    let manifest = std::path::Path::new(manifest);
+    let output = std::path::Path::new(output);
+    match mode {
+        "embedded" => nepl3_tools::doc::export::pages::svg::cli::write(manifest, output, renderer),
+        "external" => {
+            nepl3_tools::doc::export::pages::svg::cli::write_external(manifest, output, renderer)
+        }
+        _ => Err("SVG mode must be embedded or external".into()),
+    }
+}
+
 fn configured_svg(display: &str, args: &[&str]) -> nepl3_tools::Result<()> {
     let ["--css", css, "--svg", mode, input, assets, output] = args else {
         return Err("expected --css and --svg followed by input, assets and output".into());
@@ -295,13 +312,17 @@ fn run() -> nepl3_tools::Result<()> {
         ["doc-html", "pages-svg", "--math-renderer", renderer, manifest, output] if !manifest.starts_with("--") && !output.starts_with("--") => nepl3_tools::doc::export::pages::svg::cli::write(
             std::path::Path::new(manifest), std::path::Path::new(output), renderer.parse()?,
         ),
+        ["doc-html", "pages-svg", "--svg", mode, manifest, output] if !manifest.starts_with("--") && !output.starts_with("--") => configured_pages_svg(mode, nepl3_tools::doc::export::MathRenderer::KaTeXPreferred, manifest, output),
+        ["doc-html", "pages-svg", "--svg", mode, "--math-renderer", renderer, manifest, output]
+        | ["doc-html", "pages-svg", "--math-renderer", renderer, "--svg", mode, manifest, output]
+            if !manifest.starts_with("--") && !output.starts_with("--") => configured_pages_svg(mode, renderer.parse()?, manifest, output),
         ["doc-html", "pages-svg", "--interactive-limits", limits, manifest, output] if !limits.starts_with("--") && !manifest.starts_with("--") && !output.starts_with("--") => nepl3_tools::doc::export::pages::svg::cli::interactive::write(
             std::path::Path::new(manifest), std::path::Path::new(limits), std::path::Path::new(output), nepl3_tools::doc::export::MathRenderer::KaTeXPreferred,
         ),
         ["doc-html", "pages-svg", "--interactive-limits", limits, "--math-renderer", renderer, manifest, output] if !limits.starts_with("--") && !manifest.starts_with("--") && !output.starts_with("--") => nepl3_tools::doc::export::pages::svg::cli::interactive::write(
             std::path::Path::new(manifest), std::path::Path::new(limits), std::path::Path::new(output), renderer.parse()?,
         ),
-        ["doc-html", "pages-svg", ..] => Err("usage: doc-html pages-svg [--interactive-limits <limits.json>] [--math-renderer katex-preferred|mathml-only] <manifest.json> <new-output-directory>; external SVG and durable restoration are not implemented".into()),
+        ["doc-html", "pages-svg", ..] => Err("usage: doc-html pages-svg [--svg embedded|external] [--math-renderer katex-preferred|mathml-only] <manifest.json> <new-output-directory>; --interactive-limits <limits.json> is embedded-only and does not accept --svg; durable restoration is not implemented".into()),
         ["doc-html", "retry-limits"] => nepl3_tools::doc::export::pages::interactive::defaults(),
         [
             "doc-html",
@@ -444,7 +465,7 @@ fn run() -> nepl3_tools::Result<()> {
                 "nepl3-tools doc-markdown annotated <input.nepld> <aliases.json> <new-output.md>"
             );
             println!(
-                "nepl3-tools check | tasks --check | tasks --write | evidence identity [--commit <40-hex-commit>]\n  foundation --write | reader --write | engine --write | grammar --write | doc --write | math --write | sentence --write | markup --write | doc-html --write\n  doc-html export [--css external|inline] [--math-renderer katex-preferred|mathml-only] <input.nepld> <new-output-directory>\n  doc-html svg --css external|inline --svg external|embedded <input.nepld> <assets.json> <new-output-directory>\n  doc-html pages [--math-renderer katex-preferred|mathml-only] <manifest.json> <new-output-directory>\n  doc-html pages-svg [--interactive-limits <limits.json>] [--math-renderer katex-preferred|mathml-only] <manifest.json> <new-output-directory> (external SVG/durable restoration unsupported)\n  doc-inventory --write --commit <40-hex-commit> | doc-inventory --check | doc-inventory --check-current\nRepository checks do not establish runtime conformance."
+                "nepl3-tools check | tasks --check | tasks --write | evidence identity [--commit <40-hex-commit>]\n  foundation --write | reader --write | engine --write | grammar --write | doc --write | math --write | sentence --write | markup --write | doc-html --write\n  doc-html export [--css external|inline] [--math-renderer katex-preferred|mathml-only] <input.nepld> <new-output-directory>\n  doc-html svg --css external|inline --svg external|embedded <input.nepld> <assets.json> <new-output-directory>\n  doc-html pages [--math-renderer katex-preferred|mathml-only] <manifest.json> <new-output-directory>\n  doc-html pages-svg [--svg embedded|external] [--math-renderer katex-preferred|mathml-only] <manifest.json> <new-output-directory>\n  doc-html pages-svg --interactive-limits <limits.json> [--math-renderer katex-preferred|mathml-only] <manifest.json> <new-output-directory> (embedded-only; durable restoration unsupported)\n  doc-inventory --write --commit <40-hex-commit> | doc-inventory --check | doc-inventory --check-current\nRepository checks do not establish runtime conformance."
             );
             Ok(())
         }

@@ -89,8 +89,8 @@ fn svg_pages_cli_exports_actual_sources_with_explicit_selection()
     Ok(())
 }
 #[test]
-fn svg_pages_cli_rejects_external_svg_and_durable_restore() -> Result<(), Box<dyn std::error::Error>>
-{
+fn svg_pages_cli_rejects_external_interactive_and_durable_restore()
+-> Result<(), Box<dyn std::error::Error>> {
     let root = root("flags")?;
     fs::write(root.join("one.nepld"), "article en \"No math\" body nil")?;
     let manifest = root.join("pages.json");
@@ -102,7 +102,14 @@ fn svg_pages_cli_rejects_external_svg_and_durable_restore() -> Result<(), Box<dy
     )?;
     for (n, args) in [
         vec!["doc-html", "pages-svg", "--restore", "snapshot.json"],
-        vec!["doc-html", "pages-svg", "--svg", "external"],
+        vec![
+            "doc-html",
+            "pages-svg",
+            "--interactive-limits",
+            "limits.json",
+            "--svg",
+            "external",
+        ],
     ]
     .into_iter()
     .enumerate()
@@ -745,9 +752,13 @@ fn pinned_native_katex_doc_and_pages_svg_cli() -> Result<(), Box<dyn std::error:
             1
         );
     }
+    external::pinned_external_cases(binary, &packages)?;
     fs::remove_dir_all(root)?;
     Ok(())
 }
 
 #[path = "svg_cli/interactive.rs"]
 mod interactive;
+
+#[path = "svg_cli/external.rs"]
+mod external;

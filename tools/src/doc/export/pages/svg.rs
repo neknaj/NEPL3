@@ -1,7 +1,7 @@
-//! Root-only embedded-SVG packaging, immutable-source CLI export and native
-//! retained source preparation and native render retry. The plan-based renderer
-//! itself does not parse or generate KaTeX. Explicit CLI continuation reuses the
-//! native jobs; durable restoration remains separate.
+//! Root-only embedded/external SVG packaging and immutable-source CLI export.
+//! Existing retained render retry and interactive entry remain embedded-only.
+//! Plan-based entries neither parse sources nor generate KaTeX; source exports
+//! may request generation-time native visuals. Durable restoration is separate.
 pub mod cli;
 mod generation;
 pub mod identity;

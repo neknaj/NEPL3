@@ -253,7 +253,12 @@ fn svg_pages_interactive_cli_rejects_bad_setup_and_protects_outputs() -> Result<
         .arg("--help")
         .output()?;
     assert!(help.status.success());
-    assert!(String::from_utf8_lossy(&help.stdout).contains("pages-svg [--interactive-limits"));
+    // SVG selection is noninteractive; the retained embedded-only command has
+    // its own help line rather than implying that both options compose.
+    let text = String::from_utf8_lossy(&help.stdout);
+    assert!(text.contains("pages-svg [--svg embedded|external]"));
+    assert!(text.contains("pages-svg --interactive-limits"));
+    assert!(text.contains("embedded-only; durable restoration unsupported"));
     fs::remove_dir_all(root)?;
     Ok(())
 }

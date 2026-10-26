@@ -230,6 +230,32 @@ pub(super) fn package_external(
 }
 
 #[allow(clippy::too_many_arguments)]
+pub(super) fn package_external_source(
+    set: &PageSet,
+    options: &RenderOptions,
+    inputs: &[RootAssets<'_>],
+    rendered: &planned::ExternalRendered<'_, '_>,
+    identity: Digest,
+    initial: Usage,
+    source_input: &SourceEvidence<'_>,
+    natives: Option<&[Option<export::katex::Generated>]>,
+    b: &mut Budget,
+) -> Result<(BTreeMap<String, Vec<u8>>, String), String> {
+    package_inner(
+        set,
+        options,
+        inputs,
+        &rendered.rendered,
+        identity,
+        initial,
+        Some(source_input),
+        natives,
+        Some(&rendered.assets),
+        b,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
 fn package_inner(
     set: &PageSet,
     options: &RenderOptions,
@@ -392,7 +418,11 @@ fn package_inner(
     let receipt = Receipt {
         source_input,
         format: if external.is_some() {
-            "nepl3.local-doc-pages.root-svg-external-package/1"
+            if natives.is_some() {
+                "nepl3.local-doc-pages.root-svg-external-package/2"
+            } else {
+                "nepl3.local-doc-pages.root-svg-external-package/1"
+            }
         } else if natives.is_some() {
             "nepl3.local-doc-pages.root-svg-package/2"
         } else {
@@ -412,7 +442,9 @@ fn package_inner(
         limits: super::super::resources::limits(b.limits()),
         initial_usage: super::super::resources::usage(initial),
         pre_receipt_usage: super::super::resources::usage(b.usage()),
-        scope: if external.is_some() {
+        scope: if external.is_some() && source_input.is_some() {
+            "Immutable source export with root-only external SVG files, page-relative paths, page-specific CSS/CSP and checked payload hashes. Requested math rendering and successful native visuals are separate evidence; absent visuals do not record whether host invocation was attempted. Host-internal Work/Allocation are unobserved. No interactive external retry, durable restoration, deployment or portable-provider acceptance."
+        } else if external.is_some() {
             "Externally retained plans and owners. Root-only admitted external SVG files, page-relative paths, page-specific CSS/CSP and actual payload hashes. Equal generated SVG paths deduplicate only identical bytes; registered file and artifact collisions remain errors. Input identity binds external mode, not callback identity or portable proof. No source CLI, retained retry, KaTeX generation, deployment or portable-provider acceptance."
         } else if natives.is_some() {
             "Preferred native source export with independently retained MathML and optional checked generation-time KaTeX visuals. Successful visual counts do not record whether a host invocation was attempted when no visuals result. Host-internal Work/Allocation are unobserved. Root SVG, page-specific CSS/CSP and checked payload hashes; no external SVG, persistent retry, durable restoration, deployment or portable-provider acceptance."

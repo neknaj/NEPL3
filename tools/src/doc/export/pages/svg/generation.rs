@@ -11,7 +11,7 @@ use nepl3_core::{
     source::{Digest, SourceAdmission, SourceStore},
 };
 use nepl3_doc_core::model::EmbedKind;
-use nepl3_doc_html::assets::SvgInput;
+use nepl3_doc_html::assets::{SvgInput, SvgMode};
 use nepl3_wire::foundation::FoundationCodec;
 use pages::svg::{RootAssets, identity, output};
 use std::collections::BTreeMap;
@@ -49,7 +49,17 @@ pub(super) fn run_selected(
     preference: MathRenderer,
     b: &mut Budget,
 ) -> Result<Generated, String> {
-    let result = run_inner(c, captured, preference, b);
+    let result = run_inner(c, captured, preference, SvgMode::Embedded, b);
+    b.poll().map_err(err)?;
+    result
+}
+pub(super) fn run_external_selected(
+    c: &Compiled,
+    captured: &Captured,
+    preference: MathRenderer,
+    b: &mut Budget,
+) -> Result<Generated, String> {
+    let result = run_inner(c, captured, preference, SvgMode::External, b);
     b.poll().map_err(err)?;
     result
 }
@@ -57,6 +67,7 @@ fn run_inner(
     c: &Compiled,
     captured: &Captured,
     preference: MathRenderer,
+    mode: SvgMode,
     b: &mut Budget,
 ) -> Result<Generated, String> {
     b.poll().map_err(err)?;
@@ -100,7 +111,7 @@ fn run_inner(
         &[],
         captured.options.clone(),
     )?;
-    render_prepared(
+    render_prepared_selected(
         Context {
             compiled: c,
             request: &prepared.request,
@@ -112,6 +123,7 @@ fn run_inner(
             initial,
             scope: "Inputs captured once under finite count/byte limits before parsing; capture I/O is outside parse/output Budgets. Output initial_usage precedes source preparation; each parse/lower has separate limits. Resolved paths are containment-checked, not race-free filesystem capabilities. No persistent retry/capture restoration.",
         },
+        mode,
         b,
     )
 }
@@ -128,6 +140,26 @@ pub(super) struct Context<'a> {
     pub scope: &'static str,
 }
 pub(super) fn render_prepared(context: Context<'_>, b: &mut Budget) -> Result<Generated, String> {
+    render_prepared_selected(context, SvgMode::Embedded, b)
+}
+
+enum Rendering<'s, 'a> {
+    Embedded(planned::Rendered<'s, 'a>),
+    External(planned::ExternalRendered<'s, 'a>),
+}
+impl<'s, 'a> Rendering<'s, 'a> {
+    fn rendered(&self) -> &planned::Rendered<'s, 'a> {
+        match self {
+            Self::Embedded(rendered) => rendered,
+            Self::External(rendered) => rendered.rendered(),
+        }
+    }
+}
+fn render_prepared_selected(
+    context: Context<'_>,
+    mode: SvgMode,
+    b: &mut Budget,
+) -> Result<Generated, String> {
     let Context {
         compiled: c,
         request,
@@ -181,45 +213,73 @@ pub(super) fn render_prepared(context: Context<'_>, b: &mut Budget) -> Result<Ge
             b,
         )?;
     }
-    let rendered = planned::render(
-        &request.set,
-        &request.options,
-        &plans,
-        &bindings,
-        &mut host,
-        &mut |page, view, index, codec, b| {
-            let page = usize::try_from(page).map_err(err)?;
-            if view.kind == EmbedKind::Code {
-                page_code
-                    .get(page)
-                    .ok_or("CodePageMissing")?
-                    .render_with_codec(view, index, codec, b)
-            } else {
-                export::math::DisplayHost {
-                    compiled: c,
-                    registry: &c.doc.registry,
-                    codec,
-                    preference,
-                }
-                .render(
-                    view,
-                    index,
-                    math.get_mut(page).ok_or("MathPageMissing")?,
-                    b,
-                )
+    let mut other = |page: u64,
+                     view: &nepl3_doc_core::model::DocEmbedView<'_>,
+                     index,
+                     codec: &mut FoundationCodec<'_>,
+                     b: &mut Budget| {
+        let page = usize::try_from(page).map_err(err)?;
+        if view.kind == EmbedKind::Code {
+            page_code
+                .get(page)
+                .ok_or("CodePageMissing")?
+                .render_with_codec(view, index, codec, b)
+        } else {
+            export::math::DisplayHost {
+                compiled: c,
+                registry: &c.doc.registry,
+                codec,
+                preference,
             }
-        },
-        b,
-    )
-    .map_err(err)?;
-    let input_identity = identity::input(
-        &request.set,
-        &request.options,
-        &bindings,
-        &c.doc.registry,
-        host.codec,
-        b,
-    )?;
+            .render(view, index, math.get_mut(page).ok_or("MathPageMissing")?, b)
+        }
+    };
+    let selected_rendering = match mode {
+        SvgMode::Embedded => Rendering::Embedded(
+            planned::render(
+                &request.set,
+                &request.options,
+                &plans,
+                &bindings,
+                &mut host,
+                &mut other,
+                b,
+            )
+            .map_err(err)?,
+        ),
+        SvgMode::External => Rendering::External(
+            planned::render_external(
+                &request.set,
+                &request.options,
+                &plans,
+                &bindings,
+                &mut host,
+                &mut other,
+                b,
+            )
+            .map_err(err)?,
+        ),
+    };
+    let rendered = selected_rendering.rendered();
+
+    let input_identity = match mode {
+        SvgMode::Embedded => identity::input(
+            &request.set,
+            &request.options,
+            &bindings,
+            &c.doc.registry,
+            host.codec,
+            b,
+        )?,
+        SvgMode::External => identity::input_external(
+            &request.set,
+            &request.options,
+            &bindings,
+            &c.doc.registry,
+            host.codec,
+            b,
+        )?,
+    };
     let mut generated = Vec::new();
     for (page, ((records, fragment), document)) in math
         .iter_mut()
@@ -348,17 +408,31 @@ pub(super) fn render_prepared(context: Context<'_>, b: &mut Budget) -> Result<Ge
             .map(|n| n.evidence(&generated, &request.set, b))
             .transpose()?,
     };
-    let (files, manifest) = output::package(
-        &request.set,
-        &request.options,
-        &bindings,
-        &rendered,
-        input_identity,
-        initial,
-        Some(&evidence),
-        native_generation.as_ref().map(|n| n.pages.as_slice()),
-        b,
-    )?;
+    let natives = native_generation.as_ref().map(|n| n.pages.as_slice());
+    let (files, manifest) = match &selected_rendering {
+        Rendering::Embedded(rendered) => output::package(
+            &request.set,
+            &request.options,
+            &bindings,
+            rendered,
+            input_identity,
+            initial,
+            Some(&evidence),
+            natives,
+            b,
+        )?,
+        Rendering::External(rendered) => output::package_external_source(
+            &request.set,
+            &request.options,
+            &bindings,
+            rendered,
+            input_identity,
+            initial,
+            &evidence,
+            natives,
+            b,
+        )?,
+    };
     Ok(Generated {
         files,
         manifest,
