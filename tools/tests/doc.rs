@@ -32,8 +32,6 @@ mod external;
 mod footnotes;
 #[path = "doc/html.rs"]
 mod html;
-#[path = "doc/index_migration.rs"]
-mod index_migration;
 #[path = "doc/input.rs"]
 mod input;
 #[path = "doc/katex_cli.rs"]
@@ -44,6 +42,8 @@ mod labels;
 mod markdown_math;
 #[path = "doc/math.rs"]
 mod math;
+#[path = "doc/migration.rs"]
+mod migration;
 #[path = "doc/mixed.rs"]
 mod mixed;
 #[path = "doc/pages.rs"]

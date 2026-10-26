@@ -1,90 +1,13 @@
-//! Native semantic regression against the preserved pre-cutover Markdown.
-//! Page resolution, rendering and browser acceptance remain separate gates.
-use super::*;
+//! Canonical index parity; rendering/reference/visual gates are separate.
+use super::super::*;
+use super::{blocks, markdown_blocks};
 use nepl3_doc_core::{check::Category, model::*, text};
-use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
-
-fn normalized(value: &str) -> String {
-    value.chars().filter(|c| !c.is_whitespace()).collect()
-}
-
-fn markdown_blocks(source: &str) -> Vec<(String, String)> {
-    let mut result = Vec::new();
-    let mut active: Option<(String, String)> = None;
-    for event in Parser::new_ext(source, Options::ENABLE_TABLES) {
-        match event {
-            Event::Start(Tag::Heading { .. }) => active = Some(("heading".into(), String::new())),
-            Event::Start(Tag::Paragraph | Tag::Item) => {
-                active = Some(("paragraph".into(), String::new()))
-            }
-            Event::Start(Tag::TableCell) => active = Some(("cell".into(), String::new())),
-            Event::Text(value) | Event::Code(value) => {
-                if let Some((_, text)) = &mut active {
-                    text.push_str(&value);
-                }
-            }
-            Event::End(
-                TagEnd::Heading(_) | TagEnd::Paragraph | TagEnd::TableCell | TagEnd::Item,
-            ) => {
-                if let Some((kind, text)) = active.take() {
-                    result.push((kind, normalized(&text)));
-                }
-            }
-            _ => {}
-        }
-    }
-    result
-}
-
-// Explicit ordered traversal of the checked typed model, not a source parser.
-fn blocks(
-    document: &DocumentSyntax,
-    node: u64,
-    project: &mut impl FnMut(SentenceRef) -> Result<String, String>,
-    output: &mut Vec<(String, String)>,
-) -> Result<(), String> {
-    match &document.value.nodes.get(node as usize).ok_or("node")?.kind {
-        DocKind::Article { title, body, .. } | DocKind::Section { title, body, .. } => {
-            output.push(("heading".into(), normalized(&project(*title)?)));
-            blocks(document, body.0, project, output)?;
-        }
-        DocKind::Body { blocks: children } => {
-            for child in children {
-                blocks(document, child.0, project, output)?;
-            }
-        }
-        DocKind::Paragraph { items } => {
-            let mut value = String::new();
-            for item in items {
-                value.push_str(&project(SentenceRef(item.0))?);
-            }
-            output.push(("paragraph".into(), normalized(&value)));
-        }
-        DocKind::Table { header, rows, .. } => {
-            for row in header.iter().chain(rows) {
-                blocks(document, row.0, project, output)?;
-            }
-        }
-        DocKind::Row { cells } => {
-            for cell in cells {
-                output.push(("cell".into(), normalized(&project(*cell)?)));
-            }
-        }
-        DocKind::List { items, .. } => {
-            for item in items {
-                blocks(document, item.0, project, output)?;
-            }
-        }
-        DocKind::ListItem { body, .. } => blocks(document, body.0, project, output)?,
-        other => return Err(format!("unhandled draft block: {other:?}")),
-    }
-    Ok(())
-}
+use pulldown_cmark::{Event, Options, Parser, Tag};
 
 #[test]
 fn documentation_index_preserves_original_prose_tables_and_links() -> Result<(), String> {
-    let source = include_str!("../../../doc/README.nepld");
-    let original = include_str!("../../migration/fixtures/documentation-index.md");
+    let source = include_str!("../../../../doc/README.nepld");
+    let original = include_str!("../../../migration/fixtures/documentation-index.md");
     // Original doc/README.md at merged main
     // 113e87da0449430b4c5422d77593116d91a72f0f, before index cutover.
     // Do not regenerate the expected original from the candidate Doc source.
@@ -98,7 +21,7 @@ fn documentation_index_preserves_original_prose_tables_and_links() -> Result<(),
     );
     let c = compiled()?;
     let registry: nepl3_tools::doc::canonical::Registry =
-        serde_json::from_str(include_str!("../../../doc/canonical.json")).map_err(err)?;
+        serde_json::from_str(include_str!("../../../../doc/canonical.json")).map_err(err)?;
     // Use the existing native corpus configuration, not portable defaults or
     // a silently enlarged global/test budget. This is native parity evidence.
     nepl3_tools::doc::source::with_named_input_limits(
@@ -207,7 +130,7 @@ fn documentation_index_preserves_original_prose_tables_and_links() -> Result<(),
     // Exact registration and output-only compatibility, never a duplicate
     // semantic passive source. This assertion alone is not HTML acceptance.
     let registry: serde_json::Value =
-        serde_json::from_str(include_str!("../../../doc/canonical.json")).map_err(err)?;
+        serde_json::from_str(include_str!("../../../../doc/canonical.json")).map_err(err)?;
     assert!(
         registry["pages"]
             .as_array()

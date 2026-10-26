@@ -45,7 +45,10 @@ article ja "[実装指示/じっそうしじ]" body
   cons section sequence "[作業/さぎょう]の[順序/じゅんじょ]" body
     cons paragraph
       cons sentence
-        cons code "design/tasks.json" cons text " の" cons ruby text "依存順" text "いぞんじゅん" cons text "に" cons ruby text "実装" text "じっそう" cons text "する。" nil
+        cons code "design/tasks.json" cons text " の" cons ruby text "依存順" text "いぞんじゅん" cons text "に、" cons ruby text "利用" text "りよう" cons text "する" cons ruby text "前段成果物" text "ぜんだんせいかぶつ" cons text "が" cons ruby text "成立" text "せいりつ" cons text "した" cons ruby text "範囲" text "はんい" cons text "を" cons ruby text "実装" text "じっそう" cons text "する。" nil
+      cons sentence
+        cons code "depends_on" cons text " は" cons ruby text "全" text "ぜん" cons text "タスクの" cons ruby text "完了条件" text "かんりょうじょうけん" cons text "でもあり、" cons ruby text "全依存" text "ぜんいぞん" cons text "がcompleteになるまでは" cons ruby text "当該" text "とうがい" cons text "タスクをcompleteにしない。" nil
+      cons "[段階着手/だんかいちゃくしゅ]を[依存先全体/いぞんさきぜんたい]の[完成/かんせい]と[混同/こんどう]しない。"
       cons "[段階/だんかい]ごとにbuildできることと、[最終仕様/さいしゅうしよう]を[縮小/しゅくしょう]することは[別/べつ]である。"
       cons "[後段/こうだん]の[未実装/みじっそう]を[成功/せいこう]Resultやダミー[成果物/せいかぶつ]で[覆/おお]わない。"
       cons sentence
@@ -203,10 +206,32 @@ article ja "[実装指示/じっそうしじ]" body
         nil
       cons item none body
         cons paragraph
+          cons "PR・branchは[一/ひと]つの[論理的変更/ろんりてきへんこう]に[対応/たいおう]させ、[無関係/むかんけい]なtopicの[統合先/とうごうさき]へ[転用/てんよう]しない。"
+          cons "mainの[更新確認/こうしんかくにん]と[取/と]り[込/こ]みを[分/わ]け、[必要/ひつよう]な[依存変更/いぞんへんこう]・[競合解消/きょうごうかいしょう]・[統合/とうごう]gate[対応以外/たいおういがい]で[習慣的/しゅうかんてき]な[同期/どうき]mergeを[作/つく]らない。"
+          cons sentence
+            cons ruby text "通常" text "つうじょう" cons text "PRはsquash" cons ruby text "統合" text "とうごう" cons text "を" cons ruby text "既定" text "きてい" cons text "とし、" cons ruby text "依存" text "いぞん" cons text "PRの" cons ruby text "整理" text "せいり" cons text "・" cons ruby text "安定" text "あんてい" cons text "した" cons ruby text "検証候補" text "けんしょうこうほ" cons text "・" cons ruby text "公開履歴" text "こうかいりれき" cons text "の" cons ruby text "保全" text "ほぜん" cons text "は " cons link relative "doc/development.md" some "branchとprの統合手順" ruby text "開発手順" text "かいはつてじゅん" cons text " に" cons ruby text "従" text "したが" cons text "う。" nil
+          nil
+        nil
+      cons item none body
+        cons paragraph
+          cons "[統合/とうごう]と[必要/ひつよう]な[証拠/しょうこ]の[保全/ほぜん]が[済/す]み、[使用/しよう]しなくなったworktreeは[適宜削除/てきぎさくじょ]する。"
+          cons "[削除直前/さくじょちょくぜん]に[絶対/ぜったい]path・HEAD・[未保存変更/みほぞんへんこう]・[進行中/しんこうちゅう]process・[他作業/たさぎょう]からの[参照/さんしょう]を[確認/かくにん]し、Gitのworktree[登録/とうろく]とディレクトリを[整理/せいり]する。"
+          cons "[必要/ひつよう]な[資料/しりょう]は[現在/げんざい]の[作業場所/さぎょうばしょ]または[保存済/ほぞんず]みartifactへ[移/うつ]し、[未保存変更/みほぞんへんこう]とbranch/commitを[無断/むだん]で[失/うしな]わない。"
+          nil
+        nil
+      cons item none body
+        cons paragraph
           cons "ChatGPT[作成/さくせい]の[設計/せっけい]や[過去/かこ]の[検証記録/けんしょうきろく]を[無条件/むじょうけん]に[採用/さいよう]しない。"
           cons "[各契約/かくけいやく]を[本文/ほんぶん]・schema・[文法/ぶんぽう]・[例/れい]・[受入条件/うけいれじょうけん]および[必要/ひつよう]な[公式資料/こうしきしりょう]と[照合/しょうごう]し、[訂正理由/ていせいりゆう]と[影響範囲/えいきょうはんい]を[残/のこ]す。"
           nil
         nil
+      nil
+    cons paragraph
+      cons sentence
+        cons ruby text "証拠収集" text "しょうこしゅうしゅう" cons text "は " cons code "tools/evidence/README.md" cons text " に" cons ruby text "従" text "したが" cons text "う。" nil
+      cons sentence
+        cons text "reviewごとに" cons ruby text "保存" text "ほぞん" cons text "scriptやtracked source snapshotを " cons code "conformance/results/" cons text " へ" cons ruby text "追加" text "ついか" cons text "しない。" nil
+      cons "[過去/かこ]の[記録/きろく]を[保全/ほぜん]し、[新/あたら]しい[実行/じっこう]logicは[管理/かんり]されたtools/testへ、[結果/けっか]はdataへ[分離/ぶんり]する。"
       nil
     nil
   nil
