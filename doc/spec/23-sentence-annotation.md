@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 e2260873cc1f7a947f58177f517fa55e0c6888145cf22a4cd77f59c11522fee1; alias input SHA-256 cbc6c57d2b56601d43af8a069701ba64fa95ed6194468a06dbde77863455b5bb; page input SHA-256 f1ad19b966b8052e77c463fb4480521af120b7af84693685a3cfbc1fb55ed7dd. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 5d344fc4ceafe7afa7dc2c189a8f16ddf7f30413358f21d77a2af38fa9839f1d; alias input SHA-256 af9a462e555f9ea59b7d778fde1cd7a085248a885cc5509d020ad5f0bbbbd20d; page input SHA-256 82b54bbb31222d7b4c3882580f92b890bbb7fa4852406c233ea2c4e82da5bccf. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="23-構造化文章と対象付き注釈への是正"></a>
 
@@ -834,7 +834,7 @@ One cumulative Budget covers shells\, CSS\, identity data and the receipt\; pre\
 
 **ja**
 
-<ruby>包装器<rt>ほうそうき</rt></ruby>はKaTeX<ruby>変換<rt>へんかん</rt></ruby>を<ruby>実行<rt>じっこう</rt></ruby>せず、<ruby>渡<rt>わた</rt></ruby>された<ruby>表示<rt>ひょうじ</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>するだけであり、parse・CLI・<ruby>外部<rt>がいぶ</rt></ruby>SVG<ruby>梱包<rt>こんぽう</rt></ruby>・<ruby>保持<rt>ほじ</rt></ruby>jobのretry・portable proofは<ruby>追加<rt>ついか</rt></ruby>しない。
+この<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>み<ruby>包装器<rt>ほうそうき</rt></ruby>はKaTeX<ruby>変換<rt>へんかん</rt></ruby>を<ruby>実行<rt>じっこう</rt></ruby>せず、<ruby>渡<rt>わた</rt></ruby>された<ruby>表示<rt>ひょうじ</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>するだけであり、parse・CLI・<ruby>外部<rt>がいぶ</rt></ruby>SVG<ruby>梱包<rt>こんぽう</rt></ruby>・<ruby>保持<rt>ほじ</rt></ruby>jobのretry・portable proofは<ruby>追加<rt>ついか</rt></ruby>しない。
 
 </div>
 
@@ -842,7 +842,177 @@ One cumulative Budget covers shells\, CSS\, identity data and the receipt\; pre\
 
 **en**
 
-The packager does not execute KaTeX conversion and only preserves the supplied display\; it adds no parsing\, CLI\, external SVG packaging\, retained\-job retry or portable proof\.
+This embedded packager does not execute KaTeX conversion and only preserves the supplied display\; it adds no parsing\, CLI\, external SVG packaging\, retained\-job retry or portable proof\.
+
+</div>
+
+</div>
+
+</div>
+
+<a name="n-73766745787465726e616c5061636b616765"></a>
+
+<a name="external-svg-pages-package"></a>
+
+### <ruby>外部<rt>がいぶ</rt></ruby>SVGのnative PageSet<ruby>包装<rt>ほうそう</rt></ruby> \/ Native external SVG PageSet packaging
+
+<div class="nepl-paragraph">
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+pages\:\:svg\:\:render\_externalは、<ruby>同<rt>おな</rt></ruby>じ<ruby>正確<rt>せいかく</rt></ruby>なPageSet・RenderOptions・Plansを<ruby>使<rt>つか</rt></ruby>うroot\-onlyのplan\-based native<ruby>入口<rt>いりぐち</rt></ruby>であり、<ruby>非表示<rt>ひひょうじ</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>む<ruby>採用<rt>さいよう</rt></ruby>guestのSVGをroot bindingで<ruby>満<rt>み</rt></ruby>たさない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The plan\-based native pages\:\:svg\:\:render\_external entry uses the same exact PageSet\, RenderOptions and Plans and remains root\-only\: root bindings cannot satisfy adopted guest SVG requirements\, including hidden ones\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>全<rt>ぜん</rt></ruby>SVG・digest・alt・namespaceの<ruby>検証後<rt>けんしょうご</rt></ruby>に<ruby>型付<rt>かたつ</rt></ruby>き<ruby>証拠<rt>しょうこ</rt></ruby>から<ruby>不変<rt>ふへん</rt></ruby>のbyte<ruby>列<rt>れつ</rt></ruby>を<ruby>所有<rt>しょゆう</rt></ruby>し、そのcopyも<ruby>累積<rt>るいせき</rt></ruby>Budgetへ<ruby>課金<rt>かきん</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Only after all SVG\, digest\, alt and namespace checks succeed are immutable bytes owned from typed evidence\, with the copies charged to the cumulative Budget\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+input\_externalのidentityはroot\-svg\-embedded\/1を<ruby>別<rt>べつ</rt></ruby>domainのroot\-svg\-external\/1へ<ruby>置<rt>お</rt></ruby>き<ruby>換<rt>か</rt></ruby>え、それ<ruby>以外<rt>いがい</rt></ruby>のcanonical<ruby>入力<rt>にゅうりょく</rt></ruby>・<ruby>区切<rt>くぎ</rt></ruby>り・display<ruby>束縛<rt>そくばく</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The input\_external identity replaces root\-svg\-embedded\/1 with the distinct root\-svg\-external\/1 domain while retaining the other canonical inputs\, delimiters and display binding\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>各<rt>かく</rt></ruby>pageの<ruby>親<rt>おや</rt></ruby>directoryへassets\/\<digest\>\.svgを<ruby>配置<rt>はいち</rt></ruby>し、HTMLの<ruby>相対<rt>そうたい</rt></ruby>Src・page<ruby>別<rt>べつ</rt></ruby>CSS・img\-src \'self\'のCSPを<ruby>対応<rt>たいおう</rt></ruby>させる。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Each page parent directory receives assets\/\<digest\>\.svg\, matching relative HTML Src\, page\-specific CSS and the same\-origin image CSP\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>同一<rt>どういつ</rt></ruby>pathの<ruby>生成<rt>せいせい</rt></ruby>SVGだけをbyte<ruby>列<rt>れつ</rt></ruby>の<ruby>一致<rt>いっち</rt></ruby>で<ruby>重複排除<rt>じゅうふくはいじょ</rt></ruby>し、<ruby>登録<rt>とうろく</rt></ruby>fileは<ruby>同<rt>おな</rt></ruby>じbyte<ruby>列<rt>れつ</rt></ruby>でも<ruby>衝突<rt>しょうとつ</rt></ruby>として<ruby>拒否<rt>きょひ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Only generated SVGs at the same path deduplicate after actual byte equality\; registered files are rejected as collisions even when their bytes are identical\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>大小文字<rt>だいしょうもじ</rt></ruby>・fileとdirectoryの<ruby>祖先関係<rt>そせんかんけい</rt></ruby>・<ruby>予約<rt>よやく</rt></ruby>manifestとの<ruby>衝突<rt>しょうとつ</rt></ruby>も<ruby>拒否<rt>きょひ</rt></ruby>し、<ruby>異<rt>こと</rt></ruby>なる<ruby>親<rt>おや</rt></ruby>directoryへのcopyは<ruby>別<rt>べつ</rt></ruby>fileとして<ruby>出力<rt>しゅつりょく</rt></ruby><ruby>課金<rt>かきん</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Case\-folded\, file\/directory ancestor and reserved\-manifest collisions are also rejected\, and copies under different parent directories are charged as separate physical outputs\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+nepl3\.local\-doc\-pages\.root\-svg\-external\-package\/1のreceiptはsvg\=external・katex\_generation\=falseと<ruby>全<rt>ぜん</rt></ruby>payloadのbyte<ruby>長<rt>ちょう</rt></ruby>・digestを<ruby>記録<rt>きろく</rt></ruby>し、receiptの<ruby>直列化<rt>ちょくれつか</rt></ruby>まで<ruby>同<rt>おな</rt></ruby>じBudgetで<ruby>処理<rt>しょり</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The nepl3\.local\-doc\-pages\.root\-svg\-external\-package\/1 receipt records svg\=external\, katex\_generation\=false and every payload length and digest\, with receipt serialization covered by the same Budget\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>停止<rt>ていし</rt></ruby>や<ruby>失敗<rt>しっぱい</rt></ruby>では<ruby>完了<rt>かんりょう</rt></ruby>packageを<ruby>返<rt>かえ</rt></ruby>さず、この<ruby>入口<rt>いりぐち</rt></ruby>はsource CLI・KaTeX<ruby>生成<rt>せいせい</rt></ruby>・<ruby>保持<rt>ほじ</rt></ruby>jobのretry・<ruby>永続復元<rt>えいぞくふくげん</rt></ruby>・portable proofを<ruby>追加<rt>ついか</rt></ruby>しない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Stops and failures return no completed package\; this entry adds no source CLI\, KaTeX generation\, retained\-job retry\, durable restoration or portable proof\.
 
 </div>
 

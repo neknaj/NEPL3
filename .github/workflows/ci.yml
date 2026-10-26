@@ -45,7 +45,7 @@ jobs:
           tools.extensions.test_cargo tools.extensions.test_execution
           tools.audit.allocation.test_run
           tools.audit.math.test_visual tools.audit.math.test_annotations
-          tools.audit.doc_html.test_pages_svg
+          tools.audit.doc_html.test_pages_svg tools.audit.doc_html.test_pages_svg_external
 
   native:
     name: native (${{ matrix.os }})
@@ -542,6 +542,10 @@ jobs:
         run: |
           cargo test --locked -p nepl3-tools --lib doc::export::pages::sentence::svg_host::packaging::packaged_svg_pages_keep_owners_csp_css_and_manifest -- --exact --nocapture --test-threads=1 > dist/doc-browser/pages-svg-corpus.log
           python tools/audit/doc_html/pages_svg.py dist/doc-browser/pages-svg-corpus.log dist/doc-browser/pages-svg > dist/doc-browser/pages-svg.json
+      - name: Check native external SVG PageSet packaging in three browsers
+        run: |
+          cargo test --locked -p nepl3-tools --lib doc::export::pages::sentence::svg_host::external::external_packaged_svg_pages_keep_owners_csp_css_and_manifest -- --exact --nocapture --test-threads=1 > dist/doc-browser/pages-svg-external-corpus.log
+          python tools/audit/doc_html/pages_svg_external.py dist/doc-browser/pages-svg-external-corpus.log dist/doc-browser/pages-svg-external > dist/doc-browser/pages-svg-external.json
       - name: Check explicit SVG PageSet CLI in three browsers
         run: python tools/audit/doc_html/pages_svg_cli.py target/debug/nepl3-tools dist/doc-browser/pages-svg-cli > dist/doc-browser/pages-svg-cli.json
       - name: Check KaTeX-preferred SVG PageSet CLI in three browsers

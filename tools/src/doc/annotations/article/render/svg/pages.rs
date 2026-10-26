@@ -88,16 +88,16 @@ pub fn render<'s, 'a, C: FoundationValueCodec, F>(
     ) -> Result<HtmlRequest, F>,
     b: &mut Budget,
 ) -> Result<Rendered<'s, 'a>, Error<C::Error, F>> {
-    let result = render_inner(set, options, plans, inputs, host, other, b);
+    let result = render_inner(set, options, plans, inputs, host, other, None, b);
     b.poll()?;
     result
 }
 #[allow(clippy::too_many_arguments)]
-fn render_inner<'s, 'a, C: FoundationValueCodec, F>(
+fn render_inner<'s, 'a, 'i, C: FoundationValueCodec, F>(
     set: &'a PageSet,
     options: &'s RenderOptions,
     plans: &[Plan<'s, 'a>],
-    inputs: &[RootAssets<'_>],
+    inputs: &[RootAssets<'i>],
     host: &mut SentenceAnnotationRenderer<'_, C>,
     other: &mut impl FnMut(
         u64,
@@ -106,6 +106,7 @@ fn render_inner<'s, 'a, C: FoundationValueCodec, F>(
         &mut C,
         &mut Budget,
     ) -> Result<HtmlRequest, F>,
+    external: Option<&mut Vec<ExternalFile>>,
     b: &mut Budget,
 ) -> Result<Rendered<'s, 'a>, Error<C::Error, F>> {
     b.poll()?;
@@ -211,16 +212,40 @@ fn render_inner<'s, 'a, C: FoundationValueCodec, F>(
         }
         // Unregistered pages receive no SVG bytes. Every page still retains
         // its actual alt projection, including an empty one.
-        let prepared = page_assets::prepare_embedded(
-            set,
-            &borrowed,
-            options,
-            &bindings,
-            host.registry,
-            host.codec,
-            b,
-        )
-        .map_err(|error| failure::preparation(error, &namespaces, &resolutions, host, b))?;
+        let prepared = if let Some(retained) = external {
+            let prepared = page_assets::prepare_external(
+                set,
+                &borrowed,
+                options,
+                &bindings,
+                host.registry,
+                host.codec,
+                b,
+            )
+            .map_err(|error| failure::preparation(error, &namespaces, &resolutions, host, b))?;
+            let (prepared, assets) = prepared.into_parts();
+            for asset in assets {
+                let owned = ExternalFile {
+                    page: asset.page(),
+                    member: asset.member(),
+                    path: copy_external(asset.path(), b)?,
+                    svg: copy_external(asset.svg(), b)?,
+                };
+                push(retained, owned, b)?;
+            }
+            prepared
+        } else {
+            page_assets::prepare_embedded(
+                set,
+                &borrowed,
+                options,
+                &bindings,
+                host.registry,
+                host.codec,
+                b,
+            )
+            .map_err(|error| failure::preparation(error, &namespaces, &resolutions, host, b))?
+        };
         let mut sessions = Vec::new();
         for (page, plan) in plans.iter().enumerate() {
             let session = Session::for_plan::<C::Error, F>(plan, b)
@@ -275,4 +300,85 @@ fn render_inner<'s, 'a, C: FoundationValueCodec, F>(
         sentences,
         alt_projections,
     })
+}
+
+/// Only the external renderer constructs this pairing of rendered pages and
+/// owned, successfully admitted root assets. No package is implied.
+pub struct ExternalRendered<'s, 'a> {
+    pub(crate) rendered: Rendered<'s, 'a>,
+    pub(crate) assets: Vec<ExternalFile>,
+}
+impl<'s, 'a> ExternalRendered<'s, 'a> {
+    pub fn rendered(&self) -> &Rendered<'s, 'a> {
+        &self.rendered
+    }
+    pub fn assets(&self) -> &[ExternalFile] {
+        &self.assets
+    }
+}
+
+/// Root-only external SVG composition. Adopted guest assets cannot be supplied
+/// by root bindings, even when hidden. Admitted bytes are copied under the cumulative budget.
+#[allow(clippy::too_many_arguments)]
+pub fn render_external<'s, 'a, 'i, C: FoundationValueCodec, F>(
+    set: &'a PageSet,
+    options: &'s RenderOptions,
+    plans: &[Plan<'s, 'a>],
+    inputs: &[RootAssets<'i>],
+    host: &mut SentenceAnnotationRenderer<'_, C>,
+    other: &mut impl FnMut(
+        u64,
+        &DocEmbedView<'_>,
+        EmbedRef,
+        &mut C,
+        &mut Budget,
+    ) -> Result<HtmlRequest, F>,
+    b: &mut Budget,
+) -> Result<ExternalRendered<'s, 'a>, Error<C::Error, F>> {
+    let mut assets = Vec::new();
+    let result = render_inner(
+        set,
+        options,
+        plans,
+        inputs,
+        host,
+        other,
+        Some(&mut assets),
+        b,
+    );
+    b.poll()?;
+    result.map(|rendered| ExternalRendered { rendered, assets })
+}
+
+/// Owned copies are constructed only from core admission evidence; this avoids
+/// tying retained file bytes to temporary alt-projection borrows.
+pub struct ExternalFile {
+    page: u64,
+    member: MemberId,
+    path: String,
+    svg: String,
+}
+impl ExternalFile {
+    pub fn page(&self) -> u64 {
+        self.page
+    }
+    pub fn member(&self) -> MemberId {
+        self.member
+    }
+    pub fn path(&self) -> &str {
+        &self.path
+    }
+    pub fn svg(&self) -> &str {
+        &self.svg
+    }
+}
+fn copy_external(value: &str, b: &mut Budget) -> Result<String, StopReason> {
+    use nepl3_core::budget::Resource;
+    b.charge(Resource::Work, value.len() as u64)?;
+    b.charge(Resource::AllocationUnits, value.len() as u64)?;
+    let mut out = String::new();
+    out.try_reserve(value.len())
+        .map_err(|_| b.stop(StopReason::AllocationLimit))?;
+    out.push_str(value);
+    Ok(out)
 }

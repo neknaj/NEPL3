@@ -507,3 +507,11 @@ mod packaging_limits;
 
 #[path = "svg_host/packaging_failures.rs"]
 mod packaging_failures;
+
+#[path = "svg_host/external.rs"]
+mod external;
+
+#[path = "svg_host/external/failures.rs"]
+mod external_failures;
+#[path = "svg_host/external/limits.rs"]
+mod external_limits;

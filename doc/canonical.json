@@ -629,9 +629,9 @@
   },
   "parse_limits": {
     "source_bytes": 10000000,
-    "work": 600000000,
+    "work": 650000000,
     "depth": 1000,
-    "nodes": 13000000,
+    "nodes": 14000000,
     "allocation_units": 500000000,
     "output_bytes": 10000000,
     "diagnostics": 1000,
