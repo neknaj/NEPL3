@@ -1,8 +1,9 @@
-//! Embedded static SVG for exact, explicitly adopted PageSet namespaces.
+//! Static SVG for exact, explicitly adopted PageSet namespaces.
 //! This is native preparation, not a CLI asset registry or portable proof.
 use super::*;
 use crate::assets::{AssetError, SvgMode};
 use crate::namespace::assets::MemberAssets;
+use alloc::string::String;
 
 /// Page and member indices are occurrence-local. Equal asset IDs or equal
 /// document digests in another page/member do not grant access to these bytes.
@@ -47,6 +48,121 @@ pub fn prepare_embedded<'a, C: FoundationValueCodec>(
     namespaces: &[&CheckedNamespace<'_, 'a>],
     options: &'a RenderOptions,
     inputs: &[PageMemberAssets<'_>],
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<PreparedPages<'a>, PreparationError<'a, C::Error>> {
+    prepare_mode(
+        set,
+        namespaces,
+        options,
+        inputs,
+        SvgMode::Embedded,
+        registry,
+        codec,
+        budget,
+    )
+}
+
+/// Freshly checked external image sources. This is native admission evidence,
+/// not a completed package or proof that a host emitted any file.
+/// Paths are relative to each page, not to the PageSet's output root.
+pub struct ExternalAsset<'i> {
+    page: u64,
+    member: MemberId,
+    path: String,
+    svg: &'i str,
+}
+impl<'i> ExternalAsset<'i> {
+    pub fn page(&self) -> u64 {
+        self.page
+    }
+    pub fn member(&self) -> MemberId {
+        self.member
+    }
+    pub fn path(&self) -> &str {
+        &self.path
+    }
+    pub fn svg(&self) -> &'i str {
+        self.svg
+    }
+}
+
+/// Retains the exact prepared pages and their admitted external bindings.
+/// Bindings are not deduplicated: packaging must resolve page-relative paths,
+/// reject collisions and charge physical output separately.
+pub struct PreparedExternalPages<'a, 'i> {
+    prepared: PreparedPages<'a>,
+    assets: Vec<ExternalAsset<'i>>,
+}
+impl<'a, 'i> PreparedExternalPages<'a, 'i> {
+    pub fn pages(&self) -> &PreparedPages<'a> {
+        &self.prepared
+    }
+    pub fn assets(&self) -> &[ExternalAsset<'i>] {
+        &self.assets
+    }
+}
+
+/// Admit exact page/member SVG inputs, including hidden members, and retain
+/// immutable bytes alongside typed external image paths. All ordinary routing,
+/// digest, static-SVG, alt and unused-input checks run before evidence is exposed.
+/// A successful preparation is not an emission receipt or a filesystem grant.
+#[allow(clippy::too_many_arguments)]
+pub fn prepare_external<'a, 'i, C: FoundationValueCodec>(
+    set: &'a PageSet,
+    namespaces: &[&CheckedNamespace<'_, 'a>],
+    options: &'a RenderOptions,
+    inputs: &[PageMemberAssets<'i>],
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<PreparedExternalPages<'a, 'i>, PreparationError<'a, C::Error>> {
+    let prepared = prepare_mode(
+        set,
+        namespaces,
+        options,
+        inputs,
+        SvgMode::External,
+        registry,
+        codec,
+        budget,
+    )?;
+    let mut assets = Vec::new();
+    for input in inputs {
+        for svg in input.assets.inputs {
+            budget.charge(Resource::Work, svg.svg.len() as u64)?;
+            let digest = nepl3_core::source::Digest::of(svg.svg.as_bytes());
+            budget.charge(Resource::AllocationUnits, 75)?;
+            let mut path = String::from("assets/");
+            for byte in digest.0 {
+                path.push(b"0123456789abcdef"[(byte >> 4) as usize] as char);
+                path.push(b"0123456789abcdef"[(byte & 15) as usize] as char);
+            }
+            path.push_str(".svg");
+            build::push(
+                &mut assets,
+                ExternalAsset {
+                    page: input.page,
+                    member: input.assets.member,
+                    path,
+                    svg: svg.svg,
+                },
+                budget,
+            )?;
+        }
+    }
+    budget.poll()?;
+    Ok(PreparedExternalPages { prepared, assets })
+}
+
+#[allow(clippy::too_many_arguments)]
+fn prepare_mode<'a, C: FoundationValueCodec>(
+    set: &'a PageSet,
+    namespaces: &[&CheckedNamespace<'_, 'a>],
+    options: &'a RenderOptions,
+    inputs: &[PageMemberAssets<'_>],
+    mode: SvgMode,
     registry: &SchemaRegistry,
     codec: &mut C,
     budget: &mut Budget,
@@ -127,7 +243,7 @@ pub fn prepare_embedded<'a, C: FoundationValueCodec>(
                 document,
                 options,
                 svg,
-                SvgMode::Embedded,
+                mode,
                 registry,
                 codec,
                 budget,
