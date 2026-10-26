@@ -274,25 +274,57 @@ body
       cons "[出力先/しゅつりょくさき]は[存在/そんざい]しないディレクトリを[指定/してい]してください。" nil
     cons rawcode some "sh" "cargo run --locked -p nepl3-tools -- doc-html export examples/document/linear-combination.nepld .tmp/linear-combination-html\n"
     cons paragraph
-      cons sentence cons code "document.html" cons text " と " cons code "assets/" cons text " を" cons ruby text "一緒" text "いっしょ" cons text "に" cons ruby text "配布" text "はいふ" cons text "します。" nil
+      cons sentence cons ruby text "既定" text "きてい" cons text "の" cons ruby text "外部" text "がいぶ" cons text "CSS" cons ruby text "方式" text "ほうしき" cons text "では、" cons code "document.html" cons text " と " cons code "assets/" cons text " を" cons ruby text "同梱" text "どうこん" cons text "する。" nil
+      cons "HTML[単体/たんたい]でスタイルを[保持/ほじ]して[配布/はいふ]する[場合/ばあい]は、[次/つぎ]のコマンドを[使用/しよう]する。" nil
+    cons rawcode some "sh" "cargo run --locked -p nepl3-tools -- doc-html export --css inline examples/document/linear-combination.nepld .tmp/linear-combination-inline\n"
+    cons paragraph
+      cons sentence cons code "--css external" cons text " は" cons ruby text "既定" text "きてい" cons text "の" cons ruby text "方式" text "ほうしき" cons text "を" cons ruby text "明示" text "めいじ" cons text "する。" nil
+      cons sentence cons code "--css inline" cons text " は" cons ruby text "固定" text "こてい" cons text "CSS" cons ruby text "全体" text "ぜんたい" cons text "をHTMLへ" cons ruby text "内包" text "ないほう" cons text "し、CSPのハッシュで" cons ruby text "許可" text "きょか" cons text "する。" nil
+      cons "manifestは[方式/ほうしき]、[実際/じっさい]のファイル[一覧/いちらん]、CSSのハッシュとライセンスを[記録/きろく]する。"
+      cons "[閲覧時/えつらんじ]はHTML[単体/たんたい]を[配布/はいふ]できる。"
+      cons "[複数文書/ふくすうぶんしょ]でCSSを[共有/きょうゆう]する[場合/ばあい]は[外部/がいぶ]CSS[方式/ほうしき]を[使用/しよう]する。" nil
+    cons paragraph
+      cons "Docの[本文/ほんぶん]はKlee Oneの400・600をGoogle Fontsから[読/よ]み[込/こ]む。"
+      cons "フォントファイルは[出力/しゅつりょく]へ[同梱/どうこん]しない。"
+      cons "ネットワークを[使用/しよう]できない[場合/ばあい]は、システムの[代替/だいたい]フォントで[表示/ひょうじ]する。"
+      cons "[外部/がいぶ]CSS・HTML[内包/ないほう]の[両方式/りょうほうしき]で、CSPはfonts.googleapis.comのスタイルシートとfonts.gstatic.comのフォントだけを[追加許可/ついかきょか]する。"
+      cons "[閲覧時/えつらんじ]にこれらの[配信元/はいしんもと]への[要求/ようきゅう]が[発生/はっせい]する。" nil
+    cons paragraph
+      cons "ブラウザー[検証/けんしょう]は、375px・1280pxでの[外部/がいぶ]CSS・[内包/ないほう]CSS・[複製/ふくせい]HTMLの[表示比較/ひょうじひかく]、オフラインの[代替/だいたい]フォント、Google Fontsの[実際/じっさい]の[読/よ]み[込/こ]みを[含/ふく]む。"
+      cons sentence cons ruby text "画像" text "がぞう" cons text "は" cons code "dist/doc-browser/export-modes/" cons text "へ" cons ruby text "出力" text "しゅつりょく" cons text "する。" nil
+      cons "サイト[全体/ぜんたい]の[検証/けんしょう]ではGoogle Fontsの[応答/おうとう]を[空/から]のCSSへ[置換/ちかん]し、[代替/だいたい]フォントによる[表示/ひょうじ]を[検査/けんさ]する。" nil
+    cons paragraph
       cons "[数式/すうしき]・[外部/がいぶ]ページ・[画像等/がぞうとう]の[解決/かいけつ]はまだこのlocal[入口/いりぐち]の[対象外/たいしょうがい]で、[必要/ひつよう]な[場合/ばあい]は[生成/せいせい]を[拒否/きょひ]します。"
       cons "[正式文書/せいしきぶんしょ]の[正本切替/せいほんきりかえ]とPages[公開/こうかい]は、リンク・[意味同等性/いみどうとうせい]・[配布検査/はいふけんさ]を[含/ふく]む[別/べつ]の[工程/こうてい]です。"
       cons sentence cons ruby text "契約" text "けいやく" cons text "は " cons link relative "spec/20-doc-html.md" none concat cons text "20" cons ruby text "章" text "しょう" nil cons text " を" cons ruby text "参照" text "さんしょう" cons text "してください。" nil nil
     cons paragraph
-      cons sentence cons link relative "../.github/workflows/ci.yml" none text "CI workflow" cons text " はpush・pull request・" cons ruby text "手動実行" text "しゅどうじっこう" cons text "で" cons ruby text "起動" text "きどう" cons text "し、Linux・Windows・macOSで" cons ruby text "上記" text "じょうき" cons text "のRust" cons ruby text "検査" text "けんさ" cons text "とリポジトリ" cons ruby text "検査" text "けんさ" cons text "を" cons ruby text "実行" text "じっこう" cons text "します。" nil
+      cons sentence cons link relative "../.github/workflows/ci.yml" none text "CI workflow" cons text " はmainへのpush・pull request・" cons ruby text "手動実行" text "しゅどうじっこう" cons text "で" cons ruby text "起動" text "きどう" cons text "します。" nil
+      cons "feature branchのpushとPR[更新/こうしん]による[全/ぜん]workflowの[二重実行/にじゅうじっこう]を[避/さ]け、PRではGitHubのmerge refを[検査/けんさ]します。"
+      cons "PR[未作成/みさくせい]のcheckpointは[自動/じどう]CI[検証済/けんしょうず]みとは[扱/あつか]わず、[必要/ひつよう]なら[手動実行/しゅどうじっこう]します。"
+      cons "Rustのworkspace testとClippyはLinux・Windows・macOSで[実行/じっこう]し、fmt・rustdoc・allocation regression・[外部/がいぶ]consumer[全体/ぜんたい]・Doc[移行/いこう]とcanonical[生成/せいせい]はLinuxで[一度実行/いちどじっこう]します。"
+      cons "repository checkはrepository-contract jobへ[集約/しゅうやく]します。" nil
+    cons paragraph
+      cons "tag pushの[自動/じどう]CIも[維持/いじ]します。"
+      cons "CI[成功/せいこう]だけで[正式/せいしき]releaseや[公開確認済/こうかいかくにんず]みとは[扱/あつか]いません。" nil
+    cons paragraph
+      cons "siteの[全/ぜん]Python[試験/しけん]はLinuxのsite-publication jobで[実行/じっこう]します。"
+      cons "Windowsではjunction[拒否/きょひ]、Windows/macOSではstdinへ[渡/わた]す[引数/ひきすう]の[構築/こうちく]と[実/じつ]processの[強制終了/きょうせいしゅうりょう]・HTTP[通信/つうしん]と[期限/きげん]、macOSではsymlink[祖先/そせん]を[持/も]つtemporary rootの[回帰/かいき]だけを[追加実行/ついかじっこう]します。"
+      cons "stdinの[試験/しけん]はprocess[呼出/よびだ]しをmockして[渡/わた]す[値/ち]を[検査/けんさ]し、[実際/じっさい]のprocess[間転送/かんてんそう]の[証拠/しょうこ]とは[区別/くべつ]します。"
+      cons "[共通/きょうつう]のmanifest/hash/tar[検査/けんさ]をOSごとに[反復/はんぷく]しません。"
+      cons "evidence runnerのファイル・process[境界/きょうかい]は3 OSで[維持/いじ]します。" nil
+    cons paragraph
       cons "[文書/ぶんしょ]だけの[変更/へんこう]も[対象/たいしょう]です。"
-      cons sentence cons text "すべてのmatrix jobの" cons ruby text "成功" text "せいこう" cons text "を" cons ruby text "集約" text "しゅうやく" cons text "する" cons ruby text "固定名" text "こていめい" cons text " " cons code "quality" cons text " を、mainの" cons ruby text "必須" text "ひっす" cons text "status checkとして" cons ruby text "使用" text "しよう" cons text "します。" nil
-      cons "[失敗/しっぱい]・cancel・skipを[成功/せいこう]へ[読/よ]み[替/か]えません。" nil
+      cons sentence cons ruby text "固定名" text "こていめい" cons text " " cons code "quality" cons text " は" cons ruby text "引" text "ひ" cons text "き" cons ruby text "続" text "つづ" cons text "き" cons ruby text "全" text "ぜん" cons text "jobの" cons ruby text "成功" text "せいこう" cons text "を" cons ruby text "要求" text "ようきゅう" cons text "し、" cons ruby text "失敗" text "しっぱい" cons text "・cancel・skipを" cons ruby text "成功" text "せいこう" cons text "へ" cons ruby text "読" text "よ" cons text "み" cons ruby text "替" text "か" cons text "えません。" nil
+      cons "ブラウザ・Pulley・RP2040の[実行頻度変更/じっこうひんどへんこう]は、この[重複削減/ちょうふくさくげん]とは[別/べつ]に、[変更/へんこう]の[影響範囲/えいきょうはんい]とmainでの[拡張試験/かくちょうしけん]を[対応/たいおう]させて[設計/せっけい]します。" nil
     cons paragraph
-      cons sentence cons code "main" cons text " へのpushで " cons code "quality" cons text " が" cons ruby text "成功" text "せいこう" cons text "した" cons ruby text "後" text "あと" cons text "、" cons ruby text "同" text "おな" cons text "じcommit SHAのGit" cons ruby text "管理対象" text "かんりたいしょう" cons text "をsource archiveとしてActions artifactへ" cons ruby text "保存" text "ほぞん" cons text "します。" nil
-      cons "archiveにはLICENSE・[仕様/しよう]・schema・[文法/ぶんぽう]・[例/れい]・[開発/かいはつ]toolsが[入/はい]り、SHA-256とcommit[識別情報/しきべつじょうほう]を[添付/てんぷ]します。"
-      cons "[保存期間/ほぞんきかん]は30[日/にち]です。"
-      cons "これは[基盤整備段階/きばんせいびだんかい]の[継続的/けいぞくてき]な[成果物配布/せいかぶつはいふ]であり、[言語/げんご]runtimeのbinary releaseではありません。"
-      cons sentence cons code ".tmp/" cons text " はarchiveへ" cons ruby text "入" text "はい" cons text "りません。" nil nil
+      cons "[検査対象/けんさたいしょう]sourceはCI runのcommit SHAで[特定/とくてい]します。"
+      cons "[通常/つうじょう]のmain pushではsource tarを[別/べつ]artifactとして[再保存/さいほぞん]せず、Git checkoutまたはGitHubのcommit[指定/してい]source archiveを[使用/しよう]します。"
+      cons "[正式/せいしき]releaseで[同一/どういつ]の[配布/はいふ]byte[列/れつ]を[保全/ほぜん]する[必要/ひつよう]がある[場合/ばあい]は、そのreleaseの[成果物/せいかぶつ]として[扱/あつか]います。" nil
     cons paragraph
-      cons sentence cons text "source archiveは" cons ruby text "内容" text "ないよう" cons text "の" cons ruby text "参照" text "さんしょう" cons text "とbuildに" cons ruby text "使" text "つか" cons text "うsnapshotで、" cons code ".git/" cons text " は" cons ruby text "含" text "ふく" cons text "みません。" nil
-      cons sentence cons code "nepl3-tools check" cons text " はGit" cons ruby text "管理対象" text "かんりたいしょう" cons text "も" cons ruby text "検査" text "けんさ" cons text "するため、" cons ruby text "完全" text "かんぜん" cons text "なリポジトリ" cons ruby text "検査" text "けんさ" cons text "にはcloneしたcheckoutが" cons ruby text "必要" text "ひつよう" cons text "です。" nil
-      cons sentence cons text "artifact" cons ruby text "内" text "ない" cons text "の " cons code "SOURCE.txt" cons text " のcommit" cons ruby text "値" text "ち" cons text "を" cons ruby text "使" text "つか" cons text "って " cons code "git checkout <commit>" cons text " し、" cons ruby text "上記" text "じょうき" cons text "の" cons ruby text "検査" text "けんさ" cons text "を" cons ruby text "実行" text "じっこう" cons text "してください。" nil nil
+      cons sentence cons text "source archiveには " cons code ".git/" cons text " は" cons ruby text "含" text "ふく" cons text "まれません。" nil
+      cons sentence cons code "nepl3-tools check" cons text " の" cons ruby text "履歴" text "りれき" cons text "・Git" cons ruby text "管理対象検査" text "かんりたいしょうけんさ" cons text "にはcloneしたcheckoutが" cons ruby text "必要" text "ひつよう" cons text "です。" nil
+      cons sentence cons text "CI runのcommit SHAを" cons ruby text "使" text "つか" cons text "って " cons code "git checkout <commit>" cons text " し、" cons ruby text "上記" text "じょうき" cons text "の" cons ruby text "検査" text "けんさ" cons text "を" cons ruby text "実行" text "じっこう" cons text "してください。" nil
+      cons "GitHubの[再生成/さいせいせい]archiveは[同/おな]じcommitのファイル[内容/ないよう]を[参照/さんしょう]する[手段/しゅだん]であり、[圧縮/あっしゅく]byte[列/れつ]の[永続的同一性/えいぞくてきどういつせい]を[保証/ほしょう]するものではありません。" nil
     cons paragraph
       cons "Actionsの[権限/けんげん]は[読/よ]み[取/と]りに[限定/げんてい]し、checkoutにcredentialを[残/のこ]しません。"
       cons "[外部/がいぶ]actionはcommit SHAで[固定/こてい]し、DependabotがCargo[依存/いぞん]とActionsの[更新/こうしん]PRを[作成/さくせい]します。"
@@ -313,7 +345,7 @@ body
       cons "runtime releaseは[該当/がいとう]するconformanceの[実行証拠/じっこうしょうこ]がそろってから[設/もう]けます。" nil
     cons paragraph
       cons sentence cons text "Web/TEA/siteとDoc" cons ruby text "移行" text "いこう" cons text "の" cons ruby text "計画" text "けいかく" cons text "は " cons link relative "spec/14-web-ui.md" none concat cons text "14" cons ruby text "章" text "しょう" nil cons text "〜" cons link relative "spec/16-doc-migration.md" none concat cons text "16" cons ruby text "章" text "しょう" nil cons text " に" cons ruby text "従" text "したが" cons text "います。" nil
-      cons "[現在/げんざい]のCIはsource[配布/はいふ]を[維持/いじ]し、Pages[公開/こうかい]はT20の[実装/じっそう]・[受入後/うけいれご]です。"
+      cons "[現在/げんざい]のCIは[実装/じっそう]と[生成物/せいせいぶつ]を[検査/けんさ]し、Pages[公開/こうかい]はT20の[公開前条件/こうかいまえじょうけん]を[満/み]たしてから[行/おこな]い、[公開後/こうかいご]の[試験/しけん]を[別/べつ]に[記録/きろく]します。"
       cons "T21は[初回公開/しょかいこうかい]とは[別/べつ]に[最終完了/さいしゅうかんりょう]へ[必須/ひっす]で、[移行前/いこうまえ]はMarkdownを[正本/せいほん]とします。" nil
     cons paragraph
       cons sentence cons text "Pagesの" cons ruby text "実装" text "じっそう" cons text "では、" cons ruby text "公開後" text "こうかいご" cons text "smokeが" cons ruby text "失敗" text "しっぱい" cons text "したcandidateに" cons ruby text "対" text "たい" cons text "して " cons link relative "spec/15-site.md" none concat cons text "15" cons ruby text "章" text "しょう" cons text "の" cons ruby text "復旧契約" text "ふっきゅうけいやく" nil cons text " を" cons ruby text "実行" text "じっこう" cons text "します。" nil

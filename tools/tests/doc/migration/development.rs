@@ -81,9 +81,9 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 }
             }
             assert_eq!(actual_wasi, [wasi]);
-            // Deliberately a subset: the missing four fenced blocks, prose,
+            // Deliberately a subset: the missing three fenced blocks, prose,
             // headings and link closure still block a complete migration.
-            assert_eq!((expected.len(), actual.len()), (13, 9));
+            assert_eq!((expected.len(), actual.len()), (13, 10));
             for value in actual {
                 let index = expected
                     .iter()
@@ -91,18 +91,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                     .ok_or_else(|| format!("draft command differs from source: {value:?}"))?;
                 expected.remove(index);
             }
-            assert_eq!(expected.len(), 4);
-            let branch_node = document.value.nodes.iter().position(|node| {
-                matches!(&node.kind, DocKind::Section { id, .. } if id == "branchIntegration")
-            }).ok_or("branch integration section missing")?;
-            let heading = "## branchとPRの統合手順";
-            let (_, rest) = original
-                .split_once(heading)
-                .ok_or("source branch heading")?;
-            let (body, _) = rest
-                .split_once("\n## 実装と独立レビュー")
-                .ok_or("source branch section end")?;
-            let expected_branch = markdown_blocks(&format!("{heading}{body}"));
+            assert_eq!(expected.len(), 3);
             let mut b = budget();
             let prepared =
                 text::prepare(&document, profile.registry(), &mut codec, &mut b).map_err(err)?;
@@ -112,16 +101,28 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 .outcome
             {
                 text::PlainTextOutcome::Complete { text } => Ok(text),
-                other => Err(format!("incomplete branch text: {other:?}")),
+                other => Err(format!("incomplete section text: {other:?}")),
             };
-            let mut actual_branch = Vec::new();
-            blocks(
-                &document,
-                branch_node as u64,
-                &mut project,
-                &mut actual_branch,
-            )?;
-            assert_eq!(actual_branch, expected_branch);
+            // Ordered base text only: heading ranks, Ruby, URLs and sentence
+            // boundaries additionally require independent content review.
+            for (id, heading, end) in [
+                (
+                    "branchIntegration",
+                    "## branchとPRの統合手順",
+                    "\n## 実装と独立レビュー",
+                ),
+                ("distribution", "## CIと配布", "\n## branchとPRの統合手順"),
+            ] {
+                let node = document.value.nodes.iter().position(|node| {
+                    matches!(&node.kind, DocKind::Section { id: actual, .. } if actual == id)
+                }).ok_or_else(|| format!("draft section missing: {id}"))?;
+                let (_, rest) = original.split_once(heading).ok_or("source heading")?;
+                let (body, _) = rest.split_once(end).ok_or("source section end")?;
+                let expected_section = markdown_blocks(&format!("{heading}{body}"));
+                let mut actual_section = Vec::new();
+                blocks(&document, node as u64, &mut project, &mut actual_section)?;
+                assert_eq!(actual_section, expected_section, "section {id}");
+            }
             Ok(())
         },
     )?;
