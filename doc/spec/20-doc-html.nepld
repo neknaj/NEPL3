@@ -342,6 +342,24 @@ body
         cons variant en "External SVG artifact routing and packaging, typed Sentence PageSet host integration and portable proof remain outside this API."
         nil
       nil
+    cons paragraph
+      cons parallel
+        cons variant ja "[別/べつ]のprepare_externalは、[同/おな]じ[検証/けんしょう]を[通過/つうか]した[正確/せいかく]なpage・memberごとのSVG[束縛/そくばく]を、[不変/ふへん]byte[列/れつ]への[参照/さんしょう]と[型付/かたつ]き[準備結果/じゅんびけっか]として[保持/ほじ]する。"
+        cons variant en "The separate prepare_external entry retains each exact page/member SVG binding that passed the same checks as immutable borrowed bytes alongside typed prepared pages."
+        nil
+      cons parallel
+        cons variant ja "pathは[各/かく]pageからの[相対/そうたい]assets/<digest>.svgであり、package rootからのrouteではない。"
+        cons variant en "Each path is assets/<digest>.svg relative to its page, not a route from the package root."
+        nil
+      cons parallel
+        cons variant ja "[非表示/ひひょうじ]のmemberも[検証/けんしょう]し、[同/おな]じbyte[列/れつ]の[束縛/そくばく]を[省略/しょうりゃく]せず、[証拠/しょうこ]の[収集/しゅうしゅう]も[同/おな]じBudgetへ[課金/かきん]する。"
+        cons variant en "Hidden members are checked, equal-byte bindings are not omitted, and evidence collection is charged to the same Budget."
+        nil
+      cons parallel
+        cons variant ja "[梱包/こんぽう]・routeの[配置/はいち]・[衝突検査/しょうとつけんさ]・[物理/ぶつり]file[出力/しゅつりょく]・CLIへの[接続/せつぞく]は[別/べつ]の[段階/だんかい]であり、この[準備結果/じゅんびけっか]を[出力完了/しゅつりょくかんりょう]やportable proofと[扱/あつか]わない。"
+        cons variant en "Packaging, route placement, collision checks, physical file output and CLI integration are separate stages; this prepared result is neither emitted completion nor portable proof."
+        nil
+      nil
     nil
   cons section code_highlight "埋め込みコードの共有highlight"
     body

@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/20&#45;doc&#45;html.nepld; renderer nepl3-tools.markdown-annotated/4; source SHA-256 b9ec3c6950f8b7018337ea80f1194a636c4f03bce068978f294b4b94f9eeabe6; alias input SHA-256 a89d4b749408c5f6e9ccc8ed5749c8203bf1a66d788d81725b0d44b7af3c82d5. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/20&#45;doc&#45;html.nepld; renderer nepl3-tools.markdown-annotated/4; source SHA-256 8b0a43fe34f1f0e1f37141947e01a26d8c0f5c72baaa8037952ba2fca9963bd9; alias input SHA-256 a89d4b749408c5f6e9ccc8ed5749c8203bf1a66d788d81725b0d44b7af3c82d5. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="20-docのhtml変換"></a>
 
@@ -215,6 +215,90 @@ Existing asset\-free entries and CLIs remain unchanged\.
 **en**
 
 External SVG artifact routing and packaging\, typed Sentence PageSet host integration and portable proof remain outside this API\.
+
+</div>
+
+</div>
+
+</div>
+
+<div class="nepl-paragraph">
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>別<rt>べつ</rt></ruby>のprepare\_externalは、<ruby>同<rt>おな</rt></ruby>じ<ruby>検証<rt>けんしょう</rt></ruby>を<ruby>通過<rt>つうか</rt></ruby>した<ruby>正確<rt>せいかく</rt></ruby>なpage・memberごとのSVG<ruby>束縛<rt>そくばく</rt></ruby>を、<ruby>不変<rt>ふへん</rt></ruby>byte<ruby>列<rt>れつ</rt></ruby>への<ruby>参照<rt>さんしょう</rt></ruby>と<ruby>型付<rt>かたつ</rt></ruby>き<ruby>準備結果<rt>じゅんびけっか</rt></ruby>として<ruby>保持<rt>ほじ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The separate prepare\_external entry retains each exact page\/member SVG binding that passed the same checks as immutable borrowed bytes alongside typed prepared pages\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+pathは<ruby>各<rt>かく</rt></ruby>pageからの<ruby>相対<rt>そうたい</rt></ruby>assets\/\<digest\>\.svgであり、package rootからのrouteではない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Each path is assets\/\<digest\>\.svg relative to its page\, not a route from the package root\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>非表示<rt>ひひょうじ</rt></ruby>のmemberも<ruby>検証<rt>けんしょう</rt></ruby>し、<ruby>同<rt>おな</rt></ruby>じbyte<ruby>列<rt>れつ</rt></ruby>の<ruby>束縛<rt>そくばく</rt></ruby>を<ruby>省略<rt>しょうりゃく</rt></ruby>せず、<ruby>証拠<rt>しょうこ</rt></ruby>の<ruby>収集<rt>しゅうしゅう</rt></ruby>も<ruby>同<rt>おな</rt></ruby>じBudgetへ<ruby>課金<rt>かきん</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Hidden members are checked\, equal\-byte bindings are not omitted\, and evidence collection is charged to the same Budget\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>梱包<rt>こんぽう</rt></ruby>・routeの<ruby>配置<rt>はいち</rt></ruby>・<ruby>衝突検査<rt>しょうとつけんさ</rt></ruby>・<ruby>物理<rt>ぶつり</rt></ruby>file<ruby>出力<rt>しゅつりょく</rt></ruby>・CLIへの<ruby>接続<rt>せつぞく</rt></ruby>は<ruby>別<rt>べつ</rt></ruby>の<ruby>段階<rt>だんかい</rt></ruby>であり、この<ruby>準備結果<rt>じゅんびけっか</rt></ruby>を<ruby>出力完了<rt>しゅつりょくかんりょう</rt></ruby>やportable proofと<ruby>扱<rt>あつか</rt></ruby>わない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Packaging\, route placement\, collision checks\, physical file output and CLI integration are separate stages\; this prepared result is neither emitted completion nor portable proof\.
 
 </div>
 
