@@ -23,6 +23,7 @@ const CLASSES: &[&str] = &[
     "nepl-align-center",
     "nepl-align-right",
     "nepl-checkbox",
+    "nepl-table-scroll",
     "nepl-image",
     "nepl-image-group",
     "nepl-image-figure",

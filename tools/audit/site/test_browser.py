@@ -83,6 +83,18 @@ class BrowserTests(unittest.TestCase):
         self.assertEqual(len(cases), 6)
         self.assertTrue(all(row.fragment_targets == 2 for row in cases))
 
+    def test_wide_table_scrolls_inside_viewport_without_losing_content(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            site(root, content='<article class="nepl-doc">'
+                 + '<div class="nepl-table-scroll" style="max-width:100%;min-width:0;overflow-x:auto">'
+                 + '<table style="width:1600px"><thead><tr><th scope="col">Header</th></tr></thead>'
+                 + '<tbody><tr><td>Long annotated table content remains available</td></tr></tbody>'
+                 + '</table></div></article>')
+            cases = observe(root, '/NEPL3/', ('index.html',), ())
+        self.assertEqual(len(cases), 6)
+        self.assertTrue(all(not row.state.overflow for row in cases))
+
     def test_script_overflow_styles_and_example_mismatch_fail(self) -> None:
         scenarios = (('empty-fragment', '<span id=""></span>', True, 'hello 世界\n'),
                      ('script', '<script>0</script>', True, 'hello 世界\n'),

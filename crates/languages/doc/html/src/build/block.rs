@@ -121,7 +121,11 @@ impl Builder<'_, '_> {
                 header,
                 rows,
             } => {
-                let table = self.element(Some(parent), node, HtmlTag::Table)?;
+                // Preserve the native table/header/cell structure while giving
+                // wide annotated content its own bounded horizontal scrollport.
+                let scroll = self.element(Some(parent), node, HtmlTag::Div)?;
+                self.class(scroll, "nepl-table-scroll")?;
+                let table = self.element(Some(scroll), node, HtmlTag::Table)?;
                 let start = self.jobs.len();
                 if let Some(header) = header {
                     let head = self.element(Some(table), node, HtmlTag::Thead)?;
