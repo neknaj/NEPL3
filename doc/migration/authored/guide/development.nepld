@@ -105,7 +105,7 @@ body
       cons "これは[静的/せいてき]HTMLの[検査/けんさ]であり、Wasm[実行/じっこう]や[支援技術/しえんぎじゅつ]の[操作試験/そうさしけん]ではありません。"
       cons "runner[不在/ふざい]・[例/れい]の[欠落/けつらく]・[配置不一致/はいちふいっち]は[失敗/しっぱい]となり、quality jobも[失敗/しっぱい]します。"
       nil
-    cons rawcode some "sh" "python -m pip install -r tools/audit/doc_html/requirements.txt\npython -m playwright install chromium firefox webkit\nmkdir -p dist/doc-browser\ncargo test --locked -p nepl3-tools --test doc html::browser_layout_corpus_from_real_doc_source -- --exact --nocapture > dist/doc-browser/corpus.log\npython tools/audit/doc_html/browser.py --corpus dist/doc-browser/corpus.log --css crates/languages/doc/html/assets/doc.css --output dist/doc-browser/results.json\n"
+    cons rawcode some "sh" "python -m pip install -r tools/audit/doc_html/requirements.txt\npython -m playwright install chromium firefox webkit\nmkdir -p dist/doc-browser\ncargo test --locked -p nepl3-tools --test doc html::browser_layout_corpus_from_real_doc_source -- --exact --nocapture > dist/doc-browser/corpus.log\npython tools/audit/doc_html/browser.py --corpus dist/doc-browser/corpus.log --css crates/languages/doc/html/assets/doc.css --output dist/doc-browser/results.json\ncargo build --locked -p nepl3-tools\npython tools/audit/doc_html/export.py target/debug/nepl3-tools dist/doc-browser/export-modes\n"
     cons paragraph
       cons sentence
         cons text "Linuxではbrowser"
@@ -203,7 +203,7 @@ body
       cons "P1/P2はproduction reader/engineで[同/おな]じsourceを[読/よ]み[直/なお]して[比較/ひかく]します。" nil
     cons paragraph
       cons "CIのWASI jobはSHA-256を[固定/こてい]したWasmtime 44.0.1で[実装済/じっそうず]みcoreの[実試験/じつしけん]を[実行/じっこう]し、browser[向/む]けWasmのcompileも[行/おこな]います。"
-      cons sentence cons text "ローカルでは " cons code "CARGO_TARGET_WASM32_WASIP2_RUNNER" cons text " を " cons code "wasmtime run" cons text " とし、" cons code "cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup --target wasm32-wasip2 -- --test-threads=1" cons text " を" cons ruby text "実行" text "じっこう" cons text "します。" nil
+      cons sentence cons text "ローカルでは " cons code "CARGO_TARGET_WASM32_WASIP2_RUNNER" cons text " を " cons code "wasmtime run" cons text " とし、" cons code "cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html --target wasm32-wasip2 -- --test-threads=1" cons text " を" cons ruby text "実行" text "じっこう" cons text "します。" nil
       cons "browser targetのcompile[成功/せいこう]はブラウザ[上/じょう]の[実行/じっこう]・[描画試験/びょうがしけん]を[意味/いみ]しません。" nil
     cons paragraph
       cons "Binding の fixture と Python seed adapter の[一致確認/いっちかくにん]は[子/こ]processを[起動/きどう]する native host [専用試験/せんようしけん]です。"
@@ -236,7 +236,7 @@ body
       cons sentence cons ruby text "必須群" text "ひっすぐん" cons text "・targetは " cons link relative "../design/acceptance.json" none text "design/acceptance.json" cons text "、" cons ruby text "形式" text "けいしき" cons text "は " cons link relative "../interfaces/acceptance-evidence.schema.json" none concat cons ruby text "証拠" text "しょうこ" cons text "schema" nil cons text " に" cons ruby text "従" text "したが" cons text "います。" nil
       cons "scope[付/つ]きTaskEvidenceを[群全体/ぐんぜんたい]の[成功証拠/せいこうしょうこ]として[流用/りゅうよう]しません。"
       cons "[現在/げんざい]の[入力/にゅうりょく]identityは[次/つぎ]の[操作/そうさ]で[取得/しゅとく]します。" nil
-    cons rawcode some "sh" "cargo run --locked -p nepl3-tools -- evidence identity\n"
+    cons rawcode some "sh" "cargo run --locked -p nepl3-tools -- evidence identity\ncargo run --locked -p nepl3-tools -- evidence identity --commit <40-hex-commit>\n"
     cons paragraph
       cons sentence cons text "identity profileは " cons code "nepl3.repository-inputs/1" cons text " です。" nil
       cons "Gitから[見/み]える[非/ひ]ignoreファイルをpathのUTF-8 byte[順/じゅん]で[並/なら]べ、implementation-status.json、conformance/results/、[生成/せいせい]tasks/を[除外/じょがい]します。"
