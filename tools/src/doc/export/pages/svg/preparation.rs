@@ -12,7 +12,7 @@ use crate::doc::{
 };
 use nepl3_core::budget::{Limits, StopReason, Usage};
 use nepl3_doc_core::model::DocumentSyntax;
-use nepl3_doc_html::RenderOptions;
+use nepl3_doc_html::{RenderOptions, assets::SvgMode};
 use std::path::Path;
 
 /// Frozen selection and raw assets. These are not SVG validation evidence.
@@ -20,6 +20,7 @@ pub struct Frozen {
     assets: Vec<OwnedBinding>,
     options: RenderOptions,
     renderer: MathRenderer,
+    mode: SvgMode,
     output: OperationLimits,
 }
 /// An ordered page binding; an empty binding remains observable.
@@ -37,6 +38,10 @@ impl Frozen {
     }
     pub fn renderer(&self) -> MathRenderer {
         self.renderer
+    }
+    /// Immutable SVG representation selected when input bytes were captured.
+    pub fn svg_mode(&self) -> SvgMode {
+        self.mode
     }
     pub fn output_limits(&self) -> OperationLimits {
         self.output
@@ -112,6 +117,41 @@ impl<'c> Preparation<'c> {
         limits: Limits,
         code_limits: OperationLimits,
     ) -> Result<Self, String> {
+        Self::capture_mode(
+            compiled,
+            manifest,
+            renderer,
+            SvgMode::Embedded,
+            limits,
+            code_limits,
+        )
+    }
+    /// Capture an external-SVG job. Representation stays fixed across all
+    /// preparation and render grants; capture itself does not admit SVG bytes.
+    pub fn capture_external(
+        compiled: &'c Compiled,
+        manifest: &Path,
+        renderer: MathRenderer,
+        limits: Limits,
+        code_limits: OperationLimits,
+    ) -> Result<Self, String> {
+        Self::capture_mode(
+            compiled,
+            manifest,
+            renderer,
+            SvgMode::External,
+            limits,
+            code_limits,
+        )
+    }
+    fn capture_mode(
+        compiled: &'c Compiled,
+        manifest: &Path,
+        renderer: MathRenderer,
+        mode: SvgMode,
+        limits: Limits,
+        code_limits: OperationLimits,
+    ) -> Result<Self, String> {
         let captured = input::capture(manifest)?;
         let phases = base::PreparationLimits {
             parse_limits: operation(captured.phases.parse),
@@ -119,7 +159,7 @@ impl<'c> Preparation<'c> {
             code_limits,
         };
         let output = captured.output;
-        Self::from_captured(compiled, captured, renderer, limits, phases, output)
+        Self::from_captured(compiled, captured, renderer, mode, limits, phases, output)
     }
     /// Explicit host selection for the interactive driver. Manifest allowance
     /// fields are still schema-validated, but selected phase/output caps win.
@@ -135,6 +175,7 @@ impl<'c> Preparation<'c> {
             compiled,
             input::capture(manifest)?,
             renderer,
+            SvgMode::Embedded,
             limits,
             phases,
             output,
@@ -144,6 +185,7 @@ impl<'c> Preparation<'c> {
         compiled: &'c Compiled,
         captured: input::Captured,
         renderer: MathRenderer,
+        mode: SvgMode,
         limits: Limits,
         phases: base::PreparationLimits,
         output: OperationLimits,
@@ -161,6 +203,7 @@ impl<'c> Preparation<'c> {
                 assets: captured.assets,
                 options: captured.options,
                 renderer,
+                mode,
                 output,
             },
         })

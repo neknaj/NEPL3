@@ -24,7 +24,8 @@ fn manifest() -> serde_json::Value {
         "assets":[{"page":"two","assets":[{"id":"logo","source":"image.svg","mime":"image/svg+xml"}]},{"page":"one","assets":[]}],
         "display":{"mode":"single","language":"fr","fallbacks":["ja"]}})
 }
-fn check_frozen(value: &Frozen) {
+fn check_frozen(value: &Frozen, mode: SvgMode) {
+    assert_eq!(value.svg_mode(), mode);
     assert!(matches!(value.renderer(), MathRenderer::KaTeXPreferred));
     assert!(
         matches!(value.options().parallel, nepl3_doc_html::ParallelMode::Single { ref language, ref fallbacks } if language == "fr" && fallbacks == &["ja"])
@@ -62,93 +63,98 @@ fn total(attempts: &[base::PageAttempt]) -> Usage {
 }
 #[test]
 fn svg_retained_preparation_keeps_inputs_selection_and_completed_pages() -> crate::Result<()> {
-    let c = compiled()?;
-    let f = fixture()?;
-    let capture = || {
-        Preparation::capture(
-            &c,
-            &f.root().join("manifest.json"),
-            MathRenderer::KaTeXPreferred,
-            budget().limits(),
-            OperationLimits::default(),
-        )
-    };
-    let Progress::Prepared(baseline) = capture()?.run() else {
-        return Err("baseline".into());
-    };
-    check_frozen(baseline.frozen());
-    let first = baseline.attempts()[0].stages[0].usage.source_bytes;
-    let second = baseline.attempts()[1].stages[0].usage.source_bytes;
-    assert!(second > first);
-    let mut phases = base::PreparationLimits::default();
-    phases.parse_limits.source_bytes = first;
-    let mut value = manifest();
-    value["parse_limits"] = serde_json::to_value(phases.parse_limits)?;
-    f.json("manifest.json", &value)?;
-    let Progress::Paused { job, .. } = capture()?.run() else {
-        return Err("pause second".into());
-    };
-    assert_eq!(job.prepared_count(), 1);
-    assert_eq!(job.reason(), StopReason::SourceLimit);
-    let profile = job.attempts()[0].stages[0].profile;
-    let consumed = job.usage();
-    assert_eq!(consumed, total(job.attempts()));
-    check_frozen(job.frozen());
-    // No subsequent attempt may reread any captured source, including page 1.
-    for file in [
-        "manifest.json",
-        "one.nepld",
-        "two.nepld",
-        "image.svg",
-        "passive.txt",
-    ] {
-        std::fs::remove_file(f.root().join(file))?;
+    for mode in [SvgMode::Embedded, SvgMode::External] {
+        let c = compiled()?;
+        let f = fixture()?;
+        let capture = || {
+            (match mode {
+                SvgMode::Embedded => Preparation::capture,
+                SvgMode::External => Preparation::capture_external,
+            })(
+                &c,
+                &f.root().join("manifest.json"),
+                MathRenderer::KaTeXPreferred,
+                budget().limits(),
+                OperationLimits::default(),
+            )
+        };
+        let Progress::Prepared(baseline) = capture()?.run() else {
+            return Err("baseline".into());
+        };
+        check_frozen(baseline.frozen(), mode);
+        let first = baseline.attempts()[0].stages[0].usage.source_bytes;
+        let second = baseline.attempts()[1].stages[0].usage.source_bytes;
+        assert!(second > first);
+        let mut phases = base::PreparationLimits::default();
+        phases.parse_limits.source_bytes = first;
+        let mut value = manifest();
+        value["parse_limits"] = serde_json::to_value(phases.parse_limits)?;
+        f.json("manifest.json", &value)?;
+        let Progress::Paused { job, .. } = capture()?.run() else {
+            return Err("pause second".into());
+        };
+        assert_eq!(job.prepared_count(), 1);
+        assert_eq!(job.reason(), StopReason::SourceLimit);
+        let profile = job.attempts()[0].stages[0].profile;
+        let consumed = job.usage();
+        assert_eq!(consumed, total(job.attempts()));
+        check_frozen(job.frozen(), mode);
+        // No subsequent attempt may reread any captured source, including page 1.
+        for file in [
+            "manifest.json",
+            "one.nepld",
+            "two.nepld",
+            "image.svg",
+            "passive.txt",
+        ] {
+            std::fs::remove_file(f.root().join(file))?;
+        }
+        let Progress::Paused { job, .. } = job
+            .resume(budget().limits(), phases)
+            .map_err(|_| "same grant")?
+            .run()
+        else {
+            return Err("same pause".into());
+        };
+        // Source admission can stop before any measured Work; no refund is allowed.
+        assert!(job.usage().work >= consumed.work);
+        check_frozen(job.frozen(), mode);
+        let prior = job.usage();
+        let mut smaller = phases;
+        smaller.code_limits.work -= 1;
+        let job = job
+            .resume(budget().limits(), smaller)
+            .err()
+            .ok_or("reject shrink")?
+            .into_paused();
+        assert_eq!(job.usage(), prior);
+        check_frozen(job.frozen(), mode);
+        phases.parse_limits.source_bytes = second;
+        let Progress::Prepared(ready) = job
+            .resume(budget().limits(), phases)
+            .map_err(|_| "grow")?
+            .run()
+        else {
+            return Err("ready".into());
+        };
+        assert_eq!(ready.prepared_count(), 2);
+        assert_eq!(
+            ready
+                .attempts()
+                .iter()
+                .map(|a| a.page_index)
+                .collect::<Vec<_>>(),
+            [0, 1, 1, 1]
+        );
+        assert_eq!(ready.attempts()[0].stages[0].profile, profile);
+        assert_eq!(
+            ready.documents().collect::<Vec<_>>(),
+            baseline.documents().collect::<Vec<_>>()
+        );
+        assert_eq!(ready.usage(), total(ready.attempts()));
+        check_frozen(ready.frozen(), mode);
+        // The malformed raw SVG is deliberately retained: Prepared is not admission.
     }
-    let Progress::Paused { job, .. } = job
-        .resume(budget().limits(), phases)
-        .map_err(|_| "same grant")?
-        .run()
-    else {
-        return Err("same pause".into());
-    };
-    // Source admission can stop before any measured Work; no refund is allowed.
-    assert!(job.usage().work >= consumed.work);
-    check_frozen(job.frozen());
-    let prior = job.usage();
-    let mut smaller = phases;
-    smaller.code_limits.work -= 1;
-    let job = job
-        .resume(budget().limits(), smaller)
-        .err()
-        .ok_or("reject shrink")?
-        .into_paused();
-    assert_eq!(job.usage(), prior);
-    check_frozen(job.frozen());
-    phases.parse_limits.source_bytes = second;
-    let Progress::Prepared(ready) = job
-        .resume(budget().limits(), phases)
-        .map_err(|_| "grow")?
-        .run()
-    else {
-        return Err("ready".into());
-    };
-    assert_eq!(ready.prepared_count(), 2);
-    assert_eq!(
-        ready
-            .attempts()
-            .iter()
-            .map(|a| a.page_index)
-            .collect::<Vec<_>>(),
-        [0, 1, 1, 1]
-    );
-    assert_eq!(ready.attempts()[0].stages[0].profile, profile);
-    assert_eq!(
-        ready.documents().collect::<Vec<_>>(),
-        baseline.documents().collect::<Vec<_>>()
-    );
-    assert_eq!(ready.usage(), total(ready.attempts()));
-    check_frozen(ready.frozen());
-    // The malformed raw SVG is deliberately retained: Prepared is not admission.
     Ok(())
 }
 #[test]
@@ -279,7 +285,7 @@ fn svg_retained_preparation_rejects_every_shrunk_dimension_without_loss() -> cra
             assert_eq!(job.usage(), usage);
             assert_eq!(format!("{:?}", job.attempts()), attempts);
             assert_eq!(job.reason(), StopReason::SourceLimit);
-            check_frozen(job.frozen());
+            check_frozen(job.frozen(), SvgMode::Embedded);
         }
     }
     let Progress::Prepared(ready) = job
@@ -289,7 +295,7 @@ fn svg_retained_preparation_rejects_every_shrunk_dimension_without_loss() -> cra
     else {
         return Err("ready after rejection".into());
     };
-    check_frozen(ready.frozen());
+    check_frozen(ready.frozen(), SvgMode::Embedded);
     assert_eq!(ready.usage(), total(ready.attempts()));
     Ok(())
 }

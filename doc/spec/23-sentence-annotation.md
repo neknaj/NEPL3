@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 ac319b7abb3a954485d9af8860d5c0bbad6ded1a2669b524c914ac6c05ca6acb; alias input SHA-256 cc4a36e6b25ea785bd3d5b9438d0abbd52863bd5264f639714a1531f5c479631; page input SHA-256 be08167dcc75365c70f1dc74d62bc6a2d1634e063de5753809991d84cd1cda52. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/23&#45;sentence&#45;annotation.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page sentence&#45;annotation; source SHA-256 66b7806d31336c5bb09659841cf81bf469366a4fdcfd5b79d9f5d84b3045ed50; alias input SHA-256 cc4a36e6b25ea785bd3d5b9438d0abbd52863bd5264f639714a1531f5c479631; page input SHA-256 141bec687601ae3dfb57149dca1f2da7bbd3560d610d1f33d57ddab90806251c. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="23-構造化文章と対象付き注釈への是正"></a>
 
@@ -1703,7 +1703,7 @@ With valid options\, an existing destination is rejected before capture\; files 
 
 **ja**
 
-\-\-interactive\-limitsの<ruby>経路<rt>けいろ</rt></ruby>は\-\-svgを<ruby>受理<rt>じゅり</rt></ruby>せず<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みのままであり、<ruby>外部<rt>がいぶ</rt></ruby>SVGの<ruby>保持<rt>ほじ</rt></ruby>retry・<ruby>永続復元<rt>えいぞくふくげん</rt></ruby>・<ruby>全体<rt>ぜんたい</rt></ruby><ruby>受入<rt>うけいれ</rt></ruby>はこの<ruby>接続<rt>せつぞく</rt></ruby>の<ruby>完成<rt>かんせい</rt></ruby>から<ruby>推定<rt>すいてい</rt></ruby>しない。
+\-\-interactive\-limitsの<ruby>経路<rt>けいろ</rt></ruby>は\-\-svgを<ruby>受理<rt>じゅり</rt></ruby>せず<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みのままであり、<ruby>外部<rt>がいぶ</rt></ruby>SVGの<ruby>保持<rt>ほじ</rt></ruby>retryは<ruby>別<rt>べつ</rt></ruby>のnative APIであり、<ruby>永続復元<rt>えいぞくふくげん</rt></ruby>や<ruby>全体<rt>ぜんたい</rt></ruby><ruby>受入<rt>うけいれ</rt></ruby>はこの<ruby>接続<rt>せつぞく</rt></ruby>の<ruby>完成<rt>かんせい</rt></ruby>から<ruby>推定<rt>すいてい</rt></ruby>しない。
 
 </div>
 
@@ -1711,7 +1711,7 @@ With valid options\, an existing destination is rejected before capture\; files 
 
 **en**
 
-The \-\-interactive\-limits path does not accept \-\-svg and remains embedded\-only\; retained external retry\, durable restoration and overall acceptance do not follow from this source CLI connection\.
+The \-\-interactive\-limits path does not accept \-\-svg and remains embedded\-only\; retained external retry is a separate native API\, and durable restoration or overall acceptance does not follow from this source CLI connection\.
 
 </div>
 
@@ -2028,7 +2028,7 @@ Package native evidence describes only the final successful attempt\, native out
 
 **ja**
 
-filesとmanifestは<ruby>成功後<rt>せいこうご</rt></ruby>にmemory<ruby>内<rt>ない</rt></ruby>へ<ruby>返<rt>かえ</rt></ruby>し、<ruby>公開<rt>こうかい</rt></ruby>・CLI<ruby>対話<rt>たいわ</rt></ruby><ruby>再開<rt>さいかい</rt></ruby>・<ruby>永続的<rt>えいぞくてき</rt></ruby>な<ruby>復元<rt>ふくげん</rt></ruby>・<ruby>外部<rt>がいぶ</rt></ruby>SVG<ruby>包装<rt>ほうそう</rt></ruby>はこのAPIに<ruby>含<rt>ふく</rt></ruby>めず、portable proofとも<ruby>扱<rt>あつか</rt></ruby>わない。
+filesとmanifestは<ruby>成功後<rt>せいこうご</rt></ruby>にmemory<ruby>内<rt>ない</rt></ruby>へ<ruby>返<rt>かえ</rt></ruby>し、<ruby>公開<rt>こうかい</rt></ruby>・CLI<ruby>対話<rt>たいわ</rt></ruby><ruby>再開<rt>さいかい</rt></ruby>・<ruby>永続的<rt>えいぞくてき</rt></ruby>な<ruby>復元<rt>ふくげん</rt></ruby>はこのAPIに<ruby>含<rt>ふく</rt></ruby>めず、portable proofとも<ruby>扱<rt>あつか</rt></ruby>わない。
 
 </div>
 
@@ -2036,7 +2036,135 @@ filesとmanifestは<ruby>成功後<rt>せいこうご</rt></ruby>にmemory<ruby>
 
 **en**
 
-Files and manifest are returned in memory only after success\; publication\, interactive CLI resume\, durable restoration and external SVG packaging are outside this API\, and it is not a portable proof\.
+Files and manifest are returned in memory only after success\; publication\, interactive CLI resume and durable restoration are outside this API\, and it is not a portable proof\.
+
+</div>
+
+</div>
+
+</div>
+
+<a name="n-73766745787465726e616c5265747279"></a>
+
+### <ruby>外部<rt>がいぶ</rt></ruby>SVGの<ruby>保持<rt>ほじ</rt></ruby><ruby>再試行<rt>さいしこう</rt></ruby> \/ Retained external SVG retry
+
+<div class="nepl-paragraph">
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+nativeのPreparation\:\:capture\_externalは<ruby>外部<rt>がいぶ</rt></ruby>SVG<ruby>方式<rt>ほうしき</rt></ruby>を<ruby>捕捉時<rt>ほそくじ</rt></ruby>に<ruby>固定<rt>こてい</rt></ruby>し、<ruby>既存<rt>きそん</rt></ruby>のcaptureと<ruby>対話<rt>たいわ</rt></ruby>CLIは<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みを<ruby>保<rt>たも</rt></ruby>つ。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Native Preparation\:\:capture\_external fixes external SVG representation at capture\, while existing capture and the interactive CLI retain embedded output\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+Frozen\:\:svg\_modeは<ruby>読取<rt>よみと</rt></ruby>り<ruby>専用<rt>せんよう</rt></ruby>の<ruby>選択<rt>せんたく</rt></ruby>を<ruby>返<rt>かえ</rt></ruby>し、<ruby>準備<rt>じゅんび</rt></ruby>・<ruby>描画<rt>びょうが</rt></ruby>の<ruby>中断<rt>ちゅうだん</rt></ruby>と<ruby>再開拒否<rt>さいかいきょひ</rt></ruby>でもmodeを<ruby>保持<rt>ほじ</rt></ruby>して、<ruby>再開<rt>さいかい</rt></ruby><ruby>上限<rt>じょうげん</rt></ruby>から<ruby>差<rt>さ</rt></ruby>し<ruby>替<rt>か</rt></ruby>えない。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Frozen\:\:svg\_mode exposes read\-only selection\; preparation and render pauses or rejected grants preserve the mode\, and resume ceilings cannot replace it\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>捕捉済<rt>ほそくず</rt></ruby>みraw SVGは<ruby>準備済<rt>じゅんびず</rt></ruby>みDoc・Codeとともに<ruby>残<rt>のこ</rt></ruby>り、<ruby>元<rt>もと</rt></ruby>fileを<ruby>削除後<rt>さくじょご</rt></ruby>も<ruby>再読<rt>さいどく</rt></ruby>せず、<ruby>実際<rt>じっさい</rt></ruby>の<ruby>描画<rt>びょうが</rt></ruby><ruby>試行<rt>しこう</rt></ruby>で<ruby>入場<rt>にゅうじょう</rt></ruby>・<ruby>配置<rt>はいち</rt></ruby>・<ruby>衝突<rt>しょうとつ</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Captured raw SVG remains with prepared Doc and Code without rereading even deleted source files\; actual render attempts check admission\, placement and collisions\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>外部<rt>がいぶ</rt></ruby>modeは<ruby>通常<rt>つうじょう</rt></ruby>source<ruby>生成<rt>せいせい</rt></ruby>と<ruby>同<rt>おな</rt></ruby>じmode<ruby>束縛<rt>そくばく</rt></ruby>identityと<ruby>検証済<rt>けんしょうず</rt></ruby>みfile<ruby>証拠<rt>しょうこ</rt></ruby>を<ruby>使<rt>つか</rt></ruby>い、MathMLOnlyではpackage\/1、KaTeXPreferredでは<ruby>最終<rt>さいしゅう</rt></ruby><ruby>成功<rt>せいこう</rt></ruby><ruby>試行<rt>しこう</rt></ruby>のnative<ruby>結果<rt>けっか</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>むpackage\/2を<ruby>返<rt>かえ</rt></ruby>す。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+External mode uses the same mode\-bound identity and checked file evidence as ordinary source generation\, returning package\/1 for MathMLOnly or package\/2 with native outcomes from the final successful attempt for KaTeXPreferred\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+<ruby>外側<rt>そとがわ</rt></ruby>のsvg\-render\-job\/1は<ruby>変更<rt>へんこう</rt></ruby>せず、<ruby>内部<rt>ないぶ</rt></ruby>の<ruby>外部<rt>がいぶ</rt></ruby>packageを<ruby>含<rt>ふく</rt></ruby>む<ruby>全<rt>ぜん</rt></ruby>payloadをidentityへ<ruby>束縛<rt>そくばく</rt></ruby>し、<ruby>失敗<rt>しっぱい</rt></ruby><ruby>試行<rt>しこう</rt></ruby>の<ruby>消費量<rt>しょうひりょう</rt></ruby>を<ruby>返却<rt>へんきゃく</rt></ruby>せず<ruby>累積<rt>るいせき</rt></ruby>する。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+The outer svg\-render\-job\/1 format is unchanged and binds its complete payload\, including the nested external package\, into its identity\; resource consumption from failed attempts remains cumulative without refunds\.
+
+</div>
+
+</div>
+
+<div class="nepl-parallel">
+
+<div lang="ja">
+
+**ja**
+
+modeを<ruby>保持<rt>ほじ</rt></ruby>するhost containerは<ruby>従来<rt>じゅうらい</rt></ruby>どおり<ruby>測定外<rt>そくていがい</rt></ruby>であり、<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みのbytes・receipt・<ruby>課金<rt>かきん</rt></ruby>を<ruby>保<rt>たも</rt></ruby>ち、<ruby>外部<rt>がいぶ</rt></ruby>SVGの<ruby>対話<rt>たいわ</rt></ruby>CLI・<ruby>永続復元<rt>えいぞくふくげん</rt></ruby>・<ruby>全体<rt>ぜんたい</rt></ruby><ruby>受入<rt>うけいれ</rt></ruby>はこのAPIの<ruby>範囲外<rt>はんいがい</rt></ruby>とする。
+
+</div>
+
+<div lang="en">
+
+**en**
+
+Mode\-retaining host containers remain outside measurement\; embedded bytes\, receipts and charges are preserved\, while external SVG interactive CLI\, durable restoration and overall acceptance remain outside this API\.
 
 </div>
 

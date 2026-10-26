@@ -142,6 +142,12 @@ pub(super) struct Context<'a> {
 pub(super) fn render_prepared(context: Context<'_>, b: &mut Budget) -> Result<Generated, String> {
     render_prepared_selected(context, SvgMode::Embedded, b)
 }
+pub(super) fn render_prepared_external(
+    context: Context<'_>,
+    b: &mut Budget,
+) -> Result<Generated, String> {
+    render_prepared_selected(context, SvgMode::External, b)
+}
 
 enum Rendering<'s, 'a> {
     Embedded(planned::Rendered<'s, 'a>),

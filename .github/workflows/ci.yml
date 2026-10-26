@@ -52,8 +52,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     # Ubuntu exports canonical docs; Windows cold builds and external consumers
     # also need bounded headroom (two runs reached the old 20-minute cap).
+    # macOS also needs room for pinned checks after the complete workspace suite.
     # This CI wall-clock allowance does not change runtime logical Budgets.
-    timeout-minutes: ${{ matrix.os == 'macos-latest' && 20 || 35 }}
+    timeout-minutes: 35
     env:
       # Optimize canonical projection without disabling runtime checks.
       CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS: 'true'

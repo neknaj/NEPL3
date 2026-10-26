@@ -16,12 +16,14 @@ use crate::doc::export::{
 pub use job::preparation::rendering::RenderAttempt;
 use job::preparation::{PageAttempt, owned::Owned};
 use nepl3_core::budget::{Limits, StopReason, Usage};
+use nepl3_doc_html::assets::SvgMode;
 use std::collections::BTreeMap;
 
 struct Data<'c> {
     owned: Owned<'c>,
     assets: Vec<OwnedBinding>,
     renderer: MathRenderer,
+    mode: SvgMode,
     output: OperationLimits,
     renders: Vec<RenderAttempt>,
 }
@@ -83,6 +85,7 @@ impl<'c> Prepared<'c> {
             assets,
             options,
             renderer,
+            mode,
             output,
         } = frozen;
         let (owned, account) = inner.into_owned(options).map_err(|failure| {
@@ -115,6 +118,7 @@ impl<'c> Prepared<'c> {
                 owned,
                 assets,
                 renderer,
+                mode,
                 output,
                 renders: Vec::new(),
             }),
@@ -136,7 +140,11 @@ impl<'c> RenderJob<'c> {
         let requested = data.output.budget().limits();
         let result = account.run_budget(requested, |b| {
             let effective = b.limits();
-            let result = generation::render_prepared(generation::Context {
+            let render = match data.mode {
+                SvgMode::Embedded => generation::render_prepared,
+                SvgMode::External => generation::render_prepared_external,
+            };
+            let result = render(generation::Context {
                 compiled: data.owned.compiled, request: &data.owned.request,
                 page_code: &data.owned.code, origins: &data.owned.origins,
                 file_origins: &data.owned.file_origins, assets: &data.assets,

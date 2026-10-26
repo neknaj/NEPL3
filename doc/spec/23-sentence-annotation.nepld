@@ -1588,8 +1588,8 @@ body
           cons variant en "With valid options, an existing destination is rejected before capture; files are written only after complete generation and the receipt is written last, but filesystem I/O failure does not guarantee rollback."
           nil
         cons parallel
-          cons variant ja "--interactive-limitsの[経路/けいろ]は--svgを[受理/じゅり]せず[埋/う]め[込/こ]みのままであり、[外部/がいぶ]SVGの[保持/ほじ]retry・[永続復元/えいぞくふくげん]・[全体/ぜんたい][受入/うけいれ]はこの[接続/せつぞく]の[完成/かんせい]から[推定/すいてい]しない。"
-          cons variant en "The --interactive-limits path does not accept --svg and remains embedded-only; retained external retry, durable restoration and overall acceptance do not follow from this source CLI connection."
+          cons variant ja "--interactive-limitsの[経路/けいろ]は--svgを[受理/じゅり]せず[埋/う]め[込/こ]みのままであり、[外部/がいぶ]SVGの[保持/ほじ]retryは[別/べつ]のnative APIであり、[永続復元/えいぞくふくげん]や[全体/ぜんたい][受入/うけいれ]はこの[接続/せつぞく]の[完成/かんせい]から[推定/すいてい]しない。"
+          cons variant en "The --interactive-limits path does not accept --svg and remains embedded-only; retained external retry is a separate native API, and durable restoration or overall acceptance does not follow from this source CLI connection."
           nil
         nil
       cons rawcode some "sh" "nepl3-tools doc-html pages-svg --svg external examples/document/pages-svg/manifest.json out-external-svg\nnepl3-tools doc-html pages-svg --svg external --math-renderer mathml-only examples/document/pages-svg/manifest.json out-external-mathml\n"
@@ -1659,8 +1659,37 @@ body
           cons variant en "Package native evidence describes only the final successful attempt, native outcomes of earlier interrupted attempts are not retained, and neither None nor zero visuals implies no host invocation."
           nil
         cons parallel
-          cons variant ja "filesとmanifestは[成功後/せいこうご]にmemory[内/ない]へ[返/かえ]し、[公開/こうかい]・CLI[対話/たいわ][再開/さいかい]・[永続的/えいぞくてき]な[復元/ふくげん]・[外部/がいぶ]SVG[包装/ほうそう]はこのAPIに[含/ふく]めず、portable proofとも[扱/あつか]わない。"
-          cons variant en "Files and manifest are returned in memory only after success; publication, interactive CLI resume, durable restoration and external SVG packaging are outside this API, and it is not a portable proof."
+          cons variant ja "filesとmanifestは[成功後/せいこうご]にmemory[内/ない]へ[返/かえ]し、[公開/こうかい]・CLI[対話/たいわ][再開/さいかい]・[永続的/えいぞくてき]な[復元/ふくげん]はこのAPIに[含/ふく]めず、portable proofとも[扱/あつか]わない。"
+          cons variant en "Files and manifest are returned in memory only after success; publication, interactive CLI resume and durable restoration are outside this API, and it is not a portable proof."
+          nil
+        nil
+      nil
+    cons section svgExternalRetry "[外部/がいぶ]SVGの[保持/ほじ][再試行/さいしこう] / Retained external SVG retry"
+      body
+      cons paragraph
+        cons parallel
+          cons variant ja "nativeのPreparation::capture_externalは[外部/がいぶ]SVG[方式/ほうしき]を[捕捉時/ほそくじ]に[固定/こてい]し、[既存/きそん]のcaptureと[対話/たいわ]CLIは[埋/う]め[込/こ]みを[保/たも]つ。"
+          cons variant en "Native Preparation::capture_external fixes external SVG representation at capture, while existing capture and the interactive CLI retain embedded output."
+          nil
+        cons parallel
+          cons variant ja "Frozen::svg_modeは[読取/よみと]り[専用/せんよう]の[選択/せんたく]を[返/かえ]し、[準備/じゅんび]・[描画/びょうが]の[中断/ちゅうだん]と[再開拒否/さいかいきょひ]でもmodeを[保持/ほじ]して、[再開/さいかい][上限/じょうげん]から[差/さ]し[替/か]えない。"
+          cons variant en "Frozen::svg_mode exposes read-only selection; preparation and render pauses or rejected grants preserve the mode, and resume ceilings cannot replace it."
+          nil
+        cons parallel
+          cons variant ja "[捕捉済/ほそくず]みraw SVGは[準備済/じゅんびず]みDoc・Codeとともに[残/のこ]り、[元/もと]fileを[削除後/さくじょご]も[再読/さいどく]せず、[実際/じっさい]の[描画/びょうが][試行/しこう]で[入場/にゅうじょう]・[配置/はいち]・[衝突/しょうとつ]を[検査/けんさ]する。"
+          cons variant en "Captured raw SVG remains with prepared Doc and Code without rereading even deleted source files; actual render attempts check admission, placement and collisions."
+          nil
+        cons parallel
+          cons variant ja "[外部/がいぶ]modeは[通常/つうじょう]source[生成/せいせい]と[同/おな]じmode[束縛/そくばく]identityと[検証済/けんしょうず]みfile[証拠/しょうこ]を[使/つか]い、MathMLOnlyではpackage/1、KaTeXPreferredでは[最終/さいしゅう][成功/せいこう][試行/しこう]のnative[結果/けっか]を[含/ふく]むpackage/2を[返/かえ]す。"
+          cons variant en "External mode uses the same mode-bound identity and checked file evidence as ordinary source generation, returning package/1 for MathMLOnly or package/2 with native outcomes from the final successful attempt for KaTeXPreferred."
+          nil
+        cons parallel
+          cons variant ja "[外側/そとがわ]のsvg-render-job/1は[変更/へんこう]せず、[内部/ないぶ]の[外部/がいぶ]packageを[含/ふく]む[全/ぜん]payloadをidentityへ[束縛/そくばく]し、[失敗/しっぱい][試行/しこう]の[消費量/しょうひりょう]を[返却/へんきゃく]せず[累積/るいせき]する。"
+          cons variant en "The outer svg-render-job/1 format is unchanged and binds its complete payload, including the nested external package, into its identity; resource consumption from failed attempts remains cumulative without refunds."
+          nil
+        cons parallel
+          cons variant ja "modeを[保持/ほじ]するhost containerは[従来/じゅうらい]どおり[測定外/そくていがい]であり、[埋/う]め[込/こ]みのbytes・receipt・[課金/かきん]を[保/たも]ち、[外部/がいぶ]SVGの[対話/たいわ]CLI・[永続復元/えいぞくふくげん]・[全体/ぜんたい][受入/うけいれ]はこのAPIの[範囲外/はんいがい]とする。"
+          cons variant en "Mode-retaining host containers remain outside measurement; embedded bytes, receipts and charges are preserved, while external SVG interactive CLI, durable restoration and overall acceptance remain outside this API."
           nil
         nil
       nil
