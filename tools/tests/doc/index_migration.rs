@@ -1,5 +1,5 @@
-//! Draft parity is not page/link/HTML migration acceptance. The live Markdown
-//! remains authoritative until the separate reference closure is implemented.
+//! Native semantic regression against the preserved pre-cutover Markdown.
+//! Page resolution, rendering and browser acceptance remain separate gates.
 use super::*;
 use nepl3_doc_core::{check::Category, model::*, text};
 use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
@@ -82,19 +82,30 @@ fn blocks(
 }
 
 #[test]
-fn documentation_index_draft_preserves_current_prose_tables_and_links() -> Result<(), String> {
-    let source = include_str!("../../../doc/migration/authored/guide/README.nepld");
-    let original = include_str!("../../../doc/README.md");
+fn documentation_index_preserves_original_prose_tables_and_links() -> Result<(), String> {
+    let source = include_str!("../../../doc/README.nepld");
+    let original = include_str!("../../migration/fixtures/documentation-index.md");
+    // Original doc/README.md at merged main
+    // 113e87da0449430b4c5422d77593116d91a72f0f, before index cutover.
+    // Do not regenerate the expected original from the candidate Doc source.
+    use sha2::{Digest, Sha256};
+    assert_eq!(
+        Sha256::digest(original.as_bytes())
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>(),
+        "5120d92cff9839cec6afdd608d284f479759c4ffe67ea9ea2c3e8e0fc4fec3a6"
+    );
     let c = compiled()?;
     let registry: nepl3_tools::doc::canonical::Registry =
         serde_json::from_str(include_str!("../../../doc/canonical.json")).map_err(err)?;
     // Use the existing native corpus configuration, not portable defaults or
-    // a silently enlarged global/test budget. This is native draft evidence.
+    // a silently enlarged global/test budget. This is native parity evidence.
     nepl3_tools::doc::source::with_named_input_limits(
         true,
         &c,
         source,
-        "documentation-index-draft",
+        "documentation-index",
         "Article",
         registry.parse_limits.budget().limits(),
         |tree, profile, _, _| {
@@ -154,21 +165,37 @@ fn documentation_index_draft_preserves_current_prose_tables_and_links() -> Resul
             assert_eq!(tables, [(3, true, 7), (2, true, 15)]);
             let mut expected_links: Vec<_> = Parser::new_ext(original, Options::ENABLE_TABLES)
                 .filter_map(|event| match event {
-                    Event::Start(Tag::Link { dest_url, .. }) => Some(dest_url.into_string()),
+                    Event::Start(Tag::Link { dest_url, .. }) => Some(match dest_url.as_ref() {
+                        "spec/13-reproducibility.nepld" => "https://github.com/neknaj/NEPL3/blob/main/doc/spec/13-reproducibility.nepld".into(),
+                        "../examples/" => {
+                            "https://github.com/neknaj/NEPL3/tree/main/examples".into()
+                        }
+                        "../tasks/" => "https://github.com/neknaj/NEPL3/tree/main/tasks".into(),
+                        _ => dest_url.into_string(),
+                    }),
                     _ => None,
                 })
                 .collect();
             let mut actual_links = Vec::new();
             for node in &document.value.nodes {
                 if let DocKind::Link { target, .. } = &node.kind {
-                    let LinkTarget::Relative {
-                        path,
-                        fragment: None,
-                    } = target
-                    else {
-                        return Err("unexpected draft link target".into());
-                    };
-                    actual_links.push(path.clone());
+                    match target {
+                        LinkTarget::Relative {
+                            path,
+                            fragment: None,
+                        } => actual_links.push(path.clone()),
+                        LinkTarget::External { uri }
+                            if matches!(
+                                uri.as_str(),
+                                "https://github.com/neknaj/NEPL3/blob/main/doc/spec/13-reproducibility.nepld"
+                                    | "https://github.com/neknaj/NEPL3/tree/main/examples"
+                                    | "https://github.com/neknaj/NEPL3/tree/main/tasks"
+                            ) =>
+                        {
+                            actual_links.push(uri.clone())
+                        }
+                        _ => return Err("unexpected index link target".into()),
+                    }
                 }
             }
             expected_links.sort();
@@ -177,22 +204,33 @@ fn documentation_index_draft_preserves_current_prose_tables_and_links() -> Resul
             Ok(())
         },
     )?;
-    // Successful parse, lowering and prose parity must not imply cutover.
+    // Exact registration and output-only compatibility, never a duplicate
+    // semantic passive source. This assertion alone is not HTML acceptance.
     let registry: serde_json::Value =
         serde_json::from_str(include_str!("../../../doc/canonical.json")).map_err(err)?;
     assert!(
-        !registry["pages"]
+        registry["pages"]
             .as_array()
             .ok_or("pages")?
             .iter()
-            .any(|p| p["projection"] == "doc/README.md")
+            .any(|p| p["source"] == "doc/README.nepld"
+                && p["projection"] == "doc/README.md"
+                && p["route"] == "docs/guide/index.html"
+                && p["id"] == "documentation-index")
     );
     assert!(
-        registry["files"]
+        !registry["files"]
             .as_array()
             .ok_or("files")?
             .iter()
-            .any(|p| p["source"] == "doc/README.md" && p["route"] == "sources/doc-index.md")
+            .any(|p| p["source"] == "doc/README.md")
+    );
+    assert!(
+        registry["compatibility"]
+            .as_array()
+            .ok_or("compatibility")?
+            .iter()
+            .any(|p| p["page"] == "documentation-index" && p["route"] == "sources/doc-index.md")
     );
     Ok(())
 }

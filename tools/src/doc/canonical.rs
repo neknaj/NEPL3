@@ -161,7 +161,39 @@ fn passive_paths(file: &ReferenceFile, svg: bool) -> bool {
         (file.source.as_str(), file.route.as_str()),
         ("AGENTS.md", "sources/agents.md") | ("LICENSE", "sources/license.txt")
     );
-    markdown || json || example || rust_test || project
+    // Exact inert index dependencies. These are not recursive repository or
+    // schema discovery, and no directory is treated as a regular file.
+    let index = matches!(
+        (file.source.as_str(), file.route.as_str()),
+        ("README.md", "sources/readme.md")
+            | ("tasks/README.md", "sources/tasks/readme.md")
+            | (
+                "conformance/extensions/hello/README.md",
+                "sources/conformance/hello/readme.md"
+            )
+            | ("conformance/cases.json", "sources/conformance/cases.json")
+            | (
+                "interfaces/contracts.json",
+                "sources/interfaces/contracts.json"
+            )
+            | ("interfaces/doc.json", "sources/interfaces/doc.json")
+            | (
+                "interfaces/foundation.json",
+                "sources/interfaces/foundation.json"
+            )
+            | ("interfaces/markup.json", "sources/interfaces/markup.json")
+            | ("interfaces/math.json", "sources/interfaces/math.json")
+            | ("interfaces/model.json", "sources/interfaces/model.json")
+            | (
+                "interfaces/sentence-reader.json",
+                "sources/interfaces/sentence-reader.json"
+            )
+            | (
+                "interfaces/sentence.json",
+                "sources/interfaces/sentence.json"
+            )
+    );
+    markdown || json || example || rust_test || project || index
 }
 
 fn reference_inputs(

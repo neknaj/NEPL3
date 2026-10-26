@@ -17,7 +17,7 @@ body
       cons text "います。"
       nil
     cons sentence
-      cons link relative "spec/13-reproducibility.nepld" none concat cons ruby text "再現性" text "さいげんせい" cons text "の" cons ruby text "仕様" text "しよう" nil
+      cons link external "https://github.com/neknaj/NEPL3/blob/main/doc/spec/13-reproducibility.nepld" concat cons ruby text "再現性" text "さいげんせい" cons text "の" cons ruby text "仕様" text "しよう" nil
       cons text "はこの"
       cons ruby text "方式" text "ほうしき"
       cons text "へ"
@@ -157,11 +157,11 @@ body
       cons row cons sentence cons link relative "../interfaces/doc.json" none text "interfaces/doc.json" cons text "、" cons link relative "../interfaces/sentence.json" none text "sentence.json" cons text "、" cons link relative "../interfaces/sentence-reader.json" none text "sentence-reader.json" nil cons "Doc consumerのarena[値/あたい]と、[独立/どくりつ]Sentenceの[値/あたい]・readerの[実/じつ]schema" nil
       cons row cons sentence cons link relative "../interfaces/math.json" none text "interfaces/math.json" nil cons "Mathの[表記/ひょうき]を[保持/ほじ]するarenaとsource[閉包/へいほう]の[実/じつ]schema。[構造/こうぞう]proofと[式/しき]の[評価/ひょうか]を[分離/ぶんり]する" nil
       cons row cons sentence cons code "languages/*/syntax.neplg" nil cons "[各/かく]LanguagePackageの[文法/ぶんぽう]source" nil
-      cons row cons sentence cons link relative "../conformance/cases.json" none text "conformance/cases.json" cons text "、" cons link relative "../examples/" none text "examples/" nil cons "[受入条件/うけいれじょうけん]と[検証入力/けんしょうにゅうりょく]" nil
+      cons row cons sentence cons link relative "../conformance/cases.json" none text "conformance/cases.json" cons text "、" cons link external "https://github.com/neknaj/NEPL3/tree/main/examples" text "examples/" nil cons "[受入条件/うけいれじょうけん]と[検証入力/けんしょうにゅうりょく]" nil
       cons row cons sentence cons link relative "../implementation-status.json" none text "implementation-status.json" nil cons "[実装/じっそう]・[試験/しけん]の[実行状態/じっこうじょうたい]。[仕様定義/しようていぎ]と[分離/ぶんり]する" nil
       cons row cons sentence cons link relative "../design/acceptance.json" none text "design/acceptance.json" nil cons "[必須受入群/ひっすうけいれぐん]と[必須/ひっす]targetのcatalog" nil
       cons row cons sentence cons link relative "../design/ui.json" none text "design/ui.json" cons text "、" cons link relative "../design/site.json" none text "site.json" nil cons "UI/siteの[責務/せきむ]・[配置計画/はいちけいかく]。[実行可能/じっこうかのう]schemaではない" nil
-      cons row cons sentence cons link relative "../tasks/" none text "tasks/" nil cons "タスク[正本/せいほん]から[生成/せいせい]する[読/よ]み[物/もの]" nil
+      cons row cons sentence cons link external "https://github.com/neknaj/NEPL3/tree/main/tasks" text "tasks/" nil cons "タスク[正本/せいほん]から[生成/せいせい]する[読/よ]み[物/もの]" nil
       cons row cons sentence cons link relative "history/README.md" none text "history/" nil cons "[取/と]り[込/こ]み[元/もと]の[由来/ゆらい]と[当時/とうじ]の[検査報告/けんさほうこく]" nil
       nil
     cons paragraph

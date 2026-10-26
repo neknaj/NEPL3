@@ -544,6 +544,14 @@
       "aliases": "doc/migration/aliases/CODEX.json",
       "route": "docs/project/codex.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "documentation-index",
+      "source": "doc/README.nepld",
+      "projection": "doc/README.md",
+      "aliases": "doc/migration/aliases/documentation-index.json",
+      "route": "docs/guide/index.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
@@ -633,14 +641,109 @@
       "route": "sources/license.txt"
     },
     {
-      "id": "doc-index-source",
-      "source": "doc/README.md",
-      "route": "sources/doc-index.md"
-    },
-    {
       "id": "development-source",
       "source": "doc/development.md",
       "route": "sources/development.md"
+    },
+    {
+      "id": "project-readme-source",
+      "source": "README.md",
+      "route": "sources/readme.md"
+    },
+    {
+      "id": "task-index-source",
+      "source": "tasks/README.md",
+      "route": "sources/tasks/readme.md"
+    },
+    {
+      "id": "hello-consumer-source",
+      "source": "conformance/extensions/hello/README.md",
+      "route": "sources/conformance/hello/readme.md"
+    },
+    {
+      "id": "conformance-cases-source",
+      "source": "conformance/cases.json",
+      "route": "sources/conformance/cases.json"
+    },
+    {
+      "id": "design-dependencies-source",
+      "source": "design/dependencies.json",
+      "route": "sources/design/dependencies.json"
+    },
+    {
+      "id": "design-forms-source",
+      "source": "design/forms.json",
+      "route": "sources/design/forms.json"
+    },
+    {
+      "id": "design-site-source",
+      "source": "design/site.json",
+      "route": "sources/design/site.json"
+    },
+    {
+      "id": "design-ui-source",
+      "source": "design/ui.json",
+      "route": "sources/design/ui.json"
+    },
+    {
+      "id": "interface-contracts-source",
+      "source": "interfaces/contracts.json",
+      "route": "sources/interfaces/contracts.json"
+    },
+    {
+      "id": "interface-doc-source",
+      "source": "interfaces/doc.json",
+      "route": "sources/interfaces/doc.json"
+    },
+    {
+      "id": "interface-foundation-source",
+      "source": "interfaces/foundation.json",
+      "route": "sources/interfaces/foundation.json"
+    },
+    {
+      "id": "interface-markup-source",
+      "source": "interfaces/markup.json",
+      "route": "sources/interfaces/markup.json"
+    },
+    {
+      "id": "interface-math-source",
+      "source": "interfaces/math.json",
+      "route": "sources/interfaces/math.json"
+    },
+    {
+      "id": "interface-model-source",
+      "source": "interfaces/model.json",
+      "route": "sources/interfaces/model.json"
+    },
+    {
+      "id": "interface-sentence-reader-source",
+      "source": "interfaces/sentence-reader.json",
+      "route": "sources/interfaces/sentence-reader.json"
+    },
+    {
+      "id": "interface-sentence-source",
+      "source": "interfaces/sentence.json",
+      "route": "sources/interfaces/sentence.json"
+    },
+    {
+      "id": "circuit-signatures-source",
+      "source": "doc/spec/circuit-signatures.md",
+      "route": "sources/spec/circuit-signatures.md"
+    },
+    {
+      "id": "doc-signatures-source",
+      "source": "doc/spec/doc-signatures.md",
+      "route": "sources/spec/doc-signatures.md"
+    },
+    {
+      "id": "grammar-signatures-source",
+      "source": "doc/spec/grammar-signatures.md",
+      "route": "sources/spec/grammar-signatures.md"
+    },
+    {
+      "id": "math-signatures-source",
+      "source": "doc/spec/math-signatures.md",
+      "route": "sources/spec/math-signatures.md"
     }
   ],
   "output_limits": {
@@ -687,6 +790,10 @@
     {
       "page": "doc-runtime",
       "route": "sources/doc-runtime.md"
+    },
+    {
+      "page": "documentation-index",
+      "route": "sources/doc-index.md"
     }
   ]
 }

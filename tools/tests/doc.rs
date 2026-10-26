@@ -32,8 +32,8 @@ mod external;
 mod footnotes;
 #[path = "doc/html.rs"]
 mod html;
-#[path = "doc/index_draft.rs"]
-mod index_draft;
+#[path = "doc/index_migration.rs"]
+mod index_migration;
 #[path = "doc/input.rs"]
 mod input;
 #[path = "doc/katex_cli.rs"]

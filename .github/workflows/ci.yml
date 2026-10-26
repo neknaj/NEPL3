@@ -578,7 +578,7 @@ jobs:
       - name: Verify site identities, links and scriptless pages in three browsers
         run: |
           python -m unittest discover -s tools/audit/site -p 'test_*.py'
-          python tools/audit/site/check.py dist/doc-browser/site dist/doc-browser/site-results.json --renderer target/release/nepl3-tools --screenshots-dir dist/doc-browser/development-entry-screenshots --screenshot-page docs/project/contributing.html --screenshot-page docs/project/codex.html
+          python tools/audit/site/check.py dist/doc-browser/site dist/doc-browser/site-results.json --renderer target/release/nepl3-tools --screenshots-dir dist/doc-browser/development-entry-screenshots --screenshot-page docs/project/contributing.html --screenshot-page docs/project/codex.html --screenshot-page docs/guide/index.html
           python tools/audit/site/check.py dist/doc-browser/site-alternate dist/doc-browser/site-alternate-results.json --config conformance/inputs/site/alternate.json --renderer target/release/nepl3-tools
       - name: Freeze the checked site as a deterministic Pages payload
         run: |
