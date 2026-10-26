@@ -118,5 +118,9 @@
   {
     "section": "svgExternalPackage",
     "name": "external-svg-pages-package"
+  },
+  {
+    "section": "svgExternalCli",
+    "name": "external-svg-pages-cli"
   }
 ]

@@ -45,7 +45,7 @@ jobs:
           tools.extensions.test_cargo tools.extensions.test_execution
           tools.audit.allocation.test_run
           tools.audit.math.test_visual tools.audit.math.test_annotations
-          tools.audit.doc_html.test_pages_svg tools.audit.doc_html.test_pages_svg_external
+          tools.audit.doc_html.test_pages_svg tools.audit.doc_html.test_pages_svg_external tools.audit.doc_html.test_pages_svg_external_cli
 
   native:
     name: native (${{ matrix.os }})
@@ -550,6 +550,8 @@ jobs:
         run: python tools/audit/doc_html/pages_svg_cli.py target/debug/nepl3-tools dist/doc-browser/pages-svg-cli > dist/doc-browser/pages-svg-cli.json
       - name: Check KaTeX-preferred SVG PageSet CLI in three browsers
         run: python tools/audit/doc_html/pages_svg_katex.py target/debug/nepl3-tools dist/doc-browser/pages-svg-katex tools/audit/math/node_modules > dist/doc-browser/pages-svg-katex.json
+      - name: Check external SVG source CLI in both math modes and three browsers
+        run: python tools/audit/doc_html/pages_svg_external_cli.py target/debug/nepl3-tools dist/doc-browser/pages-svg-external-cli tools/audit/math/node_modules > dist/doc-browser/pages-svg-external-cli.json
       - name: Shared code highlighting and themes
         run: python tools/audit/doc_html/code.py target/debug/nepl3-tools dist/doc-browser/code > dist/doc-browser/code.json
       - name: Check shared Code in linked HTML pages

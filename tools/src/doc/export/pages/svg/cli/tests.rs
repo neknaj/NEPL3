@@ -374,3 +374,5 @@ fn svg_pages_preferred_metadata_keeps_seven_resource_boundaries() -> crate::Resu
     }
     Ok(())
 }
+
+mod external;

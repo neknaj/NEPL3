@@ -1,4 +1,4 @@
-//! Input identity for the explicit root-only, embedded-SVG host contract.
+//! Mode-bound input identities for explicit root-only SVG host contracts.
 //! This is not evidence that assets, namespaces or rendered HTML were accepted.
 use crate::doc::annotations::article::render::svg::pages::RootAssets;
 use nepl3_core::{
