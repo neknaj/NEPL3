@@ -1,5 +1,7 @@
 """Verify external SVG source CLI in both math modes under an HTTP mount."""
 from pathlib import Path
+from html.parser import HTMLParser
+from typing import override
 import hashlib
 import json
 import os
@@ -10,6 +12,49 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from tools.serialization.json import JsonValue, array, decode, integer, object_value, string
 from tools.audit.doc_html.server import serve
+
+
+# The exporter intentionally retains this one legacy font stylesheet. Network
+# interception still blocks it; permitting its DOM reference is not fetching it.
+GOOGLE_FONTS = "https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap"
+
+
+class StylesheetLinks(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.hrefs: list[str] = []
+
+    @override
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag != "link":
+            return
+        values = dict(attrs)
+        if len(values) != len(attrs):
+            raise ValueError("Duplicate link attribute")
+        rel = values.get("rel")
+        if rel is not None and "stylesheet" in rel.split():
+            href = values.get("href")
+            if rel != "stylesheet" or href is None:
+                raise ValueError("Invalid stylesheet link")
+            self.hrefs.append(href)
+
+
+def stylesheet_path(page: str) -> str:
+    if page not in ("one", "two"):
+        raise ValueError("Unknown fixture page")
+    digest = hashlib.sha256(f"{page}/index.html".encode()).hexdigest()
+    return f"assets/doc-{digest}.css"
+
+
+def verify_stylesheets(html: str, page: str, recorded_paths: set[str]) -> None:
+    relative = stylesheet_path(page)
+    if f"{page}/{relative}" not in recorded_paths:
+        raise ValueError("Page stylesheet is not recorded")
+    parser = StylesheetLinks()
+    parser.feed(html)
+    parser.close()
+    if sorted(parser.hrefs) != sorted([GOOGLE_FONTS, relative]):
+        raise ValueError("Unexpected stylesheet references")
 
 
 def verify_package(output: Path, renderer: str, mode: str, count: int) -> None:
@@ -83,6 +128,9 @@ def verify_package(output: Path, renderer: str, mode: str, count: int) -> None:
                 raise ValueError("SVG content address mismatch")
     if svg_count != 2:
         raise ValueError("Missing external SVGs")
+    for page in ("one", "two"):
+        verify_stylesheets((output / page / "index.html").read_text(encoding="utf-8"), page, paths)
+
 
 
 def prepare_cases(binary: Path, root: Path, packages: Path) -> list[tuple[str, str, Path, int, str, str]]:
@@ -167,11 +215,12 @@ def main() -> None:
                                     expect(page.locator(".katex-html")).to_have_count(formulas if preferred else 0)
                                     expect(page.locator(".nepl-image-group")).to_have_count(1)
                                     measured: object = page.evaluate(  # pyright: ignore[reportAny]
-                                        """([width,height,count,preferred,name,prefix]) => {
+                                        """([width,height,count,preferred,name,prefix,fontCss,localCss]) => {
                                         const csp=document.querySelector('meta[http-equiv="Content-Security-Policy"]').content;
                                         if (!csp.includes("img-src 'self';") || csp.includes('font-src data:') !== (preferred && count>0)) throw Error('CSP mismatch');
                                         if (document.scripts.length || document.querySelector('[style]')) throw Error('Active content');
-                                        for (const link of document.querySelectorAll('link[rel="stylesheet"]')) if (!link.href.startsWith(prefix)) throw Error('Cross-package CSS');
+                                        const styles=[...document.querySelectorAll('link[rel="stylesheet"]')].map(link=>link.href);
+                                        if (styles.length!==2 || styles.filter(href=>href===new URL(fontCss).href).length!==1 || styles.filter(href=>href===localCss).length!==1 || !localCss.startsWith(prefix)) throw Error('Unexpected stylesheet references');
                                         for (const image of document.querySelectorAll('img')) {
                                             if (!image.src.startsWith(prefix) || !image.complete || image.naturalWidth!==width || image.naturalHeight!==height) throw Error('External SVG not loaded from its package');
                                         }
@@ -191,7 +240,7 @@ def main() -> None:
                                         if ((getComputedStyle(details).display!=='none')!==(scale<1)) throw Error('Disclosure CSS');
                                         if (document.documentElement.scrollWidth>innerWidth+1) throw Error('Overflow');
                                         return 'passed';
-                                        }""", [image_width, image_height, formulas, preferred, name, prefix])
+                                        }""", [image_width, image_height, formulas, preferred, name, prefix, GOOGLE_FONTS, prefix + name + "/" + stylesheet_path(name)])
                                     if measured != "passed":
                                         raise AssertionError("Unexpected measurements")
                                     details = page.locator(".nepl-image-details")

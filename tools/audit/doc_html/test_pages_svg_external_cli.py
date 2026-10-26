@@ -1,18 +1,20 @@
 """Receipt/file integrity tests; actual markup is checked by the hosted browser."""
 import hashlib
+from html import escape
 import json
 from pathlib import Path
 import tempfile
 import unittest
 from tools.serialization.json import JsonValue, array, object_value
-from tools.audit.doc_html.pages_svg_external_cli import verify_package
+from tools.audit.doc_html.pages_svg_external_cli import GOOGLE_FONTS, stylesheet_path, verify_package, verify_stylesheets
 
 
 def fixture(root: Path, renderer: str) -> dict[str, JsonValue]:
     files = {
-        "one/index.html": "one", "two/index.html": "two",
-        "one/assets/doc-" + "0" * 64 + ".css": "css-one",
-        "two/assets/doc-" + "1" * 64 + ".css": "css-two",
+        "one/index.html": f'<link rel="stylesheet" href="{escape(GOOGLE_FONTS, quote=True)}"><link rel="stylesheet" href="{stylesheet_path("one")}">one',
+        "two/index.html": f'<link rel="stylesheet" href="{escape(GOOGLE_FONTS, quote=True)}"><link rel="stylesheet" href="{stylesheet_path("two")}">two',
+        "one/" + stylesheet_path("one"): "css-one",
+        "two/" + stylesheet_path("two"): "css-two",
         "one/assets/" + hashlib.sha256(b"svg-one").hexdigest() + ".svg": "svg-one",
         "two/assets/" + hashlib.sha256(b"svg-two").hexdigest() + ".svg": "svg-two",
     }
@@ -56,6 +58,23 @@ class ExternalCliPackageTests(unittest.TestCase):
                 root = Path(temporary)
                 _ = fixture(root, renderer)
                 verify_package(root, renderer, "Rows", 2)
+
+    def test_only_exact_legacy_font_and_recorded_page_css_are_allowed(self) -> None:
+        local = stylesheet_path("one")
+        paths = {"one/" + local, "two/" + stylesheet_path("two")}
+        good = f'<link rel="stylesheet" href="{escape(GOOGLE_FONTS, quote=True)}"><link rel="stylesheet" href="{local}">'
+        verify_stylesheets(good, "one", paths)
+        for bad in (
+            good.replace(escape(GOOGLE_FONTS, quote=True), "https://evil.example/style.css"),
+            good.replace(escape(GOOGLE_FONTS, quote=True), escape(GOOGLE_FONTS.replace("Klee+One", "Other"), quote=True)),
+            good.replace(local, "../two/" + stylesheet_path("two")),
+            good + f'<link rel="stylesheet" href="{local}">',
+            good.replace('rel="stylesheet"', 'rel="stylesheet" rel="alternate"', 1),
+        ):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                verify_stylesheets(bad, "one", paths)
+        with self.assertRaisesRegex(ValueError, "not recorded"):
+            verify_stylesheets(good, "one", set())
 
     def test_wrong_receipt_and_payload_are_rejected(self) -> None:
         for attack in ("mode", "version", "renderer", "visuals", "extra", "changed", "address", "context", "scope", "formula", "native-file", "native-accounting"):
