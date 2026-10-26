@@ -1,3 +1,5 @@
+#[path = "tests/index.rs"]
+mod index;
 #[path = "tests/project.rs"]
 mod project;
 #[path = "tests/retry.rs"]

@@ -71,6 +71,40 @@ def observe_fragments(page: Page, url: str) -> int:
     return count
 
 
+def observe_tables(page: Page) -> None:
+    """Check contained scrolling without hiding semantic table content."""
+    tables = page.locator('.nepl-doc table')
+    for index in range(tables.count()):
+        table = tables.nth(index)
+        wrapper = table.locator('xpath=..')
+        expect(wrapper).to_have_class('nepl-table-scroll')
+        script = '''el => {
+          const table = el.firstElementChild;
+          const before = table.textContent;
+          const box = el.getBoundingClientRect();
+          const client = el.clientWidth, total = el.scrollWidth;
+          el.scrollLeft = total;
+          const moved = el.scrollLeft;
+          el.scrollLeft = 0;
+          return JSON.stringify({bounded:box.left>=-1 && box.right<=innerWidth+1,
+            client,total,moved:moved>0,reset:el.scrollLeft===0,
+            overflow:getComputedStyle(el).overflowX,
+            preserved:table.textContent===before,
+            semantic:el.children.length===1 && table.tagName==='TABLE'});
+        }'''
+        raw: object = wrapper.evaluate(script)  # pyright: ignore[reportAny]
+        if not isinstance(raw, str):
+            raise TypeError('table scroll observation must be JSON text')
+        state = object_value(decode(raw, reject_duplicates=True, reject_nonfinite=True))
+        assert state['bounded'] is True and state['reset'] is True
+        assert state['preserved'] is True and state['semantic'] is True
+        assert state['overflow'] == 'auto'
+        client, total = integer(state['client']), integer(state['total'])
+        assert client > 0 and total >= client
+        if total > client:
+            assert state['moved'] is True
+
+
 def observe(root: Path, base: str, pages: Sequence[str],
             example_sources: Sequence[str], *, screenshot_root: Path | None = None,
             screenshot_pages: Sequence[str] = ()) -> tuple[Case, ...]:
@@ -136,6 +170,7 @@ def observe(root: Path, base: str, pages: Sequence[str],
                                 if response is None or response.status != 200 or failures or state.scripts != 0 or state.styles <= 0 or state.overflow:
                                     overflow_nodes: object = page.evaluate('''() => JSON.stringify([...document.querySelectorAll('body *')].map(node => { const b = node.getBoundingClientRect(); return {tag:node.tagName, cls:node.className, text:node.textContent.slice(0,120), x:b.x, right:b.right, width:b.width}; }).filter(node => node.right > innerWidth + 1).slice(0,30))''')  # pyright: ignore[reportAny]
                                     raise AssertionError((engine, width, name, state, failures, overflow_nodes))
+                                observe_tables(page)
                                 if name == 'examples/index.html':
                                     assert page.locator('pre > code').all_text_contents() == list(example_sources), \
                                         'example display differs from source'
@@ -157,6 +192,7 @@ def observe(root: Path, base: str, pages: Sequence[str],
                                         observed: object = page.evaluate(MEASURE)  # pyright: ignore[reportAny]
                                         themed = measurement(observed)
                                         assert not failures and themed.scripts == 0 and themed.styles > 0 and not themed.overflow
+                                        observe_tables(page)
                                         target = captures.path(engine, width, theme, name)
                                         png = page.screenshot(path=str(target), full_page=True, timeout=15000)
                                         captures.record(engine, browser.version, width, theme, name, target, png)

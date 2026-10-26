@@ -17,6 +17,7 @@ body:has(>.nepl-doc){margin:0;background:#0d1117;color-scheme:dark}
 .nepl-doc :not(pre)>code{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);border-radius:.36em;padding:.08em .42em}
 .nepl-doc img{max-width:100%;height:auto}
 .nepl-doc blockquote{margin:.85em 0;padding:.45em 1em;border-inline-start:.2em solid var(--nepl-border2);color:var(--nepl-muted);background:rgba(255,255,255,.02);border-radius:0 .5em .5em 0}
+.nepl-table-scroll{max-width:100%;min-width:0;overflow-x:auto}
 .nepl-doc table{border-collapse:collapse;width:100%;font-size:.94em;margin-block:1.15em}
 .nepl-doc th,.nepl-doc td{border:1px solid var(--nepl-border);padding:.45em .85em}
 .nepl-doc th{background:rgba(74,163,255,.07)}

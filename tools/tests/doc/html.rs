@@ -40,6 +40,34 @@ fn html(source: &str, options: RenderOptions) -> Result<String, String> {
     })
 }
 #[test]
+fn native_tables_keep_headers_and_ruby_inside_a_scroll_container() -> Result<(), String> {
+    let out = html(
+        r#"article ja "Table" body cons table cons default cons default nil
+        some row cons "[項目/こうもく]" cons "[説明/せつめい]" nil
+        cons row cons "[長/なが]い[項目名/こうもくめい]" cons "[本文/ほんぶん]" nil nil nil"#,
+        RenderOptions {
+            parallel: ParallelMode::Rows,
+        },
+    )?;
+    assert_eq!(out.matches("class=\"nepl-table-scroll\"").count(), 1);
+    assert!(out.contains("<div class=\"nepl-table-scroll\"><table>"));
+    assert!(out.contains("</table></div>"));
+    assert_eq!(out.matches("<thead>").count(), 1);
+    assert_eq!(out.matches("<tbody>").count(), 1);
+    assert_eq!(out.matches("<th scope=\"col\">").count(), 2);
+    assert_eq!(out.matches("<td>").count(), 2);
+    assert_eq!(out.matches("class=\"nepl-ruby\"").count(), 5);
+    assert!(
+        nepl3_doc_html::STYLESHEET
+            .contains(".nepl-table-scroll{max-width:100%;min-width:0;overflow-x:auto}")
+    );
+    // No display:block on the table, overflow:hidden, removed content, or
+    // document JavaScript substitutes for the original semantic structure.
+    assert!(!out.contains("<script"));
+    Ok(())
+}
+
+#[test]
 fn annotated_linear_combination_document_reaches_real_html() -> Result<(), String> {
     let out = html(
         include_str!("../../../examples/document/linear-combination.nepld"),
@@ -262,7 +290,7 @@ fn table_list_and_raw_code_keep_order_shape_and_original_characters() -> Result<
     assert!(out.contains("<table><thead><tr><th class=\"nepl-align-left\" scope=\"col\"><span>A</span></th><th class=\"nepl-align-right\" scope=\"col\"><span>B</span></th></tr></thead><tbody><tr><td class=\"nepl-align-left\"><span>1</span></td><td class=\"nepl-align-right\"><span>2</span></td></tr><tr><td class=\"nepl-align-left\"><span>3</span></td><td class=\"nepl-align-right\"><span>4</span></td></tr></tbody></table>"));
     assert!(out.contains("<ol start=\"7\"><li><span aria-label=\"checked\" class=\"nepl-checkbox\" role=\"img\">☑ </span>"));
     assert!(out.contains("<ul><li></li></ul>"));
-    assert!(out.contains("<figure><figcaption>Rust</figcaption><pre>\n<code>\n&#xD;\n&lt;T&gt; &amp;  x</code></pre></figure><table></table>"));
+    assert!(out.contains("<figure><figcaption>Rust</figcaption><pre>\n<code>\n&#xD;\n&lt;T&gt; &amp;  x</code></pre></figure><div class=\"nepl-table-scroll\"><table></table></div>"));
     Ok(())
 }
 
