@@ -323,6 +323,45 @@ body
       cons "[現在/げんざい]はこの[設計/せっけい]の[整備/せいび]であり、live Pagesの[保存先/ほぞんさき]・journal・[復旧/ふっきゅう]workflowは[未実装/みじっそう]です。" nil
     cons paragraph cons sentence cons text "workflowの" cons ruby text "構文" text "こうぶん" cons text "・" cons ruby text "権限" text "けんげん" cons text "・" cons ruby text "依存" text "いぞん" cons text "jobの" cons ruby text "扱" text "あつか" cons text "いは " cons link external "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax" concat cons text "GitHub Actions" cons ruby text "公式仕様" text "こうしきしよう" nil cons text "、artifactの" cons ruby text "保存" text "ほぞん" cons text "は " cons link external "https://docs.github.com/en/actions/tutorials/store-and-share-data" concat cons ruby text "公式" text "こうしき" cons text "ガイド" nil cons text " に" cons ruby text "従" text "したが" cons text "います。" nil nil
     nil
+  cons section branchIntegration "branchとPRの[統合手順/とうごうてじゅん]" body
+    cons paragraph
+      cons "[通常/つうじょう]は[更新済/こうしんず]みmainから[短命/たんめい]のtopic branchを[作/つく]り、[一/ひと]つの[論理的変更/ろんりてきへんこう]と[関連試験/かんれんしけん]を[同/おな]じPRで[閉/と]じます。"
+      cons "[同/おな]じ[要求/ようきゅう]の[修正/しゅうせい]を[別/べつ]の[依存/いぞん]PRへ[分散/ぶんさん]させず、[無関係/むかんけい]なtopicを[取/と]り[込/こ]む[統合/とうごう]branchへ[転用/てんよう]しません。"
+      cons "[実装中/じっそうちゅう]の[主要/しゅよう]topic[一/ひと]つとレビュー・CI[待/ま]ち[一/ひと]つ[程度/ていど]を[目安/めやす]とし、[同/おな]じ[領域/りょういき]の[未統合/みとうごう]stackを[伸/の]ばす[前/まえ]に[先行変更/せんこうへんこう]を[閉/と]じます。"
+      cons "[独立/どくりつ]した[作業/さぎょう]を[禁止/きんし]する[件数上限/けんすうじょうげん]ではありません。" nil
+    cons paragraph
+      cons "mainの[取得/しゅとく]・[確認/かくにん]だけでは[作業/さぎょう]branchを[更新/こうしん]しません。"
+      cons "[必要/ひつよう]なAPIや[修正/しゅうせい]の[導入/どうにゅう]、[競合解消/きょうごうかいしょう]、strict gateへの[対応/たいおう]など、[理由/りゆう]がある[時点/じてん]で[更新/こうしん]し、その[理由/りゆう]をPRへ[記録/きろく]します。"
+      cons "[統合順序/とうごうじゅんじょ]を[決/き]め、レビュー[修正/しゅうせい]と[必要/ひつよう]なbase[更新/こうしん]をまとめてから[統合候補/とうごうこうほ]を[固定/こてい]し、[必須/ひっす]CIを[完了/かんりょう]させます。"
+      cons "[同/おな]じtreeでも、[別/べつ]headの[成功/せいこう]や[別/べつ]baseとの[検証/けんしょう]を[現在候補/げんざいこうほ]の[成功/せいこう]へ[読/よ]み[替/か]えません。"
+      cons "[保護設定/ほごせってい]を[緩/ゆる]めて[同期/どうき]を[省略/しょうりゃく]しません。" nil
+    cons paragraph
+      cons "[依存/いぞん]PRでは[親/おや]PRと[親/おや]head、[子固有/ここゆう]のcommit[範囲/はんい]を[記録/きろく]します。"
+      cons "[親/おや]の[統合後/とうごうご]は[旧/きゅう]base・[旧/きゅう]headと[子/こ]branchからの[参照/さんしょう]を[確認/かくにん]・[保全/ほぜん]し、[子固有/ここゆう]の[差分/さぶん]だけを[新/しん]mainへrebase/cherry-pickして[整理/せいり]します。"
+      cons "[親/おや]がsquash[済/ず]みなら、[古/ふる]い[親/おや]commitを[子/こ]の[変更/へんこう]として[再投入/さいとうにゅう]しません。"
+      cons "[元系列/もとけいれつ]とのrange-diff、[最終差分/さいしゅうさぶん]、[競合解消/きょうごうかいしょう]を[確認/かくにん]し、[必要/ひつよう]な[再/さい]レビューと[新候補/しんこうほ]のCIを[行/おこな]います。"
+      cons "[共有/きょうゆう]branchの[書換/かきか]えは[利用者/りようしゃ]・[子/こ]branchへの[影響/えいきょう]を[確認/かくにん]し、remoteの[期待/きたい]SHAを[指定/してい]したforce-with-leaseを[使/つか]います。"
+      cons "[通常/つうじょう]のforce pushは[使/つか]いません。"
+      cons "[確認/かくにん]できなければ[新/しん]branchへ[固有差分/こゆうさぶん]を[移/うつ]し、[旧/きゅう]branchを[保全/ほぜん]します。" nil
+    cons paragraph
+      cons "[通常/つうじょう]の[単一変更/たんいつへんこう]PRはsquash mergeを[既定/きてい]とします。"
+      cons "[例外/れいがい]の[理由/りゆう]を[示/しめ]したうえで、[個別変更/こべつへんこう]を[線形/せんけい]に[残/のこ]す[場合/ばあい]はrebase merge、[元/もと]のcommitと[統合点/とうごうてん]を[保持/ほじ]する[場合/ばあい]はmerge commitを[選/えら]びます。"
+      cons "rebase mergeは[元/もと]のSHAを[保持/ほじ]しません。"
+      cons "[統合後/とうごうご]のtopic branchを[別/べつ]の[作業/さぎょう]へ[再利用/さいりよう]せず、[公開済/こうかいず]みmainは[別途合意/べっとごうい]した[履歴移行/りれきいこう]なしに[書/か]き[換/か]えません。"
+      cons "[既存/きそん]stackも[一括/いっかつ]で[無条件/むじょうけん]に[書/か]き[換/か]えず、[親/おや]から[順/じゅん]に[整理/せいり]します。" nil
+    cons paragraph
+      cons "PRには[対象/たいしょう]commit・base、[確認/かくにん]した[契約/けいやく]と[差分/さぶん]、[重要/じゅうよう]な[指摘/してき]と[解消/かいしょう]、[独立実行/どくりつじっこう]とログ[確認/かくにん]の[区別/くべつ]、[未確認範囲/みかくにんはんい]を[短/みじか]く[残/のこ]します。"
+      cons "merge queueは[導入済/どうにゅうず]みとは[扱/あつか]いません。"
+      cons sentence cons ruby text "必要" text "ひつよう" cons text "になった" cons ruby text "場合" text "ばあい" cons text "に" cons ruby text "既存" text "きそん" cons text "GitHub" cons ruby text "機能" text "きのう" cons text "と" cons code "merge_group" cons text "のCI" cons ruby text "対応" text "たいおう" cons text "を" cons ruby text "別途検証" text "べっとけんしょう" cons text "します。" nil
+      cons "[独自/どくじ]の[統合管理/とうごうかんり]frameworkは[追加/ついか]しません。" nil
+    cons paragraph
+      cons sentence
+        cons text "この" cons ruby text "運用" text "うんよう" cons text "は "
+        cons link external "https://git-scm.com/docs/gitworkflows" text "Gitのtopic workflow"
+        cons text " と "
+        cons link external "https://docs.github.com/en/pull-requests/reference/pull-request-merges" concat cons text "GitHubの" cons ruby text "統合方式" text "とうごうほうしき" cons text "・squash" cons ruby text "後" text "ご" cons text "のbranchに" cons ruby text "関" text "かん" cons text "する" cons ruby text "注意" text "ちゅうい" nil
+        cons text " を" cons ruby text "参考" text "さんこう" cons text "に、NEPL3の" cons ruby text "独立" text "どくりつ" cons text "レビュー・strict CI" cons ruby text "条件" text "じょうけん" cons text "へ" cons ruby text "適用" text "てきよう" cons text "したものです。" nil nil
+    nil
   cons section review "[実装/じっそう]と[独立/どくりつ]レビュー" body
     cons paragraph
       cons sentence cons text "Doc" cons ruby text "関連" text "かんれん" cons text "の" cons ruby text "共通値" text "きょうつうち" cons text "・wire・" cons ruby text "文書意味" text "ぶんしょいみ" cons text "APIを" cons ruby text "固定" text "こてい" cons text "する" cons ruby text "前" text "まえ" cons text "に、" cons link relative "doc-inventory.md" none concat cons ruby text "早期" text "そうき" cons text "inventoryとgap audit" nil cons text " を" cons ruby text "確認" text "かくにん" cons text "します。" nil

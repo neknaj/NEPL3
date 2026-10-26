@@ -1,6 +1,7 @@
 //! Scoped command parity in an incomplete, non-authoritative migration draft.
 use super::super::*;
-use nepl3_doc_core::{check::Category, model::DocKind};
+use super::{blocks, markdown_blocks};
+use nepl3_doc_core::{check::Category, model::DocKind, text};
 use pulldown_cmark::{CodeBlockKind, Event, Parser, Tag, TagEnd};
 
 #[test]
@@ -91,6 +92,36 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 expected.remove(index);
             }
             assert_eq!(expected.len(), 4);
+            let branch_node = document.value.nodes.iter().position(|node| {
+                matches!(&node.kind, DocKind::Section { id, .. } if id == "branchIntegration")
+            }).ok_or("branch integration section missing")?;
+            let heading = "## branchとPRの統合手順";
+            let (_, rest) = original
+                .split_once(heading)
+                .ok_or("source branch heading")?;
+            let (body, _) = rest
+                .split_once("\n## 実装と独立レビュー")
+                .ok_or("source branch section end")?;
+            let expected_branch = markdown_blocks(&format!("{heading}{body}"));
+            let mut b = budget();
+            let prepared =
+                text::prepare(&document, profile.registry(), &mut codec, &mut b).map_err(err)?;
+            let mut project = |sentence| match prepared
+                .project(sentence, text::AnnotationPolicy::BaseOnly, &[], &mut b)
+                .map_err(err)?
+                .outcome
+            {
+                text::PlainTextOutcome::Complete { text } => Ok(text),
+                other => Err(format!("incomplete branch text: {other:?}")),
+            };
+            let mut actual_branch = Vec::new();
+            blocks(
+                &document,
+                branch_node as u64,
+                &mut project,
+                &mut actual_branch,
+            )?;
+            assert_eq!(actual_branch, expected_branch);
             Ok(())
         },
     )?;
