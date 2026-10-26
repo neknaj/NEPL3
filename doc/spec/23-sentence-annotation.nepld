@@ -1402,8 +1402,45 @@ body
           cons variant en "One cumulative Budget covers shells, CSS, identity data and the receipt; pre_receipt_usage is observed before serializing the receipt itself, and a final stop check precedes success."
           nil
         cons parallel
-          cons variant ja "[包装器/ほうそうき]はKaTeX[変換/へんかん]を[実行/じっこう]せず、[渡/わた]された[表示/ひょうじ]を[保持/ほじ]するだけであり、parse・CLI・[外部/がいぶ]SVG[梱包/こんぽう]・[保持/ほじ]jobのretry・portable proofは[追加/ついか]しない。"
-          cons variant en "The packager does not execute KaTeX conversion and only preserves the supplied display; it adds no parsing, CLI, external SVG packaging, retained-job retry or portable proof."
+          cons variant ja "この[埋/う]め[込/こ]み[包装器/ほうそうき]はKaTeX[変換/へんかん]を[実行/じっこう]せず、[渡/わた]された[表示/ひょうじ]を[保持/ほじ]するだけであり、parse・CLI・[外部/がいぶ]SVG[梱包/こんぽう]・[保持/ほじ]jobのretry・portable proofは[追加/ついか]しない。"
+          cons variant en "This embedded packager does not execute KaTeX conversion and only preserves the supplied display; it adds no parsing, CLI, external SVG packaging, retained-job retry or portable proof."
+          nil
+        nil
+      nil
+    cons section svgExternalPackage "[外部/がいぶ]SVGのnative PageSet[包装/ほうそう] / Native external SVG PageSet packaging"
+      body
+      cons paragraph
+        cons parallel
+          cons variant ja "pages::svg::render_externalは、[同/おな]じ[正確/せいかく]なPageSet・RenderOptions・Plansを[使/つか]うroot-onlyのplan-based native[入口/いりぐち]であり、[非表示/ひひょうじ]を[含/ふく]む[採用/さいよう]guestのSVGをroot bindingで[満/み]たさない。"
+          cons variant en "The plan-based native pages::svg::render_external entry uses the same exact PageSet, RenderOptions and Plans and remains root-only: root bindings cannot satisfy adopted guest SVG requirements, including hidden ones."
+          nil
+        cons parallel
+          cons variant ja "[全/ぜん]SVG・digest・alt・namespaceの[検証後/けんしょうご]に[型付/かたつ]き[証拠/しょうこ]から[不変/ふへん]のbyte[列/れつ]を[所有/しょゆう]し、そのcopyも[累積/るいせき]Budgetへ[課金/かきん]する。"
+          cons variant en "Only after all SVG, digest, alt and namespace checks succeed are immutable bytes owned from typed evidence, with the copies charged to the cumulative Budget."
+          nil
+        cons parallel
+          cons variant ja "input_externalのidentityはroot-svg-embedded/1を[別/べつ]domainのroot-svg-external/1へ[置/お]き[換/か]え、それ[以外/いがい]のcanonical[入力/にゅうりょく]・[区切/くぎ]り・display[束縛/そくばく]を[維持/いじ]する。"
+          cons variant en "The input_external identity replaces root-svg-embedded/1 with the distinct root-svg-external/1 domain while retaining the other canonical inputs, delimiters and display binding."
+          nil
+        cons parallel
+          cons variant ja "[各/かく]pageの[親/おや]directoryへassets/<digest>.svgを[配置/はいち]し、HTMLの[相対/そうたい]Src・page[別/べつ]CSS・img-src 'self'のCSPを[対応/たいおう]させる。"
+          cons variant en "Each page parent directory receives assets/<digest>.svg, matching relative HTML Src, page-specific CSS and the same-origin image CSP."
+          nil
+        cons parallel
+          cons variant ja "[同一/どういつ]pathの[生成/せいせい]SVGだけをbyte[列/れつ]の[一致/いっち]で[重複排除/じゅうふくはいじょ]し、[登録/とうろく]fileは[同/おな]じbyte[列/れつ]でも[衝突/しょうとつ]として[拒否/きょひ]する。"
+          cons variant en "Only generated SVGs at the same path deduplicate after actual byte equality; registered files are rejected as collisions even when their bytes are identical."
+          nil
+        cons parallel
+          cons variant ja "[大小文字/だいしょうもじ]・fileとdirectoryの[祖先関係/そせんかんけい]・[予約/よやく]manifestとの[衝突/しょうとつ]も[拒否/きょひ]し、[異/こと]なる[親/おや]directoryへのcopyは[別/べつ]fileとして[出力/しゅつりょく][課金/かきん]する。"
+          cons variant en "Case-folded, file/directory ancestor and reserved-manifest collisions are also rejected, and copies under different parent directories are charged as separate physical outputs."
+          nil
+        cons parallel
+          cons variant ja "nepl3.local-doc-pages.root-svg-external-package/1のreceiptはsvg=external・katex_generation=falseと[全/ぜん]payloadのbyte[長/ちょう]・digestを[記録/きろく]し、receiptの[直列化/ちょくれつか]まで[同/おな]じBudgetで[処理/しょり]する。"
+          cons variant en "The nepl3.local-doc-pages.root-svg-external-package/1 receipt records svg=external, katex_generation=false and every payload length and digest, with receipt serialization covered by the same Budget."
+          nil
+        cons parallel
+          cons variant ja "[停止/ていし]や[失敗/しっぱい]では[完了/かんりょう]packageを[返/かえ]さず、この[入口/いりぐち]はsource CLI・KaTeX[生成/せいせい]・[保持/ほじ]jobのretry・[永続復元/えいぞくふくげん]・portable proofを[追加/ついか]しない。"
+          cons variant en "Stops and failures return no completed package; this entry adds no source CLI, KaTeX generation, retained-job retry, durable restoration or portable proof."
           nil
         nil
       nil

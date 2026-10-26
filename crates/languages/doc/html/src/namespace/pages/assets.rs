@@ -102,6 +102,11 @@ impl<'a, 'i> PreparedExternalPages<'a, 'i> {
     pub fn assets(&self) -> &[ExternalAsset<'i>] {
         &self.assets
     }
+    /// Transfer the already admitted evidence without cloning or re-admission.
+    /// The caller must still preserve page-relative routing when packaging.
+    pub fn into_parts(self) -> (PreparedPages<'a>, Vec<ExternalAsset<'i>>) {
+        (self.prepared, self.assets)
+    }
 }
 
 /// Admit exact page/member SVG inputs, including hidden members, and retain

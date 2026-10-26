@@ -43,16 +43,26 @@ pub fn input<C: FoundationValueCodec>(
 where
     C::Error: core::fmt::Debug,
 {
-    let result = input_inner(set, options, assets, registry, codec, budget);
+    let result = input_inner(
+        set,
+        options,
+        assets,
+        registry,
+        codec,
+        b"nepl3.local-doc-pages.root-svg-embedded/1\0",
+        budget,
+    );
     budget.poll().map_err(err)?;
     result
 }
+#[allow(clippy::too_many_arguments)]
 fn input_inner<C: FoundationValueCodec>(
     set: &PageSet,
     options: &RenderOptions,
     assets: &[RootAssets<'_>],
     registry: &SchemaRegistry,
     codec: &mut C,
+    domain: &[u8],
     b: &mut Budget,
 ) -> Result<Digest, String>
 where
@@ -65,11 +75,7 @@ where
         .canonical_value_digest(b"nepl3.local-doc-pages.svg-source/1\0", &value, b)
         .map_err(err)?;
     let mut bytes = Vec::new();
-    append(
-        &mut bytes,
-        b"nepl3.local-doc-pages.root-svg-embedded/1\0",
-        b,
-    )?;
+    append(&mut bytes, domain, b)?;
     append(&mut bytes, &source.0, b)?;
     append(&mut bytes, &(assets.len() as u64).to_le_bytes(), b)?;
     for (index, root) in assets.iter().enumerate() {
@@ -104,4 +110,30 @@ where
         &options.parallel,
         b,
     )
+}
+
+/// Same canonical inputs and display binding as input(), under a distinct
+/// external-SVG domain. Still not asset admission or emitted-file evidence.
+pub fn input_external<C: FoundationValueCodec>(
+    set: &PageSet,
+    options: &RenderOptions,
+    assets: &[RootAssets<'_>],
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<Digest, String>
+where
+    C::Error: core::fmt::Debug,
+{
+    let result = input_inner(
+        set,
+        options,
+        assets,
+        registry,
+        codec,
+        b"nepl3.local-doc-pages.root-svg-external/1\0",
+        budget,
+    );
+    budget.poll().map_err(err)?;
+    result
 }

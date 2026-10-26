@@ -103,3 +103,73 @@ where
     budget.poll().map_err(Error::Stopped)?;
     result
 }
+
+/// External SVG packaging retains its private admission evidence alongside the
+/// rendered pages. Completed files and receipt are returned only together.
+pub struct PackagedExternal<'s, 'a> {
+    pub rendered: planned::ExternalRendered<'s, 'a>,
+    pub input_identity: Digest,
+    pub files: BTreeMap<String, Vec<u8>>,
+    pub manifest: String,
+}
+
+/// Root-only, plan-based external SVG package. This does not capture sources,
+/// invoke KaTeX, provide a CLI or grant filesystem publication authority.
+#[allow(clippy::too_many_arguments)]
+pub fn render_external<'s, 'a, 'i, C: FoundationValueCodec, F>(
+    set: &'a PageSet,
+    options: &'s RenderOptions,
+    plans: &[Plan<'s, 'a>],
+    inputs: &[RootAssets<'i>],
+    host: &mut SentenceAnnotationRenderer<'_, C>,
+    other: &mut impl FnMut(
+        u64,
+        &DocEmbedView<'_>,
+        EmbedRef,
+        &mut C,
+        &mut Budget,
+    ) -> Result<HtmlRequest, F>,
+    budget: &mut Budget,
+) -> Result<PackagedExternal<'s, 'a>, Error<C::Error, F>>
+where
+    C::Error: core::fmt::Debug,
+{
+    let initial = budget.usage();
+    let result = (|| {
+        budget.poll().map_err(Error::Stopped)?;
+        let rendered =
+            match planned::render_external(set, options, plans, inputs, host, other, budget) {
+                Ok(value) => value,
+                Err(error) => {
+                    budget
+                        .charge(
+                            nepl3_core::budget::Resource::AllocationUnits,
+                            core::mem::size_of_val(&error) as u64,
+                        )
+                        .map_err(Error::Stopped)?;
+                    return Err(Error::Render(Box::new(error)));
+                }
+            };
+        let input_identity =
+            identity::input_external(set, options, inputs, host.registry, host.codec, budget)
+                .map_err(Error::Packaging)?;
+        let (files, manifest) = output::package_external(
+            set,
+            options,
+            inputs,
+            &rendered,
+            input_identity,
+            initial,
+            budget,
+        )
+        .map_err(Error::Packaging)?;
+        Ok(PackagedExternal {
+            rendered,
+            input_identity,
+            files,
+            manifest,
+        })
+    })();
+    budget.poll().map_err(Error::Stopped)?;
+    result
+}
