@@ -78,7 +78,7 @@ def observe_tables(page: Page) -> None:
         table = tables.nth(index)
         wrapper = table.locator('xpath=..')
         expect(wrapper).to_have_class('nepl-table-scroll')
-        raw: object = wrapper.evaluate('''el => {
+        script = '''el => {
           const table = el.firstElementChild;
           const before = table.textContent;
           const box = el.getBoundingClientRect();
@@ -91,7 +91,8 @@ def observe_tables(page: Page) -> None:
             overflow:getComputedStyle(el).overflowX,
             preserved:table.textContent===before,
             semantic:el.children.length===1 && table.tagName==='TABLE'});
-        }''')  # pyright: ignore[reportAny]
+        }'''
+        raw: object = wrapper.evaluate(script)  # pyright: ignore[reportAny]
         if not isinstance(raw, str):
             raise TypeError('table scroll observation must be JSON text')
         state = object_value(decode(raw, reject_duplicates=True, reject_nonfinite=True))
