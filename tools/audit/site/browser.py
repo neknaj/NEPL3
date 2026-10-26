@@ -11,6 +11,7 @@ from urllib.parse import quote, urlsplit
 
 from playwright.sync_api import Page, Request, Response, Route, expect, sync_playwright
 from tools.serialization.json import JsonValue, decode, integer, object_value, string
+from screenshots import Screenshots
 
 type Engine = Literal['chromium', 'firefox', 'webkit']
 
@@ -71,7 +72,11 @@ def observe_fragments(page: Page, url: str) -> int:
 
 
 def observe(root: Path, base: str, pages: Sequence[str],
-            example_sources: Sequence[str]) -> tuple[Case, ...]:
+            example_sources: Sequence[str], *, screenshot_root: Path | None = None,
+            screenshot_pages: Sequence[str] = ()) -> tuple[Case, ...]:
+    if screenshot_root is None and screenshot_pages:
+        raise ValueError('screenshot destination is required')
+    captures = None if screenshot_root is None else Screenshots(root, screenshot_root, pages, screenshot_pages)
     @final
     class Handler(SimpleHTTPRequestHandler):
         def __init__(self, request: socket, client_address: tuple[str, int], server: BaseServer) -> None:
@@ -136,6 +141,26 @@ def observe(root: Path, base: str, pages: Sequence[str],
                                         'example display differs from source'
                                 fragments = observe_fragments(page, f'http://127.0.0.1:{server.server_port}' + base + name)
                                 rows.append(Case(engine, browser.version, width, name, state, fragments))
+                                if captures is not None and name in captures.selected:
+                                    # Capture the initial route, not the last :target/scroll state.
+                                    initial_url = f'http://127.0.0.1:{server.server_port}' + base + name
+                                    initial_response = page.goto(initial_url, wait_until='networkidle')
+                                    assert initial_response is None or initial_response.status == 200
+                                    expect(page).to_have_url(initial_url)
+                                    scrolled: object = page.evaluate('() => { window.scrollTo(0, 0); return true; }')  # pyright: ignore[reportAny]
+                                    assert scrolled is True
+                                    for theme in ('light', 'dark'):
+                                        page.emulate_media(color_scheme=theme)
+                                        _ = page.wait_for_function("document.fonts.status === 'loaded'", timeout=15000)
+                                        dark: object = page.evaluate("matchMedia('(prefers-color-scheme: dark)').matches")  # pyright: ignore[reportAny]
+                                        assert dark is (theme == 'dark')
+                                        observed: object = page.evaluate(MEASURE)  # pyright: ignore[reportAny]
+                                        themed = measurement(observed)
+                                        assert not failures and themed.scripts == 0 and themed.styles > 0 and not themed.overflow
+                                        target = captures.path(engine, width, theme, name)
+                                        png = page.screenshot(path=str(target), full_page=True, timeout=15000)
+                                        captures.record(engine, browser.version, width, theme, name, target, png)
+                                    page.emulate_media(color_scheme='light')
                         finally:
                             context.close()
                 finally:
@@ -144,4 +169,6 @@ def observe(root: Path, base: str, pages: Sequence[str],
         server.shutdown()
         server.server_close()
         thread.join()
+    if captures is not None:
+        captures.finish()
     return tuple(rows)

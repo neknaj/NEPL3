@@ -528,6 +528,22 @@
       "aliases": "doc/migration/aliases/browser-source-position.json",
       "route": "docs/conformance/browser-source-position.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "contributing",
+      "source": "doc/migration/authored/project/CONTRIBUTING.nepld",
+      "projection": "CONTRIBUTING.md",
+      "aliases": "doc/migration/aliases/CONTRIBUTING.json",
+      "route": "docs/project/contributing.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
+    },
+    {
+      "id": "codex",
+      "source": "doc/migration/authored/project/CODEX.nepld",
+      "projection": "CODEX.md",
+      "aliases": "doc/migration/aliases/CODEX.json",
+      "route": "docs/project/codex.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [
@@ -605,6 +621,26 @@
       "id": "canonical-registry-source",
       "source": "doc/canonical.json",
       "route": "sources/canonical.json"
+    },
+    {
+      "id": "agents-source",
+      "source": "AGENTS.md",
+      "route": "sources/agents.md"
+    },
+    {
+      "id": "license-source",
+      "source": "LICENSE",
+      "route": "sources/license.txt"
+    },
+    {
+      "id": "doc-index-source",
+      "source": "doc/README.md",
+      "route": "sources/doc-index.md"
+    },
+    {
+      "id": "development-source",
+      "source": "doc/development.md",
+      "route": "sources/development.md"
     }
   ],
   "output_limits": {

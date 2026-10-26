@@ -1,11 +1,17 @@
-# 開発への参加
+<!-- Generated from doc/migration/authored/project/CONTRIBUTING.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page contributing; source SHA-256 9b3dac64a2735a08cac52a1a77deaef19c8da5302856872b98294bf78d0f8287; alias input SHA-256 258dfa5378bc18d688499f36458a20123ecf67503d0898e52f949d7ae257cbcc; page input SHA-256 3ffac8dc4c7f1982467594fe521d155fd515861f1bbc458123c0944703fb6003. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
-最初に [仕様の入口](doc/README.md)、[AGENTS.md](AGENTS.md)、[開発手順](doc/development.md) を読んでください。実装対象は [タスク定義](design/tasks.json) の依存順に選び、[実装状態](implementation-status.json) を確認します。
+<a name="開発への参加"></a>
 
-変更は具体的な問題と受入条件に結び付け、必要最小限の範囲にします。設計の誤りが見つかった場合は、根拠を示して仕様・schema・文法・例・conformanceを整合させ、`doc/decisions/` に理由を記録します。ChatGPTが生成した設計も検証対象です。
+# <ruby>開発<rt>かいはつ</rt></ruby>への<ruby>参加<rt>さんか</rt></ruby>
 
-agentによる開発では、メインagentが設計具体化・実装・試験・指摘修正と統括を担当し、subagentには独立レビューを依頼します。ユーザーが明示許可したDoc文書の書き直しに限り、subagentによる並行執筆を行い、執筆者と別の担当が独立レビューします。レビュー担当は契約と実際の差分・試験根拠を確認し、メインagentが指摘の解消と再検査を確認します。
+[正本（NEPL3d）](<doc/migration/authored/project/CONTRIBUTING.nepld>)
 
-PRには変更後の動作、関連タスク・受入条件、実行した検査、未実行の範囲を記載してください。`doc/development.md` の検査とdiff確認を行います。タスク本文の直接編集、未実装の成功stub、golden更新だけによる正しさの主張は避けます。`.tmp/` や秘密情報をcommitしません。
+<ruby>最初<rt>さいしょ</rt></ruby>に [<ruby>仕様<rt>しよう</rt></ruby>の<ruby>入口<rt>いりぐち</rt></ruby>](<doc\/README\.md>)、[AGENTS\.md](<AGENTS\.md>)、[<ruby>開発手順<rt>かいはつてじゅん</rt></ruby>](<doc\/development\.md>) を<ruby>読<rt>よ</rt></ruby>んでください。<ruby>実装対象<rt>じっそうたいしょう</rt></ruby>は [タスク<ruby>定義<rt>ていぎ</rt></ruby>](<design\/tasks\.json>) の<ruby>依存順<rt>いぞんじゅん</rt></ruby>に<ruby>選<rt>えら</rt></ruby>び、[<ruby>実装状態<rt>じっそうじょうたい</rt></ruby>](<implementation\-status\.json>) を<ruby>確認<rt>かくにん</rt></ruby>します。
 
-提供されるコードと文書は、このリポジトリの [MIT License](LICENSE) の下で扱います。
+<ruby>変更<rt>へんこう</rt></ruby>は<ruby>具体的<rt>ぐたいてき</rt></ruby>な<ruby>問題<rt>もんだい</rt></ruby>と<ruby>受入条件<rt>うけいれじょうけん</rt></ruby>に<ruby>結<rt>むす</rt></ruby>び<ruby>付<rt>つ</rt></ruby>け、<ruby>必要最小限<rt>ひつようさいしょうげん</rt></ruby>の<ruby>範囲<rt>はんい</rt></ruby>にします。<ruby>設計<rt>せっけい</rt></ruby>の<ruby>誤<rt>あやま</rt></ruby>りが<ruby>見<rt>み</rt></ruby>つかった<ruby>場合<rt>ばあい</rt></ruby>は、<ruby>根拠<rt>こんきょ</rt></ruby>を<ruby>示<rt>しめ</rt></ruby>して<ruby>仕様<rt>しよう</rt></ruby>・schema・<ruby>文法<rt>ぶんぽう</rt></ruby>・<ruby>例<rt>れい</rt></ruby>・conformanceを<ruby>整合<rt>せいごう</rt></ruby>させ、`doc/decisions/` に<ruby>理由<rt>りゆう</rt></ruby>を<ruby>記録<rt>きろく</rt></ruby>します。ChatGPTが<ruby>生成<rt>せいせい</rt></ruby>した<ruby>設計<rt>せっけい</rt></ruby>も<ruby>検証対象<rt>けんしょうたいしょう</rt></ruby>です。
+
+agentによる<ruby>開発<rt>かいはつ</rt></ruby>では、メインagentが<ruby>設計具体化<rt>せっけいぐたいか</rt></ruby>・<ruby>実装<rt>じっそう</rt></ruby>・<ruby>試験<rt>しけん</rt></ruby>・<ruby>指摘修正<rt>してきしゅうせい</rt></ruby>と<ruby>統括<rt>とうかつ</rt></ruby>を<ruby>担当<rt>たんとう</rt></ruby>し、subagentには<ruby>独立<rt>どくりつ</rt></ruby>レビューを<ruby>依頼<rt>いらい</rt></ruby>します。ユーザーが<ruby>明示許可<rt>めいじきょか</rt></ruby>したDoc<ruby>文書<rt>ぶんしょ</rt></ruby>の<ruby>書<rt>か</rt></ruby>き<ruby>直<rt>なお</rt></ruby>しに<ruby>限<rt>かぎ</rt></ruby>り、subagentによる<ruby>並行執筆<rt>へいこうしっぴつ</rt></ruby>を<ruby>行<rt>おこな</rt></ruby>い、<ruby>執筆者<rt>しっぴつしゃ</rt></ruby>と<ruby>別<rt>べつ</rt></ruby>の<ruby>担当<rt>たんとう</rt></ruby>が<ruby>独立<rt>どくりつ</rt></ruby>レビューします。レビュー<ruby>担当<rt>たんとう</rt></ruby>は<ruby>契約<rt>けいやく</rt></ruby>と<ruby>実際<rt>じっさい</rt></ruby>の<ruby>差分<rt>さぶん</rt></ruby>・<ruby>試験根拠<rt>しけんこんきょ</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>し、メインagentが<ruby>指摘<rt>してき</rt></ruby>の<ruby>解消<rt>かいしょう</rt></ruby>と<ruby>再検査<rt>さいけんさ</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>します。
+
+PRには<ruby>変更後<rt>へんこうご</rt></ruby>の<ruby>動作<rt>どうさ</rt></ruby>、<ruby>関連<rt>かんれん</rt></ruby>タスク・<ruby>受入条件<rt>うけいれじょうけん</rt></ruby>、<ruby>実行<rt>じっこう</rt></ruby>した<ruby>検査<rt>けんさ</rt></ruby>、<ruby>未実行<rt>みじっこう</rt></ruby>の<ruby>範囲<rt>はんい</rt></ruby>を<ruby>記載<rt>きさい</rt></ruby>してください。`doc/development.md` の<ruby>検査<rt>けんさ</rt></ruby>とdiff<ruby>確認<rt>かくにん</rt></ruby>を<ruby>行<rt>おこな</rt></ruby>います。タスク<ruby>本文<rt>ほんぶん</rt></ruby>の<ruby>直接編集<rt>ちょくせつへんしゅう</rt></ruby>、<ruby>未実装<rt>みじっそう</rt></ruby>の<ruby>成功<rt>せいこう</rt></ruby>stub、golden<ruby>更新<rt>こうしん</rt></ruby>だけによる<ruby>正<rt>ただ</rt></ruby>しさの<ruby>主張<rt>しゅちょう</rt></ruby>は<ruby>避<rt>さ</rt></ruby>けます。`.tmp/` や<ruby>秘密情報<rt>ひみつじょうほう</rt></ruby>をcommitしません。
+
+<ruby>提供<rt>ていきょう</rt></ruby>されるコードと<ruby>文書<rt>ぶんしょ</rt></ruby>は、このリポジトリの [MIT License](<LICENSE>) の<ruby>下<rt>もと</rt></ruby>で<ruby>扱<rt>あつか</rt></ruby>います。
