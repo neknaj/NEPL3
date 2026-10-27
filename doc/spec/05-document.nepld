@@ -71,6 +71,11 @@ body
         cons "Sectionを[指/さ]す[局所参照/きょくしょさんしょう]は、[出力/しゅつりょく]したanchorとの[一致/いっち]も[検査/けんさ]する。Inline Anchorは[参照/さんしょう]の[有無/うむ]によらず[未対応/みたいおう]として[拒否/きょひ]する。"
         cons "[外部/がいぶ]URIは[検査/けんさ]するが、[相対/そうたい]link・page link・asset・foreign[依存/いぞん]はNeedsResolutionとして[失敗/しっぱい]し、[一部/いちぶ]だけの[出力/しゅつりょく]を[返/かえ]さない。"
         cons "この[入口/いりぐち]は[互換/ごかん]alias・[外部/がいぶ]fragmentの[選択/せんたく]・[正本/せいほん]linkの[挿入/そうにゅう]を[受/う]け[付/つ]けず、Article[出力/しゅつりょく]・PageSet・canonical[公開/こうかい]の[契約/けいやく]を[変更/へんこう]しない。"
+        cons sentence cons code "doc-markdown body-footnotes [--limits FILE] INPUT OUTPUT" cons text " は、このfragmentを" cons ruby text "専用" text "せんよう" cons text "CLIから" cons ruby text "生成" text "せいせい" cons text "する。" nil
+        cons "[入力/にゅうりょく]はUTF-8の[通常/つうじょう]fileに[限定/げんてい]し、[共通/きょうつう]source[上限/じょうげん]と[選択/せんたく]したparse[上限/じょうげん]を[適用/てきよう]する。parse・lower・outputは[独立/どくりつ]した[有限/ゆうげん]Budgetを[用/もち]いる。"
+        cons "[一時/いちじ]file[名/めい]はASCIIの8.3[形式/けいしき]とし、[出力名/しゅつりょくめい]との[一致/いっち]・ASCII caseの[差/さ]・[末尾/まつび]のdotやspaceによる[別名/べつめい]を[避/さ]ける。[出力/しゅつりょく]pathの[通常/つうじょう]componentにcolonを[許/ゆる]さず、Windowsのstream[別名/べつめい]を[拒否/きょひ]する。drive prefixのcolonは[別/べつ]に[扱/あつか]う。"
+        cons "[全体/ぜんたい]を[生成/せいせい]してから[同/おな]じdirectoryの[一時/いちじ]fileへ[書/か]き、hard linkによる[非置換/ひちかん]の[公開/こうかい]で[部分/ぶぶん]fileや[既存/きそん]fileの[上書/うわが]きを[防/ふせ]ぐ。hard link[非対応/ひたいおう]のfile systemでは[失敗/しっぱい]し、renameやcopyへ[暗黙/あんもく]fallbackしない。"
+        cons "[公開後/こうかいご]の[一時/いちじ]file[削除/さくじょ]に[失敗/しっぱい]した[場合/ばあい]は、[完全/かんぜん]な[出力/しゅつりょく]が[公開済/こうかいず]みであることをerrorへ[明記/めいき]する。[電源断/でんげんだん]に[対/たい]する[永続性/えいぞくせい]や、[敵対的/てきたいてき]な[同時/どうじ]path[置換/ちかん]への[耐性/たいせい]は[保証/ほしょう]しない。"
         nil
       cons paragraph
         cons sentence cons code "labels::namespace::inspect_body" cons text " はBodyを" cons ruby text "検査" text "けんさ" cons text "し、" cons code "BodyMember" cons text " に" cons ruby text "未解決" text "みかいけつ" cons text "の" cons ruby text "参照" text "さんしょう" cons text "と" cons ruby text "定義" text "ていぎ" cons text "を" cons ruby text "保持" text "ほじ" cons text "する。" nil

@@ -22,6 +22,8 @@ mod article_svg;
 mod article_visibility;
 #[path = "doc/body_markdown.rs"]
 mod body_markdown;
+#[path = "doc/body_markdown_host.rs"]
+mod body_markdown_host;
 #[path = "doc/code_pages.rs"]
 mod code_pages;
 #[path = "doc/context.rs"]
