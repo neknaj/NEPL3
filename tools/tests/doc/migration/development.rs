@@ -1,7 +1,11 @@
 //! Scoped command parity in an incomplete, non-authoritative migration draft.
 use super::super::*;
 use super::{blocks, markdown_blocks};
-use nepl3_doc_core::{check::Category, model::DocKind, text};
+use nepl3_doc_core::{
+    check::Category,
+    model::{DocKind, DocRoot},
+    text,
+};
 use pulldown_cmark::{CodeBlockKind, Event, Parser, Tag, TagEnd};
 
 #[test]
@@ -61,6 +65,47 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 &mut codec,
             )
             .map_err(err)?;
+            let DocRoot::Article(root) = document.value.root else {
+                return Err("article root".into());
+            };
+            let DocKind::Article { body, .. } = &document.value.nodes[root.0 as usize].kind else {
+                return Err("article node".into());
+            };
+            let DocKind::Body { blocks: children } = &document.value.nodes[body.0 as usize].kind
+            else {
+                return Err("article body".into());
+            };
+            let section_ids: Vec<_> = children
+                .iter()
+                .filter_map(|child| match &document.value.nodes[child.0 as usize].kind {
+                    DocKind::Section { id, .. } => Some(id.as_str()),
+                    _ => None,
+                })
+                .collect();
+            // This checks the repaired first-H1 subsection ownership only;
+            // the misplaced second-H1 Portable section remains a separate gap.
+            assert!(
+                section_ids
+                    .windows(3)
+                    .any(|ids| ids == ["local", "documentGeneration", "pages"])
+            );
+            let checked = nepl3_doc_core::labels::check(
+                &document,
+                profile.registry(),
+                &mut budget(),
+                codec.source_admission(),
+            )
+            .map_err(err)?;
+            assert_eq!(checked.references().len(), 1);
+            let target = checked.references()[0].target.0 as usize;
+            assert_eq!(
+                checked
+                    .definitions()
+                    .get(target)
+                    .ok_or("reference definition")?
+                    .name,
+                "local"
+            );
             let mut actual = Vec::new();
             let mut actual_wasi = Vec::new();
             for node in &document.value.nodes {
@@ -84,6 +129,9 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             // Deliberately a subset: the missing three fenced blocks, prose,
             // headings and link closure still block a complete migration.
             assert_eq!((expected.len(), actual.len()), (13, 10));
+            // All ten first-H1 fenced blocks are present: their source order
+            // matters too. The three remaining blocks belong to the second H1.
+            assert_eq!(actual.as_slice(), &expected[..10]);
             for value in actual {
                 let index = expected
                     .iter()
