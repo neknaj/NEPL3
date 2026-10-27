@@ -258,6 +258,41 @@ body
       cons "[仕様書以外/しようしょいがい]の[未移行文書/みいこうぶんしょ]・rustdoc・[実行例/じっこうれい]の[操作結果/そうさけっか]を[含/ふく]む[統合/とうごう]、[公開後/こうかいご]smokeと[復旧/ふっきゅう]を[含/ふく]むPages[配信/はいしん]、T19/T20[全体/ぜんたい]の[完了/かんりょう]は[別途検証/べっとけんしょう]します。"
       nil
     cons paragraph
+      cons sentence cons code "python tools/site/payload.py dist/site dist/pages.tar --manifest-sha256 <検査済みmanifestのSHA-256>" cons text " は、" cons ruby text "検査対象" text "けんさたいしょう" cons text "と" cons ruby text "同" text "おな" cons text "じfile" cons ruby text "集合" text "しゅうごう" cons text "・byte" cons ruby text "列" text "れつ" cons text "を" cons ruby text "確認" text "かくにん" cons text "し、HTMLを" cons ruby text "再生成" text "さいせいせい" cons text "せずPages" cons ruby text "用" text "よう" cons text "のtarへ" cons ruby text "固定" text "こてい" cons text "します。" nil
+      cons "CIは[実/じつ]ブラウザ[検査/けんさ]のreportからdigestを[渡/わた]し、[元/もと]site・tar・receiptを[同/おな]じartifactに[保存/ほぞん]します。"
+      cons "tar[内/ない]の[順序/じゅんじょ]・[時刻/じこく]・[所有者/しょゆうしゃ]・modeは[固定/こてい]し、リンク（Windows junctionを[含/ふく]む）、[読取/よみと]り[失敗/しっぱい]、[未登録/みとうろく]file、[改変/かいへん]、[上限超過/じょうげんちょうか]を[拒否/きょひ]します。"
+      cons "[出力先/しゅつりょくさき]は[入力/にゅうりょく]siteの[外/そと]にある[新規/しんき]fileに[限/かぎ]ります。"
+      cons sentence cons text "receiptの " cons code "publication_verified" cons text " はfalseです。" nil
+      cons "この[梱包/こんぽう]だけでは[公開確認/こうかいかくにん]やLKG[昇格/しょうかく]になりません。"
+      cons sentence cons ruby text "境界試験" text "きょうかいしけん" cons text "は " cons code "python -m unittest discover -s tools/site -p 'test_*.py'" cons text " で" cons ruby text "実行" text "じっこう" cons text "します。" nil
+      nil
+    cons paragraph
+      cons sentence cons ruby text "復旧用" text "ふっきゅうよう" cons text "の " cons code "tools/site/recovery.py" cons text " は、" cons ruby text "別途確認" text "べっとかくにん" cons text "したLKGのtar/manifest digestと" cons ruby text "取得" text "しゅとく" cons text "した" cons ruby text "元" text "もと" cons text "tarのbyte" cons ruby text "列" text "れつ" cons text "を" cons ruby text "受" text "う" cons text "け" cons ruby text "取" text "と" cons text "ります。" nil
+      cons "ファイルシステムへ[展開/てんかい]せず、[各/かく]member・manifest・file[集合/しゅうごう]の[衝突/しょうとつ]・[内容/ないよう]・[上限/じょうげん]を[検査/けんさ]し、[元/もと]byte[列/れつ]をそのまま[返/かえ]します。"
+      cons "[圧縮/あっしゅく]wrapperは[取得側/しゅとくがわ]で[分離/ぶんり]し、[原/げん]tarのidentityと[混同/こんどう]しません。"
+      cons "canonical tarとの[比較/ひかく]は[検査/けんさ]であり、[比較用/ひかくよう]の[再/さい]serialize[結果/けっか]を[復旧出力/ふっきゅうしゅつりょく]として[使/つか]いません。"
+      cons "[保存物/ほぞんぶつ]のimmutability、[現在/げんざい]の[公開対象/こうかいたいしょう]、journalの[復旧許可/ふっきゅうきょか]は[別途検査/べっとけんさ]が[必要/ひつよう]です。"
+      cons "[通常/つうじょう]CIには[保存済/ほぞんず]みの[実/じつ]Doc tarを[用/もち]いた[回帰試験/かいきしけん]も[含/ふく]めます。"
+      nil
+    cons paragraph
+      cons sentence cons code "python tools/site/smoke.py dist/site https://neknaj.github.io/NEPL3/ --manifest-sha256 <検査済みdigest>" cons text " は、docs-only" cons ruby text "成果物" text "せいかぶつ" cons text "とHTTPS" cons ruby text "応答" text "おうとう" cons text "のbyte" cons ruby text "列" text "れつ" cons text "、HTML/CSSのMIME、directory indexと" cons ruby text "未知" text "みち" cons text "routeの404を" cons ruby text "照合" text "しょうごう" cons text "します。" nil
+      cons "build identityを[前後/ぜんご]で[取得/しゅとく]し、redirectや[内容/ないよう]の[混在/こんざい]を[拒否/きょひ]します。"
+      cons sentence cons code ".nojekyll" cons text " は" cons ruby text "公開内容" text "こうかいないよう" cons text "ではなく" cons ruby text "配信制御" text "はいしんせいぎょ" cons text "fileとして" cons ruby text "照合対象" text "しょうごうたいしょう" cons text "から" cons ruby text "外" text "はず" cons text "し、" cons ruby text "結果" text "けっか" cons text "にも" cons ruby text "記録" text "きろく" cons text "します。" nil
+      cons "socket timeoutに[加/くわ]えて[外側/そとがわ]processを[最大/さいだい]300[秒/びょう]で[終了/しゅうりょう]させ、[失敗時/しっぱいじ]は[非/ひ]zero[終了/しゅうりょう]と[理由/りゆう]を[返/かえ]します。"
+      cons sentence cons code "--local-http" cons text " は" cons ruby text "明示" text "めいじ" cons text "port" cons ruby text "付" text "つ" cons text "き127.0.0.1だけで" cons ruby text "利用" text "りよう" cons text "でき、" cons ruby text "結果" text "けっか" cons text "はlocal" cons ruby text "試験" text "しけん" cons text "として" cons ruby text "区別" text "くべつ" cons text "します。" nil
+      cons "このHTTP[照合/しょうごう]は[公開/こうかい]smokeの[一部/いちぶ]であり、Pages API/journalの[現行/げんこう]deployment、[実/じつ]browser[表示/ひょうじ]、[全/ぜん]cacheの[原子的切替/げんしてききりかえ]やLKGを[証明/しょうめい]しません。"
+      cons "publisherはそれぞれの[証拠/しょうこ]を[別途照合/べっとしょうごう]します。"
+      nil
+    cons paragraph
+      cons sentence cons ruby text "受入群" text "うけいれぐん" cons text "の" cons ruby text "文書検査" text "ぶんしょけんさ" cons text "は、Markdownの" cons ruby text "本文" text "ほんぶん" cons text "・" cons ruby text "箇条書" text "かじょうが" cons text "きの" cons ruby text "行頭" text "ぎょうとう" cons text "にあるplainな " cons code "A01:" cons text " " cons ruby text "型" text "がた" cons text "の" cons ruby text "定義" text "ていぎ" cons text "を" cons ruby text "読" text "よ" cons text "みます。" nil
+      cons sentence cons text "escapeや" cons ruby text "文字参照" text "もじさんしょう" cons text "をdecodeした" cons ruby text "表示上" text "ひょうじじょう" cons text "のprefixを" cons ruby text "使" text "つか" cons text "うため、nepldから" cons ruby text "生成" text "せいせい" cons text "した " cons code "- A01\\:" cons text " も" cons ruby text "同" text "おな" cons text "じ" cons ruby text "定義" text "ていぎ" cons text "として" cons ruby text "扱" text "あつか" cons text "います。" nil
+      cons "[見出/みだ]し・[引用/いんよう]・code・HTML・[表/ひょう]・[脚注/きゃくちゅう]や[文中/ぶんちゅう]の[単/たん]なる[言及/げんきゅう]は[定義/ていぎ]にしません。"
+      cons "ID[自体/じたい]をlinkや[強調/きょうちょう]で[組/く]み[立/た]てず、[説明部分/せつめいぶぶん]に[必要/ひつよう]な[注釈/ちゅうしゃく]・code・linkを[配置/はいち]してください。"
+      cons "inline HTMLを[含/ふく]む[段落/だんらく]では、タグの[後/あと]の[改行/かいぎょう]から[定義/ていぎ]の[抽出/ちゅうしゅつ]を[再開/さいかい]しません。"
+      cons "[次/つぎ]の[独立/どくりつ]した[段落/だんらく]・list itemから[再開/さいかい]し、[非表示/ひひょうじ]span[中/ちゅう]のIDを[定義/ていぎ]と[誤認/ごにん]するのを[避/さ]けます。"
+      cons "[重複定義/じゅうふくていぎ]を[拒否/きょひ]し、catalogとの[集合一致/しゅうごういっち]と[全/ぜん]required[条件/じょうけん]の[検査/けんさ]は[維持/いじ]します。"
+      nil
+    cons paragraph
       cons sentence
         cons code "doc/canonical.json"
         cons text " に"
@@ -359,6 +394,16 @@ body
         cons ruby text "使" text "つか"
         cons text "います。"
         nil
+      cons "ブラウザjobは[全体/ぜんたい]を60[分/ぷん]で[制限/せいげん]し、Python[依存/いぞん]の[導入/どうにゅう]は5[分/ふん]、OS[依存/いぞん]と[対応/たいおう]する3ブラウザの[導入/どうにゅう]は30[分/ぷん]の[別/べつ]stepで[制限/せいげん]する。"
+      cons "[準備/じゅんび]が[遅/おそ]い[場合/ばあい]にも[後続/こうぞく]の2[経路/けいろ]のsite build・[実/じつ]ブラウザ[検証/けんしょう]・payload[固定/こてい]を[実行/じっこう]する[余地/よち]を[残/のこ]すための[時間配分/じかんはいぶん]であり、downloadの[成功/せいこう]や[完了時刻/かんりょうじこく]を[保証/ほしょう]するものではない。"
+      cons "[導入/どうにゅう]の[失敗/しっぱい]・[取消/とりけし]・[期限超過/きげんちょうか]を[成功扱/せいこうあつか]いにせず、qualityはdoc-browserのsuccessを[必須/ひっす]とする。"
+      cons "[検証/けんしょう]を[省略/しょうりゃく]して[成功/せいこう]にしない。"
+      cons "[各段階/かくだんかい]の[開始/かいし]・[終了/しゅうりょう]・[結果/けっか]はActionsのstep[記録/きろく]とlogで[確認/かくにん]する。"
+      cons "CIではrunner imageが[既/すで]に[設定/せってい]している3[個/こ]のUbuntu archive mirror[候補/こうほ]のpriorityだけを[変更/へんこう]し、HTTPSの[公式/こうしき]primary archiveをAzure mirrorより[優先/ゆうせん]する。"
+      cons "[既知/きち]のmirror listとの[完全一致/かんぜんいっち]を[検査/けんさ]し、[未知/みち]の[内容/ないよう]・symlink・[非通常/ひつうじょう]fileは[変更/へんこう]せず[失敗/しっぱい]させる。"
+      cons "[候補/こうほ]URI、suite、component、[署名鍵/しょめいかぎ]、APTの[検証設定/けんしょうせってい]は[追加/ついか]・[削除/さくじょ]・[変更/へんこう]しない。"
+      cons "これは[取得経路/しゅとくけいろ]の[優先順位/ゆうせんじゅんい]であり、[通信速度/つうしんそくど]の[保証/ほしょう]ではない。"
+      cons sentence cons ruby text "根拠" text "こんきょ" cons text "は" cons link external "https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/scripts/build/configure-apt-sources.sh" concat cons text "runner imageの" cons ruby text "設定" text "せってい" nil cons text "と" cons link external "https://documentation.ubuntu.com/security/software-integrity/archive-verification/" concat cons text "Ubuntuのarchive" cons ruby text "検証方式" text "けんしょうほうしき" nil cons text "を" cons ruby text "参照" text "さんしょう" cons text "する。" nil
       cons sentence cons text "PowerShellで" cons ruby text "実行" text "じっこう" cons text "ログを" cons ruby text "保存" text "ほぞん" cons text "する" cons ruby text "際" text "さい" cons text "は、" cons ref local concat cons text "ローカル" cons ruby text "環境" text "かんきょう" nil cons text "のUTF-8の" cons ruby text "指針" text "ししん" cons text "に" cons ruby text "従" text "したが" cons text "ってください。" nil
       nil
     nil

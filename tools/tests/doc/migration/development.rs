@@ -155,6 +155,11 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             // boundaries additionally require independent content review.
             for (id, heading, end) in [
                 (
+                    "documentGeneration",
+                    "## 文書生成と初期Pages公開",
+                    "\n## ページ集合と移行候補",
+                ),
+                (
                     "branchIntegration",
                     "## branchとPRの統合手順",
                     "\n## 実装と独立レビュー",
@@ -189,6 +194,13 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 ("Doc inventoryの明示的なbaseline監査", "Docinventoryの"),
                 ("Doc は", "Docは"),
                 ("初期Pages公開は", "初期Pages公開は"),
+                (
+                    "`python tools/site/payload.py",
+                    "pythontools/site/payload.py",
+                ),
+                ("復旧用の", "復旧用の"),
+                ("`python tools/site/smoke.py", "pythontools/site/smoke.py"),
+                ("受入群の文書検査は", "受入群の文書検査は"),
                 (
                     "`cargo run --locked -p nepl3-tools -- site build",
                     "cargorun--locked-pnepl3-tools--sitebuild",
@@ -246,6 +258,9 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                             || source_prefix.starts_with("nativeの")
                             || source_prefix.starts_with("Doc は")
                             || source_prefix.starts_with("初期Pages公開")
+                            || source_prefix.starts_with("`python tools/site/")
+                            || source_prefix.starts_with("復旧用の")
+                            || source_prefix.starts_with("受入群の文書検査は")
                             || source_prefix
                                 .starts_with("`cargo run --locked -p nepl3-tools -- site build")
                             || source_prefix.starts_with("scope付き")
