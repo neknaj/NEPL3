@@ -6,6 +6,9 @@ use nepl3_doc_core::{
     model::*,
 };
 
+#[path = "labels/body.rs"]
+mod body;
+
 fn with_document<T>(
     compiled: &Compiled,
     source: &str,

@@ -37,6 +37,7 @@ pub enum LabelError<'a> {
     Stopped(StopReason),
     Structure(StructureError),
     ExpectedArticle,
+    ExpectedBody,
     ExpectedSentence,
     ExpectedInline,
     DuplicateOccurrence {
@@ -75,6 +76,21 @@ pub struct CheckedSentenceLabels<'a>(CheckedLabels<'a>);
 /// Labels owned by one Inline fragment. Surrounding document labels require
 /// explicit composition; this proof cannot serve as an Article-label proof.
 pub struct CheckedInlineLabels<'a>(CheckedLabels<'a>);
+/// Labels owned by one standalone Body. This proof does not admit that Body
+/// as a PageSet page or an HTML/Markdown document, supply language/title
+/// metadata, or resolve names from a containing Article or foreign closure.
+pub struct CheckedBodyLabels<'a>(CheckedLabels<'a>);
+impl<'a> CheckedBodyLabels<'a> {
+    pub fn document(&self) -> &'a DocumentSyntax {
+        self.0.document()
+    }
+    pub fn definitions(&self) -> &[LabelSite<'a>] {
+        self.0.definitions()
+    }
+    pub fn references(&self) -> &[ResolvedLabel<'a>] {
+        self.0.references()
+    }
+}
 impl<'a> CheckedInlineLabels<'a> {
     pub fn document(&self) -> &'a DocumentSyntax {
         self.0.document()
@@ -148,6 +164,24 @@ pub(crate) fn check_structure<'a>(
         return Err(LabelError::ExpectedArticle);
     };
     collect(document, structure.shape().postorder(), root.0, b)
+}
+/// Validate a standalone Body's local labels, without inventing an Article.
+/// Definitions in sibling Sections share this explicit Body namespace. Forward
+/// references, duplicate names and repeated display occurrences obey the same
+/// checks as Article-local labels, using the caller's cumulative Budget.
+/// The existing Article and composed-namespace entry points retain their root
+/// restrictions; this is not a rendering or page-admission proof.
+pub fn check_body<'a>(
+    document: &'a DocumentSyntax,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<CheckedBodyLabels<'a>, LabelError<'a>> {
+    let structure = document.validate_structure(registry, b, admission)?;
+    let DocRoot::Body(root) = document.value.root else {
+        return Err(LabelError::ExpectedBody);
+    };
+    collect(document, structure.shape().postorder(), root.0, b).map(CheckedBodyLabels)
 }
 /// Validate an independently rendered Sentence with its own label namespace.
 /// Forward references and repeated display occurrences obey the same rules as
