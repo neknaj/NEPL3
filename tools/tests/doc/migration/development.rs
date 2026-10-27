@@ -139,6 +139,11 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                     "Replyの追加sourceを検査するhostは",
                 ),
                 ("Doc inventoryの明示的なbaseline監査", "Docinventoryの"),
+                ("Doc は", "Docは"),
+                ("scope付き証拠は", "scope付き証拠は"),
+                ("`--commit` は", "--commitは"),
+                ("この操作は検査対象", "この操作は検査対象"),
+                ("[最初の移行候補]", "最初の移行候補は"),
                 (
                     "Readerの生成sourceを持つReportの境界は",
                     "Readerの生成sourceを持つReportの境界は",
@@ -186,6 +191,11 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                             || source_prefix.starts_with("Readerの")
                             || source_prefix.starts_with("Sentenceの")
                             || source_prefix.starts_with("nativeの")
+                            || source_prefix.starts_with("Doc は")
+                            || source_prefix.starts_with("scope付き")
+                            || source_prefix.starts_with("`--commit`")
+                            || source_prefix.starts_with("この操作は")
+                            || source_prefix.starts_with("[最初の移行候補]")
                         {
                             let expected_code: Vec<_> = Parser::new(source_paragraph)
                                 .filter_map(|event| match event {
@@ -251,6 +261,7 @@ fn paragraph_inline_code(
             paragraph_inline_code(document, base.0, output)?;
             paragraph_inline_code(document, reading.0, output)?;
         }
+        DocKind::Link { label, .. } => paragraph_inline_code(document, label.0, output)?,
         DocKind::InlineCode { text } => output.push(text.clone()),
         DocKind::Text { .. } => {}
         other => return Err(format!("unhandled scoped inline-code node: {other:?}")),
