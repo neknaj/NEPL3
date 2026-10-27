@@ -16,6 +16,7 @@ pub(crate) enum NotesMode {
     Inline,
     Footnotes,
 }
+pub mod body;
 pub mod host;
 pub mod pages;
 
@@ -556,6 +557,30 @@ impl<'a> Annotated<'a, '_> {
                             push(
                                 &mut stack,
                                 Task::Piece(Piece::Tag(if strong { "<strong>" } else { "<em>" })),
+                                self.plain.budget,
+                            )?;
+                        }
+                        DocKind::Reference { label, .. }
+                            if matches!(self.plain.doc.value.root, DocRoot::Body(_)) =>
+                        {
+                            let mut href = None;
+                            for (actual, value) in self.links {
+                                self.plain.budget.charge(Resource::Work, 1)?;
+                                if *actual == node {
+                                    href = Some(value.as_str());
+                                    break;
+                                }
+                            }
+                            let uri = href.ok_or(Error::NeedsResolution)?;
+                            push(
+                                &mut stack,
+                                Task::Piece(Piece::LinkEnd(node, uri)),
+                                self.plain.budget,
+                            )?;
+                            push(&mut stack, Task::Node(label.0, next), self.plain.budget)?;
+                            push(
+                                &mut stack,
+                                Task::Piece(Piece::LinkStart(node)),
                                 self.plain.budget,
                             )?;
                         }
