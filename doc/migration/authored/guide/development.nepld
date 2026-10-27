@@ -1,5 +1,31 @@
 article ja "[開発/かいはつ]と[検査/けんさ]"
 body
+  cons paragraph
+    cons "この[文書/ぶんしょ]は[現在/げんざい]の[開発操作/かいはつそうさ]を[案内/あんない]します。"
+    cons sentence cons ruby text "編集先" text "へんしゅうさき" cons text "は " cons link relative "canonical.json" none text "canonical registry" cons text "、" cons ruby text "必要" text "ひつよう" cons text "な" cons ruby text "成果物" text "せいかぶつ" cons text "は " cons link relative "../design/tasks.json" none concat cons text "タスク" cons ruby text "定義" text "ていぎ" nil cons text "、" cons ruby text "必須受入群" text "ひっすうけいれぐん" cons text "・targetは " cons link relative "../design/acceptance.json" none concat cons ruby text "受入" text "うけいれ" cons text "catalog" nil cons text " で" cons ruby text "確認" text "かくにん" cons text "します。" nil
+    nil
+  cons list unordered
+    cons item none body
+      cons paragraph
+        cons sentence cons ruby text "初回準備" text "しょかいじゅんび" cons text "と" cons ruby text "基本検査" text "きほんけんさ" cons text ": " cons ref local concat cons text "ローカル" cons ruby text "環境" text "かんきょう" nil cons text "。" nil nil
+      nil
+    cons item none body
+      cons paragraph
+        cons sentence cons ruby text "文書変更" text "ぶんしょへんこう" cons text ": " cons ref documentGeneration concat cons ruby text "文書生成" text "ぶんしょせいせい" cons text "と" cons ruby text "初期" text "しょき" cons text "Pages" cons ruby text "公開" text "こうかい" nil cons text "、" cons ref pages concat cons text "ページ" cons ruby text "集合" text "しゅうごう" cons text "と" cons ruby text "移行候補" text "いこうこうほ" nil cons text "。" nil nil
+      nil
+    cons item none body
+      cons paragraph
+        cons sentence cons ruby text "提出" text "ていしゅつ" cons text "・" cons ruby text "統合" text "とうごう" cons text ": " cons ref branchIntegration concat cons text "branchとPRの" cons ruby text "統合手順" text "とうごうてじゅん" nil cons text "、" cons ref review concat cons ruby text "実装" text "じっそう" cons text "と" cons ruby text "独立" text "どくりつ" cons text "レビュー" nil cons text "。" nil nil
+      nil
+    cons item none body
+      cons paragraph
+        cons sentence cons text "target" cons ruby text "別" text "べつ" cons text "の" cons ruby text "保証範囲" text "ほしょうはんい" cons text ": " cons ref portable text "Portable execution CI" cons text "。" nil
+        cons "[過去/かこ]の[停止理由/ていしりゆう]と[現在/げんざい]の[実行構成/じっこうこうせい]は[分/わ]けて[読/よ]みます。" nil
+      nil
+    nil
+  cons paragraph
+    cons "[編集中/へんしゅうちゅう]は[変更/へんこう]を[再現/さいげん]する[局所試験/きょくしけん]を[使/つか]い、[提出前/ていしゅつまえ]に[影響/えいきょう]する[契約/けいやく]・[生成物/せいせいぶつ]・targetを[検査/けんさ]します。"
+    cons "[下記/かき]の[全体検査一覧/ぜんたいけんさいちらん]とCIの[必須条件/ひっすじょうけん]は[維持/いじ]し、[部分試験/ぶぶんしけん]を[正式受入/せいしきうけいれ]の[代用/だいよう]にしません。" nil
   cons section portable "Portable execution CI" body
     cons paragraph
       cons "WASI foundationは[同/おな]じcomponentをWasmtime 44.0.1のnative codegenとPulley64で[実行/じっこう]し、[終了状態/しゅうりょうじょうたい]・[試験数/しけんすう]・elapsed[以外/いがい]の[出力/しゅつりょく]を[比較/ひかく]します。"

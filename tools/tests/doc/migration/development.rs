@@ -96,16 +96,78 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 codec.source_admission(),
             )
             .map_err(err)?;
-            assert_eq!(checked.references().len(), 1);
-            let target = checked.references()[0].target.0 as usize;
+            let targets = checked
+                .references()
+                .iter()
+                .map(|reference| {
+                    checked
+                        .definitions()
+                        .get(reference.target.0 as usize)
+                        .map(|site| site.name)
+                        .ok_or("reference definition")
+                })
+                .collect::<Result<Vec<_>, _>>()?;
             assert_eq!(
-                checked
-                    .definitions()
-                    .get(target)
-                    .ok_or("reference definition")?
-                    .name,
-                "local"
+                targets,
+                [
+                    "local",
+                    "documentGeneration",
+                    "pages",
+                    "branchIntegration",
+                    "review",
+                    "portable",
+                    "local"
+                ]
             );
+            // The restored navigation is a four-item unordered list, not prose
+            // with bullets or flattened section headings.
+            let DocKind::List { kind, items } = &document.value.nodes[children[1].0 as usize].kind
+            else {
+                return Err("navigation list".into());
+            };
+            assert_eq!(*kind, nepl3_doc_core::model::ListKind::Unordered);
+            assert_eq!(items.len(), 4);
+            let DocKind::Paragraph { items: intro } =
+                &document.value.nodes[children[0].0 as usize].kind
+            else {
+                return Err("intro paragraph".into());
+            };
+            assert_eq!(intro.len(), 2);
+            let mut actual_links = Vec::new();
+            for sentence in intro {
+                let DocKind::Sentence { inlines } = &document.value.nodes[sentence.0 as usize].kind
+                else {
+                    return Err("intro sentence".into());
+                };
+                for inline in inlines {
+                    if let DocKind::Link { target, .. } =
+                        &document.value.nodes[inline.0 as usize].kind
+                    {
+                        let nepl3_doc_core::model::LinkTarget::Relative { path, fragment } = target
+                        else {
+                            return Err("intro relative link".into());
+                        };
+                        assert!(fragment.is_none());
+                        actual_links.push(path.as_str());
+                    }
+                }
+            }
+            let intro_source = original
+                .split("\n## ローカル環境")
+                .next()
+                .ok_or("source introduction")?
+                .split_once("\n\n")
+                .ok_or("source title boundary")?
+                .1;
+            let expected_links: Vec<_> = Parser::new(intro_source)
+                .filter_map(|event| match event {
+                    Event::Start(Tag::Link { dest_url, .. }) if !dest_url.starts_with('#') => {
+                        Some(dest_url.into_string())
+                    }
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(actual_links, expected_links);
             let mut actual = Vec::new();
             let mut actual_wasi = Vec::new();
             for node in &document.value.nodes {
@@ -151,6 +213,11 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 text::PlainTextOutcome::Complete { text } => Ok(text),
                 other => Err(format!("incomplete section text: {other:?}")),
             };
+            let mut actual_intro = Vec::new();
+            for child in &children[..3] {
+                blocks(&document, child.0, &mut project, &mut actual_intro)?;
+            }
+            assert_eq!(actual_intro, markdown_blocks(intro_source));
             // Ordered base text only: heading ranks, Ruby, URLs and sentence
             // boundaries additionally require independent content review.
             for (id, heading, end) in [
