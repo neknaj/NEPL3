@@ -134,6 +134,10 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                     "providerのstreamtransportは",
                 ),
                 ("Replyの受信から意味検査まで", "Replyの受信から意味検査まで"),
+                (
+                    "Replyの追加sourceを検査するhostは",
+                    "Replyの追加sourceを検査するhostは",
+                ),
                 ("Doc inventoryの明示的なbaseline監査", "Docinventoryの"),
                 (
                     "`doc/canonical.json` に登録された仕様",
@@ -202,7 +206,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
     Ok(())
 }
 
-// Only the two scoped paragraphs above use this traversal. Reject new forms
+// Only the scoped provider paragraphs above use this traversal. Reject new forms
 // rather than silently overlooking code nested in an unsupported container.
 fn paragraph_inline_code(
     document: &nepl3_doc_core::model::DocumentSyntax,

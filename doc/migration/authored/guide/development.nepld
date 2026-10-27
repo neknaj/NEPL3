@@ -223,6 +223,19 @@ body
       cons sentence cons ruby text "局所試験" text "きょくしょしけん" cons text "は " cons code "cargo test --locked -p nepl3-provider --test transport reply::budget::" cons text " とし、" cons ruby text "先行" text "せんこう" cons text "Workありの" cons ruby text "厳密残量" text "げんみつざんりょう" cons text "・1" cons ruby text "不足" text "ふそく" cons text "・" cons ruby text "取消" text "とりけし" cons text "・" cons ruby text "不正応答" text "ふせいおうとう" cons text "を" cons ruby text "検査" text "けんさ" cons text "する。" nil
       nil
     cons paragraph
+      cons sentence cons text "Replyの" cons ruby text "追加" text "ついか" cons text "sourceを" cons ruby text "検査" text "けんさ" cons text "するhostは、" cons ruby text "任意選択" text "にんいせんたく" cons text "の " cons code "Connection::receive_pending_reply" cons text " を" cons ruby text "使用" text "しよう" cons text "できる。" nil
+      cons "[最初/さいしょ]の[段階/だんかい]は[構造検査済/こうぞうけんさず]みrequest IDだけを[公開/こうかい]し、[元/もと]のregistry・SourceAdmission・Budgetを[保持/ほじ]する。"
+      cons sentence cons code "finish_with" cons text " は" cons ruby text "保存済" text "ほぞんず" cons text "み" cons ruby text "要求" text "ようきゅう" cons text "のIDと" cons ruby text "選択操作" text "せんたくそうさ" cons text "の" cons ruby text "出力型" text "しゅつりょくがた" cons text "を" cons ruby text "照合" text "しょうごう" cons text "してから、Completeまたは" cons ruby text "存在" text "そんざい" cons text "するpartialのsource" cons ruby text "検査" text "けんさ" cons text "callbackを" cons ruby text "一度" text "いちど" cons text "だけ" cons ruby text "呼" text "よ" cons text "ぶ。" nil
+      cons "callbackが[返/かえ]すSourceStoreはReportをdecodeするための[明示的/めいじてき]なclosureであり、[実行権限/じっこうけんげん]を[追加/ついか]しない。"
+      cons "Awaitとpartialのない[応答/おうとう]ではcallbackを[呼/よ]ばず、[元/もと]のclosureを[使用/しよう]する。"
+      cons "Await[内/ない]の[子要求/こようきゅう]のsourceは[外側/そとがわ]のReportへ[流用/りゅうよう]しない。"
+      cons "[受信開始前/じゅしんかいしまえ]に[接続/せつぞく]を[閉状態/へいじょうたい]へ[移/うつ]し、finish[成功後/せいこうご]だけ[再開/さいかい]する。"
+      cons "[失敗/しっぱい]・panic・[未完了/みかんりょう]receiptの[破棄/はき]・forgetは[閉状態/へいじょうたい]を[保/たも]つ。"
+      cons "Readerの[意味検査/いみけんさ]、request lifetimeの[確定/かくてい]、[生成/せいせい]sourceの[認可/にんか]、remote Usageの[検証/けんしょう]、[子/こ]processの[終了/しゅうりょう]・[回収/かいしゅう]はhostの[後続責務/こうぞくせきむ]であり、このAPIでは[実行/じっこう]しない。"
+      cons "[既存/きそん]のreceive[系/けい]APIは[変更/へんこう]しない。"
+      cons sentence cons ruby text "局所試験" text "きょくしょしけん" cons text "は " cons code "cargo test --locked -p nepl3-wire --test operation pending::" cons text " と " cons code "cargo test --locked -p nepl3-provider --test transport reply::pending::" cons text " で" cons ruby text "実行" text "じっこう" cons text "する。" nil
+      nil
+    cons paragraph
       cons "Binding の fixture と Python seed adapter の[一致確認/いっちかくにん]は[子/こ]processを[起動/きどう]する native host [専用試験/せんようしけん]です。"
       cons "native の[通常試験/つうじょうしけん]で[実行/じっこう]し、Wasm target ではその host [試験/しけん]だけを[型条件/かたじょうけん]で[除外/じょがい]します。"
       cons sentence cons ruby text "同" text "おな" cons text "じ fixture を" cons ruby text "使" text "つか" cons text "う production compile・parse・analyze・portable codec の" cons ruby text "試験" text "しけん" cons text "は " cons code "cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1" cons text " でも" cons ruby text "実行" text "じっこう" cons text "します。" nil
