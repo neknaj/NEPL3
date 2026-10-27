@@ -211,6 +211,18 @@ body
       cons sentence cons text "ローカルでは " cons code "CARGO_TARGET_WASM32_WASIP2_RUNNER" cons text " を " cons code "wasmtime run" cons text " とし、" cons code "cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html --target wasm32-wasip2 -- --test-threads=1" cons text " を" cons ruby text "実行" text "じっこう" cons text "します。" nil
       cons "browser targetのcompile[成功/せいこう]はブラウザ[上/じょう]の[実行/じっこう]・[描画試験/びょうがしけん]を[意味/いみ]しません。" nil
     cons paragraph
+      cons sentence cons text "providerのstream transportは " cons code "cargo test --locked -p nepl3-provider" cons text " で" cons ruby text "検査" text "けんさ" cons text "する。" nil
+      cons sentence cons text "WASIでは" cons ruby text "同" text "おな" cons text "じコマンドに " cons code "--target wasm32-wasip2" cons text " を" cons ruby text "追加" text "ついか" cons text "する。" nil
+      cons "frameの[分割転送/ぶんかつてんそう]、[切断/せつだん]、[長/なが]さ[制限/せいげん]、codecとI/Oの[停止/ていし]、Close[後/ご]の[再利用拒否/さいりようきょひ]、schema[交換/こうかん]を[対象/たいしょう]とする。" nil
+    cons paragraph
+      cons sentence cons text "Replyの" cons ruby text "受信" text "じゅしん" cons text "から" cons ruby text "意味検査" text "いみけんさ" cons text "までを" cons ruby text "一" text "ひと" cons text "つの" cons ruby text "累積" text "るいせき" cons text "Budgetで" cons ruby text "実行" text "じっこう" cons text "するhostは " cons code "Connection::receive_reply_with_budget" cons text " を" cons ruby text "使用" text "しよう" cons text "する。" nil
+      cons "transportのdecodeと[操作応答/そうさおうとう]の[検査/けんさ]は[同/おな]じBudgetを[順/じゅん]に[使用/しよう]し、[先行消費/せんこうしょうひ]・[残量/ざんりょう]・[停止理由/ていしりゆう]を[維持/いじ]する。"
+      cons "[受信後/じゅしんご]に[検査用/けんさよう]の[残量/ざんりょう]を[新設/しんせつ]しない。"
+      cons sentence cons text "request ID・" cons ruby text "方向" text "ほうこう" cons text "・" cons ruby text "保存" text "ほぞん" cons text "context・" cons ruby text "診断" text "しんだん" cons text "source" cons ruby text "権限" text "けんげん" cons text "の" cons ruby text "検査" text "けんさ" cons text "と" cons ruby text "失敗時" text "しっぱいじ" cons text "の" cons ruby text "接続閉鎖" text "せつぞくへいさ" cons text "は、" cons ruby text "従来" text "じゅうらい" cons text "の" cons ruby text "二" text "に" cons text "Budget" cons ruby text "版" text "ばん" cons text " " cons code "receive_reply" cons text " と" cons ruby text "共有" text "きょうゆう" cons text "する。" nil
+      cons "remote[実行/じっこう]Usageの[精算/せいさん]、[生成/せいせい]sourceの[追加認可/ついかにんか]、request lifetimeの[確定/かくてい]はこのAPIの[対象外/たいしょうがい]である。"
+      cons sentence cons ruby text "局所試験" text "きょくしょしけん" cons text "は " cons code "cargo test --locked -p nepl3-provider --test transport reply::budget::" cons text " とし、" cons ruby text "先行" text "せんこう" cons text "Workありの" cons ruby text "厳密残量" text "げんみつざんりょう" cons text "・1" cons ruby text "不足" text "ふそく" cons text "・" cons ruby text "取消" text "とりけし" cons text "・" cons ruby text "不正応答" text "ふせいおうとう" cons text "を" cons ruby text "検査" text "けんさ" cons text "する。" nil
+      nil
+    cons paragraph
       cons "Binding の fixture と Python seed adapter の[一致確認/いっちかくにん]は[子/こ]processを[起動/きどう]する native host [専用試験/せんようしけん]です。"
       cons "native の[通常試験/つうじょうしけん]で[実行/じっこう]し、Wasm target ではその host [試験/しけん]だけを[型条件/かたじょうけん]で[除外/じょがい]します。"
       cons sentence cons ruby text "同" text "おな" cons text "じ fixture を" cons ruby text "使" text "つか" cons text "う production compile・parse・analyze・portable codec の" cons ruby text "試験" text "しけん" cons text "は " cons code "cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1" cons text " でも" cons ruby text "実行" text "じっこう" cons text "します。" nil

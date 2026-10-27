@@ -129,6 +129,11 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 assert_eq!(actual_section, expected_section, "section {id}");
             }
             for (source_prefix, plain_prefix) in [
+                (
+                    "providerのstream transportは",
+                    "providerのstreamtransportは",
+                ),
+                ("Replyの受信から意味検査まで", "Replyの受信から意味検査まで"),
                 ("Doc inventoryの明示的なbaseline監査", "Docinventoryの"),
                 (
                     "`doc/canonical.json` に登録された仕様",
@@ -158,6 +163,22 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                         let mut actual = Vec::new();
                         blocks(&document, node_index as u64, &mut project, &mut actual)?;
                         assert_eq!(actual, expected_paragraph, "paragraph {source_prefix}");
+                        if source_prefix.starts_with("providerの")
+                            || source_prefix.starts_with("Replyの")
+                        {
+                            let expected_code: Vec<_> = Parser::new(source_paragraph)
+                                .filter_map(|event| match event {
+                                    Event::Code(value) => Some(value.into_string()),
+                                    _ => None,
+                                })
+                                .collect();
+                            let mut actual_code = Vec::new();
+                            paragraph_inline_code(&document, node_index as u64, &mut actual_code)?;
+                            assert_eq!(
+                                actual_code, expected_code,
+                                "exact inline code {source_prefix}"
+                            );
+                        }
                         matches += 1;
                     }
                 }
@@ -178,5 +199,40 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             .iter()
             .any(|p| p.source == "doc/development.md" && p.route == "sources/development.md")
     );
+    Ok(())
+}
+
+// Only the two scoped paragraphs above use this traversal. Reject new forms
+// rather than silently overlooking code nested in an unsupported container.
+fn paragraph_inline_code(
+    document: &nepl3_doc_core::model::DocumentSyntax,
+    node: u64,
+    output: &mut Vec<String>,
+) -> Result<(), String> {
+    match &document
+        .value
+        .nodes
+        .get(node as usize)
+        .ok_or("inline node")?
+        .kind
+    {
+        DocKind::Paragraph { items } => {
+            for item in items {
+                paragraph_inline_code(document, item.0, output)?;
+            }
+        }
+        DocKind::Sentence { inlines } | DocKind::Concat { inlines } => {
+            for inline in inlines {
+                paragraph_inline_code(document, inline.0, output)?;
+            }
+        }
+        DocKind::Ruby { base, reading } => {
+            paragraph_inline_code(document, base.0, output)?;
+            paragraph_inline_code(document, reading.0, output)?;
+        }
+        DocKind::InlineCode { text } => output.push(text.clone()),
+        DocKind::Text { .. } => {}
+        other => return Err(format!("unhandled scoped inline-code node: {other:?}")),
+    }
     Ok(())
 }
