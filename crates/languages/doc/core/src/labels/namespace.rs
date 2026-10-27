@@ -1,7 +1,11 @@
 //! Explicit composition of document-owned label scopes. Foreign closures are
 //! not traversed: the host selects and lowers each participating Doc fragment.
 use super::*;
+mod body;
 mod interleaved;
+pub use body::{
+    BodyMember, CheckedBodyNamespace, inspect_body, resolve_body, resolve_body_interleaved,
+};
 pub use interleaved::{DefinitionIndex, OrderError, ReferenceIndex, SiteKind, resolve_interleaved};
 #[cfg(test)]
 mod tests;
@@ -121,13 +125,22 @@ pub fn inspect<'a>(
     let checked = document
         .validate_structure(registry, b, admission)
         .map_err(LabelError::from)?;
-    let (root, category) = edges::root(document.value.root);
+    let (_, category) = edges::root(document.value.root);
     if !matches!(
         document.value.root,
         DocRoot::Article(_) | DocRoot::Sentence(_) | DocRoot::Inline(_)
     ) {
         return Err(Error::Root(category));
     }
+    inspect_structure(&checked, b)
+}
+// Public callers establish their distinct admitted root categories first.
+fn inspect_structure<'a>(
+    checked: &crate::check::ValidatedDocumentSyntax<'a>,
+    b: &mut Budget,
+) -> Result<Member<'a>, Error<'a>> {
+    let document = checked.document();
+    let (root, _) = edges::root(document.value.root);
     let (definitions, references) = collect_sites(document, checked.shape().postorder(), root, b)?;
     // Duplicate names within a single member retain the ordinary diagnostic.
     index::build(&definitions, b)?;
