@@ -234,6 +234,30 @@ body
     nil
   cons section documentGeneration "[文書生成/ぶんしょせいせい]と[初期/しょき]Pages[公開/こうかい]" body
     cons paragraph
+      cons sentence cons ruby text "初期" text "しょき" cons text "Pages" cons ruby text "公開" text "こうかい" cons text "は " cons code ".github/workflows/pages.yml" cons text " が" cons ruby text "担当" text "たんとう" cons text "します。" nil
+      cons "main pushのCI[成功後/せいこうご]、そのrunのDoc site・[検査/けんさ]report・[元/もと]tarを[取得/しゅとく]し、commit/manifest/[内容一致/ないよういっち]を[再検査/さいけんさ]して[公開/こうかい]します。"
+      cons "[検査済/けんさず]みsiteのfile byte[列/れつ]を[公式/こうしき]upload-pages-artifactで[梱包/こんぽう]します。"
+      cons "CI tarは[照合用/しょうごうよう]に[保持/ほじ]し、Pages[輸送/ゆそう]tarと[同一/どういつ]byteとは[扱/あつか]いません。"
+      cons "[初回/しょかい]の[独自/どくじ]tar[直接/ちょくせつ]uploadはPages[側/がわ]でdeployment_failedとなりました。"
+      cons sentence cons text "tar entryの" cons ruby text "先頭" text "せんとう" cons code "./" cons ruby text "等" text "とう" cons text "の" cons ruby text "形式差" text "けいしきさ" cons text "が" cons ruby text "疑" text "うたが" cons text "われるため、" cons ruby text "輸送" text "ゆそう" cons text "を" cons ruby text "公式" text "こうしき" cons text "actionへ" cons ruby text "委譲" text "いじょう" cons text "します。" nil
+      cons "HTMLは[再/さい]buildしません。"
+      cons "[公開後/こうかいご]のHTTP smoke[失敗/しっぱい]はworkflow[失敗/しっぱい]として[記録/きろく]します。"
+      cons "LKG/journalによる[自動復旧/じどうふっきゅう]は[未提供/みていきょう]です。"
+      cons "Markdown/NEPL3d[混在公開/こんざいこうかい]は[正本移行/せいほんいこう]を[支/ささ]える[段階/だんかい]であり、[全/ぜん]ページ[移行/いこう]やT19/T20[完成/かんせい]を[意味/いみ]しません。"
+      nil
+    cons paragraph
+      cons sentence cons code "cargo run --locked -p nepl3-tools -- site build site/config.json dist/site" cons text " は、" cons ruby text "登録済" text "とうろくず" cons text "みDoc" cons ruby text "正本" text "せいほん" cons text "のHTMLに" cons ruby text "静的" text "せいてき" cons text "な" cons ruby text "索引" text "さくいん" cons text "を" cons ruby text "付" text "つ" cons text "け、" cons ruby text "新規" text "しんき" cons text "ディレクトリへ" cons ruby text "一式" text "いっしき" cons text "を" cons ruby text "生成" text "せいせい" cons text "します。" nil
+      cons "[追跡済/ついせきず]みの[設定/せってい]とcleanな[入力/にゅうりょく]checkoutを[要求/ようきゅう]し、[生成中/せいせいちゅう]にHEADや[入力/にゅうりょく]の[変更/へんこう]を[検出/けんしゅつ]した[場合/ばあい]は[出力/しゅつりょく]しません。"
+      cons sentence cons code "build.json" cons text " のsource commitは" cons ruby text "入力" text "にゅうりょく" cons text "checkout、rendererは" cons ruby text "実行" text "じっこう" cons text "したbinaryのSHA-256とそのbuild" cons ruby text "時" text "じ" cons text "のrustcを" cons ruby text "別々" text "べつべつ" cons text "に" cons ruby text "記録" text "きろく" cons text "します。" nil
+      cons "binaryのsource commitを[入力/にゅうりょく]checkoutから[推定/すいてい]しません。"
+      cons "CIでは[同/おな]じcheckoutからbuildしたbinaryと[生成/せいせい]ログを[結/むす]び[付/つ]けて[保管/ほかん]します。"
+      cons "[埋込/うめこみ]template・CSSとcheckoutの[不一致/ふいっち]も[拒否/きょひ]します。"
+      cons "toolsのbuild.rsはcompiler[識別/しきべつ]のみを[行/おこな]い、[文書生成/ぶんしょせいせい]やGrammar compileを[実行/じっこう]しません。"
+      cons sentence cons ruby text "現在" text "げんざい" cons text "の" cons ruby text "入口" text "いりぐち" cons text "は" cons ruby text "登録済" text "とうろくず" cons text "みDocページ、" cons ruby text "未移行" text "みいこう" cons text "のMarkdown" cons ruby text "仕様書" text "しようしょ" cons text "、" cons code "site/examples.json" cons text "の" cons ruby text "原文例" text "げんぶんれい" cons text "を" cons ruby text "含" text "ふく" cons text "むdocs-only" cons ruby text "生成" text "せいせい" cons text "です。" nil
+      cons "[原文/げんぶん]の[配布/はいふ]byte・Profile・digestは[同/おな]じcheckoutと[照合/しょうごう]し、[表示/ひょうじ]から[例/れい]を[実行/じっこう]しません。"
+      cons "[仕様書以外/しようしょいがい]の[未移行文書/みいこうぶんしょ]・rustdoc・[実行例/じっこうれい]の[操作結果/そうさけっか]を[含/ふく]む[統合/とうごう]、[公開後/こうかいご]smokeと[復旧/ふっきゅう]を[含/ふく]むPages[配信/はいしん]、T19/T20[全体/ぜんたい]の[完了/かんりょう]は[別途検証/べっとけんしょう]します。"
+      nil
+    cons paragraph
       cons sentence
         cons code "doc/canonical.json"
         cons text " に"

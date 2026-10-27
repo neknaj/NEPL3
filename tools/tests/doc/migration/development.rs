@@ -188,6 +188,11 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 ),
                 ("Doc inventoryの明示的なbaseline監査", "Docinventoryの"),
                 ("Doc は", "Docは"),
+                ("初期Pages公開は", "初期Pages公開は"),
+                (
+                    "`cargo run --locked -p nepl3-tools -- site build",
+                    "cargorun--locked-pnepl3-tools--sitebuild",
+                ),
                 ("scope付き証拠は", "scope付き証拠は"),
                 ("`--commit` は", "--commitは"),
                 ("この操作は検査対象", "この操作は検査対象"),
@@ -240,6 +245,9 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                             || source_prefix.starts_with("Sentenceの")
                             || source_prefix.starts_with("nativeの")
                             || source_prefix.starts_with("Doc は")
+                            || source_prefix.starts_with("初期Pages公開")
+                            || source_prefix
+                                .starts_with("`cargo run --locked -p nepl3-tools -- site build")
                             || source_prefix.starts_with("scope付き")
                             || source_prefix.starts_with("`--commit`")
                             || source_prefix.starts_with("この操作は")
