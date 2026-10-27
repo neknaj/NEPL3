@@ -202,6 +202,7 @@ pub(super) fn preparation_error<C: FoundationValueCodec>(
             LabelError::Stopped(reason) => Error::Stopped(reason),
             LabelError::Structure(error) => Error::Structure(error),
             LabelError::ExpectedArticle => Error::ExpectedRoot(check::Category::Article),
+            LabelError::ExpectedBody => Error::ExpectedRoot(check::Category::Body),
             LabelError::ExpectedSentence => Error::ExpectedRoot(check::Category::Sentence),
             LabelError::ExpectedInline => Error::ExpectedRoot(check::Category::Inline),
             error @ (LabelError::Duplicate { .. }

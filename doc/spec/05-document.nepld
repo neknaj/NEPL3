@@ -53,6 +53,15 @@ body
         cons "[構造/こうぞう]proofが[保証/ほしょう]する[範囲/はんい]は、これらのarena[不変条件/ふへんじょうけん]である。"
         cons "label[解決/かいけつ]、guestの[意味検査/いみけんさ]、PreparedArticleの[成立/せいりつ]は、それぞれ[対応/たいおう]する[操作/そうさ]で[確認/かくにん]する。" nil
       cons paragraph
+        cons sentence cons code "labels::check_body" cons text " は" cons ruby text "単独" text "たんどく" cons text "Bodyの" cons ruby text "構造" text "こうぞう" cons text "と" cons ruby text "局所" text "きょくしょ" cons text "labelを" cons ruby text "検査" text "けんさ" cons text "し、" cons code "CheckedBodyLabels" cons text " を" cons ruby text "返" text "かえ" cons text "す。" nil
+        cons "[同/おな]じBody[内/ない]のSection・Anchorの[定義/ていぎ]をBody rootから[子/こ]の[順序/じゅんじょ]を[保/たも]つ[深/ふか]さ[優先/ゆうせん]の[先行順/せんこうじゅん]に[集/あつ]めて[前方参照/ぜんぽうさんしょう]を[解決/かいけつ]し、[名前/なまえ]の[重複/じゅうふく]と[定義/ていぎ]の[反復表示/はんぷくひょうじ]を[拒否/きょひ]する。"
+        cons "[検査/けんさ]は[呼出元/よびだしもと]の[累積/るいせき]Budget・source[入場/にゅうじょう]・[深/ふか]さ[上限/じょうげん]を[維持/いじ]し、[元/もと]の[定義/ていぎ]・[参照位置/さんしょういち]を[保持/ほじ]する。"
+        cons "[外側/そとがわ]のArticleやforeign closure[内/ない]の[定義/ていぎ]は[自動導入/じどうどうにゅう]しない。"
+        cons "このnative proofはArticleのlabel proofへ[変換/へんかん]せず、[既存/きそん]のArticle・Sentence・Inlineおよび[合成/ごうせい]namespaceのroot[制限/せいげん]を[変更/へんこう]しない。"
+        cons "[既存/きそん]のBody[表現/ひょうげん]を[用/もち]い、NDFのconstructorやwire tagを[追加/ついか]しない。"
+        cons "この[段階/だんかい]ではBodyのPageSet[登録/とうろく]、HTML・Markdown[書出/かきだ]し、タイトル・[言語/げんご]metadata、[複数/ふくすう]の[最上位見出/さいじょういみだ]しを[持/も]つページの[公開/こうかい]は[未対応/みたいおう]であり、label[検査/けんさ]の[成功/せいこう]からそれらの[完了/かんりょう]を[推定/すいてい]しない。"
+        nil
+      cons paragraph
         cons sentence cons text "tokenごとのViewは " cons code "DocView.head" cons text " に" cons ruby text "束縛" text "そくばく" cons text "する。" nil
         cons "ViewRefとrelationのIDは、tokenごとに[独立/どくりつ]した[名前空間/なまえくうかん]で[管理/かんり]する。"
         cons "Text[正規化後/せいきかご]も[元/もと]ViewとOriginを[保存/ほぞん]する。"
