@@ -140,6 +140,11 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 ),
                 ("Doc inventoryの明示的なbaseline監査", "Docinventoryの"),
                 (
+                    "Readerの生成sourceを持つReportの境界は",
+                    "Readerの生成sourceを持つReportの境界は",
+                ),
+                ("Sentenceの統合経路は", "Sentenceの統合経路は"),
+                (
                     "`doc/canonical.json` に登録された仕様",
                     "doc/canonical.jsonに",
                 ),
@@ -169,6 +174,8 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                         assert_eq!(actual, expected_paragraph, "paragraph {source_prefix}");
                         if source_prefix.starts_with("providerの")
                             || source_prefix.starts_with("Replyの")
+                            || source_prefix.starts_with("Readerの")
+                            || source_prefix.starts_with("Sentenceの")
                         {
                             let expected_code: Vec<_> = Parser::new(source_paragraph)
                                 .filter_map(|event| match event {
@@ -206,7 +213,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
     Ok(())
 }
 
-// Only the scoped provider paragraphs above use this traversal. Reject new forms
+// Only the scoped execution paragraphs above use this traversal. Reject new forms
 // rather than silently overlooking code nested in an unsupported container.
 fn paragraph_inline_code(
     document: &nepl3_doc_core::model::DocumentSyntax,
