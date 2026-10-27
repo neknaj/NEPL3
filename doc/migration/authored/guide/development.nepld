@@ -66,7 +66,7 @@ body
         cons text "リンクを"
         cons ruby text "持" text "も"
         cons text "つ "
-        cons code "nepl3-tools.markdown-annotated-pages/1"
+        cons code "nepl3-tools.markdown-annotated-pages/4"
         cons text " の"
         cons ruby text "登録後" text "とうろくご"
         cons text "は、"
@@ -79,8 +79,12 @@ body
         cons ruby text "生成" text "せいせい"
         cons text "します。"
         nil
-      cons "[参照先/さんしょうさき]・[別/べつ]ページのaliasも[同/おな]じ[入力集合/にゅうりょくしゅうごう]に[含/ふく]め、[旧/きゅう]rendererのページは[既存/きそん]byte[列/れつ]を[維持/いじ]します。"
-      cons "[成功/せいこう]した[生成物/せいせいぶつ]の[差分/さぶん]をレビューしてからprojectionへ[反映/はんえい]してください。"
+      cons "[参照先/さんしょうさき]・[別/べつ]ページのaliasも[同/おな]じ[入力集合/にゅうりょくしゅうごう]に[含/ふく]め、[旧/きゅう]rendererのページは[同/おな]じrendererでの[単独生成/たんどくせいせい]と[本文/ほんぶん]を[一致/いっち]させる。"
+      cons sentence cons text "Rubyは" cons code "<ruby>" cons text "・" cons code "<rt>" cons text "で" cons ruby text "出力" text "しゅつりょく" cons text "し、タイトル" cons ruby text "直後" text "ちょくご" cons text "にNEPL3d" cons ruby text "正本" text "せいほん" cons text "への" cons ruby text "相対" text "そうたい" cons text "リンクを" cons ruby text "置" text "お" cons text "く。" nil
+      cons "[成功/せいこう]した[生成物/せいせいぶつ]の[差分/さぶん]をレビューしてからprojectionへ[反映/はんえい]する。"
+      cons "[各/かく]Markdownのヘッダーは、そのページの[正本/せいほん]・alias・[出力設定/しゅつりょくせってい]と、[利用/りよう]するリンクのroute・fragmentに[依存/いぞん]する。"
+      cons "[集合全体/しゅうごうぜんたい]のidentity、schemaに[依存/いぞん]するdocument digest、ページごとの[参照依存一覧/さんしょういぞんいちらん]は[生成/せいせい]manifestに[記録/きろく]する。"
+      cons "[無関係/むかんけい]なページや[内部/ないぶ]schemaの[変更/へんこう]で[本文/ほんぶん]・[参照/さんしょう]が[同/おな]じ[場合/ばあい]、[対象/たいしょう]Markdownのbyte[列/れつ]を[保持/ほじ]する。"
       cons sentence
         cons code "cargo run --locked -p nepl3-tools -- doc-canonical html dist/doc-canonical"
         cons text " は、"
@@ -126,8 +130,9 @@ body
       cons sentence cons code "cargo" cons text " の" cons ruby text "各" text "かく" cons text "コマンドはリポジトリrootで" cons ruby text "実行" text "じっこう" cons text "してください。" nil
       cons sentence cons code "Cargo.lock" cons text " は" cons ruby text "管理対象" text "かんりたいしょう" cons text "で、CIでは " cons code "--locked" cons text " を" cons ruby text "使" text "つか" cons text "います。" nil nil
     cons paragraph
-      cons "Doc inventoryのbaseline[検証/けんしょう]は[固定/こてい]commitのGit objectを[必要/ひつよう]とするため、CI checkoutは[全履歴/ぜんりれき]を[取得/しゅとく]します。"
-      cons "shallow cloneではbaselineを[取得/しゅとく]してから[検査/けんさ]し、object[不在/ふざい]を[監査成功/かんさせいこう]としてskipしません。"
+      cons "Doc inventoryの[明示的/めいじてき]なbaseline[監査/かんさ]は[固定/こてい]commitのGit objectを[必要/ひつよう]とします。"
+      cons sentence cons ruby text "通常" text "つうじょう" cons text "の " cons code "check" cons text " からは" cons ruby text "分離" text "ぶんり" cons text "しており、" cons ruby text "監査時" text "かんさじ" cons text "だけbaselineを" cons ruby text "取得" text "しゅとく" cons text "します。" nil
+      cons "object[不在/ふざい]を[監査成功/かんさせいこう]としてskipしません。"
       cons "source archive[単体/たんたい]にはこの[履歴/りれき]が[含/ふく]まれません。" nil
     cons paragraph
       cons "[開発/かいはつ]toolchainは1.97.0、[現時点/げんじてん]で[宣言/せんげん]・[検査/けんさ]するMSRVは1.97です。"
@@ -206,6 +211,31 @@ body
       cons sentence cons text "ローカルでは " cons code "CARGO_TARGET_WASM32_WASIP2_RUNNER" cons text " を " cons code "wasmtime run" cons text " とし、" cons code "cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html --target wasm32-wasip2 -- --test-threads=1" cons text " を" cons ruby text "実行" text "じっこう" cons text "します。" nil
       cons "browser targetのcompile[成功/せいこう]はブラウザ[上/じょう]の[実行/じっこう]・[描画試験/びょうがしけん]を[意味/いみ]しません。" nil
     cons paragraph
+      cons sentence cons text "providerのstream transportは " cons code "cargo test --locked -p nepl3-provider" cons text " で" cons ruby text "検査" text "けんさ" cons text "する。" nil
+      cons sentence cons text "WASIでは" cons ruby text "同" text "おな" cons text "じコマンドに " cons code "--target wasm32-wasip2" cons text " を" cons ruby text "追加" text "ついか" cons text "する。" nil
+      cons "frameの[分割転送/ぶんかつてんそう]、[切断/せつだん]、[長/なが]さ[制限/せいげん]、codecとI/Oの[停止/ていし]、Close[後/ご]の[再利用拒否/さいりようきょひ]、schema[交換/こうかん]を[対象/たいしょう]とする。" nil
+    cons paragraph
+      cons sentence cons text "Replyの" cons ruby text "受信" text "じゅしん" cons text "から" cons ruby text "意味検査" text "いみけんさ" cons text "までを" cons ruby text "一" text "ひと" cons text "つの" cons ruby text "累積" text "るいせき" cons text "Budgetで" cons ruby text "実行" text "じっこう" cons text "するhostは " cons code "Connection::receive_reply_with_budget" cons text " を" cons ruby text "使用" text "しよう" cons text "する。" nil
+      cons "transportのdecodeと[操作応答/そうさおうとう]の[検査/けんさ]は[同/おな]じBudgetを[順/じゅん]に[使用/しよう]し、[先行消費/せんこうしょうひ]・[残量/ざんりょう]・[停止理由/ていしりゆう]を[維持/いじ]する。"
+      cons "[受信後/じゅしんご]に[検査用/けんさよう]の[残量/ざんりょう]を[新設/しんせつ]しない。"
+      cons sentence cons text "request ID・" cons ruby text "方向" text "ほうこう" cons text "・" cons ruby text "保存" text "ほぞん" cons text "context・" cons ruby text "診断" text "しんだん" cons text "source" cons ruby text "権限" text "けんげん" cons text "の" cons ruby text "検査" text "けんさ" cons text "と" cons ruby text "失敗時" text "しっぱいじ" cons text "の" cons ruby text "接続閉鎖" text "せつぞくへいさ" cons text "は、" cons ruby text "従来" text "じゅうらい" cons text "の" cons ruby text "二" text "に" cons text "Budget" cons ruby text "版" text "ばん" cons text " " cons code "receive_reply" cons text " と" cons ruby text "共有" text "きょうゆう" cons text "する。" nil
+      cons "remote[実行/じっこう]Usageの[精算/せいさん]、[生成/せいせい]sourceの[追加認可/ついかにんか]、request lifetimeの[確定/かくてい]はこのAPIの[対象外/たいしょうがい]である。"
+      cons sentence cons ruby text "局所試験" text "きょくしょしけん" cons text "は " cons code "cargo test --locked -p nepl3-provider --test transport reply::budget::" cons text " とし、" cons ruby text "先行" text "せんこう" cons text "Workありの" cons ruby text "厳密残量" text "げんみつざんりょう" cons text "・1" cons ruby text "不足" text "ふそく" cons text "・" cons ruby text "取消" text "とりけし" cons text "・" cons ruby text "不正応答" text "ふせいおうとう" cons text "を" cons ruby text "検査" text "けんさ" cons text "する。" nil
+      nil
+    cons paragraph
+      cons sentence cons text "Replyの" cons ruby text "追加" text "ついか" cons text "sourceを" cons ruby text "検査" text "けんさ" cons text "するhostは、" cons ruby text "任意選択" text "にんいせんたく" cons text "の " cons code "Connection::receive_pending_reply" cons text " を" cons ruby text "使用" text "しよう" cons text "できる。" nil
+      cons "[最初/さいしょ]の[段階/だんかい]は[構造検査済/こうぞうけんさず]みrequest IDだけを[公開/こうかい]し、[元/もと]のregistry・SourceAdmission・Budgetを[保持/ほじ]する。"
+      cons sentence cons code "finish_with" cons text " は" cons ruby text "保存済" text "ほぞんず" cons text "み" cons ruby text "要求" text "ようきゅう" cons text "のIDと" cons ruby text "選択操作" text "せんたくそうさ" cons text "の" cons ruby text "出力型" text "しゅつりょくがた" cons text "を" cons ruby text "照合" text "しょうごう" cons text "してから、Completeまたは" cons ruby text "存在" text "そんざい" cons text "するpartialのsource" cons ruby text "検査" text "けんさ" cons text "callbackを" cons ruby text "一度" text "いちど" cons text "だけ" cons ruby text "呼" text "よ" cons text "ぶ。" nil
+      cons "callbackが[返/かえ]すSourceStoreはReportをdecodeするための[明示的/めいじてき]なclosureであり、[実行権限/じっこうけんげん]を[追加/ついか]しない。"
+      cons "Awaitとpartialのない[応答/おうとう]ではcallbackを[呼/よ]ばず、[元/もと]のclosureを[使用/しよう]する。"
+      cons "Await[内/ない]の[子要求/こようきゅう]のsourceは[外側/そとがわ]のReportへ[流用/りゅうよう]しない。"
+      cons "[受信開始前/じゅしんかいしまえ]に[接続/せつぞく]を[閉状態/へいじょうたい]へ[移/うつ]し、finish[成功後/せいこうご]だけ[再開/さいかい]する。"
+      cons "[失敗/しっぱい]・panic・[未完了/みかんりょう]receiptの[破棄/はき]・forgetは[閉状態/へいじょうたい]を[保/たも]つ。"
+      cons "Readerの[意味検査/いみけんさ]、request lifetimeの[確定/かくてい]、[生成/せいせい]sourceの[認可/にんか]、remote Usageの[検証/けんしょう]、[子/こ]processの[終了/しゅうりょう]・[回収/かいしゅう]はhostの[後続責務/こうぞくせきむ]であり、このAPIでは[実行/じっこう]しない。"
+      cons "[既存/きそん]のreceive[系/けい]APIは[変更/へんこう]しない。"
+      cons sentence cons ruby text "局所試験" text "きょくしょしけん" cons text "は " cons code "cargo test --locked -p nepl3-wire --test operation pending::" cons text " と " cons code "cargo test --locked -p nepl3-provider --test transport reply::pending::" cons text " で" cons ruby text "実行" text "じっこう" cons text "する。" nil
+      nil
+    cons paragraph
       cons "Binding の fixture と Python seed adapter の[一致確認/いっちかくにん]は[子/こ]processを[起動/きどう]する native host [専用試験/せんようしけん]です。"
       cons "native の[通常試験/つうじょうしけん]で[実行/じっこう]し、Wasm target ではその host [試験/しけん]だけを[型条件/かたじょうけん]で[除外/じょがい]します。"
       cons sentence cons ruby text "同" text "おな" cons text "じ fixture を" cons ruby text "使" text "つか" cons text "う production compile・parse・analyze・portable codec の" cons ruby text "試験" text "しけん" cons text "は " cons code "cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1" cons text " でも" cons ruby text "実行" text "じっこう" cons text "します。" nil
@@ -274,25 +304,57 @@ body
       cons "[出力先/しゅつりょくさき]は[存在/そんざい]しないディレクトリを[指定/してい]してください。" nil
     cons rawcode some "sh" "cargo run --locked -p nepl3-tools -- doc-html export examples/document/linear-combination.nepld .tmp/linear-combination-html\n"
     cons paragraph
-      cons sentence cons code "document.html" cons text " と " cons code "assets/" cons text " を" cons ruby text "一緒" text "いっしょ" cons text "に" cons ruby text "配布" text "はいふ" cons text "します。" nil
+      cons sentence cons ruby text "既定" text "きてい" cons text "の" cons ruby text "外部" text "がいぶ" cons text "CSS" cons ruby text "方式" text "ほうしき" cons text "では、" cons code "document.html" cons text " と " cons code "assets/" cons text " を" cons ruby text "同梱" text "どうこん" cons text "する。" nil
+      cons "HTML[単体/たんたい]でスタイルを[保持/ほじ]して[配布/はいふ]する[場合/ばあい]は、[次/つぎ]のコマンドを[使用/しよう]する。" nil
+    cons rawcode some "sh" "cargo run --locked -p nepl3-tools -- doc-html export --css inline examples/document/linear-combination.nepld .tmp/linear-combination-inline\n"
+    cons paragraph
+      cons sentence cons code "--css external" cons text " は" cons ruby text "既定" text "きてい" cons text "の" cons ruby text "方式" text "ほうしき" cons text "を" cons ruby text "明示" text "めいじ" cons text "する。" nil
+      cons sentence cons code "--css inline" cons text " は" cons ruby text "固定" text "こてい" cons text "CSS" cons ruby text "全体" text "ぜんたい" cons text "をHTMLへ" cons ruby text "内包" text "ないほう" cons text "し、CSPのハッシュで" cons ruby text "許可" text "きょか" cons text "する。" nil
+      cons "manifestは[方式/ほうしき]、[実際/じっさい]のファイル[一覧/いちらん]、CSSのハッシュとライセンスを[記録/きろく]する。"
+      cons "[閲覧時/えつらんじ]はHTML[単体/たんたい]を[配布/はいふ]できる。"
+      cons "[複数文書/ふくすうぶんしょ]でCSSを[共有/きょうゆう]する[場合/ばあい]は[外部/がいぶ]CSS[方式/ほうしき]を[使用/しよう]する。" nil
+    cons paragraph
+      cons "Docの[本文/ほんぶん]はKlee Oneの400・600をGoogle Fontsから[読/よ]み[込/こ]む。"
+      cons "フォントファイルは[出力/しゅつりょく]へ[同梱/どうこん]しない。"
+      cons "ネットワークを[使用/しよう]できない[場合/ばあい]は、システムの[代替/だいたい]フォントで[表示/ひょうじ]する。"
+      cons "[外部/がいぶ]CSS・HTML[内包/ないほう]の[両方式/りょうほうしき]で、CSPはfonts.googleapis.comのスタイルシートとfonts.gstatic.comのフォントだけを[追加許可/ついかきょか]する。"
+      cons "[閲覧時/えつらんじ]にこれらの[配信元/はいしんもと]への[要求/ようきゅう]が[発生/はっせい]する。" nil
+    cons paragraph
+      cons "ブラウザー[検証/けんしょう]は、375px・1280pxでの[外部/がいぶ]CSS・[内包/ないほう]CSS・[複製/ふくせい]HTMLの[表示比較/ひょうじひかく]、オフラインの[代替/だいたい]フォント、Google Fontsの[実際/じっさい]の[読/よ]み[込/こ]みを[含/ふく]む。"
+      cons sentence cons ruby text "画像" text "がぞう" cons text "は" cons code "dist/doc-browser/export-modes/" cons text "へ" cons ruby text "出力" text "しゅつりょく" cons text "する。" nil
+      cons "サイト[全体/ぜんたい]の[検証/けんしょう]ではGoogle Fontsの[応答/おうとう]を[空/から]のCSSへ[置換/ちかん]し、[代替/だいたい]フォントによる[表示/ひょうじ]を[検査/けんさ]する。" nil
+    cons paragraph
       cons "[数式/すうしき]・[外部/がいぶ]ページ・[画像等/がぞうとう]の[解決/かいけつ]はまだこのlocal[入口/いりぐち]の[対象外/たいしょうがい]で、[必要/ひつよう]な[場合/ばあい]は[生成/せいせい]を[拒否/きょひ]します。"
       cons "[正式文書/せいしきぶんしょ]の[正本切替/せいほんきりかえ]とPages[公開/こうかい]は、リンク・[意味同等性/いみどうとうせい]・[配布検査/はいふけんさ]を[含/ふく]む[別/べつ]の[工程/こうてい]です。"
       cons sentence cons ruby text "契約" text "けいやく" cons text "は " cons link relative "spec/20-doc-html.md" none concat cons text "20" cons ruby text "章" text "しょう" nil cons text " を" cons ruby text "参照" text "さんしょう" cons text "してください。" nil nil
     cons paragraph
-      cons sentence cons link relative "../.github/workflows/ci.yml" none text "CI workflow" cons text " はpush・pull request・" cons ruby text "手動実行" text "しゅどうじっこう" cons text "で" cons ruby text "起動" text "きどう" cons text "し、Linux・Windows・macOSで" cons ruby text "上記" text "じょうき" cons text "のRust" cons ruby text "検査" text "けんさ" cons text "とリポジトリ" cons ruby text "検査" text "けんさ" cons text "を" cons ruby text "実行" text "じっこう" cons text "します。" nil
+      cons sentence cons link relative "../.github/workflows/ci.yml" none text "CI workflow" cons text " はmainへのpush・pull request・" cons ruby text "手動実行" text "しゅどうじっこう" cons text "で" cons ruby text "起動" text "きどう" cons text "します。" nil
+      cons "feature branchのpushとPR[更新/こうしん]による[全/ぜん]workflowの[二重実行/にじゅうじっこう]を[避/さ]け、PRではGitHubのmerge refを[検査/けんさ]します。"
+      cons "PR[未作成/みさくせい]のcheckpointは[自動/じどう]CI[検証済/けんしょうず]みとは[扱/あつか]わず、[必要/ひつよう]なら[手動実行/しゅどうじっこう]します。"
+      cons "Rustのworkspace testとClippyはLinux・Windows・macOSで[実行/じっこう]し、fmt・rustdoc・allocation regression・[外部/がいぶ]consumer[全体/ぜんたい]・Doc[移行/いこう]とcanonical[生成/せいせい]はLinuxで[一度実行/いちどじっこう]します。"
+      cons "repository checkはrepository-contract jobへ[集約/しゅうやく]します。" nil
+    cons paragraph
+      cons "tag pushの[自動/じどう]CIも[維持/いじ]します。"
+      cons "CI[成功/せいこう]だけで[正式/せいしき]releaseや[公開確認済/こうかいかくにんず]みとは[扱/あつか]いません。" nil
+    cons paragraph
+      cons "siteの[全/ぜん]Python[試験/しけん]はLinuxのsite-publication jobで[実行/じっこう]します。"
+      cons "Windowsではjunction[拒否/きょひ]、Windows/macOSではstdinへ[渡/わた]す[引数/ひきすう]の[構築/こうちく]と[実/じつ]processの[強制終了/きょうせいしゅうりょう]・HTTP[通信/つうしん]と[期限/きげん]、macOSではsymlink[祖先/そせん]を[持/も]つtemporary rootの[回帰/かいき]だけを[追加実行/ついかじっこう]します。"
+      cons "stdinの[試験/しけん]はprocess[呼出/よびだ]しをmockして[渡/わた]す[値/ち]を[検査/けんさ]し、[実際/じっさい]のprocess[間転送/かんてんそう]の[証拠/しょうこ]とは[区別/くべつ]します。"
+      cons "[共通/きょうつう]のmanifest/hash/tar[検査/けんさ]をOSごとに[反復/はんぷく]しません。"
+      cons "evidence runnerのファイル・process[境界/きょうかい]は3 OSで[維持/いじ]します。" nil
+    cons paragraph
       cons "[文書/ぶんしょ]だけの[変更/へんこう]も[対象/たいしょう]です。"
-      cons sentence cons text "すべてのmatrix jobの" cons ruby text "成功" text "せいこう" cons text "を" cons ruby text "集約" text "しゅうやく" cons text "する" cons ruby text "固定名" text "こていめい" cons text " " cons code "quality" cons text " を、mainの" cons ruby text "必須" text "ひっす" cons text "status checkとして" cons ruby text "使用" text "しよう" cons text "します。" nil
-      cons "[失敗/しっぱい]・cancel・skipを[成功/せいこう]へ[読/よ]み[替/か]えません。" nil
+      cons sentence cons ruby text "固定名" text "こていめい" cons text " " cons code "quality" cons text " は" cons ruby text "引" text "ひ" cons text "き" cons ruby text "続" text "つづ" cons text "き" cons ruby text "全" text "ぜん" cons text "jobの" cons ruby text "成功" text "せいこう" cons text "を" cons ruby text "要求" text "ようきゅう" cons text "し、" cons ruby text "失敗" text "しっぱい" cons text "・cancel・skipを" cons ruby text "成功" text "せいこう" cons text "へ" cons ruby text "読" text "よ" cons text "み" cons ruby text "替" text "か" cons text "えません。" nil
+      cons "ブラウザ・Pulley・RP2040の[実行頻度変更/じっこうひんどへんこう]は、この[重複削減/ちょうふくさくげん]とは[別/べつ]に、[変更/へんこう]の[影響範囲/えいきょうはんい]とmainでの[拡張試験/かくちょうしけん]を[対応/たいおう]させて[設計/せっけい]します。" nil
     cons paragraph
-      cons sentence cons code "main" cons text " へのpushで " cons code "quality" cons text " が" cons ruby text "成功" text "せいこう" cons text "した" cons ruby text "後" text "あと" cons text "、" cons ruby text "同" text "おな" cons text "じcommit SHAのGit" cons ruby text "管理対象" text "かんりたいしょう" cons text "をsource archiveとしてActions artifactへ" cons ruby text "保存" text "ほぞん" cons text "します。" nil
-      cons "archiveにはLICENSE・[仕様/しよう]・schema・[文法/ぶんぽう]・[例/れい]・[開発/かいはつ]toolsが[入/はい]り、SHA-256とcommit[識別情報/しきべつじょうほう]を[添付/てんぷ]します。"
-      cons "[保存期間/ほぞんきかん]は30[日/にち]です。"
-      cons "これは[基盤整備段階/きばんせいびだんかい]の[継続的/けいぞくてき]な[成果物配布/せいかぶつはいふ]であり、[言語/げんご]runtimeのbinary releaseではありません。"
-      cons sentence cons code ".tmp/" cons text " はarchiveへ" cons ruby text "入" text "はい" cons text "りません。" nil nil
+      cons "[検査対象/けんさたいしょう]sourceはCI runのcommit SHAで[特定/とくてい]します。"
+      cons "[通常/つうじょう]のmain pushではsource tarを[別/べつ]artifactとして[再保存/さいほぞん]せず、Git checkoutまたはGitHubのcommit[指定/してい]source archiveを[使用/しよう]します。"
+      cons "[正式/せいしき]releaseで[同一/どういつ]の[配布/はいふ]byte[列/れつ]を[保全/ほぜん]する[必要/ひつよう]がある[場合/ばあい]は、そのreleaseの[成果物/せいかぶつ]として[扱/あつか]います。" nil
     cons paragraph
-      cons sentence cons text "source archiveは" cons ruby text "内容" text "ないよう" cons text "の" cons ruby text "参照" text "さんしょう" cons text "とbuildに" cons ruby text "使" text "つか" cons text "うsnapshotで、" cons code ".git/" cons text " は" cons ruby text "含" text "ふく" cons text "みません。" nil
-      cons sentence cons code "nepl3-tools check" cons text " はGit" cons ruby text "管理対象" text "かんりたいしょう" cons text "も" cons ruby text "検査" text "けんさ" cons text "するため、" cons ruby text "完全" text "かんぜん" cons text "なリポジトリ" cons ruby text "検査" text "けんさ" cons text "にはcloneしたcheckoutが" cons ruby text "必要" text "ひつよう" cons text "です。" nil
-      cons sentence cons text "artifact" cons ruby text "内" text "ない" cons text "の " cons code "SOURCE.txt" cons text " のcommit" cons ruby text "値" text "ち" cons text "を" cons ruby text "使" text "つか" cons text "って " cons code "git checkout <commit>" cons text " し、" cons ruby text "上記" text "じょうき" cons text "の" cons ruby text "検査" text "けんさ" cons text "を" cons ruby text "実行" text "じっこう" cons text "してください。" nil nil
+      cons sentence cons text "source archiveには " cons code ".git/" cons text " は" cons ruby text "含" text "ふく" cons text "まれません。" nil
+      cons sentence cons code "nepl3-tools check" cons text " の" cons ruby text "履歴" text "りれき" cons text "・Git" cons ruby text "管理対象検査" text "かんりたいしょうけんさ" cons text "にはcloneしたcheckoutが" cons ruby text "必要" text "ひつよう" cons text "です。" nil
+      cons sentence cons text "CI runのcommit SHAを" cons ruby text "使" text "つか" cons text "って " cons code "git checkout <commit>" cons text " し、" cons ruby text "上記" text "じょうき" cons text "の" cons ruby text "検査" text "けんさ" cons text "を" cons ruby text "実行" text "じっこう" cons text "してください。" nil
+      cons "GitHubの[再生成/さいせいせい]archiveは[同/おな]じcommitのファイル[内容/ないよう]を[参照/さんしょう]する[手段/しゅだん]であり、[圧縮/あっしゅく]byte[列/れつ]の[永続的同一性/えいぞくてきどういつせい]を[保証/ほしょう]するものではありません。" nil
     cons paragraph
       cons "Actionsの[権限/けんげん]は[読/よ]み[取/と]りに[限定/げんてい]し、checkoutにcredentialを[残/のこ]しません。"
       cons "[外部/がいぶ]actionはcommit SHAで[固定/こてい]し、DependabotがCargo[依存/いぞん]とActionsの[更新/こうしん]PRを[作成/さくせい]します。"
@@ -313,7 +375,7 @@ body
       cons "runtime releaseは[該当/がいとう]するconformanceの[実行証拠/じっこうしょうこ]がそろってから[設/もう]けます。" nil
     cons paragraph
       cons sentence cons text "Web/TEA/siteとDoc" cons ruby text "移行" text "いこう" cons text "の" cons ruby text "計画" text "けいかく" cons text "は " cons link relative "spec/14-web-ui.md" none concat cons text "14" cons ruby text "章" text "しょう" nil cons text "〜" cons link relative "spec/16-doc-migration.md" none concat cons text "16" cons ruby text "章" text "しょう" nil cons text " に" cons ruby text "従" text "したが" cons text "います。" nil
-      cons "[現在/げんざい]のCIはsource[配布/はいふ]を[維持/いじ]し、Pages[公開/こうかい]はT20の[実装/じっそう]・[受入後/うけいれご]です。"
+      cons "[現在/げんざい]のCIは[実装/じっそう]と[生成物/せいせいぶつ]を[検査/けんさ]し、Pages[公開/こうかい]はT20の[公開前条件/こうかいまえじょうけん]を[満/み]たしてから[行/おこな]い、[公開後/こうかいご]の[試験/しけん]を[別/べつ]に[記録/きろく]します。"
       cons "T21は[初回公開/しょかいこうかい]とは[別/べつ]に[最終完了/さいしゅうかんりょう]へ[必須/ひっす]で、[移行前/いこうまえ]はMarkdownを[正本/せいほん]とします。" nil
     cons paragraph
       cons sentence cons text "Pagesの" cons ruby text "実装" text "じっそう" cons text "では、" cons ruby text "公開後" text "こうかいご" cons text "smokeが" cons ruby text "失敗" text "しっぱい" cons text "したcandidateに" cons ruby text "対" text "たい" cons text "して " cons link relative "spec/15-site.md" none concat cons text "15" cons ruby text "章" text "しょう" cons text "の" cons ruby text "復旧契約" text "ふっきゅうけいやく" nil cons text " を" cons ruby text "実行" text "じっこう" cons text "します。" nil
@@ -323,11 +385,62 @@ body
       cons "[現在/げんざい]はこの[設計/せっけい]の[整備/せいび]であり、live Pagesの[保存先/ほぞんさき]・journal・[復旧/ふっきゅう]workflowは[未実装/みじっそう]です。" nil
     cons paragraph cons sentence cons text "workflowの" cons ruby text "構文" text "こうぶん" cons text "・" cons ruby text "権限" text "けんげん" cons text "・" cons ruby text "依存" text "いぞん" cons text "jobの" cons ruby text "扱" text "あつか" cons text "いは " cons link external "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax" concat cons text "GitHub Actions" cons ruby text "公式仕様" text "こうしきしよう" nil cons text "、artifactの" cons ruby text "保存" text "ほぞん" cons text "は " cons link external "https://docs.github.com/en/actions/tutorials/store-and-share-data" concat cons ruby text "公式" text "こうしき" cons text "ガイド" nil cons text " に" cons ruby text "従" text "したが" cons text "います。" nil nil
     nil
+  cons section branchIntegration "branchとPRの[統合手順/とうごうてじゅん]" body
+    cons paragraph
+      cons "[通常/つうじょう]は[更新済/こうしんず]みmainから[短命/たんめい]のtopic branchを[作/つく]り、[一/ひと]つの[論理的変更/ろんりてきへんこう]と[関連試験/かんれんしけん]を[同/おな]じPRで[閉/と]じます。"
+      cons "[同/おな]じ[要求/ようきゅう]の[修正/しゅうせい]を[別/べつ]の[依存/いぞん]PRへ[分散/ぶんさん]させず、[無関係/むかんけい]なtopicを[取/と]り[込/こ]む[統合/とうごう]branchへ[転用/てんよう]しません。"
+      cons "[実装中/じっそうちゅう]の[主要/しゅよう]topic[一/ひと]つとレビュー・CI[待/ま]ち[一/ひと]つ[程度/ていど]を[目安/めやす]とし、[同/おな]じ[領域/りょういき]の[未統合/みとうごう]stackを[伸/の]ばす[前/まえ]に[先行変更/せんこうへんこう]を[閉/と]じます。"
+      cons "[独立/どくりつ]した[作業/さぎょう]を[禁止/きんし]する[件数上限/けんすうじょうげん]ではありません。" nil
+    cons paragraph
+      cons "mainの[取得/しゅとく]・[確認/かくにん]だけでは[作業/さぎょう]branchを[更新/こうしん]しません。"
+      cons "[必要/ひつよう]なAPIや[修正/しゅうせい]の[導入/どうにゅう]、[競合解消/きょうごうかいしょう]、strict gateへの[対応/たいおう]など、[理由/りゆう]がある[時点/じてん]で[更新/こうしん]し、その[理由/りゆう]をPRへ[記録/きろく]します。"
+      cons "[統合順序/とうごうじゅんじょ]を[決/き]め、レビュー[修正/しゅうせい]と[必要/ひつよう]なbase[更新/こうしん]をまとめてから[統合候補/とうごうこうほ]を[固定/こてい]し、[必須/ひっす]CIを[完了/かんりょう]させます。"
+      cons "[同/おな]じtreeでも、[別/べつ]headの[成功/せいこう]や[別/べつ]baseとの[検証/けんしょう]を[現在候補/げんざいこうほ]の[成功/せいこう]へ[読/よ]み[替/か]えません。"
+      cons "[保護設定/ほごせってい]を[緩/ゆる]めて[同期/どうき]を[省略/しょうりゃく]しません。" nil
+    cons paragraph
+      cons "[依存/いぞん]PRでは[親/おや]PRと[親/おや]head、[子固有/ここゆう]のcommit[範囲/はんい]を[記録/きろく]します。"
+      cons "[親/おや]の[統合後/とうごうご]は[旧/きゅう]base・[旧/きゅう]headと[子/こ]branchからの[参照/さんしょう]を[確認/かくにん]・[保全/ほぜん]し、[子固有/ここゆう]の[差分/さぶん]だけを[新/しん]mainへrebase/cherry-pickして[整理/せいり]します。"
+      cons "[親/おや]がsquash[済/ず]みなら、[古/ふる]い[親/おや]commitを[子/こ]の[変更/へんこう]として[再投入/さいとうにゅう]しません。"
+      cons "[元系列/もとけいれつ]とのrange-diff、[最終差分/さいしゅうさぶん]、[競合解消/きょうごうかいしょう]を[確認/かくにん]し、[必要/ひつよう]な[再/さい]レビューと[新候補/しんこうほ]のCIを[行/おこな]います。"
+      cons "[共有/きょうゆう]branchの[書換/かきか]えは[利用者/りようしゃ]・[子/こ]branchへの[影響/えいきょう]を[確認/かくにん]し、remoteの[期待/きたい]SHAを[指定/してい]したforce-with-leaseを[使/つか]います。"
+      cons "[通常/つうじょう]のforce pushは[使/つか]いません。"
+      cons "[確認/かくにん]できなければ[新/しん]branchへ[固有差分/こゆうさぶん]を[移/うつ]し、[旧/きゅう]branchを[保全/ほぜん]します。" nil
+    cons paragraph
+      cons "[通常/つうじょう]の[単一変更/たんいつへんこう]PRはsquash mergeを[既定/きてい]とします。"
+      cons "[例外/れいがい]の[理由/りゆう]を[示/しめ]したうえで、[個別変更/こべつへんこう]を[線形/せんけい]に[残/のこ]す[場合/ばあい]はrebase merge、[元/もと]のcommitと[統合点/とうごうてん]を[保持/ほじ]する[場合/ばあい]はmerge commitを[選/えら]びます。"
+      cons "rebase mergeは[元/もと]のSHAを[保持/ほじ]しません。"
+      cons "[統合後/とうごうご]のtopic branchを[別/べつ]の[作業/さぎょう]へ[再利用/さいりよう]せず、[公開済/こうかいず]みmainは[別途合意/べっとごうい]した[履歴移行/りれきいこう]なしに[書/か]き[換/か]えません。"
+      cons "[既存/きそん]stackも[一括/いっかつ]で[無条件/むじょうけん]に[書/か]き[換/か]えず、[親/おや]から[順/じゅん]に[整理/せいり]します。" nil
+    cons paragraph
+      cons "PRには[対象/たいしょう]commit・base、[確認/かくにん]した[契約/けいやく]と[差分/さぶん]、[重要/じゅうよう]な[指摘/してき]と[解消/かいしょう]、[独立実行/どくりつじっこう]とログ[確認/かくにん]の[区別/くべつ]、[未確認範囲/みかくにんはんい]を[短/みじか]く[残/のこ]します。"
+      cons "merge queueは[導入済/どうにゅうず]みとは[扱/あつか]いません。"
+      cons sentence cons ruby text "必要" text "ひつよう" cons text "になった" cons ruby text "場合" text "ばあい" cons text "に" cons ruby text "既存" text "きそん" cons text "GitHub" cons ruby text "機能" text "きのう" cons text "と" cons code "merge_group" cons text "のCI" cons ruby text "対応" text "たいおう" cons text "を" cons ruby text "別途検証" text "べっとけんしょう" cons text "します。" nil
+      cons "[独自/どくじ]の[統合管理/とうごうかんり]frameworkは[追加/ついか]しません。" nil
+    cons paragraph
+      cons sentence
+        cons text "この" cons ruby text "運用" text "うんよう" cons text "は "
+        cons link external "https://git-scm.com/docs/gitworkflows" text "Gitのtopic workflow"
+        cons text " と "
+        cons link external "https://docs.github.com/en/pull-requests/reference/pull-request-merges" concat cons text "GitHubの" cons ruby text "統合方式" text "とうごうほうしき" cons text "・squash" cons ruby text "後" text "ご" cons text "のbranchに" cons ruby text "関" text "かん" cons text "する" cons ruby text "注意" text "ちゅうい" nil
+        cons text " を" cons ruby text "参考" text "さんこう" cons text "に、NEPL3の" cons ruby text "独立" text "どくりつ" cons text "レビュー・strict CI" cons ruby text "条件" text "じょうけん" cons text "へ" cons ruby text "適用" text "てきよう" cons text "したものです。" nil nil
+    nil
   cons section review "[実装/じっそう]と[独立/どくりつ]レビュー" body
+    cons paragraph
+      cons "[失敗/しっぱい]した[試験/しけん]を[通/とお]すために[要求/ようきゅう]を[縮小/しゅくしょう]したり、[必須/ひっす]target・[検査/けんさ]を[除外/じょがい]したり、[資源制限/しげんせいげん]やbranch[保護/ほご]を[緩和/かんわ]したりする[変更/へんこう]は、[通常/つうじょう]の[実装修正/じっそうしゅうせい]と[区別/くべつ]します。"
+      cons "[元/もと]の[要求/ようきゅう]、[変更理由/へんこうりゆう]、[失/うしな]われる[保証/ほしょう]と[代替検証/だいたいけんしょう]を[具体化/ぐたいか]し、[既/すで]にユーザーが[承認/しょうにん]した[範囲/はんい]かを[確認/かくにん]します。"
+      cons "[未承認/みしょうにん]の[要件縮小/ようけんしゅくしょう]・[権限/けんげん]や[公開設定/こうかいせってい]の[変更/へんこう]は、その[内容/ないよう]を[示/しめ]して[承認/しょうにん]を[得/え]るまで[適用/てきよう]しません。"
+      cons "[要求/ようきゅう]を[保存/ほぞん]する[仕様誤記/しようごき]・[型定義/かたていぎ]の[整合/せいごう]や[通常/つうじょう]の[実装修正/じっそうしゅうせい]まで、[一律/いちりつ]の[承認待/しょうにんま]ちにはしません。" nil
+    cons paragraph
+      cons "[独立/どくりつ]レビューでは、[契約違反/けいやくいはん]・[安全性/あんぜんせい]・[誤結果/ごけっか]・[必須検証不足/ひっすけんしょうぶそく]を[現在/げんざい]の[変更/へんこう]で[解消/かいしょう]します。"
+      cons "[密接/みっせつ]に[関連/かんれん]する[保守性/ほしゅせい]の[改善/かいぜん]は[範囲/はんい]を[確認/かくにん]して[取/と]り[込/こ]み、[独立機能/どくりつきのう]・[広範囲/こうはんい]な[再設計/さいせっけい]・[任意/にんい]の[追加検査/ついかけんさ]は[別/べつ]の[要求/ようきゅう]として[採否/さいひ]を[判断/はんだん]します。"
+      cons "[同/おな]じ[原因/げんいん]の[再指摘/さいしてき]が[続/つづ]く[場合/ばあい]は、[変更/へんこう]を[足/た]す[前/まえ]に[契約/けいやく]と[期待値/きたいち]を[再確認/さいかくにん]します。"
+      cons "[待機中/たいきちゅう]に[進/すす]める[作業/さぎょう]はレビュー[対象/たいしょう]を[変更/へんこう]せず、[未確定/みかくてい]の[契約/けいやく]に[依存/いぞん]しない[範囲/はんい]とします。"
+      cons "レビュー[担当/たんとう]には[固定/こてい]commitと[確認範囲/かくにんはんい]を[渡/わた]し、[試験/しけん]の[出力先/しゅつりょくさき]を[分/わ]けます。"
+      cons "[共有/きょうゆう]refsの[更新/こうしん]は[統括/とうかつ]するメインagentが[行/おこな]います。" nil
     cons paragraph
       cons sentence cons text "Doc" cons ruby text "関連" text "かんれん" cons text "の" cons ruby text "共通値" text "きょうつうち" cons text "・wire・" cons ruby text "文書意味" text "ぶんしょいみ" cons text "APIを" cons ruby text "固定" text "こてい" cons text "する" cons ruby text "前" text "まえ" cons text "に、" cons link relative "doc-inventory.md" none concat cons ruby text "早期" text "そうき" cons text "inventoryとgap audit" nil cons text " を" cons ruby text "確認" text "かくにん" cons text "します。" nil
       cons sentence cons code "cargo run --locked -p nepl3-tools -- doc-inventory --check" cons text " は" cons ruby text "固定" text "こてい" cons text "commitの" cons ruby text "原本" text "げんぽん" cons text "と" cons ruby text "照合" text "しょうごう" cons text "し、" cons ruby text "現在" text "げんざい" cons text "の" cons ruby text "文書" text "ぶんしょ" cons text "・" cons ruby text "契約" text "けいやく" cons text "の" cons ruby text "追加" text "ついか" cons text "/" cons ruby text "変更" text "へんこう" cons text "/" cons ruby text "削除" text "さくじょ" cons text "を" cons ruby text "報告" text "ほうこく" cons text "します。" nil
-      cons sentence cons ruby text "通常" text "つうじょう" cons text "の " cons code "check" cons text " にも" cons ruby text "含" text "ふく" cons text "まれます。" nil
+      cons sentence cons ruby text "通常" text "つうじょう" cons text "の " cons code "check" cons text " とは" cons ruby text "分離" text "ぶんり" cons text "し、baselineの" cons ruby text "履歴" text "りれき" cons text "を" cons ruby text "取得" text "しゅとく" cons text "した" cons ruby text "上" text "うえ" cons text "で" cons ruby text "明示的" text "めいじてき" cons text "に" cons ruby text "実行" text "じっこう" cons text "します。" nil
       cons sentence cons ruby text "現在" text "げんざい" cons text "の" cons ruby text "網羅性" text "もうらせい" cons text "を" cons ruby text "主張" text "しゅちょう" cons text "する" cons ruby text "場合" text "ばあい" cons text "は" cons ruby text "新" text "あたら" cons text "しいcommitを" cons ruby text "監査" text "かんさ" cons text "して " cons code "doc-inventory --check-current" cons text " を" cons ruby text "通" text "とお" cons text "します。" nil
       cons "[現時点/げんじてん]のbaselineと[作業/さぎょう]treeには[差分/さぶん]があり、strict[検査/けんさ]が[失敗/しっぱい]することを[未移行/みいこう]/[未監査/みかんさ]の[成功/せいこう]へ[読/よ]み[替/か]えません。"
       cons "[再生成方法/さいせいせいほうほう]と[履歴要件/りれきようけん]は[監査文書/かんさぶんしょ]を[参照/さんしょう]してください。" nil

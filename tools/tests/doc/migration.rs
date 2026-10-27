@@ -1,7 +1,7 @@
 //! Ordered typed-model versus Markdown comparisons for migration regressions.
 //! This deliberately is not a source parser, renderer or full acceptance gate.
 use nepl3_doc_core::model::{DocKind, DocumentSyntax, SentenceRef};
-use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
+use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag, TagEnd};
 #[path = "migration/agents.rs"]
 mod agents;
 #[path = "migration/development.rs"]
@@ -23,6 +23,13 @@ fn markdown_blocks(source: &str) -> Vec<(String, String)> {
                 active = Some(("paragraph".into(), String::new()))
             }
             Event::Start(Tag::TableCell) => active = Some(("cell".into(), String::new())),
+            Event::Start(Tag::CodeBlock(kind)) => {
+                let language = match kind {
+                    CodeBlockKind::Fenced(value) if !value.is_empty() => Some(value.into_string()),
+                    _ => None,
+                };
+                active = Some((format!("code:{language:?}"), String::new()));
+            }
             Event::Text(value) | Event::Code(value) => {
                 if let Some((_, text)) = &mut active {
                     text.push_str(&value);
@@ -33,6 +40,12 @@ fn markdown_blocks(source: &str) -> Vec<(String, String)> {
             ) => {
                 if let Some((kind, text)) = active.take() {
                     result.push((kind, normalized(&text)));
+                }
+            }
+            Event::End(TagEnd::CodeBlock) => {
+                if let Some(value) = active.take() {
+                    // Unlike prose, literal code whitespace is semantic data.
+                    result.push(value);
                 }
             }
             _ => {}
@@ -81,7 +94,24 @@ fn blocks(
             }
         }
         DocKind::ListItem { body, .. } => blocks(document, body.0, project, output)?,
+        DocKind::RawCode {
+            language_hint,
+            text,
+        } => {
+            output.push((format!("code:{language_hint:?}"), text.clone()));
+        }
         other => return Err(format!("unhandled draft block: {other:?}")),
     }
     Ok(())
+}
+
+#[test]
+fn markdown_literal_code_keeps_language_and_whitespace() {
+    let original = markdown_blocks("```sh\necho  value\n```\n");
+    assert_eq!(
+        original,
+        [("code:Some(\"sh\")".into(), "echo  value\n".into())]
+    );
+    assert_ne!(original, markdown_blocks("```sh\necho value\n```\n"));
+    assert_ne!(original, markdown_blocks("```text\necho  value\n```\n"));
 }
