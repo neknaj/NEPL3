@@ -604,7 +604,7 @@ body
         cons code "labels::namespace"
         cons text "が担当する。"
         nil
-      cons "hostは構造検査済みのArticle・Sentence・Inline断片を、表示出現順のmember列として明示する。"
+      cons "従来のinspectを使うhostは構造検査済みのArticle・Sentence・Inline断片を、表示出現順のmember列として明示する。"
       cons " 検査結果は各定義・参照のmember、Doc node、元source位置を保持し、選択した全memberの定義を収集してから前方参照を解決する。"
       cons " 同じ定義を持つmemberの複数出現とmember間の名前重複を拒否する。"
       cons "未選択の断片やforeign closure内部の定義は自動導入しない。"
@@ -1862,6 +1862,21 @@ body
         cons "変更できるのは既存の明示allowanceだけである。"
         cons "単体Article CLIは前述の--display設定で接続し、このPageSet manifestとは入力形式を区別する。canonical専用設定の選択追加は別範囲である。"
         nil
+      nil
+    nil
+  cons section body_namespace "Bodyのnative[名前合成/なまえごうせい]" body
+    cons paragraph
+      cons sentence cons code "labels::namespace::inspect_body" cons text " はBodyの" cons ruby text "構造" text "こうぞう" cons text "・source・" cons ruby text "定義" text "ていぎ" cons text "の" cons ruby text "重複" text "ちょうふく" cons text "を" cons ruby text "検査" text "けんさ" cons text "し、opaqueな " cons code "BodyMember" cons text " を" cons ruby text "返" text "かえ" cons text "す。" nil
+      cons "[外部/がいぶ]への[参照/さんしょう]は[未解決/みかいけつ]で[保持/ほじ]し、foreign closureや[未選択/みせんたく]のfragmentの[名前/なまえ]を[自動導入/じどうどうにゅう]しない。"
+      cons sentence cons code "resolve_body" cons text " はBodyをmember 0、" cons ruby text "明示選択" text "めいじせんたく" cons text "した" cons ruby text "既存" text "きそん" cons text "fragmentをmember 1" cons ruby text "以降" text "いこう" cons text "として" cons ruby text "連続順" text "れんぞくじゅん" cons text "に" cons ruby text "名前解決" text "なまえかいけつ" cons text "する。" nil
+      cons sentence cons code "resolve_body_interleaved" cons text " は" cons ruby text "同" text "おな" cons text "じmember" cons ruby text "番号" text "ばんごう" cons text "と" cons ruby text "局所" text "きょくしょ" cons text "site indexを" cons ruby text "使" text "つか" cons text "い、" cons ruby text "欠落" text "けつらく" cons text "・" cons ruby text "重複" text "ちょうふく" cons text "・" cons ruby text "範囲外" text "はんいがい" cons text "・" cons ruby text "局所順" text "きょくしょじゅん" cons text "の" cons ruby text "反転" text "はんてん" cons text "を" cons ruby text "拒否" text "きょひ" cons text "する。" nil
+      cons "[一時的/いちじてき]なmember[列/れつ]の[長/なが]さとbyte[数/すう]は[桁/けた]あふれを[検査/けんさ]し、[走査/そうさ]と[確保/かくほ]を[呼出元/よびだしもと]の[累積/るいせき]Budgetへ[先/さき]に[計上/けいじょう]する。"
+      cons "この[一時列/いちじれつ]の[確保失敗/かくほしっぱい]もstickyな[型付/かたつ]き[停止/ていし]として[返/かえ]し、[一時的/いちじてき]な[従来/じゅうらい]proofやmemberへの[参照/さんしょう]は[公開/こうかい]しない。"
+      cons sentence cons code "CheckedBodyNamespace" cons text " はBodyと" cons ruby text "選択" text "せんたく" cons text "fragmentへの" cons ruby text "不変借用" text "ふへんしゃくよう" cons text "および" cons ruby text "解決済" text "かいけつず" cons text "みsiteだけを" cons ruby text "保持" text "ほじ" cons text "し、" cons code "CheckedNamespace" cons text " へ" cons ruby text "変換" text "へんかん" cons text "できない。" nil
+      cons "[検査/けんさ]を[呼/よ]ぶ[側/がわ]は[共有/きょうゆう]SourceAdmissionを[各/かく]memberの[構造検査/こうぞうけんさ]へ[渡/わた]し、[名前解決/なまえかいけつ]だけからmember[間/かん]のsource[入場/にゅうじょう]の[整合/せいごう]を[推定/すいてい]しない。"
+      cons sentence cons code "Error::diagnostic_body" cons text " は" cons ruby text "同" text "おな" cons text "じBody・fragment" cons ruby text "列" text "れつ" cons text "を" cons ruby text "用" text "もち" cons text "い、" cons ruby text "未解決参照" text "みかいけつさんしょう" cons text "や" cons ruby text "重複定義" text "ちょうふくていぎ" cons text "のsiteを" cons ruby text "各所有者" text "かくしょゆうしゃ" cons text "のsourceへ" cons ruby text "照合" text "しょうごう" cons text "して" cons ruby text "診断" text "しんだん" cons text "する。" nil
+      cons "[型付/かたつ]きorder errorやroot errorをlabel[診断/しんだん]へ[読/よ]み[替/か]えず、[停止理由/ていしりゆう]を[維持/いじ]する。"
+      cons "この[追加/ついか]はnativeな[名前解決/なまえかいけつ]だけであり、Bodyの[表示順/ひょうじじゅん]、タイトル・[言語/げんご]metadata、PageSet[登録/とうろく]、HTML・Markdown[書出/かきだ]し、Sentence・SVGの[描画準備/びょうがじゅんび]を[成立/せいりつ]させない。"
       nil
     nil
   nil

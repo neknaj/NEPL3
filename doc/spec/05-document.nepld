@@ -62,6 +62,12 @@ body
         cons "この[段階/だんかい]ではBodyのPageSet[登録/とうろく]、HTML・Markdown[書出/かきだ]し、タイトル・[言語/げんご]metadata、[複数/ふくすう]の[最上位見出/さいじょういみだ]しを[持/も]つページの[公開/こうかい]は[未対応/みたいおう]であり、label[検査/けんさ]の[成功/せいこう]からそれらの[完了/かんりょう]を[推定/すいてい]しない。"
         nil
       cons paragraph
+        cons sentence cons code "labels::namespace::inspect_body" cons text " はBodyを" cons ruby text "検査" text "けんさ" cons text "し、" cons code "BodyMember" cons text " に" cons ruby text "未解決" text "みかいけつ" cons text "の" cons ruby text "参照" text "さんしょう" cons text "と" cons ruby text "定義" text "ていぎ" cons text "を" cons ruby text "保持" text "ほじ" cons text "する。" nil
+        cons sentence cons code "resolve_body" cons text " と " cons code "resolve_body_interleaved" cons text " は、このBodyと" cons ruby text "明示選択" text "めいじせんたく" cons text "した" cons ruby text "既存" text "きそん" cons text "fragmentの" cons ruby text "名前" text "なまえ" cons text "だけを" cons ruby text "合成" text "ごうせい" cons text "し、" cons code "CheckedBodyNamespace" cons text " を" cons ruby text "返" text "かえ" cons text "す。" nil
+        cons "Bodyはmember 0、[残/のこ]るfragmentは[指定列/していれつ]の[順/じゅん]にmember 1[以降/いこう]となり、[参照/さんしょう]・[定義/ていぎ]と[診断/しんだん]の[所有者/しょゆうしゃ]を[維持/いじ]する。"
+        cons sentence cons code "BodyMember" cons text " と " cons code "CheckedBodyNamespace" cons text " はopaqueな" cons ruby text "別型" text "べつがた" cons text "であり、" cons ruby text "従来" text "じゅうらい" cons text "の " cons code "Member" cons text "・" cons code "CheckedNamespace" cons text " への" cons ruby text "変換" text "へんかん" cons text "や" cons ruby text "内部参照" text "ないぶさんしょう" cons text "を" cons ruby text "公開" text "こうかい" cons text "しない。" nil
+        cons "この[名前合成/なまえごうせい]から[既存/きそん]の[描画/びょうが]・asset[準備/じゅんび]・PageSet routingへ[自動的/じどうてき]には[進/すす]めず、Bodyページのmetadataと[出力/しゅつりょく]の[未対応範囲/みたいおうはんい]を[縮小/しゅくしょう]しない。" nil
+      cons paragraph
         cons sentence cons text "tokenごとのViewは " cons code "DocView.head" cons text " に" cons ruby text "束縛" text "そくばく" cons text "する。" nil
         cons "ViewRefとrelationのIDは、tokenごとに[独立/どくりつ]した[名前空間/なまえくうかん]で[管理/かんり]する。"
         cons "Text[正規化後/せいきかご]も[元/もと]ViewとOriginを[保存/ほぞん]する。"

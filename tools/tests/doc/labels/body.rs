@@ -1,4 +1,6 @@
 use super::*;
+#[path = "body/namespace.rs"]
+mod namespace;
 
 fn with_body<T>(
     compiled: &Compiled,
