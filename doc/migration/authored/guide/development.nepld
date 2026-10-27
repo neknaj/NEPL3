@@ -243,6 +243,30 @@ body
       cons sentence cons text "WASIでは" cons ruby text "同" text "おな" cons text "じコマンドへ " cons code "--target wasm32-wasip2 -- --test-threads=1" cons text " を" cons ruby text "追加" text "ついか" cons text "する。" nil
       nil
     cons paragraph
+      cons sentence cons text "nativeの" cons ruby text "依存操作" text "いぞんそうさ" cons text "schedulerは " cons code "cargo test --locked -p nepl3-suite --test dispatch" cons text " で" cons ruby text "検査" text "けんさ" cons text "する。" nil
+      cons sentence cons text "WASIでは " cons code "--target wasm32-wasip2 -- --test-threads=1" cons text " を" cons ruby text "追加" text "ついか" cons text "する。" nil
+      cons "schedulerは[明示的/めいじてき]なframe[列/れつ]でInvoke・[依存要求/いぞんようきゅう]・Resumeを[逐次実行/ちくじじっこう]し、[同/おな]じ[実行/じっこう]Budgetへ[祖先/そせん]の[上限/じょうげん]と[深/ふか]さを[適用/てきよう]する。"
+      cons "[要求/ようきゅう]ごとのsource[権限/けんげん]、[循環検出/じゅんかんけんしゅつ]、Invalidのpartialと[診断/しんだん]、[停止後/ていしご]のcallback[抑止/よくし]、[取消/とりけし]を[検査/けんさ]する。"
+      cons "[追加生成/ついかせいせい]sourceの[認可/にんか]・[登録/とうろく]とprocess[間/かん]の[総予算管理/そうよさんかんり]は[後続/こうぞく]の[実装範囲/じっそうはんい]である。"
+      cons sentence cons text "T11・T12は" cons ruby text "段階実装中" text "だんかいじっそうちゅう" cons text "であり、" cons ruby text "正式受入" text "せいしきうけいれ" cons text "の" cons ruby text "状態" text "じょうたい" cons text "は " cons code "implementation-status.json" cons text " のacceptanceを" cons ruby text "参照" text "さんしょう" cons text "する。" nil
+      nil
+    cons paragraph
+      cons sentence cons text "nativeの " cons code "cargo test --locked -p nepl3-provider --test process_protocol" cons text " は、" cons ruby text "実" text "じつ" cons text "processのstdin/stdoutでschemaを" cons ruby text "取得" text "しゅとく" cons text "し、Invoke・Await・Resumeの" cons ruby text "結果" text "けっか" cons text "とUnicode" cons ruby text "診断" text "しんだん" cons text "をnative" cons ruby text "経路" text "けいろ" cons text "と" cons ruby text "比較" text "ひかく" cons text "する。" nil
+      cons "schema[不足/ふそく]・identity[不一致/ふいっち]・[応答前/おうとうまえ]EOFと、Await[中/ちゅう]のCancelも[検査/けんさ]する。"
+      cons "このtest targetは[専用/せんよう]harnessを[使/つか]い、protocol[用/よう]stdoutへテストランナーの[表示/ひょうじ]が[混入/こんにゅう]することを[防/ふせ]ぐ。"
+      cons "WASIではOS process[試験/しけん]を[明示的/めいじてき]にskipする。"
+      cons "[一般的/いっぱんてき]なhost scheduler、process[間/かん]の[総予算管理/そうよさんかんり]、[全/ぜん]providerの[互換性/ごかんせい]は[継続/けいぞく]する[実装/じっそう]・[受入範囲/うけいれはんい]である。"
+      nil
+    cons paragraph
+      cons sentence cons text "Readerのterminal" cons ruby text "応答" text "おうとう" cons text "については、" cons code "portable::read::reply_source_closure" cons text " が" cons ruby text "明示的" text "めいじてき" cons text "なsource" cons ruby text "集合" text "しゅうごう" cons text "だけを" cons ruby text "先" text "さき" cons text "に" cons ruby text "検査" text "けんさ" cons text "する。" nil
+      cons sentence cons code "ReaderSession::pending_read" cons text " が" cons ruby text "発行" text "はっこう" cons text "するcontextと、" cons ruby text "同" text "おな" cons text "じBudget・SourceAdmissionを" cons ruby text "渡" text "わた" cons text "す。" nil
+      cons "[保存済/ほぞんず]み[要求/ようきゅう]・[現在/げんざい]の[採用済/さいようず]みsource・[応答/おうとう]の[宣言/せんげん]を[統合/とうごう]し、codecの[無関係/むかんけい]なambient sourceは[取/と]り[込/こ]まない。"
+      cons "この[成功/せいこう]はcursor・state・mapping・Report・Usageや、transport[要求/ようきゅう]IDとsession slotの[対応/たいおう]の[承認/しょうにん]を[意味/いみ]しない。"
+      cons sentence cons ruby text "完全" text "かんぜん" cons text "な " cons code "reply_from_value" cons text " / " cons code "operation::from_reply" cons text " とresume" cons ruby text "時" text "じ" cons text "の" cons ruby text "検査" text "けんさ" cons text "は" cons ruby text "引" text "ひ" cons text "き" cons ruby text "続" text "つづ" cons text "き" cons ruby text "必要" text "ひつよう" cons text "である。" nil
+      cons "[失敗後/しっぱいご]も[入場済/にゅうじょうず]みidentityと[消費量/しょうひりょう]を[保持/ほじ]し、pending slotは[消費/しょうひ]しない。"
+      cons "remote[計測値/けいそくち]の[認証/にんしょう]、producer[側/がわ]の[変換/へんかん]、process[接続全体/せつぞくぜんたい]は[別/べつ]の[未完了範囲/みかんりょうはんい]とする。"
+      nil
+    cons paragraph
       cons sentence cons text "Sentenceの" cons ruby text "統合経路" text "とうごうけいろ" cons text "は " cons code "cargo test --locked -p nepl3-tools --test sentence --target wasm32-wasip2 -- --test-threads=1" cons text " で" cons ruby text "実行" text "じっこう" cons text "します。" nil
       cons "[独立/どくりつ]LanguagePackageのsurface compile、ReaderSession/provider、literalのportable[受渡/うけわた]し、[位置付/いちつ]き[診断/しんだん]・[停止/ていし]、Doc bridgeを[対象/たいしょう]とし、Sentence core[単体試験/たんたいしけん]と[区別/くべつ]します。"
       cons "nativeではworkspace[試験/しけん]に[含/ふく]み、WASIでも[同/おな]じ[入口/いりぐち]を[実行/じっこう]します。"

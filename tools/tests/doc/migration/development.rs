@@ -144,6 +144,15 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                     "Readerの生成sourceを持つReportの境界は",
                 ),
                 ("Sentenceの統合経路は", "Sentenceの統合経路は"),
+                ("nativeの依存操作schedulerは", "nativeの依存操作schedulerは"),
+                (
+                    "nativeの `cargo test --locked -p nepl3-provider --test process_protocol`",
+                    "nativeのcargotest--locked-pnepl3-provider--testprocess_protocol",
+                ),
+                (
+                    "Readerのterminal応答については",
+                    "Readerのterminal応答については",
+                ),
                 (
                     "`doc/canonical.json` に登録された仕様",
                     "doc/canonical.jsonに",
@@ -176,6 +185,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                             || source_prefix.starts_with("Replyの")
                             || source_prefix.starts_with("Readerの")
                             || source_prefix.starts_with("Sentenceの")
+                            || source_prefix.starts_with("nativeの")
                         {
                             let expected_code: Vec<_> = Parser::new(source_paragraph)
                                 .filter_map(|event| match event {
