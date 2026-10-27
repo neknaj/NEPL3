@@ -236,6 +236,18 @@ body
       cons sentence cons ruby text "局所試験" text "きょくしょしけん" cons text "は " cons code "cargo test --locked -p nepl3-wire --test operation pending::" cons text " と " cons code "cargo test --locked -p nepl3-provider --test transport reply::pending::" cons text " で" cons ruby text "実行" text "じっこう" cons text "する。" nil
       nil
     cons paragraph
+      cons sentence cons text "Readerの" cons ruby text "生成" text "せいせい" cons text "sourceを" cons ruby text "持" text "も" cons text "つReportの" cons ruby text "境界" text "きょうかい" cons text "は " cons code "cargo test --locked -p nepl3-reader --test runtime framed::" cons text " で" cons ruby text "検査" text "けんさ" cons text "する。" nil
+      cons "[実際/じっさい]のReaderSessionが[保存/ほぞん]したRead[要求/ようきゅう]に[対/たい]し、Unicode[生成/せいせい]sourceを[参照/さんしょう]する[診断/しんだん]をframed CBORで[受/う]け[取/と]り、pending replyのsource[入場/にゅうじょう]、[内外/ないがい]Reportの[照合/しょうごう]、ReaderSessionの[再開/さいかい]までを[同一/どういつ]process[内/ない]で[接続/せつぞく]する。"
+      cons "[生成/せいせい]sourceを[追加/ついか]しない[受信/じゅしん]、payloadのsource[宣言欠落/せんげんけつらく]、[内外/ないがい]Reportの[不一致/ふいっち]は[拒否/きょひ]し、Reader[側/がわ]のpending slotを[保持/ほじ]する。"
+      cons "これは[共有/きょうゆう]Budget[下/か]のterminal Readの[回帰/かいき]であり、process[間実行/かんじっこう]、transport Connection、remote Usageの[認証/にんしょう]、[正式受入/せいしきうけいれ]の[完了/かんりょう]を[示/しめ]すものではない。"
+      cons sentence cons text "WASIでは" cons ruby text "同" text "おな" cons text "じコマンドへ " cons code "--target wasm32-wasip2 -- --test-threads=1" cons text " を" cons ruby text "追加" text "ついか" cons text "する。" nil
+      nil
+    cons paragraph
+      cons sentence cons text "Sentenceの" cons ruby text "統合経路" text "とうごうけいろ" cons text "は " cons code "cargo test --locked -p nepl3-tools --test sentence --target wasm32-wasip2 -- --test-threads=1" cons text " で" cons ruby text "実行" text "じっこう" cons text "します。" nil
+      cons "[独立/どくりつ]LanguagePackageのsurface compile、ReaderSession/provider、literalのportable[受渡/うけわた]し、[位置付/いちつ]き[診断/しんだん]・[停止/ていし]、Doc bridgeを[対象/たいしょう]とし、Sentence core[単体試験/たんたいしけん]と[区別/くべつ]します。"
+      cons "nativeではworkspace[試験/しけん]に[含/ふく]み、WASIでも[同/おな]じ[入口/いりぐち]を[実行/じっこう]します。"
+      nil
+    cons paragraph
       cons "Binding の fixture と Python seed adapter の[一致確認/いっちかくにん]は[子/こ]processを[起動/きどう]する native host [専用試験/せんようしけん]です。"
       cons "native の[通常試験/つうじょうしけん]で[実行/じっこう]し、Wasm target ではその host [試験/しけん]だけを[型条件/かたじょうけん]で[除外/じょがい]します。"
       cons sentence cons ruby text "同" text "おな" cons text "じ fixture を" cons ruby text "使" text "つか" cons text "う production compile・parse・analyze・portable codec の" cons ruby text "試験" text "しけん" cons text "は " cons code "cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1" cons text " でも" cons ruby text "実行" text "じっこう" cons text "します。" nil
