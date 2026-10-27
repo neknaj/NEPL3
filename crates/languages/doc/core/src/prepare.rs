@@ -126,6 +126,27 @@ pub fn inspect<'a, C: FoundationValueCodec>(
     })
 }
 
+/// Discover requirements for a standalone Body, retaining every language
+/// variant and foreign closure. This checks only Body-local labels, never
+/// resolves external inputs or proves the Body ready for rendering.
+pub fn inspect_body<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    registry: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<DocPreparationPlan, PreparationError<'a, C::Error>> {
+    let checked = labels::check_body(document, registry, b, c.source_admission())?;
+    let (value, components) = portable::to_value_with_guest_components(document, registry, c, b)?;
+    let document_digest = c
+        .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
+        .map_err(boundary)?;
+    let guests = crate::identity::wrap_components(&components, GUEST_DOMAIN, c, b)?;
+    Ok(DocPreparationPlan {
+        document_digest,
+        requirements: discover(checked.document(), Some(&guests), c, b)?,
+    })
+}
+
 /// Discover requirements for a standalone Sentence, retaining every language
 /// variant and foreign closure. This checks only Sentence-local labels, never
 /// resolves external inputs or proves the Sentence ready for rendering.

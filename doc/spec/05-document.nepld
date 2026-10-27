@@ -59,7 +59,18 @@ body
         cons "[外側/そとがわ]のArticleやforeign closure[内/ない]の[定義/ていぎ]は[自動導入/じどうどうにゅう]しない。"
         cons "このnative proofはArticleのlabel proofへ[変換/へんかん]せず、[既存/きそん]のArticle・Sentence・Inlineおよび[合成/ごうせい]namespaceのroot[制限/せいげん]を[変更/へんこう]しない。"
         cons "[既存/きそん]のBody[表現/ひょうげん]を[用/もち]い、NDFのconstructorやwire tagを[追加/ついか]しない。"
-        cons "この[段階/だんかい]ではBodyのPageSet[登録/とうろく]、HTML・Markdown[書出/かきだ]し、タイトル・[言語/げんご]metadata、[複数/ふくすう]の[最上位見出/さいじょういみだ]しを[持/も]つページの[公開/こうかい]は[未対応/みたいおう]であり、label[検査/けんさ]の[成功/せいこう]からそれらの[完了/かんりょう]を[推定/すいてい]しない。"
+        cons "このlabel proofだけではBodyのPageSet[登録/とうろく]、HTML[書出/かきだ]し、タイトル・[言語/げんご]metadata、[複数/ふくすう]の[最上位見出/さいじょういみだ]しを[持/も]つページの[公開/こうかい]は[未対応/みたいおう]であり、label[検査/けんさ]の[成功/せいこう]からそれらの[完了/かんりょう]を[推定/すいてい]しない。"
+        nil
+      cons paragraph
+        cons sentence cons code "prepare::inspect_body" cons text " は" cons ruby text "単独" text "たんどく" cons text "Bodyの" cons ruby text "構造" text "こうぞう" cons text "と" cons ruby text "局所参照" text "きょくしょさんしょう" cons text "を" cons ruby text "検査" text "けんさ" cons text "し、すべてのParallel variantとforeign closureの" cons ruby text "依存要求" text "いぞんようきゅう" cons text "を" cons ruby text "保持" text "ほじ" cons text "する。" nil
+        cons sentence cons code "projection::annotated::body::render_footnotes" cons text " は、この" cons ruby text "検査" text "けんさ" cons text "を" cons ruby text "経" text "へ" cons text "たBodyをnativeなMarkdown fragmentへ" cons ruby text "出力" text "しゅつりょく" cons text "する。" nil
+        cons "[最上位/さいじょうい]のSectionは[同階層/どうかいそう]のH1、[入/い]れ[子/こ]のSectionはH2[以降/いこう]とし、H6を[超/こ]える[階層/かいそう]を[拒否/きょひ]する。"
+        cons "[先頭/せんとう]の[段落/だんらく]を[維持/いじ]し、[空/から]のBodyは[空/から]のfragmentとなる。"
+        cons "Article・タイトル・[言語/げんご]を[合成/ごうせい]せず、Annoは[順序/じゅんじょ]を[保/たも]つ[脚注/きゃくちゅう]とする。"
+        cons "[既存/きそん]のannotated Markdown profileの[形状制約/けいじょうせいやく]を[引/ひ]き[継/つ]ぎ、Sectionの[後/あと]の[通常/つうじょう]block、[未対応/みたいおう]のlist・table・raw codeの[形/かたち]を[拒否/きょひ]する。"
+        cons "Sectionを[指/さ]す[局所参照/きょくしょさんしょう]は、[出力/しゅつりょく]したanchorとの[一致/いっち]も[検査/けんさ]する。Inline Anchorは[参照/さんしょう]の[有無/うむ]によらず[未対応/みたいおう]として[拒否/きょひ]する。"
+        cons "[外部/がいぶ]URIは[検査/けんさ]するが、[相対/そうたい]link・page link・asset・foreign[依存/いぞん]はNeedsResolutionとして[失敗/しっぱい]し、[一部/いちぶ]だけの[出力/しゅつりょく]を[返/かえ]さない。"
+        cons "この[入口/いりぐち]は[互換/ごかん]alias・[外部/がいぶ]fragmentの[選択/せんたく]・[正本/せいほん]linkの[挿入/そうにゅう]を[受/う]け[付/つ]けず、Article[出力/しゅつりょく]・PageSet・canonical[公開/こうかい]の[契約/けいやく]を[変更/へんこう]しない。"
         nil
       cons paragraph
         cons sentence cons code "labels::namespace::inspect_body" cons text " はBodyを" cons ruby text "検査" text "けんさ" cons text "し、" cons code "BodyMember" cons text " に" cons ruby text "未解決" text "みかいけつ" cons text "の" cons ruby text "参照" text "さんしょう" cons text "と" cons ruby text "定義" text "ていぎ" cons text "を" cons ruby text "保持" text "ほじ" cons text "する。" nil

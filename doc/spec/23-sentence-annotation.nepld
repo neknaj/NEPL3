@@ -1877,6 +1877,7 @@ body
       cons sentence cons code "Error::diagnostic_body" cons text " は" cons ruby text "同" text "おな" cons text "じBody・fragment" cons ruby text "列" text "れつ" cons text "を" cons ruby text "用" text "もち" cons text "い、" cons ruby text "未解決参照" text "みかいけつさんしょう" cons text "や" cons ruby text "重複定義" text "ちょうふくていぎ" cons text "のsiteを" cons ruby text "各所有者" text "かくしょゆうしゃ" cons text "のsourceへ" cons ruby text "照合" text "しょうごう" cons text "して" cons ruby text "診断" text "しんだん" cons text "する。" nil
       cons "[型付/かたつ]きorder errorやroot errorをlabel[診断/しんだん]へ[読/よ]み[替/か]えず、[停止理由/ていしりゆう]を[維持/いじ]する。"
       cons "この[追加/ついか]はnativeな[名前解決/なまえかいけつ]だけであり、Bodyの[表示順/ひょうじじゅん]、タイトル・[言語/げんご]metadata、PageSet[登録/とうろく]、HTML・Markdown[書出/かきだ]し、Sentence・SVGの[描画準備/びょうがじゅんび]を[成立/せいりつ]させない。"
+      cons "[単独/たんどく]Bodyの[制限付/せいげんつ]きMarkdown fragmentは[別/べつ]の[局所参照検査/きょくしょさんしょうけんさ]と[専用出力/せんようしゅつりょく]を[用/もち]い、この[合成/ごうせい]namespaceを[描画/びょうが]のproofとして[使/つか]わない。"
       nil
     nil
   nil
