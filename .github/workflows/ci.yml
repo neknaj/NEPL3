@@ -345,10 +345,11 @@ jobs:
   wasi:
     name: wasi and wasm compilation
     runs-on: ubuntu-latest
-    # Cold WASI tests plus the release build/Pulley comparison exceeded 20 min
-    # in run 40484567010 after the foundation tests had passed. Keep every
-    # step and the per-process comparison limits; only extend host wall time.
-    timeout-minutes: 35
+    # Cold WASI tests plus the release build/Pulley comparison need bounded
+    # host headroom. Both attempts of run 40695734292 passed foundation tests
+    # but were cancelled during Pulley at the 35-minute boundary. Keep every
+    # step and per-process comparison limit; runtime logical Budgets are unchanged.
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
