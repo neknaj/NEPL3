@@ -20,6 +20,8 @@ mod article_single;
 mod article_svg;
 #[path = "doc/article/visibility.rs"]
 mod article_visibility;
+#[path = "doc/body_html_host.rs"]
+mod body_html_host;
 #[path = "doc/body_markdown.rs"]
 mod body_markdown;
 #[path = "doc/body_markdown_host.rs"]
