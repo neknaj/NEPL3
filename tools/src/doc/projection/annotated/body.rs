@@ -1,6 +1,7 @@
 //! Standalone Body Markdown fragment. No page registration, metadata, source
 //! link boundary or legacy Article capability is created by this operation.
 use super::*;
+pub mod host;
 
 /// A fragment with authored headings only. Unlike Article artifacts, this has
 /// no title boundary and cannot receive canonical Article provenance insertion.

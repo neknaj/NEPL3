@@ -382,6 +382,16 @@ fn run() -> nepl3_tools::Result<()> {
             std::path::Path::new(manifest),
             std::path::Path::new(output),
         ),
+        ["doc-markdown", "body-footnotes", input, output] if !input.starts_with("--") => {
+            nepl3_tools::doc::projection::annotated::body::host::write(
+                std::path::Path::new(input), std::path::Path::new(output), Default::default())
+        }
+        ["doc-markdown", "body-footnotes", "--limits", config, input, output] => {
+            use nepl3_tools::doc::projection::annotated::body::host;
+            host::write(std::path::Path::new(input), std::path::Path::new(output),
+                host::read_limits(std::path::Path::new(config))?)
+        }
+        ["doc-markdown", "body-footnotes", ..] => Err("expected body-footnotes [--limits FILE] INPUT OUTPUT".into()),
         ["doc-markdown", input, output] => nepl3_tools::doc::projection::write(
             std::path::Path::new(input),
             std::path::Path::new(output),
@@ -481,6 +491,7 @@ fn run() -> nepl3_tools::Result<()> {
             println!("nepl3-tools doc-canonical markdown <new-output-directory>");
             println!("nepl3-tools doc-canonical html <new-output-directory>");
             println!("nepl3-tools doc-markdown <input.nepld> <new-output.md>");
+            println!("nepl3-tools doc-markdown body-footnotes [--limits <limits.json>] <input.nepld> <new-output.md>");
             println!(
                 "nepl3-tools doc-markdown footnotes <input.nepld> <aliases.json> <new-output.md>"
             );
