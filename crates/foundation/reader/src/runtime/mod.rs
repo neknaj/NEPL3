@@ -1510,12 +1510,9 @@ impl Machine<'_, '_> {
                 budget,
             )?
         };
-        budget.charge(
-            Resource::AllocationUnits,
-            self.request.snapshot.identity().source.0.len() as u64,
-        )?;
+        let snapshot = request::copy_reference(self.request.snapshot, budget)?;
         Ok(OwnedReadRequest {
-            snapshot: self.request.snapshot.reference(),
+            snapshot,
             sources,
             start,
             limit: self.request.limit,

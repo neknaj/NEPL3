@@ -399,3 +399,63 @@ fn tiny_source_union_keeps_first_identity_and_charges_all_boundaries() -> Result
     }
     Ok(())
 }
+
+#[test]
+fn owned_source_reference_charges_utf8_name_copy_before_returning() -> Result<(), String> {
+    for name in ["a", "界", "界🙂", "long-identity-name"] {
+        let snapshot = sample(name, 7, "memory:reference", b'x')?;
+        let bytes = name.len() as u64;
+        let limits = Limits {
+            work: bytes,
+            allocation_units: bytes,
+            ..Limits::default()
+        };
+        let mut exact = Budget::new(limits);
+        assert_eq!(
+            copy_reference(&snapshot, &mut exact).map_err(|e| format!("{e:?}"))?,
+            snapshot.reference()
+        );
+        assert_eq!(exact.usage().work, bytes);
+        assert_eq!(exact.usage().allocation_units, bytes);
+        assert_eq!(exact.usage().source_bytes, 0);
+        for (limits, reason) in [
+            (
+                Limits {
+                    work: bytes - 1,
+                    ..limits
+                },
+                StopReason::WorkLimit,
+            ),
+            (
+                Limits {
+                    allocation_units: bytes - 1,
+                    ..limits
+                },
+                StopReason::AllocationLimit,
+            ),
+        ] {
+            let mut short = Budget::new(limits);
+            assert_eq!(copy_reference(&snapshot, &mut short), Err(reason));
+            assert_eq!(short.poll(), Err(reason));
+            assert_eq!(short.usage().work, 0);
+            assert_eq!(
+                short.usage().allocation_units,
+                if reason == StopReason::WorkLimit {
+                    bytes
+                } else {
+                    0
+                }
+            );
+        }
+        let mut cancelled = Budget::new(limits);
+        cancelled.cancel();
+        assert_eq!(
+            copy_reference(&snapshot, &mut cancelled),
+            Err(StopReason::Cancelled)
+        );
+        assert_eq!(cancelled.poll(), Err(StopReason::Cancelled));
+        assert_eq!(cancelled.usage().work, 0);
+        assert_eq!(cancelled.usage().allocation_units, 0);
+    }
+    Ok(())
+}

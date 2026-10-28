@@ -4,8 +4,20 @@ use super::copy::{copy, slot};
 use alloc::vec::Vec;
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
-    source::SourceSnapshot,
+    source::{SourceRef, SourceSnapshot},
 };
+
+/// SourceRef owns its name even when SourceSnapshot storage is shared.
+/// The enclosing request accounts for inline storage; this copy owns the bytes.
+pub(super) fn copy_reference(
+    snapshot: &SourceSnapshot,
+    budget: &mut Budget,
+) -> Result<SourceRef, StopReason> {
+    let bytes = snapshot.identity().source.0.len() as u64;
+    budget.charge(Resource::AllocationUnits, bytes)?;
+    budget.charge(Resource::Work, bytes)?;
+    Ok(snapshot.reference())
+}
 
 pub(super) fn copy_sources<'a>(
     sources: impl IntoIterator<Item = &'a SourceSnapshot>,
