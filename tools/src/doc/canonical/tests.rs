@@ -1138,16 +1138,24 @@ fn synchronized_context_spec_drafts_parse_lower_and_check_labels() -> Result<()>
             ("03-reader", "doc/spec/03-reader.nepld"),
             ("16-doc-migration", "doc/spec/16-doc-migration.nepld"),
             ("21-doc-pages", "doc/spec/21-doc-pages.nepld"),
-            (
-                "guide/development",
-                "doc/migration/authored/guide/development.nepld",
-            ),
         ],
         nepl3_core::budget::Limits {
             work: 600_000_000,
             allocation_units: 1_500_000_000,
             ..super::super::source::budget().limits()
         },
+    )?;
+    check_context_drafts_with_category(
+        &[(
+            "guide/development",
+            "doc/migration/authored/guide/development.nepld",
+        )],
+        nepl3_core::budget::Limits {
+            work: 600_000_000,
+            allocation_units: 1_500_000_000,
+            ..super::super::source::budget().limits()
+        },
+        nepl3_doc_core::check::Category::Body,
     )
 }
 
@@ -1177,6 +1185,23 @@ fn check_context_drafts(
     paths: &[(&str, &str)],
     phase_limits: nepl3_core::budget::Limits,
 ) -> Result<()> {
+    check_context_drafts_with_category(
+        paths,
+        phase_limits,
+        nepl3_doc_core::check::Category::Article,
+    )
+}
+fn check_context_drafts_with_category(
+    paths: &[(&str, &str)],
+    phase_limits: nepl3_core::budget::Limits,
+    category: nepl3_doc_core::check::Category,
+) -> Result<()> {
+    use nepl3_doc_core::check::Category;
+    let root_name = match category {
+        Category::Article => "Article",
+        Category::Body => "Body",
+        _ => return Err("unsupported draft root".into()),
+    };
     use nepl3_core::source::{SourceAdmission, SourceStore};
     use nepl3_wire::foundation::FoundationCodec;
     let repository = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -1198,7 +1223,7 @@ fn check_context_drafts(
             &compiled,
             &text,
             name,
-            "Article",
+            root_name,
             parse_limits,
             |tree, profile, parse_budget, _| {
                 let store = SourceStore::default();
@@ -1209,19 +1234,30 @@ fn check_context_drafts(
                 let document = nepl3_suite::adapters::sentence::literal::lower(
                     tree.syntax(),
                     &compiled.doc.package.schema,
-                    nepl3_doc_core::check::Category::Article,
+                    category,
                     profile.registry(),
                     &mut lower_budget,
                     &mut codec,
                 )
                 .map_err(super::super::source::err)?;
                 let mut check_budget = nepl3_core::budget::Budget::new(lower_limits);
-                nepl3_doc_core::labels::check(
-                    &document,
-                    profile.registry(),
-                    &mut check_budget,
-                    &mut admission,
-                )
+                match category {
+                    Category::Article => nepl3_doc_core::labels::check(
+                        &document,
+                        profile.registry(),
+                        &mut check_budget,
+                        &mut admission,
+                    )
+                    .map(|_| ()),
+                    Category::Body => nepl3_doc_core::labels::check_body(
+                        &document,
+                        profile.registry(),
+                        &mut check_budget,
+                        &mut admission,
+                    )
+                    .map(|_| ()),
+                    _ => return Err("unsupported draft root".into()),
+                }
                 .map_err(super::super::source::err)?;
                 eprintln!(
                     "{name}: parse={:?}; lower={:?}; labels={:?}",

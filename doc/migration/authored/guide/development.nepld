@@ -1,5 +1,4 @@
-article ja "[開発/かいはつ]と[検査/けんさ]"
-body
+body cons section developmentGuide "[開発/かいはつ]と[検査/けんさ]" body
   cons paragraph
     cons "この[文書/ぶんしょ]は[現在/げんざい]の[開発操作/かいはつそうさ]を[案内/あんない]します。"
     cons sentence cons ruby text "編集先" text "へんしゅうさき" cons text "は " cons link relative "canonical.json" none text "canonical registry" cons text "、" cons ruby text "必要" text "ひつよう" cons text "な" cons ruby text "成果物" text "せいかぶつ" cons text "は " cons link relative "../design/tasks.json" none concat cons text "タスク" cons ruby text "定義" text "ていぎ" nil cons text "、" cons ruby text "必須受入群" text "ひっすうけいれぐん" cons text "・targetは " cons link relative "../design/acceptance.json" none concat cons ruby text "受入" text "うけいれ" cons text "catalog" nil cons text " で" cons ruby text "確認" text "かくにん" cons text "します。" nil
@@ -26,25 +25,6 @@ body
   cons paragraph
     cons "[編集中/へんしゅうちゅう]は[変更/へんこう]を[再現/さいげん]する[局所試験/きょくしけん]を[使/つか]い、[提出前/ていしゅつまえ]に[影響/えいきょう]する[契約/けいやく]・[生成物/せいせいぶつ]・targetを[検査/けんさ]します。"
     cons "[下記/かき]の[全体検査一覧/ぜんたいけんさいちらん]とCIの[必須条件/ひっすじょうけん]は[維持/いじ]し、[部分試験/ぶぶんしけん]を[正式受入/せいしきうけいれ]の[代用/だいよう]にしません。" nil
-  cons section portable "Portable execution CI" body
-    cons paragraph
-      cons "WASI foundationは[同/おな]じcomponentをWasmtime 44.0.1のnative codegenとPulley64で[実行/じっこう]し、[終了状態/しゅうりょうじょうたい]・[試験数/しけんすう]・elapsed[以外/いがい]の[出力/しゅつりょく]を[比較/ひかく]します。"
-      cons "PulleyもCraneliftでbytecodeを[生成/せいせい]するため、[別/べつ]compilerの[検証/けんしょう]とは[扱/あつか]いません。"
-      cons "[空/から]のlibrary test binaryはemptyとして[記録/きろく]し、[集約/しゅうやく]では[実試験/じつしけん]の[成功/せいこう]を[要求/ようきゅう]します。"
-      cons "[各/かく]processは180[秒/びょう]で[停止/ていし]・[回収/かいしゅう]し、[失敗/しっぱい]ログもartifactへ[保存/ほぞん]します。"
-      cons sentence cons ruby text "比較用" text "ひかくよう" cons text "componentは " cons code "cargo test --release" cons text " で" cons ruby text "最適化" text "さいてきか" cons text "します。" nil
-      cons "[通常/つうじょう]のdebug WASI[試験/しけん]は[別途維持/べっといじ]します。"
-      cons "[非最適化/ひさいてきか]のengine parse[全/ぜん]20[件/けん]はCIのPulleyで180[秒/びょう]を[超/こ]えたため、[試験/しけん]の[削除/さくじょ]やcoreの[資源上限変更/しげんじょうげんへんこう]ではなく、[配布時/はいふじ]にも[使/つか]う[最適化/さいてきか]コードを[比較/ひかく]します。" nil
-    cons paragraph
-      cons sentence cons link relative "../conformance/targets/rp2040/README.md" none text "RP2040 adapter" cons text " は" cons ruby text "別" text "べつ" cons text "workspaceのbare-metal harnessです。" nil
-      cons "production core/reader/wire/engineの[依存/いぞん]を[使用/しよう]し、HAL・UART・allocatorを[外側/そとがわ]へ[置/お]きます。"
-      cons "ARMv6-M buildと[固定版/こていばん]rp2040jsでのUF2[実行/じっこう]は[別/べつ]job・[別証拠/べつしょうこ]です。"
-      cons "[初期実行範囲/しょきじっこうはんい]はsource[位置/いち]・budget・NDFの4[件/けん]で、Reader/Engine[全受入/ぜんうけいれ]や[実機試験/じっきしけん]の[代/か]わりにはしません。" nil
-    cons paragraph
-      cons "[実/じつ]ブラウザのWasm・Playground、RISC-V、big-endianの[検査/けんさ]はそれぞれ[独立/どくりつ]した[未達範囲/みたつはんい]です。"
-      cons "このCI[整備/せいび]をDoc HTML・[文書移行/ぶんしょいこう]・Pages[公開/こうかい]の[完成/かんせい]へ[読/よ]み[替/か]えません。"
-      cons "CIの[区切/くぎ]り[後/ご]はDoc[生成/せいせい]を[進/すす]め、[意味/いみ]・リンク・[安定/あんてい]IDの[対応/たいおう]を[検証/けんしょう]できたページからnepld[正本/せいほん]へ[移行/いこう]し、[検査済/けんさず]みの[同/おな]じsite artifactを[公開/こうかい]します。" nil
-    nil
   cons section local "ローカル[環境/かんきょう]" body
     cons paragraph
       cons sentence cons link relative "../rust-toolchain.toml" none text "rust-toolchain.toml" cons text " に" cons ruby text "固定" text "こてい" cons text "したRustと、Gitを" cons ruby text "使用" text "しよう" cons text "します。" nil
@@ -607,3 +587,59 @@ body
       cons "local-onlyのfragment[成功/せいこう]を、[資源解決/しげんかいけつ]・[配布文書/はいふぶんしょ]・T23[全体/ぜんたい]の[成功/せいこう]へ[拡張/かくちょう]しない。" nil
     nil
   nil
+cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそくきろく]の[境界/きょうかい]" body
+  cons paragraph
+    cons sentence cons ruby text "意味" text "いみ" cons text "の" cons ruby text "規範" text "きはん" cons text "は " cons code "doc/spec/" cons text "、" cons ruby text "構文" text "こうぶん" cons text "・" cons ruby text "依存" text "いぞん" cons text "・" cons ruby text "値" text "あたい" cons text "と" cons ruby text "操作" text "そうさ" cons text "の" cons ruby text "機械契約" text "きかいけいやく" cons text "は " cons code "design/forms.json" cons text "、" cons code "design/dependencies.json" cons text "、" cons code "interfaces/" cons text " が" cons ruby text "所有" text "しょゆう" cons text "する。" nil
+    cons "これらは[優先順位/ゆうせんじゅんい]で[矛盾/むじゅん]を[隠/かく]すための[階層/かいそう]ではなく、[異/こと]なる[責務/せきむ]の[正本/せいほん]である。"
+    cons "[同/おな]じ[契約/けいやく]が[食/く]い[違/ちが]ったときは[仕様/しよう]・schema・[生成物/せいせいぶつ]・[試験/しけん]を[一緒/いっしょ]に[訂正/ていせい]する。" nil
+  cons paragraph
+    cons sentence cons code "design/tasks.json" cons text " は" cons ruby text "計画" text "けいかく" cons text "、" cons code "design/acceptance.json" cons text " は" cons ruby text "受入定義" text "うけいれていぎ" cons text "、" cons code "implementation-status.json" cons text " は" cons ruby text "観測状態" text "かんそくじょうたい" cons text "と" cons ruby text "証拠参照" text "しょうこさんしょう" cons text "を" cons ruby text "所有" text "しょゆう" cons text "する。" nil
+    cons sentence cons code "design/review.json" cons text " は" cons ruby text "課題台帳" text "かだいだいちょう" cons text "であり、correctedはruntime" cons ruby text "合格" text "ごうかく" cons text "を" cons ruby text "意味" text "いみ" cons text "しない。" nil
+    cons sentence cons code "tasks/*.md" cons text " は" cons ruby text "生成表示" text "せいせいひょうじ" cons text "。" nil
+    cons sentence cons text "Docページの" cons ruby text "正本" text "せいほん" cons text "とMarkdown projectionは " cons code "doc/canonical.json" cons text " の" cons ruby text "対応" text "たいおう" cons text "に" cons ruby text "従" text "したが" cons text "う。" nil
+    cons "[生成/せいせい]adapterはgeneratorの[入力/にゅうりょく]から[再生成/さいせいせい]し、JSONという[拡張子/かくちょうし]だけで[全/すべ]てを[正本/せいほん]としない。" nil
+  cons paragraph
+    cons sentence cons code "doc/migration/generated/doc-inventory.json" cons text " は" cons ruby text "固定" text "こてい" cons text "された" cons ruby text "過去" text "かこ" cons text "commitの" cons ruby text "派生監査" text "はせいかんさ" cons text "であり、" cons ruby text "現在" text "げんざい" cons text "の" cons ruby text "全文書一覧" text "ぜんぶんしょいちらん" cons text "ではない。" nil
+    cons "[保存/ほぞん]によりbaseline[改変/かいへん]を[差分/さぶん]と[再生成検査/さいせいせいけんさ]で[検出/けんしゅつ]するため[管理/かんり]を[維持/いじ]する。"
+    cons "script inventoryは[必要時/ひつようじ]に[生成/せいせい]する[派生監査資料/はせいかんさしりょう]であり、[仕様/しよう]の[新/あたら]しい[正本/せいほん]として[保存/ほぞん]しない。" nil
+  cons paragraph
+    cons sentence cons code "design/review.json" cons text " のopen" cons ruby text "課題" text "かだい" cons text "は" cons ruby text "対象" text "たいしょう" cons text "taskの" cons ruby text "完了制約" text "かんりょうせいやく" cons text "として" cons ruby text "使用" text "しよう" cons text "し、correctedの" cons ruby text "説明" text "せつめい" cons text "は" cons ruby text "歴史記録" text "れきしきろく" cons text "として" cons ruby text "読" text "よ" cons text "む。" nil
+    cons "[現行制約/げんこうせいやく]を[解決/かいけつ]せず、[台帳/だいちょう]の[移動/いどう]や[削除/さくじょ]だけで[完了可能/かんりょうかのう]にしない。"
+    cons sentence cons text "rootの " cons code "languages/" cons text " は" cons ruby text "文法定義" text "ぶんぽうていぎ" cons text "、" cons code "crates/languages/" cons text " はRustの" cons ruby text "意味処理実装" text "いみしょりじっそう" cons text "である。" nil
+    cons sentence cons code "site/" cons text " は" cons ruby text "公開入力" text "こうかいにゅうりょく" cons text "と" cons ruby text "静的" text "せいてき" cons text "asset、" cons code "tools/site/" cons text " はhost" cons ruby text "側" text "がわ" cons text "の" cons ruby text "配布処理" text "はいふしょり" cons text "と" cons ruby text "試験" text "しけん" cons text "を" cons ruby text "所有" text "しょゆう" cons text "する。" nil nil
+  cons paragraph
+    cons "Grammarのproduction compilerによるbootstrap[一致検査/いっちけんさ]は[恒久的/こうきゅうてき]な[回帰検査/かいきけんさ]である。"
+    cons "[一方/いっぽう]、[初回入力用/しょかいにゅうりょくよう]seed adapterは[置換可能/ちかんかのう]なhost[補助/ほじょ]であり、[現在/げんざい]はDoc[生成/せいせい]も[使用/しよう]する。"
+    cons "[代替/だいたい]する[検査済/けんさず]みpackage[読込経路/よみこみけいろ]が[成立/せいりつ]するまで、[移行用/いこうよう]という[名称/めいしょう]だけで[削除/さくじょ]しない。"
+    cons "Doc[移行候補/いこうこうほ]の[作成/さくせい]toolは[全対象/ぜんたいしょう]ページの[切替/きりかえ]・[参照更新後/さんしょうこうしんご]に[役割/やくわり]を[再評価/さいひょうか]する。" nil
+  cons paragraph
+    cons "taskの[段階着手/だんかいちゃくしゅ]には[利用/りよう]する[前段成果物/ぜんだんせいかぶつ]が[必要/ひつよう]。"
+    cons sentence cons code "depends_on" cons text " の" cons ruby text "全" text "ぜん" cons text "タスク" cons ruby text "完了" text "かんりょう" cons text "は" cons ruby text "当該" text "とうがい" cons text "taskをcompleteにする" cons ruby text "条件" text "じょうけん" cons text "である。" nil
+    cons "[部分的/ぶぶんてき]な[実装/じっそう]・[監査/かんさ]をin-progressで[記録/きろく]しても、[依存先/いぞんさき]や[全受入/ぜんうけいれ]が[完成/かんせい]したことにはならない。"
+    cons "[過去/かこ]の[段階証拠/だんかいしょうこ]への[参照/さんしょう]は[索引/さくいん]として[扱/あつか]い、[現/げん]HEADの[実行証拠/じっこうしょうこ]や[正式/せいしき]な[受入認定/うけいれにんてい]へ[読/よ]み[替/か]えない。" nil
+  cons paragraph
+    cons sentence cons ruby text "証拠" text "しょうこ" cons text "の" cons ruby text "保存" text "ほぞん" cons text "は " cons link relative "../tools/evidence/README.md" none ruby text "共通収集手順" text "きょうつうしゅうしゅうてじゅん" cons text " に" cons ruby text "従" text "したが" cons text "う。" nil
+    cons "[実行/じっこう]test、レビュー[文章/ぶんしょう]、[公開記録/こうかいきろく]は[異/こと]なる[証拠種別/しょうこしゅべつ]である。"
+    cons "[保存場所/ほぞんばしょ]の[名前/なまえ]に[関/かか]わらず、review[成功/せいこう]からconformance[合格/ごうかく]、uploadから[公開済/こうかいず]み、[公開済/こうかいず]みからLKGを[推定/すいてい]しない。"
+    cons "[新/あたら]しい[保存/ほぞん]script・sourceコピーを[結果配下/けっかはいか]に[作/つく]らず、[再現/さいげん]に[必要/ひつよう]なcommit/path、[宣言入力/せんげんにゅうりょく]、command、[環境/かんきょう]、[原出力/げんしゅつりょく]とhashを[使用/しよう]する。" nil
+  cons section portable "Portable execution CI" body
+    cons paragraph
+      cons "WASI foundationは[同/おな]じcomponentをWasmtime 44.0.1のnative codegenとPulley64で[実行/じっこう]し、[終了状態/しゅうりょうじょうたい]・[試験数/しけんすう]・elapsed[以外/いがい]の[出力/しゅつりょく]を[比較/ひかく]します。"
+      cons "PulleyもCraneliftでbytecodeを[生成/せいせい]するため、[別/べつ]compilerの[検証/けんしょう]とは[扱/あつか]いません。"
+      cons "[空/から]のlibrary test binaryはemptyとして[記録/きろく]し、[集約/しゅうやく]では[実試験/じつしけん]の[成功/せいこう]を[要求/ようきゅう]します。"
+      cons "[各/かく]processは180[秒/びょう]で[停止/ていし]・[回収/かいしゅう]し、[失敗/しっぱい]ログもartifactへ[保存/ほぞん]します。"
+      cons sentence cons ruby text "比較用" text "ひかくよう" cons text "componentは " cons code "cargo test --release" cons text " で" cons ruby text "最適化" text "さいてきか" cons text "します。" nil
+      cons "[通常/つうじょう]のdebug WASI[試験/しけん]は[別途維持/べっといじ]します。"
+      cons "[非最適化/ひさいてきか]のengine parse[全/ぜん]20[件/けん]はCIのPulleyで180[秒/びょう]を[超/こ]えたため、[試験/しけん]の[削除/さくじょ]やcoreの[資源上限変更/しげんじょうげんへんこう]ではなく、[配布時/はいふじ]にも[使/つか]う[最適化/さいてきか]コードを[比較/ひかく]します。" nil
+    cons paragraph
+      cons sentence cons link relative "../conformance/targets/rp2040/README.md" none text "RP2040 adapter" cons text " は" cons ruby text "別" text "べつ" cons text "workspaceのbare-metal harnessです。" nil
+      cons "production core/reader/wire/engineの[依存/いぞん]を[使用/しよう]し、HAL・UART・allocatorを[外側/そとがわ]へ[置/お]きます。"
+      cons "ARMv6-M buildと[固定版/こていばん]rp2040jsでのUF2[実行/じっこう]は[別/べつ]job・[別証拠/べつしょうこ]です。"
+      cons "[初期実行範囲/しょきじっこうはんい]はsource[位置/いち]・budget・NDFの4[件/けん]で、Reader/Engine[全受入/ぜんうけいれ]や[実機試験/じっきしけん]の[代/か]わりにはしません。" nil
+    cons paragraph
+      cons "[実/じつ]ブラウザのWasm・Playground、RISC-V、big-endianの[検査/けんさ]はそれぞれ[独立/どくりつ]した[未達範囲/みたつはんい]です。"
+      cons "このCI[整備/せいび]をDoc HTML・[文書移行/ぶんしょいこう]・Pages[公開/こうかい]の[完成/かんせい]へ[読/よ]み[替/か]えません。"
+      cons "CIの[区切/くぎ]り[後/ご]はDoc[生成/せいせい]を[進/すす]め、[意味/いみ]・リンク・[安定/あんてい]IDの[対応/たいおう]を[検証/けんしょう]できたページからnepld[正本/せいほん]へ[移行/いこう]し、[検査済/けんさず]みの[同/おな]じsite artifactを[公開/こうかい]します。" nil
+    nil
+  nil
+nil

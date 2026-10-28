@@ -55,8 +55,10 @@ jobs:
     # macOS also needs room for pinned checks after the complete workspace suite.
     # This CI wall-clock allowance does not change runtime logical Budgets.
     # Run 40507366983 reached 35 min while Ubuntu exported canonical HTML
-    # after its Markdown check. Keep every gate; only Ubuntu needs this margin.
-    timeout-minutes: ${{ matrix.os == 'ubuntu-latest' && 45 || 35 }}
+    # after its Markdown check. Run 40662825649 completed Windows workspace
+    # tests at 34m33s, then was cancelled during KaTeX at the 35-minute boundary.
+    # Keep all checks and give both platforms bounded completion headroom.
+    timeout-minutes: ${{ matrix.os != 'macos-latest' && 45 || 35 }}
     env:
       # Optimize canonical projection without disabling runtime checks.
       CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS: 'true'
