@@ -143,13 +143,13 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 .collect();
             assert_eq!(
                 boundary_sections,
-                ["portable"],
-                "Portable belongs under the second H1"
+                ["portable", "savedExecutionScope"],
+                "restored H2 sections belong under the second H1"
             );
             assert_eq!(
                 boundary_children.len(),
-                8,
-                "seven restored paragraphs then Portable"
+                9,
+                "seven restored paragraphs then two peer H2 sections"
             );
             let mut label_budget = budget();
             let checked = nepl3_doc_core::labels::check_body(
@@ -258,12 +258,12 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 }
             }
             assert_eq!(actual_wasi, [wasi]);
-            // Deliberately a subset: the missing three fenced blocks, prose,
+            // Deliberately a subset: the missing two fenced blocks, prose,
             // headings and link closure still block a complete migration.
-            assert_eq!((expected.len(), actual.len()), (13, 10));
-            // All ten first-H1 fenced blocks are present: their source order
-            // matters too. The three remaining blocks belong to the second H1.
-            assert_eq!(actual.as_slice(), &expected[..10]);
+            assert_eq!((expected.len(), actual.len()), (13, 11));
+            // The ten first-H1 fences and first second-H1 fence retain source order.
+            // Two later second-H1 fences remain missing.
+            assert_eq!(actual.as_slice(), &expected[..11]);
             for value in actual {
                 let index = expected
                     .iter()
@@ -271,7 +271,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                     .ok_or_else(|| format!("draft command differs from source: {value:?}"))?;
                 expected.remove(index);
             }
-            assert_eq!(expected.len(), 3);
+            assert_eq!(expected.len(), 2);
             let mut b = budget();
             let prepared =
                 text::prepare(&document, profile.registry(), &mut codec, &mut b).map_err(err)?;
@@ -442,6 +442,73 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                     }));
                 }
             }
+            let DocKind::Section {
+                id: scope_id,
+                title: scope_title,
+                body: scope_body,
+            } = &document.value.nodes[boundary_children[8].0 as usize].kind
+            else {
+                return Err("saved scope H2".into());
+            };
+            assert_eq!(scope_id.as_str(), "savedExecutionScope");
+            assert_eq!(
+                project(*scope_title)?,
+                "Pure saved execution-scope derivation"
+            );
+            let DocKind::Body {
+                blocks: scope_blocks,
+            } = &document.value.nodes[scope_body.0 as usize].kind
+            else {
+                return Err("saved scope body".into());
+            };
+            assert_eq!(scope_blocks.len(), 3);
+            assert!(matches!(
+                document.value.nodes[scope_blocks[1].0 as usize].kind,
+                DocKind::RawCode { .. }
+            ));
+            let scope_source = original
+                .split_once("## Pure saved execution-scope derivation\n\n")
+                .ok_or("source saved scope")?
+                .1
+                .split_once("\n## Pure resource-transition verification")
+                .ok_or("source saved scope end")?
+                .0;
+            let expected_paragraphs: Vec<_> = scope_source
+                .trim()
+                .split("\n\n")
+                .filter(|part| !part.starts_with("```"))
+                .map(|part| {
+                    part.replace('`', "")
+                        .split_whitespace()
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                })
+                .collect();
+            assert_eq!(expected_paragraphs.len(), 2);
+            for ((index, count), expected) in [(0, 4), (2, 7)].into_iter().zip(&expected_paragraphs)
+            {
+                let DocKind::Paragraph { items } =
+                    &document.value.nodes[scope_blocks[index].0 as usize].kind
+                else {
+                    return Err("saved scope paragraph".into());
+                };
+                assert_eq!(items.len(), count);
+                let sentences = items
+                    .iter()
+                    .map(|item| project(nepl3_doc_core::model::SentenceRef(item.0)))
+                    .collect::<Result<Vec<_>, _>>()?;
+                assert_eq!(sentences.concat(), *expected);
+            }
+            let mut actual_scope_code = Vec::new();
+            paragraph_inline_code(&document, scope_blocks[0].0, &mut actual_scope_code)?;
+            assert_eq!(
+                actual_scope_code,
+                [
+                    "ExecutionScope::child",
+                    "suspension/execution/admission.rs",
+                    "ExecutionScope::run"
+                ]
+            );
             let mut actual_intro = Vec::new();
             for child in &children[..3] {
                 blocks(&document, child.0, &mut project, &mut actual_intro)?;

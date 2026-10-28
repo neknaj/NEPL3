@@ -656,5 +656,21 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons "Full acceptance remains separate." nil
       nil
     nil
+  cons section savedExecutionScope "Pure saved execution-scope derivation" body
+    cons paragraph
+      cons sentence cons code "ExecutionScope::child" cons text " polls the shared Budget, applies the heap-free pure transition in " cons code "suspension/execution/admission.rs" cons text ", and records a typed depth stop when derivation fails. " nil
+      cons "Each saved child limit is the minimum of its parent and requested limits; depth is a checked increment bounded by the resulting depth ceiling. "
+      cons "Child construction does not perform callback/resource admission. "
+      cons sentence cons code "ExecutionScope::run" cons text " retains that responsibility across Await." nil nil
+    cons rawcode some "sh" "CARGO_NET_OFFLINE=true cargo kani -p nepl3-suite --harness suspension::execution::verification::\n"
+    cons paragraph
+      cons "The derivation harness checks arbitrary saved/requested u64 fields against a u128 depth reference and explicit field minima, including two-step ancestor composition. "
+      cons "A separate harness calls the actual public child method with arbitrary observed Usage and all prior stop reasons, checking unchanged accounting and first-stop precedence. "
+      cons "That wrapper harness uses unlimited current Budget ceilings and active depth zero; it does not prove arbitrary current Budget ceilings, active depth or private measurement state. "
+      cons "Native boundary tests additionally cover active host depth four, overflow, exact and one-short depth ceilings. "
+      cons "Existing scheduler/root integration tests remain required. "
+      cons "Neither harness establishes scheduler correctness, authorization, callback execution, whole-runtime purity or physical memory bounds. "
+      cons "T11/T12 and the existing acceptance entries are not completed by this change." nil
+    nil
   nil
 nil
