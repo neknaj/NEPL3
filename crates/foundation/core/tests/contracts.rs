@@ -1338,3 +1338,136 @@ fn line_index_identity_uses_bytes_and_exact_remaining_limits() -> Result<(), Sou
     ));
     Ok(())
 }
+
+#[test]
+fn snapshot_lookup_fingerprint_is_derived_and_never_a_source_authority() -> Result<(), SourceError>
+{
+    let name = "界🙂";
+    let uri = "memory:first";
+    let limits = budget().limits();
+    // URI validation + content digest + domain/length/name/revision/digest
+    // input bytes. Fingerprint construction is charged once, before hashing.
+    let work = uri.len() as u64 + 1 + 30 + 48 + name.len() as u64;
+    let make = |b: &mut Budget| {
+        SourceSnapshot::new(SourceId(name.into()), 7, uri.into(), b"x".to_vec(), b)
+    };
+    let mut exact = Budget::new(Limits { work, ..limits });
+    let original = make(&mut exact)?;
+    assert_eq!(exact.usage().work, work);
+    // Independent SHA-256 fixture: fixed-width little-endian length/revision,
+    // UTF-8 name and SHA-256(x), prefixed with the literal lookup domain.
+    assert_eq!(original.identity_lookup_hash(), 0xacd1_5240_32cb_d640);
+    let independent = make(&mut budget())?;
+    let other_uri = SourceSnapshot::new(
+        SourceId(name.into()),
+        7,
+        "memory:other".into(),
+        b"x".to_vec(),
+        &mut budget(),
+    )?;
+    assert_eq!(original.identity(), other_uri.identity());
+    assert_eq!(
+        original.identity_lookup_hash(),
+        independent.identity_lookup_hash()
+    );
+    assert_eq!(
+        original.identity_lookup_hash(),
+        other_uri.identity_lookup_hash()
+    );
+    assert_ne!(
+        original, other_uri,
+        "same lookup hash is not structural equality"
+    );
+    let cloned = original.clone_with_budget(&mut budget())?;
+    assert_eq!(
+        cloned.identity_lookup_hash(),
+        original.identity_lookup_hash()
+    );
+    let mut short = Budget::new(Limits {
+        work: work - 1,
+        ..limits
+    });
+    assert_eq!(
+        make(&mut short),
+        Err(SourceError::Stopped(StopReason::WorkLimit))
+    );
+    assert_eq!(short.usage().work, uri.len() as u64 + 1);
+    assert_eq!(short.poll(), Err(StopReason::WorkLimit));
+    let mut stopped = Budget::new(limits);
+    stopped.cancel();
+    assert_eq!(
+        make(&mut stopped),
+        Err(SourceError::Stopped(StopReason::Cancelled))
+    );
+    let mut store = SourceStore::default();
+    store.insert(original.clone())?;
+    let ids = store.apply(
+        &[TextEdit {
+            span: original.span(0, 1)?,
+            expected_digest: original.identity().digest,
+            replacement: "y".into(),
+        }],
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    let edited = store.get_ref(&ids[0]).ok_or(SourceError::MissingSnapshot)?;
+    let reconstructed = SourceSnapshot::new(
+        edited.identity().source.clone(),
+        edited.identity().revision,
+        edited.uri().into(),
+        edited.text().as_bytes().to_vec(),
+        &mut budget(),
+    )?;
+    assert_eq!(edited, &reconstructed);
+    assert_eq!(
+        edited.identity_lookup_hash(),
+        reconstructed.identity_lookup_hash()
+    );
+    assert_eq!(original.identity_lookup_hash(), 0xacd1_5240_32cb_d640);
+    Ok(())
+}
+
+#[cfg(target_has_atomic = "ptr")]
+#[test]
+fn shared_source_store_lookup_remains_separate_from_conflict_validation() -> Result<(), SourceError>
+{
+    let original = source(&"source".repeat(100), 7, "x")?;
+    let mut store = SourceStore::default();
+    store.insert_ref_with_budget(&original, &mut budget())?;
+    let mut exact = Budget::new(Limits {
+        work: 2,
+        allocation_units: 0,
+        ..budget().limits()
+    });
+    store.insert_ref_with_budget(&original, &mut exact)?;
+    assert_eq!(exact.usage().work, 2);
+    assert_eq!(exact.usage().allocation_units, 0);
+    let mut short = Budget::new(Limits {
+        work: 1,
+        allocation_units: 0,
+        ..budget().limits()
+    });
+    assert_eq!(
+        store.insert_ref_with_budget(&original, &mut short),
+        Err(SourceError::Stopped(StopReason::WorkLimit))
+    );
+    assert_eq!(short.poll(), Err(StopReason::WorkLimit));
+    let other_uri = SourceSnapshot::new(
+        original.identity().source.clone(),
+        7,
+        "memory:other".into(),
+        b"x".to_vec(),
+        &mut budget(),
+    )?;
+    let other_digest = source(&original.identity().source.0, 7, "y")?;
+    for other in [other_uri, other_digest] {
+        let mut b = budget();
+        assert_eq!(
+            store.insert_ref_with_budget(&other, &mut b),
+            Err(SourceError::IdentityConflict)
+        );
+        assert!(b.usage().work >= (original.identity().source.0.len() * 2 + 1) as u64);
+        assert_eq!(store.snapshots(), core::slice::from_ref(&original));
+    }
+    Ok(())
+}

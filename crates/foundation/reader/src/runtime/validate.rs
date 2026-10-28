@@ -353,6 +353,9 @@ fn append_artifacts(
         )?;
     }
     machine.current.facts.append(&mut facts);
+    if !sources.is_empty() {
+        machine.reusable_sources = None;
+    }
     machine.current.sources.append(&mut sources);
     machine.current.source_maps.append(&mut maps);
     machine.current.diagnostics.append(&mut report.diagnostics);

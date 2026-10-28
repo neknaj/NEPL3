@@ -967,3 +967,9 @@ reused sets avoid repeated source-index allocations/searches. Provenance inserti
 now uses the single-charge shared insertion path instead of charging snapshot
 storage once for cloning and again for insertion. Regression tests retain the
 historical canonical-order baseline with an explicit one-unit cold-probe allowance.
+
+### Metered request source union and canonical parse policy
+
+canonical registry の parse Work 上限は、request source union の未計上だった探索と新しい index・fingerprint の費用を含めた計上の修正に合わせ、700,000,000 から 720,000,000 へ明示的に変更した。旧上限では最大の annotation 文書の最終 tree validation が WorkLimit で停止した。上限を分けた診断実行で705,445,228 Work を測定したため、通常の canonical 生成では全 canonical page に適用する新しい上限を処理開始前に選ぶ（旧上限比約2.86%増、診断値に対する余裕約2.06%）。これは速度向上や旧上限での成功を意味せず、user 向け既定値、allocation 上限 550,000,000、途中停止・取消の契約は変更しない。局所回帰は `cargo test --locked -p nepl3-tools --test doc request_source_budget::` で検査する。
+
+同じ変更で追加した規範文書を含む69ページの Markdown batch は、旧 output Work 上限 4,200,000,000 でも停止した。この batch は parse と独立した Budget であり、超過を request union の計上だけに帰属させない。別 registry による sizing 診断では、receipt 前 4,206,876,686 Work と receipt 60,227 bytes（合計 4,206,936,913 Work）を測定した。Markdown output Work のみを 4,250,000,000 へ明示的に変更し、allocation 4,000,000,000、Nodes 72,000,000、HTML output policy と他の上限は維持する。診断 registry の path・内容は execution identity に影響するため、診断出力は採用せず、正式 registry で全ページを再生成・検査する。

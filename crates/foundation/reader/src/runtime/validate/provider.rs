@@ -395,10 +395,12 @@ pub(in crate::runtime) fn apply_provider(
             ReadReply::NoMatch {
                 expected, furthest, ..
             } => {
+                machine.reusable_sources = None;
                 frame.checkpoint.restore(&mut machine.current)?;
                 Ok(Outcome::NoMatch { expected, furthest })
             }
             ReadReply::NeedMore { expected, .. } => {
+                machine.reusable_sources = None;
                 frame.checkpoint.restore(&mut machine.current)?;
                 Ok(Outcome::NeedMore(expected))
             }

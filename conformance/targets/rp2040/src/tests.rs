@@ -33,7 +33,8 @@ fn source() -> bool {
     let Ok(index) = LineIndex::new(&s, &mut budget()) else {
         return false;
     };
-    span_copy_cost(&s)
+    snapshot_lookup_cache(&s)
+        && span_copy_cost(&s)
         && s.span(1, 3) == Err(SourceError::ScalarBoundary)
         && index.line_count() == 2
         && index.offset(
@@ -52,6 +53,46 @@ fn source() -> bool {
             },
             PositionEncoding::Utf16,
         ) == Ok(9)
+}
+// The derived cache has the same fixed-width encoding on this non-atomic
+// target. Equal hashes never grant structural equality or source admission.
+fn snapshot_lookup_cache(source: &SourceSnapshot) -> bool {
+    if source.identity_lookup_hash() != 0xc6e5_526e_de5d_d2b8 {
+        return false;
+    }
+    let Ok(independent) = SourceSnapshot::new(
+        source.identity().source.clone(),
+        source.identity().revision,
+        "memory:other".into(),
+        source.text().as_bytes().to_vec(),
+        &mut budget(),
+    ) else {
+        return false;
+    };
+    if independent.identity() != source.identity()
+        || independent.identity_lookup_hash() != source.identity_lookup_hash()
+        || &independent == source
+    {
+        return false;
+    }
+    let bytes = if cfg!(target_has_atomic = "ptr") {
+        0
+    } else {
+        (source.identity().source.0.len() + source.uri().len() + source.text().len()) as u64
+    };
+    let limits = Limits {
+        work: bytes + 1,
+        allocation_units: core::mem::size_of::<SourceSnapshot>() as u64 + bytes,
+        ..budget().limits()
+    };
+    let mut b = Budget::new(limits);
+    let Ok(cloned) = source.clone_with_budget(&mut b) else {
+        return false;
+    };
+    cloned == *source
+        && cloned.identity_lookup_hash() == source.identity_lookup_hash()
+        && b.usage().work == limits.work
+        && b.usage().allocation_units == limits.allocation_units
 }
 // The RP2040 target has no pointer atomics: this executes the owned-name
 // branch, not merely a host build of the shared-identity branch.

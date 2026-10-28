@@ -927,7 +927,7 @@ fn commitment_only_second_registry_stops_are_normalized() -> TestResult {
 }
 
 #[test]
-fn archive_capture_usage_and_bytes_stay_unchanged() -> TestResult {
+fn archive_capture_bytes_stay_stable_and_shared_key_work_is_accounted() -> TestResult {
     let (a, s, f, r, g) = setup()?;
     let mut b = budget();
     let (bytes, _) = compact::encode(&g, &a, &s, &f, &r, &mut SourceAdmission::default(), &mut b)
@@ -946,7 +946,14 @@ fn archive_capture_usage_and_bytes_stay_unchanged() -> TestResult {
         (4, 19, 1620, 26973, 0, 0)
     );
     #[cfg(target_has_atomic = "ptr")]
-    assert_eq!(u.work, 102525);
+    {
+        let shared_name = &g.provenances[0].sources[0].identity().source.0;
+        assert_eq!(shared_name, "doc");
+        // The pre-optimization baseline included three aliased doc-key probes.
+        // Each now checks the identical live ID instead of traversing two
+        // copies of its name. Byte output and every other counter stay pinned.
+        assert_eq!(u.work, 102525 - 3 * 2 * shared_name.len() as u64);
+    }
     #[cfg(all(target_pointer_width = "64", target_has_atomic = "ptr"))]
     assert_eq!(u.allocation_units, 194028);
     assert_eq!(
