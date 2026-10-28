@@ -365,14 +365,83 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 return Err("Portable section".into());
             };
             assert_eq!(project(*portable_title)?, "Portable execution CI");
+            let DocKind::Body {
+                blocks: portable_children,
+            } = &document.value.nodes[portable_body.0 as usize].kind
+            else {
+                return Err("Portable body".into());
+            };
+            assert_eq!(portable_children.len(), 4, "three paragraphs then one H3");
             let mut actual_portable = Vec::new();
-            blocks(
-                &document,
-                portable_body.0,
-                &mut project,
-                &mut actual_portable,
-            )?;
+            for child in &portable_children[..3] {
+                assert!(matches!(
+                    document.value.nodes[child.0 as usize].kind,
+                    DocKind::Paragraph { .. }
+                ));
+                blocks(&document, child.0, &mut project, &mut actual_portable)?;
+            }
             assert_eq!(actual_portable, markdown_blocks(portable_source));
+            // Ownership, not whitespace-normalized heading text, establishes H3:
+            // Body -> canonicalBoundary H1 -> portable H2 -> inlineSchemaFrontier H3.
+            let DocKind::Section {
+                id: frontier_id,
+                title: frontier_title,
+                body: frontier_body,
+            } = &document.value.nodes[portable_children[3].0 as usize].kind
+            else {
+                return Err("nested frontier H3".into());
+            };
+            assert_eq!(frontier_id.as_str(), "inlineSchemaFrontier");
+            assert_eq!(
+                project(*frontier_title)?,
+                "Inline schema-validation frontier"
+            );
+            let DocKind::Body {
+                blocks: frontier_paragraphs,
+            } = &document.value.nodes[frontier_body.0 as usize].kind
+            else {
+                return Err("frontier body".into());
+            };
+            assert_eq!(frontier_paragraphs.len(), 2);
+            let frontier_source = original
+                .split_once("### Inline schema-validation frontier\n\n")
+                .ok_or("source frontier")?
+                .1
+                .split_once("\n## Pure saved execution-scope derivation")
+                .ok_or("frontier source end")?
+                .0;
+            let expected_frontier: Vec<_> = frontier_source
+                .trim()
+                .split("\n\n")
+                .map(|paragraph| paragraph.split_whitespace().collect::<Vec<_>>().join(" "))
+                .collect();
+            assert_eq!(expected_frontier.len(), 2);
+            for ((paragraph, expected), sentence_count) in frontier_paragraphs
+                .iter()
+                .zip(&expected_frontier)
+                .zip([5, 6])
+            {
+                let DocKind::Paragraph { items } = &document.value.nodes[paragraph.0 as usize].kind
+                else {
+                    return Err("frontier paragraph".into());
+                };
+                assert_eq!(items.len(), sentence_count);
+                let sentences = items
+                    .iter()
+                    .map(|item| project(nepl3_doc_core::model::SentenceRef(item.0)))
+                    .collect::<Result<Vec<_>, _>>()?;
+                // Actual spacing is semantic here: stripping whitespace would
+                // incorrectly accept "array.Each" or joined English words.
+                assert_eq!(sentences.concat(), *expected);
+                for (index, sentence) in sentences.iter().enumerate() {
+                    assert!(!sentence.starts_with(' '));
+                    assert!(sentence.ends_with(if index + 1 < sentences.len() {
+                        ". "
+                    } else {
+                        "."
+                    }));
+                }
+            }
             let mut actual_intro = Vec::new();
             for child in &children[..3] {
                 blocks(&document, child.0, &mut project, &mut actual_intro)?;
