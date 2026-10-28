@@ -784,3 +784,6 @@ mod pages_namespace;
 
 #[path = "local/namespace_assets.rs"]
 mod namespace_assets;
+
+#[path = "local/body.rs"]
+mod body;

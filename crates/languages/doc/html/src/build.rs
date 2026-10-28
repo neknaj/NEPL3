@@ -375,6 +375,25 @@ pub fn render(
 ) -> Result<RenderedFragment, RenderError> {
     render_prepared(&prepared.0, &[], budget)
 }
+/// Render a local Body in a neutral div using the existing nepl-doc styling.
+/// Top-level Sections begin at H1. No title, language or Article is invented.
+pub fn render_body(
+    prepared: &PreparedLocalBody<'_>,
+    budget: &mut Budget,
+) -> Result<RenderedFragment, RenderError> {
+    render_profile(
+        &prepared.0,
+        &[],
+        &mut |_, _, _| Err(RenderError::InternalShape),
+        budget,
+        true,
+        RootProfile::Body,
+    )
+    .map(|rendered| rendered.fragment)
+    .map_err(|error| match error {
+        ForeignRenderError::Render(error) | ForeignRenderError::Foreign(error) => error,
+    })
+}
 /// Render a prepared standalone Sentence as checked phrasing markup. Ruby and
 /// Anno use the same tree and stylesheet contract as Article rendering.
 pub fn render_sentence(
@@ -453,6 +472,29 @@ pub(crate) fn render_prepared_with_foreign<E>(
     budget: &mut Budget,
     validate_final: bool,
 ) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
+    render_profile(
+        prepared,
+        links,
+        adapter,
+        budget,
+        validate_final,
+        RootProfile::Legacy,
+    )
+}
+
+#[derive(Clone, Copy)]
+enum RootProfile {
+    Legacy,
+    Body,
+}
+fn render_profile<E>(
+    prepared: &crate::prepare::PreparedRendering<'_>,
+    links: &[(u64, HtmlHref)],
+    adapter: &mut impl FnMut(&DocEmbedView<'_>, EmbedRef, &mut Budget) -> Result<HtmlRequest, E>,
+    budget: &mut Budget,
+    validate_final: bool,
+    profile: RootProfile,
+) -> Result<RenderedInlineWithForeign, ForeignRenderError<E>> {
     budget.poll()?;
     let mut w = Builder {
         prepared,
@@ -465,22 +507,28 @@ pub(crate) fn render_prepared_with_foreign<E>(
         classes: Vec::new(),
         foreign: Vec::new(),
     };
-    let (root, slot) = match prepared.document.value.root {
-        DocRoot::Article(root) => (root.0, HtmlSlot::Block),
-        DocRoot::Sentence(root) => (root.0, HtmlSlot::Phrasing),
-        DocRoot::Inline(root) => (root.0, HtmlSlot::Phrasing),
+    let (root, slot) = match (profile, prepared.document.value.root) {
+        (RootProfile::Body, DocRoot::Body(root)) => (root.0, HtmlSlot::Block),
+        (RootProfile::Legacy, DocRoot::Article(root)) => (root.0, HtmlSlot::Block),
+        (RootProfile::Legacy, DocRoot::Sentence(root)) => (root.0, HtmlSlot::Phrasing),
+        (RootProfile::Legacy, DocRoot::Inline(root)) => (root.0, HtmlSlot::Phrasing),
         _ => return Err(RenderError::InternalShape.into()),
     };
     let article = w.element(
         None,
         root,
-        if slot == HtmlSlot::Block {
+        if matches!(profile, RootProfile::Body) {
+            HtmlTag::Div
+        } else if slot == HtmlSlot::Block {
             HtmlTag::Article
         } else {
             HtmlTag::Span
         },
     )?;
-    if slot == HtmlSlot::Block {
+    if matches!(profile, RootProfile::Body) {
+        w.class(article, "nepl-doc")?;
+        w.job(root, article, 0)?;
+    } else if slot == HtmlSlot::Block {
         w.class(article, "nepl-doc")?;
         let DocKind::Article {
             language,
