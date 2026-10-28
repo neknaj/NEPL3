@@ -1,5 +1,6 @@
 //! Explicit locally resolved Body HTML fragment. No Article, shell or resource
 //! resolution capability is created. The fixed production CSS is not packaged.
+pub mod page;
 use crate::doc::{
     export::pages::resources::{ExecutionLimits, PhaseLimits},
     fragment,
@@ -41,6 +42,24 @@ fn from_source_profile(
     phases: PhaseLimits,
     output: &mut Budget,
 ) -> Result<BodyHtmlArtifact, String> {
+    from_source_with(compiled, source, phases, output, |rendered, output| {
+        let m = &rendered.markup;
+        let checked =
+            nepl3_markup::html::validate(&m.fragment, m.slot, &m.policy, output).map_err(err)?;
+        let html = nepl3_markup::html::serialize(&checked, output).map_err(err)?;
+        Ok(BodyHtmlArtifact {
+            html,
+            document_digest: rendered.document_digest,
+        })
+    })
+}
+fn from_source_with<T>(
+    compiled: &Compiled,
+    source: &str,
+    phases: PhaseLimits,
+    output: &mut Budget,
+    finish: impl FnOnce(&nepl3_doc_html::RenderedFragment, &mut Budget) -> Result<T, String>,
+) -> Result<T, String> {
     output.poll().map_err(err)?;
     if source.len() as u64 > super::MAX_SOURCE_BYTES.min(phases.parse.source_bytes) {
         return Err("SourceLimit".into());
@@ -78,14 +97,7 @@ fn from_source_profile(
             )
             .map_err(err)?;
             let rendered = nepl3_doc_html::render_body(&prepared, output).map_err(err)?;
-            let m = &rendered.markup;
-            let checked = nepl3_markup::html::validate(&m.fragment, m.slot, &m.policy, output)
-                .map_err(err)?;
-            let html = nepl3_markup::html::serialize(&checked, output).map_err(err)?;
-            Ok(BodyHtmlArtifact {
-                html,
-                document_digest: rendered.document_digest,
-            })
+            finish(&rendered, output)
         },
     )
 }

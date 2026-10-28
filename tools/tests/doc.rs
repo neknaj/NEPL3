@@ -26,6 +26,8 @@ mod body_html_host;
 mod body_markdown;
 #[path = "doc/body_markdown_host.rs"]
 mod body_markdown_host;
+#[path = "doc/body_page.rs"]
+mod body_page;
 #[path = "doc/code_pages.rs"]
 mod code_pages;
 #[path = "doc/context.rs"]

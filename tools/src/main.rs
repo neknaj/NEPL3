@@ -222,6 +222,15 @@ fn run() -> nepl3_tools::Result<()> {
         ["math", "--write"] => nepl3_tools::math(&root),
         ["sentence", "--write"] => nepl3_tools::sentence(&root),
         ["markup", "--write"] => nepl3_tools::markup(&root),
+        ["doc-html", "body-page", "--metadata", metadata, input, output] if !input.starts_with("--") => {
+            use nepl3_tools::doc::export::body::page;
+            page::write(std::path::Path::new(input), std::path::Path::new(output), &page::read_metadata(std::path::Path::new(metadata))?, Default::default())
+        }
+        ["doc-html", "body-page", "--metadata", metadata, "--limits", config, input, output] => {
+            use nepl3_tools::doc::export::body;
+            body::page::write(std::path::Path::new(input), std::path::Path::new(output), &body::page::read_metadata(std::path::Path::new(metadata))?, body::read_limits(std::path::Path::new(config))?)
+        }
+        ["doc-html", "body-page", ..] => Err("expected body-page --metadata FILE [--limits FILE] INPUT OUTPUT".into()),
         ["doc-html", "body-fragment", input, output] if !input.starts_with("--") => {
             nepl3_tools::doc::export::body::write(std::path::Path::new(input), std::path::Path::new(output), Default::default())
         }
@@ -458,6 +467,7 @@ fn run() -> nepl3_tools::Result<()> {
         ["--help"] | ["-h"] => {
             println!("nepl3-tools signatures --check | signatures --write");
             println!("nepl3-tools site build <site-config.json> <new-output-directory>");
+            println!("nepl3-tools doc-html body-page --metadata <metadata.json> [--limits <limits.json>] <input.nepld> <new-output.html>");
             println!("nepl3-tools doc-html body-fragment [--limits <limits.json>] <input.nepld> <new-output.html>");
             println!("nepl3-tools doc-html retry-limits");
             println!(
