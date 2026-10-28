@@ -49,6 +49,14 @@ body
         cons "[共有/きょうゆう]storageを[使用/しよう]する[場合/ばあい]も、SourceBytesの[計上/けいじょう]、[停止理由/ていしりゆう]の[保持/ほじ]、[受信境界/じゅしんきょうかい]の[検査/けんさ]を[要求/ようきゅう]する。"
         nil
       cons paragraph
+        cons "Spanのcharge_shared_cloneとclone_with_budgetは、[実際/じっさい]の[不変/ふへん]Spanの[複製/ふくせい]だけの[費用/ひよう]を[表/あらわ]す。"
+        cons "pointer atomic targetではidentityを[共有/きょうゆう]するため、Workは1、AllocationUnitsはSpan slotとし、[複製/ふくせい]しないSourceIdのStringを[仮想的/かそうてき]に[加算/かさん]しない。"
+        cons "[非/ひ]atomic targetでは[実際/じっさい]に[複製/ふくせい]するsource[名/めい]のUTF-8 byte[数/すう]をWorkとAllocationUnitsの[双方/そうほう]へ[追加/ついか]する。"
+        cons sentence cons text "Readerの" cons code "CopyPurpose::Clone" cons text "とEngineの" cons code "parse/build::span" cons text "は、この" cons ruby text "共通" text "きょうつう" cons text "clone" cons ruby text "費用" text "ひよう" cons text "を" cons ruby text "使用" text "しよう" cons text "する。" nil
+        cons "[外部/がいぶ]continuationの[比較/ひかく]に[使/つか]うCopyPurpose::Compareは、[共有/きょうゆう]identityであっても[従来/じゅうらい]のsource[名/めい]を[含/ふく]む[保守的/ほしゅてき]な[比較費用/ひかくひよう]と[課金順序/かきんじゅんじょ]を[維持/いじ]する。"
+        cons "このclone[費用/ひよう]を、[独立/どくりつ]した[値/あたい]の[同一性比較/どういつせいひかく]・serialization・source[権限/けんげん]の[検査/けんさ]を[省略/しょうりゃく]する[証明/しょうめい]には[使/つか]わない。"
+        nil
+      cons paragraph
         cons sentence cons code "Span = (SnapshotId, start:u64, end:u64)" cons text " とする。" nil
         cons sentence cons concat cons ruby text "構築時" text "こうちくじ" cons text "に、" cons ruby text "半開区間" text "はんかいくかん" cons text " " nil cons code "[start,end)" cons text " が " cons code "0 <= start <= end <= source.len" cons concat cons text " を" cons ruby text "満" text "み" cons text "たし、UTF-8 scalar" cons ruby text "境界" text "きょうかい" cons text "にあることを" cons ruby text "検査" text "けんさ" cons text "する。" nil nil
         cons "[挿入位置/そうにゅういち]には[空区間/くうくかん]を[使/つか]える。"

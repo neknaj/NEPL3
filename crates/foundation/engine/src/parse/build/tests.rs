@@ -189,3 +189,63 @@ fn session_index_stops_and_conflicts_keep_source_index_pairs_consistent() -> Res
     }
     Ok(())
 }
+
+#[test]
+fn span_copy_matches_core_storage_cost_and_exact_stop_boundaries() -> Result<(), String> {
+    let name = "界🙂".repeat(64);
+    let source = source(&name, 7, "memory:span", b'a').map_err(|e| format!("{e:?}"))?;
+    let value = source.span(0, 1).map_err(|e| format!("{e:?}"))?;
+    let mut actual = budget();
+    let mut expected = budget();
+    assert_eq!(
+        span(&value, &mut actual).map_err(|e| format!("{e:?}"))?,
+        value
+            .clone_with_budget(&mut expected)
+            .map_err(|e| format!("{e:?}"))?
+    );
+    assert_eq!(actual.usage(), expected.usage());
+    let bytes = if cfg!(target_has_atomic = "ptr") {
+        0
+    } else {
+        name.len() as u64
+    };
+    assert_eq!(actual.usage().work, bytes + 1);
+    assert_eq!(
+        actual.usage().allocation_units,
+        core::mem::size_of::<Span>() as u64 + bytes
+    );
+    let exact = Limits {
+        work: actual.usage().work,
+        allocation_units: actual.usage().allocation_units,
+        ..budget().limits()
+    };
+    assert_eq!(
+        span(&value, &mut Budget::new(exact)).map_err(|e| format!("{e:?}"))?,
+        value
+    );
+    for (limits, reason) in [
+        (
+            Limits {
+                work: exact.work - 1,
+                ..exact
+            },
+            StopReason::WorkLimit,
+        ),
+        (
+            Limits {
+                allocation_units: exact.allocation_units - 1,
+                ..exact
+            },
+            StopReason::AllocationLimit,
+        ),
+    ] {
+        let mut b = Budget::new(limits);
+        assert_eq!(span(&value, &mut b), Err(reason));
+        assert_eq!(b.poll(), Err(reason));
+    }
+    let mut b = budget();
+    b.cancel();
+    assert_eq!(span(&value, &mut b), Err(StopReason::Cancelled));
+    assert_eq!(b.poll(), Err(StopReason::Cancelled));
+    Ok(())
+}

@@ -116,6 +116,17 @@ fn spans_share_immutable_identity_and_preserve_independent_value_semantics()
     let limits = budget().limits();
     let mut usage = Budget::new(limits);
     let retained = left.clone_with_budget(&mut usage)?;
+    let mut charged = Budget::new(limits);
+    left.charge_shared_clone(&mut charged)?;
+    assert_eq!(charged.usage(), usage.usage());
+    #[cfg(not(target_has_atomic = "ptr"))]
+    {
+        assert_eq!(usage.usage().work, name.len() as u64 + 1);
+        assert_eq!(
+            usage.usage().allocation_units,
+            core::mem::size_of::<Span>() as u64 + name.len() as u64
+        );
+    }
     #[cfg(target_has_atomic = "ptr")]
     {
         assert_eq!(usage.usage().work, 1);
