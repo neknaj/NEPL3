@@ -22,7 +22,7 @@ fn budget() -> Budget {
 }
 fn source() -> bool {
     let Ok(s) = SourceSnapshot::new(
-        SourceId("input".into()),
+        SourceId("入力🙂".into()),
         0,
         "memory:input".into(),
         "日🙂\r\nX".as_bytes().to_vec(),
@@ -33,7 +33,8 @@ fn source() -> bool {
     let Ok(index) = LineIndex::new(&s, &mut budget()) else {
         return false;
     };
-    s.span(1, 3) == Err(SourceError::ScalarBoundary)
+    span_copy_cost(&s)
+        && s.span(1, 3) == Err(SourceError::ScalarBoundary)
         && index.line_count() == 2
         && index.offset(
             &s,
@@ -51,6 +52,63 @@ fn source() -> bool {
             },
             PositionEncoding::Utf16,
         ) == Ok(9)
+}
+// The RP2040 target has no pointer atomics: this executes the owned-name
+// branch, not merely a host build of the shared-identity branch.
+fn span_copy_cost(source: &SourceSnapshot) -> bool {
+    let Ok(span) = source.span(0, 3) else {
+        return false;
+    };
+    let name_bytes = source.identity().source.0.len() as u64;
+    let expected_work = name_bytes + 1;
+    let expected_allocation = core::mem::size_of::<Span>() as u64 + name_bytes;
+    let mut measured = budget();
+    let Ok(copied) = span.clone_with_budget(&mut measured) else {
+        return false;
+    };
+    if measured.usage().work != expected_work
+        || measured.usage().allocation_units != expected_allocation
+        || source.slice(&copied) != Ok("日")
+    {
+        return false;
+    }
+    let mut charged = budget();
+    if span.charge_shared_clone(&mut charged).is_err() || charged.usage() != measured.usage() {
+        return false;
+    }
+    let exact = Limits {
+        work: expected_work,
+        allocation_units: expected_allocation,
+        ..budget().limits()
+    };
+    if span.clone_with_budget(&mut Budget::new(exact)) != Ok(span.clone()) {
+        return false;
+    }
+    for (limits, reason) in [
+        (
+            Limits {
+                work: expected_work - 1,
+                ..exact
+            },
+            StopReason::WorkLimit,
+        ),
+        (
+            Limits {
+                allocation_units: expected_allocation - 1,
+                ..exact
+            },
+            StopReason::AllocationLimit,
+        ),
+    ] {
+        let mut b = Budget::new(limits);
+        if span.clone_with_budget(&mut b) != Err(reason) || b.poll() != Err(reason) {
+            return false;
+        }
+    }
+    let mut cancelled = budget();
+    cancelled.cancel();
+    span.clone_with_budget(&mut cancelled) == Err(StopReason::Cancelled)
+        && cancelled.poll() == Err(StopReason::Cancelled)
 }
 fn stopped() -> bool {
     let mut limits = budget().limits();

@@ -370,9 +370,11 @@ pub struct Span {
     end: u64,
 }
 impl Span {
-    /// Copy only the immutable span storage. This is not a cost bound for
-    /// comparing an independently supplied identity or source name.
-    pub fn clone_with_budget(&self, budget: &mut Budget) -> Result<Self, StopReason> {
+    /// Charge an actual immutable Span clone. Atomic-pointer targets share
+    /// the identity and pay only the Span slot; other targets copy its name.
+    /// This is not a bound for comparing independently supplied identities,
+    /// serializing a Span, or admitting source authority.
+    pub fn charge_shared_clone(&self, budget: &mut Budget) -> Result<(), StopReason> {
         #[cfg(target_has_atomic = "ptr")]
         let bytes = 0u64;
         #[cfg(not(target_has_atomic = "ptr"))]
@@ -381,7 +383,12 @@ impl Span {
         budget.charge(
             Resource::AllocationUnits,
             bytes.saturating_add(core::mem::size_of::<Self>() as u64),
-        )?;
+        )
+    }
+    /// Copy only the immutable span storage. This is not a cost bound for
+    /// comparing an independently supplied identity or source name.
+    pub fn clone_with_budget(&self, budget: &mut Budget) -> Result<Self, StopReason> {
+        self.charge_shared_clone(budget)?;
         Ok(self.clone())
     }
     pub fn snapshot_ref(&self) -> &SnapshotId {

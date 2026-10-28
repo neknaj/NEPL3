@@ -74,8 +74,15 @@ impl CopyCost for OperationRef {
 }
 impl CopyCost for Span {
     fn charge_for(&self, b: &mut Budget, purpose: CopyPurpose) -> Result<(), StopReason> {
-        slot::<Self>(b)?;
-        self.snapshot_ref().source.0.charge_for(b, purpose)
+        match purpose {
+            CopyPurpose::Clone => self.charge_shared_clone(b),
+            // Independent echoed values still require the original complete
+            // name bound. Sharing during clone grants no equality shortcut.
+            CopyPurpose::Compare => {
+                slot::<Self>(b)?;
+                self.snapshot_ref().source.0.charge_for(b, purpose)
+            }
+        }
     }
 }
 impl CopyCost for SourceSnapshot {
@@ -432,3 +439,6 @@ impl ReaderContinuation {
         Ok(self.clone())
     }
 }
+
+#[cfg(test)]
+mod tests;

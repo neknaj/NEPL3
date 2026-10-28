@@ -22,12 +22,7 @@ pub(super) fn text(value: &str, budget: &mut Budget) -> Result<String, StopReaso
     Ok(value.into())
 }
 pub(super) fn span(value: &Span, budget: &mut Budget) -> Result<Span, StopReason> {
-    slot::<Span>(budget)?;
-    budget.charge(
-        Resource::AllocationUnits,
-        value.snapshot_ref().source.0.len() as u64,
-    )?;
-    Ok(value.clone())
+    value.clone_with_budget(budget)
 }
 /// Private session-owned index, never accepted from a continuation or provider.
 pub(super) struct SourceIndex {
