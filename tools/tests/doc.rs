@@ -68,6 +68,8 @@ mod prepare;
 mod print;
 #[path = "doc/projection.rs"]
 mod projection;
+#[path = "doc/request_source_budget.rs"]
+mod request_source_budget;
 #[path = "doc/resources.rs"]
 mod resources;
 #[path = "doc/sentence.rs"]

@@ -120,12 +120,20 @@ pub struct SourceSnapshot {
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct SnapshotData {
     id: IdentityStorage,
+    identity_lookup_hash: u64,
     uri: String,
     text: String,
 }
 impl SourceSnapshot {
     pub fn identity(&self) -> &SnapshotId {
         &self.storage.id
+    }
+    /// Opaque, collision-prone lookup accelerator for the immutable identity.
+    /// Equal identities have equal hashes, but equal hashes do NOT establish
+    /// identity, source admission, URI equality, or any validation authority.
+    /// Consumers must still compare complete identities on a hash match.
+    pub fn identity_lookup_hash(&self) -> u64 {
+        self.storage.identity_lookup_hash
     }
     pub fn new(
         source: SourceId,
@@ -171,6 +179,21 @@ impl SourceSnapshot {
         text: String,
         budget: &mut Budget,
     ) -> Result<Self, SourceError> {
+        const DOMAIN: &[u8] = b"nepl3.source.identity.lookup/1";
+        budget.charge(
+            Resource::Work,
+            (id.source.0.len() as u64).saturating_add(DOMAIN.len() as u64 + 48),
+        )?;
+        let mut hash = Sha256::new();
+        hash.update(DOMAIN);
+        hash.update((id.source.0.len() as u64).to_le_bytes());
+        hash.update(id.source.0.as_bytes());
+        hash.update(id.revision.to_le_bytes());
+        hash.update(id.digest.0);
+        let digest: [u8; 32] = hash.finalize().into();
+        let identity_lookup_hash = u64::from_le_bytes([
+            digest[0], digest[1], digest[2], digest[3], digest[4], digest[5], digest[6], digest[7],
+        ]);
         #[cfg(target_has_atomic = "ptr")]
         budget.charge(
             Resource::AllocationUnits,
@@ -182,7 +205,12 @@ impl SourceSnapshot {
         budget.poll()?;
         #[cfg(target_has_atomic = "ptr")]
         let id = IdentityStorage::new(id);
-        let data = SnapshotData { id, uri, text };
+        let data = SnapshotData {
+            id,
+            identity_lookup_hash,
+            uri,
+            text,
+        };
         #[cfg(target_has_atomic = "ptr")]
         let storage = SnapshotStorage::new(data);
         #[cfg(not(target_has_atomic = "ptr"))]
@@ -1102,13 +1130,25 @@ fn source_index_position<'a>(
     let (mut low, mut high) = (0, index.len());
     let mut compare = |position: usize| {
         let prior = get(index[position]);
+        let same_identity = core::ptr::eq(prior.identity(), snapshot.identity());
+        // Identical live immutable IDs need no source-name byte comparison.
+        // Independent values retain the previous single prepaid bound; this
+        // only selects a key, and never replaces full snapshot/URI validation.
         budget.charge(
             Resource::Work,
-            (prior.storage.id.source.0.len() as u64)
-                .saturating_add(snapshot.storage.id.source.0.len() as u64)
-                .saturating_add(1),
+            if same_identity {
+                1
+            } else {
+                (prior.storage.id.source.0.len() as u64)
+                    .saturating_add(snapshot.storage.id.source.0.len() as u64)
+                    .saturating_add(1)
+            },
         )?;
-        Ok::<_, SourceError>(source_key(prior, snapshot))
+        Ok::<_, SourceError>(if same_identity {
+            core::cmp::Ordering::Equal
+        } else {
+            source_key(prior, snapshot)
+        })
     };
     if let Some(at) = hint.filter(|&at| at < index.len()) {
         match compare(at)? {

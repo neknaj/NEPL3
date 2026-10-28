@@ -14,6 +14,8 @@ mod echo;
 mod framed;
 #[path = "runtime/read.rs"]
 mod read;
+#[path = "runtime/requests.rs"]
+mod requests;
 #[path = "runtime/retry.rs"]
 mod retry;
 #[path = "runtime/tokenizer_host.rs"]

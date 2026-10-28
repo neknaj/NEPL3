@@ -396,3 +396,205 @@ fn synchronous_tokenizer_keeps_owned_fallback_and_validates_replies() -> Result<
     }
     Ok(())
 }
+
+struct RecycledSourcesHost {
+    mode: u8,
+    calls: usize,
+    prior_table: Option<usize>,
+    remaining: Option<u64>,
+    second_usage: Option<u64>,
+}
+impl TokenizationHost for RecycledSourcesHost {
+    fn reservation(
+        &mut self,
+        _: &ReservationRequest,
+        _: &mut Budget,
+        _: &mut SourceAdmission,
+    ) -> Result<Option<SourceReservation>, ReaderError> {
+        Ok(None)
+    }
+
+    fn provider(
+        &mut self,
+        call: &ProviderCall,
+        b: &mut Budget,
+        a: &mut SourceAdmission,
+    ) -> Result<Option<ProviderReply>, ReaderError> {
+        let ProviderCall::Read { request, .. } = call else {
+            return Err(ReaderError::Context);
+        };
+        self.calls += 1;
+        if self.calls == 1 {
+            assert_eq!(request.sources.len(), 1);
+        } else if self.calls == 2 {
+            assert_eq!(request.sources.len(), 2);
+            self.prior_table = Some(request.sources.as_ptr() as usize);
+        } else {
+            assert_eq!(self.calls, 3);
+            if self.mode == 1 {
+                assert_eq!(request.start, 0);
+                assert_eq!(
+                    request.sources.len(),
+                    1,
+                    "rollback must discard generated closure"
+                );
+            } else {
+                assert_eq!(request.start, 2);
+                assert_eq!(request.sources.len(), 2);
+                assert_eq!(
+                    Some(request.sources.as_ptr() as usize),
+                    self.prior_table,
+                    "retired Vec is moved, not cloned"
+                );
+            }
+            if self.mode == 2 {
+                return Ok(None);
+            }
+        }
+        let end = if self.mode == 3 && self.calls == 3 {
+            request.limit + 1
+        } else {
+            request.start + 1
+        };
+        let mut result = terminal("a", end, b)?;
+        if self.calls == 1 {
+            let generated = a.create(
+                SourceId("native-generated".into()),
+                0,
+                "memory:native-generated".into(),
+                b"x".to_vec(),
+                b,
+            )?;
+            let ProviderReply::Read(reply) = &mut result else {
+                return Err(ReaderError::Context);
+            };
+            let ReadReply::Matched { sources, .. } = reply.as_mut() else {
+                return Err(ReaderError::Context);
+            };
+            sources.push(generated);
+        }
+        if self.calls == 2 {
+            if let Some(remaining) = self.remaining {
+                b.charge(Resource::Work, b.limits().work - b.usage().work - remaining)?;
+            }
+            self.second_usage = Some(b.usage().work);
+        }
+        Ok(Some(result))
+    }
+}
+
+#[test]
+fn retired_native_source_tables_move_only_until_rollback_and_preserve_rejected_waits()
+-> Result<(), ReaderError> {
+    let (r, schema) = registry()?;
+    for mode in 0..4 {
+        let mut p = provider_plan(&schema);
+        p.expressions.extend([
+            ReaderExpr::Literal("X".into()),
+            ReaderExpr::Seq(vec![
+                ReaderId(0),
+                ReaderId(0),
+                ReaderId(if mode == 1 { 1 } else { 0 }),
+            ]),
+            ReaderExpr::Seq(vec![ReaderId(0)]),
+            ReaderExpr::Choice(vec![ReaderId(2), ReaderId(3)]),
+        ]);
+        p.rules[0].root = ReaderId(if mode == 1 { 4 } else { 2 });
+        p.rules[0].output = TypeDescriptor::List(Box::new(TypeDescriptor::NdfValue));
+        let checked = p.check(&r, &mut budget())?;
+        let input = source("abc")?;
+        let mut store = SourceStore::default();
+        store.insert(input.clone())?;
+        let raw = context(&schema, &r)?;
+        let modes = vec![ReaderMode {
+            name: "test".into(),
+            skip: vec![],
+            take: vec![TakeRule {
+                reader: TokenReader::Rule("entry".into()),
+                kind: KindRef {
+                    schema: schema.clone(),
+                    local_kind: 0,
+                },
+            }],
+        }];
+        let execute = |remaining: Option<u64>| -> Result<(u64, bool), ReaderError> {
+            let mut b = budget();
+            let mut a = SourceAdmission::default();
+            let proof = check_context(&raw, &store, &r, &mut b, &mut a)?;
+            let mut session =
+                TokenizationSession::new("recycle".into(), &modes, &checked, &r, &mut b)?;
+            let scope = TokenizationScope {
+                operation_id: "recycle-operation".into(),
+                profile_digest: Digest([3; 32]),
+                snapshot: input.reference(),
+            };
+            let accepted = AcceptedTokenizationReport::empty(scope.clone(), &mut b)?;
+            let mut host = RecycledSourcesHost {
+                mode,
+                calls: 0,
+                prior_table: None,
+                remaining,
+                second_usage: None,
+            };
+            let reply = session.read_accepted_with_host(
+                ScopedTokenizationRequest {
+                    scope: &scope,
+                    target: TokenTarget::Mode,
+                    input: TokenizationRequest {
+                        snapshot: &input,
+                        start: 0,
+                        limit: 3,
+                        final_input: true,
+                        context: &proof,
+                        state: &NdfValue::Unit,
+                    },
+                },
+                &store,
+                &mut b,
+                &mut a,
+                accepted,
+                &mut host,
+            )?;
+            let used = b.usage().work - host.second_usage.ok_or(ReaderError::Context)?;
+            let raw = reply.reply.into_raw();
+            if let TokenizationOutcome::Stopped { reason } = &raw.outcome {
+                assert_eq!(*reason, StopReason::WorkLimit);
+                assert_eq!(b.poll(), Err(StopReason::WorkLimit));
+                assert_eq!(
+                    raw.sources.len(),
+                    1,
+                    "accepted generated source survives every stop"
+                );
+                assert!(remaining.is_some());
+                return Ok((used, false));
+            }
+            assert_eq!(host.calls, 3);
+            assert_eq!(reply.host_error.is_some(), mode == 3);
+            if mode >= 2 {
+                let TokenizationOutcome::Await { continuation, .. } = raw.outcome else {
+                    return Err(ReaderError::Context);
+                };
+                let TokenizationWait::Provider { continuation } = &continuation.pending else {
+                    return Err(ReaderError::Context);
+                };
+                assert_eq!(continuation.current.sources.len(), 1);
+                assert_eq!(continuation.request.sources.len(), 2);
+                assert_eq!(continuation.request.start, 0);
+            } else {
+                assert!(matches!(raw.outcome, TokenizationOutcome::Token(_)));
+            }
+            Ok((used, true))
+        };
+        let (full, complete) = execute(None)?;
+        assert!(complete);
+        if mode == 0 {
+            assert!(full > 0 && full < 100_000, "bounded native work={full}");
+            for remaining in 0..=full {
+                let (used, complete) = execute(Some(remaining))?;
+                assert!(used <= remaining);
+                assert_eq!(complete, remaining == full);
+            }
+        }
+    }
+    Ok(())
+}

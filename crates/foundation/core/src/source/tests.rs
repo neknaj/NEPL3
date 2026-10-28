@@ -369,3 +369,66 @@ fn first_admission_matches_native_boundaries() -> Result<(), SourceError> {
     }
     Ok(())
 }
+
+#[test]
+fn source_index_alias_shortcut_preserves_independent_key_bounds() -> Result<(), SourceError> {
+    let name = "比較🙂".repeat(32);
+    let original = fixture(&name, "memory:first", false)?;
+    let independent = fixture(&name, "memory:other", true)?;
+    let full = (name.len() * 2 + 1) as u64;
+    let mut cancelled = Budget::new(limits());
+    cancelled.cancel();
+    assert_eq!(
+        source_index_position(&[0], |_| &original, &original, None, &mut cancelled),
+        Err(SourceError::Stopped(StopReason::Cancelled))
+    );
+    assert_eq!(cancelled.poll(), Err(StopReason::Cancelled));
+    for hint in [None, Some(0)] {
+        let mut b = Budget::new(Limits {
+            work: 1,
+            allocation_units: 0,
+            ..limits()
+        });
+        assert_eq!(
+            source_index_position(&[0], |_| &original, &original, hint, &mut b)?,
+            Ok(0)
+        );
+        assert_eq!(b.usage().work, 1);
+        let mut b = Budget::new(Limits {
+            work: full,
+            allocation_units: 0,
+            ..limits()
+        });
+        // Same source/revision with different URI and digest is still the same
+        // lookup key. The caller must reject its full-snapshot conflict.
+        assert_eq!(
+            source_index_position(&[0], |_| &original, &independent, hint, &mut b)?,
+            Ok(0)
+        );
+        assert_eq!(b.usage().work, full);
+        let mut b = Budget::new(Limits {
+            work: full - 1,
+            allocation_units: 0,
+            ..limits()
+        });
+        assert_eq!(
+            source_index_position(&[0], |_| &original, &independent, hint, &mut b),
+            Err(SourceError::Stopped(StopReason::WorkLimit))
+        );
+        assert_eq!(
+            b.usage().work,
+            0,
+            "retain the independent single-charge failure boundary"
+        );
+        assert_eq!(b.poll(), Err(StopReason::WorkLimit));
+        let mut b = Budget::new(Limits {
+            work: 0,
+            ..limits()
+        });
+        assert_eq!(
+            source_index_position(&[0], |_| &original, &original, hint, &mut b),
+            Err(SourceError::Stopped(StopReason::WorkLimit))
+        );
+    }
+    Ok(())
+}

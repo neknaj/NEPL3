@@ -121,6 +121,28 @@ fn source_and_span_roundtrip_preserve_identity_bytes_and_shared_admission() -> T
     assert_eq!(restored[0].reference().source_id.0, "a");
     assert_eq!(restored[0].text().as_bytes(), sources[0].text().as_bytes());
     assert_ne!(restored[0].id(), restored[1].id());
+    // The private acceleration cache is reconstructed from complete IDs; it
+    // is not a wire field, locator proof, or replacement for decode validation.
+    assert_eq!(
+        restored[0].identity_lookup_hash(),
+        sources[1].identity_lookup_hash()
+    );
+    assert_eq!(
+        restored[1].identity_lookup_hash(),
+        sources[0].identity_lookup_hash()
+    );
+    assert_eq!(
+        encode_sources(
+            &restored,
+            &schema,
+            &registry,
+            &mut SourceAdmission::default(),
+            &mut budget()
+        )
+        .map_err(|e| format!("{e:?}"))?,
+        bytes
+    );
+
     let charged = usage.usage().source_bytes;
     decode_sources(&bytes, &schema, &registry, &mut admission, &mut usage)
         .map_err(|e| format!("{e:?}"))?;

@@ -3,6 +3,7 @@ mod checkpoint;
 mod echo;
 #[cfg(test)]
 mod ownership_tests;
+mod request;
 use checkpoint::{Frame, Saved};
 pub(crate) mod copy;
 pub(crate) mod validate;
@@ -260,6 +261,7 @@ impl<'a> ReaderSession<'a> {
             frames: Vec::new(),
             base: budget.current_depth(),
             next_call: &mut self.next_call,
+            reusable_sources: None,
         };
         if let Err(error) = machine.push(root, budget) {
             return match stop_reason(&error) {
@@ -464,6 +466,7 @@ impl<'a> ReaderSession<'a> {
             frames,
             base: c.depth_base,
             next_call: &mut self.next_call,
+            reusable_sources: None,
         };
         let outcome = budget.with_depth_at_least(depth_base, |budget| {
             validate::apply_provider(&mut machine, frame, reply, budget)
@@ -681,9 +684,19 @@ impl<'a> ReaderSession<'a> {
             Control::Suspend(call) => {
                 let call = *call;
                 let preparation = (|| -> Result<_, ReaderError> {
-                    let request = machine.owned_request(
+                    // Only this private, just-issued call supplies a prepared
+                    // table. drive/dispatch cannot change current artifacts
+                    // after issuing it without producing a new Control.
+                    let prepared = match &call {
+                        ProviderCall::Read { request, .. } => Some(request),
+                        ProviderCall::Dependent { request, .. } => Some(&request.request),
+                        ProviderCall::Transform { .. } => None,
+                    };
+                    let request = machine.owned_request_reusing_sources(
                         machine.request.start,
                         machine.request.state,
+                        prepared,
+                        None,
                         budget,
                     )?;
                     let report = machine.report(budget)?;
@@ -873,6 +886,8 @@ struct Machine<'a, 'r> {
     frames: Vec<Frame>,
     base: u64,
     next_call: &'r mut u64,
+    // A retired, validated native call may transfer its still-current union.
+    reusable_sources: Option<Vec<SourceSnapshot>>,
 }
 impl Machine<'_, '_> {
     /// Execute a synchronous callback while the original machine is still owned.
@@ -956,12 +971,31 @@ impl Machine<'_, '_> {
                 *native.error = Some(error);
                 return Ok(control);
             }
+            let recyclable = matches!(&reply, ProviderReply::Read(reply)
+                if matches!(reply.as_ref(), ReadReply::Matched { sources, .. } if sources.is_empty()));
+            let Control::Suspend(retired) = control else {
+                return Err(ReaderError::Continuation);
+            };
+            let recycled = if recyclable {
+                match *retired {
+                    ProviderCall::Read { request, .. } => Some(request.sources),
+                    ProviderCall::Dependent { request, .. } => Some(request.request.sources),
+                    ProviderCall::Transform { .. } => None,
+                }
+            } else {
+                None
+            };
             let frame = self.frames.pop().ok_or(ReaderError::Continuation)?;
             let outcome = budget.with_depth_at_least(depth, |budget| {
                 validate::apply_provider(self, frame, reply, budget)
             });
             control = match outcome {
-                Ok(outcome) => self.drive(Some(outcome), budget)?,
+                Ok(outcome) => {
+                    // Only a successful Matched reply with no added sources
+                    // can seed this move. Every later restore invalidates it.
+                    self.reusable_sources = recycled;
+                    self.drive(Some(outcome), budget)?
+                }
                 Err(error) => match stop_reason(&error) {
                     Some(reason) => return Ok(Control::Done(Outcome::Stopped(reason))),
                     None => return Err(error),
@@ -1043,6 +1077,7 @@ impl Machine<'_, '_> {
                         })
                     }
                     Outcome::NeedMore(expected) => {
+                        self.reusable_sources = None;
                         frame.checkpoint.restore(&mut self.current)?;
                         outcome = Some(Outcome::NeedMore(expected));
                     }
@@ -1051,6 +1086,7 @@ impl Machine<'_, '_> {
                         furthest,
                     } => {
                         if !matches!(&frame.phase, FramePhase::Repeat { .. }) {
+                            self.reusable_sources = None;
                             frame.checkpoint.restore_again(&mut self.current, budget)?;
                         }
                         match (expr, frame.phase) {
@@ -1102,6 +1138,7 @@ impl Machine<'_, '_> {
                                 if count >= min {
                                     outcome = Some(Outcome::Matched(NdfValue::List(values)));
                                 } else {
+                                    self.reusable_sources = None;
                                     frame.checkpoint.restore(&mut self.current)?;
                                     outcome = Some(Outcome::NoMatch { expected, furthest });
                                 }
@@ -1192,10 +1229,12 @@ impl Machine<'_, '_> {
                             outcome = Some(Outcome::Matched(NdfValue::Some(Box::new(value))));
                         }
                         (ReaderExpr::Look(_), _) => {
+                            self.reusable_sources = None;
                             frame.checkpoint.restore(&mut self.current)?;
                             outcome = Some(Outcome::Matched(NdfValue::Unit));
                         }
                         (ReaderExpr::Not(_), _) => {
+                            self.reusable_sources = None;
                             frame.checkpoint.restore(&mut self.current)?;
                             outcome = Some(Outcome::NoMatch {
                                 expected: Vec::new(),
@@ -1290,11 +1329,7 @@ impl Machine<'_, '_> {
                             let request = DependentRequest {
                                 first: value,
                                 end: self.current.cursor,
-                                request: self.owned_request(
-                                    self.current.cursor,
-                                    &self.current.state,
-                                    budget,
-                                )?,
+                                request: self.owned_current_request(budget)?,
                             };
                             let call =
                                 self.make_call(provider, CallRequest::Dependent(request), budget)?;
@@ -1331,10 +1366,12 @@ impl Machine<'_, '_> {
                         Outcome::Matched(value)
                     }
                     Primitive::NoMatch { expected, furthest } => {
+                        self.reusable_sources = None;
                         frame.checkpoint.restore(&mut self.current)?;
                         Outcome::NoMatch { expected, furthest }
                     }
                     Primitive::NeedMore { expected } => {
+                        self.reusable_sources = None;
                         frame.checkpoint.restore(&mut self.current)?;
                         Outcome::NeedMore(expected)
                     }
@@ -1420,8 +1457,7 @@ impl Machine<'_, '_> {
                     }else{self.child(frame,FramePhase::AwaitChild,rule.root,budget)?;}
                 }
                 ReaderExpr::Call(provider) => {
-                    let request =
-                        self.owned_request(self.current.cursor, &self.current.state, budget)?;
+                    let request = self.owned_current_request(budget)?;
                     let call = self.make_call(provider, CallRequest::Read(request), budget)?;
                     frame.phase = FramePhase::Provider {
                         call_id: call_identity(&call).0,
@@ -1435,23 +1471,45 @@ impl Machine<'_, '_> {
             }
         }
     }
-    fn owned_request(
+    fn owned_current_request(
+        &mut self,
+        budget: &mut Budget,
+    ) -> Result<OwnedReadRequest, ReaderError> {
+        let recycled = self.reusable_sources.take();
+        self.owned_request_reusing_sources(
+            self.current.cursor,
+            &self.current.state,
+            None,
+            recycled,
+            budget,
+        )
+    }
+    // This argument is never populated from an external echo. Only sources
+    // are reused; original start/state and every other request field stay local.
+    fn owned_request_reusing_sources(
         &self,
         start: u64,
         state: &NdfValue,
+        prepared: Option<&OwnedReadRequest>,
+        recycled: Option<Vec<SourceSnapshot>>,
         budget: &mut Budget,
     ) -> Result<OwnedReadRequest, ReaderError> {
         slot::<OwnedReadRequest>(budget)?;
         slot::<SourceSnapshot>(budget)?;
-        let mut sources: Vec<SourceSnapshot> = Vec::new();
-        for source in core::iter::once(self.request.snapshot)
-            .chain(self.request.context.sources().iter().copied())
-            .chain(&self.current.sources)
-        {
-            if !sources.iter().any(|s| s.identity() == source.identity()) {
-                sources.push(copy(source, budget)?);
-            }
-        }
+        let sources = if let Some(recycled) = recycled {
+            // Ownership is transferred, not cloned or reallocated.
+            budget.charge(Resource::Work, 1)?;
+            recycled
+        } else if let Some(prepared) = prepared {
+            copy(&prepared.sources, budget)?
+        } else {
+            request::copy_sources(
+                core::iter::once(self.request.snapshot)
+                    .chain(self.request.context.sources().iter().copied())
+                    .chain(&self.current.sources),
+                budget,
+            )?
+        };
         budget.charge(
             Resource::AllocationUnits,
             self.request.snapshot.identity().source.0.len() as u64,
