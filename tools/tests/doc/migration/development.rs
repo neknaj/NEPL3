@@ -44,36 +44,77 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
     let c = compiled()?;
     let registry: nepl3_tools::doc::canonical::Registry =
         serde_json::from_str(include_str!("../../../../doc/canonical.json")).map_err(err)?;
+    // Match the pre-existing policy for this same unadopted guide in
+    // canonical::tests::synchronized_context_spec_drafts_parse_lower_and_check_labels.
+    // This is content/structure review of a growing reference corpus, not
+    // admission under production canonical registry limits. The first attempt
+    // with the registry's 550M allocation cap stopped; that remains a cutover
+    // limitation, not a reason to trim source or change ordinary defaults.
+    let draft_limits = Limits {
+        work: 600_000_000,
+        allocation_units: 1_500_000_000,
+        ..budget().limits()
+    };
     nepl3_tools::doc::source::with_named_input_limits(
         true,
         &c,
         source,
         "development-draft",
-        "Article",
-        registry.parse_limits.budget().limits(),
-        |tree, profile, _, _| {
+        "Body",
+        draft_limits,
+        |tree, profile, parse_budget, _| {
             let store = SourceStore::default();
             let mut admission = SourceAdmission::default();
             let mut codec =
                 FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
+            let mut lower_budget = Budget::new(draft_limits);
             let document = nepl3_suite::adapters::sentence::literal::lower(
                 tree.syntax(),
                 &c.doc.package.schema,
-                Category::Article,
+                Category::Body,
                 profile.registry(),
-                &mut registry.lower_limits.budget(),
+                &mut lower_budget,
                 &mut codec,
             )
             .map_err(err)?;
-            let DocRoot::Article(root) = document.value.root else {
-                return Err("article root".into());
+            let DocRoot::Body(root) = document.value.root else {
+                return Err("Body root".into());
             };
-            let DocKind::Article { body, .. } = &document.value.nodes[root.0 as usize].kind else {
-                return Err("article node".into());
-            };
-            let DocKind::Body { blocks: children } = &document.value.nodes[body.0 as usize].kind
+            let DocKind::Body { blocks: roots } = &document.value.nodes[root.0 as usize].kind
             else {
-                return Err("article body".into());
+                return Err("root Body".into());
+            };
+            assert_eq!(roots.len(), 2, "the two source H1 headings remain peers");
+            let DocKind::Section {
+                id: first_id,
+                title: first_title,
+                body: first_body,
+            } = &document.value.nodes[roots[0].0 as usize].kind
+            else {
+                return Err("first H1 section".into());
+            };
+            let DocKind::Section {
+                id: second_id,
+                title: second_title,
+                body: second_body,
+            } = &document.value.nodes[roots[1].0 as usize].kind
+            else {
+                return Err("second H1 section".into());
+            };
+            assert_eq!(
+                (first_id.as_str(), second_id.as_str()),
+                ("developmentGuide", "canonicalBoundary")
+            );
+            let DocKind::Body { blocks: children } =
+                &document.value.nodes[first_body.0 as usize].kind
+            else {
+                return Err("first H1 body".into());
+            };
+            let DocKind::Body {
+                blocks: boundary_children,
+            } = &document.value.nodes[second_body.0 as usize].kind
+            else {
+                return Err("second H1 body".into());
             };
             let section_ids: Vec<_> = children
                 .iter()
@@ -82,20 +123,49 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                     _ => None,
                 })
                 .collect();
-            // This checks the repaired first-H1 subsection ownership only;
-            // the misplaced second-H1 Portable section remains a separate gap.
-            assert!(
-                section_ids
-                    .windows(3)
-                    .any(|ids| ids == ["local", "documentGeneration", "pages"])
+            assert_eq!(
+                section_ids,
+                [
+                    "local",
+                    "documentGeneration",
+                    "pages",
+                    "distribution",
+                    "branchIntegration",
+                    "review"
+                ]
             );
-            let checked = nepl3_doc_core::labels::check(
+            let boundary_sections: Vec<_> = boundary_children
+                .iter()
+                .filter_map(|child| match &document.value.nodes[child.0 as usize].kind {
+                    DocKind::Section { id, .. } => Some(id.as_str()),
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(
+                boundary_sections,
+                ["portable"],
+                "Portable belongs under the second H1"
+            );
+            assert_eq!(
+                boundary_children.len(),
+                8,
+                "seven restored paragraphs then Portable"
+            );
+            let mut label_budget = budget();
+            let checked = nepl3_doc_core::labels::check_body(
                 &document,
                 profile.registry(),
-                &mut budget(),
+                &mut label_budget,
                 codec.source_admission(),
             )
             .map_err(err)?;
+            eprintln!(
+                "development draft policy={draft_limits:?}; parse={:?}; lower={:?}; labels limits={:?} usage={:?}",
+                parse_budget.usage(),
+                lower_budget.usage(),
+                label_budget.limits(),
+                label_budget.usage()
+            );
             let targets = checked
                 .references()
                 .iter()
@@ -213,6 +283,96 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 text::PlainTextOutcome::Complete { text } => Ok(text),
                 other => Err(format!("incomplete section text: {other:?}")),
             };
+            // Root Body -> peer Section gives H1, their Section children give
+            // H2. Compare source heading ranks/titles as well as ownership.
+            let source_h1: Vec<_> = Parser::new(original)
+                .filter_map(|event| match event {
+                    Event::Start(Tag::Heading {
+                        level: pulldown_cmark::HeadingLevel::H1,
+                        ..
+                    }) => Some(()),
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(source_h1.len(), roots.len());
+            assert_eq!(project(*first_title)?, "開発と検査");
+            assert_eq!(project(*second_title)?, "正本と観測記録の境界");
+            let boundary_source = original
+                .split_once("# 正本と観測記録の境界\n\n")
+                .ok_or("source second H1")?
+                .1
+                .split("\n## Portable execution CI")
+                .next()
+                .ok_or("source Portable boundary")?;
+            let mut actual_boundary = Vec::new();
+            for child in &boundary_children[..7] {
+                blocks(&document, child.0, &mut project, &mut actual_boundary)?;
+            }
+            assert_eq!(actual_boundary, markdown_blocks(boundary_source));
+            let expected_boundary_code: Vec<_> = Parser::new(boundary_source)
+                .filter_map(|event| match event {
+                    Event::Code(value) => Some(value.into_string()),
+                    _ => None,
+                })
+                .collect();
+            let mut actual_boundary_code = Vec::new();
+            for child in &boundary_children[..7] {
+                paragraph_inline_code(&document, child.0, &mut actual_boundary_code)?;
+            }
+            assert_eq!(actual_boundary_code, expected_boundary_code);
+            let DocKind::Paragraph {
+                items: evidence_items,
+            } = &document.value.nodes[boundary_children[6].0 as usize].kind
+            else {
+                return Err("evidence paragraph".into());
+            };
+            let DocKind::Sentence {
+                inlines: evidence_inlines,
+            } = &document.value.nodes[evidence_items[0].0 as usize].kind
+            else {
+                return Err("evidence sentence".into());
+            };
+            let evidence_links: Vec<_> = evidence_inlines
+                .iter()
+                .filter_map(
+                    |inline| match &document.value.nodes[inline.0 as usize].kind {
+                        DocKind::Link { target, .. } => Some(target),
+                        _ => None,
+                    },
+                )
+                .collect();
+            assert_eq!(
+                evidence_links,
+                [&nepl3_doc_core::model::LinkTarget::Relative {
+                    path: "../tools/evidence/README.md".into(),
+                    fragment: None
+                }]
+            );
+
+            let portable_source = original
+                .split_once("## Portable execution CI\n\n")
+                .ok_or("source Portable")?
+                .1
+                .split("\n### Inline schema-validation frontier")
+                .next()
+                .ok_or("Portable end")?;
+            let DocKind::Section {
+                body: portable_body,
+                title: portable_title,
+                ..
+            } = &document.value.nodes[boundary_children[7].0 as usize].kind
+            else {
+                return Err("Portable section".into());
+            };
+            assert_eq!(project(*portable_title)?, "Portable execution CI");
+            let mut actual_portable = Vec::new();
+            blocks(
+                &document,
+                portable_body.0,
+                &mut project,
+                &mut actual_portable,
+            )?;
+            assert_eq!(actual_portable, markdown_blocks(portable_source));
             let mut actual_intro = Vec::new();
             for child in &children[..3] {
                 blocks(&document, child.0, &mut project, &mut actual_intro)?;
