@@ -222,6 +222,14 @@ fn run() -> nepl3_tools::Result<()> {
         ["math", "--write"] => nepl3_tools::math(&root),
         ["sentence", "--write"] => nepl3_tools::sentence(&root),
         ["markup", "--write"] => nepl3_tools::markup(&root),
+        ["doc-html", "body-fragment", input, output] if !input.starts_with("--") => {
+            nepl3_tools::doc::export::body::write(std::path::Path::new(input), std::path::Path::new(output), Default::default())
+        }
+        ["doc-html", "body-fragment", "--limits", config, input, output] => {
+            use nepl3_tools::doc::export::body;
+            body::write(std::path::Path::new(input), std::path::Path::new(output), body::read_limits(std::path::Path::new(config))?)
+        }
+        ["doc-html", "body-fragment", ..] => Err("expected body-fragment [--limits FILE] INPUT OUTPUT".into()),
         ["doc-html", "--write"] => nepl3_tools::doc_html(&root),
         [
             "doc-html",
@@ -450,6 +458,7 @@ fn run() -> nepl3_tools::Result<()> {
         ["--help"] | ["-h"] => {
             println!("nepl3-tools signatures --check | signatures --write");
             println!("nepl3-tools site build <site-config.json> <new-output-directory>");
+            println!("nepl3-tools doc-html body-fragment [--limits <limits.json>] <input.nepld> <new-output.html>");
             println!("nepl3-tools doc-html retry-limits");
             println!(
                 "nepl3-tools doc-html pages --interactive-limits <limits.json> [--math-renderer katex-preferred|mathml-only] <manifest.json> <new-output-directory>"

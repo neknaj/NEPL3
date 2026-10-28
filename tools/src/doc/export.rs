@@ -1,5 +1,6 @@
 //! Script-free local Doc export, using the same production pipeline as tests.
 pub mod assets;
+pub mod body;
 mod code;
 mod katex;
 pub mod math;
