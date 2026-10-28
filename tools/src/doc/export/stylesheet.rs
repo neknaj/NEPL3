@@ -68,7 +68,7 @@ pub(super) fn head_with_css(
     )))
 }
 
-fn check_inline_css(css: &str) -> Result<(), String> {
+pub(super) fn check_inline_css(css: &str) -> Result<(), String> {
     // '<' can open HTML raw-text end tags or comment/escape states. Current
     // production CSS needs none; fail closed if a future asset introduces one.
     if css.contains(['<', '\0', '\r']) {
@@ -78,7 +78,7 @@ fn check_inline_css(css: &str) -> Result<(), String> {
 }
 
 /// RFC 4648 base64 of exactly one SHA-256 digest (32 bytes, one '=' padding).
-fn csp_digest(digest: Digest) -> String {
+pub(super) fn csp_digest(digest: Digest) -> String {
     encode_base64(&digest.0, 44)
 }
 pub(super) fn font_data(bytes: &[u8], mime: &str, b: &mut Budget) -> Result<String, String> {

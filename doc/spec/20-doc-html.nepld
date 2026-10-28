@@ -34,7 +34,7 @@ body
     cons "nativeのprepare_local_bodyとrender_bodyは、Body[単独/たんどく]の[局所/きょくしょ]HTML fragmentを[扱/あつか]う。[準備済/じゅんびず]みの[型/かた]PreparedLocalBodyはArticleの[型/かた]と[分離/ぶんり]し、Article・PageSet・[名前空間/なまえくうかん]の[証明/しょうめい]へ[変換/へんかん]しない。"
     cons "Bodyのrootはclass nepl-docのdivとし、[既存/きそん]CSSの[余白/よはく]などの[文書/ぶんしょ]styleを[継承/けいしょう]する。Article・[題名/だいめい]・lang[属性/ぞくせい]は[合成/ごうせい]しない。[導入段落/どうにゅうだんらく]を[保持/ほじ]し、[直下/ちょっか]のSectionはH1、[子/こ]のSectionはH2から[始/はじ]める。H6を[超/こ]える[見出/みだ]しはrole headingと[深/ふか]さを[表/あらわ]すaria-levelを[持/も]つdivで[表/あらわ]す。"
     cons "Body[全体/ぜんたい]のlabelと[全/すべ]てのvariantを[検査/けんさ]し、asset・foreign・[外部/がいぶ]link・page[参照/さんしょう]などが[残/のこ]れば[完全/かんぜん]なNeedsResolution[計画/けいかく]を[返/かえ]す。[選択後/せんたくご]のHTMLも[検査/けんさ]するため、Single[表示/ひょうじ]で[参照先/さんしょうさき]anchorだけが[非表示/ひひょうじ]になる[場合/ばあい]はMissingFragmentで[失敗/しっぱい]する。"
-    cons "[各/かく][出力/しゅつりょく]nodeのoriginは[実際/じっさい]のDoc nodeを[保持/ほじ]し、rootのdivはBody nodeに[対応/たいおう]する。この[段階/だんかい]はnativeの[局所/きょくしょ]fragmentだけを[提供/ていきょう]し、BodyのNDF[結果/けっか]codec・document shell・[複数/ふくすう]page[公開/こうかい]を[追加/ついか]しない。"
+    cons "[各/かく][出力/しゅつりょく]nodeのoriginは[実際/じっさい]のDoc nodeを[保持/ほじ]し、rootのdivはBody nodeに[対応/たいおう]する。このnative[入口/いりぐち]は[局所/きょくしょ]fragmentだけを[提供/ていきょう]し、BodyのNDF[結果/けっか]codec・document shell・[複数/ふくすう]page[公開/こうかい]を[追加/ついか]しない。"
     nil
   cons paragraph
     cons sentence cons code "doc-html body-fragment [--limits FILE] INPUT OUTPUT" nil
@@ -42,6 +42,14 @@ body
     cons "parse・lower・[出力/しゅつりょく]の[予算/よさん]を[分離/ぶんり]し、[準備/じゅんび]・render・[最終/さいしゅう]markup[検査/けんさ]・serializeは[同/おな]じ[出力予算/しゅつりょくよさん]を[消費/しょうひ]する。[空/から]のBodyもclass nepl-docの[空/から]divを[返/かえ]し、[末尾改行/まつびかいぎょう]は[追加/ついか]しない。"
     cons "Body Markdownのfile hostと[同/おな]じ[上限付/じょうげんつ]きUTF-8[入力/にゅうりょく]・[厳密/げんみつ]なlimits[読込/よみこ]み・[全体生成後/ぜんたいせいせいご]のstagingとhard-link[公開/こうかい]を[使用/しよう]する。[既存/きそん]の[出力/しゅつりょく]を[置換/ちかん]せず、[未完成/みかんせい]の[最終/さいしゅう]fileを[残/のこ]さない。hard-link[非対応/ひたいおう]では[失敗/しっぱい]し、renameやcopyへfallbackしない。[電源断/でんげんだん]・[悪意/あくい]あるpath[交換/こうかん]への[耐性/たいせい]は[保証/ほしょう]しない。"
     cons "このCLIはCSS・document shell・[題名/だいめい]・lang・manifestを[付加/ふか]しない。CSS classを[含/ふく]むfragmentの[生成/せいせい]は、style[配布/はいふ]や[独立/どくりつ]したHTML[文書/ぶんしょ]の[完成/かんせい]を[意味/いみ]しない。"
+    nil
+  cons paragraph
+    cons sentence cons code "doc-html body-page --metadata FILE [--limits FILE] INPUT OUTPUT" nil
+    cons "Bodyの[単独/たんどく]HTML page hostは、[明示/めいじ]されたmetadataとRows[表示/ひょうじ]の[局所/きょくしょ]Bodyを[一/ひと]つの[新規/しんき]HTML fileへ[保存/ほぞん]する。metadataは[必須/ひっす]のtitle・language[文字列/もじれつ]だけを[持/も]つ[厳密/げんみつ]なJSONとし、[未知/みち]・[重複/じゅうふく]fieldや[不正/ふせい]UTF-8を[拒否/きょひ]する。fileは65536 byte[以内/いない]、[復元後/ふくげんご]の[二/ふた]つの[文字列/もじれつ]のUTF-8[合計/ごうけい]も65536 byte[以内/いない]とする。"
+    cons "titleは[空白/くうはく]だけの[値/あたい]を[拒否/きょひ]し、XML[文字/もじ]の[検査/けんさ]とHTML textのescapeを[行/おこな]う。languageは[既存/きそん]のRFC 5646 ABNF[検査/けんさ]を[用/もち]い、registry[登録/とうろく]の[有効性/ゆうこうせい]までは[保証/ほしょう]しない。HTMLのtitleとhtml langへ[保存/ほぞん]するだけで、Bodyの[見出/みだ]し・Article・[可視/かし]titleを[合成/ごうせい]せず、languageによるvariant[選択/せんたく]も[行/おこな]わない。"
+    cons "[固定/こてい]CSSをstyleへ[埋/う]め[込/こ]み、その[正確/せいかく]なSHA-256をCSPへ[記録/きろく]する。script・[外部/がいぶ]font・[他/ほか]のresourceの[読込/よみこ]みは[許可/きょか]しない。[生成/せいせい]にも[表示/ひょうじ]にも[外部通信/がいぶつうしん]を[要求/ようきゅう]しないが、font[自体/じたい]は[埋/う]め[込/こ]まないため、[未導入/みどうにゅう]fontは[既存/きそん]のfallbackへ[移/うつ]り、[環境間/かんきょうかん]の[同一/どういつ]font[表示/ひょうじ]は[保証/ほしょう]しない。"
+    cons "metadataの[検査/けんさ]・escapeからBodyの[準備/じゅんび]・render・[検査/けんさ]・serialize、CSS・shellの[組立/くみた]てまで[同/おな]じ[出力予算/しゅつりょくよさん]を[使用/しよう]する。Body[内部/ないぶ]の[既存/きそん][中間処理/ちゅうかんしょり]の[消費/しょうひ]を[保持/ほじ]し、[追加/ついか]metadataとshellの[出力/しゅつりょく]byteを[二重/にじゅう]に[課金/かきん]しない。html・bodyの[祖先/そせん][二段/にだん]と、headのtitle・style textの[深/ふか]さ4も[検査/けんさ]する。"
+    cons "[返却/へんきゃく]するdocument digestはBodyの[識別/しきべつ]であり、metadataや[最終/さいしゅう]fileの[識別/しきべつ]ではない。[局所/きょくしょ]Bodyで[未解決/みかいけつ]のasset・foreign・[外部参照/がいぶさんしょう]は[引/ひ]き[続/つづ]き[拒否/きょひ]する。file[公開/こうかい]はfragmentと[同/おな]じ[生成後/せいせいご]の[非上書/ひうわが]き[手順/てじゅん]を[使用/しよう]する。PageSet・[汎用/はんよう]resource[解決/かいけつ]・portable codec・[既存/きそん]Article hostの[契約/けいやく]は[変更/へんこう]しない。"
     nil
   cons paragraph
     cons sentence cons code "LocalHtmlRequest" cons text " はDocumentSyntaxとRenderOptionsを" cons ruby text "所有" text "しょゆう" cons text "する。" nil
