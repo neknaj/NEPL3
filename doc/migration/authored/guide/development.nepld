@@ -640,6 +640,21 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
       cons "[実/じつ]ブラウザのWasm・Playground、RISC-V、big-endianの[検査/けんさ]はそれぞれ[独立/どくりつ]した[未達範囲/みたつはんい]です。"
       cons "このCI[整備/せいび]をDoc HTML・[文書移行/ぶんしょいこう]・Pages[公開/こうかい]の[完成/かんせい]へ[読/よ]み[替/か]えません。"
       cons "CIの[区切/くぎ]り[後/ご]はDoc[生成/せいせい]を[進/すす]め、[意味/いみ]・リンク・[安定/あんてい]IDの[対応/たいおう]を[検証/けんしょう]できたページからnepld[正本/せいほん]へ[移行/いこう]し、[検査済/けんさず]みの[同/おな]じsite artifactを[公開/こうかい]します。" nil
+    cons section inlineSchemaFrontier "Inline schema-validation frontier" body
+      cons paragraph
+        cons "Structural validation retains up to eight borrowed sibling groups in a fixed inline array. "
+        cons "Each group pairs a value slice with one expected type or an exactly aligned field-descriptor slice. "
+        cons "A remainder reuses the slot freed by its current group; unary chains retain no empty ancestors. "
+        cons "Wider lists no longer require storage proportional to their width, while deeply branching inputs spill with precharged fallible capacity sized for the actual group. "
+        cons "The frontier retains overflow capacity for reuse." nil
+      cons paragraph
+        cons "Traversal and schema checks remain forward depth-first. "
+        cons "Every child is still charged individually for Work before any child Nodes/depth check, preserving partial Work usage and ordinary error order with Allocation nonbinding. "
+        cons "Allocation-versus-Work stop precedence can change because the real storage requests change; larger groups may cost more for deeply branching inputs. "
+        cons "Zero-allocation wide-input and exact/one-short deep-branch spill regressions cover both sides of this tradeoff. "
+        cons "Removed AllocationUnits represent removed heap requests, not waived validation. "
+        cons "Full acceptance remains separate." nil
+      nil
     nil
   nil
 nil
