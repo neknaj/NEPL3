@@ -24,6 +24,14 @@ impl<E> From<StopReason> for LocalPreparationError<'_, E> {
         Self::Stopped(e)
     }
 }
+/// A locally checked Body, not an Article or a namespace member proof.
+///
+/// ```compile_fail
+/// fn article(body: nepl3_doc_html::PreparedLocalBody<'_>) -> nepl3_doc_html::PreparedLocalArticle<'_> {
+///     body
+/// }
+/// ```
+pub struct PreparedLocalBody<'a>(pub(crate) PreparedRendering<'a>);
 pub struct PreparedLocalArticle<'a>(pub(crate) PreparedRendering<'a>);
 /// A standalone Sentence with local labels and no unresolved external inputs.
 pub struct PreparedLocalSentence<'a>(pub(crate) PreparedRendering<'a>);
@@ -57,6 +65,24 @@ pub fn prepare_local<'a, C: FoundationValueCodec>(
         return Err(LocalPreparationError::NeedsResolution(plan));
     }
     prepare_rendering(document, options, plan.document_digest, budget).map(PreparedLocalArticle)
+}
+/// Prepare an independent Body. All unresolved requirements, including hidden
+/// variants, are returned intact; no assets or guests are fabricated.
+pub fn prepare_local_body<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    options: &'a RenderOptions,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<PreparedLocalBody<'a>, LocalPreparationError<'a, C::Error>> {
+    let plan = prepare::inspect_body(document, registry, codec, budget).map_err(|e| match e {
+        PreparationError::Stopped(s) => LocalPreparationError::Stopped(s),
+        e => LocalPreparationError::Input(e),
+    })?;
+    if !plan.requirements.is_empty() {
+        return Err(LocalPreparationError::NeedsResolution(plan));
+    }
+    prepare_rendering(document, options, plan.document_digest, budget).map(PreparedLocalBody)
 }
 /// Prepare a Sentence without importing the surrounding Article's namespace.
 /// Links, assets and foreign guests remain explicit resolution requirements.

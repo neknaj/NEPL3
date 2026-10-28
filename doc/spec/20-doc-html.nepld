@@ -23,12 +23,18 @@ body
       cons ruby text "定義" text "ていぎ"
       cons text "する。"
       nil
-    cons "[本章/ほんしょう]のlocal[入口/いりぐち]は、[外部要求/がいぶようきゅう]が[一/ひと]つもないArticleまたはSentenceをHTML fragmentへ[変換/へんかん]する[制約/せいやく]を[持/も]つ。"
+    cons "[既存/きそん]のArticle・Sentence[用/よう]local[入口/いりぐち]は、[外部要求/がいぶようきゅう]が[一/ひと]つもないArticleまたはSentenceをHTML fragmentへ[変換/へんかん]する[制約/せいやく]を[持/も]つ。"
     cons "Sentence[単独/たんどく]の[入口/いりぐち]はArticleとは[別/べつ]の[型/かた]で[準備済/じゅんびず]みであることを[表/あらわ]し、phrasing fragmentを[返/かえ]す。Ruby・Anno・BreakにはArticleと[同/おな]じ[変換規則/へんかんきそく]とCSSを[使/つか]う。rootはclass nepl-sentenceのspanとし、[空白/くうはく]を[保持/ほじ]するが、Article[用/よう]の[余白/よはく]・[背景/はいけい]・fontは[設定/せってい]しない。"
     cons "[単独/たんどく]Sentenceのanchorとrefは、そのSentenceだけの[名前空間/なまえくうかん]で[検査/けんさ]する。[前方参照/ぜんぽうさんしょう]を[認/みと]め、[重複定義/じゅうふくていぎ]・[複数表示経路/ふくすうひょうじけいろ]・[未解決参照/みかいけつさんしょう]を[拒否/きょひ]する。[周囲/しゅうい]のArticleやforeign[文書/ぶんしょ]から[暗黙/あんもく]にlabelを[取/と]り[込/こ]まない。Article[内/ない]のSentenceには、[従来/じゅうらい]どおりArticle[全体/ぜんたい]の[規則/きそく]を[適用/てきよう]する。"
     cons "[準備計画/じゅんびけいかく]はDocumentSyntaxのrootを[含/ふく]むdigestと[全/すべ]ての[外部要求/がいぶようきゅう]を[保持/ほじ]する。NDF[受信側/じゅしんがわ]はrootに[対応/たいおう]するArticleまたはSentenceの[検査/けんさ]を[再実行/さいじっこう]し、[送信側/そうしんがわ]の[計画/けいかく]との[一致/いっち]を[要求/ようきゅう]する。"
     cons "document shellと[固定/こてい]CSSの[配布/はいふ]は、[後述/こうじゅつ]の[開発/かいはつ]hostが[担当/たんとう]する。"
     cons "[一般/いっぱん]page/asset/foreign[解決/かいけつ]と[完全/かんぜん]なReport[操作/そうさ]は、このlocal[入口/いりぐち]の[責務/せきむ]に[含/ふく]めず、[別/べつ]の[統合経路/とうごうけいろ]で[扱/あつか]う。"
+    nil
+  cons paragraph
+    cons "nativeのprepare_local_bodyとrender_bodyは、Body[単独/たんどく]の[局所/きょくしょ]HTML fragmentを[扱/あつか]う。[準備済/じゅんびず]みの[型/かた]PreparedLocalBodyはArticleの[型/かた]と[分離/ぶんり]し、Article・PageSet・[名前空間/なまえくうかん]の[証明/しょうめい]へ[変換/へんかん]しない。"
+    cons "Bodyのrootはclass nepl-docのdivとし、[既存/きそん]CSSの[余白/よはく]などの[文書/ぶんしょ]styleを[継承/けいしょう]する。Article・[題名/だいめい]・lang[属性/ぞくせい]は[合成/ごうせい]しない。[導入段落/どうにゅうだんらく]を[保持/ほじ]し、[直下/ちょっか]のSectionはH1、[子/こ]のSectionはH2から[始/はじ]める。H6を[超/こ]える[見出/みだ]しはrole headingと[深/ふか]さを[表/あらわ]すaria-levelを[持/も]つdivで[表/あらわ]す。"
+    cons "Body[全体/ぜんたい]のlabelと[全/すべ]てのvariantを[検査/けんさ]し、asset・foreign・[外部/がいぶ]link・page[参照/さんしょう]などが[残/のこ]れば[完全/かんぜん]なNeedsResolution[計画/けいかく]を[返/かえ]す。[選択後/せんたくご]のHTMLも[検査/けんさ]するため、Single[表示/ひょうじ]で[参照先/さんしょうさき]anchorだけが[非表示/ひひょうじ]になる[場合/ばあい]はMissingFragmentで[失敗/しっぱい]する。"
+    cons "[各/かく][出力/しゅつりょく]nodeのoriginは[実際/じっさい]のDoc nodeを[保持/ほじ]し、rootのdivはBody nodeに[対応/たいおう]する。この[段階/だんかい]はnativeの[局所/きょくしょ]fragmentだけを[提供/ていきょう]し、BodyのNDF[結果/けっか]codec・CLI・document shell・[複数/ふくすう]page[公開/こうかい]を[追加/ついか]しない。"
     nil
   cons paragraph
     cons sentence cons code "LocalHtmlRequest" cons text " はDocumentSyntaxとRenderOptionsを" cons ruby text "所有" text "しょゆう" cons text "する。" nil
