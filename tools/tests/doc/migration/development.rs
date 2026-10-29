@@ -55,11 +55,11 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
         allocation_units: 1_500_000_000,
         ..budget().limits()
     };
-    // Growing unadopted corpus: 685M stopped during tree validation. A finite
-    // 700M diagnostic run measured 686,493,012 Work; select 695M for parse only.
+    // Growing unadopted corpus: 695M stopped during tree validation. A finite
+    // 725M diagnostic run measured 703,374,868 Work; select 715M for parse only.
     // This does not relax lower/label, allocation, default or registry policies.
     let parse_limits = Limits {
-        work: 695_000_000,
+        work: 715_000_000,
         ..draft_limits
     };
     nepl3_tools::doc::source::with_named_input_limits(
@@ -529,7 +529,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             else {
                 return Err("resource transition body".into());
             };
-            assert_eq!(resource_blocks.len(), 16);
+            assert_eq!(resource_blocks.len(), 17);
             assert!(matches!(
                 document.value.nodes[resource_blocks[4].0 as usize].kind,
                 DocKind::RawCode { .. }
@@ -600,7 +600,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                     "sourceAdmissionInterruption",
                     "Source admission interruption coverage",
                     "Saved execution-scope re-entry coverage",
-                    [7, 5],
+                    &[7usize, 5][..],
                     2,
                 ),
                 (
@@ -608,8 +608,16 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                     "savedScopeReentry",
                     "Saved execution-scope re-entry coverage",
                     "Markdown batch validation reuse",
-                    [6, 2],
+                    &[6usize, 2][..],
                     4,
+                ),
+                (
+                    16,
+                    "markdownBatchReuse",
+                    "Markdown batch validation reuse",
+                    "Checked PageSet preparation reuse",
+                    &[8usize, 5, 4][..],
+                    1,
                 ),
             ] {
                 let DocKind::Section { id, title, body } =
@@ -625,7 +633,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 else {
                     return Err("resource coverage body".into());
                 };
-                assert_eq!(coverage_blocks.len(), 2);
+                assert_eq!(coverage_blocks.len(), counts.len());
                 let coverage_source = original
                     .split_once(&format!("### {heading}\n\n"))
                     .ok_or("source coverage heading")?
@@ -643,10 +651,12 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                             .join(" ")
                     })
                     .collect();
-                assert_eq!(expected_paragraphs.len(), 2);
+                assert_eq!(expected_paragraphs.len(), counts.len());
                 let mut actual_codes = Vec::new();
-                for ((node, count), expected) in
-                    coverage_blocks.iter().zip(counts).zip(&expected_paragraphs)
+                for ((node, count), expected) in coverage_blocks
+                    .iter()
+                    .zip(counts.iter().copied())
+                    .zip(&expected_paragraphs)
                 {
                     let DocKind::Paragraph { items } = &document.value.nodes[node.0 as usize].kind
                     else {

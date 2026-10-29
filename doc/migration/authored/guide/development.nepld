@@ -786,6 +786,28 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons "These are native composition regressions, not additional formal proofs or a claim that a production defect was found. "
         cons "They do not establish scheduler or remote-host correctness, panic/unwind restoration, or complete runtime acceptance." nil
       nil
+    cons section markdownBatchReuse "Markdown batch validation reuse" body
+      cons paragraph
+        cons "The annotated Math preparation loop validates its immutable containing Doc once when it encounters the first Math node. "
+        cons sentence cons text "Crate-private host helpers reuse that native " cons code "ValidatedDocumentSyntax" cons text " only inside the same registry, source-admission ledger, cumulative Budget and active-depth scope. " nil
+        cons "Each selected Math guest still passes the existing schema/foreign-closure validation, lowering, shape checking, MathML and structural TeX preparation. "
+        cons "Public single-node entry points continue validating arbitrary input. "
+        cons "This is not a portable or cross-operation paid-work proof. "
+        cons "Full Doc validation still includes unselected nodes and embeds. "
+        cons "The loop rejects changed limits or active depth before reuse and after every guest preparation, including the last guest. "
+        cons "This guard does not detect an arbitrary custom codec replacing the Budget with another value having identical bounds; preserving cumulative usage remains the codec's contract." nil
+      cons paragraph
+        cons "The SVG page profile prepares plain text lazily at the first image requirement and reuses it for that page's later images. "
+        cons "Image-free pages retain complete PageSet admission without redundant alt-text preparation. "
+        cons "Static SVG validation, asset resolution and rejection of unused assets remain in place. "
+        cons "All phases use the original cumulative Budget; stops are not reset and limits are not raised. "
+        cons "Math preparation now precedes lazy image preparation, so competing failures can be reported in a different order; byte-identical error strings are not promised." nil
+      cons paragraph
+        cons "Regression coverage compares multiple Math fragments with the independently validating public path and requires lower Work and AllocationUnits. "
+        cons "Image-free pages must match the plain page profile's complete Usage and output. "
+        cons "Multi-Math page cases retain exact/one-below limits, cancellation, elevated caller depth, invalid origin/unreachable node/unused embed rejection, and faithful output. "
+        cons "These native checks do not complete formal acceptance or prove all rendering paths linear-time." nil
+      nil
     nil
   nil
 nil
