@@ -55,12 +55,12 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
         allocation_units: 1_500_000_000,
         ..budget().limits()
     };
-    // Growing unadopted corpus: 725M Work / 10M Nodes stopped on Nodes.
-    // Finite 750M / 11M sizing measured 724,893,889 Work / 10,002,411 Nodes.
-    // Select 730M / 10.1M for parse only; other phase policies stay unchanged.
+    // Growing unadopted corpus: 730M / 10.1M stopped first on Work.
+    // Finite 800M / 12M sizing measured 738,154,629 Work / 10,198,155 Nodes.
+    // Select 740M / 10.3M for parse only; other phase policies stay unchanged.
     let parse_limits = Limits {
-        work: 730_000_000,
-        nodes: 10_100_000,
+        work: 740_000_000,
+        nodes: 10_300_000,
         ..draft_limits
     };
     nepl3_tools::doc::source::with_named_input_limits(
@@ -550,7 +550,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             else {
                 return Err("resource transition body".into());
             };
-            assert_eq!(resource_blocks.len(), 19);
+            assert_eq!(resource_blocks.len(), 20);
             assert!(matches!(
                 document.value.nodes[resource_blocks[4].0 as usize].kind,
                 DocKind::RawCode { .. }
@@ -655,6 +655,14 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                     "PageSet guest digest の mapping scope 回帰確認（2026-10-10）",
                     &[6usize][..],
                     0,
+                ),
+                (
+                    19,
+                    "guestMappingScope",
+                    "PageSet guest digest の mapping scope 回帰確認（2026-10-10）",
+                    "source position の独立期待値（2026-10-10）",
+                    &[4usize, 3][..],
+                    2,
                 ),
             ] {
                 let DocKind::Section { id, title, body } =
