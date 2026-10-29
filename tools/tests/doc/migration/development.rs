@@ -55,11 +55,11 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
         allocation_units: 1_500_000_000,
         ..budget().limits()
     };
-    // Growing unadopted corpus: 650M stopped during tree validation. A finite
-    // 700M diagnostic run measured 663,193,106 Work; select 675M for parse only.
+    // Growing unadopted corpus: 675M stopped during tree validation. A finite
+    // 700M diagnostic run measured 676,318,890 Work; select 685M for parse only.
     // This does not relax lower/label, allocation, default or registry policies.
     let parse_limits = Limits {
-        work: 675_000_000,
+        work: 685_000_000,
         ..draft_limits
     };
     nepl3_tools::doc::source::with_named_input_limits(
@@ -529,13 +529,13 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             else {
                 return Err("resource transition body".into());
             };
-            assert_eq!(resource_blocks.len(), 14);
+            assert_eq!(resource_blocks.len(), 15);
             assert!(matches!(
                 document.value.nodes[resource_blocks[4].0 as usize].kind,
                 DocKind::RawCode { .. }
             ));
             // This stage includes the caller/host boundary paragraphs;
-            // subsequent nested coverage sections remain outside the draft.
+            // their source-admission child is checked separately below.
             let resource_source = original
                 .split_once("## Pure resource-transition verification\n\n")
                 .ok_or("source resource transitions")?
@@ -594,6 +594,62 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 })
                 .collect();
             assert_eq!(actual_codes, expected_codes);
+            let DocKind::Section { id, title, body } =
+                &document.value.nodes[resource_blocks[14].0 as usize].kind
+            else {
+                return Err("source admission H3".into());
+            };
+            assert_eq!(id.as_str(), "sourceAdmissionInterruption");
+            assert_eq!(project(*title)?, "Source admission interruption coverage");
+            let DocKind::Body {
+                blocks: admission_blocks,
+            } = &document.value.nodes[body.0 as usize].kind
+            else {
+                return Err("source admission body".into());
+            };
+            assert_eq!(admission_blocks.len(), 2);
+            let admission_source = original
+                .split_once("### Source admission interruption coverage\n\n")
+                .ok_or("source admission heading")?
+                .1
+                .split_once("\n### Saved execution-scope re-entry coverage")
+                .ok_or("source admission end")?
+                .0;
+            let expected_admission: Vec<_> = admission_source
+                .trim()
+                .split("\n\n")
+                .map(|part| {
+                    part.replace('`', "")
+                        .split_whitespace()
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                })
+                .collect();
+            assert_eq!(expected_admission.len(), 2);
+            let mut admission_codes = Vec::new();
+            for ((node, count), expected) in
+                admission_blocks.iter().zip([7, 5]).zip(&expected_admission)
+            {
+                let DocKind::Paragraph { items } = &document.value.nodes[node.0 as usize].kind
+                else {
+                    return Err("source admission paragraph".into());
+                };
+                assert_eq!(items.len(), count);
+                let sentences = items
+                    .iter()
+                    .map(|item| project(nepl3_doc_core::model::SentenceRef(item.0)))
+                    .collect::<Result<Vec<_>, _>>()?;
+                assert_eq!(sentences.concat(), *expected);
+                paragraph_inline_code(&document, node.0, &mut admission_codes)?;
+            }
+            let expected_admission_codes: Vec<_> = Parser::new(admission_source)
+                .filter_map(|event| match event {
+                    Event::Code(code) => Some(code.into_string()),
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(expected_admission_codes.len(), 2);
+            assert_eq!(admission_codes, expected_admission_codes);
             let mut actual_intro = Vec::new();
             for child in &children[..3] {
                 blocks(&document, child.0, &mut project, &mut actual_intro)?;
