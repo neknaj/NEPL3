@@ -774,6 +774,18 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons "The tests do not establish arbitrary ledger/text bounds, exact Work/Allocation costs, physical allocation failure handling, remote usage authentication or complete runtime acceptance. "
         cons "The existing scoped resource proofs and the outstanding acceptance states are unchanged." nil
       nil
+    cons section savedScopeReentry "Saved execution-scope re-entry coverage" body
+      cons paragraph
+        cons sentence cons text "The suite's " cons code "suspension::execution::tests::" cons text " native regressions cover the actual " cons code "ExecutionScope::root" cons text " and " cons code "run" cons text " composition. " nil
+        cons "A saved frame whose Work ceiling has already been exceeded is rejected before observing its saved depth: the callback is suppressed and the full Usage value is unchanged. "
+        cons "This distinguishes the required ceiling-before-depth wrapper order from the reversed order, even though each Budget wrapper has separate scoped proofs. "
+        cons "A later zero-depth ceiling also rejects a saved frame without callback execution or a new depth observation. "
+        cons "Further cases retain a temporary capture ceiling after the outer ceiling is restored, and preserve a typed callback error and charged work while restoring outer limits and a nonzero active host depth. "
+        cons sentence cons text "Root construction intentionally defers cumulative resource admission until " cons code "run" cons text "." nil nil
+      cons paragraph
+        cons "These are native composition regressions, not additional formal proofs or a claim that a production defect was found. "
+        cons "They do not establish scheduler or remote-host correctness, panic/unwind restoration, or complete runtime acceptance." nil
+      nil
     nil
   nil
 nil
