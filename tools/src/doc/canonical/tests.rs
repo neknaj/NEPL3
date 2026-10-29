@@ -1156,6 +1156,10 @@ fn synchronized_context_spec_drafts_parse_lower_and_check_labels() -> Result<()>
             ..super::super::source::budget().limits()
         },
         nepl3_doc_core::check::Category::Body,
+        // Separate parse-only allowance for the growing unadopted guide.
+        // The 600M attempt stopped; finite sizing measured ~614.1M Work.
+        // Lower and labels retain the phase_limits above, including 600M Work.
+        Some(625_000_000),
     )
 }
 
@@ -1189,12 +1193,14 @@ fn check_context_drafts(
         paths,
         phase_limits,
         nepl3_doc_core::check::Category::Article,
+        None,
     )
 }
 fn check_context_drafts_with_category(
     paths: &[(&str, &str)],
     phase_limits: nepl3_core::budget::Limits,
     category: nepl3_doc_core::check::Category,
+    draft_parse_work: Option<u64>,
 ) -> Result<()> {
     use nepl3_doc_core::check::Category;
     let root_name = match category {
@@ -1216,7 +1222,11 @@ fn check_context_drafts_with_category(
         let (parse_limits, lower_limits) = if path.starts_with("doc/spec/") {
             (configured.parse, configured.lower)
         } else {
-            (phase_limits, phase_limits)
+            let mut parse = phase_limits;
+            if let Some(work) = draft_parse_work {
+                parse.work = work;
+            }
+            (parse, phase_limits)
         };
         super::super::source::with_named_input_limits(
             true,
@@ -1260,7 +1270,7 @@ fn check_context_drafts_with_category(
                 }
                 .map_err(super::super::source::err)?;
                 eprintln!(
-                    "{name}: parse={:?}; lower={:?}; labels={:?}",
+                    "{name}: parse limits={parse_limits:?}; lower/label limits={lower_limits:?}; parse={:?}; lower={:?}; labels={:?}",
                     parse_budget.usage(),
                     lower_budget.usage(),
                     check_budget.usage()
