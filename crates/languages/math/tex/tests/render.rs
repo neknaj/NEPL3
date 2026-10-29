@@ -50,7 +50,7 @@ fn grouping_and_shared_occurrences() -> Result<(), String> {
     // A fraction must preserve its unevaluated subtracting numerator and denominator.
     assert_eq!(
         out.tex(),
-        r"\frac{\left(\mathord{\textit{x}}\right)-\left(\mathord{\textit{x}}\right)}{\mathord{\textit{x}}}"
+        r"\frac{\mathord{\textit{x}}-\mathord{\textit{x}}}{\mathord{\textit{x}}}"
     );
     assert!(std::ptr::eq(out.source(), &v));
     assert_eq!(
@@ -186,6 +186,28 @@ fn deep_input_and_shared_expansion_obey_exact_output_ceiling() -> Result<(), Str
     let mut measured = budget();
     let out = render(&checked, &mut measured).map_err(|e| format!("{e:?}"))?;
     assert_eq!(out.occurrences().len(), 151);
+    assert_eq!(
+        measured.usage().depth,
+        151,
+        "group wrappers are not semantic nodes"
+    );
+    let mut depth_limits = budget().limits();
+    depth_limits.depth = 151;
+    assert!(render(&checked, &mut Budget::new(depth_limits)).is_ok());
+    depth_limits.depth = 150;
+    assert!(matches!(
+        render(&checked, &mut Budget::new(depth_limits)),
+        Err(Error::Stopped(StopReason::DepthLimit))
+    ));
+    let mut work_limits = budget().limits();
+    work_limits.work = measured.usage().work;
+    assert!(render(&checked, &mut Budget::new(work_limits)).is_ok());
+    work_limits.work -= 1;
+    assert!(matches!(
+        render(&checked, &mut Budget::new(work_limits)),
+        Err(Error::Stopped(StopReason::WorkLimit))
+    ));
+
     assert_eq!(measured.usage().output_bytes, out.tex().len() as u64);
     let mut limits = budget().limits();
     limits.output_bytes = out.tex().len() as u64;
@@ -210,5 +232,254 @@ fn deep_input_and_shared_expansion_obey_exact_output_ceiling() -> Result<(), Str
         render(&checked, &mut Budget::new(limits)),
         Err(Error::Stopped(StopReason::OutputLimit))
     ));
+    Ok(())
+}
+
+fn rendered(mut kinds: Vec<K>) -> Result<String, String> {
+    // Test cases share a symbol pool; retain only the reachable checked arena.
+    fn refs(k: &mut K, mut f: impl FnMut(&mut ExprRef)) -> Result<(), String> {
+        match k {
+            K::Symbol { .. } => (),
+            K::Add { left, right }
+            | K::Sub { left, right }
+            | K::Mul { left, right }
+            | K::Pow { left, right }
+            | K::Equal { left, right } => {
+                f(left);
+                f(right);
+            }
+            K::Neg { value } | K::Fence { value, .. } => f(value),
+            K::Call {
+                function,
+                arguments,
+            } => {
+                f(function);
+                for arg in arguments {
+                    f(arg);
+                }
+            }
+            K::Integral {
+                lower, upper, body, ..
+            }
+            | K::Sum {
+                lower, upper, body, ..
+            } => {
+                f(lower);
+                f(upper);
+                f(body);
+            }
+            _ => return Err("extend test arena remapper for this constructor".into()),
+        }
+        Ok(())
+    }
+    let mut used = vec![false; kinds.len()];
+    let mut stack = vec![kinds.len() - 1];
+    while let Some(i) = stack.pop() {
+        if used[i] {
+            continue;
+        }
+        used[i] = true;
+        refs(&mut kinds[i], |r| stack.push(r.0 as usize))?;
+    }
+    let mut map = vec![0; kinds.len()];
+    let mut next = 0;
+    for (i, keep) in used.iter().enumerate() {
+        if *keep {
+            map[i] = next;
+            next += 1;
+        }
+    }
+    let mut compact = Vec::new();
+    for (i, mut kind) in kinds.into_iter().enumerate() {
+        if used[i] {
+            refs(&mut kind, |r| r.0 = map[r.0 as usize])?;
+            compact.push(kind);
+        }
+    }
+    let v = value(compact);
+    let checked = check::expression(&v, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    Ok(render(&checked, &mut budget())
+        .map_err(|e| format!("{e:?}"))?
+        .tex()
+        .into())
+}
+fn symbols() -> Vec<K> {
+    ["a", "b", "c"]
+        .into_iter()
+        .map(|s| K::Symbol { name: s.into() })
+        .collect()
+}
+#[test]
+fn operator_context_preserves_required_grouping() -> Result<(), String> {
+    for (child, parent, required) in [
+        (
+            K::Sub {
+                left: ExprRef(1),
+                right: ExprRef(2),
+            },
+            K::Sub {
+                left: ExprRef(0),
+                right: ExprRef(3),
+            },
+            true,
+        ),
+        (
+            K::Add {
+                left: ExprRef(0),
+                right: ExprRef(1),
+            },
+            K::Mul {
+                left: ExprRef(3),
+                right: ExprRef(2),
+            },
+            true,
+        ),
+        (
+            K::Add {
+                left: ExprRef(0),
+                right: ExprRef(1),
+            },
+            K::Neg { value: ExprRef(3) },
+            true,
+        ),
+        (
+            K::Neg { value: ExprRef(0) },
+            K::Neg { value: ExprRef(3) },
+            true,
+        ),
+        (
+            K::Pow {
+                left: ExprRef(0),
+                right: ExprRef(1),
+            },
+            K::Pow {
+                left: ExprRef(3),
+                right: ExprRef(2),
+            },
+            true,
+        ),
+        (
+            K::Pow {
+                left: ExprRef(1),
+                right: ExprRef(2),
+            },
+            K::Pow {
+                left: ExprRef(0),
+                right: ExprRef(3),
+            },
+            false,
+        ),
+        (
+            K::Equal {
+                left: ExprRef(0),
+                right: ExprRef(1),
+            },
+            K::Equal {
+                left: ExprRef(3),
+                right: ExprRef(2),
+            },
+            true,
+        ),
+        (
+            K::Add {
+                left: ExprRef(0),
+                right: ExprRef(1),
+            },
+            K::Equal {
+                left: ExprRef(3),
+                right: ExprRef(2),
+            },
+            false,
+        ),
+    ] {
+        let mut kinds = symbols();
+        kinds.extend([child, parent]);
+        let tex = rendered(kinds)?;
+        assert_eq!(tex.contains(r"\left("), required, "{tex}");
+    }
+    Ok(())
+}
+#[test]
+fn function_names_and_explicit_fences_have_distinct_roles() -> Result<(), String> {
+    let mut kinds = symbols();
+    kinds.push(K::Call {
+        function: ExprRef(0),
+        arguments: vec![ExprRef(1), ExprRef(2)],
+    });
+    assert_eq!(rendered(kinds)?.matches(r"\left(").count(), 1);
+    let mut kinds = symbols();
+    kinds.extend([
+        K::Add {
+            left: ExprRef(0),
+            right: ExprRef(1),
+        },
+        K::Call {
+            function: ExprRef(3),
+            arguments: vec![ExprRef(2)],
+        },
+    ]);
+    assert_eq!(rendered(kinds)?.matches(r"\left(").count(), 2);
+    let mut kinds = symbols();
+    kinds.push(K::Fence {
+        open: "(".into(),
+        close: ")".into(),
+        value: ExprRef(0),
+    });
+    assert_eq!(rendered(kinds)?.matches(r"\left(").count(), 1);
+    Ok(())
+}
+#[test]
+fn differential_closes_integral_scope_but_power_base_stays_grouped() -> Result<(), String> {
+    for (parent, count) in [
+        (
+            K::Equal {
+                left: ExprRef(0),
+                right: ExprRef(3),
+            },
+            0,
+        ),
+        (K::Neg { value: ExprRef(3) }, 0),
+        (
+            K::Mul {
+                left: ExprRef(3),
+                right: ExprRef(0),
+            },
+            0,
+        ),
+        (
+            K::Pow {
+                left: ExprRef(3),
+                right: ExprRef(0),
+            },
+            1,
+        ),
+    ] {
+        let mut kinds = symbols();
+        kinds.extend([
+            K::Integral {
+                index: "t".into(),
+                lower: ExprRef(0),
+                upper: ExprRef(1),
+                body: ExprRef(2),
+            },
+            parent,
+        ]);
+        let tex = rendered(kinds)?;
+        assert_eq!(tex.matches(r"\left(").count(), count, "{tex}");
+    }
+    let mut kinds = symbols();
+    kinds.extend([
+        K::Add {
+            left: ExprRef(0),
+            right: ExprRef(1),
+        },
+        K::Sum {
+            index: "i".into(),
+            lower: ExprRef(0),
+            upper: ExprRef(1),
+            body: ExprRef(3),
+        },
+    ]);
+    assert_eq!(rendered(kinds)?.matches(r"\left(").count(), 1);
     Ok(())
 }

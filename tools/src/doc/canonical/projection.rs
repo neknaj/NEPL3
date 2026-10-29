@@ -1,4 +1,7 @@
 //! Frozen repository inputs and an explicitly selected page-context projection.
+#[cfg(test)]
+#[path = "math_identity_tests.rs"]
+mod math_identity_tests;
 #[path = "receipt.rs"]
 mod receipt;
 #[path = "retry.rs"]
@@ -125,7 +128,7 @@ fn page_context(
         }
     }
     if !math.is_empty() {
-        field(&mut bytes, b"structural-math-tex/1\0", budget)?;
+        field(&mut bytes, b"structural-math-tex/2\0", budget)?;
         field(&mut bytes, &(math.len() as u64).to_be_bytes(), budget)?;
         for dependency in math {
             field(&mut bytes, &dependency.embed.to_be_bytes(), budget)?;

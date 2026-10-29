@@ -152,11 +152,11 @@ impl Builder<'_> {
 fn power(k: &K) -> u8 {
     match k {
         K::Number { value, .. } if value.numerator().is_negative() => 40,
-        K::Let { .. } | K::Sequence { .. } | K::Sum { .. } | K::Integral { .. } => 0,
+        K::Let { .. } | K::Sequence { .. } | K::Sum { .. } => 0,
         K::Equal { .. } | K::Lt { .. } | K::Le { .. } => 10,
         K::Add { .. } | K::Sub { .. } => 20,
         K::Mul { .. } => 30,
-        K::Neg { .. } => 40,
+        K::Integral { .. } | K::Neg { .. } => 40,
         K::Pow { .. } => 50,
         _ => 60,
     }
@@ -305,8 +305,12 @@ where
             }
             K::Neg { value: v } => {
                 let op = out.token(Tag::Operator, "−")?;
-                let child =
-                    out.grouped(root(&map, v.0)?, &value.nodes[v.0 as usize].kind, 40, true)?;
+                let child = out.grouped(
+                    root(&map, v.0)?,
+                    &value.nodes[v.0 as usize].kind,
+                    40,
+                    !matches!(value.nodes[v.0 as usize].kind, K::Integral { .. }),
+                )?;
                 out.element(Tag::Row, &[op, child])?
             }
             K::Sqrt { value: v } => out.element(Tag::Sqrt, &[root(&map, v.0)?])?,
@@ -410,7 +414,7 @@ where
                 let body = out.grouped(
                     root(&map, body.0)?,
                     &value.nodes[body.0 as usize].kind,
-                    30,
+                    if integral { 20 } else { 30 },
                     false,
                 )?;
                 if integral {
