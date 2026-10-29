@@ -736,6 +736,28 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
       cons "The arbitrary post-state model probes the wrapper boundary and does not authorize Budget replacement: the public contract remains limited to pure validation callbacks that never replace the Budget. "
       cons "Ordinary nested tests also check a semantic validation error concurrent with resource exhaustion. "
       cons "This does not prove validation internals, generic error conversions, panic/unwind, divergence, or formal acceptance." nil
+    cons paragraph
+      cons "Shape admission callers must also preserve depth overflow before calling Budget. "
+      cons "The Math, Doc and Sentence graph validators use checked addition for caller base plus the live traversal stack and cached subtree height. "
+      cons "Saturating these sums would hide an overflowing depth when the configured limit itself is u64::MAX. "
+      cons sentence cons text "Their " cons code "--test shape absolute_depth_overflow" cons text " regressions cover one-node shapes and shared DAGs at exact-fit and overflowing bases, restored active depth, retained charges and a sticky DepthLimit. " nil
+      cons "The DAG fixtures visit the shared child first on a shorter path, so the longest-path check cannot be replaced by the maximum live stack. "
+      cons "This is a caller-side regression scope, not a proof of every rendering, lowering, evaluation or host depth calculation." nil
+    cons paragraph
+      cons "The same overflow gate applies when a previously checked handle is reused at a higher caller depth: Math binding analysis and evaluation, Sentence plain-text rendering, foreign occurrence enumeration and foreign closure validation reject an overflowing absolute depth with sticky DepthLimit. "
+      cons "These callers retain their existing charge order and restore the enclosing active depth through Budget. "
+      cons "Regressions create each handle at base zero using the same Budget before testing the higher base. "
+      cons "One-node exact-fit controls cover binding, evaluation, text and shape-only foreign enumeration; the foreign validation regression instead checks that overflow is rejected before an intentionally invalid guest is validated. "
+      cons "These examples do not prove guest execution or all host-side depth calculations." nil
+    cons paragraph
+      cons sentence cons text "A host-side Reader composition regression in " cons code "nepl3-provider --test reader" cons text " carries the saved terminal Read proof through Connection::send, fragmented Connection::receive_pending_reply, source admission, typed Report comparison and ReaderSession::resume. " nil
+      cons "A source-policy failure closes the transport and preserves the Reader slot; subsequent send/receive attempts perform no I/O. "
+      cons "A truncated Reader frame also preserves the slot. "
+      cons "A later domain Report mismatch leaves the slot pending but does not retroactively close the successfully admitted transport. "
+      cons "The successful path preserves the Unicode diagnostic/mapping and consumes exactly one frame before a following Close. "
+      cons "Only resume consumes the Reader slot. "
+      cons "The Reader dependency is test-only. "
+      cons "This is same-process I/O composition using a shared cumulative Budget, not a remote Reader implementation or authenticated cross-process usage accounting." nil
     nil
   nil
 nil
