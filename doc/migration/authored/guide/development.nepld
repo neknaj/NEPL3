@@ -758,6 +758,22 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
       cons "Only resume consumes the Reader slot. "
       cons "The Reader dependency is test-only. "
       cons "This is same-process I/O composition using a shared cumulative Budget, not a remote Reader implementation or authenticated cross-process usage accounting." nil
+    cons section sourceAdmissionInterruption "Source admission interruption coverage" body
+      cons paragraph
+        cons sentence cons code "cargo test --locked -p nepl3-core --lib source::tests::" cons text " exercises actual " cons code "SourceAdmission::admit_existing" cons text " calls using fixed valid UTF-8 snapshots. " nil
+        cons "It sweeps each SourceBytes, Work and AllocationUnits ceiling from zero through an ample-budget baseline call's usage, checks all nine prior stop reasons, and preserves the first stop on a direct retry. "
+        cons "The two-entry seed covers a fresh middle key, independently stored duplicates, shared-storage duplicates, digest conflicts and locator conflicts. "
+        cons "Assertions check the admission order, sorted index, shared-storage membership/order, retained earlier entries and unchanged counters unrelated to admission. "
+        cons "A late allocation-stop witness checks that an already charged SourceBytes amount is retained without publishing a partial ledger. "
+        cons "The empty-ledger case has its own baseline-derived ceiling sweep. "
+        cons "Fixture hashes and locators are checked independently by a normal test." nil
+      cons paragraph
+        cons "This is native boundary-test evidence, not formal verification. "
+        cons "Experimental Kani 0.68.0 checks of both the two-entry ledger and the reduced first-admission case reported out-of-memory failures; neither established a proof. "
+        cons "Their experimental checkpoint is kept separately and no unverified harness is added to the CI proof gate. "
+        cons "The tests do not establish arbitrary ledger/text bounds, exact Work/Allocation costs, physical allocation failure handling, remote usage authentication or complete runtime acceptance. "
+        cons "The existing scoped resource proofs and the outstanding acceptance states are unchanged." nil
+      nil
     nil
   nil
 nil
