@@ -55,11 +55,11 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
         allocation_units: 1_500_000_000,
         ..budget().limits()
     };
-    // Growing unadopted corpus: 695M stopped during tree validation. A finite
-    // 725M diagnostic run measured 703,374,868 Work; select 715M for parse only.
+    // Growing unadopted corpus: 715M stopped during tree validation. A finite
+    // 750M diagnostic run measured 717,835,650 Work; select 725M for parse only.
     // This does not relax lower/label, allocation, default or registry policies.
     let parse_limits = Limits {
-        work: 715_000_000,
+        work: 725_000_000,
         ..draft_limits
     };
     nepl3_tools::doc::source::with_named_input_limits(
@@ -279,12 +279,32 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 expected.remove(index);
             }
             assert_eq!(expected.len(), 1);
-            let mut b = budget();
-            let prepared =
-                text::prepare(&document, profile.registry(), &mut codec, &mut b).map_err(err)?;
+            // This growing draft exceeded the original 200M text preparation
+            // allowance before any projections. A finite 250M diagnostic used
+            // 203,044,690 Work for preparation and 203,485,185 for all parity.
+            // Keep one cumulative 210M test-local budget for both operations;
+            // no reset, memoization or production/default policy change.
+            let mut b = Budget::new(Limits {
+                work: 210_000_000,
+                ..budget().limits()
+            });
+            let prepared = text::prepare(&document, profile.registry(), &mut codec, &mut b)
+                .map_err(|error| {
+                    format!("text preparation failed: {error:?}; usage={:?}", b.usage())
+                })?;
+            eprintln!(
+                "development text preparation limits={:?} usage={:?}",
+                b.limits(),
+                b.usage()
+            );
             let mut project = |sentence| match prepared
                 .project(sentence, text::AnnotationPolicy::BaseOnly, &[], &mut b)
-                .map_err(err)?
+                .map_err(|error| {
+                    format!(
+                        "text projection {sentence:?} failed: {error:?}; usage={:?}",
+                        b.usage()
+                    )
+                })?
                 .outcome
             {
                 text::PlainTextOutcome::Complete { text } => Ok(text),
@@ -529,7 +549,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             else {
                 return Err("resource transition body".into());
             };
-            assert_eq!(resource_blocks.len(), 17);
+            assert_eq!(resource_blocks.len(), 18);
             assert!(matches!(
                 document.value.nodes[resource_blocks[4].0 as usize].kind,
                 DocKind::RawCode { .. }
@@ -618,6 +638,14 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                     "Checked PageSet preparation reuse",
                     &[8usize, 5, 4][..],
                     1,
+                ),
+                (
+                    17,
+                    "checkedPagesetReuse",
+                    "Checked PageSet preparation reuse",
+                    "Digest request lookup probes",
+                    &[6usize, 5, 4][..],
+                    0,
                 ),
             ] {
                 let DocKind::Section { id, title, body } =
@@ -819,6 +847,11 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 }
                 assert_eq!(matches, 1, "paragraph {source_prefix}");
             }
+            eprintln!(
+                "development full text parity limits={:?} usage={:?}",
+                b.limits(),
+                b.usage()
+            );
             Ok(())
         },
     )?;
