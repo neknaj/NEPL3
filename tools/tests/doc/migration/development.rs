@@ -529,18 +529,18 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             else {
                 return Err("resource transition body".into());
             };
-            assert_eq!(resource_blocks.len(), 6);
+            assert_eq!(resource_blocks.len(), 7);
             assert!(matches!(
                 document.value.nodes[resource_blocks[4].0 as usize].kind,
                 DocKind::RawCode { .. }
             ));
-            // This stage restores only the opening transition/verifier section,
-            // not the later observed-usage and callback-boundary paragraphs.
+            // This stage includes the observed-usage transition paragraph;
+            // later callback-boundary paragraphs remain outside the draft.
             let resource_source = original
                 .split_once("## Pure resource-transition verification\n\n")
                 .ok_or("source resource transitions")?
                 .1
-                .split_once("\n`Budget::record_observed_usage`")
+                .split_once("\n`Budget::with_depth`")
                 .ok_or("resource stage boundary")?
                 .0;
             let expected_paragraphs: Vec<_> = resource_source
@@ -554,9 +554,9 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                         .join(" ")
                 })
                 .collect();
-            assert_eq!(expected_paragraphs.len(), 5);
+            assert_eq!(expected_paragraphs.len(), 6);
             let mut actual_codes = Vec::new();
-            for ((index, count), expected) in [(0, 4), (1, 5), (2, 5), (3, 3), (5, 6)]
+            for ((index, count), expected) in [(0, 4), (1, 5), (2, 5), (3, 3), (5, 6), (6, 4)]
                 .into_iter()
                 .zip(&expected_paragraphs)
             {
