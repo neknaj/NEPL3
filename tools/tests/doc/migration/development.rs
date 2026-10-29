@@ -55,13 +55,20 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
         allocation_units: 1_500_000_000,
         ..budget().limits()
     };
+    // Growing unadopted corpus: 600M stopped during tree validation. A finite
+    // sizing run measured 614,075,643 Work; select 625M for parse only. This
+    // does not relax lower/label, allocation, default or production policies.
+    let parse_limits = Limits {
+        work: 625_000_000,
+        ..draft_limits
+    };
     nepl3_tools::doc::source::with_named_input_limits(
         true,
         &c,
         source,
         "development-draft",
         "Body",
-        draft_limits,
+        parse_limits,
         |tree, profile, parse_budget, _| {
             let store = SourceStore::default();
             let mut admission = SourceAdmission::default();
@@ -143,13 +150,13 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 .collect();
             assert_eq!(
                 boundary_sections,
-                ["portable", "savedExecutionScope"],
+                ["portable", "savedExecutionScope", "resourceTransitions"],
                 "restored H2 sections belong under the second H1"
             );
             assert_eq!(
                 boundary_children.len(),
-                9,
-                "seven restored paragraphs then two peer H2 sections"
+                10,
+                "seven restored paragraphs then three peer H2 sections"
             );
             let mut label_budget = budget();
             let checked = nepl3_doc_core::labels::check_body(
@@ -160,7 +167,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             )
             .map_err(err)?;
             eprintln!(
-                "development draft policy={draft_limits:?}; parse={:?}; lower={:?}; labels limits={:?} usage={:?}",
+                "development draft parse policy={parse_limits:?}; lower policy={draft_limits:?}; parse={:?}; lower={:?}; labels limits={:?} usage={:?}",
                 parse_budget.usage(),
                 lower_budget.usage(),
                 label_budget.limits(),
@@ -258,12 +265,12 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 }
             }
             assert_eq!(actual_wasi, [wasi]);
-            // Deliberately a subset: the missing two fenced blocks, prose,
+            // Deliberately a subset: the missing final fenced block, prose,
             // headings and link closure still block a complete migration.
-            assert_eq!((expected.len(), actual.len()), (13, 11));
-            // The ten first-H1 fences and first second-H1 fence retain source order.
-            // Two later second-H1 fences remain missing.
-            assert_eq!(actual.as_slice(), &expected[..11]);
+            assert_eq!((expected.len(), actual.len()), (13, 12));
+            // The ten first-H1 fences and two second-H1 fences retain source order.
+            // The final second-H1 fence remains missing.
+            assert_eq!(actual.as_slice(), &expected[..12]);
             for value in actual {
                 let index = expected
                     .iter()
@@ -271,7 +278,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                     .ok_or_else(|| format!("draft command differs from source: {value:?}"))?;
                 expected.remove(index);
             }
-            assert_eq!(expected.len(), 2);
+            assert_eq!(expected.len(), 1);
             let mut b = budget();
             let prepared =
                 text::prepare(&document, profile.registry(), &mut codec, &mut b).map_err(err)?;
@@ -509,6 +516,70 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                     "ExecutionScope::run"
                 ]
             );
+            let DocKind::Section { id, title, body } =
+                &document.value.nodes[boundary_children[9].0 as usize].kind
+            else {
+                return Err("resource transition H2".into());
+            };
+            assert_eq!(id.as_str(), "resourceTransitions");
+            assert_eq!(project(*title)?, "Pure resource-transition verification");
+            let DocKind::Body {
+                blocks: resource_blocks,
+            } = &document.value.nodes[body.0 as usize].kind
+            else {
+                return Err("resource transition body".into());
+            };
+            assert_eq!(resource_blocks.len(), 6);
+            assert!(matches!(
+                document.value.nodes[resource_blocks[4].0 as usize].kind,
+                DocKind::RawCode { .. }
+            ));
+            // This stage restores only the opening transition/verifier section,
+            // not the later observed-usage and callback-boundary paragraphs.
+            let resource_source = original
+                .split_once("## Pure resource-transition verification\n\n")
+                .ok_or("source resource transitions")?
+                .1
+                .split_once("\n`Budget::record_observed_usage`")
+                .ok_or("resource stage boundary")?
+                .0;
+            let expected_paragraphs: Vec<_> = resource_source
+                .trim()
+                .split("\n\n")
+                .filter(|part| !part.starts_with("```"))
+                .map(|part| {
+                    part.replace('`', "")
+                        .split_whitespace()
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                })
+                .collect();
+            assert_eq!(expected_paragraphs.len(), 5);
+            let mut actual_codes = Vec::new();
+            for ((index, count), expected) in [(0, 4), (1, 5), (2, 5), (3, 3), (5, 6)]
+                .into_iter()
+                .zip(&expected_paragraphs)
+            {
+                let node = resource_blocks[index];
+                let DocKind::Paragraph { items } = &document.value.nodes[node.0 as usize].kind
+                else {
+                    return Err("resource paragraph".into());
+                };
+                assert_eq!(items.len(), count);
+                let sentences = items
+                    .iter()
+                    .map(|item| project(nepl3_doc_core::model::SentenceRef(item.0)))
+                    .collect::<Result<Vec<_>, _>>()?;
+                assert_eq!(sentences.concat(), *expected);
+                paragraph_inline_code(&document, node.0, &mut actual_codes)?;
+            }
+            let expected_codes: Vec<_> = Parser::new(resource_source)
+                .filter_map(|e| match e {
+                    Event::Code(code) => Some(code.into_string()),
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(actual_codes, expected_codes);
             let mut actual_intro = Vec::new();
             for child in &children[..3] {
                 blocks(&document, child.0, &mut project, &mut actual_intro)?;

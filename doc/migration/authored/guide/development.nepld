@@ -672,5 +672,36 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
       cons "Neither harness establishes scheduler correctness, authorization, callback execution, whole-runtime purity or physical memory bounds. "
       cons "T11/T12 and the existing acceptance entries are not completed by this change." nil
     nil
+  cons section resourceTransitions "Pure resource-transition verification" body
+    cons paragraph
+      cons sentence cons code "Budget::charge" cons text " applies the pure scalar transition in " cons code "budget/charge.rs" cons text ". " nil
+      cons "The transition receives the prior counter, limit, amount and first stop and returns a typed charged/stopped outcome. "
+      cons "Its mutable application boundary updates only the selected counter and stop. "
+      cons "This is a bounded implementation scope, not a claim that every Budget operation or core API is pure." nil
+    cons paragraph
+      cons sentence cons text "The Kani harness in " cons code "budget/verification.rs" cons text " calls that same production method. " nil
+      cons "It admits all u64 fields, all seven resources and all nine current stop reasons, including overflow, zero charge, a counter above a lowered ceiling and an existing stop. "
+      cons "A u128 specification checks the result and complete Usage; limits, active depth and observed depth must remain unchanged. "
+      cons "The harness has no loops, recursion, input assumptions or alternate verification implementation. "
+      cons "Its enum generators must be updated when resource or stop variants are added." nil
+    cons paragraph
+      cons sentence cons code "Budget::observe_depth" cons text " likewise applies the pure transition in " cons code "budget/depth.rs" cons text ". " nil
+      cons "Its production harness admits arbitrary active depth, relative depth, ceiling, prior stop, historical Usage depth and current measurement depth. "
+      cons "It checks the u128 absolute-depth sum, first-stop precedence, both independent high-water marks and every unrelated field. "
+      cons "Old marks above a lowered ceiling are retained; only the newly observed absolute depth is checked here. "
+      cons sentence cons text "This individual harness does not prove " cons code "measure_depth" cons text ", " cons code "with_depth" cons text ", " cons code "with_ceiling" cons text " or callback restoration." nil nil
+    cons paragraph
+      cons "Use Kani 0.68.0 (CBMC 6.11.0, bundled nightly-2026-08-21) separately from the normal Rust 1.97 toolchain. "
+      cons "Kani is a development tool and introduces no production dependency. "
+      cons "Install it following its official installation guide:" nil
+    cons rawcode some "sh" "cargo install --locked kani-verifier --version 0.68.0\ncargo kani setup\ncargo fetch --locked\nCARGO_NET_OFFLINE=true cargo kani -p nepl3-core --harness budget::verification::\n"
+    cons paragraph
+      cons sentence cons text "Kani 0.68.0 does not accept " cons code "--locked" cons text ". " nil
+      cons "Preserve and compare Cargo.lock before and after verification; a missing offline dependency is an execution failure, not a passed proof. "
+      cons "Keep the exact source revision, lock hash, tool versions, command and raw output with the run evidence. "
+      cons "Normal tests, Clippy and target builds remain separate checks. "
+      cons "The harnesses cover the individual transitions and callback boundaries described here. "
+      cons "They do not prove other Budget operations, schema traversal, physical memory bounds or the compiler/verifier's own correctness." nil
+    nil
   nil
 nil
