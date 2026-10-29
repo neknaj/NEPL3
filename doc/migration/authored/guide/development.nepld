@@ -828,6 +828,15 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons "These are in-operation native proofs, not wire receipts, cache authorization, guest semantic proofs or complete runtime acceptance. "
         cons "No resource ceiling is raised or reset." nil
       nil
+    cons section digestRequestLookup "Digest request lookup probes" body
+      cons paragraph
+        cons "A batch node visit finds the first matching immutable-reference request with one charged lower-bound search, then scans equal requests in their existing order. "
+        cons "Every run candidate and one terminal probe are charged, including end-of-index; completed requests consume the probe but do not restart hashes. "
+        cons "This replaces a second binary search without tying Usage to address rank. "
+        cons "The domain, encoding, active hash scopes, insertion shifts and request-order results are unchanged. "
+        cons "Direct regressions cover missing addresses and duplicate runs at different ranks, all short Work ceilings, sticky stops and completed matches. "
+        cons "No universal CPU speedup is claimed for duplicate-heavy inputs; the deterministic Work change and actual encoding/hash outputs are separate measurements." nil
+      nil
     nil
   nil
 nil

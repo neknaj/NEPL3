@@ -1157,9 +1157,12 @@ fn synchronized_context_spec_drafts_parse_lower_and_check_labels() -> Result<()>
         },
         nepl3_doc_core::check::Category::Body,
         // Separate parse-only allowance for the growing unadopted guide.
-        // The 715M attempt stopped; finite sizing measured ~717.8M Work.
-        // Lower and labels retain the phase_limits above, including 600M Work.
-        Some(725_000_000),
+        // 725M / 10M stopped on Nodes; sizing measured ~724.9M / 10,002,411.
+        // Lower/labels retain phase_limits, including 600M Work / 10M Nodes.
+        Some(DraftParseAllowance {
+            work: 730_000_000,
+            nodes: 10_100_000,
+        }),
     )
 }
 
@@ -1196,11 +1199,16 @@ fn check_context_drafts(
         None,
     )
 }
+struct DraftParseAllowance {
+    work: u64,
+    nodes: u64,
+}
+
 fn check_context_drafts_with_category(
     paths: &[(&str, &str)],
     phase_limits: nepl3_core::budget::Limits,
     category: nepl3_doc_core::check::Category,
-    draft_parse_work: Option<u64>,
+    draft_parse: Option<DraftParseAllowance>,
 ) -> Result<()> {
     use nepl3_doc_core::check::Category;
     let root_name = match category {
@@ -1223,8 +1231,9 @@ fn check_context_drafts_with_category(
             (configured.parse, configured.lower)
         } else {
             let mut parse = phase_limits;
-            if let Some(work) = draft_parse_work {
-                parse.work = work;
+            if let Some(allowance) = &draft_parse {
+                parse.work = allowance.work;
+                parse.nodes = allowance.nodes;
             }
             (parse, phase_limits)
         };
