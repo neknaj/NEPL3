@@ -837,6 +837,17 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons "Direct regressions cover missing addresses and duplicate runs at different ranks, all short Work ceilings, sticky stops and completed matches. "
         cons "No universal CPU speedup is claimed for duplicate-heavy inputs; the deterministic Work change and actual encoding/hash outputs are separate measurements." nil
       nil
+    cons section guestMappingScope "PageSet guest digest の mapping scope [回帰確認/かいきかくにん]（2026-10-10）" body
+      cons paragraph
+        cons sentence cons code "nepl3-doc-core" cons text " の " cons code "foreign" cons text " integration test に、" cons ruby text "外部" text "がいぶ" cons text " codec・" cons ruby text "親" text "おや" cons text " DocumentSyntax・ForeignClosure " cons ruby text "自身" text "じしん" cons text "の mapping を" cons ruby text "分" text "わ" cons text "けた native fixture を" cons ruby text "追加" text "ついか" cons text "した。" nil
+        cons "[外部/がいぶ] mapping の[変更/へんこう]は closure bytes・document digest・PageSet identity を[変/か]えず、[親文書/おやぶんしょ]の mapping の[変更/へんこう]は guest identity を[保持/ほじ]する。"
+        cons "closure [自身/じしん]の mapping の[変更/へんこう]は guest・document・PageSet identity を[変/か]える。"
+        cons "guest digest は[各成分/かくせいぶん]domain・Entry framing・operation domainと[独立/どくりつ]した wire encoding の[連結/れんけつ]から[照合/しょうごう]し、PageSet [内/ない]の group [値/あたい]・standalone preparation・fresh codec での portable reconstruction とも[比較/ひかく]する。" nil
+      cons paragraph
+        cons "closure-owned source endpoint を[欠/か]かした[場合/ばあい]は、[同/おな]じ endpoint が[文書/ぶんしょ]と[外部/がいぶ] store にあっても standalone/batch とも[拒否/きょひ]する。"
+        cons "これは native FoundationCodec の[所有境界/しょゆうきょうかい]を[確認/かくにん]する[回帰試験/かいきしけん]であり、[任意/にんい]の custom codec の[文脈非依存性/ぶんみゃくひいぞんせい]や[全受入群/ぜんうけいれぐん]の[完了/かんりょう]を[主張/しゅちょう]しない。"
+        cons "guest view に[必須/ひっす]の mapping [自体/じたい]を[除去/じょきょ]する[別/べつ]ケースは、この[追加試験/ついかしけん]の[範囲外/はんいがい]である。" nil
+      nil
     nil
   nil
 nil
