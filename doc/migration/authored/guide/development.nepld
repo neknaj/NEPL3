@@ -848,6 +848,17 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons "これは native FoundationCodec の[所有境界/しょゆうきょうかい]を[確認/かくにん]する[回帰試験/かいきしけん]であり、[任意/にんい]の custom codec の[文脈非依存性/ぶんみゃくひいぞんせい]や[全受入群/ぜんうけいれぐん]の[完了/かんりょう]を[主張/しゅちょう]しない。"
         cons "guest view に[必須/ひっす]の mapping [自体/じたい]を[除去/じょきょ]する[別/べつ]ケースは、この[追加試験/ついかしけん]の[範囲外/はんいがい]である。" nil
       nil
+    cons section sourcePositionOracle "source position の[独立期待値/どくりつきたいち]（2026-10-10）" body
+      cons paragraph
+        cons sentence cons code "nepl3-core" cons text " の " cons code "contracts" cons text " integration test は、BOM・" cons ruby text "日本語" text "にほんご" cons text "・" cons ruby text "補助" text "ほじょ" cons text "Unicode scalar・CRLF・" cons ruby text "単独" text "たんどく" cons text "CR/LFを" cons ruby text "含" text "ふく" cons text "む" cons ruby text "固定入力" text "こていにゅうりょく" cons text "について、UTF-8/16/32の" cons ruby text "期待位置" text "きたいいち" cons text "を" cons ruby text "明示" text "めいじ" cons text "する。" nil
+        cons "[変換/へんかん]に[成功/せいこう]した[位置/いち]だけの[往復確認/おうふくかくにん]から、[全/すべ]ての[表現可能/ひょうげんかのう]な[位置/いち]を[両方向/りょうほうこう]で[要求/ようきゅう]する[確認/かくにん]へ[変更/へんこう]した。"
+        cons "scalar[内部/ないぶ]・CRLF[内部/ないぶ]・[範囲外/はんいがい]のoffsetとpositionも[区別/くべつ]して[拒否/きょひ]を[確認/かくにん]する。"
+        cons "BOM[直後/ちょくご]の[正/ただ]しいbyte offset 3を[誤/あやま]って[拒否/きょひ]する[一時的/いちじてき]なmutationは、この[試験/しけん]を[失敗/しっぱい]させた。"
+        cons "production sourceを[復元/ふくげん]した[後/あと]、contractsの35[試験/しけん]が[成功/せいこう]した。" nil
+      cons paragraph
+        cons "これはT01/E01に[関係/かんけい]する[固定/こてい]oracleの[補強/ほきょう]であり、[実/じつ]ブラウザーでのfoundation Wasm[実行/じっこう]や七target[分/ぶん]の[正式受入証拠/せいしきうけいれしょうこ]を[追加/ついか]したものではない。"
+        cons "E01を[含/ふく]む[受入状態/うけいれじょうたい]は[変更/へんこう]しない。" nil
+      nil
     nil
   nil
 nil

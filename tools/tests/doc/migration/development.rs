@@ -55,12 +55,12 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
         allocation_units: 1_500_000_000,
         ..budget().limits()
     };
-    // Growing unadopted corpus: 730M / 10.1M stopped first on Work.
-    // Finite 800M / 12M sizing measured 738,154,629 Work / 10,198,155 Nodes.
-    // Select 740M / 10.3M for parse only; other phase policies stay unchanged.
+    // Growing unadopted corpus: the initial draft stopped at 740M Work.
+    // After a numeral Ruby correction, finite 800M / 12M sizing measured
+    // 750,922,662 Work / 10,354,842 Nodes. Select 755M / 10.5M for parse only.
     let parse_limits = Limits {
-        work: 740_000_000,
-        nodes: 10_300_000,
+        work: 755_000_000,
+        nodes: 10_500_000,
         ..draft_limits
     };
     nepl3_tools::doc::source::with_named_input_limits(
@@ -280,13 +280,13 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 expected.remove(index);
             }
             assert_eq!(expected.len(), 1);
-            // This growing draft exceeded the original 200M text preparation
-            // allowance before any projections. A finite 250M diagnostic used
-            // 203,044,690 Work for preparation and 203,485,185 for all parity.
-            // Keep one cumulative 210M test-local budget for both operations;
+            // This growing draft exceeded 210M text preparation before projections.
+            // A finite 250M diagnostic used 212,131,455 Work for preparation
+            // and 212,597,132 for all parity.
+            // Keep one cumulative 215M test-local budget for both operations;
             // no reset, memoization or production/default policy change.
             let mut b = Budget::new(Limits {
-                work: 210_000_000,
+                work: 215_000_000,
                 ..budget().limits()
             });
             let prepared = text::prepare(&document, profile.registry(), &mut codec, &mut b)
@@ -550,7 +550,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             else {
                 return Err("resource transition body".into());
             };
-            assert_eq!(resource_blocks.len(), 20);
+            assert_eq!(resource_blocks.len(), 21);
             assert!(matches!(
                 document.value.nodes[resource_blocks[4].0 as usize].kind,
                 DocKind::RawCode { .. }
@@ -662,6 +662,14 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                     "PageSet guest digest の mapping scope 回帰確認（2026-10-10）",
                     "source position の独立期待値（2026-10-10）",
                     &[4usize, 3][..],
+                    2,
+                ),
+                (
+                    20,
+                    "sourcePositionOracle",
+                    "source position の独立期待値（2026-10-10）",
+                    "Browser foundation source-position slice（2026-10-10）",
+                    &[5usize, 2][..],
                     2,
                 ),
             ] {
