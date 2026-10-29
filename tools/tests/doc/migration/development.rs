@@ -55,11 +55,12 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
         allocation_units: 1_500_000_000,
         ..budget().limits()
     };
-    // Growing unadopted corpus: 715M stopped during tree validation. A finite
-    // 750M diagnostic run measured 717,835,650 Work; select 725M for parse only.
-    // This does not relax lower/label, allocation, default or registry policies.
+    // Growing unadopted corpus: 725M Work / 10M Nodes stopped on Nodes.
+    // Finite 750M / 11M sizing measured 724,893,889 Work / 10,002,411 Nodes.
+    // Select 730M / 10.1M for parse only; other phase policies stay unchanged.
     let parse_limits = Limits {
-        work: 725_000_000,
+        work: 730_000_000,
+        nodes: 10_100_000,
         ..draft_limits
     };
     nepl3_tools::doc::source::with_named_input_limits(
@@ -549,7 +550,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             else {
                 return Err("resource transition body".into());
             };
-            assert_eq!(resource_blocks.len(), 18);
+            assert_eq!(resource_blocks.len(), 19);
             assert!(matches!(
                 document.value.nodes[resource_blocks[4].0 as usize].kind,
                 DocKind::RawCode { .. }
@@ -645,6 +646,14 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                     "Checked PageSet preparation reuse",
                     "Digest request lookup probes",
                     &[6usize, 5, 4][..],
+                    0,
+                ),
+                (
+                    18,
+                    "digestRequestLookup",
+                    "Digest request lookup probes",
+                    "PageSet guest digest の mapping scope 回帰確認（2026-10-10）",
+                    &[6usize][..],
                     0,
                 ),
             ] {
