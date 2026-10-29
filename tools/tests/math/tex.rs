@@ -8,10 +8,21 @@ fn actual_math_forms_use_structural_tex_with_explicit_annotation_failure() -> Re
 
 fn for_each_tex(mut inspect: impl FnMut(&str, &str) -> Result<(), String>) -> Result<(), String> {
     let compiled = compiled()?;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+    let mut fixture: serde_json::Value = serde_json::from_str(include_str!(
         "../../../conformance/fixtures/math/lower.json"
     ))
     .map_err(err)?;
+    let additional = [
+        "equal call A cons m cons n nil neg integral t frac symbol \"pi\" 2 0 mul pow call cos cons sub frac symbol \"pi\" 2 t nil m pow call sin cons sub frac symbol \"pi\" 2 t nil n",
+        "neg integral t 0 1 add a b",
+        "call pow f n cons x nil",
+        "pow call f cons x nil n",
+    ];
+    for source in additional {
+        fixture["cases"].as_array_mut().ok_or("cases")?.push(
+            serde_json::json!({"entry":"Expr", "source":source, "kind":"GroupingRegression"}),
+        );
+    }
     for case in fixture["cases"].as_array().ok_or("cases")? {
         if case["entry"].as_str() != Some("Expr") {
             continue;
@@ -235,4 +246,153 @@ fn visual_host_boundary_rejects_forged_and_extra_fields() {
             nepl3_core::budget::StopReason::Cancelled
         ))
     ));
+}
+
+#[test]
+fn precedence_output_matches_checked_source_in_both_backends() -> Result<(), String> {
+    use nepl3_markup::mathml::{Display, serialize, validate};
+    let compiled = compiled()?;
+    let a = r"\mathord{\textit{a}}";
+    let b = r"\mathord{\textit{b}}";
+    let c = r"\mathord{\textit{c}}";
+    for (source, expected, fences) in [
+        ("sub a sub b c", format!(r"{a}-\left({b}-{c}\right)"), 1),
+        (
+            "mul add a b c",
+            format!(r"\left({a}+{b}\right)\cdot {c}"),
+            1,
+        ),
+        (
+            "pow pow a b c",
+            format!(r"{{\left({{{a}}}^{{{b}}}\right)}}^{{{c}}}"),
+            1,
+        ),
+        (
+            "pow a pow b c",
+            [
+                format!("{{{a}}}^{{"),
+                format!("{{{b}}}^{{{c}}}"),
+                "}".into(),
+            ]
+            .concat(),
+            0,
+        ),
+        ("pow -2 3", r"{\left(-2\right)}^{3}".into(), 1),
+        (
+            "superscript subscript a b c",
+            format!(r"{{\left({{{a}}}_{{{b}}}\right)}}^{{{c}}}"),
+            1,
+        ),
+        (
+            "neg integral t 0 1 add a b",
+            format!(r"-\int_{{0}}^{{1}} {a}+{b}\,\mathrm{{d}}\mathord{{\textit{{t}}}}"),
+            0,
+        ),
+    ] {
+        with_input(
+            &compiled,
+            source,
+            "Expr",
+            |tree, profile, budget_in, admission| {
+                let syntax = tree
+                    .tree()
+                    .bundle
+                    .validate_with_sources(profile.registry(), budget_in, admission)
+                    .map_err(err)?;
+                let math = lower::expression(
+                    &syntax,
+                    &compiled.others[0].schema,
+                    check::Category::Expr,
+                    profile.registry(),
+                    &mut budget(),
+                    &mut SourceAdmission::default(),
+                )
+                .map_err(err)?;
+                let checked = check::expression(&math.value, &mut budget()).map_err(err)?;
+                let tex = nepl3_math_tex::render(&checked, &mut budget()).map_err(err)?;
+                assert_eq!(tex.tex(), expected, "{source}");
+                for display in [Display::Inline, Display::Block] {
+                    let mathml =
+                        nepl3_math_mathml::render(&checked, display, &mut budget()).map_err(err)?;
+                    let checked_ml = validate(&mathml.fragment, &mut budget()).map_err(err)?;
+                    let output = serialize(&checked_ml, &mut budget()).map_err(err)?;
+                    assert_eq!(
+                        output.matches("<mo>(</mo>").count(),
+                        fences,
+                        "{source}: {output}"
+                    );
+                }
+                Ok(())
+            },
+        )?;
+    }
+    Ok(())
+}
+
+#[test]
+fn trigonometric_integral_symmetry_has_only_argument_parentheses() -> Result<(), String> {
+    use nepl3_markup::mathml::{Display, serialize, validate};
+    let compiled = compiled()?;
+    let pi = r"\frac{\mathord{\textit{pi}}}{2}";
+    let t = r"\mathord{\textit{t}}";
+    let m = r"\mathord{\textit{m}}";
+    let n = r"\mathord{\textit{n}}";
+    let complement = format!("{pi}-{t}");
+    let cos_complement =
+        format!(r"{{\mathord{{\textit{{cos}}}}\left({{{complement}}}\right)}}^{{{m}}}");
+    let sin_complement =
+        format!(r"{{\mathord{{\textit{{sin}}}}\left({{{complement}}}\right)}}^{{{n}}}");
+    let sin_t = format!(r"{{\mathord{{\textit{{sin}}}}\left({{{t}}}\right)}}^{{{m}}}");
+    let cos_t = format!(r"{{\mathord{{\textit{{cos}}}}\left({{{t}}}\right)}}^{{{n}}}");
+    let negative =
+        format!(r"-\int_{{{pi}}}^{{0}} {cos_complement}\cdot {sin_complement}\,\mathrm{{d}}{t}");
+    let positive = format!(r"\int_{{0}}^{{{pi}}} {sin_t}\cdot {cos_t}\,\mathrm{{d}}{t}");
+    let a_mn = format!(r"\mathord{{\textit{{A}}}}\left({{{m}}},\,{{{n}}}\right)");
+    let a_nm = format!(r"\mathord{{\textit{{A}}}}\left({{{n}}},\,{{{m}}}\right)");
+    for (source, expected, fences) in [
+        (
+            "equal call A cons m cons n nil neg integral t frac symbol \"pi\" 2 0 mul pow call cos cons sub frac symbol \"pi\" 2 t nil m pow call sin cons sub frac symbol \"pi\" 2 t nil n",
+            format!("{a_mn}={negative}"),
+            3,
+        ),
+        (
+            "equal neg integral t frac symbol \"pi\" 2 0 mul pow call cos cons sub frac symbol \"pi\" 2 t nil m pow call sin cons sub frac symbol \"pi\" 2 t nil n integral t 0 frac symbol \"pi\" 2 mul pow call sin cons t nil m pow call cos cons t nil n",
+            format!("{negative}={positive}"),
+            4,
+        ),
+        (
+            "equal integral t 0 frac symbol \"pi\" 2 mul pow call sin cons t nil m pow call cos cons t nil n call A cons n cons m nil",
+            format!("{positive}={a_nm}"),
+            3,
+        ),
+    ] {
+        with_input(&compiled, source, "Expr", |tree, profile, b, admission| {
+            let syntax = tree
+                .tree()
+                .bundle
+                .validate_with_sources(profile.registry(), b, admission)
+                .map_err(err)?;
+            let math = lower::expression(
+                &syntax,
+                &compiled.others[0].schema,
+                check::Category::Expr,
+                profile.registry(),
+                &mut budget(),
+                &mut SourceAdmission::default(),
+            )
+            .map_err(err)?;
+            let checked = check::expression(&math.value, &mut budget()).map_err(err)?;
+            let tex = nepl3_math_tex::render(&checked, &mut budget()).map_err(err)?;
+            assert_eq!(tex.tex(), expected);
+            for display in [Display::Inline, Display::Block] {
+                let out =
+                    nepl3_math_mathml::render(&checked, display, &mut budget()).map_err(err)?;
+                let proof = validate(&out.fragment, &mut budget()).map_err(err)?;
+                let text = serialize(&proof, &mut budget()).map_err(err)?;
+                assert_eq!(text.matches("<mo>(</mo>").count(), fences, "{text}");
+            }
+            Ok(())
+        })?;
+    }
+    Ok(())
 }

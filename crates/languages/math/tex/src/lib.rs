@@ -101,10 +101,37 @@ fn append(out: &mut String, text: &str, b: &mut Budget) -> Result<(), Error> {
 #[derive(Clone, Copy)]
 enum Part<'a> {
     Node(u64),
+    Grouped(u64, u8, bool),
     Fixed(&'static str),
     Literal(u64, &'a str),
     Name(u64, &'a str),
     End(usize),
+}
+// A definite integral has an explicit differential closing its body. Unlike a
+// sum or unstructured sequence, it can stand as an operand without outer fences.
+fn binding_power(k: &K) -> u8 {
+    match k {
+        K::Number { value, .. } if value.numerator().is_negative() => 40,
+        K::Let { .. } | K::Sequence { .. } | K::Sum { .. } => 0,
+        K::Equal { .. } | K::Lt { .. } | K::Le { .. } => 10,
+        K::Add { .. } | K::Sub { .. } => 20,
+        K::Mul { .. } => 30,
+        K::Integral { .. } | K::Neg { .. } => 40,
+        K::Pow { .. } => 50,
+        _ => 60,
+    }
+}
+fn needs_group(k: &K, parent: u8, equal: bool) -> bool {
+    let script = matches!(
+        k,
+        K::Pow { .. }
+            | K::Subscript { .. }
+            | K::Superscript { .. }
+            | K::Scripts { .. }
+            | K::Transpose { .. }
+    );
+    binding_power(k) < parent
+        || (equal && ((parent < 60 && binding_power(k) == parent) || (parent >= 50 && script)))
 }
 fn delimiter(text: &str, node: u64) -> Result<&'static str, Error> {
     match text {
@@ -178,13 +205,13 @@ fn literal(
     append(out, if italic { "}}" } else { "}" }, b)
 }
 
-/// Convert exact checked structure with conservative explicit operand grouping.
+/// Convert exact checked structure with precedence-sensitive operand grouping.
 /// Time/storage are O(emitted occurrences + emitted bytes), plus decimal printing.
 /// A shared DAG can expand: every occurrence and byte consumes the same caller's
 /// budget. No partial result is returned. Foreign annotations fail explicitly so
 /// the host can select the independent MathML path without dropping annotation.
 pub fn render<'a>(input: &CheckedExpression<'a>, b: &mut Budget) -> Result<Rendered<'a>, Error> {
-    use Part::{Fixed as F, Literal as L, Node as N};
+    use Part::{Fixed as F, Grouped as G, Literal as L, Node as N};
     b.poll()?;
     let source = input.value();
     let MathRoot::Expr(root) = source.root else {
@@ -204,6 +231,20 @@ pub fn render<'a>(input: &CheckedExpression<'a>, b: &mut Budget) -> Result<Rende
             L(node, text) => literal(&mut out.tex, text, node, false, b)?,
             Part::Name(node, text) => literal(&mut out.tex, text, node, true, b)?,
             Part::End(i) => out.occurrences[i].end = out.tex.len() as u64,
+            G(id, parent, equal) => {
+                let kind = &source
+                    .nodes
+                    .get(usize::try_from(id).map_err(|_| Error::Reference(id))?)
+                    .ok_or(Error::Reference(id))?
+                    .kind;
+                if needs_group(kind, parent, equal) {
+                    push(&mut pending, (F("\\right)"), depth), b)?;
+                    push(&mut pending, (N(id), depth), b)?;
+                    push(&mut pending, (F("\\left("), depth), b)?;
+                } else {
+                    push(&mut pending, (N(id), depth), b)?;
+                }
+            }
             N(id) => {
                 b.observe_depth(depth)?;
                 b.charge(Resource::Nodes, 1)?;
@@ -256,14 +297,16 @@ pub fn render<'a>(input: &CheckedExpression<'a>, b: &mut Budget) -> Result<Rende
                             K::Lt { .. } => "<",
                             _ => "\\le ",
                         };
+                        let precedence = binding_power(k);
+                        let comparison = precedence == 10;
                         emit(&[
-                            F("\\left("),
-                            N(left.0),
-                            F("\\right)"),
+                            G(left.0, precedence, comparison),
                             F(op),
-                            F("\\left("),
-                            N(right.0),
-                            F("\\right)"),
+                            G(
+                                right.0,
+                                precedence,
+                                comparison || matches!(k, K::Sub { .. }),
+                            ),
                         ])?;
                     }
                     K::Frac { left, right } => {
@@ -278,27 +321,38 @@ pub fn render<'a>(input: &CheckedExpression<'a>, b: &mut Budget) -> Result<Rende
                             "^{"
                         };
                         emit(&[
-                            F("{\\left("),
-                            N(left.0),
-                            F("\\right)}"),
+                            F("{"),
+                            G(
+                                left.0,
+                                if matches!(k, K::Pow { .. }) { 50 } else { 60 },
+                                true,
+                            ),
+                            F("}"),
                             F(op),
                             N(right.0),
                             F("}"),
                         ])?;
                     }
-                    K::Neg { value } => emit(&[F("-\\left("), N(value.0), F("\\right)")])?,
+                    K::Neg { value } => emit(&[
+                        F("-"),
+                        G(
+                            value.0,
+                            40,
+                            !matches!(source.nodes[value.0 as usize].kind, K::Integral { .. }),
+                        ),
+                    ])?,
                     K::Sqrt { value } => emit(&[F("\\sqrt{"), N(value.0), F("}")])?,
                     K::Root { degree, radicand } => {
                         emit(&[F("\\sqrt[{"), N(degree.0), F("}]{"), N(radicand.0), F("}")])?
                     }
                     K::Transpose { value } => {
-                        emit(&[F("{\\left("), N(value.0), F("\\right)}^{\\mathsf{T}}")])?
+                        emit(&[F("{"), G(value.0, 60, true), F("}^{\\mathsf{T}}")])?
                     }
                     K::Det { value } => emit(&[F("\\det\\left("), N(value.0), F("\\right)")])?,
                     K::Scripts { base, sub, sup } => emit(&[
-                        F("{\\left("),
-                        N(base.0),
-                        F("\\right)}_{"),
+                        F("{"),
+                        G(base.0, 60, true),
+                        F("}_{"),
                         N(sub.0),
                         F("}^{"),
                         N(sup.0),
@@ -341,9 +395,8 @@ pub fn render<'a>(input: &CheckedExpression<'a>, b: &mut Budget) -> Result<Rende
                                 N(lower.0),
                                 F("}^{"),
                                 N(upper.0),
-                                F("}\\left("),
-                                N(body.0),
-                                F("\\right)"),
+                                F("} "),
+                                G(body.0, 30, false),
                             ])?;
                         } else {
                             emit(&[
@@ -351,9 +404,9 @@ pub fn render<'a>(input: &CheckedExpression<'a>, b: &mut Budget) -> Result<Rende
                                 N(lower.0),
                                 F("}^{"),
                                 N(upper.0),
-                                F("}\\left("),
-                                N(body.0),
-                                F("\\right)\\,\\mathrm{d}"),
+                                F("} "),
+                                G(body.0, 20, false),
+                                F("\\,\\mathrm{d}"),
                                 Part::Name(id, index),
                             ])?;
                         }
@@ -394,7 +447,7 @@ pub fn render<'a>(input: &CheckedExpression<'a>, b: &mut Budget) -> Result<Rende
                             }
                             emit(&[F("{"), N(arg.0), F("}")])?;
                         }
-                        emit(&[F("\\left("), N(function.0), F("\\right)\\left(")])?;
+                        emit(&[G(function.0, 60, false), F("\\left(")])?;
                     }
                     K::Label { .. } | K::SentenceGuest { .. } => {
                         return Err(Error::Unsupported {

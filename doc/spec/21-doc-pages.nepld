@@ -1315,7 +1315,7 @@ body
       cons "[生成済/せいせいず]みMathMLの[文字列化/もじれつか]や[注釈/ちゅうしゃく]の[省略/しょうりゃく]は[行/おこな]わず、ForeignAnnotationなどTeXで[保持/ほじ]できない[内容/ないよう]は[明示的/めいじてき]に[拒否/きょひ]する。"
       cons "InlineMathはGitHubのdollar・backtick[区切/くぎ]り、DisplayMathはmath fenced code blockで[出力/しゅつりょく]する。[空/から]のTeXと[改行/かいぎょう]・backtick、table cell[内/ない]のpipeを[拒否/きょひ]する。"
       cons "RubyのHTML[内/ない]とlink label[内/ない]のMath、[到達不能/とうたつふのう]のMath node、[使用/しよう]されないforeign embedを[黙殺/もくさつ]しない。[既存/きそん]の[未対応/みたいおう]list blockは[引/ひ]き[続/つづ]き[拒否/きょひ]する。"
-      cons "Mathを[使用/しよう]するpageのcontextはstructural-math-tex/1、embed index、[検査済/けんさず]みguest digestを[含/ふく]む。MathのないpageのMarkdown headerと[本文/ほんぶん]は[変更/へんこう]しない。"
+      cons "Mathを[使用/しよう]するpageのcontextはstructural-math-tex/2、embed index、[検査済/けんさず]みguest digestを[含/ふく]む。MathのないpageのMarkdown headerと[本文/ほんぶん]は[変更/へんこう]しない。"
       cons "[準備/じゅんび]と[出力/しゅつりょく]は[同/おな]じ[累積/るいせき]Budgetを[使用/しよう]する。[全/ぜん]pageが[成功/せいこう]するまで[出力/しゅつりょく]を[公開/こうかい]しない。[旧/きゅう]APIはMathのNeedsResolutionを[維持/いじ]する。"
       cons "[独立/どくりつ]Markdown parserによる[構造/こうぞう]とpayloadの[確認/かくにん]は、GitHubのMathJax[実行/じっこう]・[実表示/じつひょうじ]や[数学的/すうがくてき]な[意味同等性/いみどうとうせい]の[証明/しょうめい]を[代替/だいたい]しない。" nil
     nil
