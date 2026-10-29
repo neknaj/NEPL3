@@ -1157,9 +1157,9 @@ fn synchronized_context_spec_drafts_parse_lower_and_check_labels() -> Result<()>
         },
         nepl3_doc_core::check::Category::Body,
         // Separate parse-only allowance for the growing unadopted guide.
-        // The 685M attempt stopped; finite sizing measured ~686.5M Work.
+        // The 695M attempt stopped; finite sizing measured ~703.4M Work.
         // Lower and labels retain the phase_limits above, including 600M Work.
-        Some(695_000_000),
+        Some(715_000_000),
     )
 }
 
