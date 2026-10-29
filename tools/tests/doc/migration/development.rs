@@ -55,11 +55,11 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
         allocation_units: 1_500_000_000,
         ..budget().limits()
     };
-    // Growing unadopted corpus: 600M stopped during tree validation. A finite
-    // sizing run measured 614,075,643 Work; select 625M for parse only. This
-    // does not relax lower/label, allocation, default or production policies.
+    // Growing unadopted corpus: 625M stopped during tree validation. A finite
+    // 700M diagnostic run measured 644,612,448 Work; select 650M for parse only.
+    // This does not relax lower/label, allocation, default or registry policies.
     let parse_limits = Limits {
-        work: 625_000_000,
+        work: 650_000_000,
         ..draft_limits
     };
     nepl3_tools::doc::source::with_named_input_limits(
@@ -529,18 +529,18 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             else {
                 return Err("resource transition body".into());
             };
-            assert_eq!(resource_blocks.len(), 7);
+            assert_eq!(resource_blocks.len(), 11);
             assert!(matches!(
                 document.value.nodes[resource_blocks[4].0 as usize].kind,
                 DocKind::RawCode { .. }
             ));
-            // This stage includes the observed-usage transition paragraph;
-            // later callback-boundary paragraphs remain outside the draft.
+            // This stage includes the callback-boundary paragraphs;
+            // later caller/host regressions remain outside the draft.
             let resource_source = original
                 .split_once("## Pure resource-transition verification\n\n")
                 .ok_or("source resource transitions")?
                 .1
-                .split_once("\n`Budget::with_depth`")
+                .split_once("\nShape admission callers")
                 .ok_or("resource stage boundary")?
                 .0;
             let expected_paragraphs: Vec<_> = resource_source
@@ -554,11 +554,22 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                         .join(" ")
                 })
                 .collect();
-            assert_eq!(expected_paragraphs.len(), 6);
+            assert_eq!(expected_paragraphs.len(), 10);
             let mut actual_codes = Vec::new();
-            for ((index, count), expected) in [(0, 4), (1, 5), (2, 5), (3, 3), (5, 6), (6, 4)]
-                .into_iter()
-                .zip(&expected_paragraphs)
+            for ((index, count), expected) in [
+                (0, 4),
+                (1, 5),
+                (2, 5),
+                (3, 3),
+                (5, 6),
+                (6, 4),
+                (7, 6),
+                (8, 2),
+                (9, 7),
+                (10, 10),
+            ]
+            .into_iter()
+            .zip(&expected_paragraphs)
             {
                 let node = resource_blocks[index];
                 let DocKind::Paragraph { items } = &document.value.nodes[node.0 as usize].kind

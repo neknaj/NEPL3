@@ -707,6 +707,35 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
       cons "Its production Kani harness checks all eight fields together using u128 reference sums: admission is atomic, field-error precedence is preserved, and admitted already-completed work is recorded even after an existing stop. "
       cons "Failed admission retains Usage and the measurement mark; limits and active depth are unchanged. "
       cons "This proof does not authenticate host observations or establish the saved grant that authorizes them." nil
+    cons paragraph
+      cons sentence cons code "Budget::with_depth" cons text " and " cons code "with_depth_at_least" cons text " share the pure entry transition in " cons code "budget/depth/entry.rs" cons text ". " nil
+      cons "Two production-method harnesses check admission, first-stop precedence, independent high-water marks and callback suppression on rejection. "
+      cons "A symbolic callback checks entry state and supplies an arbitrary terminating post-state and Result. "
+      cons "The wrappers restore only saved active depth and preserve all other post-callback fields and the callback Result, even when that Result differs from the sticky stop. "
+      cons "These proofs concern this boundary, not callback computations, generic error conversions, panic/unwind restoration, divergence or authorization to replace/reset a Budget. "
+      cons "They do not establish Usage monotonicity across an arbitrary whole-Budget replacement." nil
+    cons paragraph
+      cons sentence cons text "The required " cons code "resource-charge-proof" cons text " CI job runs the pinned verifier and keeps its raw output and source/lock identity for 14 days. " nil
+      cons "The quality gate requires this job to succeed; the artifact is scoped proof evidence, not full acceptance." nil
+    cons paragraph
+      cons sentence cons code "Budget::with_ceiling" cons text " uses the pure admission function " cons code "budget/ceiling.rs" cons text ". " nil
+      cons "The eight effective limits are component-wise minima. "
+      cons "Admission checks cumulative usage in source/work/nodes/allocation/output/diagnostics/events order, then checks historical usage depth last; active and measurement depth are not admission inputs. "
+      cons "The production-method Kani harness uses arbitrary fields and prior stops, checks callback suppression on rejection and entry state on admission, and models an arbitrary replacement Budget with an independent callback Result. "
+      cons "Every returning path restores only the saved outer limits; other callback state and its Result are retained. "
+      cons "Nested ceiling intersection cannot widen limits, but a callback that directly replaces its Budget is not constrained by that guarantee. "
+      cons "Panic, unwind, divergence, generic error conversion and whole-runtime acceptance remain outside this proof." nil
+    cons paragraph
+      cons sentence cons code "Budget::measure_depth" cons text " completes its local observation through the pure " cons code "budget/depth/measurement.rs" cons text " function. " nil
+      cons "Entry rejects a prior stop before the callback; otherwise the local mark starts at the caller's active depth. "
+      cons "Every returning callback path merges the local mark into the saved enclosing mark before resolving the Result. "
+      cons "A callback error takes precedence over a different sticky stop. "
+      cons "A successful callback is followed by a stop check and returns the nonnegative difference from the saved base only when still running. "
+      cons "The production-method Kani harness checks these rules, entry state, callback count and unchanged post-callback fields using arbitrary symbolic states. "
+      cons "Its signed wider-integer difference is independent of production saturating_sub. "
+      cons "The arbitrary post-state model probes the wrapper boundary and does not authorize Budget replacement: the public contract remains limited to pure validation callbacks that never replace the Budget. "
+      cons "Ordinary nested tests also check a semantic validation error concurrent with resource exhaustion. "
+      cons "This does not prove validation internals, generic error conversions, panic/unwind, divergence, or formal acceptance." nil
     nil
   nil
 nil
