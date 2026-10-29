@@ -55,11 +55,11 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
         allocation_units: 1_500_000_000,
         ..budget().limits()
     };
-    // Growing unadopted corpus: 625M stopped during tree validation. A finite
-    // 700M diagnostic run measured 644,612,448 Work; select 650M for parse only.
+    // Growing unadopted corpus: 650M stopped during tree validation. A finite
+    // 700M diagnostic run measured 663,193,106 Work; select 675M for parse only.
     // This does not relax lower/label, allocation, default or registry policies.
     let parse_limits = Limits {
-        work: 650_000_000,
+        work: 675_000_000,
         ..draft_limits
     };
     nepl3_tools::doc::source::with_named_input_limits(
@@ -529,18 +529,18 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             else {
                 return Err("resource transition body".into());
             };
-            assert_eq!(resource_blocks.len(), 11);
+            assert_eq!(resource_blocks.len(), 14);
             assert!(matches!(
                 document.value.nodes[resource_blocks[4].0 as usize].kind,
                 DocKind::RawCode { .. }
             ));
-            // This stage includes the callback-boundary paragraphs;
-            // later caller/host regressions remain outside the draft.
+            // This stage includes the caller/host boundary paragraphs;
+            // subsequent nested coverage sections remain outside the draft.
             let resource_source = original
                 .split_once("## Pure resource-transition verification\n\n")
                 .ok_or("source resource transitions")?
                 .1
-                .split_once("\nShape admission callers")
+                .split_once("\n### Source admission interruption coverage")
                 .ok_or("resource stage boundary")?
                 .0;
             let expected_paragraphs: Vec<_> = resource_source
@@ -554,7 +554,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                         .join(" ")
                 })
                 .collect();
-            assert_eq!(expected_paragraphs.len(), 10);
+            assert_eq!(expected_paragraphs.len(), 13);
             let mut actual_codes = Vec::new();
             for ((index, count), expected) in [
                 (0, 4),
@@ -567,6 +567,9 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 (8, 2),
                 (9, 7),
                 (10, 10),
+                (11, 6),
+                (12, 5),
+                (13, 8),
             ]
             .into_iter()
             .zip(&expected_paragraphs)
