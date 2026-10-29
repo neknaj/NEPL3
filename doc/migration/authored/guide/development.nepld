@@ -808,6 +808,26 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons "Multi-Math page cases retain exact/one-below limits, cancellation, elevated caller depth, invalid origin/unreachable node/unused embed rejection, and faithful output. "
         cons "These native checks do not complete formal acceptance or prove all rendering paths linear-time." nil
       nil
+    cons section checkedPagesetReuse "Checked PageSet preparation reuse" body
+      cons paragraph
+        cons "PageSet resolution hashes the enclosing PageSet and document values together. "
+        cons "Guest identities now use versioned Foundation components and operation-domain wrapping; group NDF reuse across that encoding boundary remains unfinished. "
+        cons "It keeps all native closure, source, environment and outer schema checks, and preserves independently separated digest domains. "
+        cons "Standalone preparation still encodes/checks its input. "
+        cons "Guest hash work now precedes label discovery, so competing failure order may change. "
+        cons "Tests compare mixed empty/single/multiple guest pages with independent standalone component identities and exact/one-short resource ceilings." nil
+      cons paragraph
+        cons "The same operation retains immutable native document structures in CheckedPages. "
+        cons "Selected Markdown Math preparation borrows these structures instead of repeating containing-Doc validation; guest selection, semantic checks, lowering and output preparation remain. "
+        cons "The native unresolved-text entry shares the ordinary text traversal, but accepts no external resolutions and therefore needs no identity hashes for their verification. "
+        cons "Encountered inline guests remain unresolved. "
+        cons "This supplies image alt text without re-encoding and re-hashing its full owner." nil
+      cons paragraph
+        cons "Both native entries check limits and active depth, preserve stopped budgets, and require continuation of the same cumulative Budget/registry/source admission. "
+        cons "Matching bounds do not prove paid-usage identity. "
+        cons "These are in-operation native proofs, not wire receipts, cache authorization, guest semantic proofs or complete runtime acceptance. "
+        cons "No resource ceiling is raised or reset." nil
+      nil
     nil
   nil
 nil
