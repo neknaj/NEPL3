@@ -859,6 +859,22 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons "これはT01/E01に[関係/かんけい]する[固定/こてい]oracleの[補強/ほきょう]であり、[実/じつ]ブラウザーでのfoundation Wasm[実行/じっこう]や七target[分/ぶん]の[正式受入証拠/せいしきうけいれしょうこ]を[追加/ついか]したものではない。"
         cons "E01を[含/ふく]む[受入状態/うけいれじょうたい]は[変更/へんこう]しない。" nil
       nil
+    cons section browserSourcePosition "Browser foundation source-position slice（2026-10-10）" body
+      cons paragraph
+        cons sentence cons code "conformance/targets/browser" cons text " は production の " cons code "SourceSnapshot" cons text " / " cons code "LineIndex" cons text " を" cons ruby text "呼" text "よ" cons text "ぶ test-only cdylib を Wasm " cons ruby text "化" text "か" cons text "する。" nil
+        cons sentence cons ruby text "固定" text "こてい" cons text "した173ケースを Chromium・Firefox・WebKit の" cons ruby text "全" text "すべ" cons text "てで" cons ruby text "照合" text "しょうごう" cons text "する runner を " cons code "tools/emulators/browser" cons text " に" cons ruby text "追加" text "ついか" cons text "した。" nil
+        cons "[期待値/きたいち]は[変換器/へんかんき]から[生成/せいせい]せず、BOM・[日本語/にほんご]・[補助/ほじょ]scalar・[改行/かいぎょう]・[空入力/からにゅうりょく]・[末尾/まつび]CRLF・snapshot mismatchのbyte/column[表/ひょう]から[固定/こてい]する。"
+        cons "fixtureの[正確/せいかく]なUTF-8 bytesもWasmから[読/よ]み[出/だ]し、[同/おな]じbyte[幅/はば]の[文字/もじ]への[置換/ちかん]を[検出/けんしゅつ]する。" nil
+      cons paragraph
+        cons "runnerはclean checkoutに[結/むす]び[付/つ]いたbuild、u64/BigIntの[型付/かたつ]き[結果/けっか]、[各/かく]engineのraw observations、version、input/binary hashesを[保存/ほぞん]する。"
+        cons "Linuxのdescendant trackingはdetached browserとreparentingを[扱/あつか]い、timeout[時/じ]にTERM/KILLと[終了確認/しゅうりょうかくにん]を[行/おこな]う。"
+        cons "trusted test runnerの[範囲/はんい]であり、[敵対的/てきたいてき]processの[隔離/かくり]や[暗号学的実行証明/あんごうがくてきじっこうしょうめい]ではない。"
+        cons "十[個/こ]のPython[失敗系試験/しっぱいけいしけん]とadapterのhost[試験/しけん]・clippy・Wasm build、basedpyright all-modeがlocalで[成功/せいこう]した。"
+        cons "三engineの[実行結果/じっこうけっか]は[対応/たいおう]するCI artifactで[別途確認/べっとかくにん]する。" nil
+      cons paragraph
+        cons "これはE01[全/ぜん]七targetのAcceptanceEvidenceを[組/く]み[立/た]てる[処理/しょり]ではない。"
+        cons sentence cons code "design/acceptance.json" cons text "、LKG、publication identityの" cons ruby text "状態" text "じょうたい" cons text "は" cons ruby text "変更" text "へんこう" cons text "しない。" nil nil
+      nil
     nil
   nil
 nil
