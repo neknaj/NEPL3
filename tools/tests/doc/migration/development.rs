@@ -55,11 +55,11 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
         allocation_units: 1_500_000_000,
         ..budget().limits()
     };
-    // Growing unadopted corpus stopped at 770M parse Work.
-    // Finite 820M / 12M sizing measured 786,636,378 Work / 10,780,982 Nodes.
-    // Select 790M / 10.9M for parse only; other phase policies stay separate.
+    // Growing unadopted corpus stopped at 790M parse Work.
+    // Finite 850M / 12M sizing measured 808,556,414 Work / 10,891,651 Nodes.
+    // Select 810M / 10.9M for parse only; other phase policies stay separate.
     let parse_limits = Limits {
-        work: 790_000_000,
+        work: 810_000_000,
         nodes: 10_900_000,
         ..draft_limits
     };
@@ -266,23 +266,12 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 }
             }
             assert_eq!(actual_wasi, [wasi]);
-            // Deliberately a subset: the missing final fenced block, prose,
-            // headings and link closure still block a complete migration.
-            assert_eq!((expected.len(), actual.len()), (13, 12));
-            // The ten first-H1 fences and two second-H1 fences retain source order.
-            // The final second-H1 fence remains missing.
-            assert_eq!(actual.as_slice(), &expected[..12]);
-            for value in actual {
-                let index = expected
-                    .iter()
-                    .position(|item| item == &value)
-                    .ok_or_else(|| format!("draft command differs from source: {value:?}"))?;
-                expected.remove(index);
-            }
-            assert_eq!(expected.len(), 1);
-            // This growing draft exceeded 220M text preparation before projections.
-            // A finite 250M diagnostic used 220,561,598 Work for preparation
-            // and 221,051,157 for all parity.
+            // All ordered command fences are restored; prose, headings and
+            // link closure still block complete document migration.
+            assert_eq!((expected.len(), actual.len()), (13, 13));
+            assert_eq!(actual, expected);
+            // This slice uses 223,675,693 Work for text preparation
+            // and 224,170,431 for all parity under the existing allowance.
             // Keep one cumulative 225M test-local budget for both operations;
             // no reset, memoization or production/default policy change.
             let mut b = Budget::new(Limits {
@@ -550,7 +539,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             else {
                 return Err("resource transition body".into());
             };
-            assert_eq!(resource_blocks.len(), 23);
+            assert_eq!(resource_blocks.len(), 24);
             assert!(matches!(
                 document.value.nodes[resource_blocks[4].0 as usize].kind,
                 DocKind::RawCode { .. }
@@ -748,6 +737,78 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 assert_eq!(expected_codes.len(), code_count);
                 assert_eq!(actual_codes, expected_codes);
             }
+            let DocKind::Section { id, title, body } =
+                &document.value.nodes[resource_blocks[23].0 as usize].kind
+            else {
+                return Err("ordinary math H3".into());
+            };
+            assert_eq!(id.as_str(), "ordinaryDocHtmlMath");
+            assert_eq!(project(*title)?, "通常Doc HTML内の数式");
+            let DocKind::Body {
+                blocks: math_blocks,
+            } = &document.value.nodes[body.0 as usize].kind
+            else {
+                return Err("ordinary math body".into());
+            };
+            assert_eq!(math_blocks.len(), 3);
+            let math_source = original
+                .split_once("### 通常Doc HTML内の数式\n\n")
+                .ok_or("math source heading")?
+                .1
+                .split_once("\n## BudgetのscopeとRust unwinding")
+                .ok_or("math source end")?
+                .0;
+            let paragraphs: Vec<_> = math_source
+                .trim()
+                .split("\n\n")
+                .filter(|part| !part.starts_with("```"))
+                .map(|part| {
+                    part.replace('`', "")
+                        .split_whitespace()
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                })
+                .collect();
+            assert_eq!(paragraphs.len(), 2);
+            let mut actual_codes = Vec::new();
+            for ((index, count), expected) in [(0, 3), (2, 7)].into_iter().zip(&paragraphs) {
+                let DocKind::Paragraph { items } =
+                    &document.value.nodes[math_blocks[index].0 as usize].kind
+                else {
+                    return Err("ordinary math paragraph".into());
+                };
+                assert_eq!(items.len(), count);
+                let sentences = items
+                    .iter()
+                    .map(|item| project(nepl3_doc_core::model::SentenceRef(item.0)))
+                    .collect::<Result<Vec<_>, _>>()?;
+                assert_eq!(sentences.concat(), *expected);
+                paragraph_inline_code(&document, math_blocks[index].0, &mut actual_codes)?;
+            }
+            let expected_codes: Vec<_> = Parser::new(math_source)
+                .filter_map(|event| match event {
+                    Event::Code(code) => Some(code.into_string()),
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(expected_codes.len(), 6);
+            assert_eq!(actual_codes, expected_codes);
+            let DocKind::RawCode {
+                language_hint,
+                text,
+            } = &document.value.nodes[math_blocks[1].0 as usize].kind
+            else {
+                return Err("ordinary math command fence".into());
+            };
+            assert_eq!(language_hint.as_deref(), Some("sh"));
+            let source_code = math_source
+                .split_once("```sh\n")
+                .ok_or("math fence")?
+                .1
+                .split_once("```\n")
+                .ok_or("math fence end")?
+                .0;
+            assert_eq!(text, source_code);
             let mut actual_intro = Vec::new();
             for child in &children[..3] {
                 blocks(&document, child.0, &mut project, &mut actual_intro)?;
