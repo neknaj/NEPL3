@@ -55,12 +55,12 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
         allocation_units: 1_500_000_000,
         ..budget().limits()
     };
-    // Growing unadopted corpus stopped at 840M parse Work.
-    // Finite 900M / 12M sizing measured 854,242,484 Work / 11,383,749 Nodes.
-    // Select 860M / 11.5M for parse only; other phase policies stay separate.
+    // Growing unadopted corpus stopped at 860M parse Work.
+    // Finite 900M / 12M sizing measured 877,314,854 Work / 11,728,762 Nodes.
+    // Select 880M / 11.8M for parse only; other phase policies stay separate.
     let parse_limits = Limits {
-        work: 860_000_000,
-        nodes: 11_500_000,
+        work: 880_000_000,
+        nodes: 11_800_000,
         ..draft_limits
     };
     nepl3_tools::doc::source::with_named_input_limits(
@@ -275,12 +275,12 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             // link closure still block complete document migration.
             assert_eq!((expected.len(), actual.len()), (13, 13));
             assert_eq!(actual, expected);
-            // The prior 230M allowance stopped at 229,999,989 Work.
-            // Finite 260M sizing measured 233,932,767 for preparation and
-            // 234,461,230 for all parity. Use one cumulative 240M budget;
+            // The prior 240M allowance stopped at 239,999,989 Work.
+            // Finite 260M sizing measured 240,388,503 for preparation and
+            // 240,935,422 for all parity. Use one cumulative 245M budget;
             // no reset, memoization or production/default policy change.
             let mut b = Budget::new(Limits {
-                work: 240_000_000,
+                work: 245_000_000,
                 ..budget().limits()
             });
             let prepared = text::prepare(&document, profile.registry(), &mut codec, &mut b)
@@ -827,7 +827,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             else {
                 return Err("budget unwinding body".into());
             };
-            assert_eq!(unwind_blocks.len(), 3);
+            assert_eq!(unwind_blocks.len(), 4);
             let DocKind::Paragraph { items } =
                 &document.value.nodes[unwind_blocks[0].0 as usize].kind
             else {
@@ -989,6 +989,70 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 })
                 .collect();
             assert_eq!(expected_codes.len(), 8);
+            assert_eq!(actual_codes, expected_codes);
+            let DocKind::Section { id, title, body } =
+                &document.value.nodes[unwind_blocks[3].0 as usize].kind
+            else {
+                return Err("trusted local children H3".into());
+            };
+            assert_eq!(id.as_str(), "trustedLocalChildren");
+            assert_eq!(project(*title)?, "Trusted terminal local children");
+            let DocKind::Body {
+                blocks: trusted_blocks,
+            } = &document.value.nodes[body.0 as usize].kind
+            else {
+                return Err("trusted local children body".into());
+            };
+            assert_eq!(trusted_blocks.len(), 5);
+            let trusted_source = original
+                .split_once("### Trusted terminal local children\n\n")
+                .ok_or("trusted local children source")?
+                .1
+                .split_once("\n### Saved Reader call through a measured builtin child")
+                .ok_or("trusted local children end")?
+                .0;
+            let paragraphs: Vec<_> = trusted_source
+                .trim()
+                .split("\n\n")
+                .map(|part| {
+                    part.replace('`', "")
+                        .split_whitespace()
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                })
+                .collect();
+            assert_eq!(paragraphs.len(), 5);
+            let mut actual_codes = Vec::new();
+            for ((node, count), expected) in
+                trusted_blocks.iter().zip([4, 5, 5, 4, 6]).zip(&paragraphs)
+            {
+                let DocKind::Paragraph { items } = &document.value.nodes[node.0 as usize].kind
+                else {
+                    return Err("trusted local children paragraph".into());
+                };
+                assert_eq!(items.len(), count);
+                let sentences = items
+                    .iter()
+                    .map(|item| project(nepl3_doc_core::model::SentenceRef(item.0)))
+                    .collect::<Result<Vec<_>, _>>()?;
+                assert_eq!(sentences.concat(), *expected);
+                for (index, sentence) in sentences.iter().enumerate() {
+                    assert!(!sentence.starts_with(' '));
+                    assert!(sentence.ends_with(if index + 1 < sentences.len() {
+                        ". "
+                    } else {
+                        "."
+                    }));
+                }
+                paragraph_inline_code(&document, node.0, &mut actual_codes)?;
+            }
+            let expected_codes: Vec<_> = Parser::new(trusted_source)
+                .filter_map(|event| match event {
+                    Event::Code(code) => Some(code.into_string()),
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(expected_codes.len(), 7);
             assert_eq!(actual_codes, expected_codes);
             let mut actual_intro = Vec::new();
             for child in &children[..3] {
