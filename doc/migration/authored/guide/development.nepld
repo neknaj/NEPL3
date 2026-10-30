@@ -931,6 +931,31 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons sentence cons text "Focused checks: " cons code "cargo test --locked -p nepl3-reader --lib portable::continuation" cons text " and " cons code "cargo test --locked -p nepl3-reader --test runtime echo::" cons text ". " nil
         cons "Native builtinName sender and Tokenizer pending-value echoes are covered in separate sections below; cross-process continuation authority and formal runtime acceptance remain separate work." nil
       nil
+    cons section savedInvokeComparison "Exact saved Invoke comparison before settlement" body
+      cons paragraph
+        cons sentence cons code "Invoke::check_saved" cons text " compares request ID, operation identity, input, environment, Limits and ordered source/resource tables against the host's retained Invoke. " nil
+        cons "It uses the existing budgeted TypedValue and SourceSnapshot comparisons and charges resource IDs/digests/bytes before comparison. "
+        cons "This comparison admits no source bytes and grants no authority. "
+        cons "Even equally malformed values may compare equal; ordinary schema validation and authorization are still required." nil
+      cons paragraph
+        cons sentence cons code "IssuedInvocation::issue_with_parent_validation" cons text " charges input validation and context encoding to the actual parent before reserving the saved Invoke's unchanged grant. " nil
+        cons "The grant must fit the remaining capacity after those costs. "
+        cons "Prior usage and sticky stops survive validation or reservation failure; reservation itself is not consumed remote usage. "
+        cons sentence cons text "Legacy " cons code "issue" cons text " keeps its separate validation Budget. " nil
+        cons "Parent-paid issuance does not authenticate remote measurements; the separate cumulative-history local-child adapter is covered below. "
+        cons sentence cons text "The focused regression is " cons code "cargo test --locked -p nepl3-provider --test transport reply::delegation::parent::" cons text "." nil nil
+      cons paragraph
+        cons sentence cons code "IssuedInvocation::settle_saved_request" cons text " is an optional entry that runs that check under the actual parent's unreserved local ceiling before the existing identity checks and one-time settlement. " nil
+        cons "Successful comparison costs stay charged on mismatch or stop. "
+        cons "A failed request/identity check or an observation exceeding the grant records no remote Usage; the unresolved guard cancels its parent without replacing an earlier stop. "
+        cons sentence cons text "The new entry has a separate " cons code "SavedSettlementError" cons text "; the existing " cons code "Error" cons text " enum is unchanged. " nil
+        cons sentence cons text "The unchanged " cons code "settle" cons text " entry remains available for an independently verified observation after a parent stop. " nil
+        cons "The new entry cannot perform fresh comparison on an already stopped parent, and does not silently bypass that verification." nil
+      cons paragraph
+        cons "Exact content equality does not connect that content to a trusted measurement channel or distinguish repeated identical requests, reconnections or attempts. "
+        cons "The host must establish those associations and terminal cleanup independently. "
+        cons "The context digest retains its existing cycle-detection semantics; no wire record, remote inherited Budget transport, task status or formal acceptance result changes in this slice." nil
+      nil
     nil
   nil
 nil
