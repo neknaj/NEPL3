@@ -987,6 +987,19 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons "The immutable Invoke keeps its relative grant; do not rewrite it to cumulative limits or insert an unchanged cumulative-ceiling dispatcher. "
         cons sentence cons text "The focused test is " cons code "cargo test --locked -p nepl3-provider --test transport reply::delegation::child::" cons text "." nil nil
       nil
+    cons section savedReaderMeasuredChild "Saved Reader call through a measured builtin child" body
+      cons paragraph
+        cons sentence cons code "apps/provider/tests/reader/child.rs" cons text " composes an authentic saved " cons code "builtinName" cons text " call with the request-bound local-child adapter and the production standalone builtinName sender. " nil
+        cons "The host retains the original session/call/continuation, authorizes the outer Invoke and builds only that Invoke's source authority. "
+        cons "The shared sender narrows nested source declarations before context decoding; preparation and execution use the supplied child Budget and SourceAdmission. "
+        cons "The test does not duplicate request decoding or builtin dispatch, encode its reply, or settle the sender's cumulative Usage a second time. "
+        cons "The unchanged Invoke contains relative additive grants; the child has cumulative ceilings and the saved call depth. "
+        cons "Actual increments settle once before the original session validates and consumes the terminal reply." nil
+      cons paragraph
+        cons "The integration checks Matched, NoMatch and nonfinal NeedMore, source authority and conflicting-content rejection, a tight child work stop with retained output, parent admission isolation, fresh depth versus historical peak, and valid resume after rejected child attempts. "
+        cons "It preserves the existing generated-source outer Report test. "
+        cons "This is host-composed integration coverage, not a resumable child, remote accounting proof, or formal provider-equivalence acceptance." nil
+      nil
     nil
   nil
 nil
