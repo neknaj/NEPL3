@@ -55,12 +55,12 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
         allocation_units: 1_500_000_000,
         ..budget().limits()
     };
-    // Growing unadopted corpus stopped at 825M parse Work.
-    // Finite 870M / 12M sizing measured 835,457,413 Work / 11,136,676 Nodes.
-    // Select 840M / 11.2M for parse only; other phase policies stay separate.
+    // Growing unadopted corpus stopped at 840M parse Work.
+    // Finite 900M / 12M sizing measured 854,242,484 Work / 11,383,749 Nodes.
+    // Select 860M / 11.5M for parse only; other phase policies stay separate.
     let parse_limits = Limits {
-        work: 840_000_000,
-        nodes: 11_200_000,
+        work: 860_000_000,
+        nodes: 11_500_000,
         ..draft_limits
     };
     nepl3_tools::doc::source::with_named_input_limits(
@@ -275,12 +275,12 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             // link closure still block complete document migration.
             assert_eq!((expected.len(), actual.len()), (13, 13));
             assert_eq!(actual, expected);
-            // This slice uses 229,134,377 Work for preparation and
-            // 229,645,759 for all parity under the existing 230M allowance.
-            // Keep one cumulative test-local budget for both operations;
+            // The prior 230M allowance stopped at 229,999,989 Work.
+            // Finite 260M sizing measured 233,932,767 for preparation and
+            // 234,461,230 for all parity. Use one cumulative 240M budget;
             // no reset, memoization or production/default policy change.
             let mut b = Budget::new(Limits {
-                work: 230_000_000,
+                work: 240_000_000,
                 ..budget().limits()
             });
             let prepared = text::prepare(&document, profile.registry(), &mut codec, &mut b)
@@ -827,7 +827,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             else {
                 return Err("budget unwinding body".into());
             };
-            assert_eq!(unwind_blocks.len(), 2);
+            assert_eq!(unwind_blocks.len(), 3);
             let DocKind::Paragraph { items } =
                 &document.value.nodes[unwind_blocks[0].0 as usize].kind
             else {
@@ -917,6 +917,72 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 paragraph_inline_code(&document, node.0, &mut actual_codes)?;
             }
             let expected_codes: Vec<_> = Parser::new(echo_source)
+                .filter_map(|event| match event {
+                    Event::Code(code) => Some(code.into_string()),
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(expected_codes.len(), 8);
+            assert_eq!(actual_codes, expected_codes);
+            let DocKind::Section { id, title, body } =
+                &document.value.nodes[unwind_blocks[2].0 as usize].kind
+            else {
+                return Err("saved Invoke H3".into());
+            };
+            assert_eq!(id.as_str(), "savedInvokeComparison");
+            assert_eq!(
+                project(*title)?,
+                "Exact saved Invoke comparison before settlement"
+            );
+            let DocKind::Body {
+                blocks: invoke_blocks,
+            } = &document.value.nodes[body.0 as usize].kind
+            else {
+                return Err("saved Invoke body".into());
+            };
+            assert_eq!(invoke_blocks.len(), 4);
+            let invoke_source = original
+                .split_once("### Exact saved Invoke comparison before settlement\n\n")
+                .ok_or("saved Invoke source")?
+                .1
+                .split_once("\n### Trusted terminal local children")
+                .ok_or("saved Invoke end")?
+                .0;
+            let paragraphs: Vec<_> = invoke_source
+                .trim()
+                .split("\n\n")
+                .map(|part| {
+                    part.replace('`', "")
+                        .split_whitespace()
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                })
+                .collect();
+            assert_eq!(paragraphs.len(), 4);
+            let mut actual_codes = Vec::new();
+            for ((node, count), expected) in invoke_blocks.iter().zip([4, 6, 6, 3]).zip(&paragraphs)
+            {
+                let DocKind::Paragraph { items } = &document.value.nodes[node.0 as usize].kind
+                else {
+                    return Err("saved Invoke paragraph".into());
+                };
+                assert_eq!(items.len(), count);
+                let sentences = items
+                    .iter()
+                    .map(|item| project(nepl3_doc_core::model::SentenceRef(item.0)))
+                    .collect::<Result<Vec<_>, _>>()?;
+                assert_eq!(sentences.concat(), *expected);
+                for (index, sentence) in sentences.iter().enumerate() {
+                    assert!(!sentence.starts_with(' '));
+                    assert!(sentence.ends_with(if index + 1 < sentences.len() {
+                        ". "
+                    } else {
+                        "."
+                    }));
+                }
+                paragraph_inline_code(&document, node.0, &mut actual_codes)?;
+            }
+            let expected_codes: Vec<_> = Parser::new(invoke_source)
                 .filter_map(|event| match event {
                     Event::Code(code) => Some(code.into_string()),
                     _ => None,
