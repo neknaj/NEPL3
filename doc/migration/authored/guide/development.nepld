@@ -1053,6 +1053,37 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons "NeedMore remains terminal for that immutable snapshot; a larger revision starts a new read rather than reviving the consumed continuation. "
         cons "Resource Stop is not converted to resumable Await." nil
       nil
+    cons section syntaxSourcePrefixes "Identical syntax source-prefix checkpoints" body
+      cons paragraph
+        cons "Within one checked ForeignClosureGroup conversion, the wire encoder may retain one complete SHA-256 state after the outer ForeignSyntax.bundle.sources prefix. "
+        cons "The operation fixes the foundation schema and domain. "
+        cons "Reuse additionally checks the complete guest schema, category, and ordered native snapshots, including URI and text via metered snapshot equality. "
+        cons "Canonical root IDs are normalized to zero. "
+        cons "The remainder of the bundle and its environment reference are still encoded in order. "
+        cons "This preserves expanded v1 identities and every local source declaration; it is neither a compact wire format nor a generic subtree digest cache." nil
+      cons paragraph
+        cons "All native, schema, ownership and source admission checks precede this private optimization. "
+        cons "The checkpoint is retained only after a successful digest. "
+        cons "Hits reobserve its maximum absolute depth, meter comparisons and SHA-state copies, and remain subject to sticky Budget stops. "
+        cons "Native storage sharing can make key comparison cheap; independently allocated equal snapshots still pay for byte comparison. "
+        cons "Cold/missing prefixes have additional checkpoint bookkeeping cost. "
+        cons "Nested source lists later in the syntax stream are not skipped." nil
+      cons paragraph
+        cons "Regression coverage compares component identities with independently emitted canonical bytes across SHA block boundaries, checks changed prefix keys and suffixes, and tests exact/one-short warm resource limits. "
+        cons "This optimization alone does not establish that a real document set fits any configured resource limit." nil
+      cons paragraph
+        cons "Native syntax/provenance validation also retains one checked local source set in its SourceAdmission ledger. "
+        cons "Exact ordered snapshot equality (including URI/text) reuses the previously built SourceStore; misses preserve admission, duplicate and insertion checks before replacing it. "
+        cons "Every consumer still checks its own origins, mappings, tokens, nodes and environments. "
+        cons "The local set never becomes the ledger's union, so admitting a source elsewhere cannot make it visible to a guest." nil
+      cons paragraph
+        cons "The retained store is owned by the same append-only operation ledger and holds immutable snapshots. "
+        cons "Failed replacement keeps the previous set. "
+        cons "Public stop/error variants are unchanged. "
+        cons "Each lookup pays one Work unit plus snapshot comparisons; reused sets avoid repeated source-index allocations/searches. "
+        cons "Provenance insertion now uses the single-charge shared insertion path instead of charging snapshot storage once for cloning and again for insertion. "
+        cons "Regression tests retain the historical canonical-order baseline with an explicit one-unit cold-probe allowance." nil
+      nil
     nil
   nil
 nil
