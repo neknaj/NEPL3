@@ -55,12 +55,12 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
         allocation_units: 1_500_000_000,
         ..budget().limits()
     };
-    // Growing unadopted corpus stopped at 755M parse Work.
-    // Finite 800M / 12M sizing measured 768,458,363 Work / 10,562,979 Nodes.
-    // Select 770M / 10.7M for parse only; other phase policies stay separate.
+    // Growing unadopted corpus stopped at 770M parse Work.
+    // Finite 820M / 12M sizing measured 786,636,378 Work / 10,780,982 Nodes.
+    // Select 790M / 10.9M for parse only; other phase policies stay separate.
     let parse_limits = Limits {
-        work: 770_000_000,
-        nodes: 10_700_000,
+        work: 790_000_000,
+        nodes: 10_900_000,
         ..draft_limits
     };
     nepl3_tools::doc::source::with_named_input_limits(
@@ -280,13 +280,13 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 expected.remove(index);
             }
             assert_eq!(expected.len(), 1);
-            // This growing draft exceeded 215M text preparation before projections.
-            // A finite 250M diagnostic used 216,321,123 Work for preparation
-            // and 216,798,120 for all parity.
-            // Keep one cumulative 220M test-local budget for both operations;
+            // This growing draft exceeded 220M text preparation before projections.
+            // A finite 250M diagnostic used 220,561,598 Work for preparation
+            // and 221,051,157 for all parity.
+            // Keep one cumulative 225M test-local budget for both operations;
             // no reset, memoization or production/default policy change.
             let mut b = Budget::new(Limits {
-                work: 220_000_000,
+                work: 225_000_000,
                 ..budget().limits()
             });
             let prepared = text::prepare(&document, profile.registry(), &mut codec, &mut b)
@@ -550,7 +550,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             else {
                 return Err("resource transition body".into());
             };
-            assert_eq!(resource_blocks.len(), 22);
+            assert_eq!(resource_blocks.len(), 23);
             assert!(matches!(
                 document.value.nodes[resource_blocks[4].0 as usize].kind,
                 DocKind::RawCode { .. }
@@ -678,6 +678,14 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                     "Browser foundation source-position slice（2026-10-10）",
                     "Native / WASI source-position oracle（2026-10-10）",
                     &[4usize, 5, 2][..],
+                    5,
+                ),
+                (
+                    22,
+                    "nativeWasiSourcePosition",
+                    "Native / WASI source-position oracle（2026-10-10）",
+                    "通常Doc HTML内の数式",
+                    &[4usize, 4, 3][..],
                     5,
                 ),
             ] {

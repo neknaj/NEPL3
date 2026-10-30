@@ -875,6 +875,22 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons "これはE01[全/ぜん]七targetのAcceptanceEvidenceを[組/く]み[立/た]てる[処理/しょり]ではない。"
         cons sentence cons code "design/acceptance.json" cons text "、LKG、publication identityの" cons ruby text "状態" text "じょうたい" cons text "は" cons ruby text "変更" text "へんこう" cons text "しない。" nil nil
       nil
+    cons section nativeWasiSourcePosition "Native / WASI source-position oracle（2026-10-10）" body
+      cons paragraph
+        cons sentence cons code "tools/tests/source/position.rs" cons text " はbrowser sliceと" cons ruby text "同" text "おな" cons text "じ173ケースのJSONを" cons code "include_str!" cons text "で" cons ruby text "読" text "よ" cons text "み、privateな" cons ruby text "型付" text "かたつ" cons text "きschemaで" cons ruby text "検証" text "けんしょう" cons text "してからproductionの" cons code "SourceSnapshot" cons text " / " cons code "LineIndex" cons text "を" cons ruby text "直接呼" text "ちょくせつよ" cons text "ぶ。" nil
+        cons "empty input・[末尾/まつび]CRLF・三[種類/しゅるい]のsnapshot mismatch・canonical u64・invalid positionを[含/ふく]む[固定/こてい]inventoryを[全件実行/ぜんけんじっこう]する。"
+        cons "[余分/よぶん]なfield、[重複/じゅうふく]field、[未知/みち]のcase/selector/error、[欠損/けっそん]fixture、[不正/ふせい]な[引数/ひきすう]を[拒否/きょひ]し、[期待座標/きたいざひょう]やerrorを[変更/へんこう]した[場合/ばあい]は[実行照合/じっこうしょうごう]が[失敗/しっぱい]する。"
+        cons "nativeの三OSとWASIは[同/おな]じ[入力/にゅうりょく]を[使/つか]い、[別/べつ]の[期待値生成器/きたいちせいせいき]を[追加/ついか]しない。" nil
+      cons paragraph
+        cons sentence cons text "CIは" cons ruby text "既存" text "きそん" cons text "の" cons code "tools/evidence/runner.py" cons text "で" cons ruby text "各" text "かく" cons text "native targetとWasmtimeのfocused command・tool versions・host identity・raw logsを" cons ruby text "保存" text "ほぞん" cons text "する。" nil
+        cons "三つのintegration testsはlocal Linuxとchecksumを[確認/かくにん]したWasmtime 44.0.1で[成功/せいこう]し、focused Clippyも[成功/せいこう]した。"
+        cons "Windows・macOSの[実行成功/じっこうせいこう]はそれぞれのCIログを[確認/かくにん]するまで[主張/しゅちょう]しない。"
+        cons "これらはbounded sliceのcommand evidenceであり、E01七targetの[正式受入/せいしきうけいれ]やT01[完了/かんりょう]への[自動昇格/じどうしょうかく]は[行/おこな]わない。" nil
+      cons paragraph
+        cons "Wasmtimeのdownload/extractionはCI runnerのtemporary directoryで[行/おこな]う。"
+        cons "source checkoutへ[未追跡/みついせき]の[配布物/はいふぶつ]を[置/お]くと、[既存/きそん]evidence runnerのclean-source gateが[証拠採取前/しょうこさいしゅまえ]に[拒否/きょひ]するためである。"
+        cons "checksum[検証/けんしょう]とclean-source gateは[維持/いじ]する。" nil
+      nil
     nil
   nil
 nil
