@@ -1000,6 +1000,20 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons "It preserves the existing generated-source outer Report test. "
         cons "This is host-composed integration coverage, not a resumable child, remote accounting proof, or formal provider-equivalence acceptance." nil
       nil
+    cons section tokenizerPendingEchoes "Tokenizer canonical pending-value echoes" body
+      cons paragraph
+        cons "TokenizationSession exports the complete canonical TokenizationContinuation and pending domain TokenizationReply (Await or Reserve). "
+        cons "Resume/reserve checks schema headers/session, unchanged limits and monotone history before shared-budget polling, then compares the complete value against private state before consuming pending. "
+        cons "The selected Reader wire schema is distinct from the language plan schema." nil
+      cons paragraph
+        cons "Inner Reader and outer Tokenizer Usage/Report retain their captured values while serialization and comparison consume the current budget. "
+        cons "Admitted stops use the existing collector-preserving stop path; foreign or malformed preflight retains pending. "
+        cons "A Reserve echo does not supply reservation authority: an actual native SourceReservation is still required and checked by the existing implementation." nil
+      cons paragraph
+        cons "Regression tests cover both projections, all three provider kinds, reservation, independent native-derived field oracles, schema-valid changes, mapped scopes, repeated/unsorted sources, ambient exclusion, wrong routes, replay, and stops. "
+        cons "This is not a general continuation decoder, a terminal-reply codec, or a common OperationReply Await/Reserve envelope. "
+        cons "Formal acceptance remains in progress." nil
+      nil
     nil
   nil
 nil
