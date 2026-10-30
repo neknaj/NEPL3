@@ -1157,11 +1157,11 @@ fn synchronized_context_spec_drafts_parse_lower_and_check_labels() -> Result<()>
         },
         nepl3_doc_core::check::Category::Body,
         // Separate parse-only allowance for the growing unadopted guide.
-        // 880M stopped on Work; finite sizing measured 888,724,473 / 11,924,270.
+        // 890M stopped on Work; finite sizing measured 899,850,589 / 12,132,326.
         // Lower/labels retain phase_limits, including 600M Work / 10M Nodes.
         Some(DraftParseAllowance {
-            work: 890_000_000,
-            nodes: 12_000_000,
+            work: 905_000_000,
+            nodes: 12_200_000,
         }),
     )
 }

@@ -55,12 +55,12 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
         allocation_units: 1_500_000_000,
         ..budget().limits()
     };
-    // Growing unadopted corpus stopped at 880M parse Work.
-    // Finite 920M / 12.5M sizing measured 888,512,796 Work / 11,924,270 Nodes.
-    // Select 890M / 12M for parse only; other phase policies stay separate.
+    // Growing unadopted corpus stopped at 890M parse Work.
+    // Finite 930M / 12.5M sizing measured 899,622,061 Work / 12,132,326 Nodes.
+    // Select 905M / 12.2M for parse only; other phase policies stay separate.
     let parse_limits = Limits {
-        work: 890_000_000,
-        nodes: 12_000_000,
+        work: 905_000_000,
+        nodes: 12_200_000,
         ..draft_limits
     };
     nepl3_tools::doc::source::with_named_input_limits(
@@ -275,12 +275,12 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             // link closure still block complete document migration.
             assert_eq!((expected.len(), actual.len()), (13, 13));
             assert_eq!(actual, expected);
-            // The unchanged 245M cumulative text allowance fits this slice:
-            // 243,841,691 Work for preparation, 244,399,673 for all parity.
-            // Keep the budget fixed before preparation;
+            // The prior 245M allowance stopped at 244,999,996 Work.
+            // Finite 270M sizing measured 247,674,103 for preparation and
+            // 248,244,303 for all parity. Use one cumulative 250M budget;
             // no reset, memoization or production/default policy change.
             let mut b = Budget::new(Limits {
-                work: 245_000_000,
+                work: 250_000_000,
                 ..budget().limits()
             });
             let prepared = text::prepare(&document, profile.registry(), &mut codec, &mut b)
@@ -827,7 +827,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             else {
                 return Err("budget unwinding body".into());
             };
-            assert_eq!(unwind_blocks.len(), 5);
+            assert_eq!(unwind_blocks.len(), 6);
             let DocKind::Paragraph { items } =
                 &document.value.nodes[unwind_blocks[0].0 as usize].kind
             else {
@@ -1119,6 +1119,69 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 })
                 .collect();
             assert_eq!(expected_codes.len(), 2);
+            assert_eq!(actual_codes, expected_codes);
+            let DocKind::Section { id, title, body } =
+                &document.value.nodes[unwind_blocks[5].0 as usize].kind
+            else {
+                return Err("tokenizer echoes H3".into());
+            };
+            assert_eq!(id.as_str(), "tokenizerPendingEchoes");
+            assert_eq!(project(*title)?, "Tokenizer canonical pending-value echoes");
+            let DocKind::Body {
+                blocks: tokenizer_blocks,
+            } = &document.value.nodes[body.0 as usize].kind
+            else {
+                return Err("tokenizer echoes body".into());
+            };
+            assert_eq!(tokenizer_blocks.len(), 3);
+            let tokenizer_source = original
+                .split_once("### Tokenizer canonical pending-value echoes\n\n")
+                .ok_or("tokenizer echoes source")?
+                .1
+                .split_once("\n### Standalone builtinName sender and encoding retries")
+                .ok_or("tokenizer echoes end")?
+                .0;
+            let paragraphs: Vec<_> = tokenizer_source
+                .trim()
+                .split("\n\n")
+                .map(|part| {
+                    part.replace('`', "")
+                        .split_whitespace()
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                })
+                .collect();
+            assert_eq!(paragraphs.len(), 3);
+            let mut actual_codes = Vec::new();
+            for ((node, count), expected) in tokenizer_blocks.iter().zip([3, 3, 3]).zip(&paragraphs)
+            {
+                let DocKind::Paragraph { items } = &document.value.nodes[node.0 as usize].kind
+                else {
+                    return Err("tokenizer echoes paragraph".into());
+                };
+                assert_eq!(items.len(), count);
+                let sentences = items
+                    .iter()
+                    .map(|item| project(nepl3_doc_core::model::SentenceRef(item.0)))
+                    .collect::<Result<Vec<_>, _>>()?;
+                assert_eq!(sentences.concat(), *expected);
+                for (index, sentence) in sentences.iter().enumerate() {
+                    assert!(!sentence.starts_with(' '));
+                    assert!(sentence.ends_with(if index + 1 < sentences.len() {
+                        ". "
+                    } else {
+                        "."
+                    }));
+                }
+                paragraph_inline_code(&document, node.0, &mut actual_codes)?;
+            }
+            let expected_codes: Vec<_> = Parser::new(tokenizer_source)
+                .filter_map(|event| match event {
+                    Event::Code(code) => Some(code.into_string()),
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(expected_codes.len(), 0);
             assert_eq!(actual_codes, expected_codes);
             let mut actual_intro = Vec::new();
             for child in &children[..3] {
