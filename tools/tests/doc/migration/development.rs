@@ -55,12 +55,12 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
         allocation_units: 1_500_000_000,
         ..budget().limits()
     };
-    // Growing unadopted corpus stopped at 790M parse Work.
-    // Finite 850M / 12M sizing measured 808,556,414 Work / 10,891,651 Nodes.
-    // Select 810M / 10.9M for parse only; other phase policies stay separate.
+    // Growing unadopted corpus stopped at 810M parse Work.
+    // Finite 850M / 12M sizing measured 822,334,305 Work / 10,980,541 Nodes.
+    // Select 825M / 11M for parse only; other phase policies stay separate.
     let parse_limits = Limits {
-        work: 810_000_000,
-        nodes: 10_900_000,
+        work: 825_000_000,
+        nodes: 11_000_000,
         ..draft_limits
     };
     nepl3_tools::doc::source::with_named_input_limits(
@@ -151,13 +151,18 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 .collect();
             assert_eq!(
                 boundary_sections,
-                ["portable", "savedExecutionScope", "resourceTransitions"],
+                [
+                    "portable",
+                    "savedExecutionScope",
+                    "resourceTransitions",
+                    "budgetUnwinding"
+                ],
                 "restored H2 sections belong under the second H1"
             );
             assert_eq!(
                 boundary_children.len(),
-                10,
-                "seven restored paragraphs then three peer H2 sections"
+                11,
+                "seven restored paragraphs then four peer H2 sections"
             );
             let mut label_budget = budget();
             let checked = nepl3_doc_core::labels::check_body(
@@ -270,12 +275,13 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             // link closure still block complete document migration.
             assert_eq!((expected.len(), actual.len()), (13, 13));
             assert_eq!(actual, expected);
-            // This slice uses 223,675,693 Work for text preparation
-            // and 224,170,431 for all parity under the existing allowance.
-            // Keep one cumulative 225M test-local budget for both operations;
+            // The existing 225M text allowance stopped at 224,999,988 Work.
+            // Finite 250M sizing used 225,945,236 for preparation and
+            // 226,445,237 for all parity. Keep one cumulative 230M test-local
+            // budget for both operations;
             // no reset, memoization or production/default policy change.
             let mut b = Budget::new(Limits {
-                work: 225_000_000,
+                work: 230_000_000,
                 ..budget().limits()
             });
             let prepared = text::prepare(&document, profile.registry(), &mut codec, &mut b)
@@ -809,6 +815,54 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 .ok_or("math fence end")?
                 .0;
             assert_eq!(text, source_code);
+            let DocKind::Section { id, title, body } =
+                &document.value.nodes[boundary_children[10].0 as usize].kind
+            else {
+                return Err("budget unwinding H2".into());
+            };
+            assert_eq!(id.as_str(), "budgetUnwinding");
+            assert_eq!(project(*title)?, "BudgetのscopeとRust unwinding");
+            let DocKind::Body {
+                blocks: unwind_blocks,
+            } = &document.value.nodes[body.0 as usize].kind
+            else {
+                return Err("budget unwinding body".into());
+            };
+            assert_eq!(unwind_blocks.len(), 1);
+            let DocKind::Paragraph { items } =
+                &document.value.nodes[unwind_blocks[0].0 as usize].kind
+            else {
+                return Err("budget unwinding paragraph".into());
+            };
+            assert_eq!(items.len(), 5);
+            let unwind_source = original
+                .split_once("## BudgetのscopeとRust unwinding\n\n")
+                .ok_or("unwind source heading")?
+                .1
+                .split_once("\n### Session-bound canonical Reader echoes")
+                .ok_or("unwind source end")?
+                .0;
+            assert_eq!(unwind_source.trim().split("\n\n").count(), 1);
+            let expected = unwind_source
+                .replace('`', "")
+                .split_whitespace()
+                .collect::<Vec<_>>()
+                .join(" ");
+            let sentences = items
+                .iter()
+                .map(|item| project(nepl3_doc_core::model::SentenceRef(item.0)))
+                .collect::<Result<Vec<_>, _>>()?;
+            assert_eq!(sentences.concat(), expected);
+            let mut actual_codes = Vec::new();
+            paragraph_inline_code(&document, unwind_blocks[0].0, &mut actual_codes)?;
+            let expected_codes: Vec<_> = Parser::new(unwind_source)
+                .filter_map(|event| match event {
+                    Event::Code(code) => Some(code.into_string()),
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(expected_codes.len(), 6);
+            assert_eq!(actual_codes, expected_codes);
             let mut actual_intro = Vec::new();
             for child in &children[..3] {
                 blocks(&document, child.0, &mut project, &mut actual_intro)?;

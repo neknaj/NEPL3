@@ -907,5 +907,13 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons "[数式中/すうしきちゅう]のRuby/Anno[等/とう]をTeXへ[忠実/ちゅうじつ]に[写/うつ]せない[場合/ばあい]も、[数式全体/すうしきぜんたい]をMathMLに[保/たも]ち[注釈/ちゅうしゃく]を[落/お]とさない。" nil
       nil
     nil
+  cons section budgetUnwinding "BudgetのscopeとRust unwinding" body
+    cons paragraph
+      cons sentence cons code "Budget::with_depth" cons text "、" cons code "with_depth_at_least" cons text "、" cons code "with_ceiling" cons text "、" cons code "measure_depth" cons text "、" cons code "observe_depth_scope" cons text " は、" cons ruby text "通常" text "つうじょう" cons text "のResult" cons ruby text "経路" text "けいろ" cons text "とRust unwindingでscopeを" cons ruby text "復元" text "ふくげん" cons text "する。" nil
+      cons "[累積/るいせき]Usageとsticky stopは[保持/ほじ]し、[入/い]れ[子/こ]の[深/ふか]さ[測定/そくてい]は[内外/ないがい]の[最大値/さいだいち]を[統合/とうごう]する。"
+      cons "[復元/ふくげん]はstack[上/じょう]のDrop guardで[行/おこな]い、[純粋/じゅんすい]なcharge・depth・ceiling[遷移/せんい]と[停止理由/ていしりゆう]の[優先順位/ゆうせんじゅんい]は[維持/いじ]する。"
+      cons sentence cons code "cargo test --locked -p nepl3-core --test budget unwind_scopes" cons text " は、" cons ruby text "内側" text "うちがわ" cons text "で" cons ruby text "捕捉" text "ほそく" cons text "したunwind、" cons ruby text "取消" text "とりけし" cons text "・" cons ruby text "超過後" text "ちょうかご" cons text "のunwind、" cons ruby text "測定" text "そくてい" cons text "の" cons ruby text "内外" text "ないがい" cons text "peak、preflightのerror" cons ruby text "変換中" text "へんかんちゅう" cons text "のunwindを" cons ruby text "検査" text "けんさ" cons text "する。" nil
+      cons "panic=abortやWasmでdestructorの[実行/じっこう]を[保証/ほしょう]するものではなく、panicを[成功/せいこう]Resultへ[変換/へんかん]しない。" nil
+    nil
   nil
 nil
