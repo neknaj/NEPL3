@@ -1014,6 +1014,24 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons "This is not a general continuation decoder, a terminal-reply codec, or a common OperationReply Await/Reserve envelope. "
         cons "Formal acceptance remains in progress." nil
       nil
+    cons section standaloneNameSender "Standalone builtinName sender and encoding retries" body
+      cons paragraph
+        cons sentence cons code "portable::read::sender::execute_name" cons text " checks the selected builtinName operation, validates the request's declared source table against explicit host authority, and narrows context decoding to that table before calling the existing native provider. " nil
+        cons "It reuses the request codec, dispatch validation and builtin; it does not implement another parser. "
+        cons "A request declaration alone grants no authority." nil
+      cons paragraph
+        cons sentence cons text "The returned " cons code "ExecutedName" cons text " privately owns the actual native reply, captured execution Usage and narrowed sources. " nil
+        cons sentence cons code "to_operation_reply" cons text " uses a separate encoding Budget, fresh SourceAdmission for each attempt and the shared terminal outcome wrapper. " nil
+        cons "The codec scope rebinds sources and admission while retaining the registry; it cannot reuse execution or earlier encoding source-byte charges. "
+        cons "The caller's admission ledger is preserved. "
+        cons "Failed encoding can be retried without rerunning execution, changing its captured Report/Usage or clearing its sticky stop. "
+        cons "Encoding consumes its own budget. "
+        cons "The wire result does not authenticate remote usage, and this standalone entry does not reconcile a saved caller's cumulative history, depth, grant or session identity." nil
+      cons paragraph
+        cons "This bounded slice excludes native pending-session convenience dispatch. "
+        cons "Measured-child hosts remain responsible for request binding, depth, admission and settlement; they must not settle the sender's cumulative execution Usage a second time. "
+        cons sentence cons text "Focused checks: " cons code "cargo test --locked -p nepl3-reader --test portable sender::" cons text "." nil nil
+      nil
     nil
   nil
 nil
