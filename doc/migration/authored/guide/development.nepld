@@ -891,6 +891,21 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons "source checkoutへ[未追跡/みついせき]の[配布物/はいふぶつ]を[置/お]くと、[既存/きそん]evidence runnerのclean-source gateが[証拠採取前/しょうこさいしゅまえ]に[拒否/きょひ]するためである。"
         cons "checksum[検証/けんしょう]とclean-source gateは[維持/いじ]する。" nil
       nil
+    cons section ordinaryDocHtmlMath "[通常/つうじょう]Doc HTML[内/ない]の[数式/すうしき]" body
+      cons paragraph
+        cons sentence cons code "sentence cons math Math frac 1 2 nil" cons text " は" cons ruby text "文中" text "ぶんちゅう" cons text "の" cons ruby text "数式" text "すうしき" cons text "、" cons code "display Math frac 1 2" cons text " は" cons ruby text "別行" text "べつぎょう" cons text "のBlockを" cons ruby text "表" text "あらわ" cons text "す。 " nil
+        cons "[通常/つうじょう]のexport/pagesはこれらをMathMLとして[表示/ひょうじ]できる。"
+        cons "SVG[化/か]や[生成後/せいせいご]のHTML[手修正/てしゅうせい]は[不要/ふよう]である。" nil
+      cons rawcode some "sh" "cargo run --locked -p nepl3-tools -- doc-html export --css inline --math-renderer mathml-only input.nepld new-output\ncargo run --locked -p nepl3-tools -- doc-html pages --math-renderer mathml-only pages.json new-pages\n"
+      cons paragraph
+        cons sentence cons ruby text "省略時" text "しょうりゃくじ" cons text "は " cons code "katex-preferred" cons text "。" nil
+        cons sentence cons text "native CLIの" cons ruby text "生成時" text "せいせいじ" cons text "KaTeX adapterは、Node 24" cons ruby text "以上" text "いじょう" cons text "と、" cons code "NEPL3_KATEX_NODE_MODULES" cons text " で" cons ruby text "指定" text "してい" cons text "した" cons ruby text "固定" text "こてい" cons text "packageを" cons ruby text "使" text "つか" cons text "う。" nil
+        cons sentence cons text "host" cons ruby text "能力" text "のうりょく" cons text "や" cons ruby text "必要" text "ひつよう" cons text "なmoduleを" cons ruby text "利用" text "りよう" cons text "できない" cons ruby text "場合" text "ばあい" cons text "は、" cons ruby text "理由" text "りゆう" cons text "をmanifestの " cons code "math_diagnostics" cons text " に" cons ruby text "保持" text "ほじ" cons text "して" cons ruby text "独立" text "どくりつ" cons text "MathMLへ" cons ruby text "移" text "うつ" cons text "る。" nil
+        cons "[資源停止/しげんていし]・[期限超過/きげんちょうか]・provider[違反/いはん]を[能力不足/のうりょくぶそく]によるMathML[成功/せいこう]へ[読/よ]み[替/か]えない。 "
+        cons "MathML[成功/せいこう]をKaTeX[成功/せいこう]として[扱/あつか]わない。"
+        cons sentence cons ruby text "明示的" text "めいじてき" cons text "な " cons code "mathml-only" cons text " ではこの" cons ruby text "能力不足診断" text "のうりょくぶそくしんだん" cons text "を" cons ruby text "出" text "だ" cons text "さない。 " nil
+        cons "[数式中/すうしきちゅう]のRuby/Anno[等/とう]をTeXへ[忠実/ちゅうじつ]に[写/うつ]せない[場合/ばあい]も、[数式全体/すうしきぜんたい]をMathMLに[保/たも]ち[注釈/ちゅうしゃく]を[落/お]とさない。" nil
+      nil
     nil
   nil
 nil

@@ -727,7 +727,7 @@ cargo run --locked -p nepl3-tools -- doc-html export --css inline --math-rendere
 cargo run --locked -p nepl3-tools -- doc-html pages --math-renderer mathml-only pages.json new-pages
 ```
 
-省略時は `katex-preferred`。現native hostのKaTeX接続は未完了であり、利用不能の理由をmanifestの `math_diagnostics` に保持して独立MathMLへ移る。
+省略時は `katex-preferred`。native CLIの生成時KaTeX adapterは、Node 24以上と、`NEPL3_KATEX_NODE_MODULES` で指定した固定packageを使う。host能力や必要なmoduleを利用できない場合は、理由をmanifestの `math_diagnostics` に保持して独立MathMLへ移る。資源停止・期限超過・provider違反を能力不足によるMathML成功へ読み替えない。
 MathML成功をKaTeX成功として扱わない。明示的な `mathml-only` ではこの能力不足診断を出さない。
 数式中のRuby/Anno等をTeXへ忠実に写せない場合も、数式全体をMathMLに保ち注釈を落とさない。
 
