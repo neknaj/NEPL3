@@ -55,12 +55,12 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
         allocation_units: 1_500_000_000,
         ..budget().limits()
     };
-    // Growing unadopted corpus stopped at 905M parse Work.
-    // Finite 950M / 13M sizing measured 911,796,214 Work / 12,296,892 Nodes.
-    // Select 920M / 12.4M for parse only; other phase policies stay separate.
+    // Growing unadopted corpus stopped at 920M parse Work.
+    // Finite 960M / 13M sizing measured 924,608,946 Work / 12,474,335 Nodes.
+    // Select 930M / 12.6M for parse only; other phase policies stay separate.
     let parse_limits = Limits {
-        work: 920_000_000,
-        nodes: 12_400_000,
+        work: 930_000_000,
+        nodes: 12_600_000,
         ..draft_limits
     };
     nepl3_tools::doc::source::with_named_input_limits(
@@ -275,9 +275,9 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             // link closure still block complete document migration.
             assert_eq!((expected.len(), actual.len()), (13, 13));
             assert_eq!(actual, expected);
-            // The prior 250M allowance stopped at 249,999,999 Work.
-            // Finite 280M sizing measured 251,024,690 for preparation and
-            // 251,605,951 for all parity. Use one cumulative 255M budget;
+            // The unchanged 255M cumulative text allowance fits this slice:
+            // 254,325,670 Work for preparation, 254,914,268 for all parity.
+            // Keep the budget fixed before preparation;
             // no reset, memoization or production/default policy change.
             let mut b = Budget::new(Limits {
                 work: 255_000_000,
@@ -827,7 +827,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             else {
                 return Err("budget unwinding body".into());
             };
-            assert_eq!(unwind_blocks.len(), 7);
+            assert_eq!(unwind_blocks.len(), 8);
             let DocKind::Paragraph { items } =
                 &document.value.nodes[unwind_blocks[0].0 as usize].kind
             else {
@@ -1241,6 +1241,71 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 paragraph_inline_code(&document, node.0, &mut actual_codes)?;
             }
             let expected_codes: Vec<_> = Parser::new(sender_source)
+                .filter_map(|event| match event {
+                    Event::Code(code) => Some(code.into_string()),
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(expected_codes.len(), 4);
+            assert_eq!(actual_codes, expected_codes);
+            let DocKind::Section { id, title, body } =
+                &document.value.nodes[unwind_blocks[7].0 as usize].kind
+            else {
+                return Err("native saved name ledger H3".into());
+            };
+            assert_eq!(id.as_str(), "nativeSavedNameLedger");
+            assert_eq!(
+                project(*title)?,
+                "Native saved builtinName on the existing operation ledger"
+            );
+            let DocKind::Body {
+                blocks: ledger_blocks,
+            } = &document.value.nodes[body.0 as usize].kind
+            else {
+                return Err("native saved name ledger body".into());
+            };
+            assert_eq!(ledger_blocks.len(), 3);
+            let ledger_source = original
+                .split_once("### Native saved builtinName on the existing operation ledger\n\n")
+                .ok_or("native saved name ledger source")?
+                .1
+                .split_once("\n### Identical syntax source-prefix checkpoints")
+                .ok_or("native saved name ledger end")?
+                .0;
+            let paragraphs: Vec<_> = ledger_source
+                .trim()
+                .split("\n\n")
+                .map(|part| {
+                    part.replace('`', "")
+                        .split_whitespace()
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                })
+                .collect();
+            assert_eq!(paragraphs.len(), 3);
+            let mut actual_codes = Vec::new();
+            for ((node, count), expected) in ledger_blocks.iter().zip([3, 7, 6]).zip(&paragraphs) {
+                let DocKind::Paragraph { items } = &document.value.nodes[node.0 as usize].kind
+                else {
+                    return Err("native saved name ledger paragraph".into());
+                };
+                assert_eq!(items.len(), count);
+                let sentences = items
+                    .iter()
+                    .map(|item| project(nepl3_doc_core::model::SentenceRef(item.0)))
+                    .collect::<Result<Vec<_>, _>>()?;
+                assert_eq!(sentences.concat(), *expected);
+                for (index, sentence) in sentences.iter().enumerate() {
+                    assert!(!sentence.starts_with(' '));
+                    assert!(sentence.ends_with(if index + 1 < sentences.len() {
+                        ". "
+                    } else {
+                        "."
+                    }));
+                }
+                paragraph_inline_code(&document, node.0, &mut actual_codes)?;
+            }
+            let expected_codes: Vec<_> = Parser::new(ledger_source)
                 .filter_map(|event| match event {
                     Event::Code(code) => Some(code.into_string()),
                     _ => None,

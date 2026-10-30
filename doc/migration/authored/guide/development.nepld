@@ -1032,6 +1032,27 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons "Measured-child hosts remain responsible for request binding, depth, admission and settlement; they must not settle the sender's cumulative execution Usage a second time. "
         cons sentence cons text "Focused checks: " cons code "cargo test --locked -p nepl3-reader --test portable sender::" cons text "." nil nil
       nil
+    cons section nativeSavedNameLedger "Native saved builtinName on the existing operation ledger" body
+      cons paragraph
+        cons sentence cons code "ReaderSession::execute_pending_name" cons text " borrows the session's private pending Read and dispatches only the selected builtinName operation. " nil
+        cons "It retains the actual parent Budget and codec SourceAdmission, checks saved limits and monotone usage, and prepares typed sources/context before starting its relative additive grant. "
+        cons "Counter equality is only consistency checking; it does not prove ledger identity." nil
+      cons paragraph
+        cons sentence cons code "ReadReplyContext::saved_depth" cons text " exposes the private saved Read/Dependent depth. " nil
+        cons "It grants no execution or reply authority. "
+        cons "Native dispatch uses the larger of saved and currently active depth. "
+        cons "Its absolute depth cap must also cover the historical peak. "
+        cons "Limits/active depth restore on return; charges and sticky stops remain. "
+        cons sentence cons code "Limits::cumulative_ceiling" cons text " is the shared pure checked conversion used by both this path and measured-child setup, avoiding a second grant arithmetic implementation. " nil
+        cons "It neither reserves work nor settles usage." nil
+      cons paragraph
+        cons "The pending slot is unchanged by execution. "
+        cons sentence cons code "ExecutedName::into_reply" cons text " feeds ordinary saved-session validation/resume; invoking execution again reruns and charges the pure builtin. " nil
+        cons "Encoding retries instead reuse the immutable result with fresh encoding admission. "
+        cons "This same-ledger helper is not inserted into the separately admitted measured-child route. "
+        cons "NeedMore remains terminal for that immutable snapshot; a larger revision starts a new read rather than reviving the consumed continuation. "
+        cons "Resource Stop is not converted to resumable Await." nil
+      nil
     nil
   nil
 nil
