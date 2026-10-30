@@ -55,12 +55,12 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
         allocation_units: 1_500_000_000,
         ..budget().limits()
     };
-    // Growing unadopted corpus stopped at 810M parse Work.
-    // Finite 850M / 12M sizing measured 822,334,305 Work / 10,980,541 Nodes.
-    // Select 825M / 11M for parse only; other phase policies stay separate.
+    // Growing unadopted corpus stopped at 825M parse Work.
+    // Finite 870M / 12M sizing measured 835,457,413 Work / 11,136,676 Nodes.
+    // Select 840M / 11.2M for parse only; other phase policies stay separate.
     let parse_limits = Limits {
-        work: 825_000_000,
-        nodes: 11_000_000,
+        work: 840_000_000,
+        nodes: 11_200_000,
         ..draft_limits
     };
     nepl3_tools::doc::source::with_named_input_limits(
@@ -275,10 +275,9 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             // link closure still block complete document migration.
             assert_eq!((expected.len(), actual.len()), (13, 13));
             assert_eq!(actual, expected);
-            // The existing 225M text allowance stopped at 224,999,988 Work.
-            // Finite 250M sizing used 225,945,236 for preparation and
-            // 226,445,237 for all parity. Keep one cumulative 230M test-local
-            // budget for both operations;
+            // This slice uses 229,134,377 Work for preparation and
+            // 229,645,759 for all parity under the existing 230M allowance.
+            // Keep one cumulative test-local budget for both operations;
             // no reset, memoization or production/default policy change.
             let mut b = Budget::new(Limits {
                 work: 230_000_000,
@@ -828,7 +827,7 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
             else {
                 return Err("budget unwinding body".into());
             };
-            assert_eq!(unwind_blocks.len(), 1);
+            assert_eq!(unwind_blocks.len(), 2);
             let DocKind::Paragraph { items } =
                 &document.value.nodes[unwind_blocks[0].0 as usize].kind
             else {
@@ -862,6 +861,68 @@ fn development_draft_existing_commands_match_current_source() -> Result<(), Stri
                 })
                 .collect();
             assert_eq!(expected_codes.len(), 6);
+            assert_eq!(actual_codes, expected_codes);
+            let DocKind::Section { id, title, body } =
+                &document.value.nodes[unwind_blocks[1].0 as usize].kind
+            else {
+                return Err("reader echoes H3".into());
+            };
+            assert_eq!(id.as_str(), "readerEchoes");
+            assert_eq!(project(*title)?, "Session-bound canonical Reader echoes");
+            let DocKind::Body {
+                blocks: echo_blocks,
+            } = &document.value.nodes[body.0 as usize].kind
+            else {
+                return Err("reader echoes body".into());
+            };
+            assert_eq!(echo_blocks.len(), 3);
+            let echo_source = original
+                .split_once("### Session-bound canonical Reader echoes\n\n")
+                .ok_or("reader echoes source")?
+                .1
+                .split_once("\n### Exact saved Invoke comparison before settlement")
+                .ok_or("reader echoes end")?
+                .0;
+            let paragraphs: Vec<_> = echo_source
+                .trim()
+                .split("\n\n")
+                .map(|part| {
+                    part.replace('`', "")
+                        .split_whitespace()
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                })
+                .collect();
+            assert_eq!(paragraphs.len(), 3);
+            let mut actual_codes = Vec::new();
+            for ((node, count), expected) in echo_blocks.iter().zip([4, 6, 2]).zip(&paragraphs) {
+                let DocKind::Paragraph { items } = &document.value.nodes[node.0 as usize].kind
+                else {
+                    return Err("reader echoes paragraph".into());
+                };
+                assert_eq!(items.len(), count);
+                let sentences = items
+                    .iter()
+                    .map(|item| project(nepl3_doc_core::model::SentenceRef(item.0)))
+                    .collect::<Result<Vec<_>, _>>()?;
+                assert_eq!(sentences.concat(), *expected);
+                for (index, sentence) in sentences.iter().enumerate() {
+                    assert!(!sentence.starts_with(' '));
+                    assert!(sentence.ends_with(if index + 1 < sentences.len() {
+                        ". "
+                    } else {
+                        "."
+                    }));
+                }
+                paragraph_inline_code(&document, node.0, &mut actual_codes)?;
+            }
+            let expected_codes: Vec<_> = Parser::new(echo_source)
+                .filter_map(|event| match event {
+                    Event::Code(code) => Some(code.into_string()),
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(expected_codes.len(), 8);
             assert_eq!(actual_codes, expected_codes);
             let mut actual_intro = Vec::new();
             for child in &children[..3] {

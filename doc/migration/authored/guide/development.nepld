@@ -914,6 +914,23 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
       cons "[復元/ふくげん]はstack[上/じょう]のDrop guardで[行/おこな]い、[純粋/じゅんすい]なcharge・depth・ceiling[遷移/せんい]と[停止理由/ていしりゆう]の[優先順位/ゆうせんじゅんい]は[維持/いじ]する。"
       cons sentence cons code "cargo test --locked -p nepl3-core --test budget unwind_scopes" cons text " は、" cons ruby text "内側" text "うちがわ" cons text "で" cons ruby text "捕捉" text "ほそく" cons text "したunwind、" cons ruby text "取消" text "とりけし" cons text "・" cons ruby text "超過後" text "ちょうかご" cons text "のunwind、" cons ruby text "測定" text "そくてい" cons text "の" cons ruby text "内外" text "ないがい" cons text "peak、preflightのerror" cons ruby text "変換中" text "へんかんちゅう" cons text "のunwindを" cons ruby text "検査" text "けんさ" cons text "する。" nil
       cons "panic=abortやWasmでdestructorの[実行/じっこう]を[保証/ほしょう]するものではなく、panicを[成功/せいこう]Resultへ[変換/へんかん]しない。" nil
+    cons section readerEchoes "Session-bound canonical Reader echoes" body
+      cons paragraph
+        cons sentence cons code "ReaderSession::pending_continuation_value" cons text " exports every saved continuation field; " cons code "pending_reply_value" cons text " wraps that projection as domain " cons code "ReadReply::Await" cons text ", with the same pending call and Report. " nil
+        cons sentence cons code "resume_continuation_value" cons text " and " cons code "resume_reply_value" cons text " compare the complete canonical echo before resuming the existing private session. " nil
+        cons "Received frames, sources, counters and context never replace private state or supply authority for creating a new session. "
+        cons sentence cons text "These are not general continuation decoders or common " cons code "OperationReply::Await" cons text " adapters." nil nil
+      cons paragraph
+        cons "Export and comparison consume the supplied Budget while encoded Usage/Report retain their saved values. "
+        cons "Canonical source ordering and identical-declaration coalescing leave native collector/rollback order intact. "
+        cons "Source mappings remain scoped to each saved checkpoint. "
+        cons "Non-stopping malformed echoes preserve pending; foreign-session/shape preflight cannot consume it even with a stopped Budget. "
+        cons "A shared-operation resource stop follows the existing terminal path, retaining accepted collector artifacts. "
+        cons "Existing generated-source reply closure is kept." nil
+      cons paragraph
+        cons sentence cons text "Focused checks: " cons code "cargo test --locked -p nepl3-reader --lib portable::continuation" cons text " and " cons code "cargo test --locked -p nepl3-reader --test runtime echo::" cons text ". " nil
+        cons "Native builtinName sender and Tokenizer pending-value echoes are covered in separate sections below; cross-process continuation authority and formal runtime acceptance remain separate work." nil
+      nil
     nil
   nil
 nil

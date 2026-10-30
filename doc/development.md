@@ -754,9 +754,9 @@ A shared-operation resource stop follows the existing terminal path, retaining
 accepted collector artifacts. Existing generated-source reply closure is kept.
 
 Focused checks: `cargo test --locked -p nepl3-reader --lib portable::continuation`
-and `cargo test --locked -p nepl3-reader --test runtime echo::`. Native sender,
-Tokenizer portable echoes, cross-process continuation authority and formal
-runtime acceptance remain separate work.
+and `cargo test --locked -p nepl3-reader --test runtime echo::`. Native builtinName sender and Tokenizer pending-value echoes are covered in separate
+sections below; cross-process continuation authority and formal runtime acceptance
+remain separate work.
 
 
 ### Exact saved Invoke comparison before settlement
