@@ -956,6 +956,37 @@ cons section canonicalBoundary "[正本/せいほん]と[観測記録/かんそ�
         cons "The host must establish those associations and terminal cleanup independently. "
         cons "The context digest retains its existing cycle-detection semantics; no wire record, remote inherited Budget transport, task status or formal acceptance result changes in this slice." nil
       nil
+    cons section trustedLocalChildren "Trusted terminal local children" body
+      cons paragraph
+        cons sentence cons code "IssuedBudget::execute_local_child" cons text " consumes one relative grant in a separate local admission context. " nil
+        cons "It imports the actual parent's cumulative Usage, adds each additive grant with checked arithmetic, and keeps depth as an absolute ceiling. "
+        cons "Imported historical depth must fit that ceiling even if this callback is shallow. "
+        cons "The callback starts at the greater of the admitted saved depth and the parent's active depth; its caller must retain every applicable ancestor ceiling." nil
+      cons paragraph
+        cons sentence cons code "Budget::observe_depth_scope" cons text " retains callback output, the fresh relative depth peak and the sticky stop together. " nil
+        cons "Preexisting stops prevent execution. "
+        cons "A stop reached during execution does not erase already produced output or accounting, but retained output is not proof of success or source admission. "
+        cons "Nested scopes and Rust unwinding merge fresh peaks without reobserving historical Usage.depth. "
+        cons sentence cons code "measure_depth" cons text " preserves its existing Result error precedence and stop handling." nil nil
+      cons paragraph
+        cons "The child settles seven additive differences and its fresh absolute depth peak; its cumulative usage still includes imported history. "
+        cons "Inspect both its semantic output and stop reason. "
+        cons "Child stops do not choose the parent's semantic policy. "
+        cons "The adapter rejects observable Budget replacement, counter regression and changed limits, but is not tamper-proof against dishonest trusted callbacks. "
+        cons "An unwound unsettled grant cancels its parent without inventing partial consumption." nil
+      cons paragraph
+        cons "Sources are admitted once in this child's own SourceAdmission, independently of the parent's proof; returning a source does not authorize it in the parent. "
+        cons "This is a terminal trusted local adapter, not a resumable child, remote Usage authentication or default-dispatch route. "
+        cons "Existing dispatch that interprets relative Invoke limits as cumulative ceilings cannot be inserted unchanged. "
+        cons sentence cons text "Run " cons code "cargo test --locked -p nepl3-core --test budget" cons text " and " cons code "cargo test --locked -p nepl3-suite --test delegation" cons text " for focused checks." nil nil
+      cons paragraph
+        cons sentence cons code "IssuedInvocation::execute_local_child" cons text " binds that terminal adapter to the exact borrowed authorized Invoke and returns the saved request ID, host-selected implementation and context alongside the local execution. " nil
+        cons "It consumes the reservation once, without revalidation or a second settlement. "
+        cons "Both issuance paths are supported; parent-paid validation and subsequent local work remain in the child's actual starting history. "
+        cons "These local bindings do not authenticate wire reports, prove complete-Invoke equality or map Reader/session/source scope. "
+        cons "The immutable Invoke keeps its relative grant; do not rewrite it to cumulative limits or insert an unchanged cumulative-ceiling dispatcher. "
+        cons sentence cons text "The focused test is " cons code "cargo test --locked -p nepl3-provider --test transport reply::delegation::child::" cons text "." nil nil
+      nil
     nil
   nil
 nil
